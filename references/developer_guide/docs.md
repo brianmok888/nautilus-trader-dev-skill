@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/docs/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/docs.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Docs Style Guide
 
 This guide outlines the style conventions and best practices for writing documentation for NautilusTrader.

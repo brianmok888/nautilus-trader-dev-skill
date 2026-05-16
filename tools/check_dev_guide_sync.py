@@ -1,17 +1,68 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 
+CURRENT_DEV_GUIDE_FILES = [
+    "adapters.md",
+    "benchmarking.md",
+    "coding_standards.md",
+    "design_principles.md",
+    "docs.md",
+    "environment_setup.md",
+    "ffi.md",
+    "index.md",
+    "python.md",
+    "releases.md",
+    "rust.md",
+    "spec_data_testing.md",
+    "spec_exec_testing.md",
+    "test_datasets.md",
+    "testing.md",
+]
+
 REQUIRED_GUIDE_FILES = [
-    Path("references/developer_guide/design_principles.md"),
-    Path("references/developer_guide/spec_data_testing.md"),
-    Path("references/developer_guide/spec_exec_testing.md"),
-    Path("references/developer_guide/test_datasets.md"),
+    Path("references/developer_guide") / name for name in CURRENT_DEV_GUIDE_FILES
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
+
+RETIRED_UPSTREAM_REFERENCE_FILES = [
+    Path("references/developer_guide/cython.md"),
+    Path("references/developer_guide/docs_style.md"),
+    Path("references/developer_guide/packaged_data.md"),
+    Path("references/api_reference/adapters/coinbase_intx.md"),
+    Path("references/api_reference/adapters/mt5.md"),
+    Path("references/integrations/coinbase_intx.md"),
+    Path("references/integrations/mt5.md"),
+]
+
+CURRENT_INTEGRATION_GUIDES = [
+    "architect_ax.md",
+    "betfair.md",
+    "binance.md",
+    "bitmex.md",
+    "bybit.md",
+    "coinbase.md",
+    "databento.md",
+    "deribit.md",
+    "dydx.md",
+    "hyperliquid.md",
+    "ib.md",
+    "kraken.md",
+    "okx.md",
+    "polymarket.md",
+    "tardis.md",
+]
+
+INTEGRATION_INDEXES = [
+    Path("references/integrations/index.md"),
+    Path("skills/nt-adapters/references/integrations/index.md"),
+]
+
+RETIRED_API_INDEX_LINKS = ["coinbase_intx.md", "mt5.md"]
 
 INVARIANT_TARGETS = {
     Path("skills/nt-live/SKILL.md"): ["LiveNode"],
@@ -23,13 +74,22 @@ INVARIANT_TARGETS = {
     Path("skills/nt-architect/SKILL.md"): ["message immutability"],
 }
 
-DATASET_METADATA_FIELDS = ["file", "sha256", "size_bytes", "original_url", "licence", "added_at"]
+DATASET_METADATA_FIELDS = [
+    "file",
+    "sha256",
+    "size_bytes",
+    "original_url",
+    "licence",
+    "added_at",
+]
 
 LIVE_RUNTIME_BOUNDARY_TARGETS = {
     Path("skills/nt-live/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
     Path("skills/nt-strategy-builder/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
     Path("skills/nt-review/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
 }
+
+GUIDE_LINK_RE = re.compile(r"\[Guide\]\(([^)]+\.md)\)")
 
 
 @dataclass(frozen=True)
@@ -64,9 +124,7 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def run_checks(root: Path) -> CheckResult:
-    errors: list[str] = []
-
+def _check_required_guide_files(root: Path, errors: list[str]) -> None:
     for relative in REQUIRED_GUIDE_FILES:
         absolute = root / relative
         if not absolute.exists():
@@ -78,6 +136,55 @@ def run_checks(root: Path) -> CheckResult:
             errors.append(
                 f"missing source metadata in {relative.as_posix()}: {', '.join(missing_keys)}"
             )
+
+
+def _check_retired_references(root: Path, errors: list[str]) -> None:
+    for relative in RETIRED_UPSTREAM_REFERENCE_FILES:
+        if (root / relative).exists():
+            errors.append(f"retired upstream reference still present: {relative.as_posix()}")
+
+
+def _check_integration_index(root: Path, relative: Path, errors: list[str]) -> None:
+    absolute = root / relative
+    if not absolute.exists():
+        return
+
+    text = _read(absolute)
+    links = set(GUIDE_LINK_RE.findall(text))
+    for guide in CURRENT_INTEGRATION_GUIDES:
+        if guide not in links:
+            errors.append(f"missing current integration guide link {guide} in {relative.as_posix()}")
+
+    for link in sorted(links):
+        if not (absolute.parent / link).exists():
+            errors.append(f"broken integration guide link {link} in {relative.as_posix()}")
+
+
+def _check_official_index_alignment(root: Path, errors: list[str]) -> None:
+    for relative in INTEGRATION_INDEXES:
+        _check_integration_index(root, relative, errors)
+
+    api_index = root / "references/api_reference/adapters/index.md"
+    if api_index.exists():
+        text = _read(api_index)
+        for stale_link in RETIRED_API_INDEX_LINKS:
+            if stale_link in text:
+                errors.append(
+                    f"retired API adapter link {stale_link} "
+                    "in references/api_reference/adapters/index.md"
+                )
+
+    strategy_builder = root / "skills/nt-strategy-builder/SKILL.md"
+    if strategy_builder.exists() and "Coinbase IntX" in _read(strategy_builder):
+        errors.append("stale Coinbase IntX adapter guidance in skills/nt-strategy-builder/SKILL.md")
+
+
+def run_checks(root: Path) -> CheckResult:
+    errors: list[str] = []
+
+    _check_required_guide_files(root, errors)
+    _check_retired_references(root, errors)
+    _check_official_index_alignment(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)

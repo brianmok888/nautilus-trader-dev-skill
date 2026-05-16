@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/python/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/python.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Python
 
 The [Python](https://www.python.org/) programming language is used for the majority of user-facing code in NautilusTrader. Python provides a rich ecosystem of libraries and frameworks, making it ideal for strategy development, data analysis, and system integration.

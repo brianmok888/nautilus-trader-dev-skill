@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/testing/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/testing.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Testing
 
 Our automated tests serve as executable specifications for the trading platform.

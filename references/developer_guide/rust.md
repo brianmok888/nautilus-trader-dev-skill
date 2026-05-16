@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/rust/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Rust Style Guide
 
 The [Rust](https://www.rust-lang.org/learn) programming language is an ideal fit for implementing the mission-critical core of the platform and systems.

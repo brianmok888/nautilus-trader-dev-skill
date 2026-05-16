@@ -1131,7 +1131,7 @@ For API details, load (relative to this skill folder):
 - `references/developer_guide/ffi.md` - FFI memory contract
 - `references/developer_guide/adapters.md` - Adapter development guide
 - `references/developer_guide/benchmarking.md` - Benchmarking guide
-- `references/developer_guide/docs_style.md` - Documentation style guide
+- `references/developer_guide/docs.md` - Documentation style guide
 
 For concept understanding:
 - `references/concepts/backtesting.md` - Backtesting concepts and models

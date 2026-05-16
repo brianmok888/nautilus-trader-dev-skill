@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/ffi/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/ffi.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # FFI Memory Contract
 
 NautilusTrader exposes several **C-compatible** types so that compiled Rust code can be

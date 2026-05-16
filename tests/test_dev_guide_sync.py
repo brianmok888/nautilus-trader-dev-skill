@@ -5,8 +5,21 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.check_dev_guide_sync import CheckResult
+from tools.check_dev_guide_sync import CURRENT_DEV_GUIDE_FILES
 from tools.check_dev_guide_sync import run_checks
 
+
+def current_metadata(name: str = "design_principles.md") -> str:
+    slug = "" if name == "index.md" else name.removesuffix(".md") + "/"
+    return (
+        "---\n"
+        f"source_url: https://nautilustrader.io/docs/latest/developer_guide/{slug}\n"
+        f"source_repo: nautechsystems/nautilus_trader/docs/developer_guide/{name}\n"
+        "sync_date: 2026-05-16\n"
+        "target: NautilusTrader v1.226.0 latest developer guide\n"
+        "confidence: high\n"
+        "---\n"
+    )
 
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -117,7 +130,10 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     assert "missing invariant 'LiveNode' in skills/nt-live/SKILL.md" in result.errors
     assert "missing invariant 'DataTester' in skills/nt-testing/SKILL.md" in result.errors
     assert "missing invariant 'ExecTester' in skills/nt-testing/SKILL.md" in result.errors
-    assert "missing invariant 'nautilus_network::http::HttpClient' in skills/nt-adapters/SKILL.md" in result.errors
+    assert (
+        "missing invariant 'nautilus_network::http::HttpClient' in skills/nt-adapters/SKILL.md"
+        in result.errors
+    )
     assert "missing invariant 'message immutability' in skills/nt-architect/SKILL.md" in result.errors
 
 
@@ -134,22 +150,70 @@ def test_reports_missing_live_runtime_boundary_terms(tmp_path: Path) -> None:
     assert "missing live runtime boundary in skills/nt-review/SKILL.md" in result.errors
 
 
+
+def test_reports_retired_upstream_reference_files(tmp_path: Path) -> None:
+    write(tmp_path / "references/integrations/coinbase_intx.md", "# Coinbase International\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "retired upstream reference still present: references/integrations/coinbase_intx.md"
+        in result.errors
+    )
+
+
+def test_reports_missing_current_integration_links(tmp_path: Path) -> None:
+    write(tmp_path / "references/integrations/index.md", "# Integrations\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert "missing current integration guide link coinbase.md in references/integrations/index.md" in result.errors
+
+
+def test_reports_broken_integration_guide_links(tmp_path: Path) -> None:
+    write(tmp_path / "references/integrations/index.md", "| Docs |\n|---|\n| [Guide](missing.md) |\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert "broken integration guide link missing.md in references/integrations/index.md" in result.errors
+
+
+def test_reports_retired_api_adapter_index_links(tmp_path: Path) -> None:
+    write(tmp_path / "references/api_reference/adapters/index.md", "   coinbase_intx.md\n   mt5.md\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "retired API adapter link coinbase_intx.md in references/api_reference/adapters/index.md"
+        in result.errors
+    )
+    assert (
+        "retired API adapter link mt5.md in references/api_reference/adapters/index.md"
+        in result.errors
+    )
+
+
+def test_reports_stale_coinbase_intx_strategy_builder_guidance(tmp_path: Path) -> None:
+    write(tmp_path / "skills/nt-strategy-builder/SKILL.md", "Nautilus ships Coinbase IntX adapters.\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "stale Coinbase IntX adapter guidance in skills/nt-strategy-builder/SKILL.md"
+        in result.errors
+    )
+
 def test_success_when_required_files_metadata_paths_and_invariants_exist(tmp_path: Path) -> None:
-    metadata = """---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/design_principles/
-source_repo: nautechsystems/nautilus_trader/docs/developer_guide/design_principles.md
-sync_date: 2026-04-29
-target: latest developer guide
-confidence: high
----
-"""
-    for name in [
-        "design_principles.md",
-        "spec_data_testing.md",
-        "spec_exec_testing.md",
-        "test_datasets.md",
-    ]:
-        write(tmp_path / "references/developer_guide" / name, metadata + f"# {name}\n")
+    for name in CURRENT_DEV_GUIDE_FILES:
+        write(
+            tmp_path / "references/developer_guide" / name,
+            current_metadata(name) + f"# {name}\n",
+        )
 
     write(
         tmp_path / "skills/nt-live/SKILL.md",

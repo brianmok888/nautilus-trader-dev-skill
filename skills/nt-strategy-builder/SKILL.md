@@ -49,7 +49,7 @@ Are you using live market data?
 
 ### 1. Standard CeFi Adapters (Built-in)
 
-NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase IntX, dYdX, IB, Databento, Tardis, and more.
+NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase (Rust/v2 `LiveNode` path), dYdX, Interactive Brokers, Databento, Tardis, and more.
 
 > **v1.223.0**: dYdX v3 (legacy) adapter removed. Use `nautilus_trader.adapters.dydx` (module renamed from `dydx_v4`). Class prefix is now `Dydx` (e.g., `DydxDataClientConfig`, `DydxLiveDataClientFactory`). The dydx optional install extra is no longer needed.
 

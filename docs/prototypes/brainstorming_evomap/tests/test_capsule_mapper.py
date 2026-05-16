@@ -5,11 +5,14 @@
 """Tests for capsule mapper."""
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
 
 _module_dir = Path(__file__).parent.parent
+if str(_module_dir) not in sys.path:
+    sys.path.insert(0, str(_module_dir))
 
 
 def _load_module(name: str):

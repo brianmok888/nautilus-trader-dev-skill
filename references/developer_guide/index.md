@@ -1,58 +1,36 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/index.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Developer Guide
 
-Welcome to the developer guide for NautilusTrader!
+Guidance on developing and extending NautilusTrader, or contributing back to the project.
 
-Here you'll find guidance on developing and extending NautilusTrader to meet your trading needs or to contribute improvements back to the project.
+NautilusTrader uses a **Rust core with Python bindings** architecture:
 
-:::info
-This guide is structured so that automated tooling can consume it alongside human readers.
-:::
+- **Rust** handles networking, data parsing, order matching, and other performance-critical operations.
+- **Python** provides the user-facing API for strategy development, configuration, and system integration.
+- **PyO3** bridges the two, exposing Rust functionality to Python with minimal overhead.
 
-We believe in using the right tool for the job. The overall design philosophy is to fully utilize
-the high level power of Python, with its rich eco-system of frameworks and libraries, whilst
-overcoming some of its inherent shortcomings in performance and lack of built-in type safety
-(with it being an interpreted dynamic language).
-
-One of the advantages of Cython is that allocation and freeing of memory is handled by the C code
-generator during the ‘cythonization’ step of the build (unless you’re specifically utilizing some of
-its lower level features).
-
-This approach combines Python’s simplicity with near-native C performance via compiled extensions.
-
-The main development and runtime environment we are working in is Python. With the
-introduction of Cython throughout the production codebase in `.pyx` and `.pxd` files, it's
-important to be aware of how the CPython implementation of Python interacts with the underlying
-CPython API, and the NautilusTrader C extension modules which Cython produces.
-
-We recommend a thorough review of the [Cython docs](https://cython.readthedocs.io/en/latest/) to familiarize yourself with some of its core
-concepts, and where C typing is being used.
-
-It's not necessary to become a C language expert, however it's helpful to understand how Cython C
-syntax is used in function and method definitions, in local code blocks, and the common primitive C
-types and how these map to their corresponding `PyObject` types.
+This approach combines Python's simplicity and ecosystem with Rust's performance and memory safety.
 
 ## Contents
 
 - [Environment Setup](environment_setup.md)
-- [Coding Standards](coding_standards.md)
 - [Design Principles](design_principles.md)
-- [Cython](cython.md)
+- [Coding Standards](coding_standards.md)
 - [Rust](rust.md)
+- [Python](python.md)
 - [Testing](testing.md)
+- [Test Datasets](test_datasets.md)
+- [Docs Style](docs.md)
+- [Release Notes](releases.md)
+- [Adapters](adapters.md)
 - [Data Testing Spec](spec_data_testing.md)
 - [Execution Testing Spec](spec_exec_testing.md)
-- [Test Datasets](test_datasets.md)
-- [Docs Style Guide](docs.md)
-- [Release Notes Guide](releases.md)
-- [Adapters](adapters.md)
 - [Benchmarking](benchmarking.md)
-- [Packaged Data](packaged_data.md)
 - [FFI Memory Contract](ffi.md)
-
-## Local Contracts
-
-- [Environment Tooling Contract](contracts/environment_tooling.md)
-- [Testing Policy Contract](contracts/testing_policy.md)
-- [Adapter Contract](contracts/adapter_contract.md)
-- [Live Runtime Contract](contracts/live_runtime_contract.md)
-- [Design Principles Contract](contracts/design_principles.md)

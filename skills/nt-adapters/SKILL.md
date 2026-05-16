@@ -9,10 +9,10 @@ description: "Use when working with exchange or data provider adapters, HTTP/Web
 
 NautilusTrader **adapter domain** — exchange/data provider integrations following a layered architecture with Rust core for networking and Python layer for platform integration.
 
-**Python modules**: `adapters/*` (16 adapters), `adapters/_template/`
-**Rust crates**: All 16 `adapters/*` crates, `nautilus_network`, `nautilus_cryptography`
+**Python modules**: `adapters/*`, `adapters/_template/`, and PyO3 exports where an adapter is Rust/v2-only.
+**Rust crates**: adapter crates plus `nautilus_network` and `nautilus_cryptography`.
 
-**Supported adapters**: Binance, Bybit, OKX, Kraken, Deribit, dYdX, Hyperliquid, BitMEX, Interactive Brokers, Databento, Tardis, Betfair, Polymarket, Architect (AX), Blockchain, Shioaji
+**Current official integrations (v1.226.0)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, dYdX, Hyperliquid, Interactive Brokers, Kraken, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
 
 ## When To Use
 

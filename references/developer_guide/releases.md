@@ -1,3 +1,11 @@
+---
+source_url: https://nautilustrader.io/docs/latest/developer_guide/releases/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/releases.md
+sync_date: 2026-05-16
+target: NautilusTrader v1.226.0 latest developer guide
+confidence: high
+---
+
 # Release Notes Guide
 
 This guide documents the standards for writing release notes in `RELEASES.md`.

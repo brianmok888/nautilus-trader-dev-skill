@@ -4,7 +4,7 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 
 ## Overview
 
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) with version-sensitive notes called out explicitly where they matter.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) with version-sensitive notes called out explicitly where they matter. Current upstream baseline: NautilusTrader v1.226.0 / latest docs, verified 2026-05-16.
 
 ## Skills Map
 
@@ -157,8 +157,11 @@ The checker validates required local developer-guide pages, source metadata,
 stale reference paths, and high-risk NautilusTrader invariants used by the skill
 suite.
 
-## Source
+## Source of Truth
+
+This skill repo is aligned to NautilusTrader itself, not to any downstream or prior skill repository.
 
 - Official docs: [nautilustrader.io/docs/latest/developer_guide](https://nautilustrader.io/docs/latest/developer_guide/)
 - NautilusTrader repo: [nautechsystems/nautilus_trader](https://github.com/nautechsystems/nautilus_trader)
-- Skill repo: [Martingale42/nautilus-dev](https://github.com/Martingale42/nautilus-dev)
+
+Prior or downstream skill repos such as [Martingale42/nautilus-dev](https://github.com/Martingale42/nautilus-dev) may be useful for comparison, but they are not alignment targets or sources of truth.

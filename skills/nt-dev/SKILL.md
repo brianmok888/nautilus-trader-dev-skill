@@ -415,5 +415,5 @@ Start items with: "Added", "Removed", "Renamed", "Changed", "Fixed", "Implemente
 - `references/developer_guide/ffi.md` — CVec lifecycle, PyCapsule, abort_on_panic, ownership
 - `references/developer_guide/test_datasets.md` — Dataset categories, metadata, curation workflow
 - `references/developer_guide/releases.md` — Branch model, versioning, checklist, release notes
-- `references/developer_guide/docs_style.md` — Docs types, admonitions, MDX components, style guide
+- `references/developer_guide/docs.md` — Docs types, admonitions, MDX components, style guide
 - `references/developer_guide/contracts/environment_tooling.md` — Current tooling contract
