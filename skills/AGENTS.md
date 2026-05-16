@@ -1,10 +1,12 @@
 # SKILLS OVERVIEW
 
-16 specialized skills for NautilusTrader development. Use workflow skills for
+17 specialized skills for NautilusTrader development. Use workflow skills for
 architecture, implementation, wiring, and review; use domain skills for focused
 NautilusTrader concepts; use developer-guide skills for setup and testing.
 
 ## WORKFLOW
+
+Start with `nt` for task classification and routing.
 
 ```
 nt-architect → nt-implement → nt-strategy-builder → nt-review
@@ -16,6 +18,7 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 
 | Skill | Purpose | Entry Point |
 |-------|---------|-------------|
+| **nt** | Entry-point router for NautilusTrader tasks | `nt/SKILL.md` |
 | **nt-architect** | Decompose systems into Actor/Indicator/Strategy architecture | `nt-architect/SKILL.md` |
 | **nt-implement** | Implement NautilusTrader components from templates | `nt-implement/SKILL.md` |
 | **nt-review** | Review code before deployment | `nt-review/SKILL.md` |
@@ -56,6 +59,7 @@ All templates use `asyncio.run(main())` — no CLI framework.
 
 | I need to... | Go to |
 |--------------|-------|
+| Start a NautilusTrader task and choose skills | `nt/` |
 | Design architecture | `nt-architect/` |
 | Write a strategy | `nt-implement/` |
 | Run a backtest | `nt-strategy-builder/templates/backtest_node.py` |

@@ -29,6 +29,26 @@ REQUIRED_GUIDE_FILES = [
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
 
+ENTRY_SKILL = Path("skills/nt/SKILL.md")
+ENTRY_SKILL_ROUTING_TARGETS = [
+    "nt-adapters",
+    "nt-architect",
+    "nt-backtest",
+    "nt-data",
+    "nt-dev",
+    "nt-dex-adapter",
+    "nt-evomap-integration",
+    "nt-implement",
+    "nt-learn",
+    "nt-live",
+    "nt-model",
+    "nt-review",
+    "nt-signals",
+    "nt-strategy-builder",
+    "nt-testing",
+    "nt-trading",
+]
+
 RETIRED_UPSTREAM_REFERENCE_FILES = [
     Path("references/developer_guide/cython.md"),
     Path("references/developer_guide/docs_style.md"),
@@ -124,6 +144,31 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+
+def _check_entry_skill(root: Path, errors: list[str]) -> None:
+    absolute = root / ENTRY_SKILL
+    if not absolute.exists():
+        errors.append(f"missing NautilusTrader entry skill: {ENTRY_SKILL.as_posix()}")
+        return
+
+    text = _read(absolute)
+    for required_text in [
+        "name: nt",
+        "Entry-point/router skill",
+        "Source of truth",
+        "nautechsystems/nautilus_trader",
+    ]:
+        if required_text not in text:
+            errors.append(
+                f"missing entry skill contract '{required_text}' in {ENTRY_SKILL.as_posix()}"
+            )
+
+    for skill_name in ENTRY_SKILL_ROUTING_TARGETS:
+        if skill_name not in text:
+            errors.append(
+                f"entry skill does not route to {skill_name} in {ENTRY_SKILL.as_posix()}"
+            )
+
 def _check_required_guide_files(root: Path, errors: list[str]) -> None:
     for relative in REQUIRED_GUIDE_FILES:
         absolute = root / relative
@@ -182,6 +227,7 @@ def _check_official_index_alignment(root: Path, errors: list[str]) -> None:
 def run_checks(root: Path) -> CheckResult:
     errors: list[str] = []
 
+    _check_entry_skill(root, errors)
     _check_required_guide_files(root, errors)
     _check_retired_references(root, errors)
     _check_official_index_alignment(root, errors)

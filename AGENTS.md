@@ -20,6 +20,7 @@ agent-actionable rules.
 ```
 nautilus-trader-dev-skill/
 ├── skills/                 # Specialized skills
+│   ├── nt/                # Entry-point router for NautilusTrader tasks
 │   ├── nt-architect/      # Architecture decomposition (Actor/Indicator/Strategy)
 │   ├── nt-implement/      # Strategy/Actor/Indicator implementation
 │   ├── nt-evomap-integration/ # EvoMap advisory sidecar integration
@@ -38,6 +39,7 @@ nautilus-trader-dev-skill/
 
 | Task | Location | Notes |
 |------|----------|-------|
+| Start a NautilusTrader task | `skills/nt/` | Classifies intent and routes to relevant `nt-*` skills |
 | Design component architecture | `skills/nt-architect/` | Start here for new projects |
 | Implement Strategy/Actor | `skills/nt-implement/` | Templates + conventions |
 | Wire backtest or live node | `skills/nt-strategy-builder/templates/` | backtest_node.py, live_node.py |
@@ -51,18 +53,22 @@ nautilus-trader-dev-skill/
 ## SKILL WORKFLOW
 
 ```
+nt (entry/router)
+        │
+        ▼
 nt-architect → nt-implement → nt-strategy-builder → nt-review
                     ↓                ↓
      nt-evomap-integration (if EvoMap)  nt-dex-adapter (if DEX)
 ```
 
 **Sequence:**
-1. **nt-architect** — Decompose system into Actor/Indicator/Strategy components
-2. **nt-implement** — Write individual components with templates
-3. **nt-evomap-integration** — (Optional) Add governed EvoMap advisory workflow
-4. **nt-strategy-builder** — Wire BacktestEngine, Python TradingNode, or Rust/v2 LiveNode paths
-5. **nt-dex-adapter** — (Optional) Build custom DEX adapter
-6. **nt-review** — Review before live deployment
+1. **nt** — Start here when the task needs classification or multiple Nautilus skills
+2. **nt-architect** — Decompose system into Actor/Indicator/Strategy components
+3. **nt-implement** — Write individual components with templates
+4. **nt-evomap-integration** — (Optional) Add governed EvoMap advisory workflow
+5. **nt-strategy-builder** — Wire BacktestEngine, Python TradingNode, or Rust/v2 LiveNode paths
+6. **nt-dex-adapter** — (Optional) Build custom DEX adapter
+7. **nt-review** — Review before live deployment
 
 ## CONVENTIONS (PROJECT-SPECIFIC)
 

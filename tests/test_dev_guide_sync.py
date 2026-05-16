@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.check_dev_guide_sync import CheckResult
 from tools.check_dev_guide_sync import CURRENT_DEV_GUIDE_FILES
+from tools.check_dev_guide_sync import ENTRY_SKILL_ROUTING_TARGETS
 from tools.check_dev_guide_sync import run_checks
 
 
@@ -21,10 +22,47 @@ def current_metadata(name: str = "design_principles.md") -> str:
         "---\n"
     )
 
+
+def write_entry_skill(root: Path) -> None:
+    routes = "\n".join(f"- `{skill_name}`" for skill_name in ENTRY_SKILL_ROUTING_TARGETS)
+    write(
+        root / "skills/nt/SKILL.md",
+        "---\n"
+        "name: nt\n"
+        "description: Entry-point/router skill for NautilusTrader tasks.\n"
+        "---\n"
+        "# Entry-point/router skill\n"
+        "## Source of truth\n"
+        "Use nautechsystems/nautilus_trader as source.\n"
+        f"{routes}\n",
+    )
+
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 
+
+
+def test_reports_missing_entry_skill(tmp_path: Path) -> None:
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert "missing NautilusTrader entry skill: skills/nt/SKILL.md" in result.errors
+
+
+def test_reports_incomplete_entry_skill_routes(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt/SKILL.md",
+        "---\nname: nt\ndescription: Entry-point/router skill.\n---\n"
+        "# Entry-point/router skill\n## Source of truth\n"
+        "nautechsystems/nautilus_trader\n"
+        "nt-trading only\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert "entry skill does not route to nt-architect in skills/nt/SKILL.md" in result.errors
 
 def test_reports_missing_required_guide_files(tmp_path: Path) -> None:
     write(tmp_path / "references/developer_guide/index.md", "# Developer Guide\n")
@@ -209,6 +247,8 @@ def test_reports_stale_coinbase_intx_strategy_builder_guidance(tmp_path: Path) -
     )
 
 def test_success_when_required_files_metadata_paths_and_invariants_exist(tmp_path: Path) -> None:
+    write_entry_skill(tmp_path)
+
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
             tmp_path / "references/developer_guide" / name,

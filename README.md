@@ -8,6 +8,8 @@ These skills encode NautilusTrader best practices, correct patterns, and structu
 
 ## Skills Map
 
+Start with `nt` when you want the skill suite to classify the task and route to the relevant NautilusTrader skills.
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                                                                              │
@@ -60,16 +62,21 @@ These skills encode NautilusTrader best practices, correct patterns, and structu
 
 | Goal | Skills to use |
 |---|---|
-| Design a new trading system | `nt-architect` → `nt-implement` |
+| Design a new trading system | `nt` → `nt-architect` → `nt-implement` |
 | Build a CeFi adapter (Binance, OKX…) | `nt-adapters` + `nt-dev` |
 | Build a DEX adapter (on-chain) | `nt-dex-adapter` + `nt-implement` |
 | Run a backtest | `nt-strategy-builder` + `nt-backtest` |
 | Deploy live trading | `nt-strategy-builder` + `nt-live` |
 | Review code before merge | `nt-review` + `nt-testing` |
-| Learn NautilusTrader | `nt-learn` (12-stage curriculum) |
-| Contribute to NautilusTrader core | `nt-dev` + `nt-testing` |
+| Learn NautilusTrader | `nt` → `nt-learn` (12-stage curriculum) |
+| Contribute to NautilusTrader core | `nt` → `nt-dev` + `nt-testing` |
 
-## Skill Inventory (16 skills)
+## Skill Inventory (17 skills)
+
+### Entry Point (1)
+| Skill | Description | Key Content |
+|---|---|---|
+| `nt` | Start point/router for NautilusTrader tasks | Classifies intent, loads relevant `nt-*` skills |
 
 ### Workflow Pipeline (6)
 | Skill | Description | Key Content |
