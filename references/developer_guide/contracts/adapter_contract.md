@@ -15,7 +15,7 @@ Sources:
   not teach `tokio::spawn()` as the default from Python-driven adapter code.
 - Align Python adapter methods with current command/request object signatures.
 - Treat `InstrumentProvider.load_all_async()` as the required load method for
-  current v1.224-era guidance; override targeted load methods only for venue
+  current v1.227-era guidance; override targeted load methods only for venue
   semantics or efficiency.
 - Require order status reports, fill reports, position status reports, and mass
   status generation where the official execution client contract requires them.

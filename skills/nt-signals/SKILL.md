@@ -54,6 +54,12 @@ self.register_indicator_for_bars(bar_type, ema_slow)
 - **Trend**: `AroonOscillator`, `DirectionalMovement`, `LinearRegression`, `ArcherMovingAveragesTrends`
 - **Volume**: `OnBalanceVolume`, `VolumeWeightedAveragePrice`
 
+### v1.227.0 signal/data deltas
+
+- `DataActor.subscribe_signal` accepts an optional `priority` for ordered subscriber dispatch; pass `None` / omit it when ordering is not required.
+- Continuous futures support adjusted aggregated bars via `ContinuousFutureAdjustmentType` and the `BarBuilder` price-adjustment pipeline.
+- `BarType` exposes native `is_externally_aggregated` and `is_internally_aggregated` helpers.
+
 ### Bar Aggregation
 
 ```python

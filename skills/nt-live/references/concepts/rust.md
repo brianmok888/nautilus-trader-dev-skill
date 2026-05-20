@@ -86,11 +86,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.55"
-nautilus-common = "0.55"
-nautilus-execution = "0.55"
-nautilus-model = { version = "0.55", features = ["stubs"] }
-nautilus-trading = { version = "0.55", features = ["examples"] }
+nautilus-backtest = "0.57"
+nautilus-common = "0.57"
+nautilus-execution = "0.57"
+nautilus-model = { version = "0.57", features = ["stubs"] }
+nautilus-trading = { version = "0.57", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -100,8 +100,8 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.55"
-nautilus-okx = "0.55"
+nautilus-live = "0.57"
+nautilus-okx = "0.57"
 ```
 
 To track the latest development branch, point all Nautilus dependencies at the
@@ -116,7 +116,7 @@ nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git"
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
-The minimum supported Rust version (MSRV) is **1.94.0**.
+The minimum supported Rust version (MSRV) is **1.95.0**.
 
 ### Feature flags
 

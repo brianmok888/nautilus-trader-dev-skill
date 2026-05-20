@@ -15,23 +15,28 @@
 
 //! Example demonstrating live data testing with the Binance Spot SBE adapter.
 //!
-//! Run with: `cargo run --example binance-spot-data-tester --package nautilus-binance`
+//! Run with: `cargo run --example binance-spot-data-tester --package nautilus-binance --features examples`
 //!
-//! Requires environment variables (for SBE data streams):
-//! - BINANCE_ED25519_API_KEY
-//! - BINANCE_ED25519_API_SECRET
+//! Requires environment variables based on the configured environment
+//! (Ed25519 keys are auto-detected):
+//! - Live: `BINANCE_API_KEY` / `BINANCE_API_SECRET`
+//! - Testnet: `BINANCE_TESTNET_API_KEY` / `BINANCE_TESTNET_API_SECRET`
+//! - Demo: `BINANCE_DEMO_API_KEY` / `BINANCE_DEMO_API_SECRET`
 
 use std::num::NonZeroUsize;
 
 use nautilus_binance::{
-    common::enums::{BinanceEnvironment, BinanceProductType},
+    common::{
+        consts::BINANCE_CLIENT_ID,
+        enums::{BinanceEnvironment, BinanceProductType},
+    },
     config::BinanceDataClientConfig,
     factories::BinanceDataClientFactory,
 };
 use nautilus_common::enums::Environment;
 use nautilus_live::node::LiveNode;
 use nautilus_model::{
-    identifiers::{ClientId, InstrumentId, TraderId},
+    identifiers::{InstrumentId, TraderId},
     stubs::TestDefault,
 };
 use nautilus_testkit::testers::{DataTester, DataTesterConfig};
@@ -50,14 +55,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let binance_config = BinanceDataClientConfig {
         product_types: vec![BinanceProductType::Spot],
-        environment: BinanceEnvironment::Mainnet,
+        environment: BinanceEnvironment::Live,
         api_key: None,
         api_secret: None,
         ..Default::default()
     };
 
     let client_factory = BinanceDataClientFactory::new();
-    let client_id = ClientId::new("BINANCE");
+    let client_id = *BINANCE_CLIENT_ID;
 
     let mut node = LiveNode::builder(trader_id, environment)?
         .with_name(node_name)
@@ -65,9 +70,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_data_client(None, Box::new(client_factory), Box::new(binance_config))?
         .build()?;
 
-    let tester_config = DataTesterConfig::new(client_id, instrument_ids)
-        .with_subscribe_book_at_interval(true)
-        .with_book_interval_ms(NonZeroUsize::new(10).unwrap());
+    let tester_config = DataTesterConfig::builder()
+        .client_id(client_id)
+        .instrument_ids(instrument_ids)
+        .subscribe_book_at_interval(true)
+        .book_interval_ms(NonZeroUsize::new(10).unwrap())
+        .manage_book(true)
+        .build();
     let tester = DataTester::new(tester_config);
 
     node.add_actor(tester)?;

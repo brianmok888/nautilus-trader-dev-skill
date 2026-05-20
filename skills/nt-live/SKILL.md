@@ -180,11 +180,11 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.55"
-nautilus-live = "0.55"
-nautilus-model = "0.55"
-nautilus-okx = "0.55"          # or any venue adapter
-nautilus-trading = { version = "0.55", features = ["examples"] }
+nautilus-common = "0.57"
+nautilus-live = "0.57"
+nautilus-model = "0.57"
+nautilus-okx = "0.57"          # or any venue adapter
+nautilus-trading = { version = "0.57", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"
@@ -196,7 +196,10 @@ tokio = { version = "1", features = ["full"] }
 
 ```rust
 use log::LevelFilter;
-use nautilus_common::{enums::Environment, logging::logger::LoggerConfig};
+use nautilus_common::{
+    enums::Environment,
+    logging::{logger::LoggerConfig, writer::FileWriterConfig},
+};
 use nautilus_live::node::LiveNode;
 use nautilus_model::identifiers::{AccountId, TraderId};
 use nautilus_okx::{
@@ -222,6 +225,13 @@ let exec_config = OKXExecClientConfig {
 
 let log_config = LoggerConfig {
     stdout_level: LevelFilter::Info,
+    fileout_level: LevelFilter::Info,
+    file_config: Some(FileWriterConfig {
+        directory: Some("logs".into()),
+        file_name: Some("live-node.log".into()),
+        ..Default::default()
+    }),
+    clear_log_file: false,
     ..Default::default()
 };
 
@@ -238,7 +248,7 @@ let mut node = LiveNode::builder(trader_id, Environment::Live)?
         Box::new(OKXExecutionClientFactory::new()),
         Box::new(exec_config),
     )?
-    .with_reconciliation(false)  // Enable in production!
+    .with_reconciliation(true)
     .with_delay_post_stop_secs(5)
     .build()?;
 ```
@@ -284,6 +294,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The node runs until interrupted (Ctrl+C) or shut down programmatically.
 
+### v1.227.0 LiveNode config notes
+
+- `LoggerConfig` can be constructed directly from Python and Rust; Rust `LiveNode` supports `file_config` and `clear_log_file`.
+- `LiveNodeConfig` and adapter client configs implement serde `Deserialize`, so TOML-backed config loading is viable for Rust live nodes.
+- Portfolio mark-to-market snapshots are emitted as `PortfolioSnapshot` events when `snapshot_interval_ms` is configured.
+
 ### Environment Variables
 
 Adapters read API credentials from environment variables. Use `.env` + `dotenvy`:
@@ -320,7 +336,7 @@ Most adapters include runnable `node_data_tester.rs` and `node_exec_tester.rs` e
 ### Reconciliation
 
 In production, enable reconciliation so the engine aligns cached state with the venue on startup:
-- Remove `.with_reconciliation(false)` from the builder
+- Keep `.with_reconciliation(true)` or the production default enabled unless an adapter limitation is documented and reviewed
 - See `references/concepts/live.md` for reconciliation details
 
 ## Rust Extension (PyO3 Path)

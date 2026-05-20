@@ -4,7 +4,7 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 
 ## Overview
 
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) with version-sensitive notes called out explicitly where they matter. Current upstream baseline: NautilusTrader v1.226.0 / latest docs, verified 2026-05-16.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) with version-sensitive notes called out explicitly where they matter. Current upstream baseline: NautilusTrader v1.227.0 / latest docs, verified 2026-05-20.
 
 ## Skills Map
 

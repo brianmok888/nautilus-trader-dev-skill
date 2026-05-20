@@ -563,6 +563,12 @@ def on_order_filled(self, event: OrderFilled) -> None:
 - [ ] **v1.224.0**: `InstrumentProvider.load_ids_async`/`load_async` now have defaults; adapter only needs `load_all_async`
 - [ ] **v1.224.0**: Binance Ed25519 env vars for Spot/Margin now raise `ValueError` (hard error)
 - [ ] **v1.224.0**: Hyperliquid `builder_fee_refresh_mins` config removed
+- [ ] **v1.227.0**: legacy adapter environment flags removed; use `environment` enums, with Binance/Kraken `Live` / `LIVE` instead of stale `Mainnet` variants
+- [ ] **v1.227.0**: `time_bars_origins` renamed to `time_bars_origin_offset` in `DataEngineConfig` / `LiveDataEngineConfig`
+- [ ] **v1.227.0**: `From<OrderInitialized>` removed; use `TryFrom` / `try_from` / `try_into` and handle invalid orders as errors
+- [ ] **v1.227.0**: Rust cache accessors return scoped wrappers; use `order_owned` / `account_owned` / `position_owned` for boundary snapshots
+- [ ] **v1.227.0**: `DataActor.subscribe_signal` requires `priority: Option<u32>` in Rust; pass `None` unless ordering is intentional
+- [ ] **v1.227.0**: Rust `OrderFactory::bracket` is builder-style (`factory.bracket()...call()`)
 
 ### Risk Controls
 
@@ -642,42 +648,6 @@ fee_rate = self.instrument.maker_fee_rate if is_maker else self.instrument.taker
 - [ ] Emulation trigger type matches venue expectations
 - [ ] `cache.orders_emulated()` / `cache.is_order_emulated()` used for emulation queries
 - [ ] OTO/OCO/OUO contingency orders validated with correct `oto_trigger_mode` (`PARTIAL` or `FULL`)
-
-### Order Emulation Triggers (v1.223.0+)
-
-10 emulation trigger types available:
-
-| Trigger | Description |
-|---------|-------------|
-| `NO_TRIGGER` | No emulation |
-| `DEFAULT` | Venue default |
-| `BID_ASK` | Bid/ask price based |
-| `LAST_PRICE` | Last trade price |
-| `DOUBLE_LAST` | Double last trade price |
-| `DOUBLE_BID_ASK` | Double bid/ask |
-| `LAST_OR_BID_ASK` | Last or bid/ask |
-| `MID_POINT` | Mid-price |
-| `MARK_PRICE` | Mark price |
-| `INDEX_PRICE` | Index price |
-
-**Venue-specific trigger rules:**
-
-| Venue | Default Trigger |
-|-------|----------------|
-| Binance | `LAST_PRICE` (spot), `MARK_PRICE` (futures) |
-| Bybit | `LAST_PRICE` |
-| Kraken | `BID_ASK` |
-| OKX | `MARK_PRICE` |
-| IB | `DOUBLE_LAST` |
-| dYdX | `INDEX_PRICE` |
-| Polymarket | `MID_POINT` |
-| Betfair | `DOUBLE_BID_ASK` |
-
-**Review checks:**
-- [ ] Emulation trigger type matches venue expectations
-- [ ] `cache.orders_emulated()` / `cache.is_order_emulated()` used for emulation queries
-- [ ] `oto_trigger_mode` set correctly: `FULL` or `PARTIAL` (default)
-- [ ] Bracket order patterns use correct OTO/OCO/OUO contingency types
 
 Check adherence to NautilusTrader Rust style:
 

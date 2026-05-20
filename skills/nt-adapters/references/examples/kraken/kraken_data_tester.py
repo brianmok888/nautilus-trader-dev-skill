@@ -42,12 +42,12 @@ token = None  # FUTURES uses "XBT", SPOT uses "BTC"
 if product_type == KrakenProductType.SPOT:
     token = token or "BTC"
     symbol = f"{token}/USD"
-    environment = KrakenEnvironment.MAINNET
+    environment = KrakenEnvironment.LIVE
 elif product_type == KrakenProductType.FUTURES:
     # Kraken Futures perpetual symbols use PI_ prefix (e.g., PI_XBTUSD, PI_ETHUSD)
     token = token or "XBT"
     symbol = f"PI_{token}USD"
-    environment = KrakenEnvironment.MAINNET
+    environment = KrakenEnvironment.LIVE
     # environment = KrakenEnvironment.DEMO  # Use demo-futures.kraken.com
 else:
     raise ValueError(f"Unsupported product type: {product_type}")
@@ -68,8 +68,6 @@ config_node = TradingNodeConfig(
     ),
     data_clients={
         KRAKEN: KrakenDataClientConfig(
-            api_key=None,  # 'KRAKEN_API_KEY' env var
-            api_secret=None,  # 'KRAKEN_API_SECRET' env var
             environment=environment,
             product_types=product_types,
             instrument_provider=InstrumentProviderConfig(load_all=True),

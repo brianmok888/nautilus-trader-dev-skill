@@ -23,16 +23,16 @@ NautilusTrader's v2 Rust path provides:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.55", features = ["streaming"] }
-nautilus-common = "0.55"
-nautilus-execution = "0.55"
-nautilus-live = "0.55"
-nautilus-model = { version = "0.55", features = ["stubs"] }
-nautilus-persistence = "0.55"
-nautilus-trading = { version = "0.55", features = ["examples"] }
+nautilus-backtest = { version = "0.57", features = ["streaming"] }
+nautilus-common = "0.57"
+nautilus-execution = "0.57"
+nautilus-live = "0.57"
+nautilus-model = { version = "0.57", features = ["stubs"] }
+nautilus-persistence = "0.57"
+nautilus-trading = { version = "0.57", features = ["examples"] }
 
 # Add venue adapter for live trading
-nautilus-okx = "0.55"
+nautilus-okx = "0.57"
 
 ahash = "0.8"
 anyhow = "1"
@@ -53,7 +53,7 @@ ustr = "1"
 | `streaming` | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode` |
 | `defi` | `nautilus-model` | DeFi data types (implies `high-precision`) |
 
-MSRV: **1.94.0**
+MSRV: **1.95.0**
 
 ## Writing a Rust Actor
 

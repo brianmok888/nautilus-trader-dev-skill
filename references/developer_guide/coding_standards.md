@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-sync_date: 2026-05-16
-target: NautilusTrader v1.226.0 latest developer guide
+sync_date: 2026-05-20
+target: NautilusTrader v1.227.0 latest developer guide
 confidence: high
 ---
 
@@ -21,6 +21,33 @@ The following applies to **all** source files (Rust, Python, Cython, shell, etc.
 - Lines should generally stay below **100 characters**; wrap thoughtfully when necessary.
 - Prefer American English spelling (`color`, `serialize`, `behavior`).
 
+### Shell script portability
+
+Shell scripts in this repository use **bash** (not POSIX sh) and must be portable across **Linux** and **macOS**. User-facing scripts (e.g., `scripts/cli/install.sh`) must also work on **Windows** via Git Bash or WSL.
+
+**Shebang**: Always use `#!/usr/bin/env bash` for portability.
+
+**Common pitfalls**: GNU and BSD utilities differ between Linux and macOS:
+
+| Command              | Linux (GNU)       | macOS (BSD)       | Portable solution                        |
+|----------------------|-------------------|-------------------|------------------------------------------|
+| `sed -i`             | `sed -i 's/…'`    | `sed -i '' 's/…'` | Use backup extension: `sed -i.bak 's/…'` |
+| `stat` (file size)   | `stat -c%s file`  | `stat -f%z file`  | Detect with `stat --version`             |
+| `sha256sum`          | `sha256sum file`  | N/A               | Use `shasum -a 256` or detect            |
+| `readlink -f`        | Works             | N/A               | Avoid, or use `realpath`                 |
+| `grep -P` (PCRE)     | Works             | N/A               | Use `-E` (extended regex) instead        |
+| `date` (nanoseconds) | `date +%N`        | N/A               | Use `$RANDOM` for cache‑busting          |
+
+**Bash version**: macOS ships with bash 3.2; avoid bash 4+ features in user-facing scripts:
+
+| Feature                           | Bash version | Alternative                      |
+|-----------------------------------|--------------|----------------------------------|
+| Associative arrays (`declare -A`) | 4.0+         | Use files or simple arrays       |
+| `readarray` / `mapfile`           | 4.0+         | Use `while read` loops           |
+| `${var,,}` / `${var^^}` (case)    | 4.0+         | Use `tr '[:upper:]' '[:lower:]'` |
+
+**CI scripts** (`scripts/ci/*`) run on Linux runners, so bash 4+ and GNU tools are acceptable there.
+
 ### Comment conventions
 
 1. Generally leave **one blank line above** every comment block or docstring so it is visually separated from code.
@@ -31,12 +58,11 @@ The following applies to **all** source files (Rust, Python, Cython, shell, etc.
 6. Keep comments concise; favor clarity and only explain the non-obvious – *less is more*.
 7. Avoid emoji symbols in text.
 
-### Doc comment / docstring mood
+### Doc comment mood
 
-- **Python** docstrings should be written in the **imperative mood** – e.g. *"Return a cached client."*
-- **Rust** doc comments should be written in the **indicative mood** – e.g. *"Returns a cached client."*
+**Rust** doc comments should be written in the **indicative mood** – e.g. *"Returns a cached client."*
 
-These conventions align with the prevailing styles of each language ecosystem and make generated
+This convention aligns with the prevailing style of the Rust ecosystem and makes generated
 documentation feel natural to end-users.
 
 ### Terminology and phrasing
@@ -47,13 +73,25 @@ documentation feel natural to end-users.
 
 2. **Spelling**: Use "hardcoded" (single word) rather than "hard-coded" or "hard coded" – this is the more modern and accepted spelling.
 
+3. **Error variable naming**: Use single-letter `e` for caught errors/exceptions:
+   - Rust: `Err(e)` not `Err(err)` or `Err(error)`, and `|e|` not `|err|` in closures
+   - Python: `except SomeError as e:` not `as err:` or `as error:`
+
+### Naming conventions
+
+1. **Internal fields**: Abbreviations are acceptable for private/internal fields (e.g., `_price_prec`, `_size_prec`) to keep hot-path code concise.
+
+2. **User-facing API**: Use full, descriptive names for public properties, function parameters, return types, and metric names/labels (e.g., `price_precision`, `size_precision`). This prevents abbreviated terminology from leaking into dashboards or alerts.
+
+3. **Error messages and logs**: Use full words for clarity (e.g., "price precision" not "price prec"). The user should never see abbreviated terminology.
+
 ### Formatting
 
-1. For longer lines of code, and when passing more than a couple of arguments, you should take a new line which aligns at the next logical indent (rather than attempting a hanging 'vanity' alignment off an opening parenthesis). This practice conserves space to the right, ensures important code is more central in view, and is also robust to function/method name changes.
+1. For longer lines of code, and when passing more than a couple of arguments, you should take a new line which aligns at the next logical indent (rather than attempting a hanging 'vanity' alignment off an opening parenthesis). This practice conserves space to the right, keeps important code more central in view, and survives function/method name changes.
 
 2. The closing parenthesis should be located on a new line, aligned at the logical indent.
 
-3. Also ensure multiple hanging parameters or arguments end with a trailing comma:
+3. Multiple hanging parameters or arguments should end with a trailing comma:
 
 ```python
 long_method_with_many_params(
@@ -63,65 +101,7 @@ long_method_with_many_params(
 )
 ```
 
-### PEP-8
-
-The codebase generally follows the PEP-8 style guide. Even though C typing is taken advantage of in the Cython parts of the codebase, we still aim to be idiomatic of Python where possible.
-One notable departure is that Python truthiness is not always taken advantage of to check if an argument is `None` for everything other than collections.
-
-There are two reasons for this;
-
-1. Cython can generate more efficient C code from `is None` and `is not None`, rather than entering the Python runtime to check the `PyObject` truthiness.
-
-2. As per the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) - it’s discouraged to use truthiness to check if an argument is/is not `None`, when there is a chance an unexpected object could be passed into the function or method which will yield an unexpected truthiness evaluation (which could result in a logical error type bug).
-
-*“Always use if foo is None: (or is not None) to check for a None value. E.g., when testing whether a variable or argument that defaults to None was set to some other value. The other value might be a value that’s false in a boolean context!”*
-
-There are still areas that aren’t performance-critical where truthiness checks for `None` (`if foo is None:` vs `if not foo:`) will be acceptable for clarity.
-
-:::note
-Use truthiness to check for empty collections (e.g., `if not my_list:`) rather than comparing explicitly to `None` or empty.
-:::
-
-We welcome all feedback on where the codebase departs from PEP-8 for no apparent reason.
-
-## Python style guide
-
-### Type hints
-
-All function and method signatures *must* include comprehensive type annotations:
-
-```python
-def __init__(self, config: EMACrossConfig) -> None:
-def on_bar(self, bar: Bar) -> None:
-def on_save(self) -> dict[str, bytes]:
-def on_load(self, state: dict[str, bytes]) -> None:
-```
-
-**Generic Types**: Use `TypeVar` for reusable components
-
-```python
-T = TypeVar("T")
-class ThrottledEnqueuer(Generic[T]):
-```
-
-### Docstrings
-
-The [NumPy docstring spec](https://numpydoc.readthedocs.io/en/latest/format.html) is used throughout the codebase.
-This needs to be adhered to consistently to ensure the docs build correctly.
-
-**Test method naming**: Descriptive names explaining the scenario:
-
-```python
-def test_currency_with_negative_precision_raises_overflow_error(self):
-def test_sma_with_no_inputs_returns_zero_count(self):
-def test_sma_with_single_input_returns_expected_value(self):
-```
-
-### Ruff
-
-[ruff](https://astral.sh/ruff) is utilized to lint the codebase. Ruff rules can be found in the top-level `pyproject.toml`, with ignore justifications typically commented.
-
-### Commit messages
+## Commit messages
 
 Here are some guidelines for the style of your commit messages:
 
@@ -135,7 +115,7 @@ Here are some guidelines for the style of your commit messages:
 
 5. Optional: Provide any hyperlinks which are informative.
 
-#### Gitlint (optional)
+### Gitlint (optional)
 
 Gitlint is available to help enforce commit message standards automatically. It checks that commit messages follow the guidelines above (character limits, formatting, etc.). This is **opt-in** and not enforced in CI.
 
@@ -165,5 +145,5 @@ Configuration is in `.gitlint` at the repository root:
 - **79-character body width**: Aligns with Python's PEP 8 conventions and the traditional limit for git tooling.
 
 :::note
-Gitlint may be enforced in CI in the future, so adopting these practices early helps ensure a smooth transition.
+Gitlint may be enforced in CI in the future, so adopting these practices early eases the transition.
 :::

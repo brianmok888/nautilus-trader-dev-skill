@@ -30,6 +30,11 @@ NautilusTrader **domain model** — instruments, identifiers, value types, enums
 
 ## Python Usage
 
+### v1.227.0 model deltas
+
+- `InstrumentId::parse_parent_components` and `InstrumentClass` parent suffix conversion helpers are exposed via PyO3.
+- Rust cache model accessors may return scoped wrapper newtypes (`OrderRef`, `AccountRef`, `PositionRef`) rather than raw references; request owned snapshots when values cross async/event boundaries.
+
 ### Identifiers
 
 ```python

@@ -130,6 +130,14 @@ class RegimeActor(Actor):
 
 ## Templates
 
+> **New in v1.227.0 (2026-05-18)** — Current baseline changes for new code:
+> - Use Rust crate version `0.57` in standalone examples.
+> - Use adapter `environment` enums; Binance/Kraken live enum names are `Live` / `LIVE`.
+> - Use `time_bars_origin_offset`, not `time_bars_origins`.
+> - Use `DataActor.subscribe_signal(..., priority=None)` when ordered signal dispatch matters.
+> - Use `TryFrom<OrderInitialized>` / `try_into` for order initialization validation.
+> - Use the builder-style `OrderFactory::bracket()...call()` Rust API.
+
 > **New in v1.224.0 (2026-03-03)** — Breaking changes and new features:
 > - **InstrumentProvider simplification**: `load_ids_async()` and `load_async()` now have default implementations that Only `load_all_async()` is required in adapter subclasses.
 > - **`fill_limit_inside_spread`**: Renamed from `fill_limit_at_touch`. `BestPriceFillModel` now fills inside bid-ask spread by default.
@@ -196,7 +204,7 @@ class RegimeActor(Actor):
 | `post_market_exit` | After market exit completes |
 
 During market exit, non-reduce-only orders are auto-denied; order lists with any non-reduce-only order denied entirely.
->
+
 > **New in v1.224.0 (2026-03-03)** — Breaking changes and new features:
 > - **InstrumentProvider simplification**: `load_ids_async()` and `load_async()` now have default implementations that delegate to `load_all_async()`. Only `load_all_async()` is required in adapter subclasses.
 > - **`fill_limit_inside_spread`**: Renamed from `fill_limit_at_touch`. `BestPriceFillModel` now fills inside bid-ask spread by default.

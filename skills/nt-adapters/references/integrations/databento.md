@@ -1,63 +1,69 @@
 # Databento
 
-NautilusTrader provides an adapter for integrating with the Databento API and [Databento Binary Encoding (DBN)](https://databento.com/docs/standards-and-conventions/databento-binary-encoding) format data.
-As Databento is purely a market data provider, there is no execution client provided - although a sandbox environment with simulated execution could still be set up.
-It's also possible to match Databento data with Interactive Brokers execution, or to calculate traditional asset class signals for crypto trading.
+NautilusTrader includes an adapter for the [Databento](https://databento.com/) API
+and for data in
+[Databento Binary Encoding (DBN)](https://databento.com/docs/standards-and-conventions/databento-binary-encoding).
+Databento is a market data provider only. The adapter does not include an execution client,
+but you can pair it with a sandbox for simulated execution.
+You can also match Databento data with Interactive Brokers execution,
+or calculate traditional asset class signals for crypto trading.
 
-The capabilities of this adapter include:
+The adapter supports:
 
-- Loading historical data from DBN files and decoding into Nautilus objects for backtesting or writing to the data catalog.
-- Requesting historical data which is decoded to Nautilus objects to support live trading and backtesting.
-- Subscribing to real-time data feeds which are decoded to Nautilus objects to support live trading and sandbox environments.
+- Loading historical data from DBN files and decoding to Nautilus objects for backtesting or catalog storage.
+- Requesting historical data decoded to Nautilus objects for live trading and backtesting.
+- Subscribing to real-time data feeds decoded to Nautilus objects for live trading and sandbox environments.
 
 :::tip
-[Databento](https://databento.com/signup) currently offers 125 USD in free data credits (historical data only) for new account sign-ups.
+[Databento](https://databento.com/signup) offers $125 in free data credits for
+new sign-ups. Databento currently allows those credits for historical data or
+toward the first month of a subscription plan.
 
-With careful requests, this is more than enough for testing and evaluation purposes.
-We recommend you make use of the [/metadata.get_cost](https://databento.com/docs/api-reference-historical/metadata/metadata-get-cost) endpoint.
+With careful requests, this covers testing and evaluation. Check the
+[/metadata.get_cost](https://databento.com/docs/api-reference-historical/metadata/metadata-get-cost)
+endpoint before requesting data.
 :::
 
 ## Overview
 
-The adapter implementation takes the [databento-rs](https://crates.io/crates/databento) crate as a dependency,
-which is the official Rust client library provided by Databento.
+The adapter uses the [databento-rs](https://crates.io/crates/databento) crate,
+Databento's official Rust client library.
 
 :::info
-There is **no** need for an optional extra installation of `databento`, as the core components of the
-adapter are compiled as static libraries and linked automatically during the build process.
+You do not need to install `databento` separately. The adapter compiles as a
+static library and links automatically during the build.
 :::
 
 The following adapter classes are available:
 
-- `DatabentoDataLoader`: Loads Databento Binary Encoding (DBN) data from files.
-- `DatabentoInstrumentProvider`: Integrates with the Databento API (HTTP) to provide latest or historical instrument definitions.
-- `DatabentoHistoricalClient`: Integrates with the Databento API (HTTP) for historical market data requests.
-- `DatabentoLiveClient`: Integrates with the Databento API (raw TCP) for subscribing to real-time data feeds.
-- `DatabentoDataClient`: Provides a `LiveMarketDataClient` implementation for running a trading node in real time.
+- `DatabentoDataLoader`: Loads DBN data from files.
+- `DatabentoInstrumentProvider`: Fetches latest or historical instrument definitions via the Databento HTTP API.
+- `DatabentoHistoricalClient`: Fetches historical market data via the Databento HTTP API.
+- `DatabentoLiveClient`: Subscribes to real-time data feeds via Databento's raw TCP API.
+- `DatabentoDataClient`: `LiveMarketDataClient` implementation for live trading nodes.
 
 :::info
-As with the other integration adapters, most users will define a configuration for a live trading node (covered below),
-and won't need to necessarily work with these lower level components directly.
+Most users configure a live trading node (covered below) and do not work with
+these components directly.
 :::
 
 ## Examples
 
-You can find live example scripts [here](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/databento/).
+See the [live examples](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/databento/).
 
 ## Databento documentation
 
-Databento provides extensive documentation for new users which can be found in the [Databento new users guide](https://databento.com/docs/quickstart/new-user-guides).
-We recommend also referring to the Databento documentation in conjunction with this NautilusTrader integration guide.
+See the [Databento new users guide](https://databento.com/docs/quickstart/new-user-guides).
+Refer to it alongside this integration guide.
 
 ## Databento Binary Encoding (DBN)
 
-Databento Binary Encoding (DBN) is an extremely fast message encoding and storage format for normalized market data.
-The [DBN specification](https://databento.com/docs/standards-and-conventions/databento-binary-encoding) includes a simple, self-describing metadata header and a fixed set of struct definitions,
-which enforce a standardized way to normalize market data.
+Databento Binary Encoding (DBN) is a fast message encoding and storage format for
+normalized market data. The [DBN spec](https://databento.com/docs/standards-and-conventions/databento-binary-encoding)
+includes a self-describing metadata header and a fixed set of struct definitions
+that standardize how market data is normalized.
 
-The integration provides a decoder which can convert DBN format data to Nautilus objects.
-
-The same Rust implemented Nautilus decoder is used for:
+The adapter decodes DBN data to Nautilus objects. The same Rust decoder handles:
 
 - Loading and decoding DBN files from disk.
 - Decoding historical and live data in real time.
@@ -76,34 +82,64 @@ The following Databento schemas are supported by NautilusTrader:
 | [CMBP_1](https://databento.com/docs/schemas-and-data-formats/cmbp-1)          | `(QuoteTick, TradeTick \| None)`  | Consolidated MBP across venues. |
 | [CBBO_1S](https://databento.com/docs/schemas-and-data-formats/cbbo-1s)        | `QuoteTick`                       | Consolidated 1-second BBO.      |
 | [CBBO_1M](https://databento.com/docs/schemas-and-data-formats/cbbo-1m)        | `QuoteTick`                       | Consolidated 1-minute BBO.      |
-| [TCBBO](https://databento.com/docs/schemas-and-data-formats/tcbbo)            | `(QuoteTick, TradeTick)`          | Trade-sampled consolidated BBO. |
-| [TBBO](https://databento.com/docs/schemas-and-data-formats/tbbo)              | `(QuoteTick, TradeTick)`          | Trade-sampled best bid/offer.   |
+| [TCBBO](https://databento.com/docs/schemas-and-data-formats/tcbbo)            | `(QuoteTick, TradeTick)`          | Trade‑sampled consolidated BBO. |
+| [TBBO](https://databento.com/docs/schemas-and-data-formats/tbbo)              | `(QuoteTick, TradeTick)`          | Trade‑sampled best bid/offer.   |
 | [TRADES](https://databento.com/docs/schemas-and-data-formats/trades)          | `TradeTick`                       | Trade ticks.                    |
 | [OHLCV_1S](https://databento.com/docs/schemas-and-data-formats/ohlcv-1s)      | `Bar`                             | 1-second bars.                  |
 | [OHLCV_1M](https://databento.com/docs/schemas-and-data-formats/ohlcv-1m)      | `Bar`                             | 1-minute bars.                  |
 | [OHLCV_1H](https://databento.com/docs/schemas-and-data-formats/ohlcv-1h)      | `Bar`                             | 1-hour bars.                    |
 | [OHLCV_1D](https://databento.com/docs/schemas-and-data-formats/ohlcv-1d)      | `Bar`                             | Daily bars.                     |
-| [OHLCV_EOD](https://databento.com/docs/schemas-and-data-formats/ohlcv-eod)    | `Bar`                             | End-of-day bars.                |
 | [DEFINITION](https://databento.com/docs/schemas-and-data-formats/definition)  | `Instrument` (various types)      | Instrument definitions.         |
 | [IMBALANCE](https://databento.com/docs/schemas-and-data-formats/imbalance)    | `DatabentoImbalance`              | Auction imbalance data.         |
 | [STATISTICS](https://databento.com/docs/schemas-and-data-formats/statistics)  | `DatabentoStatistics`             | Market statistics.              |
 | [STATUS](https://databento.com/docs/schemas-and-data-formats/status)          | `InstrumentStatus`                | Market status updates.          |
 
+:::note
+Databento also documents reference schemas, including corporate actions,
+adjustment factors, and security master data. This adapter currently maps only
+the schemas listed above to Nautilus data types. The Databento DBN crate also
+exposes `ohlcv-eod`; Nautilus keeps an adapter-level override for daily bars,
+while the public Databento schema docs list `ohlcv-1d` for daily OHLCV.
+:::
+
+:::info
+Instrument definitions for unsupported `instrument_class` values (`'I'` Index,
+`'B'` Bond, `'X'` FX spot) are skipped with a warning rather than aborting the
+batch. Index-emitting publishers include CGIF.TITANIUM (110), IEX Options (108),
+and MEMX MX2 (109). Open an issue if you need Nautilus modeling for these.
+
+Statistics messages with `stat_type` values outside the modeled range (currently
+1-20) are also skipped with a warning. This includes venue-specific values
+`VenueSpecificVolume1` (10001) and `VenueSpecificPrice1` (10002), which exceed
+the `u8` Arrow column width used for persistence.
+:::
+
 ### Schema considerations
 
-- **TBBO and TCBBO**: Trade-sampled feeds that pair every trade with the BBO immediately *before* the trade's effect (TBBO per-venue, TCBBO consolidated across venues). Use when you need trades aligned with contemporaneous quotes without managing two streams.
-- **MBP-1 and CMBP-1 (L1)**: Event-level updates; emit trades only on trade events. Choose for a complete top-of-book event tape. For quote+trade alignment, prefer TBBO/TCBBO; otherwise, use TRADES.
-- **MBP-10 (L2)**: Top 10 levels with trades. Good for depth-aware strategies that don't need per-order detail; lighter than MBO with much of the structure you need including number of orders per level.
-- **MBO (L3)**: Per-order events enable queue position modeling and exact book reconstruction. Highest volume/cost; start at node initialization to ensure proper replay context.
-- **BBO_1S/BBO_1M and CBBO_1S/CBBO_1M**: Sampled top-of-book quotes at fixed intervals (1s/1m), no trades. Best for monitoring/spreads/low-cost signal generation; not suited for fine-grained microstructure.
-- **TRADES**: Trades only. Pair with MBP-1 (`include_trades=True`) or use TBBO/TCBBO if you need quote context aligned with trades.
-- **OHLCV_ (incl. OHLCV_EOD)**: Aggregated bars derived from trades. Prefer for higher-timeframe analytics/backtests; ensure bar timestamps represent close time (set `bars_timestamp_on_close=True`).
-- **Imbalance / Statistics / Status**: Venue operational data; subscribe via `subscribe_data` with a `DataType` carrying `instrument_id` metadata.
+- **TBBO and TCBBO**: Trade-sampled feeds that pair every trade with the BBO
+  immediately *before* the trade's effect. Use them for trades aligned with
+  contemporaneous quotes without managing two streams.
+- **MBP-1 and CMBP-1 (L1)**: Event-level updates that emit trades only on trade
+  events. Choose them for a complete top-of-book event tape. For quote and trade
+  alignment, prefer TBBO or TCBBO.
+- **MBP-10 (L2)**: Top 10 levels with trades. Use it for depth-aware strategies
+  that do not need full MBO data. Includes orders per level.
+- **MBO (L3)**: Per-order events for queue position modeling and exact book
+  reconstruction. Start at node initialization for proper replay context.
+- **BBO_1S/BBO_1M and CBBO_1S/CBBO_1M**: Sampled top-of-book updates at fixed
+  intervals (1s or 1m). The adapter emits `QuoteTick` only for these schemas.
+  Use them for monitoring, spreads, and low-cost signals. They are not suited
+  for microstructure work.
+- **TRADES**: Trades only. Pair with MBP-1 (`include_trades=True`) or use TBBO
+  or TCBBO for quote context with trades.
+- **OHLCV**: Aggregated bars from trades. Use them for higher-timeframe
+  analytics. Set `bars_timestamp_on_close=True` for close timestamps.
+- **Imbalance, statistics, and status**: Venue operational data. Subscribe via
+  `subscribe_data` with a `DataType` carrying `instrument_id` metadata.
 
 :::tip
-**Consolidated schemas** (CMBP_1, CBBO_1S, CBBO_1M, TCBBO) aggregate data across multiple venues,
-providing a unified view of the market. These are particularly useful for cross-venue analysis and
-when you need a complete market picture.
+Consolidated schemas (CMBP_1, CBBO_1S, CBBO_1M, TCBBO) aggregate data across
+multiple venues. Useful for cross-venue analysis.
 :::
 
 :::info
@@ -112,9 +148,9 @@ See also the Databento [Schemas and data formats](https://databento.com/docs/sch
 
 ## Schema selection for live subscriptions
 
-The following table shows how Nautilus subscription methods map to Databento schemas:
+Nautilus subscription methods map to Databento schemas as follows:
 
-| Nautilus Subscription Method    | Default Schema | Available Databento Schemas                                                  | Nautilus Data Type |
+| Nautilus subscription method    | Default schema | Available Databento schemas                                                  | Nautilus data type |
 |:--------------------------------|:---------------|:-----------------------------------------------------------------------------|:-------------------|
 | `subscribe_quote_ticks()`       | `mbp-1`        | `mbp-1`, `bbo-1s`, `bbo-1m`, `cmbp-1`, `cbbo-1s`, `cbbo-1m`, `tbbo`, `tcbbo` | `QuoteTick`        |
 | `subscribe_trade_ticks()`       | `trades`       | `trades`, `tbbo`, `tcbbo`, `mbp-1`, `cmbp-1`                                 | `TradeTick`        |
@@ -123,8 +159,8 @@ The following table shows how Nautilus subscription methods map to Databento sch
 | `subscribe_bars()`              | varies         | `ohlcv-1s`, `ohlcv-1m`, `ohlcv-1h`, `ohlcv-1d`                               | `Bar`              |
 
 :::note
-The examples below assume you're within a `Strategy` or `Actor` class context where `self` has access to subscription methods.
-Remember to import the necessary types:
+The examples below assume a `Strategy` or `Actor` context where `self` has
+subscription methods. Import the required types:
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO_CLIENT_ID
@@ -135,7 +171,7 @@ from nautilus_trader.model.identifiers import InstrumentId
 
 :::
 
-### Quote subscriptions (MBP / L1)
+### Quote subscriptions (MBP and L1)
 
 ```python
 # Default MBP-1 quotes (may include trades)
@@ -148,7 +184,7 @@ self.subscribe_quote_ticks(
     client_id=DATABENTO_CLIENT_ID,
 )
 
-# 1-second BBO snapshots (quotes only, no trades)
+# 1-second BBO snapshots (adapter emits QuoteTick only)
 self.subscribe_quote_ticks(
     instrument_id=instrument_id,
     params={"schema": "bbo-1s"},
@@ -162,10 +198,10 @@ self.subscribe_quote_ticks(
     client_id=DATABENTO_CLIENT_ID,
 )
 
-# Trade-sampled BBO (includes both quotes AND trades)
+# Trade-sampled BBO (includes quotes and trades)
 self.subscribe_quote_ticks(
     instrument_id=instrument_id,
-    params={"schema": "tbbo"},  # Will receive both QuoteTick and TradeTick onto the message bus
+    params={"schema": "tbbo"},  # Receives QuoteTick and TradeTick on the message bus
     client_id=DATABENTO_CLIENT_ID,
 )
 ```
@@ -191,7 +227,7 @@ self.subscribe_trade_ticks(
 )
 ```
 
-### Order book depth subscriptions (MBP / L2)
+### Order book depth subscriptions (MBP and L2)
 
 ```python
 # Subscribe to top 10 levels of market depth
@@ -201,10 +237,10 @@ self.subscribe_order_book_depth(
 )
 
 # The depth parameter must be 10 for Databento
-# This will receive OrderBookDepth10 updates
+# Receives OrderBookDepth10 updates
 ```
 
-### Order book deltas subscriptions (MBO / L3)
+### Order book deltas subscriptions (MBO and L3)
 
 ```python
 # Subscribe to full order book updates (market by order)
@@ -213,8 +249,7 @@ self.subscribe_order_book_deltas(
     book_type=BookType.L3_MBO  # Uses MBO schema
 )
 
-# Note: MBO subscriptions must be made at node startup for Databento
-# to ensure proper replay from session start
+# Make MBO subscriptions at node startup so Databento can replay from session start
 ```
 
 ### Bar subscriptions
@@ -240,16 +275,16 @@ self.subscribe_bars(
     bar_type=BarType.from_str(f"{instrument_id}-1-DAY-LAST-EXTERNAL")
 )
 
-# Subscribe to daily bars with end-of-day schema (only valid for DAY aggregation)
+# Subscribe to daily bars with the adapter's end-of-day override
 self.subscribe_bars(
     bar_type=BarType.from_str(f"{instrument_id}-1-DAY-LAST-EXTERNAL"),
-    params={"schema": "ohlcv-eod"},  # Override to use end-of-day bars
+    params={"schema": "ohlcv-eod"},
 )
 ```
 
 ### Custom data type subscriptions
 
-For specialized Databento data types like imbalance and statistics, use the generic `subscribe_data` method:
+Imbalance, statistics, and status data require the generic `subscribe_data` method:
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO_CLIENT_ID
@@ -279,21 +314,22 @@ self.subscribe_data(
 
 ## Instrument IDs and symbology
 
-Databento market data includes an `instrument_id` field which is an integer assigned
-by either the original source venue, or internally by Databento during normalization.
+Databento market data includes an `instrument_id` field: a numeric ID assigned
+by the publisher in most cases, or synthesized by Databento when the publisher
+does not provide one. Databento only guarantees this ID is unique within a given
+day. This differs from the Nautilus `InstrumentId`, a string of symbol + venue
+separated by a period: `"{symbol}.{venue}"`.
 
-It's important to realize that this is different to the Nautilus `InstrumentId`
-which is a string made up of a symbol + venue with a period separator i.e. `"{symbol}.{venue}"`.
+The decoder maps the Databento `raw_symbol` to the Nautilus `symbol` and uses an
+[ISO 10383 market identifier code](https://www.iso20022.org/market-identifier-codes)
+from the definition message for the Nautilus `venue`.
 
-The Nautilus decoder will use the Databento `raw_symbol` for the Nautilus `symbol` and an [ISO 10383 MIC](https://www.iso20022.org/market-identifier-codes) (Market Identifier Code)
-from the Databento instrument definition message for the Nautilus `venue`.
+Databento identifies datasets with a *dataset ID*, separate from venue identifiers.
+See [Databento dataset naming conventions](https://databento.com/docs/api-reference-historical/basics/datasets)
+for details.
 
-Databento datasets are identified with a *dataset ID* which is not the same
-as a venue identifier. You can read more about Databento dataset naming conventions [here](https://databento.com/docs/api-reference-historical/basics/datasets).
-
-Of particular note is for CME Globex MDP 3.0 data (`GLBX.MDP3` dataset ID), the following
-exchanges are all grouped under the `GLBX` venue. These mappings can be determined from the
-instruments `exchange` field:
+For CME Globex MDP 3.0 (`GLBX.MDP3`), these exchanges group under the `GLBX` venue.
+The instrument's `exchange` field determines the mapping:
 
 - `CBCM`: XCME-XCBT inter-exchange spread
 - `NYUM`: XNYM-DUMX inter-exchange spread
@@ -304,29 +340,31 @@ instruments `exchange` field:
 - `XNYM`: New York Mercantile Exchange (NYMEX)
 
 :::info
-Other venue MICs can be found in the `venue` field of responses from the [metadata.list_publishers](https://databento.com/docs/api-reference-historical/metadata/metadata-list-publishers) endpoint.
+Other venue MICs are in the `venue` field of responses from
+the [metadata.list_publishers](https://databento.com/docs/api-reference-historical/metadata/metadata-list-publishers) endpoint.
 :::
 
 ## Timestamps
 
-Databento data includes various timestamp fields including (but not limited to):
+Databento data includes these timestamp fields:
 
-- `ts_event`: The matching-engine-received timestamp expressed as the number of nanoseconds since the UNIX epoch.
-- `ts_in_delta`: The matching-engine-sending timestamp expressed as the number of nanoseconds before `ts_recv`.
-- `ts_recv`: The capture-server-received timestamp expressed as the number of nanoseconds since the UNIX epoch.
-- `ts_out`: The Databento sending timestamp.
+- `ts_event`: Matching-engine-received timestamp in nanoseconds since the UNIX epoch.
+- `ts_in_delta`: Matching-engine-sending timestamp in nanoseconds before `ts_recv`.
+- `ts_recv`: Capture-server-received timestamp in nanoseconds since the UNIX epoch.
+- `ts_out`: Databento sending timestamp (live only).
 
-Nautilus data includes at *least* two timestamps (required by the `Data` contract):
+Nautilus data requires at least two timestamps (per the `Data` contract):
 
 - `ts_event`: UNIX timestamp (nanoseconds) when the data event occurred.
 - `ts_init`: UNIX timestamp (nanoseconds) when the data instance was created.
 
-When decoding and normalizing Databento to Nautilus we generally assign the Databento `ts_recv` value to the Nautilus
-`ts_event` field, as this timestamp is much more reliable and consistent, and is guaranteed to be monotonically increasing per instrument.
-The exception to this are the `DatabentoImbalance` and `DatabentoStatistics` data types, which have fields for all timestamps as these types are defined specifically for the adapter.
+The decoder maps Databento `ts_recv` to Nautilus `ts_event`. This timestamp is
+more reliable and monotonically increases per Databento symbol. The exceptions are
+`DatabentoImbalance` and `DatabentoStatistics`, which carry all timestamp fields
+since they are adapter-specific types.
 
 :::info
-See the following Databento docs for further information:
+See these Databento docs for details:
 
 - [Databento standards and conventions - timestamps](https://databento.com/docs/standards-and-conventions/common-fields-enums-types#timestamps)
 - [Databento timestamping guide](https://databento.com/docs/architecture/timestamping-guide)
@@ -335,8 +373,7 @@ See the following Databento docs for further information:
 
 ## Data types
 
-The following section discusses Databento schema -> Nautilus data type equivalence
-and considerations.
+This section maps Databento schemas to Nautilus data types.
 
 :::info
 See Databento [schemas and data formats](https://databento.com/docs/schemas-and-data-formats).
@@ -344,74 +381,120 @@ See Databento [schemas and data formats](https://databento.com/docs/schemas-and-
 
 ### Instrument definitions
 
-Databento provides a single schema to cover all instrument classes, these are
-decoded to the appropriate Nautilus `Instrument` types.
+Databento uses a single schema for all instrument classes. The decoder maps each
+to the appropriate Nautilus `Instrument` type.
 
-The following Databento instrument classes are supported by NautilusTrader:
+| Databento instrument class | Code | Nautilus instrument type |
+|----------------------------|------|--------------------------|
+| Stock                      | `K`  | `Equity`                 |
+| Future                     | `F`  | `FuturesContract`        |
+| Call                       | `C`  | `OptionContract`         |
+| Put                        | `P`  | `OptionContract`         |
+| Future spread              | `S`  | `FuturesSpread`          |
+| Option spread              | `T`  | `OptionSpread`           |
+| Mixed spread               | `M`  | `OptionSpread`           |
+| FX spot                    | `X`  | `CurrencyPair`           |
+| Bond                       | `B`  | Not yet available        |
 
-| Databento instrument class | Code |  Nautilus instrument type    |
-|----------------------------|------|------------------------------|
-| Stock                      | `K`  | `Equity`                     |
-| Future                     | `F`  | `FuturesContract`            |
-| Call                       | `C`  | `OptionContract`             |
-| Put                        | `P`  | `OptionContract`             |
-| Future spread              | `S`  | `FuturesSpread`              |
-| Option spread              | `T`  | `OptionSpread`               |
-| Mixed spread               | `M`  | `OptionSpread`               |
-| FX spot                    | `X`  | `CurrencyPair`               |
-| Bond                       | `B`  | Not yet available            |
+### Price precision
+
+Databento raw prices are fixed-point integers scaled by 1e-9. The adapter derives
+price precision from the instrument's tick size in the definition message.
+
+For live feeds, the feed handler maintains a per-instrument precision map populated
+from `InstrumentDefMsg` records as they arrive. Market data handlers resolve
+precision in this order:
+
+1. `InstrumentDefMsg` metadata for the Databento record `instrument_id`.
+2. Cached instrument precision passed by the Python subscription path.
+3. Explicit `price_precisions` passed to the direct live client.
+4. The USD default precision of 2.
+
+The fallback maps are keyed by Databento record `instrument_id` after symbol
+mapping, so parent, continuous, and other non-raw symbology requests can still
+use cached or explicit precision until definition metadata arrives.
+
+**Instrument definitions must arrive before market data** for correct precision on
+instruments with non-standard tick sizes (e.g., treasury futures with fractional
+ticks like 1/256). Subscribe to `DEFINITION` schema for your instruments before
+or alongside market data subscriptions.
+
+For historical requests and file-based loading, precision is resolved per
+record in this order:
+
+1. An explicit `price_precision` argument on the call.
+2. A per-symbol cache populated by loading definitions (`load_instruments`
+   on the file loader, `get_range_instruments` on the historical client) or
+   by an explicit `set_price_precision(symbol, precision)` call.
+
+The Python data client seeds the historical-client cache from the instrument
+provider before every request, so already-loaded instruments need no extra
+configuration. When precision cannot be resolved, loading fails with an
+explicit error rather than silently defaulting to USD precision.
+
+:::tip
+The Python adapter automatically subscribes to instrument definitions before
+market data and passes cached instrument precision as a fallback, so the
+precision map populates without extra configuration. For direct Rust client
+usage, subscribe to `DEFINITION` schema before market data or pass explicit
+precision fallbacks.
+:::
 
 ### MBO (market by order)
 
-This schema is the highest granularity data offered by Databento, and represents
-full order book depth. Some messages also provide trade information, and so when
-decoding MBO messages Nautilus will produce an `OrderBookDelta` and optionally a
-`TradeTick`.
+MBO is the highest granularity data from Databento, representing full order book
+depth. Some messages include trade data. The decoder produces an `OrderBookDelta`
+and optionally a `TradeTick`.
 
-The Nautilus live data client will buffer MBO messages until an `F_LAST` flag
-is seen. A discrete `OrderBookDeltas` container object will then be passed to the
-registered handler.
+The live client buffers MBO messages until it sees an `F_LAST` flag, then passes
+an `OrderBookDeltas` container to the handler.
 
-Order book snapshots are also buffered into a discrete `OrderBookDeltas` container
-object, which occurs during the replay startup sequence.
+The client also buffers order book snapshots into `OrderBookDeltas` during the
+replay startup sequence.
 
 ### MBP-1 (market by price, top-of-book)
 
-This schema represents the top-of-book only (quotes *and* trades). Like with MBO messages, some
-messages carry trade information, and so when decoding MBP-1 messages Nautilus
-will produce a `QuoteTick` and *also* a `TradeTick` if the message is a trade.
+MBP-1 represents top-of-book quotes and trades. Some messages carry trade data.
+The decoder produces a `QuoteTick` and also a `TradeTick` when the message is
+a trade.
 
 ### TBBO and TCBBO (top-of-book with trades)
 
-The TBBO (Top Book with Trades) and TCBBO (Top Consolidated Book with Trades) schemas provide
-both quote and trade data in each message. When subscribing to quotes using these schemas,
-you'll automatically receive both `QuoteTick` and `TradeTick` data, making them more efficient
-than subscribing to quotes and trades separately. TCBBO provides consolidated data across venues.
+TBBO and TCBBO provide both quote and trade data in each message. Both schemas
+emit `QuoteTick` and `TradeTick` per message, more efficient than separate quote
+and trade subscriptions. TCBBO provides consolidated data across venues.
+
+#### Trade ID derivation (CMBP-1 and TCBBO)
+
+The CMBP-1 and TCBBO schemas do not publish a native trade identifier. The
+decoder derives a deterministic `TradeId` by FNV-1a hashing the instrument ID,
+`ts_event`, `ts_recv`, price, size, and aggressor side of the trade. The same
+venue event yields the same trade ID across replays, so downstream dedup stays
+intact. Two logically distinct trades with identical fields collide; this
+matches the venue's inability to distinguish them.
 
 ### OHLCV (bar aggregates)
 
-The Databento bar aggregation messages are timestamped at the **open** of the bar interval.
-The Nautilus decoder will normalize the `ts_event` timestamps to the **close** of the bar
-(original `ts_event` + bar interval).
+Databento timestamps bar messages at the **open** of the interval. The decoder
+normalizes `ts_event` to the bar **close** (original `ts_event` + interval).
 
-### Imbalance & Statistics
+### Imbalance and statistics
 
-The Databento `imbalance` and `statistics` schemas cannot be represented as a built-in Nautilus data types,
-and so they have specific types defined in Rust `DatabentoImbalance` and `DatabentoStatistics`.
-Python bindings are provided via PyO3 (Rust) so the types behave a little differently to built-in Nautilus
-data types, where all attributes are PyO3 provided objects and not directly compatible
-with certain methods which may expect a Cython provided type. There are PyO3 -> legacy Cython
-object conversion methods available, which can be found in the API reference.
+The `imbalance` and `statistics` schemas have no built-in Nautilus equivalents.
+The adapter defines `DatabentoImbalance` and `DatabentoStatistics` in Rust.
 
-Here is a general pattern for converting a PyO3 `Price` to a Cython `Price`:
+PyO3 bindings expose these types in Python. Their attributes are PyO3 objects
+and may not work with methods expecting Cython types. See the API reference for
+PyO3 to Cython conversion methods.
+
+Convert a PyO3 `Price` to a Cython `Price`:
 
 ```python
 price = Price.from_raw(pyo3_price.raw, pyo3_price.precision)
 ```
 
-Additionally requesting for and subscribing to these data types requires the use of the
-lower level generic methods for custom data types. The following example subscribes to the `imbalance`
-schema for the `AAPL.XNAS` instrument (Apple Inc trading on the Nasdaq exchange):
+Requesting and subscribing to these types requires the generic `subscribe_data`
+method. Subscribe to `imbalance` for `AAPL.XNAS`:
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO_CLIENT_ID
@@ -425,7 +508,8 @@ self.subscribe_data(
 )
 ```
 
-Or requesting the previous days `statistics` schema for the `ES.FUT` parent symbol (all active E-mini S&P 500 futures contracts on the CME Globex exchange):
+Request the previous day's `statistics` for the `ES.FUT` parent symbol
+(all active E-mini S&P 500 futures):
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO_CLIENT_ID
@@ -443,47 +527,106 @@ self.request_data(
 )
 ```
 
+### Catalog persistence
+
+Both types support Arrow serialization for catalog storage. The Arrow serializers
+register automatically when you import the adapter package.
+
+#### Writing to the catalog
+
+```python
+from nautilus_trader.adapters.databento import DatabentoDataLoader
+from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.persistence.catalog import ParquetDataCatalog
+
+catalog = ParquetDataCatalog.from_env()
+loader = DatabentoDataLoader()
+
+imbalances = loader.from_dbn_file(
+    path="aapl-imbalance.dbn.zst",
+    instrument_id=InstrumentId.from_str("AAPL.XNAS"),
+    as_legacy_cython=False,  # Required for Databento-specific types
+)
+
+catalog.write_data(imbalances)
+```
+
+#### Reading from the catalog
+
+```python
+from nautilus_trader.adapters.databento import DatabentoImbalance
+
+results = catalog.query(DatabentoImbalance, identifiers=["AAPL.XNAS"])
+
+for imbalance in results:
+    print(imbalance.ref_price)  # DatabentoImbalance fields
+```
+
+:::warning
+Catalog persistence supports writing and querying these types, but streaming
+them through `BacktestNode` or `BacktestEngine` is not yet supported. For
+backtesting with imbalance or statistics data, query the catalog directly and
+process the results in your strategy or analysis code.
+:::
+
+#### Encoding and decoding in Rust
+
+The `nautilus_databento::arrow` module provides Arrow record batch encoding and
+decoding. Enable the `arrow` feature flag.
+
+```rust
+use nautilus_databento::arrow::imbalance::{
+    decode_imbalance_batch,
+    imbalance_to_arrow_record_batch,
+};
+
+let batch = imbalance_to_arrow_record_batch(imbalances)?;
+
+let metadata = batch.schema().metadata().clone();
+let decoded = decode_imbalance_batch(&metadata, batch)?;
+```
+
+The `statistics` module follows the same pattern with
+`decode_statistics_batch` and `statistics_to_arrow_record_batch`.
+
 ## Performance considerations
 
-When backtesting with Databento DBN data, there are two options:
+Two options for backtesting with DBN data:
 
-- Store the data in DBN (`.dbn.zst`) format files and decode to Nautilus objects on every run.
-- Convert the DBN files to Nautilus objects and then write to the data catalog once (stored as Nautilus Parquet format on disk).
+- Store data as DBN (`.dbn.zst`) files and decode to Nautilus objects every run.
+- Convert DBN files to Nautilus objects once and write to the data catalog (Nautilus Parquet format).
 
-Whilst the DBN -> Nautilus decoder is implemented in Rust and has been optimized,
-the best performance for backtesting will be achieved by writing the Nautilus
-objects to the data catalog, which performs the decoding step once.
+The DBN decoder is optimized Rust, but writing to the catalog once gives the
+best backtest performance.
 
-[DataFusion](https://arrow.apache.org/datafusion/) provides a query engine backend to efficiently load and stream
-the Nautilus Parquet data from disk, which achieves extremely high throughput (at least an order of magnitude faster
-than converting DBN -> Nautilus on the fly for every backtest run).
+[DataFusion](https://arrow.apache.org/datafusion/) streams Nautilus Parquet data
+from disk at high throughput, at least an order of magnitude faster than
+decoding DBN per run.
 
 :::note
-Performance benchmarks are currently under development.
+Performance benchmarks are under development.
 :::
 
 ## Loading DBN data
 
-You can load DBN files and convert the records to Nautilus objects using the
-`DatabentoDataLoader` class. There are two main purposes for doing so:
+The `DatabentoDataLoader` class loads DBN files and converts records to Nautilus
+objects. Two primary uses:
 
-- Pass the converted data to `BacktestEngine.add_data` directly for backtesting.
-- Pass the converted data to `ParquetDataCatalog.write_data` for later streaming use with a `BacktestNode`.
+- Pass data to `BacktestEngine.add_data` for backtesting.
+- Write data to `ParquetDataCatalog` for streaming with a `BacktestNode`.
 
 ### DBN data to a BacktestEngine
 
-This code snippet demonstrates how to load DBN data and pass to a `BacktestEngine`.
-Since the `BacktestEngine` needs an instrument added, we'll use a test instrument
-provided by the `TestInstrumentProvider` (you could also pass an instrument object
-which was parsed from a DBN file too).
-The data is a month of TSLA (Tesla Inc) trades on the Nasdaq exchange:
+Load DBN data and pass to a `BacktestEngine`. The engine requires an instrument.
+This example uses `TestInstrumentProvider` (an instrument parsed from a DBN
+file also works). The data covers one month of TSLA trades on Nasdaq:
 
 ```python
 # Add instrument
 TSLA_NASDAQ = TestInstrumentProvider.equity(symbol="TSLA")
 engine.add_instrument(TSLA_NASDAQ)
 
-# Decode data to legacy Cython objects
+# Decode data to Cython objects
 loader = DatabentoDataLoader()
 trades = loader.from_dbn_file(
     path=TEST_DATA_DIR / "databento" / "temp" / "tsla-xnas-20240107-20240206.trades.dbn.zst",
@@ -496,16 +639,14 @@ engine.add_data(trades)
 
 ### DBN data to a ParquetDataCatalog
 
-This code snippet demonstrates how to load DBN data and write to a `ParquetDataCatalog`.
-We pass a value of false for the `as_legacy_cython` flag, which will ensure the
-DBN records are decoded as PyO3 (Rust) objects. It's worth noting that legacy Cython
-objects can also be passed to `write_data`, but these need to be converted back to
-pyo3 objects under the hood (so passing PyO3 objects is an optimization).
+Load DBN data and write to a `ParquetDataCatalog`. Set `as_legacy_cython=False`
+to decode as PyO3 objects.
 
 ### Loading instruments
 
-**Important**: When loading market data (MBO, trades, quotes, bars, etc.) into a catalog, you must first load the corresponding instrument definitions from DEFINITION schema files.
-The catalog needs instruments to be present before it can store market data. Market data files (MBO, TRADES, etc.) do not contain instrument definitions.
+**Important**: Load instrument definitions from DEFINITION schema files before
+loading market data into a catalog. The catalog requires instruments before it
+can store market data. Market data files do not contain instrument definitions.
 
 ```python
 # Initialize the catalog interface
@@ -514,8 +655,8 @@ catalog = ParquetDataCatalog.from_env()
 
 loader = DatabentoDataLoader()
 
-# Step 1: Load instrument definitions FIRST
-# You must obtain DEFINITION schema files from Databento for your instruments
+# Step 1: Load instrument definitions first
+# Obtain DEFINITION schema files from Databento for your instruments
 instruments = loader.from_dbn_file(
     path=TEST_DATA_DIR / "databento" / "temp" / "tsla-xnas-definition.dbn.zst",
     as_legacy_cython=False,  # Use PyO3 for optimal performance
@@ -527,7 +668,7 @@ catalog.write_data(instruments)
 # Step 2: Now load and write market data
 instrument_id = InstrumentId.from_str("TSLA.XNAS")
 
-# Decode trades to pyo3 objects
+# Decode trades to PyO3 objects
 trades = loader.from_dbn_file(
     path=TEST_DATA_DIR / "databento" / "temp" / "tsla-xnas-20240107-20240206.trades.dbn.zst",
     instrument_id=instrument_id,
@@ -540,7 +681,7 @@ catalog.write_data(trades)
 
 #### Loading multiple data types for backtesting
 
-When preparing a catalog for backtesting with multiple data types (e.g., MBO order book data), always load instruments first:
+Always load instruments before market data:
 
 ```python
 from nautilus_trader.adapters.databento.loaders import DatabentoDataLoader
@@ -577,16 +718,19 @@ trades = loader.from_dbn_file(
 catalog.write_data(trades)
 
 # Verify instruments are in the catalog
-print(catalog.instruments())  # Should show your loaded instruments
+print(catalog.instruments())  # Shows your loaded instruments
 ```
 
 :::tip
-You can verify your instruments loaded correctly by calling `catalog.instruments()` which returns a list of all instruments in the catalog. If this returns an empty list, you need to load DEFINITION files first.
+Call `catalog.instruments()` to verify. An empty list means you need to load
+DEFINITION files first.
 :::
 
 :::info
-To obtain DEFINITION schema files from Databento, use the Databento API or CLI to download instrument definitions for your symbols and date ranges.
-See the [Databento documentation](https://databento.com/docs/api-reference-historical/timeseries/timeseries-get-range) for details on requesting definition data.
+Download DEFINITION schema files through the Databento API or CLI for your
+symbols and date ranges. See the
+[Databento documentation](https://databento.com/docs/api-reference-historical/timeseries/timeseries-get-range)
+for details.
 :::
 
 :::info
@@ -595,15 +739,20 @@ See also the [Data concepts guide](../concepts/data.md).
 
 ### Historical loader options
 
-The `from_dbn_file` method supports several important parameters:
+Parameters for `from_dbn_file`:
 
-- `instrument_id`: Passing this improves decode speed by skipping symbology lookup.
-- `price_precision`: Override the default price precision for the instrument.
-- `include_trades`: For MBP-1/CMBP-1 schemas, setting this to `True` will emit both `QuoteTick` and `TradeTick` objects when trade data is present.
-- `as_legacy_cython`: Set to `False` when loading IMBALANCE or STATISTICS schemas (required) or for performance when writing to catalog.
+- `instrument_id`: Speeds up decoding by skipping symbology lookup.
+- `price_precision`: Override applied to every record read. When omitted, the
+  loader resolves precision per symbol from its cache (populated by
+  `load_instruments` or `set_price_precision`); loading fails if unresolved.
+- `include_trades`: For MBP-1/CMBP-1 schemas, `True` emits both `QuoteTick`
+  and `TradeTick` when trade data is present.
+- `as_legacy_cython`: Set to `False` for IMBALANCE/STATISTICS schemas
+  (required) or for better catalog write performance.
 
 :::warning
-IMBALANCE and STATISTICS schemas require `as_legacy_cython=False` as these are PyO3-only types. Setting `as_legacy_cython=True` will raise a `ValueError`.
+IMBALANCE and STATISTICS schemas require `as_legacy_cython=False` (PyO3-only
+types). `True` raises a `ValueError`.
 :::
 
 ### Loading consolidated data
@@ -616,7 +765,7 @@ loader = DatabentoDataLoader()
 cmbp_quotes = loader.from_dbn_file(
     path="consolidated.cmbp-1.dbn.zst",
     instrument_id=InstrumentId.from_str("AAPL.XNAS"),
-    include_trades=True,  # Get both quotes and trades if available
+    include_trades=True,  # Includes both quotes and trades if available
     as_legacy_cython=True,
 )
 
@@ -627,8 +776,8 @@ cbbo_quotes = loader.from_dbn_file(
     as_legacy_cython=False,  # Use PyO3 for better performance
 )
 
-# Load TCBBO (trade-sampled consolidated BBO) - provides both quotes and trades
-# Note: include_trades=True loads quotes, include_trades=False loads trades
+# Load TCBBO (trade-sampled consolidated BBO) with quotes and trades
+# include_trades=True loads quotes, include_trades=False loads trades
 tcbbo_quotes = loader.from_dbn_file(
     path="consolidated.tcbbo.dbn.zst",
     instrument_id=InstrumentId.from_str("AAPL.XNAS"),
@@ -645,40 +794,38 @@ tcbbo_trades = loader.from_dbn_file(
 ```
 
 :::tip
-**Cost optimization**: Avoid subscribing to both TBBO/TCBBO and separate trade subscriptions for the same instrument, as these schemas already include trade data. This prevents duplicates and reduces costs.
+Avoid subscribing to both TBBO/TCBBO and separate trade feeds for the same
+instrument. These schemas already include trades. Duplicating wastes cost and
+creates duplicate data.
 :::
 
 ## Real-time client architecture
 
-The `DatabentoDataClient` is a Python class which contains other Databento adapter classes.
-There are two `DatabentoLiveClient`s per Databento dataset:
+The `DatabentoDataClient` wraps the other Databento adapter classes. Each
+dataset uses two `DatabentoLiveClient` instances:
 
 - One for MBO (order book deltas) real-time feeds
 - One for all other real-time feeds
 
 :::warning
-There is currently a limitation that all MBO (order book deltas) subscriptions for a dataset have to be made at
-node startup, to then be able to replay data from the beginning of the session. If subsequent subscriptions
-arrive after start, then an error will be logged (and the subscription ignored).
+Make all MBO subscriptions for a dataset at node startup to replay from session
+start. The client logs subscriptions after start as errors and ignores them.
 
-There is no such limitation for any of the other Databento schemas.
+This limitation does not apply to other schemas.
 :::
 
-A single `DatabentoHistoricalClient` instance is reused between the `DatabentoInstrumentProvider` and `DatabentoDataClient`,
-which makes historical instrument definitions and data requests.
+A single `DatabentoHistoricalClient` serves both `DatabentoInstrumentProvider`
+and `DatabentoDataClient` for historical requests.
 
 ## Configuration
 
-The most common use case is to configure a live `TradingNode` to include a
-Databento data client. To achieve this, add a `DATABENTO` section to your client
-configuration(s):
+Add a `DATABENTO` section to your `TradingNode` client configuration:
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO
 from nautilus_trader.live.node import TradingNode
 
 config = TradingNodeConfig(
-    ...,  # Omitted
     data_clients={
         DATABENTO: {
             "api_key": None,  # 'DATABENTO_API_KEY' env var
@@ -689,75 +836,74 @@ config = TradingNodeConfig(
             "parent_symbols": None,  # Databento parent symbols to load on start
         },
     },
-    ..., # Omitted
 )
 ```
 
-Then, create a `TradingNode` and add the client factory:
+Create the `TradingNode` and register the factory:
 
 ```python
 from nautilus_trader.adapters.databento.factories import DatabentoLiveDataClientFactory
 from nautilus_trader.live.node import TradingNode
 
-# Instantiate the live trading node with a configuration
+# Create the live trading node with the configuration
 node = TradingNode(config=config)
 
 # Register the client factory with the node
 node.add_data_client_factory(DATABENTO, DatabentoLiveDataClientFactory)
 
-# Finally build the node
+# Build the node
 node.build()
 ```
 
 ### Configuration parameters
 
-The Databento data client provides the following configuration options:
-
-| Option                    | Default | Description |
-|---------------------------|---------|-------------|
-| `api_key`                 | `None`  | Databento API secret. When `None`, falls back to the `DATABENTO_API_KEY` environment variable. |
-| `http_gateway`            | `None`  | Historical HTTP gateway override, useful for testing custom endpoints. |
-| `live_gateway`            | `None`  | Raw TCP real-time gateway override, typically only used for testing. |
-| `use_exchange_as_venue`   | `True`  | If `True`, uses the exchange MIC for Nautilus venues (e.g., `XCME`). When `False`, retains the default GLBX mapping. |
-| `timeout_initial_load`    | `15.0`  | Seconds to wait for instrument definitions to load per dataset before proceeding. |
-| `mbo_subscriptions_delay` | `3.0`   | Seconds to buffer before enabling MBO/L3 streams so initial snapshots can replay in order. |
-| `bars_timestamp_on_close` | `True`  | Timestamp bars on the close (`ts_event`/`ts_init`). Set `False` to timestamp on the open. |
-| `reconnect_timeout_mins`  | `10`    | Minutes to attempt reconnection before giving up. Set to `None` to retry indefinitely (use with caution). See [Connection stability](#connection-stability) below. |
-| `venue_dataset_map`       | `None`  | Optional mapping of Nautilus venues to Databento dataset codes. |
-| `parent_symbols`          | `None`  | Optional mapping `{dataset: {parent symbols}}` to preload definition trees (e.g., `{"GLBX.MDP3": {"ES.FUT", "ES.OPT"}}`). |
-| `instrument_ids`          | `None`  | Sequence of Nautilus `InstrumentId` values to preload definitions for at startup. |
+| Option                    | Default | Description                                                                                                          |
+|---------------------------|---------|----------------------------------------------------------------------------------------------------------------------|
+| `api_key`                 | `None`  | Databento API secret. Falls back to the `DATABENTO_API_KEY` environment variable when `None`.                        |
+| `http_gateway`            | `None`  | Historical HTTP gateway override for testing custom endpoints.                                                       |
+| `live_gateway`            | `None`  | Raw TCP real‑time gateway override, typically for testing only.                                                       |
+| `use_exchange_as_venue`   | `True`  | Use the exchange MIC for Nautilus venues (e.g., `XCME`). `False` retains the default GLBX mapping.                   |
+| `timeout_initial_load`    | `15.0`  | Seconds to wait for instrument definitions per dataset before proceeding.                                            |
+| `mbo_subscriptions_delay` | `3.0`   | Seconds to buffer before enabling MBO/L3 streams so initial snapshots replay in order.                               |
+| `bars_timestamp_on_close` | `True`  | Timestamp bars on the close (`ts_event`/`ts_init`). `False` timestamps on the open.                                 |
+| `reconnect_timeout_mins`  | `10`    | Minutes to attempt reconnection before giving up. `None` retries indefinitely. See [Connection stability](#connection-stability). |
+| `venue_dataset_map`       | `None`  | Optional Nautilus venue to Databento dataset code mapping.                                                            |
+| `parent_symbols`          | `None`  | Optional `{dataset: {parent symbols}}` to preload definition trees (e.g., `{"GLBX.MDP3": {"ES.FUT", "ES.OPT"}}`).   |
+| `instrument_ids`          | `None`  | Nautilus `InstrumentId` values to preload definitions for at startup.                                                |
 
 :::tip
-We recommend using environment variables to manage your credentials.
+Use environment variables for credentials.
 :::
 
 ### Connection stability
 
-The Databento live client implements automatic reconnection to handle connection interruptions. The system remains resilient through:
+The live client reconnects automatically on:
 
 - **Network interruptions**: Temporary connectivity issues.
-- **Gateway restarts**: Databento performs scheduled maintenance every Sunday (see [Maintenance Schedule](https://databento.com/docs/api-reference-live/basics#maintenance-schedule)).
+- **Gateway restarts**: Databento Sunday maintenance. See the
+  [maintenance schedule](https://databento.com/docs/api-reference-live/basics#maintenance-schedule).
 - **Market closures**: Sessions ending during off-hours.
 
 #### Reconnection strategy
 
-The client uses different backoff strategies based on the timeout configuration:
+Backoff strategy depends on the timeout configuration:
 
 **With timeout** (default 10 minutes):
 
-- Exponential backoff capped at **60 seconds** for quick recovery.
-- Pattern: 1s, 2s, 4s, 8s, 16s, 32s, 60s, 60s... (±1s jitter).
-- Optimized to reconnect quickly within the timeout window.
+- Exponential backoff capped at **60 seconds**.
+- Pattern: 1s, 2s, 4s, 8s, 16s, 32s, 60s, 60s, and so on (with jitter).
+- Reconnects quickly within the timeout window.
 
 **Without timeout** (`reconnect_timeout_mins=None`):
 
-- Exponential backoff capped at **10 minutes** for patient, infrastructure-friendly recovery.
-- Pattern: 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s, 512s, 600s, 600s... (±1s jitter).
-- Ideal for unattended systems surviving overnight closures and scheduled maintenance.
+- Exponential backoff capped at **10 minutes**.
+- Pattern: 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s, 512s, 600s, 600s,
+  and so on (with jitter).
+- Suited for unattended systems through overnight closures and scheduled maintenance.
 
 All reconnections include:
 
-- **Jitter**: Random delay (up to 1 second) to prevent synchronized reconnection storms.
+- **Jitter**: Random delay (up to 1 second) to prevent simultaneous reconnection storms.
 - **Automatic resubscription**: Restores all active subscriptions after reconnecting.
 - **Cycle reset**: Each successful session (>60s) resets the timeout clock.
 
@@ -769,28 +915,33 @@ The `reconnect_timeout_mins` parameter controls how long the client attempts rec
 
 - Handles transient network issues.
 - Survives scheduled gateway restarts.
-- Prevents wasting resources overnight when markets are closed.
+- Stops retrying overnight when markets close.
 - Requires manual intervention for longer outages.
 
 :::warning
-Setting `reconnect_timeout_mins=None` causes indefinite retry attempts. Use this only for unattended systems that must survive overnight market closures without manual intervention. This can mask persistent configuration or authentication issues.
+Setting `reconnect_timeout_mins=None` retries indefinitely. Use only for
+unattended systems that must survive overnight market closures. This can mask
+persistent configuration or authentication issues.
 :::
 
 #### Scheduled maintenance
 
-Databento restarts their live gateways every Sunday at the following times (all clients are disconnected):
+Databento restarts live gateways every Sunday (all clients disconnect):
 
-| Dataset            | Maintenance Time (UTC) |
+| Dataset            | Maintenance time (UTC) |
 |--------------------|------------------------|
 | CME Globex         | 09:30                  |
 | All ICE venues     | 09:45                  |
 | All other datasets | 10:30                  |
 
-The default 10-minute timeout handles typical maintenance restarts. For unattended systems running through the maintenance window, consider using `reconnect_timeout_mins=None` or a longer timeout. See the [Databento Maintenance Schedule](https://databento.com/docs/api-reference-live/basics/maintenance-schedule) for details.
+The default 10-minute timeout covers typical restarts. For unattended systems,
+use `reconnect_timeout_mins=None` or a longer value. See the
+[Databento Maintenance Schedule](https://databento.com/docs/api-reference-live/basics/maintenance-schedule)
+for details.
 
 ## Contributing
 
 :::info
-For additional features or to contribute to the Databento adapter, please see our
+To contribute, see the
 [contributing guide](https://github.com/nautechsystems/nautilus_trader/blob/develop/CONTRIBUTING.md).
 :::

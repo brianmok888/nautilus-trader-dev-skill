@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-30
+**Generated:** 2026-05-20
 **Commit:** 618653c
 **Branch:** main
 **Stack:** AI Agent Skills (Claude Code, Gemini CLI, Codex) for NautilusTrader development
@@ -123,6 +123,10 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 | Coinbase International adapter (`COINBASE_INTX`) | **v1.224.0**: Entire package removed — use different venue |
 | `InstrumentProvider.load_ids_async` override | **v1.224.0**: Now has default — only `load_all_async` required |
 | Hyperliquid `builder_fee_refresh_mins` | **v1.224.0**: Config removed |
+| legacy adapter environment flags | **v1.227.0**: Removed — use adapter `environment` enum; Binance/Kraken live naming is `Live` / `LIVE` |
+| `time_bars_origins` | **v1.227.0**: Renamed to `time_bars_origin_offset` |
+| `From<OrderInitialized>` | **v1.227.0**: Removed — use `TryFrom` / `try_into` and handle invariant errors |
+| old Rust cache raw-reference assumptions | **v1.227.0**: cache accessors return scoped wrappers; use owned snapshot helpers for boundaries |
 
 ## COMMANDS
 

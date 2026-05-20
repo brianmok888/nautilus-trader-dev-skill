@@ -123,9 +123,11 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 
 ### Dependency Management
 
-- `pyproject.toml` pins `required-version` for uv and enforces `exclude-newer = "3 days"` cooldown
-- Bypass cooldown: `uv lock --exclude-newer "0 seconds"`
-- Workspace deps: use `serde = { workspace = true }` for shared deps
+- Current official baseline: Python package `1.227.0`, Rust workspace crate `0.57.0`, MSRV `1.95.0`, Python `>=3.12,<3.15`.
+- `pyproject.toml` pins `required-version = "==0.11.12"` for uv and enforces `exclude-newer = "3 days"` cooldown.
+- `[tool.uv].no-build-package` pins third-party packages to wheels; update it with `scripts/check-no-build-packages.sh` when `uv.lock` or `pyproject.toml` changes.
+- Bypass cooldown only for justified urgent updates: `uv lock --exclude-newer "0 seconds"`.
+- Workspace deps: use `serde = { workspace = true }` for shared deps.
 
 ## Coding Conventions
 

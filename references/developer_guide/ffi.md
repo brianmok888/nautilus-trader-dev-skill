@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/ffi/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/ffi.md
-sync_date: 2026-05-16
-target: NautilusTrader v1.226.0 latest developer guide
+sync_date: 2026-05-20
+target: NautilusTrader v1.227.0 latest developer guide
 confidence: high
 ---
 
@@ -33,7 +33,7 @@ use a helper that does so) to maintain this guarantee.
 |-------|-------------------------------|--------|
 | **1** | Rust                          | Build a `Vec<T>` and convert it with `into()` – this *leaks* the vector and transfers ownership of the raw allocation to foreign code. |
 | **2** | Foreign (Python / Cython / C) | Use the data while the `CVec` value is in scope. **Do not modify the fields `ptr`, `len`, `cap`.** |
-| **3** | Foreign                       | Exactly once, call the *type-specific* drop helper exported by Rust (for example `vec_drop_book_levels`, `vec_drop_book_orders`, `vec_time_event_handlers_drop`). The helper reconstructs the original `Vec<T>` with `Vec::from_raw_parts` and lets it drop, freeing the memory. |
+| **3** | Foreign                       | Exactly once, call the *type‑specific* drop helper exported by Rust (for example `vec_drop_book_levels`, `vec_drop_book_orders`, `vec_time_event_handlers_drop`). The helper reconstructs the original `Vec<T>` with `Vec::from_raw_parts` and lets it drop, freeing the memory. |
 
 :::warning
 If step **3** is forgotten the allocation is leaked for the remainder of the process; if it
@@ -56,13 +56,24 @@ once the capsule becomes unreachable. The closure/destructor is responsible
 for reconstructing the original `Box<T>` or `Vec<T>` and letting it drop.
 
 ```rust
-Python::attach(|py| {
-    // allocate the value on the heap
-    let my_data = MyStruct::new();
+use pyo3::types::PyCapsule;
 
-    // move it into the capsule and register a destructor
-    let capsule = pyo3::types::PyCapsule::new_with_destructor(py, my_data, None, |_, _| {})
-        .expect("capsule creation failed");
+Python::attach(|py| {
+    // Allocate the value on the heap
+    let my_data = Box::new(MyStruct::new());
+    let ptr = Box::into_raw(my_data);
+
+    // Move it into the capsule and register a destructor that frees the memory
+    let capsule = PyCapsule::new_with_destructor(
+        py,
+        ptr,
+        None,
+        |ptr, _| {
+            // Reconstruct the Box and let it drop, freeing the allocation
+            let _ = unsafe { Box::from_raw(ptr) };
+        },
+    )
+    .expect("capsule creation failed");
 
     // ... pass `capsule` back to Python ...
 });
@@ -77,8 +88,12 @@ this rule everywhere – adding new FFI modules must follow the same pattern.
 
 Earlier versions of the codebase shipped a generic `cvec_drop` function that always treated the
 buffer as `Vec<u8>`. Using it with any other element type causes a size-mismatch during
-deallocation and corrupts the allocator’s bookkeeping. Because the helper was not referenced
+deallocation and corrupts the allocator's bookkeeping. Because the helper was not referenced
 anywhere inside the project it has been removed to avoid accidental misuse.
+
+Instead, use the **type-specific** drop helper for your element type (e.g., `vec_drop_book_levels`,
+`vec_drop_book_orders`). If no helper exists for your type, add one following the pattern in
+`crates/core/src/ffi/cvec.rs`.
 
 ## Box-backed `*_API` wrappers (owned Rust objects)
 
@@ -106,15 +121,16 @@ Memory-safety requirements are therefore:
 
 1. Every constructor (`*_new`) **must** have a matching `*_drop` exported
     next to it.
-2. The *Python/Cython* binding must guarantee that `*_drop` is invoked
-    exactly once. Two approaches are accepted:
+2. Validate parameters before heap allocation to fail fast and avoid allocating invalid objects.
+3. The *Python/Cython* binding must guarantee that `*_drop` is invoked
+    exactly once. Two approaches exist:
 
-    • Wrap the pointer in a `PyCapsule` created with
+    • **Preferred for new code**: Wrap the pointer in a `PyCapsule` created with
       `PyCapsule::new_with_destructor`, passing a destructor that calls
       the drop helper.
 
-    • Call the helper explicitly in `__del__`/`__dealloc__` on the Python
-      side.  This is the historical pattern for most v1 Cython modules:
+    • **Legacy pattern** (v1 Cython modules only): Call the helper explicitly in
+      `__del__`/`__dealloc__` on the Python side:
 
       ```python
       cdef class OrderBook:
@@ -131,4 +147,4 @@ Memory-safety requirements are therefore:
 Whichever style is used, remember: **forgetting the drop call leaks the
 entire structure**, while calling it twice will double-free and crash.
 
-New FFI code must follow this template before it can be merged.
+New FFI code must use `PyCapsule` with destructors and follow this template before it can be merged.

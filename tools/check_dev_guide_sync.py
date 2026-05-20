@@ -28,6 +28,9 @@ REQUIRED_GUIDE_FILES = [
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
+CURRENT_SYNC_DATE = "2026-05-20"
+CURRENT_TARGET = "NautilusTrader v1.227.0 latest developer guide"
+
 
 ENTRY_SKILL = Path("skills/nt/SKILL.md")
 ENTRY_SKILL_ROUTING_TARGETS = [
@@ -85,13 +88,26 @@ INTEGRATION_INDEXES = [
 RETIRED_API_INDEX_LINKS = ["coinbase_intx.md", "mt5.md"]
 
 INVARIANT_TARGETS = {
-    Path("skills/nt-live/SKILL.md"): ["LiveNode"],
-    Path("skills/nt-testing/SKILL.md"): ["DataTester", "ExecTester"],
+    Path("skills/nt-live/SKILL.md"): ["LiveNode", "file_config", "PortfolioSnapshot"],
+    Path("skills/nt-testing/SKILL.md"): [
+        "DataTester",
+        "ExecTester",
+        "limit_aggressive",
+        "test_modify_rejected",
+    ],
     Path("skills/nt-adapters/SKILL.md"): [
         "nautilus_network::http::HttpClient",
         "get_runtime().spawn()",
+        "time_bars_origin_offset",
+        "`Live` / `LIVE`",
     ],
     Path("skills/nt-architect/SKILL.md"): ["message immutability"],
+    Path("skills/nt-data/SKILL.md"): ["time_bars_origin_offset", "order_owned"],
+    Path("skills/nt-signals/SKILL.md"): ["priority", "ContinuousFutureAdjustmentType"],
+    Path("skills/nt-trading/SKILL.md"): [
+        "PortfolioSnapshot",
+        "TryFrom<OrderInitialized>",
+    ],
 }
 
 DATASET_METADATA_FIELDS = [
@@ -105,7 +121,11 @@ DATASET_METADATA_FIELDS = [
 
 LIVE_RUNTIME_BOUNDARY_TARGETS = {
     Path("skills/nt-live/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
-    Path("skills/nt-strategy-builder/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
+    Path("skills/nt-strategy-builder/SKILL.md"): [
+        "LiveNode",
+        "TradingNode",
+        "Python live",
+    ],
     Path("skills/nt-review/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
 }
 
@@ -126,11 +146,20 @@ def _iter_checked_markdown_files(root: Path) -> list[Path]:
             continue
         if relative.parts[:2] == ("docs", "superpowers"):
             continue
-        if relative.parts[:2] == ("skills", "nt-adapters") and "references" in relative.parts:
+        if (
+            relative.parts[:2] == ("skills", "nt-adapters")
+            and "references" in relative.parts
+        ):
             continue
-        if relative.parts[:2] == ("skills", "nt-dev") and "references" in relative.parts:
+        if (
+            relative.parts[:2] == ("skills", "nt-dev")
+            and "references" in relative.parts
+        ):
             continue
-        if relative.parts[:2] == ("skills", "nt-live") and "references" in relative.parts:
+        if (
+            relative.parts[:2] == ("skills", "nt-live")
+            and "references" in relative.parts
+        ):
             continue
         checked.append(path)
     return checked
@@ -142,7 +171,6 @@ def _relative(path: Path, root: Path) -> str:
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
-
 
 
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
@@ -169,6 +197,7 @@ def _check_entry_skill(root: Path, errors: list[str]) -> None:
                 f"entry skill does not route to {skill_name} in {ENTRY_SKILL.as_posix()}"
             )
 
+
 def _check_required_guide_files(root: Path, errors: list[str]) -> None:
     for relative in REQUIRED_GUIDE_FILES:
         absolute = root / relative
@@ -181,12 +210,18 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             errors.append(
                 f"missing source metadata in {relative.as_posix()}: {', '.join(missing_keys)}"
             )
+        if f"sync_date: {CURRENT_SYNC_DATE}" not in text:
+            errors.append(f"stale sync date in {relative.as_posix()}")
+        if f"target: {CURRENT_TARGET}" not in text:
+            errors.append(f"stale target in {relative.as_posix()}")
 
 
 def _check_retired_references(root: Path, errors: list[str]) -> None:
     for relative in RETIRED_UPSTREAM_REFERENCE_FILES:
         if (root / relative).exists():
-            errors.append(f"retired upstream reference still present: {relative.as_posix()}")
+            errors.append(
+                f"retired upstream reference still present: {relative.as_posix()}"
+            )
 
 
 def _check_integration_index(root: Path, relative: Path, errors: list[str]) -> None:
@@ -198,11 +233,15 @@ def _check_integration_index(root: Path, relative: Path, errors: list[str]) -> N
     links = set(GUIDE_LINK_RE.findall(text))
     for guide in CURRENT_INTEGRATION_GUIDES:
         if guide not in links:
-            errors.append(f"missing current integration guide link {guide} in {relative.as_posix()}")
+            errors.append(
+                f"missing current integration guide link {guide} in {relative.as_posix()}"
+            )
 
     for link in sorted(links):
         if not (absolute.parent / link).exists():
-            errors.append(f"broken integration guide link {link} in {relative.as_posix()}")
+            errors.append(
+                f"broken integration guide link {link} in {relative.as_posix()}"
+            )
 
 
 def _check_official_index_alignment(root: Path, errors: list[str]) -> None:
@@ -221,7 +260,9 @@ def _check_official_index_alignment(root: Path, errors: list[str]) -> None:
 
     strategy_builder = root / "skills/nt-strategy-builder/SKILL.md"
     if strategy_builder.exists() and "Coinbase IntX" in _read(strategy_builder):
-        errors.append("stale Coinbase IntX adapter guidance in skills/nt-strategy-builder/SKILL.md")
+        errors.append(
+            "stale Coinbase IntX adapter guidance in skills/nt-strategy-builder/SKILL.md"
+        )
 
 
 def run_checks(root: Path) -> CheckResult:
@@ -241,8 +282,18 @@ def run_checks(root: Path) -> CheckResult:
             errors.append(f"unqualified pre-commit install in {relative}")
         if "capnp-version" in text:
             errors.append(f"stale cap'n proto version source in {relative}")
-        if "LD_LIBRARY_PATH" in text and 'sysconfig.get_config_var("LIBDIR")' not in text:
+        if (
+            "LD_LIBRARY_PATH" in text
+            and 'sysconfig.get_config_var("LIBDIR")' not in text
+        ):
             errors.append(f"imprecise LD_LIBRARY_PATH guidance in {relative}")
+        if "v1.226.0 / latest docs" in text:
+            errors.append(f"stale upstream baseline in {relative}")
+        if (
+            'required-version = "==0.11.2"' in text
+            or 'required-version = "==0.11.8"' in text
+        ):
+            errors.append(f"stale uv required-version guidance in {relative}")
 
     for relative, required_terms in INVARIANT_TARGETS.items():
         absolute = root / relative
@@ -260,8 +311,18 @@ def run_checks(root: Path) -> CheckResult:
             errors.append("stale pytest command in skills/nt-testing/SKILL.md")
         if "cargo test --workspace" in text:
             errors.append("stale cargo test command in skills/nt-testing/SKILL.md")
+        if "limit_aggressive" not in text:
+            errors.append(
+                "missing v1.227 ExecTester flag 'limit_aggressive' in skills/nt-testing/SKILL.md"
+            )
+        if "test_modify_rejected" not in text:
+            errors.append(
+                "missing v1.227 ExecTester flag 'test_modify_rejected' in skills/nt-testing/SKILL.md"
+            )
         if "DST readiness" not in text:
-            errors.append("missing invariant 'DST readiness' in skills/nt-testing/SKILL.md")
+            errors.append(
+                "missing invariant 'DST readiness' in skills/nt-testing/SKILL.md"
+            )
         for field in DATASET_METADATA_FIELDS:
             if field not in text:
                 errors.append(

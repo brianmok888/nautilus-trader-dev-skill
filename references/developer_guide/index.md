@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/index.md
-sync_date: 2026-05-16
-target: NautilusTrader v1.226.0 latest developer guide
+sync_date: 2026-05-20
+target: NautilusTrader v1.227.0 latest developer guide
 confidence: high
 ---
 

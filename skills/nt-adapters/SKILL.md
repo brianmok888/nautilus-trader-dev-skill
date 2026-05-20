@@ -12,7 +12,7 @@ NautilusTrader **adapter domain** — exchange/data provider integrations follow
 **Python modules**: `adapters/*`, `adapters/_template/`, and PyO3 exports where an adapter is Rust/v2-only.
 **Rust crates**: adapter crates plus `nautilus_network` and `nautilus_cryptography`.
 
-**Current official integrations (v1.226.0)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, dYdX, Hyperliquid, Interactive Brokers, Kraken, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
+**Current official integrations (v1.227.0)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, dYdX, Hyperliquid, Interactive Brokers, Kraken, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
 
 ## When To Use
 
@@ -45,9 +45,12 @@ Current high-risk rules:
   do not teach `tokio::spawn()` as the default from Python-driven adapter code.
 - Keep Python data and execution client methods aligned with current
   command/request object signatures.
-- Treat `InstrumentProvider.load_all_async()` as the required v1.224-era method;
+- Treat `InstrumentProvider.load_all_async()` as the required v1.227-era method;
   override targeted methods only for venue-specific semantics or efficiency.
-- Require data tester and execution tester evidence for adapter readiness.
+- Use adapter `environment` enums instead of removed legacy environment flags; for Binance and Kraken, use `Live` / `LIVE` naming rather than stale `Mainnet` / `MAINNET` enum variants.
+- Convert venue millisecond timestamps at parser boundaries with `millis_to_nanos`; `ts_event` is the converted venue timestamp and `ts_init` is `clock.get_time_ns()`.
+- When adapter examples touch data-engine bar settings, use `time_bars_origin_offset`; never reintroduce stale `time_bars_origins`.
+- Require data tester and execution tester evidence for adapter readiness; execution tests should include marketable limit coverage via `limit_aggressive` and rejected modify coverage via `test_modify_rejected` when the venue supports those paths.
 
 Adapters follow a layered architecture:
 

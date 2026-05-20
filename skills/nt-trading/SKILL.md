@@ -158,6 +158,14 @@ exec_algorithms=[MyExecAlgorithm.fully_qualified_name()]
 
 Extend risk calculations by subclassing margin models or implementing custom position sizing logic in your Strategy.
 
+## v1.227.0 Rust trading deltas
+
+- `PortfolioSnapshot` events provide per-account mark-to-market snapshots when `snapshot_interval_ms` is configured; subscribe through the portfolio message-bus APIs when snapshot streams are part of the strategy contract.
+- Rust `Strategy` order APIs take optional `Params`; pass `None` when no custom params are needed to avoid needless `IndexMap` allocation.
+- Rust `Strategy::cancel_order` / `modify_order` take `ClientOrderId`; `cancel_orders` takes `Vec<ClientOrderId>`.
+- `OrderFactory::bracket` is now a builder-style method (`factory.bracket()...call()`), not the older flat constructor form.
+- Invalid Python order `create()` calls now raise `ValueError`; Rust order conversions should use `TryFrom<OrderInitialized>` / `try_from` / `try_into` rather than removed `From<OrderInitialized>`.
+
 ## Rust Usage
 
 NautilusTrader has a complete Rust implementation (v2 Rust) that runs without Python. Strategies and actors are written in pure Rust, compiled to standalone binaries.

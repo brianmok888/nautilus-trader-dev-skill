@@ -259,6 +259,16 @@ config = ExecTesterConfig(
     order_qty=Quantity.from_str("0.01"),
 ).with_use_post_only()
 
+# v1.227.0 execution-test coverage flags
+config = ExecTesterConfig(
+    strategy_id=StrategyId("test-strat"),
+    instrument_id=instrument_id,
+    client_id=ClientId("BINANCE"),
+    order_qty=Quantity.from_str("0.01"),
+)
+config.limit_aggressive = True       # marketable limit paths crossing the spread
+config.test_modify_rejected = True   # venue modify-rejection path when supported
+
 # Reject tests
 config = ExecTesterConfig(
     strategy_id=StrategyId("test-strat"),

@@ -87,6 +87,8 @@ Where `order_qty` is `Quantity` or `Decimal`.
 | `log_data`                                      | bool              | True            | —              |
 | `test_reject_post_only`                         | bool              | False           | 8              |
 | `test_reject_reduce_only`                       | bool              | False           | 8              |
+| `limit_aggressive`                              | bool              | False           | 2              |
+| `test_modify_rejected`                          | bool              | False           | 4              |
 | `can_unsubscribe`                               | bool              | True            | 9              |
 
 ## Rust Builder Methods
@@ -121,6 +123,8 @@ config.modify_orders_to_maintain_tob_offset = true;
 config.cancel_replace_orders_to_maintain_tob_offset = true;
 config.modify_stop_orders_to_maintain_offset = true;
 config.cancel_replace_stop_orders_to_maintain_offset = true;
+config.limit_aggressive = true;
+config.test_modify_rejected = true;
 config.use_individual_cancels_on_stop = true;
 ```
 

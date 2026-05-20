@@ -67,8 +67,15 @@ self.subscribe_bars(bar_type)
 self.subscribe_quote_ticks(instrument_id)
 self.subscribe_trade_ticks(instrument_id)
 self.subscribe_order_book_deltas(instrument_id)
-self.subscribe_order_book_snapshots(instrument_id, depth=10)
+self.subscribe_order_book_depth(instrument_id, depth=10)
 ```
+
+### v1.227.0 data/cache notes
+
+- `DataEngineConfig` / `LiveDataEngineConfig` renamed `time_bars_origins` to `time_bars_origin_offset`.
+- `Cache.purge_instrument(...)` trims unused instrument records.
+- Rust cache accessors now use scoped borrow wrappers (`OrderRef`, `AccountRef`, `PositionRef`); use `order_owned`, `account_owned`, or `position_owned` when an owned snapshot must cross a boundary.
+- Custom Arrow storage supports `#[custom_data_field(json)]` for JSON-backed Serde fields with PyO3 dict conversion for `IndexMap` / `HashMap` values.
 
 ### Cache Queries
 

@@ -28,6 +28,13 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Live deployment** → use `nt-live`
 - **Indicator logic** → use `nt-signals`
 
+## v1.227.0 backtest/matching deltas
+
+- Continuous futures can be used with adjusted aggregated bars.
+- `time_bars_origins` is now `time_bars_origin_offset` in data-engine configs.
+- `OrderMatchingEngineConfig` defaults were aligned with the Cython per-engine constructor.
+- `OrderMatchingCore` exposes tick-size updates and zero-allocation `iter_*` read-only APIs used by trailing-stop and GTD timing logic.
+
 ## Python Usage
 
 ### BacktestNode (Recommended)
@@ -168,11 +175,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.55", features = ["streaming"] }
-nautilus-execution = "0.55"
-nautilus-model = { version = "0.55", features = ["stubs"] }
-nautilus-persistence = "0.55"
-nautilus-trading = { version = "0.55", features = ["examples"] }
+nautilus-backtest = { version = "0.57", features = ["streaming"] }
+nautilus-execution = "0.57"
+nautilus-model = { version = "0.57", features = ["stubs"] }
+nautilus-persistence = "0.57"
+nautilus-trading = { version = "0.57", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"
