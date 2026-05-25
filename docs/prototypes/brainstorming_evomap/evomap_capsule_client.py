@@ -2,88 +2,113 @@
 # Nautech Systems, Inc. Proprietary and Confidential.
 # Use subject to license terms.
 
-"""EvoMap Capsule Client for A2A protocol communication."""
+"""Local EvoMap Proxy mailbox client prototype.
 
+The agent-side integration talks to the local Proxy. The Proxy owns Hub sync,
+retries, authentication, and low-level GEP/A2A protocol details.
+"""
+
+from collections.abc import Callable
+import json
 from typing import Any
+from urllib import parse, request
 
 
-class EvoMapCapsuleClient:
-    """Thin gateway client for EvoMap A2A endpoints.
+Transport = Callable[[str, str, dict[str, Any] | None], dict[str, Any]]
 
-    This client handles:
-    - Envelope construction
-    - Authentication via API key
-    - HTTP communication with EvoMap hub
-    """
 
-    def __init__(self, base_url: str, api_key: str) -> None:
+class EvoMapProxyMailboxClient:
+    """Thin gateway for local EvoMap Proxy mailbox endpoints."""
+
+    def __init__(
+        self,
+        proxy_url: str = "http://127.0.0.1:19820",
+        transport: Transport | None = None,
+    ) -> None:
         """Initialize the client.
 
         Parameters
         ----------
-        base_url : str
-            Base URL for EvoMap hub (e.g., https://evomap.ai)
-        api_key : str
-            API key for authentication
+        proxy_url : str, default "http://127.0.0.1:19820"
+            Local EvoMap Proxy URL. Do not point strategy code at the Hub.
+        transport : callable, optional
+            Test seam for HTTP transport.
         """
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key
+        self.proxy_url = self._normalize_local_proxy_url(proxy_url)
+        self._transport = transport or self._http_json
 
-    def hello(self) -> dict[str, Any]:
-        """Register node with EvoMap hub.
+    @staticmethod
+    def _normalize_local_proxy_url(proxy_url: str) -> str:
+        parsed = parse.urlparse(proxy_url.rstrip("/"))
+        if parsed.scheme not in {"http", "https"} or parsed.hostname not in {
+            "127.0.0.1",
+            "localhost",
+            "::1",
+        }:
+            raise ValueError("EvoMap client must target the local Proxy")
+        return proxy_url.rstrip("/")
 
-        Returns
-        -------
-        dict[str, Any]
-            Response containing claim info and status
-        """
-        # Placeholder implementation
-        return {"ok": True, "message": "hello not yet implemented"}
+    def send_message(self, message_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Enqueue a local mailbox message for Proxy-managed sync."""
+        return self._post("/mailbox/send", {"type": message_type, "payload": payload})
 
-    def publish(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Publish a capsule bundle to EvoMap.
+    def poll(
+        self,
+        message_type: str | None = None,
+        channel: str | None = None,
+        limit: int = 10,
+    ) -> dict[str, Any]:
+        """Poll local mailbox messages by optional type/channel filters."""
+        payload: dict[str, Any] = {"limit": limit}
+        if message_type is not None:
+            payload["type"] = message_type
+        if channel is not None:
+            payload["channel"] = channel
+        return self._post("/mailbox/poll", payload)
 
-        Parameters
-        ----------
-        payload : dict[str, Any]
-            Bundle payload with assets (Gene, Capsule, EvolutionEvent)
+    def ack(self, message_ids: list[str]) -> dict[str, Any]:
+        """Acknowledge processed mailbox messages."""
+        return self._post("/mailbox/ack", {"message_ids": message_ids})
 
-        Returns
-        -------
-        dict[str, Any]
-            Publish confirmation
-        """
-        # Placeholder implementation
-        return {"ok": True, "message": "publish not yet implemented"}
+    def status(self, message_id: str) -> dict[str, Any]:
+        """Fetch local status for a mailbox message."""
+        return self._get(f"/mailbox/status/{message_id}")
 
-    def fetch(self, query: dict[str, Any]) -> dict[str, Any]:
-        """Fetch capsule insights from EvoMap.
+    def submit_assets(self, assets: list[dict[str, Any]]) -> dict[str, Any]:
+        """Submit Gene/Capsule/EvolutionEvent assets through the Proxy."""
+        return self._post("/asset/submit", {"assets": assets})
 
-        Parameters
-        ----------
-        query : dict[str, Any]
-            Query parameters for fetching insights
+    def fetch_assets(self, asset_ids: list[str]) -> dict[str, Any]:
+        """Fetch asset details through the Proxy."""
+        return self._post("/asset/fetch", {"asset_ids": asset_ids})
 
-        Returns
-        -------
-        dict[str, Any]
-            Fetched items matching query
-        """
-        # Placeholder implementation
-        return {"ok": True, "items": [], "message": "fetch not yet implemented"}
+    def search_assets(
+        self,
+        signals: list[str],
+        mode: str = "semantic",
+        limit: int = 5,
+    ) -> dict[str, Any]:
+        """Search advisory assets through the Proxy."""
+        return self._post(
+            "/asset/search",
+            {"signals": signals, "mode": mode, "limit": limit},
+        )
 
-    def report(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Report decisions (accepted/rejected suggestions) to EvoMap.
+    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._transport("POST", f"{self.proxy_url}{path}", payload)
 
-        Parameters
-        ----------
-        payload : dict[str, Any]
-            Decision report payload
+    def _get(self, path: str) -> dict[str, Any]:
+        return self._transport("GET", f"{self.proxy_url}{path}", None)
 
-        Returns
-        -------
-        dict[str, Any]
-            Report confirmation
-        """
-        # Placeholder implementation
-        return {"ok": True, "message": "report not yet implemented"}
+    @staticmethod
+    def _http_json(method: str, url: str, payload: dict[str, Any] | None) -> dict[str, Any]:
+        data = None if payload is None else json.dumps(payload).encode("utf-8")
+        req = request.Request(
+            url,
+            data=data,
+            method=method,
+            headers={"Content-Type": "application/json"},
+        )
+        with request.urlopen(req, timeout=5) as response:  # nosec: prototype local Proxy client
+            body = response.read().decode("utf-8")
+        return json.loads(body) if body else {}

@@ -28,7 +28,7 @@ REQUIRED_GUIDE_FILES = [
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
-CURRENT_SYNC_DATE = "2026-05-20"
+CURRENT_SYNC_DATE = "2026-05-25"
 CURRENT_TARGET = "NautilusTrader v1.227.0 latest developer guide"
 
 
@@ -129,6 +129,30 @@ LIVE_RUNTIME_BOUNDARY_TARGETS = {
     Path("skills/nt-review/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
 }
 
+EVOMAP_DIRECT_A2A_TARGETS = [
+    Path("skills/nt-evomap-integration/SKILL.md"),
+    Path("skills/nt-implement/SKILL.md"),
+]
+
+EVOMAP_DIRECT_A2A_TERMS = [
+    "EvoMapCapsuleClient",
+    "`hello`, `publish`, `fetch`, `report`",
+    "hello, publish, fetch, report",
+]
+
+EVOMAP_PROXY_BOUNDARY_TARGET = Path("skills/nt-evomap-integration/SKILL.md")
+EVOMAP_PROXY_BOUNDARY_TERMS = [
+    "Proxy mailbox",
+    "mailbox/send",
+    "mailbox/poll",
+    "asset/submit",
+    "asset/fetch",
+    "LangChain",
+    "LangGraph",
+    "StateGraph",
+    "human-in-the-loop",
+]
+
 GUIDE_LINK_RE = re.compile(r"\[Guide\]\(([^)]+\.md)\)")
 
 
@@ -143,6 +167,8 @@ def _iter_checked_markdown_files(root: Path) -> list[Path]:
     for path in sorted(root.rglob("*.md")):
         relative = path.relative_to(root)
         if ".git" in path.parts:
+            continue
+        if relative.parts and relative.parts[0] == ".omx":
             continue
         if relative.parts[:2] == ("docs", "superpowers"):
             continue
@@ -292,6 +318,7 @@ def run_checks(root: Path) -> CheckResult:
         if (
             'required-version = "==0.11.2"' in text
             or 'required-version = "==0.11.8"' in text
+            or 'required-version = "==0.11.12"' in text
         ):
             errors.append(f"stale uv required-version guidance in {relative}")
 
@@ -336,6 +363,24 @@ def run_checks(root: Path) -> CheckResult:
         text = _read(absolute)
         if not all(term in text for term in required_terms):
             errors.append(f"missing live runtime boundary in {relative.as_posix()}")
+
+    for relative in EVOMAP_DIRECT_A2A_TARGETS:
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+        text = _read(absolute)
+        if any(term in text for term in EVOMAP_DIRECT_A2A_TERMS):
+            errors.append(
+                f"stale direct EvoMap A2A guidance in {relative.as_posix()}"
+            )
+
+    evomap = root / EVOMAP_PROXY_BOUNDARY_TARGET
+    if evomap.exists():
+        text = _read(evomap)
+        if not all(term in text for term in EVOMAP_PROXY_BOUNDARY_TERMS):
+            errors.append(
+                f"missing EvoMap proxy boundary in {EVOMAP_PROXY_BOUNDARY_TARGET.as_posix()}"
+            )
 
     return CheckResult(ok=not errors, errors=errors)
 

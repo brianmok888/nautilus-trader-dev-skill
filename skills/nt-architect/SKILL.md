@@ -29,13 +29,14 @@ If the architecture includes a custom or modified adapter, enforce these constra
 
 ## EvoMap Integration Boundary (Optional)
 
-If the system integrates with `evomap.ai`, model it as an **external advisory sidecar** and keep Nautilus as the sole execution authority:
+If the system integrates with EvoMap, LangChain, or LangGraph, model it as an **external advisory sidecar** and keep Nautilus as the sole execution authority:
 
 - **Execution authority stays local**: only Strategy/Actor logic inside Nautilus can affect orders.
 - **Advisory-only contract**: EvoMap outputs are suggestions, never auto-applied trading rule changes.
-- **Non-blocking architecture**: publish/fetch/report flows must run off the hot trading path.
+- **Non-blocking architecture**: Proxy mailbox, LangChain, and LangGraph flows must run off the hot trading path.
 - **Deterministic fallback**: define behavior when EvoMap is unavailable (continue local strategy, log degraded mode).
 - **Provenance**: include IDs linking internal decisions to external suggestion snapshots.
+- **Graph boundary**: LangGraph `StateGraph` checkpoints and human-in-the-loop interrupts are review artifacts, not executable trading state.
 
 ## Architecture Design Process
 

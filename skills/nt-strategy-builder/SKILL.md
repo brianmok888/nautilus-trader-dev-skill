@@ -147,13 +147,13 @@ See `templates/multi_venue_strategy.py`.
 
 ## EvoMap Sidecar Wiring (Optional)
 
-Use `evomap.ai` as an external refinement source while preserving local trading determinism:
+Use EvoMap, LangChain, or LangGraph as external refinement sources while preserving local trading determinism:
 
-- Keep EvoMap calls off execution-critical paths (`on_bar`, `on_quote_tick`, `on_order_book_deltas`).
+- Keep EvoMap Proxy mailbox calls, LangChain model/tool calls, and LangGraph execution off execution-critical paths (`on_bar`, `on_quote_tick`, `on_order_book_deltas`).
 - Publish only necessary fields (avoid full account or secret context leakage).
 - Use periodic sync (`on_timer`) and bounded queues to prevent memory growth.
-- Record suggestion provenance (`capsule_id`, suggestion hash, decision reason) for post-trade audit.
-- If EvoMap is unavailable, continue with local strategy logic and emit degraded-mode telemetry.
+- Record suggestion provenance (asset id, suggestion hash, LangGraph checkpoint id, decision reason) for post-trade audit.
+- If EvoMap, LangChain, or LangGraph orchestration is unavailable, continue with local strategy logic and emit degraded-mode telemetry.
 
 ## Adapter Wiring Contract (2026 Guide Alignment)
 
