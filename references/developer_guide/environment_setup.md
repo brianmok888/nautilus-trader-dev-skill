@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/environment_setup/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/environment_setup.md
-sync_date: 2026-05-20
+sync_date: 2026-05-25
 target: NautilusTrader v1.227.0 latest developer guide
 confidence: high
 ---
@@ -206,7 +206,7 @@ echo "PYTHONHOME: $PYTHONHOME"
 Python dependencies are managed by [uv](https://docs.astral.sh/uv). The `[tool.uv]` section in
 `pyproject.toml` enforces three supply chain safety settings:
 
-- **`required-version = "==0.11.12"`**: all developers and CI use the same uv version. The version
+- **`required-version = "==0.11.14"`**: all developers and CI use the same uv version. The version
   is extracted by `scripts/uv-version.sh` for Makefile, CI, and Docker builds. If your local uv
   drifts off the pin, `uv lock`/`uv sync` will fail with `Required uv version ... does not match the
   running version ...`. Run `make update-uv` to install the pinned version (or follow uv's own

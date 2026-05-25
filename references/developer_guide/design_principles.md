@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/design_principles/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/design_principles.md
-sync_date: 2026-05-20
+sync_date: 2026-05-25
 target: NautilusTrader v1.227.0 latest developer guide
 confidence: high
 ---

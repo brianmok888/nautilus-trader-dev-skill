@@ -124,6 +124,23 @@ def test_reports_stale_metadata_target(tmp_path: Path) -> None:
     assert any("stale target" in error for error in result.errors)
 
 
+def test_ignores_omx_runtime_context(tmp_path: Path) -> None:
+    write_entry_skill(tmp_path)
+    for name in CURRENT_DEV_GUIDE_FILES:
+        write(
+            tmp_path / "references/developer_guide" / name,
+            current_metadata(name) + f"# {name}\n",
+        )
+    write(
+        tmp_path / ".omx/context/runtime.md",
+        "Historical notes may mention references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert "stale references/guides path in .omx/context/runtime.md" not in result.errors
+
+
 def test_reports_stale_references_guides_path(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
@@ -165,6 +182,48 @@ def test_reports_imprecise_ld_library_path_guidance(tmp_path: Path) -> None:
     assert result.ok is False
     assert (
         "imprecise LD_LIBRARY_PATH guidance in skills/nt-dev/SKILL.md" in result.errors
+    )
+
+
+def test_reports_stale_uv_required_version_01112(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/SKILL.md",
+        'pyproject.toml pins required-version = "==0.11.12" for uv.\n',
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert "stale uv required-version guidance in skills/nt-dev/SKILL.md" in result.errors
+
+
+def test_reports_stale_evomap_direct_a2a_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-evomap-integration/SKILL.md",
+        "Use EvoMapCapsuleClient to call hello, publish, fetch, report on evomap.ai.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "stale direct EvoMap A2A guidance in skills/nt-evomap-integration/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_missing_evomap_proxy_boundary_terms(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-evomap-integration/SKILL.md",
+        "EvoMap remains advisory-only with fallback and provenance.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing EvoMap proxy boundary in skills/nt-evomap-integration/SKILL.md"
+        in result.errors
     )
 
 
@@ -377,6 +436,12 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-trading/SKILL.md",
         "Use PortfolioSnapshot and TryFrom<OrderInitialized>.\n",
+    )
+    write(
+        tmp_path / "skills/nt-evomap-integration/SKILL.md",
+        "Use local Proxy mailbox endpoints mailbox/send, mailbox/poll, asset/submit, "
+        "and asset/fetch. LangChain model/tool wrappers and LangGraph StateGraph "
+        "or human-in-the-loop checkpoints stay advisory-only and off hot handlers.\n",
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",

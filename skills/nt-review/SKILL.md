@@ -41,18 +41,19 @@ Adapter-specific review severity:
 
 ## EvoMap Integration Review Gate (Optional)
 
-If the system integrates with `evomap.ai`, fail the review if any of the following are present:
+If the system integrates with EvoMap, LangChain, or LangGraph, fail the review if any of the following are present:
 
-- **Execution coupling**: EvoMap availability can directly block or alter order execution in hot handlers.
+- **Execution coupling**: EvoMap, LangChain, or LangGraph availability can directly block or alter order execution in hot handlers.
 - **Auto-apply behavior**: suggestions are merged into live strategy rules without explicit approval.
 - **No degraded-mode plan**: missing deterministic fallback behavior when EvoMap is down.
-- **No provenance**: missing traceability for exported payloads and accept/reject decisions.
+- **No provenance**: missing traceability for exported payloads, graph checkpoints, and accept/reject decisions.
 - **Unsafe payload scope**: credentials or unnecessary account-sensitive fields are exported.
+- **Direct Hub coupling**: agent-side code bypasses the local Proxy mailbox boundary.
 
 EvoMap-specific review severity:
 
-- `Blocker`: execution coupling, auto-apply behavior, secret leakage.
-- `Major`: missing fallback/provenance controls.
+- `Blocker`: execution coupling, auto-apply behavior, secret leakage, direct Hub coupling.
+- `Major`: missing fallback/provenance controls or missing human-in-the-loop graph checkpoints for advisory changes.
 - `Minor`: naming/documentation drift with otherwise safe behavior.
 
 ## Review Dimensions

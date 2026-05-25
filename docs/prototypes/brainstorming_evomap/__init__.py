@@ -5,5 +5,5 @@
 """Brainstorming EvoMap Capsule integration module."""
 
 # Lazy import to avoid package path issues
-# Use: from skills.brainstorming_evomap.evomap_capsule_client import EvoMapCapsuleClient
+# Use: from skills.brainstorming_evomap.evomap_capsule_client import EvoMapProxyMailboxClient
 
