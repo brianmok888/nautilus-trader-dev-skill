@@ -9,11 +9,16 @@ Defines all three config classes required by NautilusTrader's adapter framework:
 Replace 'MyDEX' with your actual DEX/venue name throughout.
 """
 
-from decimal import Decimal
-
 from pydantic import SecretStr
 
 from nautilus_trader.config import InstrumentProviderConfig, LiveDataClientConfig, LiveExecClientConfig
+
+
+class UnsafeLiveDEXConfigError(ValueError):
+    def __init__(self, field_name: str) -> None:
+        super().__init__(
+            f"{field_name} is required before setting sandbox_mode=False"
+        )
 
 
 # =============================================================================
@@ -36,10 +41,10 @@ class MyDEXInstrumentProviderConfig(InstrumentProviderConfig, frozen=True):
         If True, uses testnet RPC and skips chain calls in tests.
     """
 
-    rpc_url: str = "https://mainnet.infura.io/v3/YOUR_PROJECT_ID"
-    chain_id: int = 1
+    rpc_url: str = "http://127.0.0.1:8545"
+    chain_id: int = 31337
     pools: list[str] = []      # Empty → load all known pools
-    sandbox_mode: bool = False
+    sandbox_mode: bool = True
 
 
 # =============================================================================
@@ -70,12 +75,12 @@ class MyDEXDataClientConfig(LiveDataClientConfig, frozen=True):
         If True, uses mock/testnet data instead of mainnet.
     """
 
-    rpc_url: str = "https://mainnet.infura.io/v3/YOUR_PROJECT_ID"
+    rpc_url: str = "http://127.0.0.1:8545"
     ws_rpc_url: str | None = None       # Optional: WebSocket RPC for event streaming
-    chain_id: int = 1
+    chain_id: int = 31337
     pool_addresses: list[str] = []
     poll_interval_secs: float = 2.0     # Poll every 2 seconds (rate-limit friendly)
-    sandbox_mode: bool = False
+    sandbox_mode: bool = True
 
 
 # =============================================================================
@@ -111,11 +116,19 @@ class MyDEXExecClientConfig(LiveExecClientConfig, frozen=True):
         If True, uses testnet or local fork. No real funds at risk.
     """
 
-    rpc_url: str = "https://mainnet.infura.io/v3/YOUR_PROJECT_ID"
-    private_key: SecretStr = SecretStr("CHANGE_ME")   # ← load from env var
+    rpc_url: str = "http://127.0.0.1:8545"
+    private_key: SecretStr = SecretStr("")   # ← load from env var
     wallet_address: str = "0x0000000000000000000000000000000000000000"
-    chain_id: int = 1
+    chain_id: int = 31337
     max_slippage_bps: int = 50           # 0.50% max slippage
     gas_limit: int = 300_000             # Safe upper bound for DEX swaps
     gas_price_gwei: int | None = None    # None → use network suggestion
-    sandbox_mode: bool = False
+    sandbox_mode: bool = True
+
+    def __post_init__(self) -> None:
+        if self.sandbox_mode:
+            return
+        if self.private_key.get_secret_value() == "":
+            raise UnsafeLiveDEXConfigError("private_key")
+        if self.rpc_url == "http://127.0.0.1:8545":
+            raise UnsafeLiveDEXConfigError("rpc_url")

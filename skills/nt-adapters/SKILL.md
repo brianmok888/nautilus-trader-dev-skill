@@ -12,7 +12,7 @@ NautilusTrader **adapter domain** — exchange/data provider integrations follow
 **Python modules**: `adapters/*`, `adapters/_template/`, and PyO3 exports where an adapter is Rust/v2-only.
 **Rust crates**: adapter crates plus `nautilus_network` and `nautilus_cryptography`.
 
-**Current official integrations (v1.227.0)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, dYdX, Hyperliquid, Interactive Brokers, Kraken, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
+**Current official integrations (GitHub `develop` snapshot)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, Derive, dYdX, Hyperliquid, Interactive Brokers, Kraken, Lighter, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
 
 ## When To Use
 
@@ -51,6 +51,15 @@ Current high-risk rules:
 - Convert venue millisecond timestamps at parser boundaries with `millis_to_nanos`; `ts_event` is the converted venue timestamp and `ts_init` is `clock.get_time_ns()`.
 - When adapter examples touch data-engine bar settings, use `time_bars_origin_offset`; never reintroduce stale `time_bars_origins`.
 - Require data tester and execution tester evidence for adapter readiness; execution tests should include marketable limit coverage via `limit_aggressive` and rejected modify coverage via `test_modify_rejected` when the venue supports those paths.
+- For WebSocket handlers that receive the connected client after construction,
+  queue `SetClient` before publishing the command channel or marking the
+  connection active.
+- For single-endpoint authenticated streams, keep auth-token rotation in the
+  outer client, stop refresh tasks with `CancellationToken`, and replay current
+  account subscriptions after refresh.
+- Treat transport, timeout, send, retry, parse, and whole-batch failures as
+  ambiguous outcome failures unless the venue returns an explicit per-order
+  rejection.
 
 Adapters follow a layered architecture:
 
@@ -389,6 +398,12 @@ pub struct SubscriptionState {
 **Message routing**: `WsDispatchState` maps incoming messages to handlers
 **Backpressure**: Use bounded channels, drop stale messages
 **Split architectures**: Separate WebSocket connections for data vs execution
+**SetClient handoff**: Queue `HandlerCommand::SetClient(client)` before
+publishing a replacement command sender or setting active state, so queued
+Subscribe/order commands cannot reach a handler with `inner == None`.
+**Auth-token rotation**: If public and authenticated channels share one endpoint
+with expiring subscribe tokens, mint tokens in the outer client, re-subscribe
+account channels on a timer, and cancel the refresh loop with `CancellationToken`.
 
 ### Task Management
 
@@ -416,6 +431,9 @@ get_runtime().spawn(async move {
 
 - Use DataTesterConfig for data flow validation (see `nt-testing`)
 - Use ExecTesterConfig for execution lifecycle testing (see `nt-testing`)
+- Cover ambiguous outcome failures in adapter tests: do not emit terminal reject
+  events for unknown submit/cancel/modify/batch outcomes unless the venue reports
+  an explicit per-order rejection.
 - Rust unit tests in `#[cfg(test)] mod tests` within source files
 - Integration tests in `tests/` directory
 

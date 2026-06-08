@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-sync_date: 2026-05-25
-target: NautilusTrader v1.227.0 latest developer guide
+sync_date: 2026-06-08
+target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
 
@@ -88,6 +88,34 @@ Mismatches in any of these cause full rebuilds:
 - Different profiles (e.g., `dev` vs `nextest` vs `release`).
 
 When adding new build targets or modifying existing ones, maintain alignment with the testing/linting group to preserve fast incremental builds.
+
+### Generated FFI bindings and precision mode
+
+The `nautilus-model` build script regenerates `nautilus_trader/core/includes/model.h` and
+`nautilus_trader/core/rust/model.pxd` when the `ffi` feature is enabled. Those files encode
+whether the generated C/Cython bindings use high precision. The committed generated files use
+high precision. Local cargo commands that compile `nautilus-model` with `ffi` should either
+include the `high-precision` feature or set `HIGH_PRECISION=true`.
+
+Make targets that use `BASE_FEATURES`, such as `make build-debug-v2`, already include
+`high-precision`. The drift risk mainly comes from ad-hoc cargo commands that enable `ffi`
+without the aligned feature set.
+
+Use an environment override for narrow checks that do not include the full aligned feature
+set:
+
+```fish
+env HIGH_PRECISION=true cargo check -p nautilus-model --features ffi,python
+```
+
+Before committing FFI-related work, verify those generated files did not drift:
+
+```fish
+git diff -- nautilus_trader/core/includes/model.h nautilus_trader/core/rust/model.pxd
+```
+
+If they changed only because a command ran without high precision, rerun the cargo command
+with `HIGH_PRECISION=true`. Do not hand-edit the generated files.
 
 ## Module organization
 

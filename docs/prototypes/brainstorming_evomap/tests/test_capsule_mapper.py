@@ -8,8 +8,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-import pytest
-
 _module_dir = Path(__file__).parent.parent
 if str(_module_dir) not in sys.path:
     sys.path.insert(0, str(_module_dir))
@@ -105,6 +103,106 @@ def test_bundle_metadata_contains_session_and_section():
 
     assert bundle["metadata"]["session_id"] == "session_123"
     assert bundle["metadata"]["section_id"] == "data_flow"
+
+
+def test_section_delta_redacts_sensitive_content_and_denies_metadata():
+    bundle = capsule_mapper.map_section_delta(
+        session_id="s1",
+        section_id="security",
+        content=(
+            "Use POLYGON_PRIVATE_KEY=0x"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "
+            "with wallet 0x1111111111111111111111111111111111111111"
+        ),
+        metadata={
+            "approaches": ["least privilege"],
+            "api_key": "sk-live-secret",
+            "wallet_address": "0x1111111111111111111111111111111111111111",
+        },
+    )
+
+    gene = next(a for a in bundle["assets"] if a["type"] == "gene")
+    data = gene["data"]
+
+    assert "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" not in data[
+        "content_preview"
+    ]
+    assert "0x1111111111111111111111111111111111111111" not in data["content_preview"]
+    assert data["metadata"] == {"approaches": ["least privilege"]}
+    assert "redacted_fields" in bundle["metadata"]
+    assert "metadata.api_key" in bundle["metadata"]["redacted_fields"]
+
+
+def test_section_delta_redacts_sensitive_values_in_allowed_metadata():
+    bundle = capsule_mapper.map_section_delta(
+        session_id="s1",
+        section_id="security",
+        content="safe content",
+        metadata={
+            "summary": "token sk-live-secret",
+            "constraints": [
+                "private key "
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ],
+        },
+    )
+
+    gene = next(a for a in bundle["assets"] if a["type"] == "gene")
+    metadata = gene["data"]["metadata"]
+
+    assert "sk-live-secret" not in metadata["summary"]
+    assert "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" not in metadata[
+        "constraints"
+    ][0]
+    assert metadata["summary"] == "token [REDACTED_TOKEN]"
+
+
+def test_design_doc_redacts_content_and_decisions_before_export():
+    bundle = capsule_mapper.map_design_doc(
+        session_id="s1",
+        design_doc_path="docs/design.md",
+        content=(
+            "# Design\n\nprivate_key=0x"
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
+        decisions=[
+            {
+                "id": "d1",
+                "summary": "Use sandbox first",
+                "private_key": "0x"
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            }
+        ],
+    )
+
+    gene = next(a for a in bundle["assets"] if a["type"] == "gene")
+    event = next(a for a in bundle["assets"] if a["type"] == "evolution_event")
+
+    assert "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" not in gene[
+        "data"
+    ]["content_preview"]
+    assert event["data"]["decisions"] == [{"id": "d1", "summary": "Use sandbox first"}]
+
+
+def test_design_doc_redacts_sensitive_values_in_allowed_decisions():
+    bundle = capsule_mapper.map_design_doc(
+        session_id="s1",
+        design_doc_path="docs/design.md",
+        content="safe content",
+        decisions=[
+            {
+                "id": "d1",
+                "summary": "wallet 0x1111111111111111111111111111111111111111",
+                "rationale": "token sk-live-secret",
+            }
+        ],
+    )
+
+    event = next(a for a in bundle["assets"] if a["type"] == "evolution_event")
+    decision = event["data"]["decisions"][0]
+
+    assert "0x1111111111111111111111111111111111111111" not in decision["summary"]
+    assert "sk-live-secret" not in decision["rationale"]
 
 
 def test_map_design_doc_creates_final_design_bundle():

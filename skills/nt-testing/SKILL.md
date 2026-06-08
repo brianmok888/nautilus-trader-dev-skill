@@ -45,6 +45,9 @@ Required testing rules:
 - Isolate PyO3 panic or abort paths in subprocess-style tests when the failure
   can terminate the interpreter.
 - Keep unit tests deterministic and do not implicitly download datasets.
+- Execution adapters must cover ambiguous outcome failures (`TC-E74` through
+  `TC-E78`) with mock HTTP/WebSocket boundaries where live venues cannot
+  produce transport, timeout, send, retry, parse, or whole-batch failures.
 
 ## DST readiness
 
@@ -277,6 +280,22 @@ config = ExecTesterConfig(
     order_qty=Quantity.from_str("0.01"),
 ).with_test_reject_post_only()
 ```
+
+### Current execution-test deltas
+
+- Cover `TC-E74` through `TC-E78` for ambiguous submit, cancel, modify, and
+  batch outcomes. Unknown outcomes must remain in-flight until venue updates,
+  query results, or reconciliation resolve them; emit terminal reject events
+  only for explicit per-order venue rejections.
+- For post-only crossing rejects, assert `due_post_only=true` when the adapter
+  emits `OrderRejected`, so strategy code can distinguish post-only failures
+  from other venue rejects.
+- For stop and conditional orders, include trigger-order reconciliation when a
+  venue keeps open trigger orders in a separate endpoint. Long-lived trigger
+  signatures must use the trigger-order signing expiry window, not the normal
+  order expiry.
+- If a venue supports limit-order modify but not native trigger-order replace,
+  skip native stop modify and cover the cancel-replace path instead.
 
 ### Execution Validation Flow
 

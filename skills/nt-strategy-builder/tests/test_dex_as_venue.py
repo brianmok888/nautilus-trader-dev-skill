@@ -8,13 +8,14 @@ This test does NOT require a live chain connection.
 All data is constructed in-memory using Nautilus test kit helpers.
 """
 
-import pytest
 from decimal import Decimal
+from pathlib import Path
+import subprocess
+import sys
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.model.currencies import USDT, ETH, BTC
-from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.enums import AccountType, OmsType
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CurrencyPair
@@ -54,13 +55,10 @@ def build_dex_instrument(pool_name: str, venue_name: str) -> CurrencyPair:
     )
 
 
-class TestDEXasBacktestVenue:
-    """Verify a DEX adapter output integrates with BacktestEngine."""
-
-    def test_dex_instrument_adds_to_engine(self):
-        """BacktestEngine accepts a DEX pool as an instrument."""
-        instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
-        engine = BacktestEngine()
+def _run_dex_instrument_case() -> None:
+    instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=Venue("UNISWAP_V3"),
             oms_type=OmsType.NETTING,
@@ -70,7 +68,92 @@ class TestDEXasBacktestVenue:
         )
         engine.add_instrument(instrument)
         engine.run()
+    finally:
         engine.dispose()
+
+
+def _run_dex_empty_case() -> None:
+    instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
+    engine = BacktestEngine()
+    try:
+        engine.add_venue(
+            venue=Venue("UNISWAP_V3"),
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, USDT), Money(10, ETH)],
+            fill_model=FillModel(
+                prob_fill_on_limit=0.25,
+                prob_slippage=0.70,
+                random_seed=42,
+            ),
+        )
+        engine.add_instrument(instrument)
+        engine.run()
+
+        report = engine.trader.generate_positions_report()
+        assert report is not None
+    finally:
+        engine.dispose()
+
+
+def _run_dex_and_cefi_case() -> None:
+    from nautilus_trader.test_kit.providers import TestInstrumentProvider
+
+    dex_instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
+    cefi_instrument = TestInstrumentProvider.btcusdt_binance()
+    engine = BacktestEngine()
+    try:
+        engine.add_venue(
+            venue=Venue("UNISWAP_V3"),
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, USDT), Money(10, ETH)],
+        )
+        engine.add_venue(
+            venue=Venue("BINANCE"),
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
+        )
+        engine.add_instrument(dex_instrument)
+        engine.add_instrument(cefi_instrument)
+        engine.run()
+    finally:
+        engine.dispose()
+
+
+_BACKTEST_CASES = {
+    "dex_instrument": _run_dex_instrument_case,
+    "dex_empty": _run_dex_empty_case,
+    "dex_and_cefi": _run_dex_and_cefi_case,
+}
+
+
+def _run_backtest_case_in_subprocess(case_name: str) -> None:
+    result = subprocess.run(
+        [sys.executable, __file__, "--backtest-case", case_name],
+        cwd=Path(__file__).resolve().parents[3],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, (
+        f"BacktestEngine case {case_name!r} failed with exit code "
+        f"{result.returncode}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+
+
+class TestDEXasBacktestVenue:
+    """Verify a DEX adapter output integrates with BacktestEngine."""
+
+    def test_dex_instrument_adds_to_engine(self):
+        """BacktestEngine accepts a DEX pool as an instrument."""
+        _run_backtest_case_in_subprocess("dex_instrument")
 
     def test_dex_fill_model_parameters(self):
         """DEX fill model has higher slippage than CeFi model."""
@@ -90,51 +173,15 @@ class TestDEXasBacktestVenue:
 
     def test_engine_with_dex_venue_runs_empty(self):
         """Engine with a DEX venue runs to completion with no data (empty run)."""
-        instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
-        engine = BacktestEngine()
-        engine.add_venue(
-            venue=Venue("UNISWAP_V3"),
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, USDT), Money(10, ETH)],
-            fill_model=FillModel(
-                prob_fill_on_limit=0.25,
-                prob_slippage=0.70,
-                random_seed=42,
-            ),
-        )
-        engine.add_instrument(instrument)
-        engine.run()  # No data → runs immediately
-
-        report = engine.trader.generate_positions_report()
-        assert report is not None  # Report should exist even with no trades
-        engine.dispose()
+        _run_backtest_case_in_subprocess("dex_empty")
 
     def test_dex_and_cefi_venues_coexist(self):
         """Engine accepts both a DEX venue and a CeFi venue simultaneously."""
-        from nautilus_trader.test_kit.providers import TestInstrumentProvider
+        _run_backtest_case_in_subprocess("dex_and_cefi")
 
-        dex_instrument = build_dex_instrument("WETH-USDC", "UNISWAP_V3")
-        cefi_instrument = TestInstrumentProvider.btcusdt_binance()
 
-        engine = BacktestEngine()
-
-        engine.add_venue(
-            venue=Venue("UNISWAP_V3"),
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, USDT), Money(10, ETH)],
-        )
-        engine.add_venue(
-            venue=Venue("BINANCE"),
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
-        )
-        engine.add_instrument(dex_instrument)
-        engine.add_instrument(cefi_instrument)
-        engine.run()
-        engine.dispose()
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--backtest-case":
+        _BACKTEST_CASES[sys.argv[2]]()
+        raise SystemExit(0)
+    raise SystemExit("Usage: test_dex_as_venue.py --backtest-case CASE")

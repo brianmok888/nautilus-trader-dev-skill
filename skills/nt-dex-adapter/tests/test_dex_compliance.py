@@ -12,7 +12,6 @@ NOTE: These tests check method PRESENCE only. Functional correctness is
 tested in `test_instrument_parsing.py` and `test_order_book_events.py`.
 """
 
-import sys
 import importlib.util
 from inspect import iscoroutinefunction
 from inspect import signature
@@ -214,6 +213,30 @@ class TestConfigInterface:
 
     def test_provider_config_has_sandbox_mode(self):
         assert self._has_field(MyDEXInstrumentProviderConfig, "sandbox_mode")
+
+    def test_exec_config_defaults_to_sandbox_mode(self):
+        config = MyDEXExecClientConfig()
+
+        assert config.sandbox_mode is True
+
+    def test_exec_config_default_private_key_is_empty(self):
+        config = MyDEXExecClientConfig()
+
+        assert config.private_key.get_secret_value() == ""
+
+    def test_exec_config_default_chain_is_not_mainnet(self):
+        config = MyDEXExecClientConfig()
+
+        assert config.chain_id != 1
+
+    def test_exec_config_rejects_live_mode_without_private_key(self):
+        from pydantic import SecretStr
+
+        with pytest.raises(ValueError, match="private_key"):
+            MyDEXExecClientConfig(
+                private_key=SecretStr(""),
+                sandbox_mode=False,
+            )
 
 
 class TestFactoryInterface:

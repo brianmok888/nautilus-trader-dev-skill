@@ -28,8 +28,8 @@ REQUIRED_GUIDE_FILES = [
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
-CURRENT_SYNC_DATE = "2026-05-25"
-CURRENT_TARGET = "NautilusTrader v1.227.0 latest developer guide"
+CURRENT_SYNC_DATE = "2026-06-08"
+CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
 
 
 ENTRY_SKILL = Path("skills/nt/SKILL.md")
@@ -71,10 +71,12 @@ CURRENT_INTEGRATION_GUIDES = [
     "coinbase.md",
     "databento.md",
     "deribit.md",
+    "derive.md",
     "dydx.md",
     "hyperliquid.md",
     "ib.md",
     "kraken.md",
+    "lighter.md",
     "okx.md",
     "polymarket.md",
     "tardis.md",
@@ -153,7 +155,81 @@ EVOMAP_PROXY_BOUNDARY_TERMS = [
     "human-in-the-loop",
 ]
 
+POLYMARKET_ALLOWANCE_TARGETS = [
+    Path("references/integrations/polymarket.md"),
+    Path("skills/nt-adapters/references/integrations/polymarket.md"),
+]
+
+SECRET_IGNORE_PATTERNS = [".env", ".env.*", "*.pem", "*.key"]
+
 GUIDE_LINK_RE = re.compile(r"\[Guide\]\(([^)]+\.md)\)")
+UV_REQUIRED_VERSION_RE = re.compile(r'required-version\s*=\s*"==[^"]+"')
+
+CURRENT_GUIDE_DELTA_TARGETS = {
+    Path("references/developer_guide/adapters.md"): [
+        "Handler initialization handshake",
+        "Auth-token rotation",
+        "CancellationToken",
+    ],
+    Path("references/developer_guide/spec_exec_testing.md"): [
+        "Ambiguous outcome failures",
+        "TC-E74",
+        "TC-E78",
+        "due_post_only=true",
+        "trigger-order signing expiry",
+    ],
+    Path("references/developer_guide/environment_setup.md"): [
+        "current version numbers into docs",
+        "rustup toolchain install nightly",
+        "pip-audit",
+        "maturin",
+    ],
+    Path("references/developer_guide/rust.md"): [
+        "Generated FFI bindings and precision mode",
+        "HIGH_PRECISION=true",
+    ],
+    Path("references/developer_guide/python.md"): [
+        "Python v2 live callback routing",
+        "Do not call `Python::attach` from Tokio worker tasks",
+    ],
+    Path("references/developer_guide/ffi.md"): [
+        "Typed CVec wrappers and Send",
+        "Rust-owned CVec capsules with explicit drop",
+    ],
+}
+
+CURRENT_SKILL_DELTA_TARGETS = {
+    Path("skills/nt-adapters/SKILL.md"): [
+        "SetClient",
+        "auth-token rotation",
+        "CancellationToken",
+        "ambiguous outcome failures",
+    ],
+    Path("skills/nt-testing/SKILL.md"): [
+        "TC-E74",
+        "TC-E78",
+        "due_post_only=true",
+        "trigger-order signing expiry",
+    ],
+    Path("skills/nt-dev/SKILL.md"): [
+        "Do not copy current version numbers",
+        "Generated FFI bindings and precision mode",
+        "Python v2 live callback routing",
+        "Typed CVec wrappers and Send",
+    ],
+    Path("skills/nt-evomap-integration/SKILL.md"): [
+        "~/.evolver/settings.json",
+        "EVOMAP_PROXY_PORT",
+        "mailbox/ack",
+        "mailbox/status",
+        "mailbox/list",
+        "task/subscribe",
+        "task/list",
+        "task/claim",
+        "task/complete",
+        "task/unsubscribe",
+    ],
+}
 
 
 @dataclass(frozen=True)
@@ -291,6 +367,57 @@ def _check_official_index_alignment(root: Path, errors: list[str]) -> None:
         )
 
 
+def _check_required_terms(
+    root: Path,
+    errors: list[str],
+    targets: dict[Path, list[str]],
+    error_label: str,
+) -> None:
+    for relative, required_terms in targets.items():
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+        text = _read(absolute)
+        for term in required_terms:
+            if term not in text:
+                errors.append(
+                    f"missing current {error_label} delta '{term}' in {relative.as_posix()}"
+                )
+
+
+def _check_secret_ignore_patterns(root: Path, errors: list[str]) -> None:
+    gitignore = root / ".gitignore"
+    if not gitignore.exists():
+        errors.append("missing .gitignore with secret ignore patterns")
+        return
+
+    patterns = set(_read(gitignore).splitlines())
+    for pattern in SECRET_IGNORE_PATTERNS:
+        if pattern not in patterns:
+            errors.append(f"missing secret ignore pattern '{pattern}' in .gitignore")
+
+
+def _check_security_guidance(root: Path, errors: list[str]) -> None:
+    for relative in POLYMARKET_ALLOWANCE_TARGETS:
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+
+        text = _read(absolute)
+        if "maximum possible amount of pUSD" in text:
+            errors.append(
+                f"unbounded Polymarket allowance guidance in {relative.as_posix()}"
+            )
+
+    for markdown_file in _iter_checked_markdown_files(root):
+        text = _read(markdown_file)
+        if "CryptoPermanentContract" in text:
+            errors.append(
+                "nonexistent DEX instrument class CryptoPermanentContract "
+                f"in {_relative(markdown_file, root)}"
+            )
+
+
 def run_checks(root: Path) -> CheckResult:
     errors: list[str] = []
 
@@ -298,6 +425,8 @@ def run_checks(root: Path) -> CheckResult:
     _check_required_guide_files(root, errors)
     _check_retired_references(root, errors)
     _check_official_index_alignment(root, errors)
+    _check_secret_ignore_patterns(root, errors)
+    _check_security_guidance(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
@@ -321,6 +450,13 @@ def run_checks(root: Path) -> CheckResult:
             or 'required-version = "==0.11.12"' in text
         ):
             errors.append(f"stale uv required-version guidance in {relative}")
+        if UV_REQUIRED_VERSION_RE.search(text):
+            errors.append(f"copied uv required-version guidance in {relative}")
+        if "Current official baseline:" in text and "Python package" in text:
+            errors.append(f"copied current Nautilus version guidance in {relative}")
+
+    _check_required_terms(root, errors, CURRENT_GUIDE_DELTA_TARGETS, "guide")
+    _check_required_terms(root, errors, CURRENT_SKILL_DELTA_TARGETS, "skill")
 
     for relative, required_terms in INVARIANT_TARGETS.items():
         absolute = root / relative

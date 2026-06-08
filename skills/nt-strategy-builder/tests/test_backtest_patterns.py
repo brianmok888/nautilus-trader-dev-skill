@@ -5,8 +5,12 @@ Verifies that backtest configuration patterns from templates
 construct, run, and dispose correctly using NautilusTrader's test kit.
 """
 
-import pytest
 from decimal import Decimal
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
@@ -17,12 +21,9 @@ from nautilus_trader.model.objects import Money
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
 
-class TestBacktestVenueConfig:
-    """Verify venue configuration patterns build without error."""
-
-    def test_cash_venue_builds(self):
-        """A CASH account venue builds and accepts starting balances."""
-        engine = BacktestEngine()
+def _run_cash_venue_case() -> None:
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=Venue("SIM"),
             oms_type=OmsType.NETTING,
@@ -31,11 +32,13 @@ class TestBacktestVenueConfig:
             starting_balances=[Money(10_000, USDT)],
         )
         assert engine is not None
+    finally:
         engine.dispose()
 
-    def test_margin_venue_with_leverage(self):
-        """A MARGIN account venue accepts default_leverage."""
-        engine = BacktestEngine()
+
+def _run_margin_venue_case() -> None:
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=Venue("SIM"),
             oms_type=OmsType.NETTING,
@@ -45,11 +48,13 @@ class TestBacktestVenueConfig:
             default_leverage=Decimal("10"),
         )
         assert engine is not None
+    finally:
         engine.dispose()
 
-    def test_dex_cash_venue_builds(self):
-        """A DEX venue (no margin) builds the same way as CeFi CASH."""
-        engine = BacktestEngine()
+
+def _run_dex_cash_venue_case() -> None:
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=Venue("UNISWAP_V3"),
             oms_type=OmsType.NETTING,
@@ -58,11 +63,13 @@ class TestBacktestVenueConfig:
             starting_balances=[Money(10_000, USDT)],
         )
         assert engine is not None
+    finally:
         engine.dispose()
 
-    def test_multi_currency_starting_balances(self):
-        """Multiple starting currencies are accepted."""
-        engine = BacktestEngine()
+
+def _run_multi_currency_case() -> None:
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=Venue("SIM"),
             oms_type=OmsType.NETTING,
@@ -71,7 +78,92 @@ class TestBacktestVenueConfig:
             starting_balances=[Money(10_000, USDT)],
         )
         assert engine is not None
+    finally:
         engine.dispose()
+
+
+def _run_engine_add_instrument_case() -> None:
+    instrument = TestInstrumentProvider.btcusdt_binance()
+    engine = BacktestEngine()
+    try:
+        engine.add_venue(
+            venue=Venue("BINANCE"),
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
+        )
+        engine.add_instrument(instrument)
+        engine.run()
+    finally:
+        engine.dispose()
+
+
+def _run_engine_account_report_case() -> None:
+    instrument = TestInstrumentProvider.btcusdt_binance()
+    engine = BacktestEngine()
+    try:
+        venue = Venue("BINANCE")
+        engine.add_venue(
+            venue=venue,
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
+        )
+        engine.add_instrument(instrument)
+        engine.run()
+
+        report = engine.trader.generate_account_report(venue)
+        assert report is not None
+    finally:
+        engine.dispose()
+
+
+_BACKTEST_CASES = {
+    "cash_venue": _run_cash_venue_case,
+    "margin_venue": _run_margin_venue_case,
+    "dex_cash_venue": _run_dex_cash_venue_case,
+    "multi_currency": _run_multi_currency_case,
+    "engine_add_instrument": _run_engine_add_instrument_case,
+    "engine_account_report": _run_engine_account_report_case,
+}
+
+
+def _run_backtest_case_in_subprocess(case_name: str) -> None:
+    result = subprocess.run(
+        [sys.executable, __file__, "--backtest-case", case_name],
+        cwd=Path(__file__).resolve().parents[3],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, (
+        f"BacktestEngine case {case_name!r} failed with exit code "
+        f"{result.returncode}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+
+
+class TestBacktestVenueConfig:
+    """Verify venue configuration patterns build without error."""
+
+    def test_cash_venue_builds(self):
+        """A CASH account venue builds and accepts starting balances."""
+        _run_backtest_case_in_subprocess("cash_venue")
+
+    def test_margin_venue_with_leverage(self):
+        """A MARGIN account venue accepts default_leverage."""
+        _run_backtest_case_in_subprocess("margin_venue")
+
+    def test_dex_cash_venue_builds(self):
+        """A DEX venue (no margin) builds the same way as CeFi CASH."""
+        _run_backtest_case_in_subprocess("dex_cash_venue")
+
+    def test_multi_currency_starting_balances(self):
+        """Multiple starting currencies are accepted."""
+        _run_backtest_case_in_subprocess("multi_currency")
 
 
 class TestFillModelPatterns:
@@ -117,33 +209,14 @@ class TestBacktestEngineWithInstrument:
     """Verify engine accepts instruments and runs without data."""
 
     def test_engine_add_instrument(self):
-        instrument = TestInstrumentProvider.btcusdt_binance()
-        engine = BacktestEngine()
-        engine.add_venue(
-            venue=Venue("BINANCE"),
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
-        )
-        engine.add_instrument(instrument)
-        engine.run()  # No data → runs immediately
-        engine.dispose()
+        _run_backtest_case_in_subprocess("engine_add_instrument")
 
     def test_engine_generates_account_report(self):
-        instrument = TestInstrumentProvider.btcusdt_binance()
-        engine = BacktestEngine()
-        venue = Venue("BINANCE")
-        engine.add_venue(
-            venue=venue,
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, USDT), Money(1, BTC)],
-        )
-        engine.add_instrument(instrument)
-        engine.run()
+        _run_backtest_case_in_subprocess("engine_account_report")
 
-        report = engine.trader.generate_account_report(venue)
-        assert report is not None
-        engine.dispose()
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--backtest-case":
+        _BACKTEST_CASES[sys.argv[2]]()
+        raise SystemExit(0)
+    raise SystemExit("Usage: test_backtest_patterns.py --backtest-case CASE")

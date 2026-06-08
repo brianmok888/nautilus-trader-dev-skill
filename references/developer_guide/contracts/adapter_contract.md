@@ -19,9 +19,16 @@ Sources:
   semantics or efficiency.
 - Require order status reports, fill reports, position status reports, and mass
   status generation where the official execution client contract requires them.
+- Queue `SetClient` before publishing a replacement WebSocket command channel
+  or active-state flag when handlers receive their connected client by command.
+- Keep expiring auth-token rotation in the outer client and stop refresh loops
+  with `CancellationToken`; handlers send supplied tokens but do not sign.
+- Treat transport, timeout, send, retry, parse, and whole-batch failures as
+  ambiguous outcomes unless the venue returns explicit per-order results.
 
 ## Review rule
 
 An adapter is not ready when it only has provider/data/exec class shells. It must
 prove command handling, subscriptions, reconciliation, account state, and factory
-wiring for the claimed venue scope.
+wiring for the claimed venue scope. Rejection events require venue evidence, not
+client-side uncertainty.

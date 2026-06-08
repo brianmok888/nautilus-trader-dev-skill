@@ -10,8 +10,12 @@ Sources:
 - Use `uv` for Python environment and command execution in this skill repo.
 - For NautilusTrader core setup, prefer the official latest setup path:
   `make install-tools`, pinned tools from `tools.toml`, and `prek install`.
+- Do not copy current version numbers into docs, runner images, or scripts when
+  a manifest-backed source can be read (`rust-toolchain.toml`, `Cargo.toml`,
+  `pyproject.toml`, lockfiles, or `tools.toml`).
 - Preserve command names that are still official make targets, even when they
   include the phrase `pre-commit`.
+- Fuzzing requires a Rust nightly runtime (`rustup toolchain install nightly`).
 
 ## Review rule
 

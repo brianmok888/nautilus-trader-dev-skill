@@ -123,8 +123,14 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 
 ### Dependency Management
 
-- Current official baseline: Python package `1.227.0`, Rust workspace crate `0.57.0`, MSRV `1.95.0`, Python `>=3.12,<3.15`.
-- `pyproject.toml` pins `required-version = "==0.11.14"` for uv and enforces `exclude-newer = "3 days"` cooldown.
+- Treat GitHub `develop` manifests as the authoritative baseline for package,
+  crate, MSRV, and Python version ranges when this repo tracks source snapshots.
+- Do not copy current version numbers into docs, runner images, or scripts when
+  the manifest can be read instead. Treat `rust-toolchain.toml`, `Cargo.toml`,
+  `pyproject.toml`, lockfiles, and `tools.toml` as the version sources.
+- `pyproject.toml` pins uv through `required-version` and enforces the
+  `exclude-newer = "3 days"` cooldown; read the actual pin with
+  `scripts/uv-version.sh` instead of duplicating it in guidance.
 - `[tool.uv].no-build-package` pins third-party packages to wheels; update it with `scripts/check-no-build-packages.sh` when `uv.lock` or `pyproject.toml` changes.
 - Bypass cooldown only for justified urgent updates: `uv lock --exclude-newer "0 seconds"`.
 - Workspace deps: use `serde = { workspace = true }` for shared deps.
@@ -216,6 +222,14 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 - Async functions: document cancellation safety for control-plane futures.
   Adapter sync-to-async bridges should use `get_runtime().block_on()`;
   Python-thread-sensitive tasks should use `get_runtime().spawn()`.
+- Generated FFI bindings and precision mode: when compiling `nautilus-model`
+  with `ffi` outside the aligned feature set, include `high-precision` or set
+  `HIGH_PRECISION=true`; verify generated `model.h` / `model.pxd` did not drift
+  before committing FFI-related work.
+- Python v2 live callback routing: Tokio worker threads must not run Python
+  code during live trading. Route unavoidable Python callbacks through live
+  runner event channels; do not call `Python::attach` from Tokio worker tasks.
+- Fuzz targets require nightly at runtime: `rustup toolchain install nightly`.
 
 ## Testing & Benchmarking
 
@@ -298,6 +312,12 @@ New data types need tests at all layers: DataEngine, DataActor (Rust), PyO3 disp
 4. **No generic `cvec_drop`** — always use type-specific helpers (`vec_drop_book_levels`, etc.)
 5. **PyCapsule with destructor**: Always use `PyCapsule::new_with_destructor`, never `PyCapsule::new(..., None)`
 6. **Box-backed `*_API` wrappers**: Every `*_new` must have a matching `*_drop`. Validate params before allocation.
+7. **Typed CVec wrappers and Send**: never mark raw `CVec` as `Send`; wrap the
+   concrete payload (for example a transparent `DataFfiCVec`) and document the
+   invariant before an unsafe `Send` impl.
+8. **Rust-owned CVec capsules with explicit drop**: use only type-specific
+   named capsules and type-specific drop functions, validate `len <= cap`, and
+   reset metadata before `Vec::from_raw_parts`.
 
 ### CVec Lifecycle
 

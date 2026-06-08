@@ -39,11 +39,20 @@ Use five explicit components:
 
 Current Evolver integrations communicate through a local Proxy mailbox. Keep the protocol boundary inside the sidecar client:
 
+Discover the local Proxy from `~/.evolver/settings.json`; the default is
+`http://127.0.0.1:19820`, overrideable by `EVOMAP_PROXY_PORT`. Agent-side code
+talks to localhost only. The Proxy owns Hub auth, heartbeat, retries, and sync.
+
 - `POST /mailbox/send` — enqueue local messages for asynchronous sync.
 - `POST /mailbox/poll` — fetch local mailbox results such as asset review decisions.
 - `POST /mailbox/ack` and `GET /mailbox/status/{message_id}` — acknowledge and observe outcomes.
+- `GET /mailbox/list?type=...&limit=...` — inspect local messages for diagnostics.
 - `POST /asset/submit` — submit Gene/Capsule/EvolutionEvent assets.
 - `POST /asset/fetch` and `POST /asset/search` — retrieve or search advisory assets.
+- `POST /task/subscribe`, `GET /task/list`, `POST /task/claim`,
+  `POST /task/complete`, and `POST /task/unsubscribe` — optional task
+  workflow endpoints; keep them out of trading logic unless the sidecar is
+  explicitly handling offline review work.
 
 Treat direct Hub protocol details as Proxy-owned. Strategy and Actor code should only see domain methods such as `submit_assets`, `poll`, and `search_assets`.
 

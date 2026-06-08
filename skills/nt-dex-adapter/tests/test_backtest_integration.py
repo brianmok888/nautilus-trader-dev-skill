@@ -11,20 +11,17 @@ separately in test_dex_compliance.py.
 No live chain connection required — all data is in-memory.
 """
 
-import pytest
 from decimal import Decimal
-
-import sys
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
-from nautilus_trader.model.currencies import USDT
-from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.enums import AccountType, OmsType
-from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
-from nautilus_trader.model.instruments import CurrencyPair
 from nautilus_trader.model.objects import Money, Price, Quantity
 
 _templates = Path(__file__).parent.parent / "templates"
@@ -46,9 +43,7 @@ MyDEXInstrumentProvider = _provider_mod.MyDEXInstrumentProvider
 amm_spot_price = _ob_mod.amm_spot_price
 
 
-@pytest.fixture
-def dex_instrument():
-    """Synthetic DEX instrument from sandbox provider."""
+def _build_dex_instrument():
     config = MyDEXInstrumentProviderConfig(sandbox_mode=True)
     provider = MyDEXInstrumentProvider(config=config)
     provider._load_sandbox_instruments()
@@ -56,8 +51,7 @@ def dex_instrument():
     return next(iter(instruments.values()))
 
 
-@pytest.fixture
-def dex_fill_model():
+def _build_fill_model():
     return FillModel(
         prob_fill_on_limit=0.25,
         prob_slippage=0.70,
@@ -65,30 +59,32 @@ def dex_fill_model():
     )
 
 
-class TestDEXBacktestEngineIntegration:
-    """Integration smoke tests for DEX adapter + BacktestEngine."""
-
-    def test_engine_accepts_dex_instrument(self, dex_instrument, dex_fill_model):
-        """BacktestEngine accepts a DEX instrument without error."""
-        base = dex_instrument.base_currency
-        quote = dex_instrument.quote_currency
-        engine = BacktestEngine()
+def _run_accepts_dex_instrument_case() -> None:
+    dex_instrument = _build_dex_instrument()
+    base = dex_instrument.base_currency
+    quote = dex_instrument.quote_currency
+    engine = BacktestEngine()
+    try:
         engine.add_venue(
             venue=dex_instrument.id.venue,
             oms_type=OmsType.NETTING,
             account_type=AccountType.CASH,
             base_currency=None,
             starting_balances=[Money(10_000, quote), Money(10, base)],
-            fill_model=dex_fill_model,
+            fill_model=_build_fill_model(),
         )
         engine.add_instrument(dex_instrument)
         engine.run()
+    finally:
         engine.dispose()
 
-    def test_engine_generates_account_report(self, dex_instrument, dex_fill_model):
-        base = dex_instrument.base_currency
-        quote = dex_instrument.quote_currency
-        engine = BacktestEngine()
+
+def _run_account_report_case() -> None:
+    dex_instrument = _build_dex_instrument()
+    base = dex_instrument.base_currency
+    quote = dex_instrument.quote_currency
+    engine = BacktestEngine()
+    try:
         venue = dex_instrument.id.venue
         engine.add_venue(
             venue=venue,
@@ -102,7 +98,72 @@ class TestDEXBacktestEngineIntegration:
 
         report = engine.trader.generate_account_report(venue)
         assert report is not None
+    finally:
         engine.dispose()
+
+
+def _run_zero_balance_case() -> None:
+    dex_instrument = _build_dex_instrument()
+    base = dex_instrument.base_currency
+    quote = dex_instrument.quote_currency
+    engine = BacktestEngine()
+    try:
+        engine.add_venue(
+            venue=dex_instrument.id.venue,
+            oms_type=OmsType.NETTING,
+            account_type=AccountType.CASH,
+            base_currency=None,
+            starting_balances=[Money(10_000, quote), Money(0, base)],
+        )
+        engine.add_instrument(dex_instrument)
+        engine.run()
+    finally:
+        engine.dispose()
+
+
+_BACKTEST_CASES = {
+    "accepts_dex_instrument": _run_accepts_dex_instrument_case,
+    "account_report": _run_account_report_case,
+    "zero_balance": _run_zero_balance_case,
+}
+
+
+def _run_backtest_case_in_subprocess(case_name: str) -> None:
+    result = subprocess.run(
+        [sys.executable, __file__, "--backtest-case", case_name],
+        cwd=Path(__file__).resolve().parents[3],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, (
+        f"BacktestEngine case {case_name!r} failed with exit code "
+        f"{result.returncode}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+
+
+@pytest.fixture
+def dex_instrument():
+    """Synthetic DEX instrument from sandbox provider."""
+    return _build_dex_instrument()
+
+
+@pytest.fixture
+def dex_fill_model():
+    return _build_fill_model()
+
+
+class TestDEXBacktestEngineIntegration:
+    """Integration smoke tests for DEX adapter + BacktestEngine."""
+
+    def test_engine_accepts_dex_instrument(self, dex_instrument, dex_fill_model):
+        """BacktestEngine accepts a DEX instrument without error."""
+        _run_backtest_case_in_subprocess("accepts_dex_instrument")
+
+    def test_engine_generates_account_report(self, dex_instrument, dex_fill_model):
+        _run_backtest_case_in_subprocess("account_report")
 
     def test_sandbox_provider_instrument_is_valid(self, dex_instrument):
         """Sandbox provider creates instruments with valid precision/fee fields."""
@@ -123,16 +184,11 @@ class TestDEXBacktestEngineIntegration:
 
     def test_dex_venue_with_zero_balance_initialises(self, dex_instrument):
         """Engine tolerates DEX venue starting with zero additional token balance."""
-        base = dex_instrument.base_currency
-        quote = dex_instrument.quote_currency
-        engine = BacktestEngine()
-        engine.add_venue(
-            venue=dex_instrument.id.venue,
-            oms_type=OmsType.NETTING,
-            account_type=AccountType.CASH,
-            base_currency=None,
-            starting_balances=[Money(10_000, quote), Money(0, base)],
-        )
-        engine.add_instrument(dex_instrument)
-        engine.run()
-        engine.dispose()
+        _run_backtest_case_in_subprocess("zero_balance")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--backtest-case":
+        _BACKTEST_CASES[sys.argv[2]]()
+        raise SystemExit(0)
+    raise SystemExit("Usage: test_backtest_integration.py --backtest-case CASE")

@@ -1,10 +1,10 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-05-25
+**Generated:** 2026-06-08
 **Commit:** 618653c
 **Branch:** main
 **Stack:** AI Agent Skills (Claude Code, Gemini CLI, Codex) for NautilusTrader development
-**NautilusTrader Alignment:** Latest developer guide with version-sensitive migration notes
+**NautilusTrader Alignment:** GitHub `develop` developer-guide snapshot with version-sensitive migration notes
 
 ## OVERVIEW
 

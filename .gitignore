@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+
+# Local agent/runtime state
+.omx/

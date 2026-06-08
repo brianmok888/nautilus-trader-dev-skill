@@ -14,6 +14,13 @@ Sources:
   compatible with the official data tester pattern.
 - Use ExecTester evidence for execution adapter behavior when the adapter surface
   is compatible with the official execution tester pattern.
+- Include `TC-E74` through `TC-E78` for ambiguous submit/cancel/modify/batch
+  outcomes when the adapter has execution support. Use mock boundaries when live
+  venues cannot reliably produce unknown outcomes.
+- Assert `due_post_only=true` for post-only rejection events when the adapter
+  emits `OrderRejected` for a crossing post-only order.
+- Cover trigger-order reconciliation and trigger-order signing expiry for venues
+  that keep native stop/conditional orders outside the normal open-order path.
 - Isolate PyO3 panic/abort behavior in subprocess-style tests when a failure
   would abort the interpreter.
 - Keep unit tests deterministic and avoid implicit network or dataset downloads.

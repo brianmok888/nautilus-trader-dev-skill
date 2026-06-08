@@ -158,13 +158,20 @@ Before running the script, ensure the following prerequisites are met:
 
 Once you have these in place, the script will:
 
-- Approve the maximum possible amount of pUSD (using the `MAX_INT` value) for the Polymarket collateral token contract.
+- Approve a bounded pUSD amount for the Polymarket collateral token contract.
 - Set the approval for the CTF contract, allowing it to interact with your account for trading purposes.
 
-:::note
-You can also adjust the approval amount in the script instead of using `MAX_INT`,
-with the amount specified in *fractional units* of **pUSD**, though this has not been tested.
+:::caution
+Use least-privilege allowances by default. Size the pUSD approval to the intended
+session or strategy budget, rotate it when the budget changes, and revoke unused
+allowances from the wallet or a trusted allowance-management tool after testing or
+shutdown.
 :::
+
+`MAX_INT` approvals should be treated as an explicit high-risk operator choice,
+not the default. Use them only after recording operator acknowledgement that a
+compromised exchange contract, proxy, script, or wallet path could spend all
+approved collateral until the allowance is revoked.
 
 Ensure that your private key and public key are correctly stored in the environment variables before running the script.
 Here's an example of how to set the variables in your terminal session:
