@@ -59,7 +59,7 @@ The integration includes several custom data types:
 - `BinanceBar`: Bar data with additional volume metrics for historical and real-time use.
 - `BinanceFuturesMarkPriceUpdate`: Mark price updates for Binance Futures.
 
-See the Binance [API Reference](/docs/python-api-latest/adapters/binance.html) for full definitions.
+See the Binance [API Reference](https://nautilustrader.io/docs/python-api-latest/adapters/binance.html) for full definitions.
 
 ## Symbology
 

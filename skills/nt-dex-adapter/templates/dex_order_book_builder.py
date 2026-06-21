@@ -15,12 +15,10 @@ For on-chain CLOB DEX (dYdX v4, Hyperliquid):
 This helper is called by the data client to generate OrderBookDelta snapshots.
 """
 
-from decimal import Decimal
 
 from nautilus_trader.model.data import OrderBookDelta, OrderBookDeltas
-from nautilus_trader.model.enums import BookAction, OrderSide as BookSide
+from nautilus_trader.model.enums import BookAction
 from nautilus_trader.model.identifiers import InstrumentId
-from nautilus_trader.model.objects import Price, Quantity
 
 
 # =============================================================================

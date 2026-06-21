@@ -409,7 +409,7 @@ print(results_df.T)  # Transpose for vertical display
 :::info
 Reports are generated from in-memory data structures. For large-scale analysis
 or long-running systems, consider persisting reports to a database for efficient
-querying. See the [Cache guide](cache.md) for persistence options.
+querying. See the [Cache guide](https://nautilustrader.io/docs/latest/concepts/cache/) for persistence options.
 :::
 
 ## Integration with other components
@@ -434,5 +434,5 @@ position snapshots in `NETTING` OMS.
 
 - [Visualization](visualization.md) - Learn how to create interactive tearsheets and charts from backtest results.
 - [Portfolio](portfolio.md) - Explore portfolio statistics and performance metrics.
-- [Backtesting](backtesting.md) - Learn how to run backtests that generate reports.
-- [Cache](cache.md) - Understand the cache system that stores data for reports.
+- [Backtesting](https://nautilustrader.io/docs/latest/concepts/backtesting/) - Learn how to run backtests that generate reports.
+- [Cache](https://nautilustrader.io/docs/latest/concepts/cache/) - Understand the cache system that stores data for reports.

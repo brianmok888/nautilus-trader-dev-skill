@@ -132,7 +132,7 @@ For demo trading, set `is_demo: true` in both config structs and use demo
 API credentials from OKX.
 
 Each adapter documents its required variables in the
-[integration guide](../integrations/) for that venue.
+[integration guide](https://nautilustrader.io/docs/latest/../integrations/) for that venue.
 
 ## Async runtime
 

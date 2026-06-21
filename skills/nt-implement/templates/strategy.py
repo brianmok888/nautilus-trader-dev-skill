@@ -5,7 +5,6 @@ A Strategy handles trading logic: receiving data, making decisions, submitting o
 Strategy inherits from Actor, so all Actor capabilities are available.
 """
 
-from decimal import Decimal
 
 from nautilus_trader.config import StrategyConfig
 from nautilus_trader.core.data import Data
@@ -13,7 +12,6 @@ from nautilus_trader.model.data import Bar
 from nautilus_trader.model.data import BarType
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.enums import OrderSide
-from nautilus_trader.model.objects import Quantity
 from nautilus_trader.model.events import OrderFilled
 from nautilus_trader.model.events import PositionChanged
 from nautilus_trader.model.events import PositionClosed

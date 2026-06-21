@@ -179,7 +179,7 @@ The following outlines the main configuration options.
 By configuring these parameters thoughtfully, you can ensure that your trading system operates efficiently,
 handles orders correctly, and remains resilient in the face of potential issues, such as lost events or conflicting data/information.
 
-For full details see the `LiveExecEngineConfig` [API Reference](../api_reference/config#class-liveexecengineconfig).
+For full details see the `LiveExecEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecengineconfig).
 
 #### Reconciliation
 
@@ -338,7 +338,7 @@ Each loop delegates to the cache APIs described in [Purging cached state](cache.
 ### Strategy configuration
 
 The `StrategyConfig` class outlines the configuration for trading strategies, ensuring that each strategy operates with the correct parameters and manages orders effectively.
-For a complete parameter list see the `StrategyConfig` [API Reference](../api_reference/config#class-strategyconfig).
+For a complete parameter list see the `StrategyConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-strategyconfig).
 
 #### Identification
 
@@ -355,7 +355,7 @@ For a complete parameter list see the `StrategyConfig` [API Reference](../api_re
 
 | Setting                     | Default | Description                                                                                                            |
 |-----------------------------|---------|------------------------------------------------------------------------------------------------------------------------|
-| `oms_type`                  | None    | Specifies the [OMS type](../concepts/execution#oms-configuration), for position ID handling and order processing flow. |
+| `oms_type`                  | None    | Specifies the [OMS type](https://nautilustrader.io/docs/latest/concepts/execution/#oms-configuration), for position ID handling and order processing flow. |
 | `use_uuid_client_order_ids` | False   | If UUID4's should be used for client order ID values. |
 | `external_order_claims`     | None    | Lists instrument IDs for external orders the strategy should claim, aiding accurate order management. |
 | `manage_contingent_orders`  | False   | If enabled, the strategy automatically manages OTO, OCO, and OUO contingent orders. |
@@ -459,7 +459,7 @@ They exist solely to align position discrepancies and should not be managed by u
 To detect external orders in your strategy, check `order.strategy_id.value == "EXTERNAL"`. These orders are included in portfolio calculations and position tracking like any other order.
 :::
 
-For a full list of live trading options see the `LiveExecEngineConfig` [API Reference](../api_reference/config#class-liveexecengineconfig).
+For a full list of live trading options see the `LiveExecEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecengineconfig).
 
 ### Reconciliation procedure
 

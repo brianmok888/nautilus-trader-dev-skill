@@ -2,7 +2,7 @@
 
 Backtesting with NautilusTrader is a methodical simulation process that replicates trading
 activities using a specific system implementation. This system is composed of various components
-including the built-in engines, `Cache`, [MessageBus](message_bus.md), `Portfolio`, [Actors](actors.md), [Strategies](strategies.md), [Execution Algorithms](execution.md),
+including the built-in engines, `Cache`, [MessageBus](https://nautilustrader.io/docs/latest/concepts/message_bus/), `Portfolio`, [Actors](https://nautilustrader.io/docs/latest/concepts/actors/), [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/), [Execution Algorithms](https://nautilustrader.io/docs/latest/concepts/execution/),
 and other user-defined modules. The entire trading simulation is predicated on a stream of historical data processed by a
 `BacktestEngine`. Once this data stream is exhausted, the engine concludes its operation, producing
 detailed results and performance metrics for in-depth analysis.
@@ -1632,6 +1632,6 @@ The margin model will be automatically applied to the simulated exchange during 
 
 ## Related guides
 
-- [Strategies](strategies.md) - Develop strategies to backtest.
-- [Visualization](visualization.md) - Generate tearsheets from backtest results.
-- [Reports](reports.md) - Analyze backtest performance data.
+- [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/) - Develop strategies to backtest.
+- [Visualization](https://nautilustrader.io/docs/latest/concepts/visualization/) - Generate tearsheets from backtest results.
+- [Reports](https://nautilustrader.io/docs/latest/concepts/reports/) - Analyze backtest performance data.

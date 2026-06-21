@@ -593,7 +593,7 @@ The design of the platform prioritizes software correctness and safety at the hi
 
 The Rust codebase under `crates/` relies on the `rustc` compiler's guarantees for safe code.
 Any `unsafe` blocks are explicit opt-outs where we must uphold the required invariants ourselves
-(see the Rust section of the [Developer Guide](../developer_guide/rust.md)); overall memory and type safety
+(see the Rust section of the [Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/rust/)); overall memory and type safety
 depend on those invariants holding.
 
 Cython provides type safety at the C level at both compile time, and runtime:
@@ -638,4 +638,4 @@ For parallel execution or workload isolation, run each node in its own separate 
 ## Related guides
 
 - [Overview](overview.md) - High-level introduction to NautilusTrader.
-- [Message Bus](message_bus.md) - Core messaging infrastructure.
+- [Message Bus](https://nautilustrader.io/docs/latest/concepts/message_bus/) - Core messaging infrastructure.

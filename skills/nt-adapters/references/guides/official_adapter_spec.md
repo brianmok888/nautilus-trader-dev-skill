@@ -244,7 +244,7 @@ to these defaults when unset.
 Expose typed config structs in `src/config.rs` so Python callers toggle venue-specific behaviour
 (see how OKX wires demo URLs, retries, and channel flags).
 Keep defaults minimal and delegate URL selection to helpers in `common::urls`.
-For the user-facing design rationale, see the [Configuration](../concepts/configuration.md)
+For the user-facing design rationale, see the [Configuration](https://nautilustrader.io/docs/latest/../concepts/configuration/)
 concept guide.
 
 #### Builder and Default
@@ -1925,7 +1925,7 @@ tests/integration_tests/adapters/your_adapter/
 ## Documentation
 
 All adapter documentation (module-level docs, doc comments, and inline comments) should follow the
-[Documentation Style Guide](docs.md).
+[Documentation Style Guide](https://nautilustrader.io/docs/latest/docs/).
 
 ### Rust documentation requirements
 
@@ -2242,7 +2242,7 @@ class TemplateLiveMarketDataClient(LiveMarketDataClient):
 
 When implementing `_subscribe_order_book_deltas` or streaming order book
 data, adapters **must** set `RecordFlag` flags correctly on each
-`OrderBookDelta`. See also [Delta flags and event boundaries](../concepts/data.md#delta-flags-and-event-boundaries).
+`OrderBookDelta`. See also [Delta flags and event boundaries](https://nautilustrader.io/docs/latest/../concepts/data/#delta-flags-and-event-boundaries).
 
 - **`F_LAST`**: Set on the last delta of every logical event group. The
   `DataEngine` uses this flag as the flush signal when `buffer_deltas` is

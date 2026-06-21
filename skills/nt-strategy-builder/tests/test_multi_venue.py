@@ -11,23 +11,15 @@ Tests confirm:
 - on_stop cancels orders on both venues
 """
 
-import pytest
 from collections import deque
-from decimal import Decimal
-from typing import Optional
 from unittest.mock import MagicMock
 from types import MethodType
 
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.data import QuoteTick
-from nautilus_trader.model.enums import AccountType, OmsType
-from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
-from nautilus_trader.model.objects import Money, Price, Quantity
-from nautilus_trader.test_kit.providers import TestInstrumentProvider
+from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.model.objects import Price, Quantity
 
 # Import the template class under test
-import sys
 import importlib.util
 from pathlib import Path
 

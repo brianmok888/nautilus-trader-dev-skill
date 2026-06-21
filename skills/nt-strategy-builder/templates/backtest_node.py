@@ -12,14 +12,13 @@ Demonstrates a complete BacktestEngine setup with:
 Replace MyStrategy / MyStrategyConfig with your actual components.
 """
 
-from decimal import Decimal
 from pathlib import Path
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.backtest.config import BacktestEngineConfig, BacktestVenueConfig
 from nautilus_trader.config import BacktestDataConfig, BacktestRunConfig
-from nautilus_trader.model.currencies import USD, USDT
+from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.enums import AccountType, OmsType
 from nautilus_trader.model.identifiers import Venue
 from nautilus_trader.model.objects import Money

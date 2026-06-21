@@ -10,9 +10,6 @@ Replace 'MyDEX' with your actual DEX name and fill in the RPC client calls.
 
 from decimal import Decimal
 
-from nautilus_trader.cache.cache import Cache
-from nautilus_trader.common.component import LiveClock
-from nautilus_trader.config import InstrumentProviderConfig
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CurrencyPair
 from nautilus_trader.model.currencies import Currency

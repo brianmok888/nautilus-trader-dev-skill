@@ -113,7 +113,7 @@ Actors have access to core system components:
 | `self.log`        | Structured logging.                                      |
 | `self.msgbus`     | Publish/subscribe to custom messages.                    |
 
-For custom messaging between components, see the [Message Bus](message_bus.md) guide.
+For custom messaging between components, see the [Message Bus](https://nautilustrader.io/docs/latest/concepts/message_bus/) guide.
 
 ## Data handling and callbacks
 
@@ -337,5 +337,5 @@ The `on_order_canceled()` handler will only receive events while the actor is in
 ## Related guides
 
 - [Strategies](strategies.md) - Strategies extend actors with order management capabilities.
-- [Data](data.md) - Data types and subscriptions available to actors.
-- [Message Bus](message_bus.md) - The messaging system actors use for communication.
+- [Data](https://nautilustrader.io/docs/latest/concepts/data/) - Data types and subscriptions available to actors.
+- [Message Bus](https://nautilustrader.io/docs/latest/concepts/message_bus/) - The messaging system actors use for communication.

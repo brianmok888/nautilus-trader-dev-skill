@@ -30,7 +30,7 @@ Live example scripts are available in
 **Options support**: The adapter supports options market data, venue-provided Greeks
 (`subscribe_option_greeks`), and order execution for options instruments. See the
 [Options trading](#options-trading) section below for details and the
-[Options](../concepts/options.md) guide for subscription patterns.
+[Options](https://nautilustrader.io/docs/latest/concepts/options/) guide for subscription patterns.
 :::
 
 :::info

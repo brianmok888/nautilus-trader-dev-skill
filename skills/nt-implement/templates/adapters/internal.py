@@ -11,12 +11,8 @@ This is simpler than exchange adapters since you control the API.
 """
 
 import asyncio
-from collections.abc import Callable
 
-from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.actor import Actor
-from nautilus_trader.common.component import LiveClock
-from nautilus_trader.common.component import MessageBus
 from nautilus_trader.config import ActorConfig
 from nautilus_trader.core.data import Data
 from nautilus_trader.model.custom import customdataclass

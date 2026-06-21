@@ -182,7 +182,7 @@ The platform allows different OMS configurations for strategies and venues:
 :::tip
 For most trading scenarios, keeping strategy and venue OMS types aligned simplifies
 position management. Override configurations are primarily useful for prop trading
-desks or when interfacing with legacy systems. See the [Live guide](live.md)
+desks or when interfacing with legacy systems. See the [Live guide](https://nautilustrader.io/docs/latest/concepts/live/)
 for venue-specific OMS configuration.
 :::
 
@@ -213,7 +213,7 @@ for accurate totals.
 
 :::note
 This historical snapshot mechanism differs from optional position state snapshots (`snapshot_positions`),
-which periodically record open-position state for telemetry. See the [Live guide](live.md) for
+which periodically record open-position state for telemetry. See the [Live guide](https://nautilustrader.io/docs/latest/concepts/live/) for
 `snapshot_positions` and `snapshot_positions_interval_secs` settings.
 :::
 
@@ -374,7 +374,7 @@ notional = position.notional_value(current_price)
 
 :::info
 For complete type information and detailed property documentation, see the Position
-[API Reference](../api_reference/model/position.md#class-position).
+[API Reference](https://nautilustrader.io/docs/latest/api_reference/model/position/#class-position).
 :::
 
 ## Events and tracking

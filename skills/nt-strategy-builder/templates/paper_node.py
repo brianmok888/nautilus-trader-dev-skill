@@ -14,7 +14,6 @@ For Rust v2 / Rust-backed live-node work, use the LiveNode path in nt-live.
 """
 
 import asyncio
-import os
 
 from nautilus_trader.config import (
     LiveDataEngineConfig,

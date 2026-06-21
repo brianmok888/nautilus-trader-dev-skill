@@ -11,8 +11,6 @@ import pandas as pd
 
 from nautilus_trader.config import ExecAlgorithmConfig
 from nautilus_trader.execution.algorithm import ExecAlgorithm
-from nautilus_trader.model import InstrumentId
-from nautilus_trader.model import OrderSide
 from nautilus_trader.model import Quantity
 from nautilus_trader.model import TimeInForce
 from nautilus_trader.model.events import OrderFilled
@@ -98,7 +96,6 @@ class MyExecAlgorithm(ExecAlgorithm):
 
         # Split quantity into slices
         total_qty = float(order.quantity)
-        slice_qty = total_qty / num_slices
         sizes = self._calculate_slice_sizes(instrument, total_qty, num_slices)
 
         # Store scheduled sizes

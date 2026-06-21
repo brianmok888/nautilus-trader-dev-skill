@@ -67,7 +67,7 @@ def on_bar(self, bar: Bar) -> None:
 ## Configuration
 
 Use the `CacheConfig` class to configure the `Cache` behavior and capacity.
-You can provide this configuration either to a `BacktestEngine` or a `TradingNode`, depending on your [environment context](architecture.md#environment-contexts).
+You can provide this configuration either to a `BacktestEngine` or a `TradingNode`, depending on your [environment context](https://nautilustrader.io/docs/latest/concepts/architecture/#environment-contexts).
 
 Here's a basic example of configuring the `Cache`:
 
@@ -395,7 +395,7 @@ Key safeguards:
 - Indices and reverse lookups are cleaned alongside the primary object to avoid dangling references.
 - Database deletions occur only when `purge_from_database=True` and a cache database is configured, ensuring in-memory purges do not silently erase persisted data.
 
-Use the trading clock (for example, `self.clock.timestamp_ns()`) when supplying `ts_now`. Set `purge_from_database=True` only when you intend to delete persisted records from Redis or PostgreSQL as well. In live trading these methods run automatically when the execution engine is configured with purge intervals; see [Memory management](live.md#memory-management) for the scheduler settings.
+Use the trading clock (for example, `self.clock.timestamp_ns()`) when supplying `ts_now`. Set `purge_from_database=True` only when you intend to delete persisted records from Redis or PostgreSQL as well. In live trading these methods run automatically when the execution engine is configured with purge intervals; see [Memory management](https://nautilustrader.io/docs/latest/concepts/live/#memory-management) for the scheduler settings.
 
 #### Instruments and currencies
 
@@ -535,5 +535,5 @@ class AnotherStrategy(Strategy):
 ## Related guides
 
 - [Data](data.md) - Data types stored in the cache.
-- [Strategies](strategies.md) - Strategies access cache for market data and state.
-- [Reports](reports.md) - Generate reports from cached data.
+- [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/) - Strategies access cache for market data and state.
+- [Reports](https://nautilustrader.io/docs/latest/concepts/reports/) - Generate reports from cached data.

@@ -15,15 +15,12 @@ use the LiveNode path in nt-live.
 
 import asyncio
 from collections import deque
-from decimal import Decimal
 
 from nautilus_trader.config import LiveExecEngineConfig, TradingNodeConfig
-from nautilus_trader.core.data import Data
 from nautilus_trader.live.node import TradingNode
-from nautilus_trader.model.data import Bar, BarType, QuoteTick
+from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.enums import OrderSide
-from nautilus_trader.model.identifiers import InstrumentId, TraderId, Venue
-from nautilus_trader.model.objects import Quantity
+from nautilus_trader.model.identifiers import InstrumentId, TraderId
 from nautilus_trader.trading.config import StrategyConfig
 from nautilus_trader.trading.strategy import Strategy
 

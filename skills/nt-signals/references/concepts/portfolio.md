@@ -147,7 +147,7 @@ stat = WinRate()
 engine.portfolio.analyzer.register_statistic(stat)
 ```
 
-See the [`PortfolioAnalyzer` API Reference](../api_reference/analysis.md#class-portfolioanalyzer) for all available methods.
+See the [`PortfolioAnalyzer` API Reference](https://nautilustrader.io/docs/latest/api_reference/analysis/#class-portfolioanalyzer) for all available methods.
 
 :::tip
 Ensure your statistic is robust to degenerate inputs such as `None`, empty series, or insufficient data.
@@ -165,6 +165,6 @@ statistic in turn. Any output is then displayed in the tear sheet under the `Por
 
 ## Related guides
 
-- [Positions](positions.md) - Position tracking within portfolios.
-- [Reports](reports.md) - Generate portfolio analysis reports.
-- [Visualization](visualization.md) - Visualize portfolio performance.
+- [Positions](https://nautilustrader.io/docs/latest/concepts/positions/) - Position tracking within portfolios.
+- [Reports](https://nautilustrader.io/docs/latest/concepts/reports/) - Generate portfolio analysis reports.
+- [Visualization](https://nautilustrader.io/docs/latest/concepts/visualization/) - Visualize portfolio performance.

@@ -96,9 +96,9 @@ provided by Tardis. However, for certain exchanges, raw symbols are adjusted to 
 
 For detailed symbology documentation per exchange:
 
-- [Binance symbology](./binance.md#symbology)
-- [Bybit symbology](./bybit.md#symbology)
-- [dYdX symbology](./dydx.md#symbology)
+- [Binance symbology](https://nautilustrader.io/docs/latest/integrations/binance/#symbology)
+- [Bybit symbology](https://nautilustrader.io/docs/latest/integrations/bybit/#symbology)
+- [dYdX symbology](https://nautilustrader.io/docs/latest/integrations/dydx/#symbology)
 
 ## Venues
 

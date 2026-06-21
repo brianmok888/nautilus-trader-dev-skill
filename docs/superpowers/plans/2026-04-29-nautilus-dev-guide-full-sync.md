@@ -466,10 +466,10 @@ network, license, or freshness assumptions.
 Add these entries under `## Contents` after Coding Standards and Testing as appropriate:
 
 ```markdown
-- [Design Principles](design_principles.md)
-- [Data Testing Spec](spec_data_testing.md)
-- [Execution Testing Spec](spec_exec_testing.md)
-- [Test Datasets](test_datasets.md)
+- [Design Principles](../../../references/developer_guide/design_principles.md)
+- [Data Testing Spec](../../../references/developer_guide/spec_data_testing.md)
+- [Execution Testing Spec](../../../references/developer_guide/spec_exec_testing.md)
+- [Test Datasets](../../../references/developer_guide/test_datasets.md)
 ```
 
 Also add this subsection after the contents list:
@@ -477,11 +477,11 @@ Also add this subsection after the contents list:
 ```markdown
 ## Local Contracts
 
-- [Environment Tooling Contract](contracts/environment_tooling.md)
-- [Testing Policy Contract](contracts/testing_policy.md)
-- [Adapter Contract](contracts/adapter_contract.md)
-- [Live Runtime Contract](contracts/live_runtime_contract.md)
-- [Design Principles Contract](contracts/design_principles.md)
+- [Environment Tooling Contract](../../../references/developer_guide/contracts/environment_tooling.md)
+- [Testing Policy Contract](../../../references/developer_guide/contracts/testing_policy.md)
+- [Adapter Contract](../../../references/developer_guide/contracts/adapter_contract.md)
+- [Live Runtime Contract](../../../references/developer_guide/contracts/live_runtime_contract.md)
+- [Design Principles Contract](../../../references/developer_guide/contracts/design_principles.md)
 ```
 
 - [ ] **Step 7: Run the checker**

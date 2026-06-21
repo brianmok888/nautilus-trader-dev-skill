@@ -734,7 +734,7 @@ for details.
 :::
 
 :::info
-See also the [Data concepts guide](../concepts/data.md).
+See also the [Data concepts guide](https://nautilustrader.io/docs/latest/concepts/data/).
 :::
 
 ### Historical loader options

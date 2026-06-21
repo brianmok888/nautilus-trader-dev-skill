@@ -579,7 +579,7 @@ in `crates/live/src/manager.rs` and
 audited as load-bearing for fill ordering and reconciliation. Other call
 sites are reviewed individually; the closed sites and remaining allowed
 patterns are listed under "Implementation notes" in
-[../concepts/dst.md](../concepts/dst.md).
+[../concepts/dst.md](https://nautilustrader.io/docs/latest/concepts/dst/).
 
 When the collection is **lookup-only** (no `.iter()`, `.values()`,
 `.keys()`, `.into_iter()`, `.drain()`, or `for x in map { ... }`),

@@ -16,28 +16,31 @@ Replace 'MyDEX' with your actual DEX name throughout.
 import sys
 from pathlib import Path
 
-_TEMPLATE_DIR = Path(__file__).resolve().parent
-if str(_TEMPLATE_DIR) not in sys.path:
-    sys.path.append(str(_TEMPLATE_DIR))
-
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
 from nautilus_trader.live.factories import LiveDataClientFactory, LiveExecClientFactory
 from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 
+_TEMPLATE_DIR = Path(__file__).resolve().parent
+if str(_TEMPLATE_DIR) not in sys.path:
+    sys.path.append(str(_TEMPLATE_DIR))
+
+# The templates must work both as package imports and as standalone files loaded
+# by compliance tests or copied into a project. The sys.path bridge above keeps
+# fallback sibling imports available in the latter mode.
 try:
-    from .dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig
-    from .dex_data_client import MyDEXDataClient
-    from .dex_exec_client import MyDEXExecutionClient
-    from .dex_instrument_provider import (
+    from .dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig  # noqa: E402
+    from .dex_data_client import MyDEXDataClient  # noqa: E402
+    from .dex_exec_client import MyDEXExecutionClient  # noqa: E402
+    from .dex_instrument_provider import (  # noqa: E402
         MyDEXInstrumentProvider,
         MyDEXInstrumentProviderConfig,
     )
 except ImportError:
-    from dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig
-    from dex_data_client import MyDEXDataClient
-    from dex_exec_client import MyDEXExecutionClient
-    from dex_instrument_provider import (
+    from dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig  # noqa: E402
+    from dex_data_client import MyDEXDataClient  # noqa: E402
+    from dex_exec_client import MyDEXExecutionClient  # noqa: E402
+    from dex_instrument_provider import (  # noqa: E402
         MyDEXInstrumentProvider,
         MyDEXInstrumentProviderConfig,
     )

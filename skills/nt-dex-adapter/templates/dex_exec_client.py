@@ -17,23 +17,16 @@ Replace 'MyDEX' with your actual DEX name throughout.
 
 import asyncio
 import sys
-from decimal import Decimal
 from pathlib import Path
-
-_TEMPLATE_DIR = Path(__file__).resolve().parent
-if str(_TEMPLATE_DIR) not in sys.path:
-    sys.path.append(str(_TEMPLATE_DIR))
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
-from nautilus_trader.core.uuid import UUID4
 from nautilus_trader.live.execution_client import LiveExecutionClient
 from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.enums import (
     AccountType,
     LiquiditySide,
     OmsType,
-    OrderSide,
     PositionSide,
 )
 from nautilus_trader.model.identifiers import (
@@ -45,16 +38,23 @@ from nautilus_trader.model.identifiers import (
     VenueOrderId,
     Venue,
 )
-from nautilus_trader.model.objects import AccountBalance, Money, Price, Quantity
+from nautilus_trader.model.objects import Money, Price
 from nautilus_trader.model.orders import Order
 from nautilus_trader.execution.reports import OrderStatusReport
 
+_TEMPLATE_DIR = Path(__file__).resolve().parent
+if str(_TEMPLATE_DIR) not in sys.path:
+    sys.path.append(str(_TEMPLATE_DIR))
+
+# The templates must work both as package imports and as standalone files loaded
+# by compliance tests or copied into a project. The sys.path bridge above keeps
+# fallback sibling imports available in the latter mode.
 try:
-    from .dex_config import MyDEXExecClientConfig
-    from .dex_instrument_provider import MyDEXInstrumentProvider
+    from .dex_config import MyDEXExecClientConfig  # noqa: E402
+    from .dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
 except ImportError:
-    from dex_config import MyDEXExecClientConfig
-    from dex_instrument_provider import MyDEXInstrumentProvider
+    from dex_config import MyDEXExecClientConfig  # noqa: E402
+    from dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
 
 
 class MyDEXExecutionClient(LiveExecutionClient):
@@ -169,9 +169,8 @@ class MyDEXExecutionClient(LiveExecutionClient):
             )
             return
 
-        # Calculate minimum output (slippage protection)
-        slippage_rate = Decimal(str(self._config.max_slippage_bps)) / Decimal("10000")
-        # min_amount_out = order.quantity * (1 - slippage_rate)
+        # Calculate minimum output (slippage protection):
+        # min_amount_out = order.quantity * (1 - Decimal(str(self._config.max_slippage_bps)) / Decimal("10000"))
 
         try:
             # ── Build and sign transaction ──

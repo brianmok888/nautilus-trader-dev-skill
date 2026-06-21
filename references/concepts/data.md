@@ -1429,7 +1429,7 @@ NautilusTrader defines an internal data format specified in the `nautilus_model`
 These models are serialized into Arrow record batches and written to Parquet files.
 Nautilus backtesting is most efficient when using these Nautilus-format Parquet files.
 
-However, migrating the data model between [precision modes](../getting_started/installation.md#precision-mode) and schema changes can be challenging.
+However, migrating the data model between [precision modes](https://nautilustrader.io/docs/latest/getting_started/installation/#precision-mode) and schema changes can be challenging.
 This guide explains how to handle data migrations using our utility tools.
 
 ### Migration tools

@@ -102,7 +102,7 @@ make cargo-test-crate-nautilus-serialization FEATURES="capnp"
 - **Group assertions** when possible: perform all setup/act steps first, then assert together to avoid the act-assert-act smell.
 - Use `unwrap`, `expect`, or direct `panic!`/`assert` calls inside tests; clarity and conciseness matter more than defensive error handling here.
 
-For Rust-specific test conventions (module structure, `#[rstest]`, parameterization), see the [Rust guide](rust.md#testing-conventions).
+For Rust-specific test conventions (module structure, `#[rstest]`, parameterization), see the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/#testing-conventions).
 
 ## Waiting for asynchronous effects
 

@@ -6,11 +6,11 @@
 # -------------------------------------------------------------------------------------------------
 
 from nautilus_trader.common.config import NautilusConfig
+from nautilus_trader.common.providers import InstrumentProvider
 from nautilus_trader.live.data_client import LiveMarketDataClient
 from nautilus_trader.live.execution_client import LiveExecutionClient
 from nautilus_trader.live.factories import LiveDataClientFactory
 from nautilus_trader.live.factories import LiveExecClientFactory
-from nautilus_trader.model.identifiers import AccountId
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.identifiers import Venue
 
@@ -45,8 +45,6 @@ class MyExchangeExecClientConfig(NautilusConfig, frozen=True):
 # ---------------------------------------------------------------------------
 # Instrument Provider (shared by data + exec clients)
 # ---------------------------------------------------------------------------
-
-from nautilus_trader.common.providers import InstrumentProvider
 
 
 class MyExchangeInstrumentProvider(InstrumentProvider):
@@ -150,8 +148,7 @@ class MyExchangeExecClient(LiveExecutionClient):
 
     async def _submit_order(self, command):
         """Submit order to exchange."""
-        order = command.order
-        # TODO: Convert NT order to exchange format
+        # TODO: Convert command.order to exchange format
         # TODO: Send via HTTP API
         # TODO: Handle response, generate OrderAccepted/OrderRejected event
         #   self._handle_event(order_accepted_event)

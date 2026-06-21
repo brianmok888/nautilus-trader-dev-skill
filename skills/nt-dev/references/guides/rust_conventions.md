@@ -543,7 +543,7 @@ in `crates/live/src/manager.rs` and
 audited as load-bearing for fill ordering and reconciliation. Other call
 sites are reviewed individually; the closed sites and remaining allowed
 patterns are listed under "Implementation notes" in
-[../concepts/dst.md](../concepts/dst.md).
+[../concepts/dst.md](https://nautilustrader.io/docs/latest/../concepts/dst/).
 
 When the collection is **lookup-only** (no `.iter()`, `.values()`,
 `.keys()`, `.into_iter()`, `.drain()`, or `for x in map { ... }`),
@@ -1340,14 +1340,14 @@ To maintain correctness, any use of `unsafe` Rust must follow our policy:
   `#![deny(unsafe_op_in_unsafe_fn)]`. Even inside an `unsafe fn`, each pointer dereference or
   other dangerous operation must be wrapped in its own `unsafe { … }` block.
 - **CVec contract** – for raw vectors that cross the FFI boundary read the
-  [FFI Memory Contract](ffi.md). Foreign code becomes the owner of the allocation and **must**
+  [FFI Memory Contract](https://nautilustrader.io/docs/latest/ffi/). Foreign code becomes the owner of the allocation and **must**
   call the matching `vec_drop_*` function exactly once.
 
 ### Categories of unsafe code
 
 The codebase uses unsafe Rust in these categories:
 
-1. **FFI boundaries** – Raw pointer operations for C interop. See [FFI documentation](ffi.md).
+1. **FFI boundaries** – Raw pointer operations for C interop. See [FFI documentation](https://nautilustrader.io/docs/latest/ffi/).
 2. **Interior mutability** – `UnsafeCell` for thread-local registries with controlled access patterns.
 3. **Unsafe Send/Sync** – Types that are not inherently thread-safe but satisfy trait bounds
    through runtime invariants (e.g., single-threaded access guaranteed by architecture).

@@ -17,7 +17,7 @@ The suite covers these categories:
 ## Testing policy
 
 Tests and runtime contracts form one design system. The
-[Design by contract](rust.md#design-by-contract) ladder pushes invariants into the type
+[Design by contract](https://nautilustrader.io/docs/latest/developer_guide/rust/#design-by-contract) ladder pushes invariants into the type
 system where possible; the testing ladder below escalates the remaining unknowns through
 larger input spaces and richer execution models. Each layer extends coverage to inputs
 or execution states the layer below cannot reach.
@@ -27,7 +27,7 @@ before adding tests or `debug_assert!` statements.
 
 ### Mechanism ladder
 
-Runtime contracts are covered in the [Rust guide](rust.md#design-by-contract): prefer the
+Runtime contracts are covered in the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/#design-by-contract): prefer the
 type system first, then `check_*` from `nautilus_core::correctness` at API boundaries,
 then `debug_assert!` for internal invariants, then `assert!` for soundness-critical or
 always-on checks.
@@ -247,7 +247,7 @@ are preferred for new files.
 ### Rust
 
 For Rust-specific test conventions (module structure, `#[rstest]`, parameterization),
-see the [Rust guide](rust.md#testing-conventions).
+see the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/#testing-conventions).
 
 ## Waiting for asynchronous effects
 

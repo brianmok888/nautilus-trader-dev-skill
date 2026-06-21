@@ -172,9 +172,9 @@ function names without bloating production binaries (which still use
 
 ## Templates
 
-Ready-to-copy starter files live in [`docs/dev_templates/`](../dev_templates/):
+Ready-to-copy starter files live in [`docs/dev_templates/`](https://nautilustrader.io/docs/latest/dev_templates/):
 
-- **Criterion**: [`criterion_template.rs`](../dev_templates/criterion_template.rs)
-- **iai**: [`iai_template.rs`](../dev_templates/iai_template.rs)
+- **Criterion**: [`criterion_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/criterion_template.rs/)
+- **iai**: [`iai_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/iai_template.rs/)
 
 Copy the template into `benches/`, adjust imports and names, and start measuring!

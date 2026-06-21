@@ -12,9 +12,8 @@ from decimal import Decimal
 
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CurrencyPair
-from nautilus_trader.model.objects import Price, Quantity
+from nautilus_trader.model.objects import Quantity
 
-import sys
 import importlib.util
 from pathlib import Path
 

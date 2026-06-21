@@ -591,8 +591,8 @@ channel:
 
 Subscribe to per-instrument Greeks or aggregate them into option chain
 snapshots with ATM-relative strike filtering. See the
-[options concept guide](../concepts/options.md) for subscription patterns and
-the [options data tutorial](../tutorials/options_data_bybit.md) for a
+[options concept guide](https://nautilustrader.io/docs/latest/concepts/options/) for subscription patterns and
+the [options data tutorial](https://nautilustrader.io/docs/latest/tutorials/options_data_bybit/) for a
 step-by-step walkthrough. NautilusTrader builds the option chain view locally
 from Bybit's per-contract option market data.
 

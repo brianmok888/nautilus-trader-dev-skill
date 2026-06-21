@@ -138,7 +138,7 @@ The `TradingState` enum has three variants:
 - `HALTED`: Does not process further order commands until state changes.
 - `REDUCING`: Only processes cancels or commands that reduce open positions.
 
-See the [`RiskEngineConfig` API Reference](../api_reference/config#risk) for further details.
+See the [`RiskEngineConfig` API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#risk) for further details.
 
 ## Execution algorithms
 

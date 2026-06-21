@@ -16,14 +16,10 @@ Replace placeholder names with your actual adapter package.
 """
 
 import asyncio
-import os
-from decimal import Decimal
-from pathlib import Path
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.config import (
-    BacktestDataConfig,
     LiveExecEngineConfig,
     TradingNodeConfig,
 )

@@ -169,7 +169,7 @@ override what you need.
 | `on_time_event`        | `TimeEvent`               |
 
 For a step-by-step walkthrough, see the
-[Write an Actor (Rust)](../how_to/write_rust_actor.md) how-to guide.
+[Write an Actor (Rust)](https://nautilustrader.io/docs/latest/how_to/write_rust_actor/) how-to guide.
 For a complete example, see
 [`BookImbalanceActor`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/actors/imbalance).
 
@@ -200,7 +200,7 @@ objects: `market`, `limit`, `stop_market`, `stop_limit`,
 `market_if_touched`, `limit_if_touched`, and `trailing_stop_market`.
 
 For a step-by-step walkthrough, see the
-[Write a Strategy (Rust)](../how_to/write_rust_strategy.md) how-to guide.
+[Write a Strategy (Rust)](https://nautilustrader.io/docs/latest/how_to/write_rust_strategy/) how-to guide.
 For complete examples, see
 [`EmaCross`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/strategies/ema_cross)
 and
@@ -223,7 +223,7 @@ node.add_strategy(strategy)?;
 node.run().await?;
 ```
 
-See [Run Live Trading (Rust)](../how_to/run_rust_live_trading.md) for a
+See [Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) for a
 full walkthrough.
 
 #### Native config from Python
@@ -275,7 +275,7 @@ loads them without recompilation. This path is not yet available.
 ## Backtesting
 
 For annotated walkthroughs of both APIs, see the
-[Run a Backtest (Rust)](../how_to/run_rust_backtest.md) how-to guide.
+[Run a Backtest (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_backtest/) how-to guide.
 
 ### `BacktestEngine` (low-level API)
 
@@ -305,7 +305,7 @@ Source:
 ## Live trading
 
 For an annotated walkthrough, see the
-[Run Live Trading (Rust)](../how_to/run_rust_live_trading.md) how-to guide.
+[Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) how-to guide.
 
 The `LiveNode` connects to real venues through adapter clients. The builder
 pattern configures data and execution clients, then `run()` starts the async
@@ -335,12 +335,12 @@ against live venues.
 
 ## Related guides
 
-- [Write an Actor (Rust)](../how_to/write_rust_actor.md) - Step-by-step actor walkthrough.
-- [Write a Strategy (Rust)](../how_to/write_rust_strategy.md) - Step-by-step strategy walkthrough.
-- [Run a Backtest (Rust)](../how_to/run_rust_backtest.md) - BacktestEngine and BacktestNode usage.
-- [Run Live Trading (Rust)](../how_to/run_rust_live_trading.md) - LiveNode setup and venue connection.
-- [Architecture](architecture.md) - System design and data/execution flow.
-- [Actors](actors.md) - Actor concepts (applies to both Python and Rust).
-- [Strategies](strategies.md) - Strategy concepts and handler reference.
-- [Events](events.md) - Event types and handler dispatch.
-- [Backtesting](backtesting.md) - Backtest concepts and matching engine behavior.
+- [Write an Actor (Rust)](https://nautilustrader.io/docs/latest/how_to/write_rust_actor/) - Step-by-step actor walkthrough.
+- [Write a Strategy (Rust)](https://nautilustrader.io/docs/latest/how_to/write_rust_strategy/) - Step-by-step strategy walkthrough.
+- [Run a Backtest (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_backtest/) - BacktestEngine and BacktestNode usage.
+- [Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) - LiveNode setup and venue connection.
+- [Architecture](https://nautilustrader.io/docs/latest/developer_guide/architecture/) - System design and data/execution flow.
+- [Actors](https://nautilustrader.io/docs/latest/developer_guide/actors/) - Actor concepts (applies to both Python and Rust).
+- [Strategies](https://nautilustrader.io/docs/latest/developer_guide/strategies/) - Strategy concepts and handler reference.
+- [Events](https://nautilustrader.io/docs/latest/developer_guide/events/) - Event types and handler dispatch.
+- [Backtesting](https://nautilustrader.io/docs/latest/developer_guide/backtesting/) - Backtest concepts and matching engine behavior.

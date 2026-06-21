@@ -138,7 +138,7 @@ The `TradingState` enum has three variants:
 - `HALTED`: Does not process further order commands until state changes.
 - `REDUCING`: Only processes cancels or commands that reduce open positions.
 
-See the [`RiskEngineConfig` API Reference](../api_reference/config#risk) for further details.
+See the [`RiskEngineConfig` API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#risk) for further details.
 
 ## Execution algorithms
 
@@ -425,7 +425,7 @@ The likelihood of reconciliation race conditions increases when:
   provides time for WebSocket connections to stabilize before continuous reconciliation begins.
   Reducing this increases the chance of duplicate fills during the startup window.
 
-See [Continuous reconciliation](live.md#continuous-reconciliation) for configuration details.
+See [Continuous reconciliation](https://nautilustrader.io/docs/latest/concepts/live/#continuous-reconciliation) for configuration details.
 
 ### System behavior
 
@@ -497,7 +497,7 @@ overfill warnings to identify patterns that may require venue-specific handling.
 
 :::warning
 When `allow_overfills=False` (the default), rejected fills may cause position discrepancies
-between the system and the venue. Use the [reconciliation](live.md#execution-reconciliation)
+between the system and the venue. Use the [reconciliation](https://nautilustrader.io/docs/latest/concepts/live/#execution-reconciliation)
 features to detect and resolve such discrepancies.
 :::
 

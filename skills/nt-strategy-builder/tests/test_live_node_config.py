@@ -5,10 +5,8 @@ Verifies that TradingNodeConfig and LiveExecEngineConfig patterns from
 templates parse and build correctly. No network connections are made.
 """
 
-import pytest
 
 from nautilus_trader.config import (
-    LiveDataEngineConfig,
     LiveExecEngineConfig,
     LiveRiskEngineConfig,
     LoggingConfig,

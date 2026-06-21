@@ -7,7 +7,7 @@ guide covers both.
 For background on backtesting concepts, fill models, and matching engine
 behavior, see the [Backtesting](../concepts/backtesting.md) concept guide.
 For project setup and feature flags, see the
-[Rust](../concepts/rust.md#project-setup) concept guide.
+[Rust](https://nautilustrader.io/docs/latest/../concepts/rust/#project-setup) concept guide.
 
 ## Dependencies
 

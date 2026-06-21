@@ -118,7 +118,7 @@ rules:
 
 The subscription methods on `DataActorCore` handle this correctly by
 capturing the actor ID and performing the lookup inside the callback closure.
-See [Runtime invariants](../developer_guide/rust.md#runtime-invariants) for
+See [Runtime invariants](https://nautilustrader.io/docs/latest/../developer_guide/rust/#runtime-invariants) for
 the full threading and registry model.
 
 ## Full example

@@ -6,7 +6,7 @@
 # -------------------------------------------------------------------------------------------------
 
 from nautilus_trader.common.config import NautilusConfig
-from nautilus_trader.live.data_client import LiveDataClient
+from nautilus_trader.common.providers import InstrumentProvider
 from nautilus_trader.live.data_client import LiveMarketDataClient
 from nautilus_trader.live.factories import LiveDataClientFactory
 from nautilus_trader.model.identifiers import InstrumentId
@@ -37,8 +37,6 @@ class MyProviderDataClientConfig(NautilusConfig, frozen=True):
 # ---------------------------------------------------------------------------
 # Instrument Provider
 # ---------------------------------------------------------------------------
-
-from nautilus_trader.common.providers import InstrumentProvider
 
 
 class MyProviderInstrumentProvider(InstrumentProvider):

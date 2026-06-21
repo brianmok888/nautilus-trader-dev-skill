@@ -79,12 +79,12 @@ make build-debug
 ```
 
 Windows users should follow the source installation steps in the
-[installation guide](../getting_started/installation.md#from-source), then use the relevant commands
+[installation guide](https://nautilustrader.io/docs/latest/getting_started/installation/#from-source), then use the relevant commands
 from this guide.
 
 ### 1. Install dependencies
 
-Follow the [installation guide](../getting_started/installation.md) to set up the project with a modification to the final command to install development and test dependencies:
+Follow the [installation guide](https://nautilustrader.io/docs/latest/getting_started/installation/) to set up the project with a modification to the final command to install development and test dependencies:
 
 ```bash tab="uv"
 uv sync --active --all-groups --all-extras

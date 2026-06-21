@@ -8,7 +8,6 @@ Use this for data vendors like Databento, Tardis, or custom data sources.
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock
 from nautilus_trader.common.component import MessageBus
-from nautilus_trader.config import InstrumentProviderConfig
 from nautilus_trader.config import LiveDataClientConfig
 from nautilus_trader.core.uuid import UUID4
 from nautilus_trader.live.data_client import LiveDataClient
@@ -20,7 +19,6 @@ from nautilus_trader.model.data import BarType
 from nautilus_trader.model.data import DataType
 from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.data import TradeTick
-from nautilus_trader.model.instruments import Instrument
 
 
 # =============================================================================

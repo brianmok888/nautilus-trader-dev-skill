@@ -5,7 +5,7 @@ NautilusTrader benchmarks. It covers tooling specifics, directory layout,
 example code, local execution, and flamegraph profiling.
 
 For policy (what we benchmark, when, with what rigor, how it ties into CI),
-see [`/BENCHMARKING.md`](../../BENCHMARKING.md) at the repository root.
+see [`/BENCHMARKING.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/BENCHMARKING.md) at the repository root.
 
 ---
 
@@ -211,10 +211,10 @@ use `panic = "abort"` and are built via `[profile.release]`).
 
 ## Templates
 
-Ready-to-copy starter files live in [`docs/dev_templates/`](../dev_templates/):
+Ready-to-copy starter files live in [`docs/dev_templates/`](https://nautilustrader.io/docs/latest/dev_templates/):
 
-- **Criterion**: [`criterion_template.rs`](../dev_templates/criterion_template.rs)
-- **iai**: [`iai_template.rs`](../dev_templates/iai_template.rs)
+- **Criterion**: [`criterion_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/criterion_template.rs/)
+- **iai**: [`iai_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/iai_template.rs/)
 
 Copy the template into the target crate's `benches/`, adjust imports and
 group names, register in `Cargo.toml`, and start measuring.

@@ -1,5 +1,4 @@
 from nautilus_trader.analysis.visualizer import BacktestVisualizer
-from nautilus_trader.analysis.statistics import PortfolioAnalyzer
 from nautilus_trader.backtest.engine import BacktestEngine
 
 # 1. Run your backtest

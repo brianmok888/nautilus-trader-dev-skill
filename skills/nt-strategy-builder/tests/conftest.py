@@ -6,17 +6,15 @@ Shared fixtures for unit and integration tests.
 
 import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, AsyncMock
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
-from nautilus_trader.model.currencies import USDT, BTC, ETH
-from nautilus_trader.model.enums import AccountType, AssetClass, OmsType
+from nautilus_trader.model.currencies import USDT, ETH
+from nautilus_trader.model.enums import AccountType, OmsType
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CurrencyPair
 from nautilus_trader.model.objects import Money, Price, Quantity
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
-from nautilus_trader.test_kit.stubs.identifiers import TestIdStubs
 
 
 # ─── INSTRUMENT FIXTURES ───────────────────────────────────────────────────────

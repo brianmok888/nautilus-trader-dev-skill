@@ -677,7 +677,7 @@ The cache also exposes `purge_order`, `purge_position`, `purge_closed_orders`,
 `purge_closed_positions`, and `purge_account_events` for trimming closed execution state.
 For long-running Polymarket nodes, schedule the bulk purges from `LiveExecEngineConfig`
 (15 min interval, 60 min buffer is a sensible default). See
-[Cache: purging cached data](../concepts/cache.md#purging-cached-data) for the full set.
+[Cache: purging cached data](https://nautilustrader.io/docs/latest/concepts/cache/#purging-cached-data) for the full set.
 
 :::warning
 The caller decides when an instrument is no longer needed. Purging an instrument that another

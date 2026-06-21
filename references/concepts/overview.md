@@ -202,7 +202,7 @@ The following order types are available (when possible on a venue):
 ## Value types
 
 The following value types are backed by either 128-bit or 64-bit raw integer values, depending on the
-[precision mode](../getting_started/installation.md#precision-mode) used during compilation.
+[precision mode](https://nautilustrader.io/docs/latest/getting_started/installation/#precision-mode) used during compilation.
 
 - `Price`
 - `Quantity`

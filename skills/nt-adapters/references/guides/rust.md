@@ -543,7 +543,7 @@ in `crates/live/src/manager.rs` and
 audited as load-bearing for fill ordering and reconciliation. Other call
 sites are reviewed individually; the closed sites and remaining allowed
 patterns are listed under "Implementation notes" in
-[../concepts/dst.md](../concepts/dst.md).
+[../concepts/dst.md](https://nautilustrader.io/docs/latest/concepts/dst/).
 
 When the collection is **lookup-only** (no `.iter()`, `.values()`,
 `.keys()`, `.into_iter()`, `.drain()`, or `for x in map { ... }`),
@@ -1487,7 +1487,7 @@ This feature is opt-in to avoid requiring the Cap'n Proto compiler for standard 
 Install the Cap'n Proto compiler before working with schemas. The required version is
 specified in `tools.toml` in the repository root.
 
-See the [Environment Setup](environment_setup.md#capn-proto) guide for detailed installation
+See the [Environment Setup](https://nautilustrader.io/docs/latest/developer_guide/environment_setup/#capn-proto) guide for detailed installation
 instructions for each platform.
 
 :::warning

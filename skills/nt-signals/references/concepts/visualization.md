@@ -567,6 +567,6 @@ Other individual chart functions include `create_equity_curve`, `create_drawdown
 
 ## Related guides
 
-- [Backtesting](backtesting.md) - Learn how to run backtests that generate tearsheets.
+- [Backtesting](https://nautilustrader.io/docs/latest/concepts/backtesting/) - Learn how to run backtests that generate tearsheets.
 - [Reports](reports.md) - Understand the underlying statistics displayed in tearsheets.
 - [Portfolio](portfolio.md) - Explore portfolio tracking and performance metrics.

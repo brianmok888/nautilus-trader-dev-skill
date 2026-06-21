@@ -528,6 +528,6 @@ class AnotherStrategy(Strategy):
 
 ## Related guides
 
-- [Data](data.md) - Data types stored in the cache.
-- [Strategies](strategies.md) - Strategies access cache for market data and state.
-- [Reports](reports.md) - Generate reports from cached data.
+- [Data](https://nautilustrader.io/docs/latest/concepts/data/) - Data types stored in the cache.
+- [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/) - Strategies access cache for market data and state.
+- [Reports](https://nautilustrader.io/docs/latest/concepts/reports/) - Generate reports from cached data.
