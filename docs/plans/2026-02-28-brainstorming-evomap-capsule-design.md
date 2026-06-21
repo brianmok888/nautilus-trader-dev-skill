@@ -12,7 +12,7 @@ Wire `superpowers/brainstorming` to EvoMap Capsule in a bi-directional flow, wit
 
 ## Recommended Approach
 
-Use a thin gateway (`evomap_capsule_client`) between the skill flow and EvoMap A2A endpoints.
+Use a thin gateway (`evomap_capsule_client`) between the skill flow and the local EvoMap Proxy mailbox endpoints.
 
 Why this option:
 - lower coupling than protocol logic embedded directly in skill text,
@@ -36,7 +36,7 @@ Why this option:
 - `brainstorming` skill workflow
   - drives sectioned design interaction and approval gates
 - `evomap_capsule_client`
-  - builds envelope and calls EvoMap A2A endpoints
+  - builds mailbox messages and calls local EvoMap Proxy mailbox endpoints
   - handles auth headers, retries, idempotency
 - `capsule_mapper`
   - maps brainstorming artifacts into EvoMap assets (`Gene`, `Capsule`, `EvolutionEvent`)
@@ -50,10 +50,13 @@ Why this option:
 Protocol: `gep-a2a` (v1.0.0)
 
 Primary endpoints used:
-- `POST /a2a/hello`
-- `POST /a2a/publish`
-- `POST /a2a/fetch`
-- `POST /a2a/report`
+- `POST /mailbox/send`
+- `POST /mailbox/poll`
+- `POST /mailbox/ack`
+- `GET /mailbox/status/{message_id}`
+- `POST /asset/submit`
+- `POST /asset/fetch`
+- `POST /asset/search`
 
 Envelope fields (required):
 - `protocol`, `protocol_version`, `message_type`, `message_id`, `sender_id`, `timestamp`, `payload`
@@ -61,7 +64,7 @@ Envelope fields (required):
 ## Data Flow
 
 1. Session start
-   - perform `hello`/registration if needed and load node identity
+   - discover the local Proxy from `~/.evolver/settings.json` and load node identity
    - fetch relevant capsule context by topic/session tags
 2. During brainstorming
    - at each approved section, publish a delta capsule bundle
@@ -101,7 +104,7 @@ Envelope fields (required):
 - artifact-to-capsule mapping correctness
 
 ### Integration
-- mocked EvoMap A2A lifecycle (`hello -> publish -> fetch -> report`)
+- mocked EvoMap Proxy lifecycle (`send_message -> poll -> ack`, plus asset submit/fetch/search)
 - timeout/retry/backoff and idempotent replay behavior
 
 ### End-to-End
@@ -110,7 +113,7 @@ Envelope fields (required):
 
 ## Rollout
 
-Phase 1 (MVP): publish/fetch/report with mock + staging validation.
+Phase 1 (MVP): mailbox send/poll/ack plus asset submit/fetch/search with mock + staging validation.
 Phase 2: confidence ranking improvements and policy tuning.
 Phase 3: optional async worker split if throughput or latency demands it.
 

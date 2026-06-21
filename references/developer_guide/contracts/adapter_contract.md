@@ -25,6 +25,10 @@ Sources:
   with `CancellationToken`; handlers send supplied tokens but do not sign.
 - Treat transport, timeout, send, retry, parse, and whole-batch failures as
   ambiguous outcomes unless the venue returns explicit per-order results.
+- Preserve the local prepare-failure carve-out from ExecTester policy: local
+  cancel/modify prepare failures that prove the command was not sent may emit
+  `OrderCancelRejected` or `OrderModifyRejected` when attributable to exactly
+  one command.
 
 ## Review rule
 

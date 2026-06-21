@@ -127,6 +127,17 @@ Follow this dependency-driven order. Each phase builds on the previous one. **Im
 |------|-----------|-------------|
 | 1.1 | HTTP error types | Define HTTP-specific error enum with retryable/non-retryable variants |
 | 1.2 | HTTP client | Implement credentials, request signing, rate limiting, retry logic |
+
+### Rate-limit and unknown-outcome policy
+
+- Scope shared venue caps through one limiter per actual venue window; do not
+  duplicate a shared cap across separate REST/WebSocket/poller limiters.
+- Bound inflight command concurrency with a closed-loop gate, not only a send
+  rate limiter.
+- Treat an execution-path rate-limit response as an unknown outcome unless the
+  command is idempotent or the venue proves it was not processed; leave order
+  state open for reconciliation instead of emitting a terminal rejection.
+
 | 1.3 | HTTP API models | Define request/response structs for REST endpoints |
 | 1.4 | HTTP parsing | Convert venue responses to Nautilus domain models |
 | 1.5 | WebSocket error types | Define WebSocket-specific error enum |

@@ -99,10 +99,10 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-adapters` | CeFi adapter specification | 7-phase implementation, 118KB official spec |
 | `nt-model` | Core domain objects | Instruments, identifiers, value objects |
 
-### Developer Guide (2)
+### Developer Guide (3)
 | Skill | Description | Key Content |
 |---|---|---|
-| `nt-dev` | Official dev guide alignment | Coding standards, Rust/Python conventions, FFI memory, releases |
+| `nt-dev` | Official dev guide alignment | Coding standards, Rust/Python conventions, FFI memory, releases, release security |
 | `nt-testing` | Testing pyramid and specs | DataTesterConfig, ExecTesterConfig, property-based, fuzzing |
 
 ### Learning (1)
@@ -112,7 +112,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 
 ## Official Developer Guide Coverage
 
-Current developer-guide sync status is verified by `tools/check_dev_guide_sync.py`.
+Current developer-guide sync status is verified by `tools/check_dev_guide_sync.py`. Coverage includes `references/developer_guide/release_security.md` for trusted publishing, Sigstore, SLSA provenance, and cosign verification guidance.
 Local references summarize official pages and include source metadata; skills use
 canonical contracts under `references/developer_guide/contracts/` for
 agent-actionable rules.

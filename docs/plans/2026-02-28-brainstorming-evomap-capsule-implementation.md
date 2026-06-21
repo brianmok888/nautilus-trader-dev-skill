@@ -4,7 +4,7 @@
 
 **Goal:** Add bi-directional EvoMap Capsule wiring to the brainstorming workflow so sessions can publish design deltas and fetch refinement insights.
 
-**Architecture:** Implement a thin gateway client for EvoMap A2A protocol, plus mapping and policy layers. Keep brainstorming as orchestration logic and route all network/protocol concerns through dedicated modules. Add deterministic IDs, retries, and graceful fallback to local-only mode.
+**Architecture:** Implement a thin gateway client for the local EvoMap Proxy mailbox and asset endpoints, plus mapping and policy layers. Keep brainstorming as orchestration logic and route all network/protocol concerns through dedicated modules. Add deterministic IDs, retries, and graceful fallback to local-only mode.
 
 **Tech Stack:** Python, requests/httpx (existing project preference), pytest, mock servers/fixtures, markdown plan artifacts.
 
@@ -21,9 +21,9 @@
 
 ```python
 def test_client_exposes_required_methods():
-    from skills.brainstorming_evomap.evomap_capsule_client import EvoMapCapsuleClient
-    client = EvoMapCapsuleClient(base_url="https://evomap.ai", api_key="x")
-    for name in ["hello", "publish", "fetch", "report"]:
+    from skills.brainstorming_evomap.evomap_capsule_client import EvoMapProxyMailboxClient
+    client = EvoMapProxyMailboxClient(proxy_url="http://127.0.0.1:19820")
+    for name in ["send_message", "poll", "ack", "status", "submit_assets", "fetch_assets", "search_assets"]:
         assert hasattr(client, name)
 ```
 
@@ -48,7 +48,7 @@ git add skills/brainstorming_evomap/evomap_capsule_client.py skills/brainstormin
 git commit -m "feat: scaffold evomap capsule client"
 ```
 
-### Task 2: Implement A2A envelope builder and validation
+### Task 2: Implement Proxy mailbox message builder and validation
 
 **Files:**
 - Create: `skills/brainstorming_evomap/envelope.py`
@@ -59,7 +59,7 @@ git commit -m "feat: scaffold evomap capsule client"
 ```python
 def test_envelope_contains_required_fields():
     from skills.brainstorming_evomap.envelope import build_envelope
-    msg = build_envelope(message_type="publish", sender_id="node_1", payload={"k": "v"})
+    msg = build_envelope(message_type="asset_submit", sender_id="node_1", payload={"k": "v"})
     for key in ["protocol", "protocol_version", "message_type", "message_id", "sender_id", "timestamp", "payload"]:
         assert key in msg
 ```
@@ -159,7 +159,7 @@ git add skills/brainstorming_evomap/capsule_policy.py skills/brainstorming_evoma
 git commit -m "feat: add capsule policy and fallback controls"
 ```
 
-### Task 5: Integrate publish/fetch hooks into brainstorming flow
+### Task 5: Integrate Proxy mailbox hooks into brainstorming flow
 
 **Files:**
 - Modify: `skills/brainstorming/SKILL.md`
@@ -169,10 +169,10 @@ git commit -m "feat: add capsule policy and fallback controls"
 **Step 1: Write the failing test**
 
 ```python
-def test_hooks_execute_fetch_then_publish_then_fetch():
+def test_hooks_execute_poll_then_submit_then_poll():
     from skills.brainstorming_evomap.brainstorming_hooks import run_section_cycle
     trace = run_section_cycle(session_id="s1", section="components")
-    assert trace == ["fetch_pre", "publish_delta", "fetch_refine"]
+    assert trace == ["poll_pre", "submit_delta", "poll_refine"]
 ```
 
 **Step 2: Run test to verify it fails**
@@ -205,12 +205,12 @@ git commit -m "feat: wire brainstorming flow to evomap capsule hooks"
 **Step 1: Write the failing test**
 
 ```python
-def test_end_to_end_publish_fetch_report_cycle(mock_server):
-    from skills.brainstorming_evomap.evomap_capsule_client import EvoMapCapsuleClient
-    c = EvoMapCapsuleClient(base_url=mock_server.url, api_key="k")
-    assert c.hello()["ok"]
-    assert c.publish({"assets": []})["ok"]
-    assert "items" in c.fetch({"query": "brainstorming"})
+def test_end_to_end_proxy_mailbox_asset_cycle(mock_server):
+    from skills.brainstorming_evomap.evomap_capsule_client import EvoMapProxyMailboxClient
+    c = EvoMapProxyMailboxClient(proxy_url=mock_server.url)
+    assert c.send_message("asset_submit", {"assets": []})["ok"]
+    assert c.poll(message_type="asset_review")["ok"]
+    assert c.fetch_assets(["capsule_1"])["ok"]
 ```
 
 **Step 2: Run test to verify it fails**
@@ -231,7 +231,7 @@ Expected: PASS.
 
 ```bash
 git add skills/brainstorming_evomap/tests/test_evomap_integration.py skills/brainstorming_evomap/tests/fixtures/a2a_payloads.json skills/brainstorming_evomap/evomap_capsule_client.py
-git commit -m "test: validate evomap a2a publish fetch report lifecycle"
+git commit -m "test: validate evomap proxy mailbox asset lifecycle"
 ```
 
 ### Task 7: Full verification and docs updates

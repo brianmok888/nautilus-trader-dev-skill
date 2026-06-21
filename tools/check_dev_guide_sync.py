@@ -15,6 +15,7 @@ CURRENT_DEV_GUIDE_FILES = [
     "ffi.md",
     "index.md",
     "python.md",
+    "release_security.md",
     "releases.md",
     "rust.md",
     "spec_data_testing.md",
@@ -89,6 +90,11 @@ INTEGRATION_INDEXES = [
 
 RETIRED_API_INDEX_LINKS = ["coinbase_intx.md", "mt5.md"]
 
+COINBASE_STATUS_TARGETS = [
+    Path("references/integrations/index.md"),
+    Path("skills/nt-adapters/references/integrations/index.md"),
+]
+
 INVARIANT_TARGETS = {
     Path("skills/nt-live/SKILL.md"): ["LiveNode", "file_config", "PortfolioSnapshot"],
     Path("skills/nt-testing/SKILL.md"): [
@@ -132,12 +138,17 @@ LIVE_RUNTIME_BOUNDARY_TARGETS = {
 }
 
 EVOMAP_DIRECT_A2A_TARGETS = [
+    Path("docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"),
+    Path("docs/plans/2026-02-28-brainstorming-evomap-capsule-implementation.md"),
     Path("skills/nt-evomap-integration/SKILL.md"),
     Path("skills/nt-implement/SKILL.md"),
 ]
 
 EVOMAP_DIRECT_A2A_TERMS = [
+    "/a2a/",
+    "EvoMap A2A endpoints",
     "EvoMapCapsuleClient",
+    "hello -> publish -> fetch -> report",
     "`hello`, `publish`, `fetch`, `report`",
     "hello, publish, fetch, report",
 ]
@@ -170,9 +181,15 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "Handler initialization handshake",
         "Auth-token rotation",
         "CancellationToken",
+        "execution-path rate-limit response",
+        "unknown outcome",
+        "idempotent",
     ],
     Path("references/developer_guide/spec_exec_testing.md"): [
         "Ambiguous outcome failures",
+        "local prepare-failure carve-out",
+        "OrderCancelRejected",
+        "OrderModifyRejected",
         "TC-E74",
         "TC-E78",
         "due_post_only=true",
@@ -196,6 +213,12 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "Typed CVec wrappers and Send",
         "Rust-owned CVec capsules with explicit drop",
     ],
+    Path("references/developer_guide/release_security.md"): [
+        "trusted publishing",
+        "Sigstore",
+        "SLSA provenance",
+        "cosign",
+    ],
 }
 
 CURRENT_SKILL_DELTA_TARGETS = {
@@ -204,10 +227,16 @@ CURRENT_SKILL_DELTA_TARGETS = {
         "auth-token rotation",
         "CancellationToken",
         "ambiguous outcome failures",
+        "execution-path rate-limit response",
+        "unknown outcome",
+        "idempotent",
     ],
     Path("skills/nt-testing/SKILL.md"): [
         "TC-E74",
         "TC-E78",
+        "local prepare-failure carve-out",
+        "OrderCancelRejected",
+        "OrderModifyRejected",
         "due_post_only=true",
         "trigger-order signing expiry",
     ],
@@ -397,6 +426,20 @@ def _check_secret_ignore_patterns(root: Path, errors: list[str]) -> None:
             errors.append(f"missing secret ignore pattern '{pattern}' in .gitignore")
 
 
+def _check_coinbase_status(root: Path, errors: list[str]) -> None:
+    for relative in COINBASE_STATUS_TARGETS:
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+        text = _read(absolute)
+        coinbase_lines = [line for line in text.splitlines() if "Coinbase" in line]
+        if any("beta-yellow" in line for line in coinbase_lines) or (
+            coinbase_lines and not any("stable-green" in line for line in coinbase_lines)
+        ):
+            errors.append(
+                f"stale Coinbase integration status in {relative.as_posix()}"
+            )
+
 def _check_security_guidance(root: Path, errors: list[str]) -> None:
     for relative in POLYMARKET_ALLOWANCE_TARGETS:
         absolute = root / relative
@@ -425,6 +468,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_required_guide_files(root, errors)
     _check_retired_references(root, errors)
     _check_official_index_alignment(root, errors)
+    _check_coinbase_status(root, errors)
     _check_secret_ignore_patterns(root, errors)
     _check_security_guidance(root, errors)
 

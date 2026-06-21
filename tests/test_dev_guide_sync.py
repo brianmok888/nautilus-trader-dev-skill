@@ -87,6 +87,10 @@ def test_reports_missing_required_guide_files(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
+        "missing required guide file: references/developer_guide/release_security.md"
+        in result.errors
+    )
+    assert (
         "missing required guide file: references/developer_guide/spec_exec_testing.md"
         in result.errors
     )
@@ -228,6 +232,42 @@ def test_reports_stale_evomap_direct_a2a_guidance(tmp_path: Path) -> None:
     assert result.ok is False
     assert (
         "stale direct EvoMap A2A guidance in skills/nt-evomap-integration/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_stale_evomap_direct_a2a_guidance_in_current_docs(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md",
+        "Build a gateway that calls EvoMap A2A endpoints directly.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "stale direct EvoMap A2A guidance in "
+        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"
+        in result.errors
+    )
+
+
+def test_reports_stale_evomap_a2a_routes_in_current_docs(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md",
+        "Call POST /a2a/publish and then run hello -> publish -> fetch -> report.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "stale direct EvoMap A2A guidance in "
+        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"
         in result.errors
     )
 
@@ -407,6 +447,22 @@ def test_reports_retired_api_adapter_index_links(tmp_path: Path) -> None:
     )
 
 
+def test_reports_stale_coinbase_beta_integration_status(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/integrations/index.md",
+        "| [Coinbase](https://coinbase.com) | `COINBASE` | CEX | "
+        "![status](https://img.shields.io/badge/beta-yellow) | [Guide](coinbase.md) |\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "stale Coinbase integration status in references/integrations/index.md"
+        in result.errors
+    )
+
+
 def test_reports_stale_coinbase_intx_strategy_builder_guidance(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-strategy-builder/SKILL.md",
@@ -443,6 +499,21 @@ def test_reports_missing_current_reference_deltas(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
+        "missing current guide delta 'local prepare-failure carve-out' "
+        "in references/developer_guide/spec_exec_testing.md"
+        in result.errors
+    )
+    assert (
+        "missing current guide delta 'execution-path rate-limit response' "
+        "in references/developer_guide/adapters.md"
+        in result.errors
+    )
+    assert (
+        "missing current guide delta 'trusted publishing' "
+        "in references/developer_guide/release_security.md"
+        in result.errors
+    )
+    assert (
         "missing current guide delta 'Python v2 live callback routing' "
         "in references/developer_guide/python.md"
         in result.errors
@@ -463,11 +534,21 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "Handler initialization handshake\n"
             + "Auth-token rotation\n"
             + "CancellationToken\n"
+            + "execution-path rate-limit response\n"
+            + "unknown outcome\n"
+            + "idempotent\n"
             + "Ambiguous outcome failures\n"
+            + "local prepare-failure carve-out\n"
+            + "OrderCancelRejected\n"
+            + "OrderModifyRejected\n"
             + "TC-E74\n"
             + "TC-E78\n"
             + "due_post_only=true\n"
             + "trigger-order signing expiry\n"
+            + "trusted publishing\n"
+            + "Sigstore\n"
+            + "SLSA provenance\n"
+            + "cosign\n"
             + "Python v2 live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
             + "Generated FFI bindings and precision mode\n"
@@ -507,7 +588,17 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
+        "missing current skill delta 'execution-path rate-limit response' "
+        "in skills/nt-adapters/SKILL.md"
+        in result.errors
+    )
+    assert (
         "missing current skill delta 'TC-E74' in skills/nt-testing/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing current skill delta 'local prepare-failure carve-out' "
+        "in skills/nt-testing/SKILL.md"
         in result.errors
     )
     assert (
@@ -582,10 +673,32 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write_entry_skill(tmp_path)
     write(tmp_path / ".gitignore", ".env\n.env.*\n*.pem\n*.key\n")
 
+    guide_bodies = {
+        "adapters.md": (
+            "Handler initialization handshake Auth-token rotation CancellationToken "
+            "execution-path rate-limit response unknown outcome idempotent\n"
+        ),
+        "spec_exec_testing.md": (
+            "Ambiguous outcome failures local prepare-failure carve-out "
+            "OrderCancelRejected OrderModifyRejected TC-E74 TC-E78 "
+            "due_post_only=true trigger-order signing expiry\n"
+        ),
+        "environment_setup.md": (
+            "current version numbers into docs rustup toolchain install nightly "
+            "pip-audit maturin\n"
+        ),
+        "rust.md": "Generated FFI bindings and precision mode HIGH_PRECISION=true\n",
+        "python.md": (
+            "Python v2 live callback routing Do not call `Python::attach` "
+            "from Tokio worker tasks\n"
+        ),
+        "ffi.md": "Typed CVec wrappers and Send Rust-owned CVec capsules with explicit drop\n",
+        "release_security.md": "trusted publishing Sigstore SLSA provenance cosign\n",
+    }
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
             tmp_path / "references/developer_guide" / name,
-            current_metadata(name) + f"# {name}\n",
+            current_metadata(name) + f"# {name}\n" + guide_bodies.get(name, ""),
         )
 
     write(
@@ -597,6 +710,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         tmp_path / "skills/nt-testing/SKILL.md",
         "Use DataTester and ExecTester evidence with limit_aggressive and test_modify_rejected.\n"
         "Cover TC-E74 through TC-E78 ambiguous outcome failures, due_post_only=true, "
+        "local prepare-failure carve-out, OrderCancelRejected, OrderModifyRejected, "
         "and trigger-order signing expiry.\n"
         "DST readiness uses deterministic runtime seams.\n"
         "Required dataset metadata: file sha256 size_bytes original_url licence added_at.\n",
@@ -606,7 +720,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Use nautilus_network::http::HttpClient and get_runtime().spawn().\n"
         "Use time_bars_origin_offset and Binance/Kraken `Live` / `LIVE` environments.\n"
         "Use SetClient before publishing command channels, support auth-token rotation, "
-        "CancellationToken shutdown, and ambiguous outcome failures.\n",
+        "CancellationToken shutdown, ambiguous outcome failures, and execution-path "
+        "rate-limit response handling as an unknown outcome unless idempotent.\n",
     )
     write(
         tmp_path / "skills/nt-architect/SKILL.md",
@@ -659,11 +774,21 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "Handler initialization handshake\n"
             + "Auth-token rotation\n"
             + "CancellationToken\n"
+            + "execution-path rate-limit response\n"
+            + "unknown outcome\n"
+            + "idempotent\n"
             + "Ambiguous outcome failures\n"
+            + "local prepare-failure carve-out\n"
+            + "OrderCancelRejected\n"
+            + "OrderModifyRejected\n"
             + "TC-E74\n"
             + "TC-E78\n"
             + "due_post_only=true\n"
             + "trigger-order signing expiry\n"
+            + "trusted publishing\n"
+            + "Sigstore\n"
+            + "SLSA provenance\n"
+            + "cosign\n"
             + "Python v2 live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
             + "Generated FFI bindings and precision mode\n"

@@ -286,7 +286,10 @@ config = ExecTesterConfig(
 - Cover `TC-E74` through `TC-E78` for ambiguous submit, cancel, modify, and
   batch outcomes. Unknown outcomes must remain in-flight until venue updates,
   query results, or reconciliation resolve them; emit terminal reject events
-  only for explicit per-order venue rejections.
+  only for explicit per-order venue rejections, except the upstream
+  local prepare-failure carve-out: local cancel/modify prepare failures that
+  prove the command was not sent may emit `OrderCancelRejected` or
+  `OrderModifyRejected` when attributable to exactly one command.
 - For post-only crossing rejects, assert `due_post_only=true` when the adapter
   emits `OrderRejected`, so strategy code can distinguish post-only failures
   from other venue rejects.

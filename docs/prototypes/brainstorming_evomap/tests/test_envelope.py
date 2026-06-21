@@ -7,7 +7,6 @@
 import importlib.util
 from pathlib import Path
 
-import pytest
 
 _module_dir = Path(__file__).parent.parent
 

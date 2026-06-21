@@ -25,6 +25,7 @@ This approach combines Python's simplicity and ecosystem with Rust's performance
 - [Coding Standards](coding_standards.md)
 - [Rust](rust.md)
 - [Python](python.md)
+- [Release Security Architecture](release_security.md)
 - [Testing](testing.md)
 - [Test Datasets](test_datasets.md)
 - [Docs Style](docs.md)
