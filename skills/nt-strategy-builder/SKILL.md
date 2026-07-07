@@ -1,6 +1,6 @@
 ---
 name: nt-strategy-builder
-description: "Use when building backtesting or live-trading systems in NautilusTrader. Covers BacktestEngine, TradingNode, multi-venue data wiring (CeFi + custom DEX adapters), fill/margin model configuration, and paper trading. Includes explicit DO/DON'Ts rules and a test suite."
+description: Use when building NautilusTrader backtesting, paper-trading, or live-trading systems
 ---
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
