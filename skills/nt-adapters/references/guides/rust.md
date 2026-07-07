@@ -279,10 +279,10 @@ Adapter crates (under `crates/adapters/`) require special handling for spawning 
    use nautilus_common::live::runtime::get_runtime;
    ```
 
-3. **Use `get_runtime().block_on()` for sync-to-async bridges**: When synchronous code needs to call async functions in adapters:
+3. **Use `get_runtime().block_on()` only outside an ambient Tokio runtime**: Sync-to-async bridges may use `get_runtime().block_on()` only from contexts such as PyO3 methods, binaries, dedicated background threads, or tests. Never use it inside live `DataClient` or `ExecutionClient` trait method implementations; spawn work with `get_runtime().spawn()` and return immediately.
 
    ```rust
-   fn sync_method(&self) -> anyhow::Result<()> {
+   fn py_sync_method(&self) -> anyhow::Result<()> {
        get_runtime().block_on(self.async_implementation())
    }
    ```

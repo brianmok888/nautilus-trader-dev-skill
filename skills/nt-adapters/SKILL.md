@@ -419,7 +419,7 @@ account channels on a timer, and cancel the refresh loop with `CancellationToken
 ### Task Management
 
 ```rust
-// Use the Nautilus runtime for Python-driven adapter paths — never block_on
+// Use the Nautilus runtime for live DataClient/ExecutionClient trait paths
 get_runtime().spawn(async move { ... });
 
 // Graceful shutdown via CancellationToken
@@ -432,9 +432,14 @@ get_runtime().spawn(async move {
 });
 ```
 
-**Critical**: Never use `block_on` in trait method implementations. Do not teach
-`tokio::spawn()` as the default from Python-driven adapter code; use
-`get_runtime().spawn()` so task ownership follows Nautilus runtime expectations.
+**Critical**: Never use get_runtime().block_on() inside trait method implementations.
+Never use `get_runtime().block_on()` inside live `DataClient` or
+`ExecutionClient` trait method implementations; spawn work and
+return immediately. `get_runtime().block_on()` is only valid outside an ambient
+Tokio runtime, such as PyO3 methods, binaries, dedicated background threads,
+`block_in_place` bridges, or tests. Do not teach `tokio::spawn()` as the default
+from Python-driven adapter code; use `get_runtime().spawn()` so task ownership
+follows Nautilus runtime expectations.
 
 ## Key Conventions
 

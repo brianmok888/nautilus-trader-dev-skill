@@ -70,6 +70,9 @@ Block production-readiness claims unless review evidence covers:
 - `LiveNode` use for Rust v2 / Rust-backed live-node paths, or a Python live /
   integration-specific label for `TradingNode` examples;
 - environment setup that uses current `prek`/`make install-tools` guidance.
+- Generated Python artifacts are regenerated with `make py-stubs-v2` and
+  committed when PyO3 surfaces, stub annotations, wrapped Rust docs, or adapter
+  feature wiring change.
 
 ### 1. Nautilus Conventions
 

@@ -67,8 +67,17 @@ node.add_strategy_from_config(importable_strategy_config)
 
 ```rust
 use nautilus_testkit::testers::{ExecTester, ExecTesterConfig};
+use nautilus_trading::strategy::StrategyConfig;
 
-let tester_config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, order_qty);
+let tester_config = ExecTesterConfig::builder()
+    .base(StrategyConfig {
+        strategy_id: Some(strategy_id),
+        ..Default::default()
+    })
+    .instrument_id(instrument_id)
+    .client_id(client_id)
+    .order_qty(order_qty)
+    .build()?;
 let tester = ExecTester::new(tester_config);
 node.add_strategy(tester)?;
 node.run().await?;

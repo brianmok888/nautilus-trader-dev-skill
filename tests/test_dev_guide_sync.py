@@ -119,8 +119,7 @@ def test_reports_stale_metadata_target(tmp_path: Path) -> None:
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
             tmp_path / "references/developer_guide" / name,
-            current_metadata(name).replace("develop", "v1.227.0")
-            + f"# {name}\n",
+            current_metadata(name).replace("develop", "v1.227.0") + f"# {name}\n",
         )
 
     result = run_checks(tmp_path)
@@ -148,7 +147,9 @@ def test_ignores_omx_runtime_context(tmp_path: Path) -> None:
 
     result = run_checks(tmp_path)
 
-    assert "stale references/guides path in .omx/context/runtime.md" not in result.errors
+    assert (
+        "stale references/guides path in .omx/context/runtime.md" not in result.errors
+    )
 
 
 def test_reports_stale_references_guides_path(tmp_path: Path) -> None:
@@ -204,7 +205,9 @@ def test_reports_stale_uv_required_version_01112(tmp_path: Path) -> None:
     result = run_checks(tmp_path)
 
     assert result.ok is False
-    assert "stale uv required-version guidance in skills/nt-dev/SKILL.md" in result.errors
+    assert (
+        "stale uv required-version guidance in skills/nt-dev/SKILL.md" in result.errors
+    )
 
 
 def test_reports_copied_current_nautilus_version_guidance(tmp_path: Path) -> None:
@@ -249,8 +252,7 @@ def test_reports_stale_evomap_direct_a2a_guidance_in_current_docs(
     assert result.ok is False
     assert (
         "stale direct EvoMap A2A guidance in "
-        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"
-        in result.errors
+        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md" in result.errors
     )
 
 
@@ -267,8 +269,7 @@ def test_reports_stale_evomap_a2a_routes_in_current_docs(
     assert result.ok is False
     assert (
         "stale direct EvoMap A2A guidance in "
-        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"
-        in result.errors
+        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md" in result.errors
     )
 
 
@@ -490,38 +491,31 @@ def test_reports_missing_current_reference_deltas(tmp_path: Path) -> None:
 
     assert (
         "missing current guide delta 'Handler initialization handshake' "
-        "in references/developer_guide/adapters.md"
-        in result.errors
+        "in references/developer_guide/adapters.md" in result.errors
     )
     assert (
         "missing current guide delta 'Ambiguous outcome failures' "
-        "in references/developer_guide/spec_exec_testing.md"
-        in result.errors
+        "in references/developer_guide/spec_exec_testing.md" in result.errors
     )
     assert (
         "missing current guide delta 'local prepare-failure carve-out' "
-        "in references/developer_guide/spec_exec_testing.md"
-        in result.errors
+        "in references/developer_guide/spec_exec_testing.md" in result.errors
     )
     assert (
         "missing current guide delta 'execution-path rate-limit response' "
-        "in references/developer_guide/adapters.md"
-        in result.errors
+        "in references/developer_guide/adapters.md" in result.errors
     )
     assert (
         "missing current guide delta 'trusted publishing' "
-        "in references/developer_guide/release_security.md"
-        in result.errors
+        "in references/developer_guide/release_security.md" in result.errors
     )
     assert (
         "missing current guide delta 'Python v2 live callback routing' "
-        "in references/developer_guide/python.md"
-        in result.errors
+        "in references/developer_guide/python.md" in result.errors
     )
     assert (
         "missing current guide delta 'Typed CVec wrappers and Send' "
-        "in references/developer_guide/ffi.md"
-        in result.errors
+        "in references/developer_guide/ffi.md" in result.errors
     )
 
 
@@ -556,11 +550,19 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "Typed CVec wrappers and Send\n"
             + "Rust-owned CVec capsules with explicit drop\n"
             + "Do not copy current version numbers\n"
-            + "rustup toolchain install nightly\n",
+            + "rustup toolchain install nightly\n"
+            + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
+            + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
+            + "export TAG= export REPO= gh attestation verify.\n",
         )
     write(
         tmp_path / "skills/nt-adapters/SKILL.md",
         "Use nautilus_network::http::HttpClient and get_runtime().spawn().\n"
+        "Never use get_runtime().block_on() inside trait method implementations.\n"
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations; spawn work immediately.\n"
+        "Live DataClient and ExecutionClient trait methods spawn work; get_runtime().block_on() only outside an ambient Tokio runtime, such as PyO3.\n"
         "Use time_bars_origin_offset and Binance/Kraken `Live` / `LIVE` environments.\n",
     )
     write(
@@ -589,8 +591,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     assert (
         "missing current skill delta 'execution-path rate-limit response' "
-        "in skills/nt-adapters/SKILL.md"
-        in result.errors
+        "in skills/nt-adapters/SKILL.md" in result.errors
     )
     assert (
         "missing current skill delta 'TC-E74' in skills/nt-testing/SKILL.md"
@@ -598,18 +599,328 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     assert (
         "missing current skill delta 'local prepare-failure carve-out' "
-        "in skills/nt-testing/SKILL.md"
-        in result.errors
+        "in skills/nt-testing/SKILL.md" in result.errors
     )
     assert (
         "missing current skill delta 'Python v2 live callback routing' "
-        "in skills/nt-dev/SKILL.md"
-        in result.errors
+        "in skills/nt-dev/SKILL.md" in result.errors
     )
     assert (
         "missing current skill delta '~/.evolver/settings.json' "
-        "in skills/nt-evomap-integration/SKILL.md"
+        "in skills/nt-evomap-integration/SKILL.md" in result.errors
+    )
+
+
+def test_reports_missing_rust_and_adapter_compliance_terms(tmp_path: Path) -> None:
+    write(tmp_path / "skills/nt-dev/SKILL.md", "Use Rust and PyO3 carefully.\n")
+    write(
+        tmp_path / "skills/nt-adapters/SKILL.md",
+        "Use get_runtime().spawn() in adapters.\n",
+    )
+    write(tmp_path / "skills/nt-testing/SKILL.md", "Use ExecTester evidence.\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing Rust compliance term 'cargo nextest' in skills/nt-dev/SKILL.md"
         in result.errors
+    )
+    assert (
+        "missing Rust compliance term 'cargo clippy' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing Rust compliance term 'cargo deny' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing Rust compliance term 'rstest' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing adapter runtime term 'Never use get_runtime().block_on() inside trait method implementations' "
+        "in skills/nt-adapters/SKILL.md" in result.errors
+    )
+    assert (
+        "missing execution testing term 'Adapter baseline matrix' in skills/nt-testing/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing execution testing term 'Account reconciliation matrix' in skills/nt-testing/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_missing_runtime_boundary_contracts(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/SKILL.md",
+        "Adapter sync-to-async bridges should use get_runtime().block_on().\n"
+        "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n",
+    )
+    write(
+        tmp_path / "skills/nt-adapters/SKILL.md",
+        "Use get_runtime().spawn(). Never use get_runtime().block_on() "
+        "inside trait method implementations.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing Rust compliance contract 'block_on boundary' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing adapter runtime contract 'block_on boundary' in skills/nt-adapters/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_runtime_boundary_without_canonical_negative_phrase(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-implement/SKILL.md",
+        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3. "
+        "Mention DataClient and ExecutionClient and spawn, but without the canonical warning.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing adapter runtime contract 'block_on canonical warning' "
+        "in skills/nt-implement/SKILL.md" in result.errors
+    )
+
+
+def test_reports_runtime_boundary_terms_scattered_across_paragraphs(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-implement/SKILL.md",
+        "Never use vague runtime guidance without a local reason.\n\n"
+        "get_runtime().block_on() can appear in a historical note.\n\n"
+        "inside live systems, DataClient behavior matters.\n\n"
+        "ExecutionClient trait method implementations should spawn work.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing adapter runtime contract 'block_on canonical warning' "
+        "in skills/nt-implement/SKILL.md" in result.errors
+    )
+
+
+def test_reports_missing_execution_testing_contract_details(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-testing/SKILL.md",
+        "Use DataTester and ExecTester evidence. Adapter baseline matrix. "
+        "Account reconciliation matrix. limit_aggressive test_modify_rejected DST readiness "
+        "file sha256 size_bytes original_url licence added_at TC-E74 TC-E78 "
+        "local prepare-failure carve-out OrderCancelRejected OrderModifyRejected "
+        "due_post_only=true trigger-order signing expiry.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing execution testing contract 'ExecTester baseline and reconciliation' "
+        "in skills/nt-testing/SKILL.md" in result.errors
+    )
+
+
+def test_contract_checks_accept_markdown_wrapped_terms(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/SKILL.md",
+        "cargo nextest cargo clippy cargo deny rstest.\n"
+        "Use block_on only outside an ambient\n"
+        "Tokio runtime with PyO3. Never use it in DataClient or\n"
+        "ExecutionClient trait methods; spawn work instead.\n",
+    )
+    write(
+        tmp_path / "skills/nt-adapters/SKILL.md",
+        "nautilus_network::http::HttpClient get_runtime().spawn() "
+        "time_bars_origin_offset `Live` / `LIVE`.\n"
+        "Never use\n"
+        "get_runtime().block_on() inside trait method implementations.\n"
+        "DataClient and ExecutionClient paths spawn work; block_on is only valid "
+        "outside an ambient Tokio runtime such as PyO3.\n",
+    )
+    write(
+        tmp_path / "skills/nt-testing/SKILL.md",
+        "DataTester ExecTester limit_aggressive test_modify_rejected DST readiness.\n"
+        "file sha256 size_bytes original_url licence added_at.\n"
+        "Adapter baseline matrix Account reconciliation matrix.\n"
+        "ExecTester groups 1–5 and capability matrix after DataTester.\n"
+        "unknown outcomes stay non-terminal; reconcile balances, open orders, "
+        "fills, positions, and startup\n"
+        "state. TC-E74 TC-E78 local prepare-failure carve-out OrderCancelRejected "
+        "OrderModifyRejected due_post_only=true trigger-order signing expiry.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any(
+        "Rust compliance contract 'block_on boundary'" in e for e in result.errors
+    )
+    assert not any("adapter runtime term" in e for e in result.errors)
+    assert not any(
+        "adapter runtime contract 'block_on boundary'" in e for e in result.errors
+    )
+    assert not any(
+        "execution testing contract 'ExecTester baseline and reconciliation'" in e
+        for e in result.errors
+    )
+
+
+def test_reports_adapter_adjacent_block_on_boundary_drift(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-implement/SKILL.md",
+        "Use get_runtime().block_on() for sync-to-async bridges.\n",
+    )
+    write(
+        tmp_path / "skills/nt-dex-adapter/rules/dos_and_donts.md",
+        "Async call goes to Rust client via get_runtime().block_on().\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing adapter runtime contract 'block_on boundary' in skills/nt-implement/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing adapter runtime contract 'block_on boundary' "
+        "in skills/nt-dex-adapter/rules/dos_and_donts.md" in result.errors
+    )
+
+
+def test_reports_reference_block_on_boundary_drift(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/developer_guide/rust.md",
+        "Use get_runtime().block_on() for sync-to-async bridges.\n",
+    )
+    write(
+        tmp_path / "skills/nt-adapters/references/guides/rust.md",
+        "Use get_runtime().block_on() for sync-to-async bridges.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing adapter runtime contract 'block_on boundary' "
+        "in references/developer_guide/rust.md" in result.errors
+    )
+    assert (
+        "missing adapter runtime contract 'block_on boundary' "
+        "in skills/nt-adapters/references/guides/rust.md" in result.errors
+    )
+
+
+def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/developer_guide/rust.md", "Generated Python artifacts.\n"
+    )
+    write(
+        tmp_path / "references/developer_guide/testing.md",
+        "cargo nextest run --workspace.\n",
+    )
+    write(
+        tmp_path / "references/developer_guide/spec_exec_testing.md",
+        "ExecTesterConfig::new(...).\n",
+    )
+    write(
+        tmp_path / "references/developer_guide/release_security.md",
+        "Fish-compatible example.\n",
+    )
+    write(tmp_path / "skills/nt-dev/SKILL.md", "Run Rust checks.\n")
+    write(tmp_path / "skills/nt-testing/SKILL.md", "Use ExecTesterConfig.\n")
+    write(tmp_path / "skills/nt-review/SKILL.md", "Review generated stubs.\n")
+    write(tmp_path / "skills/nt-data/SKILL.md", "Use order_owned.\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing latest upstream delta 'uv version pinned by `required-version`' "
+        "in references/developer_guide/rust.md" in result.errors
+    )
+    assert (
+        "missing latest upstream delta 'arrow,ffi,python,high-precision,streaming,defi' "
+        "in references/developer_guide/testing.md" in result.errors
+    )
+    assert (
+        "missing latest upstream delta 'ExecTesterConfig::builder()' "
+        "in references/developer_guide/spec_exec_testing.md" in result.errors
+    )
+    assert (
+        "missing latest upstream delta 'export TAG=' "
+        "in references/developer_guide/release_security.md" in result.errors
+    )
+    assert (
+        "missing latest skill alignment 'make py-stubs-v2' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing latest skill alignment 'ExecTesterConfig::builder()' in skills/nt-testing/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing latest skill alignment 'Generated Python artifacts' in skills/nt-review/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing latest skill alignment 'try_order' in skills/nt-data/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/developer_guide/release_security.md",
+        "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "
+        "gh attestation verify.\n"
+        "```bash\n"
+        "export TAG= v1.228.0\n"
+        "set -gx REPO nautechsystems/nautilus_trader\n"
+        "set -gx URL (curl -sS https://example.invalid)\n"
+        "test (sha256sum file | cut -d ' ' -f 1) = abc\n"
+        "```\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "invalid release-security bash example in references/developer_guide/release_security.md"
+        in result.errors
+    )
+
+
+def test_accepts_release_security_bash_array_assignments(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/developer_guide/release_security.md",
+        "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "
+        "gh attestation verify.\n"
+        "```bash\n"
+        "export TAG=v1.228.0\n"
+        'artifacts=("nautilus_trader-1.228.0.tar.gz" "SHA256SUMS")\n'
+        "printf '%s\\n' \"${artifacts[@]}\"\n"
+        "```\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "invalid release-security bash example in references/developer_guide/release_security.md"
+        not in result.errors
     )
 
 
@@ -618,7 +929,9 @@ def test_reports_copied_uv_required_version_guidance(tmp_path: Path) -> None:
 
     result = run_checks(tmp_path)
 
-    assert "copied uv required-version guidance in skills/nt-dev/SKILL.md" in result.errors
+    assert (
+        "copied uv required-version guidance in skills/nt-dev/SKILL.md" in result.errors
+    )
 
 
 def test_reports_unbounded_polymarket_allowance_guidance(tmp_path: Path) -> None:
@@ -687,13 +1000,17 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "current version numbers into docs rustup toolchain install nightly "
             "pip-audit maturin\n"
         ),
-        "rust.md": "Generated FFI bindings and precision mode HIGH_PRECISION=true\n",
+        "rust.md": (
+            "Generated FFI bindings and precision mode HIGH_PRECISION=true\n"
+            "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
+        ),
         "python.md": (
             "Python v2 live callback routing Do not call `Python::attach` "
             "from Tokio worker tasks\n"
         ),
         "ffi.md": "Typed CVec wrappers and Send Rust-owned CVec capsules with explicit drop\n",
-        "release_security.md": "trusted publishing Sigstore SLSA provenance cosign\n",
+        "release_security.md": "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= gh attestation verify\n",
     }
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
@@ -709,6 +1026,10 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
         "Use DataTester and ExecTester evidence with limit_aggressive and test_modify_rejected.\n"
+        "Adapter baseline matrix and Account reconciliation matrix required.\n"
+        "ExecTesterConfig::builder() StrategyConfig build()? for Rust examples.\n"
+        "ExecTester groups 1–5 after DataTester, capability matrix, unknown outcomes stay non-terminal.\n"
+        "Reconcile balances, open orders, fills, positions, and startup state.\n"
         "Cover TC-E74 through TC-E78 ambiguous outcome failures, due_post_only=true, "
         "local prepare-failure carve-out, OrderCancelRejected, OrderModifyRejected, "
         "and trigger-order signing expiry.\n"
@@ -718,6 +1039,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-adapters/SKILL.md",
         "Use nautilus_network::http::HttpClient and get_runtime().spawn().\n"
+        "Never use get_runtime().block_on() inside trait method implementations.\n"
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations; spawn work immediately.\n"
+        "Live DataClient and ExecutionClient trait methods spawn work; get_runtime().block_on() only outside an ambient Tokio runtime, such as PyO3.\n"
         "Use time_bars_origin_offset and Binance/Kraken `Live` / `LIVE` environments.\n"
         "Use SetClient before publishing command channels, support auth-token rotation, "
         "CancellationToken shutdown, ambiguous outcome failures, and execution-path "
@@ -729,7 +1053,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-data/SKILL.md",
-        "Use time_bars_origin_offset and order_owned snapshots.\n",
+        "Use time_bars_origin_offset, order_owned, try_order, and try_order_owned snapshots.\n",
     )
     write(
         tmp_path / "skills/nt-signals/SKILL.md",
@@ -756,6 +1080,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Tokio worker threads from running Python code. Typed CVec wrappers and Send are required "
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
+        "Generated Python artifacts make py-stubs-v2 arrow,ffi,python,high-precision,streaming,defi.\n"
+        "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
+        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
     )
     write(
@@ -764,7 +1091,22 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-review/SKILL.md",
-        "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific.\n",
+        "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific. Generated Python artifacts make py-stubs-v2.\n",
+    )
+    write(
+        tmp_path / "skills/nt-implement/SKILL.md",
+        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n",
+    )
+    write(
+        tmp_path / "skills/nt-dex-adapter/rules/dos_and_donts.md",
+        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n",
+    )
+    write(
+        tmp_path / "skills/nt-adapters/references/guides/rust.md",
+        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n",
     )
 
     for name in CURRENT_DEV_GUIDE_FILES:
@@ -799,7 +1141,12 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "current version numbers into docs\n"
             + "pip-audit\n"
             + "maturin\n"
-            + "rustup toolchain install nightly\n",
+            + "rustup toolchain install nightly\n"
+            + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
+            + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
+            + "export TAG= export REPO= gh attestation verify.\n",
         )
 
     result = run_checks(tmp_path)

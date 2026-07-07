@@ -171,10 +171,180 @@ POLYMARKET_ALLOWANCE_TARGETS = [
     Path("skills/nt-adapters/references/integrations/polymarket.md"),
 ]
 
+RUST_COMPLIANCE_TARGETS = {
+    Path("skills/nt-dev/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "rstest",
+    ],
+}
+
+ADAPTER_RUNTIME_TARGETS = {
+    Path("skills/nt-adapters/SKILL.md"): [
+        "Never use get_runtime().block_on() inside trait method implementations",
+    ],
+}
+
+EXECUTION_TESTING_TARGETS = {
+    Path("skills/nt-testing/SKILL.md"): [
+        "Adapter baseline matrix",
+        "Account reconciliation matrix",
+    ],
+}
+
+CONTRACT_TERM_GROUPS = {
+    (Path("skills/nt-dev/SKILL.md"), "Rust compliance", "block_on boundary"): [
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "DataClient",
+        "ExecutionClient",
+        "spawn",
+    ],
+    (Path("skills/nt-adapters/SKILL.md"), "adapter runtime", "block_on boundary"): [
+        "DataClient",
+        "ExecutionClient",
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "spawn",
+    ],
+    (Path("skills/nt-implement/SKILL.md"), "adapter runtime", "block_on boundary"): [
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "DataClient",
+        "ExecutionClient",
+        "spawn",
+    ],
+    (
+        Path("skills/nt-dex-adapter/rules/dos_and_donts.md"),
+        "adapter runtime",
+        "block_on boundary",
+    ): [
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "DataClient",
+        "ExecutionClient",
+        "spawn",
+    ],
+    (
+        Path("references/developer_guide/rust.md"),
+        "adapter runtime",
+        "block_on boundary",
+    ): [
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "DataClient",
+        "ExecutionClient",
+        "spawn",
+    ],
+    (
+        Path("skills/nt-adapters/references/guides/rust.md"),
+        "adapter runtime",
+        "block_on boundary",
+    ): [
+        "outside an ambient Tokio runtime",
+        "PyO3",
+        "DataClient",
+        "ExecutionClient",
+        "spawn",
+    ],
+    (
+        Path("skills/nt-testing/SKILL.md"),
+        "execution testing",
+        "ExecTester baseline and reconciliation",
+    ): [
+        "groups 1–5",
+        "capability matrix",
+        "DataTester",
+        "unknown outcomes stay",
+        "balances",
+        "open orders",
+        "fills",
+        "positions",
+        "startup state",
+    ],
+}
+
+LATEST_UPSTREAM_DELTA_TARGETS = {
+    Path("references/developer_guide/rust.md"): [
+        "uv version pinned by `required-version`",
+        "Generated Python artifacts",
+        "make py-stubs-v2",
+        "bon::bon",
+        "try_order",
+    ],
+    Path("references/developer_guide/testing.md"): [
+        "arrow,ffi,python,high-precision,streaming,defi",
+        "--lib --tests",
+    ],
+    Path("references/developer_guide/spec_exec_testing.md"): [
+        "ExecTesterConfig::builder()",
+        "StrategyConfig",
+        "build()?",
+    ],
+    Path("references/developer_guide/release_security.md"): [
+        "export TAG=",
+        "export REPO=",
+        "gh attestation verify",
+    ],
+}
+
+LATEST_SKILL_ALIGNMENT_TARGETS = {
+    Path("skills/nt-dev/SKILL.md"): [
+        "make py-stubs-v2",
+        "Generated Python artifacts",
+        "arrow,ffi,python,high-precision,streaming,defi",
+    ],
+    Path("skills/nt-testing/SKILL.md"): [
+        "ExecTesterConfig::builder()",
+        "StrategyConfig",
+        "build()?",
+    ],
+    Path("skills/nt-review/SKILL.md"): [
+        "Generated Python artifacts",
+        "make py-stubs-v2",
+    ],
+    Path("skills/nt-data/SKILL.md"): [
+        "try_order",
+        "try_order_owned",
+    ],
+}
+
 SECRET_IGNORE_PATTERNS = [".env", ".env.*", "*.pem", "*.key"]
 
 GUIDE_LINK_RE = re.compile(r"\[Guide\]\(([^)]+\.md)\)")
 UV_REQUIRED_VERSION_RE = re.compile(r'required-version\s*=\s*"==[^"]+"')
+
+
+BASH_CODE_BLOCK_RE = re.compile(
+    r"^```(?:bash|sh)\s*\n(.*?)^```", re.MULTILINE | re.DOTALL
+)
+INVALID_RELEASE_SECURITY_BASH_PATTERNS = [
+    re.compile(r"^\s*set\s+-gx\b", re.MULTILINE),
+    re.compile(r"^\s*export\s+[A-Za-z_][A-Za-z0-9_]*=\s+\S", re.MULTILINE),
+    re.compile(r"^\s*(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*=\s*\([^)]*\|", re.MULTILINE),
+    re.compile(r"^\s*test\s+\(", re.MULTILINE),
+]
+
+BLOCK_ON_CANONICAL_WARNING_TARGETS = [
+    Path("skills/nt-dev/SKILL.md"),
+    Path("skills/nt-adapters/SKILL.md"),
+    Path("skills/nt-implement/SKILL.md"),
+    Path("skills/nt-dex-adapter/rules/dos_and_donts.md"),
+    Path("references/developer_guide/rust.md"),
+    Path("skills/nt-adapters/references/guides/rust.md"),
+    Path("skills/nt-dev/references/guides/rust_conventions.md"),
+]
+
+BLOCK_ON_CANONICAL_WARNING_TERMS = [
+    "Never use",
+    "get_runtime().block_on()",
+    "inside live",
+    "DataClient",
+    "ExecutionClient",
+    "trait method implementations",
+    "spawn work",
+]
 
 CURRENT_GUIDE_DELTA_TARGETS = {
     Path("references/developer_guide/adapters.md"): [
@@ -304,6 +474,20 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _contains_term(text: str, term: str) -> bool:
+    normalized_text = " ".join(text.split())
+    normalized_term = " ".join(term.split())
+    return normalized_term in normalized_text
+
+
+def _contains_terms_in_single_paragraph(text: str, terms: list[str]) -> bool:
+    paragraphs = re.split(r"\n\s*\n", text)
+    return any(
+        all(_contains_term(paragraph, term) for term in terms)
+        for paragraph in paragraphs
+    )
+
+
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
     absolute = root / ENTRY_SKILL
     if not absolute.exists():
@@ -317,13 +501,13 @@ def _check_entry_skill(root: Path, errors: list[str]) -> None:
         "Source of truth",
         "nautechsystems/nautilus_trader",
     ]:
-        if required_text not in text:
+        if not _contains_term(text, required_text):
             errors.append(
                 f"missing entry skill contract '{required_text}' in {ENTRY_SKILL.as_posix()}"
             )
 
     for skill_name in ENTRY_SKILL_ROUTING_TARGETS:
-        if skill_name not in text:
+        if not _contains_term(text, skill_name):
             errors.append(
                 f"entry skill does not route to {skill_name} in {ENTRY_SKILL.as_posix()}"
             )
@@ -336,7 +520,7 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             errors.append(f"missing required guide file: {relative.as_posix()}")
             continue
         text = _read(absolute)
-        missing_keys = [key for key in METADATA_KEYS if key not in text]
+        missing_keys = [key for key in METADATA_KEYS if not _contains_term(text, key)]
         if missing_keys:
             errors.append(
                 f"missing source metadata in {relative.as_posix()}: {', '.join(missing_keys)}"
@@ -408,10 +592,56 @@ def _check_required_terms(
             continue
         text = _read(absolute)
         for term in required_terms:
-            if term not in text:
-                errors.append(
-                    f"missing current {error_label} delta '{term}' in {relative.as_posix()}"
-                )
+            if not _contains_term(text, term):
+                if error_label in {"guide", "skill"}:
+                    errors.append(
+                        f"missing current {error_label} delta '{term}' "
+                        f"in {relative.as_posix()}"
+                    )
+                elif error_label == "latest upstream":
+                    errors.append(
+                        f"missing latest upstream delta '{term}' in {relative.as_posix()}"
+                    )
+                elif error_label == "latest skill alignment":
+                    errors.append(
+                        f"missing latest skill alignment '{term}' in {relative.as_posix()}"
+                    )
+                else:
+                    errors.append(
+                        f"missing {error_label} term '{term}' in {relative.as_posix()}"
+                    )
+
+
+def _check_contract_term_groups(root: Path, errors: list[str]) -> None:
+    for (
+        relative,
+        error_label,
+        contract_name,
+    ), required_terms in CONTRACT_TERM_GROUPS.items():
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+        text = _read(absolute)
+        if not all(_contains_term(text, term) for term in required_terms):
+            errors.append(
+                f"missing {error_label} contract '{contract_name}' in {relative.as_posix()}"
+            )
+
+
+def _check_block_on_canonical_warnings(root: Path, errors: list[str]) -> None:
+    for relative in BLOCK_ON_CANONICAL_WARNING_TARGETS:
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+
+        text = _read(absolute)
+        if not _contains_terms_in_single_paragraph(
+            text, BLOCK_ON_CANONICAL_WARNING_TERMS
+        ):
+            errors.append(
+                "missing adapter runtime contract 'block_on canonical warning' "
+                f"in {relative.as_posix()}"
+            )
 
 
 def _check_secret_ignore_patterns(root: Path, errors: list[str]) -> None:
@@ -434,11 +664,28 @@ def _check_coinbase_status(root: Path, errors: list[str]) -> None:
         text = _read(absolute)
         coinbase_lines = [line for line in text.splitlines() if "Coinbase" in line]
         if any("beta-yellow" in line for line in coinbase_lines) or (
-            coinbase_lines and not any("stable-green" in line for line in coinbase_lines)
+            coinbase_lines
+            and not any("stable-green" in line for line in coinbase_lines)
+        ):
+            errors.append(f"stale Coinbase integration status in {relative.as_posix()}")
+
+
+def _check_release_security_bash_examples(root: Path, errors: list[str]) -> None:
+    relative = Path("references/developer_guide/release_security.md")
+    absolute = root / relative
+    if not absolute.exists():
+        return
+
+    text = _read(absolute)
+    for block in BASH_CODE_BLOCK_RE.findall(text):
+        if any(
+            pattern.search(block) for pattern in INVALID_RELEASE_SECURITY_BASH_PATTERNS
         ):
             errors.append(
-                f"stale Coinbase integration status in {relative.as_posix()}"
+                f"invalid release-security bash example in {relative.as_posix()}"
             )
+            return
+
 
 def _check_security_guidance(root: Path, errors: list[str]) -> None:
     for relative in POLYMARKET_ALLOWANCE_TARGETS:
@@ -471,6 +718,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_coinbase_status(root, errors)
     _check_secret_ignore_patterns(root, errors)
     _check_security_guidance(root, errors)
+    _check_release_security_bash_examples(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
@@ -502,13 +750,25 @@ def run_checks(root: Path) -> CheckResult:
     _check_required_terms(root, errors, CURRENT_GUIDE_DELTA_TARGETS, "guide")
     _check_required_terms(root, errors, CURRENT_SKILL_DELTA_TARGETS, "skill")
 
+    _check_required_terms(root, errors, RUST_COMPLIANCE_TARGETS, "Rust compliance")
+    _check_required_terms(root, errors, ADAPTER_RUNTIME_TARGETS, "adapter runtime")
+    _check_required_terms(root, errors, EXECUTION_TESTING_TARGETS, "execution testing")
+    _check_contract_term_groups(root, errors)
+    _check_block_on_canonical_warnings(root, errors)
+    _check_required_terms(
+        root, errors, LATEST_UPSTREAM_DELTA_TARGETS, "latest upstream"
+    )
+    _check_required_terms(
+        root, errors, LATEST_SKILL_ALIGNMENT_TARGETS, "latest skill alignment"
+    )
+
     for relative, required_terms in INVARIANT_TARGETS.items():
         absolute = root / relative
         if not absolute.exists():
             continue
         text = _read(absolute)
         for term in required_terms:
-            if term not in text:
+            if not _contains_term(text, term):
                 errors.append(f"missing invariant '{term}' in {relative.as_posix()}")
 
     nt_testing = root / "skills/nt-testing/SKILL.md"
@@ -541,7 +801,7 @@ def run_checks(root: Path) -> CheckResult:
         if not absolute.exists():
             continue
         text = _read(absolute)
-        if not all(term in text for term in required_terms):
+        if not all(_contains_term(text, term) for term in required_terms):
             errors.append(f"missing live runtime boundary in {relative.as_posix()}")
 
     for relative in EVOMAP_DIRECT_A2A_TARGETS:
@@ -550,9 +810,7 @@ def run_checks(root: Path) -> CheckResult:
             continue
         text = _read(absolute)
         if any(term in text for term in EVOMAP_DIRECT_A2A_TERMS):
-            errors.append(
-                f"stale direct EvoMap A2A guidance in {relative.as_posix()}"
-            )
+            errors.append(f"stale direct EvoMap A2A guidance in {relative.as_posix()}")
 
     evomap = root / EVOMAP_PROXY_BOUNDARY_TARGET
     if evomap.exists():

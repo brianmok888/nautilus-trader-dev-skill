@@ -220,8 +220,12 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
   paths, immutable `Arc<AHashMap<...>>` for read-only sharing, and `DashMap`
   for concurrent reads/writes.
 - Async functions: document cancellation safety for control-plane futures.
-  Adapter sync-to-async bridges should use `get_runtime().block_on()`;
-  Python-thread-sensitive tasks should use `get_runtime().spawn()`.
+  Use `get_runtime().block_on()` only for sync-to-async bridges outside an
+  ambient Tokio runtime, such as PyO3 methods, binary entry points, dedicated
+  background threads, or tests. Never use `get_runtime().block_on()` inside live `DataClient` or
+  `ExecutionClient` trait method implementations; spawn work with
+  `get_runtime().spawn()` and return immediately. Python-thread-sensitive tasks
+  should also use `get_runtime().spawn()`.
 - Generated FFI bindings and precision mode: when compiling `nautilus-model`
   with `ffi` outside the aligned feature set, include `high-precision` or set
   `HIGH_PRECISION=true`; verify generated `model.h` / `model.pxd` did not drift
@@ -232,6 +236,30 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 - Fuzz targets require nightly at runtime: `rustup toolchain install nightly`.
 
 ## Testing & Benchmarking
+
+### Rust quality gates
+
+For Rust or PyO3 changes, keep local checks aligned with upstream developer-guide
+expectations:
+
+```bash
+cargo nextest run --workspace --features "arrow,ffi,python,high-precision,streaming,defi" --cargo-profile nextest --lib --tests
+cargo clippy --workspace --all-targets --features "arrow,ffi,python,high-precision,streaming,defi" -- -D warnings
+cargo deny check
+```
+
+Use `rstest` fixtures for repeated Rust setup and table-style test cases; keep
+fixture helpers close to the crate/module under test.
+
+
+### Generated Python artifacts
+
+After changing Python-exposed Rust surfaces (`#[pyclass]`, `#[pymethods]`,
+`#[pyfunction]`, stub annotations, wrapped Rust docs, or adapter feature wiring),
+run `make py-stubs-v2` and commit every generated `.pyi` file and wrapper doc
+comment. The v2 stub target checks the uv version pinned by `required-version`
+in `python/pyproject.toml`; follow the printed `uv self update --version ...`
+hint before rerunning if local uv differs.
 
 ### Test Categories
 

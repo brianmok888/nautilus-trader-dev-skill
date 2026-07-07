@@ -74,7 +74,7 @@ self.subscribe_order_book_depth(instrument_id, depth=10)
 
 - `DataEngineConfig` / `LiveDataEngineConfig` renamed `time_bars_origins` to `time_bars_origin_offset`.
 - `Cache.purge_instrument(...)` trims unused instrument records.
-- Rust cache accessors now use scoped borrow wrappers (`OrderRef`, `AccountRef`, `PositionRef`); use `order_owned`, `account_owned`, or `position_owned` when an owned snapshot must cross a boundary.
+- Rust cache accessors now use scoped borrow wrappers (`OrderRef`, `AccountRef`, `PositionRef`); use `order_owned`, `account_owned`, or `position_owned` when an owned snapshot must cross a boundary. Use `try_order` or `try_order_owned` when a missing order is an error, so callers receive `OrderLookupError` instead of inventing ad hoc not-found errors.
 - Custom Arrow storage supports `#[custom_data_field(json)]` for JSON-backed Serde fields with PyO3 dict conversion for `IndexMap` / `HashMap` values.
 
 ### Cache Queries

@@ -281,6 +281,45 @@ config = ExecTesterConfig(
 ).with_test_reject_post_only()
 ```
 
+
+### Current Rust ExecTesterConfig API
+
+New Rust execution tester examples use `ExecTesterConfig::builder()` with a
+`StrategyConfig` base and finish with `build()?`; do not copy older
+`ExecTesterConfig::new(...)` examples into new Rust adapter docs.
+
+```rust
+use nautilus_trading::strategy::StrategyConfig;
+use nautilus_testkit::testers::ExecTesterConfig;
+
+let tester_config = ExecTesterConfig::builder()
+    .base(StrategyConfig {
+        strategy_id: Some(strategy_id),
+        ..Default::default()
+    })
+    .instrument_id(instrument_id)
+    .client_id(client_id)
+    .order_qty(order_qty)
+    .build()?;
+```
+
+### Adapter baseline matrix
+
+Baseline adapter execution compliance means the adapter passes ExecTester groups
+1–5 after DataTester connectivity is already verified. Record the venue
+capability matrix in the adapter guide, including order types, TIFs, post-only
+behavior, modify/cancel support, trigger-order behavior, and which testnet/demo
+credentials and instruments were used. Do not claim baseline readiness from
+unit tests or method-presence checks alone.
+
+### Account reconciliation matrix
+
+Execution adapters must document reconciliation coverage for balances, open
+orders, fills/trade reports, positions, rejected/canceled orders, and startup
+state recovery. Reconciliation tests should prove unknown outcomes stay
+non-terminal until venue state, query results, or account snapshots resolve
+them.
+
 ### Current execution-test deltas
 
 - Cover `TC-E74` through `TC-E78` for ambiguous submit, cancel, modify, and

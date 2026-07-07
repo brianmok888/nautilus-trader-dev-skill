@@ -68,10 +68,17 @@ class DEXPollingActor(Actor):
         )
 
     def _poll_chain(self, event) -> None:
-        # Async call goes to Rust client via get_runtime().block_on()
+        # This PyO3 bridge may use get_runtime().block_on() only because it runs
+        # outside an ambient Tokio runtime and outside DataClient/ExecutionClient
+        # trait method implementations. Live adapter trait paths must spawn work.
         data = self._client.fetch_pool_state(self.pool_address)
         self.publish_data(DEXPoolState, data)
 ```
+
+**DO** keep runtime boundaries explicit: `get_runtime().block_on()` belongs only
+outside an ambient Tokio runtime, such as PyO3 methods, binaries, dedicated
+threads, or tests. Never use `get_runtime().block_on()` inside live `DataClient` or `ExecutionClient`
+trait method implementations; spawn work and return immediately.
 
 **DO** emit `OrderBookDelta` events for on-chain CLOB DEX updates.
 

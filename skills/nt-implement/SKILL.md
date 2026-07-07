@@ -1049,7 +1049,12 @@ pub extern "C" fn custom_momentum_update(
 
 9. **Adapter Async Runtime** (see `references/developer_guide/rust.md`):
    - Use `get_runtime().spawn()` instead of `tokio::spawn()` in adapter crates
-   - Use `get_runtime().block_on()` for sync-to-async bridges
+   - Use `get_runtime().block_on()` only for sync-to-async bridges outside an
+     ambient Tokio runtime, such as PyO3 methods, binaries, dedicated threads,
+     or tests
+   - Never use `get_runtime().block_on()` inside live `DataClient` or
+     `ExecutionClient` trait method implementations; spawn work and return
+     immediately
    - Import from `nautilus_common::live::get_runtime` (shorter re-export path)
    - Tests are exempt: `#[tokio::test]` creates its own runtime
 

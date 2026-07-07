@@ -315,10 +315,10 @@ Adapter crates (under `crates/adapters/`) require special handling for spawning 
    use nautilus_common::live::runtime::get_runtime;
    ```
 
-3. **Use `get_runtime().block_on()` for sync-to-async bridges**: When synchronous code needs to call async functions in adapters:
+3. **Use `get_runtime().block_on()` only outside an ambient Tokio runtime**: Sync-to-async bridges may use `get_runtime().block_on()` only from contexts such as PyO3 methods, binaries, dedicated background threads, or tests. Never use it inside live `DataClient` or `ExecutionClient` trait method implementations; spawn work with `get_runtime().spawn()` and return immediately.
 
    ```rust
-   fn sync_method(&self) -> anyhow::Result<()> {
+   fn py_sync_method(&self) -> anyhow::Result<()> {
        get_runtime().block_on(self.async_implementation())
    }
    ```
@@ -460,8 +460,14 @@ python = ["pyo3", "pyo3-stub-gen"]
 pyo3-stub-gen = { workspace = true, optional = true }
 ```
 
-**Regenerating stubs:** run `make py-stubs-v2` (or `python python/generate_stubs.py`)
-after changing annotations. The post-processor handles `py_` prefix stripping,
+### Generated Python artifacts
+
+The v2 Python surface commits generated Python type stubs and wrapper doc
+comments. Run `make py-stubs-v2` after changing annotations, Python-exposed Rust
+surfaces, wrapped Rust docs, or adapter feature wiring. The v2 target uses the
+uv version pinned by `required-version` in `python/pyproject.toml`; if local uv
+differs, follow the printed `uv self update --version ...` hint before rerun.
+The post-processor handles `py_` prefix stripping,
 `@property`/`@staticmethod`/`@classmethod` decoration, keyword escaping, deduplication,
 and ruff formatting.
 
@@ -970,6 +976,15 @@ impl Send for MessageBus {
     }
 }
 ```
+
+
+#### Fluent builders for many-optional constructors
+
+Types with large constructors dominated by optional fields may expose a fluent
+`bon::bon` builder that delegates to `new_checked`, keeping one validated
+construction path while allowing callers to omit `Option` fields. The builder is
+additive: keep `new()` and `new_checked()` in place, and return the same
+`CorrectnessResult` from `build()`.
 
 ## Python bindings
 
@@ -1623,3 +1638,7 @@ When evolving schemas:
 
 Cap'n Proto's evolution rules allow schema changes without breaking binary compatibility, but
 you must follow these constraints to maintain forward/backward compatibility.
+
+### Cache lookup helpers
+
+Use `Cache::try_order` or `Cache::try_order_owned` when a missing order is an error; they return `OrderLookupError` instead of requiring callers to build ad hoc not-found errors.
