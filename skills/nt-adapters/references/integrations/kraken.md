@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Kraken
 
 Kraken offers spot and derivatives trading across a wide range of digital
@@ -741,6 +743,8 @@ from nautilus_trader.adapters.kraken import KRAKEN
 from nautilus_trader.adapters.kraken import KrakenEnvironment
 from nautilus_trader.adapters.kraken import KrakenProductType
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 config = TradingNodeConfig(
     ...,  # Omitted
     data_clients={
@@ -760,15 +764,21 @@ config = TradingNodeConfig(
 
 ### Production configuration
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 The most common use case is to configure a live `TradingNode` to include Kraken
 data and execution clients. Add a `KRAKEN` section to your client
 configuration(s):
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.kraken import KRAKEN
 from nautilus_trader.adapters.kraken import KrakenEnvironment
 from nautilus_trader.adapters.kraken import KrakenProductType
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -791,6 +801,8 @@ config = TradingNodeConfig(
 
 When trading both Spot and Futures markets, include both product types:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -809,13 +821,19 @@ config = TradingNodeConfig(
 )
 ```
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Then, create a `TradingNode` and add the client factories:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.kraken import KRAKEN
 from nautilus_trader.adapters.kraken import KrakenLiveDataClientFactory
 from nautilus_trader.adapters.kraken import KrakenLiveExecClientFactory
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Instantiate the live trading node with a configuration
 node = TradingNode(config=config)

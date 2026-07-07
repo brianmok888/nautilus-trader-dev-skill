@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Stage 01: Setup & Installation
 
 ## Goal
@@ -11,6 +13,8 @@ Install NautilusTrader and verify it works. Two paths: install from PyPI (quicke
 - A terminal you're comfortable with
 
 ## Concepts
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 NautilusTrader is a **Rust core + Python API** platform. The Python package wraps high-performance Rust code via PyO3/Cython bindings. Pre-built wheels are available on PyPI for most platforms, but building from source requires a Rust toolchain.
 

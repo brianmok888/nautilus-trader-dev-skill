@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Serialization Patterns Reference
 
 ## Overview
@@ -168,9 +170,15 @@ When `nautilus_trader.serialization.arrow.serializer` is imported, it automatica
 Wranglers convert external data (pandas DataFrames, Arrow tables) into NautilusTrader domain
 objects. There are two generations:
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 ### Legacy Wranglers (Cython)
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 **Module**: `nautilus_trader.persistence.wranglers` (`.pyx`)
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 These produce Cython-based objects and accept an `Instrument` instance directly.
 

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Data Testing Spec
 
 This section defines a rigorous test matrix for validating adapter data
@@ -27,6 +29,8 @@ Before running data tests:
   interchangeable; using the wrong credentials produces authentication errors (e.g. HTTP 401).
 
 **Python node setup**:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 Legacy examples still use `nautilus_trader.live.node.TradingNode`, but new Rust-backed
 PyO3 adapters should prefer `nautilus_trader.live.LiveNode`. Use `LiveNode.builder(...)`

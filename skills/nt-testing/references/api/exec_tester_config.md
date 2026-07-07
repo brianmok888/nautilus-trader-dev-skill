@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # ExecTesterConfig API Reference
 
 Extracted from the Execution Testing Spec. Both Python (`nautilus_trader.test_kit.strategies.tester_exec`)
@@ -149,9 +151,13 @@ An adapter that passes groups 1–5 is considered **baseline execution compliant
 
 ### Python
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.live.node import TradingNode
 from nautilus_trader.test_kit.strategies.tester_exec import ExecTester, ExecTesterConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 node = TradingNode(config=config_node)
 strategy = ExecTester(config=config_tester)

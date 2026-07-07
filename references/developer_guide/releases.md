@@ -6,6 +6,8 @@ target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Releases
 
 This guide covers the release process and the standards for writing release notes.
@@ -219,6 +221,8 @@ Includes significant hardening improvements elevated from Internal Improvements.
 
 **Format**:
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 ```markdown
 - Fixed non-executable stack for Cython extensions to support hardened Linux systems
 - Fixed divide-by-zero and overflow bugs in model crate that could cause crashes
@@ -329,6 +333,8 @@ Note: Plain logic panics belong in Fixes unless they threaten system stability o
 ## Examples
 
 **Security** (could cause crashes/corruption):
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```markdown
 - Fixed divide-by-zero in margin calculations that could crash the engine

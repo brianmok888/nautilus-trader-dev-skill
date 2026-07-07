@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Coding Standards
 
 ## Code Style
@@ -6,6 +8,10 @@ The current codebase can be used as a guide for formatting conventions.
 Additional guidelines are provided below.
 
 ### Universal formatting rules
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+
 
 The following applies to **all** source files (Rust, Python, Cython, shell, etc.):
 

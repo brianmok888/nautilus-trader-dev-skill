@@ -1,3 +1,7 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # ---
 # jupyter:
 #   jupytext:
@@ -24,6 +28,7 @@ import time
 import pandas as pd
 from ibapi.common import MarketDataTypeEnum as IBMarketDataTypeEnum
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.interactive_brokers.common import IB
 from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersDataClientConfig
 from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecClientConfig
@@ -331,6 +336,7 @@ data_engine_config = LiveDataEngineConfig(
 
 logging_config = LoggingConfig(log_level="INFO")
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id="TESTER-001",
@@ -346,6 +352,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=2.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Instantiate the node with a configuration
 node = TradingNode(config=config_node)
 

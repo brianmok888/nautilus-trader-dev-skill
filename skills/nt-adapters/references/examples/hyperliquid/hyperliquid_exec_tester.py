@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -17,6 +21,7 @@
 from decimal import Decimal
 from enum import Enum
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.hyperliquid import HYPERLIQUID
 from nautilus_trader.adapters.hyperliquid import HyperliquidDataClientConfig
 from nautilus_trader.adapters.hyperliquid import HyperliquidExecClientConfig
@@ -69,6 +74,7 @@ else:
 instrument_id = InstrumentId.from_str(f"{symbol}.{HYPERLIQUID}")
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
@@ -123,6 +129,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=10.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Instantiate the node with a configuration
 node = TradingNode(config=config_node)
 

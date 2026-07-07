@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Testing
 
 Our automated tests serve as executable specifications for the trading platform.
@@ -130,6 +132,9 @@ Use parametrized tests and fixtures (e.g., `@pytest.mark.parametrize`) to avoid 
 
 ### v1 legacy Python tests
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+
 The v1 legacy test suite lives under `tests/` at the repository root and tests
 the Cython-based package. From the repository root:
 
@@ -144,6 +149,9 @@ uv run --active --no-sync pytest --new-first --failed-first
 The Python test suite lives under `python/tests/` and tests the Rust-backed PyO3
 package. It requires a built extension module (`make build-debug-v2`) and uses its
 own virtualenv under `python/.venv/`.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 
 For new live adapter examples and docs in the v2 path, prefer
 `nautilus_trader.live.LiveNode`. `nautilus_trader.live.node.TradingNode` remains the
@@ -356,6 +364,8 @@ existing types are tested, so new types can follow the same pattern.
 
 ### Test layer matrix
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 | Layer                  | Location                                    | What it covers                                             |
 |------------------------|---------------------------------------------|------------------------------------------------------------|
 | DataEngine subscribe   | `crates/data/tests/engine.rs`               | Engine processes subscribe/unsubscribe commands correctly. |
@@ -420,6 +430,9 @@ When introducing a new data type, add tests at each layer:
    - Add `test_subscribe_<type>` and `test_unsubscribe_<type>` tests.
    - Assert `actor.subscribed_<type>()` returns expected entries after subscribe and
      is empty after unsubscribe.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 
 5. **Backtest client** (`nautilus_trader/backtest/data_client.pyx`): Override
    `subscribe_<type>` and `unsubscribe_<type>` if the base `MarketDataClient` raises

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Cache
 
 The `Cache` is a central in-memory database that automatically stores and manages all trading-related data.
@@ -66,10 +68,14 @@ def on_bar(self, bar: Bar) -> None:
 
 ## Configuration
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Use the `CacheConfig` class to configure the `Cache` behavior and capacity.
 You can provide this configuration either to a `BacktestEngine` or a `TradingNode`, depending on your [environment context](https://nautilustrader.io/docs/latest/concepts/architecture/#environment-contexts).
 
 Here's a basic example of configuring the `Cache`:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.config import CacheConfig, BacktestEngineConfig, TradingNodeConfig
@@ -81,6 +87,8 @@ engine_config = BacktestEngineConfig(
         bar_capacity=5_000,    # Store last 5,000 bars per bar type
     ),
 )
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # For live trading
 node_config = TradingNodeConfig(

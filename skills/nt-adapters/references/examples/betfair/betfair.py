@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -18,6 +22,7 @@ import asyncio
 import traceback
 from decimal import Decimal
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.betfair import BETFAIR
 from nautilus_trader.adapters.betfair import BetfairDataClientConfig
 from nautilus_trader.adapters.betfair import BetfairExecClientConfig
@@ -38,6 +43,7 @@ from nautilus_trader.live.node import TradingNode
 # *** IT IS NOT INTENDED TO BE USED TO TRADE LIVE WITH REAL MONEY. ***
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 async def main(
     instrument_config: BetfairInstrumentProviderConfig,
     log_level: str = "INFO",
@@ -73,6 +79,7 @@ async def main(
     # Determine account currency - used in execution client
     account = await client.get_account_details()
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     # Configure trading node
     config = TradingNodeConfig(
         timeout_connection=30.0,
@@ -133,6 +140,7 @@ async def main(
         for instrument in instruments
     ]
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     # Set up TradingNode
     node = TradingNode(config=config)
     node.trader.add_strategies(strategies)

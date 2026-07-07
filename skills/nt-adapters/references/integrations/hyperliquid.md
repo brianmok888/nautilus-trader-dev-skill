@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Hyperliquid
 
 [Hyperliquid](https://hyperliquid.gitbook.io/hyperliquid-docs) is a decentralized perpetual futures
@@ -250,6 +252,8 @@ provider = HyperliquidInstrumentProvider(
     ],
 )
 ```
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 For live `TradingNode` usage, pass the same `product_types` through the Hyperliquid
 client config:
@@ -608,6 +612,8 @@ Market orders require cached quote data. The adapter uses the best ask (for buys
 (for sells) with a configurable slippage buffer (default 50 bps). Prices are rounded to 5
 significant figures, which is a Hyperliquid API requirement for all limit prices. Ensure you
 subscribe to quotes for any instrument you intend to trade with market orders.
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 When using the Rust-native execution client, the slippage buffer is controlled by
 `market_order_slippage_bps` on `HyperliquidExecClientConfig` and can be overridden per-order
@@ -971,6 +977,8 @@ client.
 
 ### Configuration example
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.hyperliquid import HYPERLIQUID
 from nautilus_trader.adapters.hyperliquid import HyperliquidDataClientConfig
@@ -978,6 +986,8 @@ from nautilus_trader.adapters.hyperliquid import HyperliquidExecClientConfig
 from nautilus_trader.adapters.hyperliquid import HyperliquidProductType
 from nautilus_trader.config import InstrumentProviderConfig
 from nautilus_trader.config import TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     data_clients={
@@ -1012,13 +1022,19 @@ environment variables (`HYPERLIQUID_TESTNET_PK` and `HYPERLIQUID_TESTNET_VAULT`)
 mainnet variables.
 :::
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Then, create a `TradingNode` and add the client factories:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.hyperliquid import HYPERLIQUID
 from nautilus_trader.adapters.hyperliquid import HyperliquidLiveDataClientFactory
 from nautilus_trader.adapters.hyperliquid import HyperliquidLiveExecClientFactory
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Instantiate the live trading node with a configuration
 node = TradingNode(config=config)

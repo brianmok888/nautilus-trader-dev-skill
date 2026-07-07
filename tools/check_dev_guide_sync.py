@@ -289,6 +289,66 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
     ],
 }
 
+
+NT_V2_CUTOVER_TARGETS = {
+    Path("skills/nt-dev/SKILL.md"): [
+        "1.231.0",
+        "final 1.x",
+        "2.0.0rc1",
+        "develop_v1",
+        "Rust MSRV 1.96.1",
+        "Python v2 controller subclassing",
+        "subclassable execution algorithms",
+        "FeeModel",
+        "FillModel",
+    ],
+}
+
+NT_V2_LIVE_TARGETS = {
+    Path("skills/nt-live/SKILL.md"): [
+        "SIGTERM",
+        "with_clock_factory",
+        "event_store",
+        "v1.227-v1.229",
+        "LiveNode metrics",
+        "WebSocket transport backend",
+        "RecencyMap",
+    ],
+}
+
+NT_V2_REVIEW_TARGETS = {
+    Path("skills/nt-review/SKILL.md"): [
+        "Python v2 config stub/readback drift",
+        "subclassable PyO3 stubs",
+        "v2 wranglers",
+        "raw fixed-point overflow",
+        "RecencyMap",
+        "DataActor",
+        "message bus",
+    ],
+}
+
+NT_V2_TESTING_TARGETS = {
+    Path("skills/nt-testing/SKILL.md"): [
+        "Python v2 controller subclassing",
+        "subclassable execution algorithms",
+        "FeeModel",
+        "FillModel",
+    ],
+}
+
+NT_V2_RUST_TARGETS = {
+    Path("references/developer_guide/rust.md"): [
+        "Rust MSRV 1.96.1",
+        "2.0.0rc1",
+        "develop_v1",
+        "Python v2 controller subclassing",
+        "subclassable execution algorithms",
+        "FeeModel",
+        "FillModel",
+    ],
+}
+
 LATEST_SKILL_ALIGNMENT_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
         "make py-stubs-v2",
@@ -310,6 +370,37 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
     ],
 }
 
+
+LEGACY_GUIDANCE_ROOTS = ("skills", "references")
+LEGACY_GUIDANCE_SUFFIXES = {".md", ".py"}
+LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__"}
+TRADING_NODE_TERM = "TradingNode"
+TRADING_NODE_LABEL_TERMS = [
+    "Python live",
+    "integration-specific",
+    "Legacy",
+    "legacy",
+    "reference-only",
+]
+LEGACY_GUIDANCE_TERMS = [
+    "Cython",
+    ".pyx",
+    ".pxd",
+    "as_legacy_cython",
+    "legacy Cython",
+    "legacy v1 core",
+    "Cython v1",
+]
+LEGACY_LABEL_TERMS = [
+    "migration",
+    "reference-only",
+    "deprecated",
+    "removed",
+    "replaced",
+    "rename",
+    "renamed",
+]
+
 SECRET_IGNORE_PATTERNS = [".env", ".env.*", "*.pem", "*.key"]
 
 GUIDE_LINK_RE = re.compile(r"\[Guide\]\(([^)]+\.md)\)")
@@ -325,6 +416,9 @@ INVALID_RELEASE_SECURITY_BASH_PATTERNS = [
     re.compile(r"^\s*(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*=\s*\([^)]*\|", re.MULTILINE),
     re.compile(r"^\s*test\s+\(", re.MULTILINE),
 ]
+PYTHON_CODE_BLOCK_RE = re.compile(
+    r"^```(?:python|py)\s*\n(.*?)^```", re.MULTILINE | re.DOTALL
+)
 
 BLOCK_ON_CANONICAL_WARNING_TARGETS = [
     Path("skills/nt-dev/SKILL.md"),
@@ -486,6 +580,149 @@ def _contains_terms_in_single_paragraph(text: str, terms: list[str]) -> bool:
         all(_contains_term(paragraph, term) for term in terms)
         for paragraph in paragraphs
     )
+
+
+def _iter_legacy_guidance_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for root_name in LEGACY_GUIDANCE_ROOTS:
+        base = root / root_name
+        if not base.exists():
+            continue
+        for path in sorted(base.rglob("*")):
+            if not path.is_file() or path.suffix not in LEGACY_GUIDANCE_SUFFIXES:
+                continue
+            relative = path.relative_to(root)
+            if any(part in LEGACY_GUIDANCE_EXCLUDED_PARTS for part in relative.parts):
+                continue
+            files.append(path)
+    return files
+
+
+def _split_guidance_blocks(text: str) -> list[str]:
+    blocks = re.split(r"\n\s*\n", text)
+    return [block for block in blocks if block.strip()]
+
+
+def _block_with_previous_context(blocks: list[str], index: int) -> str:
+    if index > 0 and _contains_term(blocks[index - 1], "NT v2 compatibility note"):
+        return f"{blocks[index - 1]}\n\n{blocks[index]}"
+    return blocks[index]
+
+
+def _block_has_label(block: str, labels: list[str]) -> bool:
+    return _contains_term(block, "NT v2 compatibility note") and any(
+        _contains_term(block, label) for label in labels
+    )
+
+
+def _strip_labelled_python_fences(text: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        block = match.group(1)
+        if _block_has_label(block, TRADING_NODE_LABEL_TERMS) or _block_has_label(
+            block,
+            LEGACY_LABEL_TERMS,
+        ):
+            return ""
+        return match.group(0)
+
+    return PYTHON_CODE_BLOCK_RE.sub(replace, text)
+
+
+def _check_python_shebang_positions(root: Path, errors: list[str]) -> None:
+    for path in _iter_legacy_guidance_files(root):
+        if path.suffix != ".py":
+            continue
+        lines = _read(path).splitlines()
+        if any(line.startswith("#!") for line in lines[1:]):
+            errors.append(
+                f"python shebang is not on first line in {_relative(path, root)}"
+            )
+
+
+def _check_python_fence_compatibility_labels(root: Path, errors: list[str]) -> None:
+    for path in _iter_legacy_guidance_files(root):
+        if path.suffix != ".md":
+            continue
+        text = _read(path)
+        for block in PYTHON_CODE_BLOCK_RE.findall(text):
+            labels_in_block = 0
+            for line in block.splitlines():
+                stripped = line.lstrip()
+                if stripped.startswith("NT v2 compatibility note:"):
+                    errors.append(
+                        "uncommented NT v2 compatibility note in Python fence in "
+                        f"{_relative(path, root)}"
+                    )
+                    break
+                if stripped.startswith("# NT v2 compatibility note:"):
+                    labels_in_block += 1
+            if labels_in_block > 1:
+                errors.append(
+                    "duplicate NT v2 compatibility note in Python fence in "
+                    f"{_relative(path, root)}"
+                )
+
+
+def _check_duplicate_compatibility_labels(root: Path, errors: list[str]) -> None:
+    for path in _iter_legacy_guidance_files(root):
+        text = _read(path)
+        previous_note: str | None = None
+        note_cluster: set[str] = set()
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                previous_note = None
+                continue
+            note = stripped.removeprefix("# ").strip()
+            if not note.startswith("NT v2 compatibility note:"):
+                previous_note = None
+                note_cluster.clear()
+                continue
+            if note == previous_note:
+                errors.append(
+                    "duplicate adjacent NT v2 compatibility note in "
+                    f"{_relative(path, root)}"
+                )
+                break
+            if note in note_cluster:
+                errors.append(
+                    "duplicate repeated NT v2 compatibility note in "
+                    f"{_relative(path, root)}"
+                )
+                break
+            note_cluster.add(note)
+            previous_note = note
+
+
+def _check_unlabelled_legacy_guidance(root: Path, errors: list[str]) -> None:
+    for path in _iter_legacy_guidance_files(root):
+        text = _read(path)
+        if path.suffix == ".md":
+            text = _strip_labelled_python_fences(text)
+        relative = _relative(path, root)
+        blocks = _split_guidance_blocks(text)
+
+        if TRADING_NODE_TERM in text:
+            if not all(
+                _block_has_label(
+                    _block_with_previous_context(blocks, index),
+                    TRADING_NODE_LABEL_TERMS,
+                )
+                for index, block in enumerate(blocks)
+                if TRADING_NODE_TERM in block
+            ):
+                errors.append(f"unlabelled TradingNode guidance in {relative}")
+
+        if any(term in text for term in LEGACY_GUIDANCE_TERMS):
+            if not all(
+                _block_has_label(
+                    _block_with_previous_context(blocks, index),
+                    LEGACY_LABEL_TERMS,
+                )
+                for index, block in enumerate(blocks)
+                if any(term in block for term in LEGACY_GUIDANCE_TERMS)
+            ):
+                errors.append(f"unlabelled legacy/Cython/v1 guidance in {relative}")
 
 
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
@@ -719,6 +956,10 @@ def run_checks(root: Path) -> CheckResult:
     _check_secret_ignore_patterns(root, errors)
     _check_security_guidance(root, errors)
     _check_release_security_bash_examples(root, errors)
+    _check_python_shebang_positions(root, errors)
+    _check_python_fence_compatibility_labels(root, errors)
+    _check_duplicate_compatibility_labels(root, errors)
+    _check_unlabelled_legacy_guidance(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
@@ -761,6 +1002,12 @@ def run_checks(root: Path) -> CheckResult:
     _check_required_terms(
         root, errors, LATEST_SKILL_ALIGNMENT_TARGETS, "latest skill alignment"
     )
+
+    _check_required_terms(root, errors, NT_V2_CUTOVER_TARGETS, "NT v2 cutover")
+    _check_required_terms(root, errors, NT_V2_LIVE_TARGETS, "NT v2 live")
+    _check_required_terms(root, errors, NT_V2_REVIEW_TARGETS, "NT v2 review")
+    _check_required_terms(root, errors, NT_V2_TESTING_TARGETS, "NT v2 testing")
+    _check_required_terms(root, errors, NT_V2_RUST_TARGETS, "NT v2 rust")
 
     for relative, required_terms in INVARIANT_TARGETS.items():
         absolute = root / relative

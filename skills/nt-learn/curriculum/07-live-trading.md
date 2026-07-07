@@ -1,8 +1,14 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Stage 07: Live Trading
 
 ## Goal
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 Deploy a backtested strategy to live markets using Python `TradingNode`, understand adapters, reconciliation, and production considerations.
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 > **Runtime note:** This stage teaches Python live trading with `TradingNode`.
 > For Rust v2 / Rust-backed live-node work, use the `LiveNode` path documented
@@ -18,7 +24,11 @@ Deploy a backtested strategy to live markets using Python `TradingNode`, underst
 
 The same strategy runs unchanged across backtest, sandbox, and live. The engine swaps adapters and venues — your `on_bar()`, `on_order_filled()`, etc. remain identical.
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ### TradingNode
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 `TradingNode` is the Python live trading runtime. It manages:
 - Async event loop for network I/O
@@ -26,8 +36,12 @@ The same strategy runs unchanged across backtest, sandbox, and live. The engine 
 - State reconciliation on startup
 - Graceful shutdown
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.live.node import TradingNode, TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     trader_id="TRADER-001",
@@ -36,11 +50,14 @@ config = TradingNodeConfig(
     strategies=[ImportableStrategyConfig(...)],
 )
 
+
 node = TradingNode(config=config)
 node.run()  # Blocks — runs until Ctrl+C or node.stop()
 ```
 
 ### Important Constraints
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 1. **One TradingNode per process** — singleton state, no concurrent instances
 2. **Do NOT use Jupyter notebooks** — event loop conflicts with the async runtime
@@ -65,6 +82,8 @@ NT has adapters for Binance (spot/futures/options), Interactive Brokers, Bybit, 
 
 ### InstrumentProvider (Standalone Usage)
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 You can use an InstrumentProvider outside of a TradingNode for research:
 
 ```python
@@ -83,6 +102,8 @@ provider = BinanceSpotInstrumentProvider(
 
 ## Reconciliation
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 When a TradingNode starts, it reconciles internal state with the venue's reality.
 
 ### Startup Reconciliation
@@ -95,6 +116,8 @@ When a TradingNode starts, it reconciles internal state with the venue's reality
 ### Continuous Reconciliation
 
 During runtime, the execution engine monitors in-flight and open orders:
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(
@@ -113,6 +136,8 @@ config = TradingNodeConfig(
 
 For surviving restarts, configure Redis:
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ```python
 config = TradingNodeConfig(
     cache=CacheConfig(
@@ -126,6 +151,8 @@ This persists orders, positions, and account state to Redis. On restart, state i
 ### External MessageBus
 
 For multi-node architectures, the MessageBus can publish to Redis streams:
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(
@@ -143,6 +170,8 @@ config = TradingNodeConfig(
 
 ```python
 from nautilus_trader.config import LoggingConfig
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     logging=LoggingConfig(
@@ -189,6 +218,8 @@ self.msgbus.publish("RiskEngine.set_trading_state", TradingState.HALTED)
 
 For paper trading with real-time data but simulated execution:
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ```python
 # Same as live, but use simulated venue
 config = TradingNodeConfig(
@@ -207,11 +238,15 @@ This lets you validate real-time behavior without risking capital.
 
 2. **InstrumentProvider**: Use a provider standalone to list available instruments from an exchange.
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 3. **Compare backtest vs live config**: Take your backtest from Stage 05 and write the equivalent `TradingNodeConfig` for live trading. What changes?
 
 4. **Logging exploration**: Run a backtest with different log levels (`DEBUG` vs `INFO`). How does the output differ?
 
 ## Checkpoint
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 You're ready for Stage 08 when:
 - [ ] You understand how TradingNode differs from BacktestEngine

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Stage 08: Rust Internals
 
 ## Goal
@@ -156,6 +158,8 @@ The `#[pyclass]` attribute makes the struct available in Python. `#[pymethods]` 
 
 ### FFI (Foreign Function Interface)
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 Some bindings use C FFI via Cython instead of direct PyO3:
 
 ```rust
@@ -164,11 +168,15 @@ Some bindings use C FFI via Cython instead of direct PyO3:
 pub extern "C" fn price_new(value: f64, precision: u8) -> Price { ... }
 ```
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 ```cython
 # Cython side — calls the C function
 cdef extern from "nautilus.h":
     Price price_new(double value, uint8_t precision)
 ```
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 This dual-path (PyO3 + Cython/FFI) exists for historical reasons. Newer code tends toward direct PyO3.
 

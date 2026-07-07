@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -16,6 +20,7 @@
 
 import pandas as pd
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.okx import OKX
 from nautilus_trader.adapters.okx import OKXDataClientConfig
 from nautilus_trader.adapters.okx import OKXLiveDataClientFactory
@@ -76,6 +81,7 @@ instrument_families = (
     # "ETH-USDT",
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
@@ -108,9 +114,11 @@ config_node = TradingNodeConfig(
     timeout_post_stop=5.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Instantiate the node with a configuration
 node = TradingNode(config=config_node)
 
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 # Configure and initialize the tester
 config_tester = DataTesterConfig(
     instrument_ids=[spot_instrument_id, swap_instrument_id],

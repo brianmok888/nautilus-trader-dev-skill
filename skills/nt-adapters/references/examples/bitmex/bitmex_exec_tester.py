@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -16,6 +20,7 @@
 
 from decimal import Decimal
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.bitmex import BITMEX
 from nautilus_trader.adapters.bitmex import BitmexDataClientConfig
 from nautilus_trader.adapters.bitmex import BitmexExecClientConfig
@@ -51,6 +56,7 @@ order_qty = Decimal(1)  # Contract size in USD
 
 instrument_id = InstrumentId.from_str(f"{symbol}.{BITMEX}")
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
@@ -134,6 +140,7 @@ config_tester = ExecTesterConfig(
 )
 tester = ExecTester(config=config_tester)
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Setup and run the trading node
 node = TradingNode(config=config_node)
 

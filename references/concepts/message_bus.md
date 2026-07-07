@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Message Bus
 
 The `MessageBus` is a fundamental part of the platform, enabling communication between system components
@@ -292,6 +294,8 @@ def register_serializable_type(
 
 ## Configuration
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 The message bus external backing technology can be configured by importing the `MessageBusConfig` object and passing this to
 your `TradingNodeConfig`. Each of these config options will be described below.
 
@@ -409,6 +413,8 @@ Rather than a maximum lookback window based on the current wall clock time.
 :::
 
 ## External streams
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The message bus within a `TradingNode` (node) is referred to as the "internal message bus".
 A producer node is one which publishes messages onto an external stream (see [external publishing](#external-publishing)).

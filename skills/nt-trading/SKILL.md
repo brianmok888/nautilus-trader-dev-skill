@@ -3,6 +3,8 @@ name: nt-trading
 description: "Use when working with strategy logic, order execution, risk management, position/portfolio tracking, or exec algorithms in NautilusTrader."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-trading
 
 ## What This Skill Covers

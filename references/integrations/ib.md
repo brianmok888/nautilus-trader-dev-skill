@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Interactive Brokers
 
 Interactive Brokers (IB) is a trading platform providing market access across a wide range of financial instruments, including stocks, options, futures, currencies, bonds, funds, and cryptocurrencies. NautilusTrader offers an adapter to integrate with IB using their [Trader Workstation (TWS) API](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/) through their Python library, [ibapi](https://github.com/nautechsystems/ibapi).
@@ -882,6 +884,8 @@ Interactive Brokers enforces pacing limits; excessive historical-data or order r
 
 ## Live trading
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Live trading with Interactive Brokers requires setting up a `TradingNode` that incorporates both `InteractiveBrokersDataClient` and `InteractiveBrokersExecutionClient`. These clients depend on the `InteractiveBrokersInstrumentProvider` for instrument management.
 
 ### Architecture overview
@@ -1541,9 +1545,13 @@ Set `conditionsCancelOrder` to control what happens when conditions are met:
 
 ### Complete trading node configuration
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Setting up a complete trading environment involves configuring a `TradingNodeConfig` with all necessary components. Here are examples for different scenarios.
 
 #### Paper trading configuration
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 import os
@@ -1595,6 +1603,8 @@ exec_client_config = InteractiveBrokersExecClientConfig(
     routing=RoutingConfig(default=True),
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 # Trading node configuration
 config_node = TradingNodeConfig(
     trader_id="PAPER-TRADER-001",
@@ -1611,6 +1621,7 @@ config_node = TradingNodeConfig(
     timeout_disconnection=5.0,
     timeout_post_stop=2.0,
 )
+
 
 # Create and configure the trading node
 node = TradingNode(config=config_node)
@@ -1656,6 +1667,8 @@ exec_client_config = InteractiveBrokersExecClientConfig(
     dockerized_gateway=dockerized_gateway_config,
     routing=RoutingConfig(default=True),
 )
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Live trading node configuration
 config_node = TradingNodeConfig(
@@ -1704,6 +1717,8 @@ NautilusTrader supports using multiple Interactive Brokers execution clients sim
 
 To configure multiple IB execution clients, provide multiple entries in the `exec_clients` dictionary with unique keys. Each entry specifies a different `account_id`:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.interactive_brokers.config import (
     InteractiveBrokersDataClientConfig,
@@ -1728,6 +1743,8 @@ data_client_config = InteractiveBrokersDataClientConfig(
     market_data_type=IBMarketDataTypeEnum.REALTIME,
     instrument_provider=instrument_provider_config,
 )
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Configuration for multiple IB execution clients
 config_node = TradingNodeConfig(
@@ -1874,6 +1891,8 @@ all_ib_realized_pnl = portfolio.realized_pnls(venue=Venue("IB"))
 ```
 
 ### Running the trading node
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 def run_trading_node():

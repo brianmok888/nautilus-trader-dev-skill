@@ -3,6 +3,8 @@ name: nt-backtest
 description: "Use when working with backtesting engine, fill models, matching engine, simulated exchange, or backtest configuration in NautilusTrader."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-backtest
 
 ## What This Skill Covers
@@ -29,6 +31,8 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Indicator logic** → use `nt-signals`
 
 ## v1.227.0 backtest/matching deltas
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 - Continuous futures can be used with adjusted aggregated bars.
 - `time_bars_origins` is now `time_bars_origin_offset` in data-engine configs.

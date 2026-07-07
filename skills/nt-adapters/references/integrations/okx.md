@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # OKX
 
 Founded in 2017, OKX is a cryptocurrency exchange that offers spot, margin, perpetual
@@ -646,6 +648,8 @@ pipeline.
 
 Options require the `instrument_families` config parameter to scope which underlyings to load:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 config = TradingNodeConfig(
     data_clients={
@@ -678,6 +682,8 @@ Use `OKXInstrumentType.EVENTS` in the data or execution client config. The
 `instrument_families` setting maps to OKX `seriesId` values for event contracts. When
 `instrument_families` is omitted, the adapter requests the event contract series list
 first, then requests instruments for each series.
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(
@@ -789,6 +795,8 @@ Set `environment=OKXEnvironment.DEMO` in your client configuration:
 
 ```python
 from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     data_clients={
@@ -937,6 +945,8 @@ clients.
 
 Below is an example configuration for a live trading node using OKX data and execution clients:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.okx import OKX
 from nautilus_trader.adapters.okx import OKXDataClientConfig, OKXExecClientConfig
@@ -947,6 +957,8 @@ from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
 from nautilus_trader.core.nautilus_pyo3 import OKXInstrumentType
 from nautilus_trader.core.nautilus_pyo3 import OKXMarginMode
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     ...,

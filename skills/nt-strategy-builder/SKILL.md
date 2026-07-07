@@ -1,7 +1,11 @@
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ---
 name: nt-strategy-builder
 description: "Use when building backtesting or live-trading systems in NautilusTrader. Covers BacktestEngine, TradingNode, multi-venue data wiring (CeFi + custom DEX adapters), fill/margin model configuration, and paper trading. Includes explicit DO/DON'Ts rules and a test suite."
 ---
+
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
 # Strategy Builder
 
@@ -16,6 +20,8 @@ Complements the existing skills:
 
 ## When to Use
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 | Scenario | Approach |
 |---|---|
 | Replay historical data, no live connection | `BacktestEngine` + `ParquetDataCatalog` |
@@ -28,9 +34,13 @@ Complements the existing skills:
 
 ### Live runtime selection
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Use `LiveNode` for Rust v2 / Rust-backed live-node work. Python live
 connectivity examples may still use `TradingNode`; label them as Python live or
 integration-specific rather than universal defaults.
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```
 Are you using live market data?
@@ -55,9 +65,13 @@ NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase (Rust/v2 `LiveNo
 
 > **v1.223.0 Binance**: `listen_key_ping_max_failures` removed from `BinanceExecClientConfig`. Binance now authenticates via WebSocket API (Ed25519/HMAC auto-detected from `api_secret` format). Credentials from `BINANCE_API_KEY`/`BINANCE_API_SECRET` env vars.
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.binance.factories import BinanceLiveDataClientFactory
 from nautilus_trader.config import TradingNodeConfig, LiveDataEngineConfig
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     data_clients={
@@ -76,6 +90,8 @@ After building a DEX adapter with the `nt-dex-adapter` skill, wire it in exactly
 
 ```python
 from my_dex_adapter.factory import MyDEXLiveDataClientFactory, MyDEXLiveExecClientFactory
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     data_clients={"MYDEX": MyDEXDataClientConfig(rpc_url="https://...", wallet_address="0x...")},
@@ -108,6 +124,8 @@ data_config = BacktestDataConfig(
 
 ### 4. Multi-Venue (Mixed CeFi + DEX)
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 Wire multiple venues into a single `TradingNode` or `BacktestEngine`. Each venue gets its own:
 - `data_client` entry
 - `exec_client` entry (if trading)
@@ -116,6 +134,8 @@ Wire multiple venues into a single `TradingNode` or `BacktestEngine`. Each venue
 See `templates/multi_venue_strategy.py`.
 
 ## Template Quick Reference
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 | Template | When to use |
 |---|---|
@@ -156,6 +176,8 @@ Use EvoMap, LangChain, or LangGraph as external refinement sources while preserv
 - If EvoMap, LangChain, or LangGraph orchestration is unavailable, continue with local strategy logic and emit degraded-mode telemetry.
 
 ## Adapter Wiring Contract (2026 Guide Alignment)
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 When wiring any custom adapter into `TradingNode` or `BacktestEngine`, verify these invariants:
 
@@ -272,6 +294,8 @@ New code built from these templates should pass the included test suite:
 uv run pytest skills/nt-strategy-builder/tests/ -v
 ```
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 Tests cover:
 - `test_backtest_patterns.py` — venue config, fill model, catalog round-trip
 - `test_live_node_config.py` — TradingNode config builds without error
@@ -279,6 +303,8 @@ Tests cover:
 - `test_multi_venue.py` — multi-venue data routing
 
 ## References
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 Load these for detailed API information (relative to nt-implement skill folder):
 - `references/concepts/backtesting.md` — BacktestEngine, venue config, fill models

@@ -6,6 +6,8 @@ target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Docs Style
 
 This guide outlines the style conventions and best practices for writing documentation for NautilusTrader.
@@ -49,6 +51,8 @@ they want X. Keep these distinct:
 
 - Tutorials should not assume prior knowledge.
 - How-to guides should not teach background concepts.
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 When one type needs to reference another, link to it instead of inlining. For
 example, a how-to guide that configures `TradingNodeConfig` should link to the

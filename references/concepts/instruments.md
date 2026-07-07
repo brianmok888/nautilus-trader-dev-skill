@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Instruments
 
 The `Instrument` base class represents the core specification for any tradable asset/contract. There are
@@ -301,6 +303,8 @@ margin_maint = (notional_value / leverage * margin_maint) + (notional_value / le
 
 For those interested in exploring the technical implementation:
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 - [nautilus_trader/accounting/accounts/margin.pyx](https://github.com/nautechsystems/nautilus_trader/blob/develop/nautilus_trader/accounting/accounts/margin.pyx)
 - Key methods: `calculate_margin_init(self, ...)` and `calculate_margin_maint(self, ...)`
 
@@ -324,10 +328,14 @@ The framework provides two built-in fee model implementations:
 While the built-in fee models cover common scenarios, you might encounter situations requiring specific commission structures.
 NautilusTrader's flexible architecture allows you to implement custom fee models by inheriting from the base `FeeModel` class.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 For example, if you're trading futures on exchanges that charge per-contract commissions (like CME), you can implement
 a custom fee model. When creating custom fee models, we inherit from the `FeeModel` base class, which is implemented
 in Cython for performance reasons. This Cython implementation is reflected in the parameter naming convention,
 where type information is incorporated into parameter names using underscores (like `Order_order` or `Quantity_fill_qty`).
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 While these parameter names might look unusual to Python developers, they're a result of Cython's type system and help
 maintain consistency with the framework's core components. Here's how you could create a per-contract commission model:
@@ -347,6 +355,8 @@ This custom implementation calculates the total commission by multiplying a `fix
 of contracts` traded. The `get_commission(...)` method receives information about the order, fill quantity, fill price
 and instrument, allowing for flexible commission calculations based on these parameters.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 Our new class `PerContractFeeModel` inherits class `FeeModel`, which is implemented in Cython,
 so notice the Cython-style parameter names in the method signature:
 
@@ -354,6 +364,8 @@ so notice the Cython-style parameter names in the method signature:
 - `Quantity_fill_qty`: The fill quantity, with type prefix `Quantity_`.
 - `Price_fill_px`: The fill price, with type prefix `Price_`.
 - `Instrument_instrument`: The instrument object, with type prefix `Instrument_`.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 These parameter names follow NautilusTrader's Cython naming conventions, where the prefix indicates the expected type.
 While this might seem verbose compared to typical Python naming conventions, it ensures type safety and consistency

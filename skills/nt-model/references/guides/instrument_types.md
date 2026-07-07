@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Instrument Types Reference Guide
 
 Complete catalog of all instrument types in NautilusTrader with fields, creation patterns,
@@ -294,6 +296,8 @@ equity = Equity(
 
 ```python
 from nautilus_trader.model.instruments.base import instruments_from_pyo3
+
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 # Convert a list of pyo3 Rust instrument objects to Cython objects
 cython_instruments = instruments_from_pyo3(pyo3_instrument_list)

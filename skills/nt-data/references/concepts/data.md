@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Data
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
@@ -580,6 +582,8 @@ There are a number of **DataWrangler v2** components, which will take a `pd.Data
 with a different fixed width Nautilus Arrow v2 schema, and output PyO3 Nautilus objects which are only compatible with the new version
 of the Nautilus core, currently in development.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 **These PyO3 provided data objects are not compatible where the legacy Cython objects are currently used (e.g., adding directly to a `BacktestEngine`).**
 :::
 
@@ -1113,6 +1117,9 @@ catalog_config = DataCatalogConfig(
 
 `DataCatalogConfig` is commonly used in live trading configurations for historical data access:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
+
 ```python
 from nautilus_trader.config import TradingNodeConfig
 from nautilus_trader.persistence.config import DataCatalogConfig
@@ -1123,6 +1130,9 @@ catalog_config = DataCatalogConfig(
     fs_protocol="file",
     name="historical_data"
 )
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 
 # Use in trading node configuration
 node_config = TradingNodeConfig(

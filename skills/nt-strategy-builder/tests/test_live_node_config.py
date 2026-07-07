@@ -1,11 +1,17 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Strategy Builder Tests: Live Node Config
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Verifies that TradingNodeConfig and LiveExecEngineConfig patterns from
 templates parse and build correctly. No network connections are made.
 """
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.config import (
     LiveExecEngineConfig,
     LiveRiskEngineConfig,
@@ -15,9 +21,11 @@ from nautilus_trader.config import (
 from nautilus_trader.model.identifiers import TraderId
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 class TestTradingNodeConfig:
     """Verify TradingNode configuration builds from template patterns."""
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     def test_basic_config_builds(self):
         """Minimal TradingNodeConfig builds without error."""
         config = TradingNodeConfig(
@@ -26,6 +34,7 @@ class TestTradingNodeConfig:
         assert config is not None
         assert config.trader_id == TraderId("TRADER-001")
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     def test_full_config_with_timeouts_builds(self):
         """Full config with all recommended timeouts builds correctly."""
         config = TradingNodeConfig(
@@ -38,6 +47,7 @@ class TestTradingNodeConfig:
         assert config.timeout_connection == 30.0
         assert config.timeout_reconciliation == 10.0
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     def test_config_with_logging(self):
         """LoggingConfig attaches to TradingNodeConfig."""
         config = TradingNodeConfig(

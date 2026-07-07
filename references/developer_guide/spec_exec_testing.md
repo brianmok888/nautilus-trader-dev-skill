@@ -6,6 +6,8 @@ target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Execution Testing Spec
 
 This section defines a rigorous test matrix for validating adapter execution
@@ -41,6 +43,8 @@ Before running execution tests:
 - Reconciliation enabled to verify state consistency.
 
 **Python node setup**:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 Legacy examples still use `nautilus_trader.live.node.TradingNode`, but new Rust-backed
 PyO3 adapters should prefer `nautilus_trader.live.LiveNode`. Use `LiveNode.builder(...)`

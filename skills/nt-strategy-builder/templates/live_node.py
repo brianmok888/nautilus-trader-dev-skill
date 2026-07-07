@@ -1,6 +1,11 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Strategy Builder Template: Live Trading Node
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Demonstrates a production-ready Python live/integration-specific TradingNode with:
 - Reconciliation and resilience timeouts
 - Persistence and state recovery
@@ -15,6 +20,7 @@ For Rust v2 / Rust-backed live-node work, use the LiveNode path in nt-live.
 
 import asyncio
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.config import (
     LiveDataEngineConfig,
     LiveExecEngineConfig,
@@ -33,6 +39,7 @@ from nautilus_trader.model.identifiers import TraderId
 
 # ─── NODE CONFIG ───────────────────────────────────────────────────────────────
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 config = TradingNodeConfig(
     trader_id=TraderId("TRADER-001"),
 
@@ -117,6 +124,7 @@ config = TradingNodeConfig(
 
 # ─── BUILD AND RUN ─────────────────────────────────────────────────────────────
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 async def main() -> None:
     node = TradingNode(config=config)
 

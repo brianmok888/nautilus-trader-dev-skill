@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Live Trading
 
 NautilusTrader enables traders to deploy their backtested strategies in a real-time
@@ -10,6 +12,8 @@ node operations, execution reconciliation, and the differences between backtesti
 
 This guide provides an overview of the key aspects of live trading.
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 :::note[Live runtime boundary]
 Python live-trading examples in this guide use `TradingNode`. Rust v2 /
 Rust-backed live-node work should use `LiveNode` where the official Rust live
@@ -19,6 +23,8 @@ path applies.
 :::danger[Jupyter notebooks not recommended for live trading]
 Running live trading nodes in Jupyter notebooks is **not recommended** due to event loop conflicts and operational risks:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 - Jupyter runs its own asyncio event loop, which conflicts with `TradingNode`'s event loop management.
 - Workarounds like `nest_asyncio` are not production-grade solutions.
 - Notebooks are unstable for production: cells can be re-executed out of order, kernels can crash, and state can be lost.
@@ -26,6 +32,8 @@ Running live trading nodes in Jupyter notebooks is **not recommended** due to ev
 
 Use Jupyter notebooks for backtesting, analysis, and experimentation. For live trading, run your trading nodes as standalone Python scripts or services with proper process management.
 :::
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 :::warning[One TradingNode per process]
 Running multiple `TradingNode` instances concurrently in the same process is not supported due to global singleton state.
@@ -54,13 +62,21 @@ When operating a live trading system, configuring your execution engine and stra
 essential for ensuring reliability, accuracy, and performance. The following is an overview of the
 key concepts and settings involved for live configuration.
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ### `TradingNodeConfig`
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The main configuration class for live trading systems is `TradingNodeConfig`,
 which inherits from `NautilusKernelConfig` and provides live-specific config options:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.config import TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     trader_id="MyTrader-001",
@@ -140,6 +156,8 @@ message_bus_config = MessageBusConfig(
 ### Multi-venue configuration
 
 Live trading systems often connect to multiple venues. Here's an example of configuring both spot and futures markets for Binance:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(
@@ -363,11 +381,15 @@ For a complete parameter list see the `StrategyConfig` [API Reference](https://n
 
 ### Windows signal handling
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 :::warning
 Windows: asyncio event loops do not implement `loop.add_signal_handler`. As a result, the legacy
 `TradingNode` does not receive OS signals via asyncio on Windows. Use Ctrl+C (SIGINT) handling or
 programmatic shutdown; SIGTERM parity is not expected on Windows.
 :::
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 On Windows, asyncio event loops do not implement `loop.add_signal_handler`, so Unix-style signal
 integration is unavailable. As a result, `TradingNode` does not receive OS signals via asyncio on

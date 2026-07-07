@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Cache Operations Reference
 
 ## Overview
@@ -260,6 +262,8 @@ is `CachePostgresAdapter` in `nautilus_trader.cache.adapter`.
 | Index | `index_venue_order_id()`, `index_order_position()` |
 
 ### Postgres Adapter
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 `CachePostgresAdapter` connects to PostgreSQL via the Rust `PostgresCacheDatabase` (pyo3 binding).
 It transforms Cython objects to pyo3 representations before writing, and vice-versa on load. It

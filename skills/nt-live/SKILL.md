@@ -3,6 +3,8 @@ name: nt-live
 description: "Use when working with live trading nodes, system boot, NautilusKernel, engine configuration, component lifecycle, or deployment in NautilusTrader."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-live
 
 ## What This Skill Covers
@@ -13,6 +15,8 @@ NautilusTrader **live infrastructure domain** — live trading nodes, system ker
 **Rust crates**: `nautilus_system`, `nautilus_live`, `nautilus_common`, `nautilus_core`
 
 ## When To Use
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 - Configuring and launching live trading nodes
 - `NautilusKernel` boot sequence and system setup
@@ -37,6 +41,8 @@ NautilusTrader **live infrastructure domain** — live trading nodes, system ker
 Read `references/developer_guide/contracts/live_runtime_contract.md` before
 choosing a live runtime.
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 - Use `nautilus_trader.live.LiveNode` for Rust v2 / Rust-backed live-node work.
 - Python live connectivity examples may still use
   `nautilus_trader.live.node.TradingNode`; label those examples as Python live
@@ -44,13 +50,17 @@ choosing a live runtime.
 - Keep reconciliation enabled for production execution clients unless a venue
   limitation is documented and reviewed.
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 ### TradingNode Configuration
 
-Python live/integration-specific `TradingNode` example.
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.live.node import TradingNode
 from nautilus_trader.config import TradingNodeConfig, LiveExecEngineConfig, LiveRiskEngineConfig
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     trader_id="TRADER-001",
@@ -71,12 +81,13 @@ config = TradingNodeConfig(
     },
 )
 
+
 node = TradingNode(config=config)
 ```
 
 ### Node Lifecycle
 
-Python live/integration-specific `TradingNode` example.
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 # Build node
@@ -294,6 +305,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The node runs until interrupted (Ctrl+C) or shut down programmatically.
 
+### Current v2 LiveNode deltas
+
+- v2 `LiveNode` shutdown handles Unix SIGTERM in the Rust path.
+- Rust live and sandbox node builders support `with_clock_factory` for
+  deterministic clock injection.
+- `LiveNode metrics` are available for Rust live runner observability.
+- Python and PyO3 configs support WebSocket transport backend selection.
+- The `event_store` format changed in v1.230.0; beta v1.227-v1.229 stores
+  must be regenerated rather than migrated in-place.
+- Live reconciliation uses monotonic-time gates and `RecencyMap` tracking;
+  review recency-sensitive checks for monotonic-clock use before deployment.
+
 ### v1.227.0 LiveNode config notes
 
 - `LoggerConfig` can be constructed directly from Python and Rust; Rust `LiveNode` supports `file_config` and `clear_log_file`.
@@ -414,6 +437,8 @@ See `references/developer_guide/coding_standards.md` for project-wide convention
 - FFI patterns (GIL management, callback forwarding)
 
 ## References
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 - `references/concepts/` — architecture, cache, logging, live, overview, rust
 - `references/api/` — system, core, common, config, live

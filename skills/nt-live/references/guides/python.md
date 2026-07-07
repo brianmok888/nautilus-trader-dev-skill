@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Python
 
 The [Python](https://www.python.org/) programming language is used for the majority of user-facing code in NautilusTrader.
@@ -104,12 +106,20 @@ def test_sma_with_single_input_returns_expected_value(self):
 
 [ruff](https://astral.sh/ruff) is used to lint the codebase. Ruff rules can be found in the top-level `pyproject.toml`, with ignore justifications typically commented.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 ## Cython (legacy)
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 :::note
 This section covers Cython conventions for `.pyx` and `.pxd` files.
 :::
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 For `.pyx` and `.pxd` files, make sure all functions and methods returning `void` or a primitive C type (such as `bint`, `int`, `double`) include the `except *` keyword in the signature. Without it, Python exceptions are silently ignored.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 For more information, see the [Cython docs](https://cython.readthedocs.io/en/latest/index.html).

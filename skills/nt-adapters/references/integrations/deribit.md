@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Deribit
 
 Founded in 2016, Deribit is a cryptocurrency derivatives exchange specializing in Bitcoin and
@@ -525,6 +527,8 @@ To use the testnet, set `environment=DeribitEnvironment.TESTNET` in your client 
 ```python
 from nautilus_trader.core.nautilus_pyo3 import DeribitEnvironment
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 config = TradingNodeConfig(
     data_clients={
         DERIBIT: DeribitDataClientConfig(
@@ -604,6 +608,8 @@ HTTP failures are logged and the WebSocket subscribe is skipped.
 
 Below is an example configuration for a live trading node using Deribit data and execution clients:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.deribit import DERIBIT
 from nautilus_trader.adapters.deribit import DeribitDataClientConfig
@@ -615,6 +621,8 @@ from nautilus_trader.config import TradingNodeConfig
 from nautilus_trader.core.nautilus_pyo3 import DeribitEnvironment
 from nautilus_trader.core.nautilus_pyo3 import DeribitProductType
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -637,6 +645,7 @@ config = TradingNodeConfig(
         ),
     },
 )
+
 
 node = TradingNode(config=config)
 node.add_data_client_factory(DERIBIT, DeribitLiveDataClientFactory)

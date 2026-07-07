@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Binance
 
 Founded in 2017, Binance is one of the largest cryptocurrency exchanges in terms
@@ -705,13 +707,19 @@ definitive list of Rust config options.
 | `default_taker_fee`                      | `0.0004` | Default taker fee rate for commission estimation on exchange‑generated fills (liquidation, ADL, settlement). |
 | `log_rejected_due_post_only_as_warning` | `True` | Log post‑only rejections as warnings when `True`; otherwise as errors. |
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 The most common use case is to configure a live `TradingNode` with Binance
 data and execution clients. Add a `BINANCE` section to your client
 configuration:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.adapters.binance import BINANCE
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -738,13 +746,19 @@ config = TradingNodeConfig(
 )
 ```
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Then, create a `TradingNode` and add the client factories:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.binance import BINANCE
 from nautilus_trader.adapters.binance import BinanceLiveDataClientFactory
 from nautilus_trader.adapters.binance import BinanceLiveExecClientFactory
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Instantiate the live trading node with a configuration
 node = TradingNode(config=config)
@@ -1043,6 +1057,8 @@ To use hedge mode:
 
     ```python
     from nautilus_trader.adapters.binance import BINANCE
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
     config = TradingNodeConfig(
         ...,  # Omitted

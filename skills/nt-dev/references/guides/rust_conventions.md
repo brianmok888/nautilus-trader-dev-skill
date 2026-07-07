@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Rust
 
 The [Rust](https://www.rust-lang.org/learn) programming language is an ideal fit for implementing the mission-critical core of the platform and systems.
@@ -712,6 +714,8 @@ cache.insert(other_key, other_value);  // Data race
 
 ### Shared mutability storage
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 Code ported from Cython often cloned values out of a container before mutating them.
 That pattern produces silent staleness: the local clone diverges from the canonical
 entry the moment another code path applies an event to it.
@@ -1317,6 +1321,8 @@ Style:
 5. **Avoid large structs in `Result<T, E>`** – box large error payloads (`Box<dyn Error + Send + Sync>`).
 
 ## Unsafe Rust
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 It will be necessary to write `unsafe` Rust code to be able to achieve the value
 of interoperating between Cython and Rust. The ability to step outside the boundaries of safe Rust is what makes it possible to

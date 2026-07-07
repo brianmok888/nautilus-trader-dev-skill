@@ -6,11 +6,27 @@ target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Rust
 
 The [Rust](https://www.rust-lang.org/learn) programming language is an ideal fit for implementing the mission-critical core of the platform and systems.
 Its strong type system, ownership model, and compile-time checks eliminate memory errors and data races by construction,
 while zero-cost abstractions and the absence of a garbage collector deliver C-like performance, important for high-frequency trading workloads.
+
+## NT v2 transition baseline
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+- 1.231.0 is intended as the final 1.x release carrying the legacy Cython v1
+  core; new development targets Rust v2 / PyO3.
+- 2.0.0rc1 wheels are available for pre-release testing, while post-cutover
+  legacy v1 critical backports move to `develop_v1`.
+- Rust MSRV 1.96.1 is the current upstream Rust baseline.
+- Python v2 controller subclassing and subclassable execution algorithms are
+  part of the supported Rust v2/PyO3 workflow.
+- Python v2 `FeeModel` and `FillModel` subclass support replaces legacy Cython
+  extension patterns for custom backtest models.
 
 ## Cargo manifest conventions
 
@@ -91,6 +107,8 @@ When adding new build targets or modifying existing ones, maintain alignment wit
 
 ### Generated FFI bindings and precision mode
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 The `nautilus-model` build script regenerates `nautilus_trader/core/includes/model.h` and
 `nautilus_trader/core/rust/model.pxd` when the `ffi` feature is enabled. Those files encode
 whether the generated C/Cython bindings use high precision. The committed generated files use
@@ -109,6 +127,8 @@ env HIGH_PRECISION=true cargo check -p nautilus-model --features ffi,python
 ```
 
 Before committing FFI-related work, verify those generated files did not drift:
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```fish
 git diff -- nautilus_trader/core/includes/model.h nautilus_trader/core/rust/model.pxd
@@ -754,6 +774,8 @@ cache.insert(other_key, other_value);  // Data race
 
 ### Shared mutability storage
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 Code ported from Cython often cloned values out of a container before mutating them.
 That pattern produces silent staleness: the local clone diverges from the canonical
 entry the moment another code path applies an event to it.
@@ -1368,6 +1390,8 @@ Style:
 5. **Avoid large structs in `Result<T, E>`** – box large error payloads (`Box<dyn Error + Send + Sync>`).
 
 ## Unsafe Rust
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 It will be necessary to write `unsafe` Rust code to be able to achieve the value
 of interoperating between Cython and Rust. The ability to step outside the boundaries of safe Rust is what makes it possible to

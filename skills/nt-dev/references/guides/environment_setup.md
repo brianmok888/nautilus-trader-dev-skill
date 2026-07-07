@@ -1,4 +1,8 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Environment Setup
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 For development we recommend using the PyCharm *Professional* edition IDE, as it interprets Cython syntax. Alternatively, you could use Visual Studio Code with a Cython extension.
 
@@ -266,6 +270,8 @@ To update the pinned uv version, change `required-version` in both `pyproject.to
 `make update-uv` to install the new pinned version locally.
 
 ## Builds
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 Following any changes to `.rs`, `.pyx` or `.pxd` files, you can re-compile by running:
 

@@ -1,4 +1,8 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # NT-STRATEGY-BUILDER
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 BacktestEngine and TradingNode wiring for NautilusTrader.
 
@@ -17,6 +21,8 @@ From idea → running system. Covers backtesting, paper trading, and live deploy
 | `multi_venue_strategy.py` | Multi-venue | 2+ venues simultaneously |
 
 ## DECISION TREE
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```
 Live market data?

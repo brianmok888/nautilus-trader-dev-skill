@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-implement Knowledge Base
 
 **Purpose:** Implement NautilusTrader components using correct patterns and templates. Covers Python components, simulation models, Rust+PyO3 bindings, and adapter development.

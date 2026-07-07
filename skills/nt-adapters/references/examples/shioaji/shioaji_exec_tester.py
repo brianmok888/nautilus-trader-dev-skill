@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Example: Shioaji execution client tester.
 
@@ -15,6 +19,7 @@ CAUTION: Set dry_run=True to prevent actual order placement.
 
 from decimal import Decimal
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.shioaji.config import ShioajiDataClientConfig
 from nautilus_trader.adapters.shioaji.config import ShioajiExecClientConfig
 from nautilus_trader.adapters.shioaji.constants import SINOPAC
@@ -42,6 +47,7 @@ gateway_host = "localhost"
 gateway_port = 8000
 dry_run = True  # Set to False to enable actual order placement (CAUTION!)
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
     logging=LoggingConfig(log_level="INFO", use_pyo3=True),
@@ -75,6 +81,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=5.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 node = TradingNode(config=config_node)
 
 config_tester = ExecTesterConfig(

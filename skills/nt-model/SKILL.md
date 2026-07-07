@@ -3,6 +3,8 @@ name: nt-model
 description: "Use when working with domain model types, instruments, identifiers, value types, enums, or currencies in NautilusTrader."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-model
 
 ## What This Skill Covers

@@ -3,6 +3,8 @@ name: nt-testing
 description: "Use when writing or running tests for NautilusTrader, setting up test fixtures, using DataTesterConfig or ExecTesterConfig, managing test datasets, or configuring CI testing."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-testing
 
 ## What This Skill Covers
@@ -35,6 +37,16 @@ The complete NautilusTrader testing framework:
 
 Read `references/developer_guide/contracts/testing_policy.md` before designing
 adapter, live-runtime, or PyO3 tests.
+
+Current v2 testing deltas:
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+- Cover Python v2 controller subclassing and importable controller configs with
+  backtest/live config round-trip tests when orchestration code changes.
+- Cover subclassable execution algorithms for routed-order behavior.
+- Cover custom Python v2 `FeeModel` and `FillModel` subclasses in backtest
+  scenarios without relying on legacy Cython extension hooks.
 
 Required testing rules:
 

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Logging
 
 The platform provides logging for both backtesting and live trading using a high-performance logging subsystem implemented in Rust
@@ -183,9 +185,13 @@ The input value should be a dictionary of component ID strings to log level stri
 
 Below is an example of a trading node logging configuration that includes some of the options mentioned above:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.config import LoggingConfig
 from nautilus_trader.config import TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config_node = TradingNodeConfig(
     trader_id="TESTER-001",
@@ -198,6 +204,8 @@ config_node = TradingNodeConfig(
     ... # Omitted
 )
 ```
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 For backtesting, the `BacktestEngineConfig` class can be used instead of `TradingNodeConfig`, as the same options are available.
 
@@ -287,6 +295,8 @@ compatibility across different environments where color rendering is not support
 ## Using a logger directly
 
 It's possible to use `Logger` objects directly, and these can be initialized anywhere (very similar to the Python built-in `logging` API).
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 If you ***aren't*** using an object which already initializes a `NautilusKernel` (and logging) such as `BacktestEngine` or `TradingNode`,
 then you can activate logging in the following way:
@@ -387,9 +397,13 @@ custom Rust components (such as feature extractors or adapters) compiled as sepa
 
 Enable the tracing subscriber by setting `use_tracing=True` in `LoggingConfig`:
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 from nautilus_trader.config import LoggingConfig
 from nautilus_trader.config import TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config_node = TradingNodeConfig(
     trader_id="TESTER-001",

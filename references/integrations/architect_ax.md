@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # AX Exchange
 
 [AX Exchange](https://architect.exchange) is the world's first centralized and regulated exchange
@@ -129,6 +131,8 @@ export AX_API_SECRET="your-sandbox-api-secret"
 ```
 
 #### 4. Configure the trading node
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(
@@ -328,9 +332,13 @@ from market data endpoints. This is handled automatically by the adapter configu
 | `recv_window_ms`          | `5000`    | Receive window (milliseconds) for signed requests.                  |
 | `cancel_on_disconnect`    | `false`   | Cancel all open orders when the orders WebSocket disconnects.       |
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 The most common use case is to configure a live `TradingNode` to include AX Exchange
 data and execution clients. To achieve this, add an `AX` section to your client
 configuration(s):
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.architect_ax import AX
@@ -339,6 +347,8 @@ from nautilus_trader.adapters.architect_ax import AxEnvironment
 from nautilus_trader.adapters.architect_ax import AxExecClientConfig
 from nautilus_trader.config import InstrumentProviderConfig
 from nautilus_trader.config import TradingNodeConfig
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -357,13 +367,19 @@ config = TradingNodeConfig(
 )
 ```
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Then, create a `TradingNode` and add the client factories:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.architect_ax import AX
 from nautilus_trader.adapters.architect_ax import AxLiveDataClientFactory
 from nautilus_trader.adapters.architect_ax import AxLiveExecClientFactory
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # Instantiate the live trading node with a configuration
 node = TradingNode(config=config)

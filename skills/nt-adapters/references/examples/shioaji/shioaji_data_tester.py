@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Example: Shioaji data client tester.
 
@@ -10,6 +14,7 @@ Prerequisites:
     2. Gateway logged in: ``curl -X POST http://localhost:8000/auth/login -d '...'``
 """
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.shioaji.config import ShioajiDataClientConfig
 from nautilus_trader.adapters.shioaji.constants import SINOPAC
 from nautilus_trader.adapters.shioaji.factories import ShioajiLiveDataClientFactory
@@ -27,6 +32,7 @@ from nautilus_trader.test_kit.strategies.tester_data import DataTesterConfig
 gateway_host = "localhost"
 gateway_port = 8000
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
     logging=LoggingConfig(log_level="INFO", use_pyo3=True),
@@ -42,6 +48,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=5.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 node = TradingNode(config=config_node)
 
 # Configure instruments to test

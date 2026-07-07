@@ -3,6 +3,8 @@ name: nt
 description: "Entry-point/router skill for any NautilusTrader or nautilus_trader task. Use when the user asks for NautilusTrader help, says nt, asks which Nautilus skill to use, or gives a trading-system, strategy, adapter, data, backtest, live, testing, or core-contribution task without naming a more specific nt-* skill. Routes to and loads the relevant NautilusTrader skills instead of answering from memory alone."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # NautilusTrader Entry Skill
 
 Use this as the start point for NautilusTrader work. It does not replace the
@@ -33,6 +35,8 @@ official source as authoritative and update/report the local drift.
    `tools/check_dev_guide_sync.py` when docs/skill guidance changed.
 
 ## Skill router
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 | User goal | Primary skill | Supporting skills |
 |---|---|---|

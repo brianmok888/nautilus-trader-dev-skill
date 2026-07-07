@@ -1,9 +1,13 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Order Book
 
 NautilusTrader provides a high-performance order book implemented in Rust, capable of
 maintaining full book state from L1 through L3 data. The `OrderBook` is the primary
 component for tracking public market depth, while the `OwnOrderBook` tracks your own
 orders separately, enabling filtered views that show true available liquidity.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 :::note
 This guide documents the Rust API. These types are also available from Python via

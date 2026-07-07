@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Value Type Patterns Reference Guide
 
 Comprehensive guide to NautilusTrader's core value types: Price, Quantity, Money,
@@ -304,6 +306,8 @@ CRV, and many more (50+ crypto currencies pre-registered).
 
 ### Registering Custom Currencies
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 Custom currencies must be registered in **both** the Cython and pyo3 maps:
 
 ```python
@@ -318,6 +322,8 @@ custom = Currency(
     name="X Coin",
     currency_type=CurrencyType.CRYPTO,
 )
+
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 # Registers in both Cython and pyo3 internal maps
 register_currency(custom, overwrite=False)
@@ -379,6 +385,8 @@ The `from_raw_c` pattern avoids float conversion entirely, preserving the exact
 fixed-point representation across the Rust/Python boundary.
 
 ### Currency conversion
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```python
 # Rust pyo3 Currency -> Cython Currency (via code string lookup)

@@ -553,6 +553,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            + "Rust MSRV 1.96.1 2.0.0rc1 develop_v1 Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
@@ -567,12 +568,15 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
+        "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use DataTester and ExecTester evidence with limit_aggressive and test_modify_rejected.\n"
         "DST readiness uses deterministic runtime seams.\n"
         "Required dataset metadata: file sha256 size_bytes original_url licence added_at.\n",
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
+        "1.231.0 final 1.x 2.0.0rc1 develop_v1 Rust MSRV 1.96.1 "
+        "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
     )
@@ -882,6 +886,321 @@ def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
     )
 
 
+def test_reports_unlabelled_tradingnode_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
+        "from nautilus_trader.live.node import TradingNode\n"
+        "node = TradingNode(config=config)\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_accepts_labelled_tradingnode_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
+        "NT v2 compatibility note: Python live/integration-specific "
+        "TradingNode example; for Rust v2 / Rust-backed work use LiveNode.\n"
+        "from nautilus_trader.live.node import TradingNode\n"
+        "node = TradingNode(config=config)\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any("unlabelled TradingNode guidance" in e for e in result.errors)
+
+
+def test_reports_unlabelled_legacy_cython_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/references/guides/ffi.md",
+        "Expose this type through Cython and update the .pyx wrapper.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-dev/references/guides/ffi.md" in result.errors
+    )
+
+
+def test_accepts_locally_labelled_legacy_reference_block(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/developer_guide/ffi.md",
+        "NT v2 compatibility note: legacy Cython/v1 references are retained "
+        "for migration/reference-only context; prefer Rust v2 PyO3 guidance "
+        "when exposing this type through Cython and updating the .pyx wrapper.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any("unlabelled legacy/Cython/v1 guidance" in e for e in result.errors)
+
+
+def test_reports_later_unlabelled_guidance_after_reference_header(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "references/developer_guide/ffi.md",
+        "NT v2 compatibility note: legacy Cython/v1 references are retained "
+        "for migration/reference-only context; prefer Rust v2 PyO3 guidance.\n\n"
+        "General FFI overview without actionable legacy terms.\n\n"
+        "Expose this type through Cython and update the .pyx wrapper.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in references/developer_guide/ffi.md"
+        in result.errors
+    )
+
+
+def test_ignores_non_core_legacy_and_version_mentions(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/concepts/positions.md",
+        "Legacy systems may export data under dataset path v1/my-dataset; "
+        "Tardis exposes /v1/exchanges for metadata.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any("unlabelled legacy/Cython/v1 guidance" in e for e in result.errors)
+
+
+def test_reports_file_level_legacy_label_in_curated_template(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
+        "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode\n"
+        "# references in this file are retained for migration/reference-only context.\n"
+        "# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.\n\n"
+        "# General setup text.\n\n"
+        "from nautilus_trader.live.node import TradingNode\n"
+        "node = TradingNode(config=config)\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_replacement_terms_alone_do_not_label_legacy_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/references/guides/ffi.md",
+        "Expose this type through Cython; compare with PyO3 before choosing.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-dev/references/guides/ffi.md" in result.errors
+    )
+
+
+def test_replacement_terms_alone_do_not_label_tradingnode_guidance(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
+        "Use TradingNode in this example; LiveNode is another node.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_descriptive_terms_alone_do_not_label_tradingnode_guidance(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
+        "TradingNode remains Python live integration-specific runtime guidance.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_descriptive_terms_alone_do_not_label_legacy_cython_guidance(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-dev/references/guides/ffi.md",
+        "Cython is deprecated; expose this type through the wrapper.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-dev/references/guides/ffi.md" in result.errors
+    )
+
+
+def test_marker_alone_does_not_label_legacy_cython_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/references/guides/ffi.md",
+        "NT v2 compatibility note: Cython wrapper guidance.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-dev/references/guides/ffi.md" in result.errors
+    )
+
+
+def test_reports_python_label_before_shebang(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-adapters/references/examples/binance/example.py",
+        "# NT v2 compatibility note: Python live TradingNode reference-only.\n"
+        "#!/usr/bin/env python3\n"
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "python shebang is not on first line in "
+        "skills/nt-adapters/references/examples/binance/example.py" in result.errors
+    )
+
+
+def test_reports_uncommented_python_fence_compatibility_label(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "references/concepts/live.md",
+        "```python\n"
+        "NT v2 compatibility note: Python live/integration-specific TradingNode.\n"
+        "from nautilus_trader.live.node import TradingNode\n"
+        "```\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "uncommented NT v2 compatibility note in Python fence in "
+        "references/concepts/live.md" in result.errors
+    )
+
+
+def test_reports_duplicate_adjacent_compatibility_labels(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/concepts/live.md",
+        "NT v2 compatibility note: Python live/integration-specific TradingNode; "
+        "use LiveNode for Rust v2/Rust-backed work.\n"
+        "NT v2 compatibility note: Python live/integration-specific TradingNode; "
+        "use LiveNode for Rust v2/Rust-backed work.\n"
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "duplicate adjacent NT v2 compatibility note in references/concepts/live.md"
+        in result.errors
+    )
+
+
+def test_reports_blank_separated_duplicate_compatibility_labels(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "references/developer_guide/ffi.md",
+        "NT v2 compatibility note: legacy Cython/v1 reference-only; "
+        "prefer Rust v2/PyO3 for new work.\n\n"
+        "NT v2 compatibility note: legacy Cython/v1 reference-only; "
+        "prefer Rust v2/PyO3 for new work.\n\n"
+        "Expose this type through Cython and update the .pyx wrapper.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "duplicate repeated NT v2 compatibility note in "
+        "references/developer_guide/ffi.md" in result.errors
+    )
+
+
+def test_reports_duplicate_python_fence_compatibility_labels(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references/concepts/live.md",
+        "```python\n"
+        "# NT v2 compatibility note: Python live/integration-specific TradingNode.\n"
+        "# NT v2 compatibility note: Python live/integration-specific TradingNode.\n"
+        "from nautilus_trader.live.node import TradingNode\n"
+        "```\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "duplicate NT v2 compatibility note in Python fence in "
+        "references/concepts/live.md" in result.errors
+    )
+
+
+def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
+    write(tmp_path / "skills/nt-dev/SKILL.md", "Rust v2 and PyO3 are preferred.\n")
+    write(tmp_path / "skills/nt-live/SKILL.md", "Use LiveNode for Rust v2.\n")
+    write(tmp_path / "skills/nt-review/SKILL.md", "Review PyO3 code.\n")
+    write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
+    write(tmp_path / "references/developer_guide/rust.md", "Rust guidance.\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT v2 cutover term '1.231.0' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT v2 cutover term '2.0.0rc1' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT v2 cutover term 'develop_v1' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT v2 live term 'with_clock_factory' in skills/nt-live/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT v2 review term 'v2 wranglers' in skills/nt-review/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT v2 testing term 'Python v2 controller subclassing' "
+        "in skills/nt-testing/SKILL.md" in result.errors
+    )
+    assert (
+        "missing NT v2 rust term 'Rust MSRV 1.96.1' "
+        "in references/developer_guide/rust.md" in result.errors
+    )
+
+
 def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -> None:
     write(
         tmp_path / "references/developer_guide/release_security.md",
@@ -1020,11 +1339,18 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
 
     write(
         tmp_path / "skills/nt-live/SKILL.md",
+        "NT v2 compatibility note: Python live/integration-specific TradingNode; "
+        "use LiveNode for Rust v2/Rust-backed work.\n"
         "Prefer LiveNode for Rust v2; TradingNode remains Python live/integration-specific.\n"
-        "Legacy v1/Cython-oriented example with file_config and PortfolioSnapshot.\n",
+        "NT v2 compatibility note: legacy Cython/v1 reference-only; "
+        "prefer Rust v2/PyO3 for new work.\n"
+        "Legacy v1/Cython-oriented example with file_config and PortfolioSnapshot.\n"
+        "SIGTERM with_clock_factory event_store v1.227-v1.229 LiveNode metrics "
+        "WebSocket transport backend RecencyMap.\n",
     )
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
+        "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use DataTester and ExecTester evidence with limit_aggressive and test_modify_rejected.\n"
         "Adapter baseline matrix and Account reconciliation matrix required.\n"
         "ExecTesterConfig::builder() StrategyConfig build()? for Rust examples.\n"
@@ -1074,6 +1400,10 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
+        "NT v2 compatibility note: legacy Cython/v1 reference-only; "
+        "prefer Rust v2/PyO3 for new work.\n"
+        "1.231.0 final 1.x 2.0.0rc1 develop_v1 Rust MSRV 1.96.1 "
+        "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         "Do not copy current version numbers into docs. Generated FFI bindings and precision mode "
         "must be checked before committing FFI work. Python v2 live callback routing keeps "
@@ -1087,11 +1417,18 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-strategy-builder/SKILL.md",
+        "NT v2 compatibility note: Python live/integration-specific TradingNode; "
+        "use LiveNode for Rust v2/Rust-backed work.\n"
         "LiveNode for Rust v2; TradingNode remains Python live/integration-specific.\n",
     )
     write(
         tmp_path / "skills/nt-review/SKILL.md",
-        "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific. Generated Python artifacts make py-stubs-v2.\n",
+        "NT v2 compatibility note: Python live/integration-specific TradingNode; "
+        "use LiveNode for Rust v2/Rust-backed work.\n"
+        "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific. "
+        "Generated Python artifacts make py-stubs-v2. Python v2 config stub/readback drift, "
+        "subclassable PyO3 stubs, v2 wranglers, raw fixed-point overflow, RecencyMap, "
+        "DataActor, and message bus.\n",
     )
     write(
         tmp_path / "skills/nt-implement/SKILL.md",
@@ -1144,6 +1481,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            + "Rust MSRV 1.96.1 2.0.0rc1 develop_v1 Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",

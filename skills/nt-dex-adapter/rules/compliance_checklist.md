@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # DEX Adapter Compliance Checklist
 
 Every custom DEX adapter must clear this checklist before use in backtesting or live trading.
@@ -61,6 +63,8 @@ Then complete the manual checklist below.
 - [ ] `InstrumentProviderConfig`, `DataClientConfig`, `ExecClientConfig` all defined
 
 ### Factory
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 - [ ] `ClientFactory` class defined with:
   - `create_live_data_client()` class method

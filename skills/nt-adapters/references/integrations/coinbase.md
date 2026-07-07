@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Coinbase
 
 Founded in 2012, Coinbase is one of the largest US-regulated cryptocurrency
@@ -7,6 +9,8 @@ order execution on both spot (Cash) and CFM derivatives (Margin) accounts
 through a shared execution client, with the account type selected by the
 factory (see [Execution scope](#execution-scope)).
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 :::note
 This adapter is Rust-only and is consumed by the v2 system (and the Rust
 `LiveNode`). It does not ship a legacy Python `TradingNode` integration;
@@ -15,6 +19,8 @@ entry points can construct them.
 :::
 
 ## Overview
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The Coinbase adapter is implemented in Rust and consumed by the v2 system.
 The adapter does not ship a legacy Python `TradingNode` integration; only

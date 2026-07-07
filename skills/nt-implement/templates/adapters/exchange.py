@@ -1,3 +1,7 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Exchange Adapter Template for nautilus_trader.
 
@@ -340,6 +344,7 @@ class MyExchangeExecutionClient(LiveExecutionClient):
         pass
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # =============================================================================
 # Factory (for integration with TradingNode)
 # =============================================================================

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -24,6 +28,7 @@ from pathlib import Path
 
 import pandas as pd
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.bybit import BYBIT
 from nautilus_trader.adapters.bybit import BybitDataClientConfig
 from nautilus_trader.adapters.bybit import BybitProductType
@@ -788,6 +793,7 @@ def main():
     underlying = "BTC"
     spot_symbol = f"{underlying}USDT-SPOT.BYBIT"
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     # Configure the trading node
     config_node = TradingNodeConfig(
         trader_id=TraderId("OPTIONS-COLLECTOR-001"),
@@ -820,6 +826,7 @@ def main():
         timeout_post_stop=5.0,
     )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     # Instantiate the node
     node = TradingNode(config=config_node)
 

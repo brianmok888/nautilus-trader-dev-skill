@@ -1,3 +1,7 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Strategy Builder Template: Multi-Venue Strategy
 
@@ -8,6 +12,7 @@ Common use cases:
 - Signal confirmation (one venue's data confirms another's signal)
 - Liquidity routing (send orders to best-priced venue)
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 This Python live/integration-specific TradingNode template handles the data
 routing and signal isolation logic. For Rust v2 / Rust-backed live-node work,
 use the LiveNode path in nt-live.
@@ -16,6 +21,7 @@ use the LiveNode path in nt-live.
 import asyncio
 from collections import deque
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.config import LiveExecEngineConfig, TradingNodeConfig
 from nautilus_trader.live.node import TradingNode
 from nautilus_trader.model.data import QuoteTick
@@ -216,10 +222,12 @@ class MultiVenueStrategy(Strategy):
 
 # ─── MULTI-VENUE TRADING NODE SETUP ────────────────────────────────────────────
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 async def run_multi_venue_node() -> None:
     """
     Run a TradingNode with two venues.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     Subscribe both to the TradingNode — each venue adapter is independent
     but both feed the same strategy via the message bus.
     """
@@ -266,6 +274,7 @@ async def run_multi_venue_node() -> None:
         trade_primary=True,
     )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     node = TradingNode(config=config)
 
     # Register factories for both adapters

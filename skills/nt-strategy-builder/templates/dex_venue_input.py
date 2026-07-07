@@ -1,6 +1,11 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 Strategy Builder Template: DEX Adapter as Venue
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Shows how to wire a custom DEX adapter (built with nt-dex-adapter skill) into
 BOTH a BacktestEngine and a Python live/integration-specific TradingNode. The
 adapter is treated identically to any CeFi adapter from the framework's
@@ -17,6 +22,7 @@ Replace placeholder names with your actual adapter package.
 
 import asyncio
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.config import (
@@ -104,14 +110,17 @@ def run_dex_backtest(catalog_path: str = "/path/to/catalog") -> None:
     engine.dispose()
 
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # =============================================================================
 # Option B: Live TradingNode with DEX adapter as execution venue
 # =============================================================================
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 async def run_dex_live_node() -> None:
     """
     Run a live TradingNode connected to a DEX adapter.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     The DEX adapter handles:
     - Instrument discovery (pool addresses → Nautilus instruments)
     - Market data (polling AMM state → QuoteTick / OrderBookDelta)
@@ -153,6 +162,7 @@ async def run_dex_live_node() -> None:
         # },
     )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     node = TradingNode(config=config)
 
     # Register DEX adapter factories

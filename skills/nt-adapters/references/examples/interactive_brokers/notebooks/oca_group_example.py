@@ -1,3 +1,7 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # ---
 # jupyter:
 #   jupytext:
@@ -24,6 +28,7 @@ import sys
 
 import pandas as pd
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.interactive_brokers.common import IB
 from nautilus_trader.adapters.interactive_brokers.common import IBContract
 from nautilus_trader.adapters.interactive_brokers.common import IBOrderTags
@@ -43,6 +48,7 @@ from nautilus_trader.adapters.interactive_brokers.factories import (
 from nautilus_trader.common.config import LoggingConfig
 from nautilus_trader.config import TradingNodeConfig
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # from nautilus_trader.core.datetime import unix_nanos_to_dt
 from nautilus_trader.live.config import LiveDataEngineConfig
 from nautilus_trader.live.config import RoutingConfig
@@ -184,6 +190,7 @@ instrument_provider = InteractiveBrokersInstrumentProviderConfig(
     symbology_method=SymbologyMethod.IB_SIMPLIFIED,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
     logging=LoggingConfig(
@@ -229,6 +236,7 @@ strat_config = Strat_oca_test_config(tradable_instrument_id=tradable_instrument_
 # Instantiate your strategy
 strategy = Strat_oca_test(config=strat_config)
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Instantiate the node with a configuration
 node = TradingNode(config=config_node)
 

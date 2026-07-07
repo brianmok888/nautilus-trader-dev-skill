@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io
@@ -14,6 +18,7 @@
 #  limitations under the License.
 # -------------------------------------------------------------------------------------------------
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.polymarket import POLYMARKET
 from nautilus_trader.adapters.polymarket import PolymarketDataClientConfig
 from nautilus_trader.adapters.polymarket import PolymarketLiveDataClientFactory
@@ -55,6 +60,7 @@ load_ids = [str(x) for x in instrument_ids]
 instrument_provider_config = PolymarketInstrumentProviderConfig(load_ids=frozenset(load_ids))
 # instrument_provider_config = PolymarketInstrumentProviderConfig(load_all=True, filters=filters)
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
@@ -78,6 +84,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=1.0,
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Instantiate the node with a configuration
 node = TradingNode(config=config_node)
 

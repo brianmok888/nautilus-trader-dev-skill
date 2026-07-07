@@ -3,6 +3,8 @@ name: nt-dex-adapter
 description: "Use when building a custom DEX adapter that fully complies with NautilusTrader's adapter standard. Covers DEX-specific instrument discovery, on-chain data normalisation, wallet-signed order execution, and the 7-phase implementation sequence. Includes DO/DON'Ts rules, a compliance checklist, and a test suite."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Custom DEX Adapter
 
 ## Overview
@@ -89,6 +91,8 @@ This maps directly to the canonical adapter implementation pattern. Complete eac
 - On-chain wallet balance → `AccountBalance`
 - Position tracking (DEX perps: on-chain position query)
 - `generate_order_status_report()` for reconciliation
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ### Phase 6: Configuration & Factory
 - `InstrumentProviderConfig`, `DataClientConfig`, `ExecClientConfig`

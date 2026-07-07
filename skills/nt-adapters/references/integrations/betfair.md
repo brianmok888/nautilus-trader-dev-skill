@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Betfair
 
 Founded in 2000, Betfair operates the world’s largest online betting exchange,
@@ -592,7 +594,11 @@ each node to avoid interference:
 
 This prevents warning spam and ensures each node processes only its own orders and fills.
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Here is a minimal example showing how to configure a live `TradingNode` with Betfair clients:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.betfair import BETFAIR
@@ -601,11 +607,14 @@ from nautilus_trader.adapters.betfair import BetfairLiveExecClientFactory
 from nautilus_trader.config import TradingNodeConfig
 from nautilus_trader.live.node import TradingNode
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 # Configure Betfair data and execution clients (using AUD account currency)
 config = TradingNodeConfig(
     data_clients={BETFAIR: {"account_currency": "AUD"}},
     exec_clients={BETFAIR: {"account_currency": "AUD"}},
 )
+
 
 # Build the TradingNode with Betfair adapter factories
 node = TradingNode(config)

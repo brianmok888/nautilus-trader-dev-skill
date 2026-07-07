@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Strategy Builder — DO and DON'Ts
 
 Curated rules with rationale. Each rule maps to a common production failure mode.
@@ -107,6 +109,8 @@ exec_engine=LiveExecEngineConfig(
     reconciliation_startup_delay_secs=10.0,
 )
 ```
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 **DO** configure all connection timeouts on `TradingNodeConfig`.
 ```python

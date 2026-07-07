@@ -3,6 +3,8 @@ name: nt-review
 description: "Use when reviewing nautilus_trader implementations. Validates conventions, trading correctness, performance, testability, live trading readiness, FFI/Rust code, and benchmarking before deployment."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Nautilus Trader Code Review
 
 ## Overview
@@ -58,9 +60,31 @@ EvoMap-specific review severity:
 
 ## Review Dimensions
 
+### NT v2 cutover review gates
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+Block merge/live-readiness claims when the diff reintroduces unlabelled legacy
+Cython/v1 guidance, treats Python live `TradingNode` as the Rust-backed default,
+or misses current v2 migration fixes:
+
+- Python v2 config stub/readback drift must stay covered for `DataActorConfig`,
+  `StrategyConfig`, and `ExecutionAlgorithmConfig`.
+- subclassable PyO3 stubs must not be marked final when controllers, execution
+  algorithms, `FeeModel`, or `FillModel` are intended to be subclassed.
+- v2 wranglers must detect raw fixed-point overflow before Arrow conversion.
+- Live reconciliation recency checks must use monotonic time and account for
+  `RecencyMap`-based tracking.
+- `DataActor` order fill/cancel callbacks and subscription methods removed in
+  the v2 cutover path; use the message bus for those flows.
+
 ### Developer guide sync review gates
 
 Block production-readiness claims unless review evidence covers:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 - message immutability across published events, commands, requests, and
   responses;
@@ -439,6 +463,8 @@ self.log.error(f"No signal")  # Not an error
 When reviewing code for live trading deployment, check these additional dimensions:
 
 ### Configuration Review
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 # CORRECT: Proper timeout configuration

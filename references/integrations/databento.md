@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Databento
 
 NautilusTrader includes an adapter for the [Databento](https://databento.com/) API
@@ -483,9 +485,13 @@ normalizes `ts_event` to the bar **close** (original `ts_event` + interval).
 The `imbalance` and `statistics` schemas have no built-in Nautilus equivalents.
 The adapter defines `DatabentoImbalance` and `DatabentoStatistics` in Rust.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 PyO3 bindings expose these types in Python. Their attributes are PyO3 objects
 and may not work with methods expecting Cython types. See the API reference for
 PyO3 to Cython conversion methods.
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 Convert a PyO3 `Price` to a Cython `Price`:
 
@@ -541,6 +547,8 @@ from nautilus_trader.persistence.catalog import ParquetDataCatalog
 
 catalog = ParquetDataCatalog.from_env()
 loader = DatabentoDataLoader()
+
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 imbalances = loader.from_dbn_file(
     path="aapl-imbalance.dbn.zst",
@@ -626,6 +634,8 @@ file also works). The data covers one month of TSLA trades on Nasdaq:
 TSLA_NASDAQ = TestInstrumentProvider.equity(symbol="TSLA")
 engine.add_instrument(TSLA_NASDAQ)
 
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 # Decode data to Cython objects
 loader = DatabentoDataLoader()
 trades = loader.from_dbn_file(
@@ -638,6 +648,8 @@ engine.add_data(trades)
 ```
 
 ### DBN data to a ParquetDataCatalog
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 Load DBN data and write to a `ParquetDataCatalog`. Set `as_legacy_cython=False`
 to decode as PyO3 objects.
@@ -655,6 +667,8 @@ catalog = ParquetDataCatalog.from_env()
 
 loader = DatabentoDataLoader()
 
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 # Step 1: Load instrument definitions first
 # Obtain DEFINITION schema files from Databento for your instruments
 instruments = loader.from_dbn_file(
@@ -667,6 +681,7 @@ catalog.write_data(instruments)
 
 # Step 2: Now load and write market data
 instrument_id = InstrumentId.from_str("TSLA.XNAS")
+
 
 # Decode trades to PyO3 objects
 trades = loader.from_dbn_file(
@@ -691,6 +706,8 @@ from nautilus_trader.persistence.catalog import ParquetDataCatalog
 catalog = ParquetDataCatalog.from_env()
 loader = DatabentoDataLoader()
 
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 # Step 1: Load instrument definitions from DEFINITION files
 instruments = loader.from_dbn_file(
     path="equity-definitions.dbn.zst",
@@ -701,6 +718,7 @@ catalog.write_data(instruments)
 # Step 2: Load market data (MBO, trades, quotes, etc.)
 instrument_id = InstrumentId.from_str("AAPL.XNAS")
 
+
 # Load MBO order book deltas
 deltas = loader.from_dbn_file(
     path="aapl-mbo.dbn.zst",
@@ -708,6 +726,7 @@ deltas = loader.from_dbn_file(
     as_legacy_cython=False,
 )
 catalog.write_data(deltas)
+
 
 # Load trades
 trades = loader.from_dbn_file(
@@ -741,6 +760,8 @@ See also the [Data concepts guide](../concepts/data.md).
 
 Parameters for `from_dbn_file`:
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 - `instrument_id`: Speeds up decoding by skipping symbology lookup.
 - `price_precision`: Override applied to every record read. When omitted, the
   loader resolves precision per symbol from its cache (populated by
@@ -750,6 +771,8 @@ Parameters for `from_dbn_file`:
 - `as_legacy_cython`: Set to `False` for IMBALANCE/STATISTICS schemas
   (required) or for better catalog write performance.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 :::warning
 IMBALANCE and STATISTICS schemas require `as_legacy_cython=False` (PyO3-only
 types). `True` raises a `ValueError`.
@@ -758,6 +781,8 @@ types). `True` raises a `ValueError`.
 ### Loading consolidated data
 
 Consolidated schemas aggregate data across multiple venues:
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```python
 # Load consolidated MBP-1 quotes
@@ -769,12 +794,15 @@ cmbp_quotes = loader.from_dbn_file(
     as_legacy_cython=True,
 )
 
+# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 # Load consolidated BBO quotes
 cbbo_quotes = loader.from_dbn_file(
     path="consolidated.cbbo-1s.dbn.zst",
     instrument_id=InstrumentId.from_str("AAPL.XNAS"),
     as_legacy_cython=False,  # Use PyO3 for better performance
 )
+
 
 # Load TCBBO (trade-sampled consolidated BBO) with quotes and trades
 # include_trades=True loads quotes, include_trades=False loads trades
@@ -784,6 +812,7 @@ tcbbo_quotes = loader.from_dbn_file(
     include_trades=True,  # Loads quotes
     as_legacy_cython=True,
 )
+
 
 tcbbo_trades = loader.from_dbn_file(
     path="consolidated.tcbbo.dbn.zst",
@@ -819,11 +848,17 @@ and `DatabentoDataClient` for historical requests.
 
 ## Configuration
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 Add a `DATABENTO` section to your `TradingNode` client configuration:
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 config = TradingNodeConfig(
     data_clients={
@@ -839,11 +874,17 @@ config = TradingNodeConfig(
 )
 ```
 
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+
 Create the `TradingNode` and register the factory:
+
+NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```python
 from nautilus_trader.adapters.databento.factories import DatabentoLiveDataClientFactory
 from nautilus_trader.live.node import TradingNode
+
+# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 # Create the live trading node with the configuration
 node = TradingNode(config=config)

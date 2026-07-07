@@ -1,8 +1,14 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 from nautilus_trader.adapters.kraken.config import KrakenDataClientConfig
 from nautilus_trader.adapters.kraken.config import KrakenExecClientConfig
 from nautilus_trader.adapters.kraken.config import KrakenInstrumentProviderConfig
 from nautilus_trader.config import TradingNodeConfig
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 def get_kraken_config(
     api_key: str,
     api_secret: str,
@@ -34,6 +40,7 @@ def get_kraken_config(
         api_secret=api_secret,
     )
     
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     return TradingNodeConfig(
         trader_id="KRAKEN-NODE-001",
         data_clients={"KRAKEN": data_client},

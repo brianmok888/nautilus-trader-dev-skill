@@ -1,6 +1,10 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # NautilusTrader Indicators Reference Guide
 
 ## Overview
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 All indicators live in `nautilus_trader.indicators` and inherit from the `Indicator` base class
 (`nautilus_trader.indicators.base.Indicator`). Indicators are Cython-compiled for performance.
@@ -349,6 +353,8 @@ crates/indicators/src/
   volatility/           # atr, dc, kc, kp, rvi, vr, fuzzy
   python/               # PyO3 bindings
 ```
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 The Rust crate is `nautilus-indicators` and the Python bindings are generated via PyO3
 in the `python/` subdirectory, making both the Cython and Rust versions available.

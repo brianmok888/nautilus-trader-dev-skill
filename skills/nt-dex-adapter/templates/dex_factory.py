@@ -1,10 +1,16 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 """
 DEX Adapter Template: Client Factory
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Registers the DEX adapter's data and execution clients with a TradingNode.
 
 Phase 6 of the 7-phase DEX adapter implementation sequence.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Usage in TradingNode:
     node = TradingNode(config=config)
     node.add_data_client_factory("MYDEX", MyDEXLiveDataClientFactory)
@@ -58,6 +64,7 @@ class MyDEXLiveDataClientFactory(LiveDataClientFactory):
     """
     Factory for creating MyDEX live data clients.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     Registered with TradingNode via:
         node.add_data_client_factory("MYDEX", MyDEXLiveDataClientFactory)
     """
@@ -74,6 +81,7 @@ class MyDEXLiveDataClientFactory(LiveDataClientFactory):
         """
         Create and return a MyDEX data client.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
         Parameters
         ----------
         loop : asyncio.AbstractEventLoop
@@ -113,6 +121,7 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
     """
     Factory for creating MyDEX live execution clients.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
     Registered with TradingNode via:
         node.add_exec_client_factory("MYDEX", MyDEXLiveExecClientFactory)
     """

@@ -1,11 +1,19 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Deployment Patterns for NautilusTrader Live Trading
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ## TradingNode Lifecycle
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The `TradingNode` class (in `nautilus_trader/live/node.py`) is the top-level entry
 point for live trading. Its lifecycle follows four distinct phases:
 
 ### Phase 1: Build
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 node = TradingNode(config=config)
@@ -13,6 +21,8 @@ node.add_data_client_factory("BINANCE", BinanceLiveDataClientFactory)
 node.add_exec_client_factory("BINANCE", BinanceLiveExecClientFactory)
 node.build()
 ```
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 During build:
 1. The `NautilusKernel` is created with all core engines (data, risk, execution).
@@ -73,7 +83,11 @@ Final cleanup:
 The node registers `_loop_sig_handler` as the signal callback. On receiving SIGINT
 or SIGTERM, it logs a warning and calls `stop()`, triggering graceful shutdown.
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ## TradingNodeConfig Options
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 `TradingNodeConfig` extends `NautilusKernelConfig` with live-specific defaults.
 
@@ -165,6 +179,8 @@ prefix before the first hyphen identifies the factory.
 
 ### Example: Two Exchanges
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 ```python
 config = TradingNodeConfig(
     data_clients={
@@ -215,6 +231,8 @@ The builder extracts the factory name by splitting on the first hyphen:
 
 ### LoggingConfig
 
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+
 Pass a `LoggingConfig` to `TradingNodeConfig.logging` to control:
 - Log level (DEBUG, INFO, WARNING, ERROR)
 - Output format
@@ -223,6 +241,8 @@ Pass a `LoggingConfig` to `TradingNodeConfig.logging` to control:
 ### Cache and Message Bus Backing
 
 For production deployments, enable database backing:
+
+NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
 config = TradingNodeConfig(

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Rust
 
 Nautilus has a complete Rust implementation under the `crates/` directory.
@@ -15,6 +17,8 @@ requirements may change between releases.
 Nautilus has three implementations. Understanding where each stands helps
 you choose the right one for your use case.
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 - **v1 legacy**: Cython/Python classes under `nautilus_trader/`. Fully
   featured with the broadest component coverage.
 - **v2 Rust**: Pure Rust under `crates/`. Runs without Python.
@@ -23,6 +27,8 @@ you choose the right one for your use case.
   Rust engine performance.
 
 ### Capability matrix
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 | Component             | v1 legacy (Cython) | v2 Rust        | v2 PyO3 (Python on Rust) |
 |-----------------------|--------------------|----------------|--------------------------|
@@ -48,6 +54,8 @@ you choose the right one for your use case.
 | Config serialization  | ✓                  | -              | -                        |
 
 ### Adapters
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 | Adapter             | v1 legacy (Cython) | v2 Rust | v2 PyO3 |
 |---------------------|--------------------|---------|---------|

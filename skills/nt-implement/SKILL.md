@@ -3,6 +3,8 @@ name: nt-implement
 description: "Use when implementing nautilus_trader components. Provides templates for Strategy, Actor, Indicator, Custom Data, Execution Algorithm, Adapters, and custom simulation models (FillModel, MarginModel, PortfolioStatistic). Includes Rust+PyO3 implementation patterns."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Nautilus Trader Implementation
 
 ## Overview
@@ -939,7 +941,11 @@ mod python {
 }
 ```
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 ### FFI Memory Safety (for Cython interop)
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 When exposing Rust types to Cython via C FFI, follow the memory contract:
 

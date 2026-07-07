@@ -1,3 +1,7 @@
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 # ---
 # jupyter:
 #   jupytext:
@@ -20,6 +24,7 @@
 # Note: Use the jupytext python package to be able to open this python file in jupyter as a notebook.
 # Also run `jupytext-config set-default-viewer` to open jupytext python files as notebooks by default.
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # %%
 from nautilus_trader.adapters.databento import DATABENTO
 from nautilus_trader.adapters.databento import DatabentoDataClientConfig
@@ -191,6 +196,7 @@ data_clients: dict[str, LiveDataClientConfig] = {
     ),
 }
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # Configure the trading node
 config_node = TradingNodeConfig(
     trader_id=TraderId("TESTER-001"),
@@ -206,6 +212,7 @@ config_node = TradingNodeConfig(
     timeout_post_stop=0.0,  # Not required as no order state
 )
 
+# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 # %%
 node = TradingNode(config=config_node)
 node.trader.add_strategy(strategy)

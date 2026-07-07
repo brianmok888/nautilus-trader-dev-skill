@@ -3,6 +3,8 @@ name: nt-dev
 description: "Use when setting up NautilusTrader development environment, writing code that follows project conventions, running tests, benchmarks, managing releases, or understanding FFI memory contracts."
 ---
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # nt-dev
 
 ## What This Skill Covers
@@ -113,6 +115,8 @@ make format         # Auto-format all code
 make pre-commit     # Run full pre-commit suite
 ```
 
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
 After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` or `make build-debug`.
 
 ### IDE Configuration
@@ -205,7 +209,27 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 - **Logging**: `log::info!`, `log::warn!` etc. — always fully qualified
 - **Async**: `get_runtime().spawn()` in adapters (not `tokio::spawn()`); `#[tokio::test]` OK in tests
 
+### NT v2 transition baseline (1.231.0 Beta)
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+
+- NautilusTrader 1.231.0 is intended as the final 1.x release with legacy
+  Cython v1 core support; new feature work should target the Rust v2 / PyO3
+  runtime.
+- 2.0.0rc1 wheels are available on PyPI for `uv pip install --pre
+  nautilus_trader`; after the cutover, `develop` is v2-only and legacy v1
+  critical backports move to `develop_v1`.
+- Treat Rust MSRV 1.96.1 as the current upstream Rust baseline when aligning
+  examples, CI notes, and local toolchain checks.
+- Python v2 controller subclassing and importable controller configs are
+  supported for backtest/live orchestration.
+- Python v2 subclassable execution algorithms are supported for routed orders.
+- Python v2 `FeeModel` and `FillModel` subclass support enables custom
+  backtest models without falling back to legacy Cython extension patterns.
+
 ### Current Rust/PyO3 Deltas
+
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 - PyO3 properties: use `#[getter]` only for cheap, side-effect-free,
   attribute-like values. Use methods for actions, mutations, I/O, arguments,
