@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("nautilus_trader")
+
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.model.enums import AccountType, OmsType

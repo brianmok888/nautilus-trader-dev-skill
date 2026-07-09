@@ -8,6 +8,8 @@ All tests run offline — no RPC connections required.
 """
 
 import pytest
+
+pytest.importorskip("nautilus_trader")
 from decimal import Decimal
 
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue

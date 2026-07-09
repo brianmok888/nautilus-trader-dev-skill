@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/python/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/python.md
-sync_date: 2026-06-08
+sync_date: 2026-07-08
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---

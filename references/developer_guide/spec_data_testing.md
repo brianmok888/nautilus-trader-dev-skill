@@ -1,10 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/spec_data_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_data_testing.md
-sync_date: 2026-06-08
+sync_date: 2026-07-08
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
+
+NT v2 compatibility note: legacy/v1/Cython/TradingNode references in this file are labelled legacy/reference-only unless an adjacent paragraph explicitly says they are current Rust/PyO3/LiveNode guidance.
 
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 

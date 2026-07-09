@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("pydantic")
+
 _templates = Path(__file__).parent.parent / "templates"
 
 

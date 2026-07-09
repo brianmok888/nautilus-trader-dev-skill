@@ -3,6 +3,8 @@ name: nt-strategy-builder
 description: Use when building NautilusTrader backtesting, paper-trading, or live-trading systems
 ---
 
+NT v2 compatibility note: legacy/v1/Cython/TradingNode references in this file are labelled legacy/reference-only unless an adjacent paragraph explicitly says they are current Rust/PyO3/LiveNode guidance.
+
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 

@@ -5,6 +5,9 @@ Shared fixtures for unit and integration tests.
 """
 
 import pytest
+
+pytest.importorskip("nautilus_trader")
+
 from decimal import Decimal
 
 from nautilus_trader.backtest.engine import BacktestEngine

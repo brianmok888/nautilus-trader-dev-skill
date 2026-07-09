@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 
@@ -29,8 +30,13 @@ REQUIRED_GUIDE_FILES = [
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
-CURRENT_SYNC_DATE = "2026-06-08"
+CURRENT_SYNC_DATE = "2026-07-08"
+CURRENT_SYNC_COMMIT = "ff5fea909f6aba3b932d88e7e4a283c25195dee7"
+CURRENT_RELEASE_TAG = "v1.230.0"
+CURRENT_RELEASE_DATE = "2026-06-29"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
+CURRENT_DATE = "2026-07-09"
+SOURCE_STALE_AFTER_DAYS = 14
 
 
 ENTRY_SKILL = Path("skills/nt/SKILL.md")
@@ -390,6 +396,18 @@ LEGACY_GUIDANCE_TERMS = [
     "legacy Cython",
     "legacy v1 core",
     "Cython v1",
+    "ExecTesterConfig::new(",
+]
+
+LEGACY_GUIDANCE_PATTERNS = [
+    re.compile(
+        r"(?<!/api/)\bv1\b(?:[^\n]{0,80})\b(runtime|adapter|template|example|core|TradingNode)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\blegacy\b(?:[^\n]{0,80})\b(runtime|adapter|template|example|core|TradingNode)\b",
+        re.IGNORECASE,
+    ),
 ]
 LEGACY_LABEL_TERMS = [
     "migration",
@@ -615,6 +633,13 @@ def _block_has_label(block: str, labels: list[str]) -> bool:
     )
 
 
+def _has_file_level_label(text: str, labels: list[str]) -> bool:
+    head = "\n".join(text.splitlines()[:40])
+    if not _block_has_label(head, labels):
+        return False
+    return "whole file" in head.lower() or "in this file" in head.lower()
+
+
 def _strip_labelled_python_fences(text: str) -> str:
     def replace(match: re.Match[str]) -> str:
         block = match.group(1)
@@ -694,36 +719,52 @@ def _check_duplicate_compatibility_labels(root: Path, errors: list[str]) -> None
             previous_note = note
 
 
+def _has_legacy_guidance(text: str) -> bool:
+    return any(term in text for term in LEGACY_GUIDANCE_TERMS) or any(
+        pattern.search(text) for pattern in LEGACY_GUIDANCE_PATTERNS
+    )
+
+
+def _has_tradingnode_guidance(text: str) -> bool:
+    return TRADING_NODE_TERM in text
+
+
+def _check_unlabelled_tradingnode_guidance(root: Path, errors: list[str]) -> None:
+    for path in _iter_legacy_guidance_files(root):
+        text = _read(path)
+        text = _strip_labelled_python_fences(text)
+        if _has_file_level_label(text, TRADING_NODE_LABEL_TERMS):
+            continue
+        blocks = _split_guidance_blocks(text)
+        for index, block in enumerate(blocks):
+            if not _has_tradingnode_guidance(block):
+                continue
+            if _block_has_label(block, TRADING_NODE_LABEL_TERMS):
+                continue
+            context = _block_with_previous_context(blocks, index)
+            if _block_has_label(context, TRADING_NODE_LABEL_TERMS):
+                continue
+            errors.append(f"unlabelled TradingNode guidance in {_relative(path, root)}")
+            break
+
+
 def _check_unlabelled_legacy_guidance(root: Path, errors: list[str]) -> None:
     for path in _iter_legacy_guidance_files(root):
         text = _read(path)
-        if path.suffix == ".md":
-            text = _strip_labelled_python_fences(text)
-        relative = _relative(path, root)
+        text = _strip_labelled_python_fences(text)
+        if _has_file_level_label(text, LEGACY_LABEL_TERMS):
+            continue
         blocks = _split_guidance_blocks(text)
-
-        if TRADING_NODE_TERM in text:
-            if not all(
-                _block_has_label(
-                    _block_with_previous_context(blocks, index),
-                    TRADING_NODE_LABEL_TERMS,
-                )
-                for index, block in enumerate(blocks)
-                if TRADING_NODE_TERM in block
-            ):
-                errors.append(f"unlabelled TradingNode guidance in {relative}")
-
-        if any(term in text for term in LEGACY_GUIDANCE_TERMS):
-            if not all(
-                _block_has_label(
-                    _block_with_previous_context(blocks, index),
-                    LEGACY_LABEL_TERMS,
-                )
-                for index, block in enumerate(blocks)
-                if any(term in block for term in LEGACY_GUIDANCE_TERMS)
-            ):
-                errors.append(f"unlabelled legacy/Cython/v1 guidance in {relative}")
-
+        for index, block in enumerate(blocks):
+            if not _has_legacy_guidance(block):
+                continue
+            if _block_has_label(block, LEGACY_LABEL_TERMS):
+                continue
+            context = _block_with_previous_context(blocks, index)
+            if _block_has_label(context, LEGACY_LABEL_TERMS):
+                continue
+            errors.append(f"unlabelled legacy/Cython/v1 guidance in {_relative(path, root)}")
+            break
 
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
     absolute = root / ENTRY_SKILL
@@ -766,6 +807,39 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             errors.append(f"stale sync date in {relative.as_posix()}")
         if f"target: {CURRENT_TARGET}" not in text:
             errors.append(f"stale target in {relative.as_posix()}")
+
+
+def _check_source_sync_metadata(
+    errors: list[str],
+    *,
+    current_date: str = CURRENT_DATE,
+    sync_date: str = CURRENT_SYNC_DATE,
+    stale_after_days: int = SOURCE_STALE_AFTER_DAYS,
+) -> None:
+    age_days = (date.fromisoformat(current_date) - date.fromisoformat(sync_date)).days
+    if age_days > stale_after_days:
+        errors.append(
+            f"Source baseline snapshot is stale: sync_date {sync_date} is "
+            f"{age_days} days before {current_date}; refresh or relabel latest-docs claims."
+        )
+
+
+def _check_primary_adapter_templates(root: Path, errors: list[str]) -> None:
+    required_terms = ["Rust core", "PyO3", "LiveNode"]
+    for relative in [
+        Path("skills/nt-adapters/templates/exchange.py"),
+        Path("skills/nt-implement/templates/adapters/exchange.py"),
+    ]:
+        path = root / relative
+        if not path.exists():
+            continue
+        text = _read(path)
+        missing = [term for term in required_terms if term not in text]
+        if missing:
+            errors.append(
+                f"Primary adapter template is not Rust-first in {relative.as_posix()}: "
+                f"missing {', '.join(missing)}."
+            )
 
 
 def _check_retired_references(root: Path, errors: list[str]) -> None:
@@ -950,6 +1024,8 @@ def run_checks(root: Path) -> CheckResult:
 
     _check_entry_skill(root, errors)
     _check_required_guide_files(root, errors)
+    _check_source_sync_metadata(errors)
+    _check_primary_adapter_templates(root, errors)
     _check_retired_references(root, errors)
     _check_official_index_alignment(root, errors)
     _check_coinbase_status(root, errors)
@@ -959,6 +1035,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_python_shebang_positions(root, errors)
     _check_python_fence_compatibility_labels(root, errors)
     _check_duplicate_compatibility_labels(root, errors)
+    _check_unlabelled_tradingnode_guidance(root, errors)
     _check_unlabelled_legacy_guidance(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):

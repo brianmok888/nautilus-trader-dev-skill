@@ -4,6 +4,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tools import check_dev_guide_sync as sync
 from tools.check_dev_guide_sync import CheckResult
 from tools.check_dev_guide_sync import CURRENT_SYNC_DATE
 from tools.check_dev_guide_sync import CURRENT_TARGET
@@ -975,7 +976,105 @@ def test_ignores_non_core_legacy_and_version_mentions(tmp_path: Path) -> None:
     assert not any("unlabelled legacy/Cython/v1 guidance" in e for e in result.errors)
 
 
-def test_reports_file_level_legacy_label_in_curated_template(tmp_path: Path) -> None:
+
+
+def test_reports_unlabelled_generic_legacy_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills" / "nt-testing" / "SKILL.md",
+        "# Skill\n\nCopy the legacy adapter template when building a new venue.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
+def test_reports_unlabelled_v1_runtime_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills" / "nt-testing" / "SKILL.md",
+        "# Skill\n\nUse the v1 runtime adapter template for new venues.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
+def test_allows_api_v1_paths_in_current_adapter_docs(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references" / "integrations" / "venue.md",
+        "| `GET /api/v1/orders` | Adapter paginates current exchange orders. |\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
+def test_reports_unlabelled_exec_tester_config_new(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references" / "developer_guide" / "spec_exec_testing.md",
+        "# Spec Exec Testing\n\n"
+        "```rust\n"
+        "let config = ExecTesterConfig::new(StrategyConfig::default());\n"
+        "```\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
+def test_primary_adapter_template_must_be_rust_first(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills" / "nt-adapters" / "templates" / "exchange.py",
+        "# Default Python DataClient and ExecClient factory for TradingNode.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert any("not Rust-first" in error for error in errors)
+
+
+def test_primary_adapter_template_accepts_rust_first_livenode_boundary(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills" / "nt-adapters" / "templates" / "exchange.py",
+        "# Rust-first adapter template\n"
+        "# Rust core + PyO3 bindings with LiveNode Python control-plane wiring.\n"
+        "# TradingNode is legacy/reference-only and not the default.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any("not Rust-first" in error for error in errors)
+
+
+def test_source_sync_metadata_reports_stale_snapshot() -> None:
+    errors: list[str] = []
+
+    sync._check_source_sync_metadata(
+        errors,
+        current_date="2026-07-09",
+        sync_date="2026-06-08",
+        stale_after_days=14,
+    )
+
+    assert any("Source baseline snapshot is stale" in error for error in errors)
+
+
+def test_source_sync_metadata_accepts_recent_snapshot() -> None:
+    errors: list[str] = []
+
+    sync._check_source_sync_metadata(
+        errors,
+        current_date="2026-07-09",
+        sync_date="2026-07-08",
+        stale_after_days=14,
+    )
+
+    assert errors == []
+
+def test_allows_file_level_legacy_label_in_curated_template(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
         "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode\n"
@@ -990,7 +1089,7 @@ def test_reports_file_level_legacy_label_in_curated_template(tmp_path: Path) -> 
 
     assert (
         "unlabelled TradingNode guidance in "
-        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+        "skills/nt-strategy-builder/templates/live_node.py" not in result.errors
     )
 
 

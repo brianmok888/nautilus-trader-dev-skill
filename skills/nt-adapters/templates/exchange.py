@@ -1,211 +1,118 @@
-# -------------------------------------------------------------------------------------------------
-#  NautilusTrader Exchange Adapter Template
-#
-#  Use this template for full exchange adapters (data + execution).
-#  Components: DataClient + ExecClient + InstrumentProvider + Factories + Config
-# -------------------------------------------------------------------------------------------------
+"""
+Rust-first NautilusTrader v2 exchange adapter template.
 
-from nautilus_trader.common.config import NautilusConfig
-from nautilus_trader.common.providers import InstrumentProvider
-from nautilus_trader.live.data_client import LiveMarketDataClient
-from nautilus_trader.live.execution_client import LiveExecutionClient
-from nautilus_trader.live.factories import LiveDataClientFactory
-from nautilus_trader.live.factories import LiveExecClientFactory
-from nautilus_trader.model.identifiers import InstrumentId
-from nautilus_trader.model.identifiers import Venue
+Default architecture:
+- Rust core owns protocol/domain normalization, WebSocket/HTTP clients, signing,
+  order-book state, and request/response models.
+- PyO3 exposes a small Python extension package for NautilusTrader integration.
+- Python remains the control plane: configuration, factories, and LiveNode wiring.
 
+NT v2 compatibility note: TradingNode/Python-live factories are legacy/reference-only;
+do not use them as the default for new adapters.
+"""
 
-VENUE = Venue("MYEXCHANGE")
+from __future__ import annotations
 
-
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-class MyExchangeDataClientConfig(NautilusConfig, frozen=True):
-    """Configuration for MyExchange data client."""
-
-    api_key: str = ""
-    api_secret: str = ""
-    base_url: str = "https://api.myexchange.com"
-    ws_url: str = "wss://stream.myexchange.com"
-    # TODO: Add exchange-specific config fields
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 
-class MyExchangeExecClientConfig(NautilusConfig, frozen=True):
-    """Configuration for MyExchange execution client."""
+class RustExchangeCore(Protocol):
+    """PyO3 binding boundary implemented by the Rust adapter crate."""
 
-    api_key: str = ""
-    api_secret: str = ""
-    base_url: str = "https://api.myexchange.com"
-    ws_url: str = "wss://stream.myexchange.com"
-    # TODO: Add exchange-specific config fields
+    def load_instruments(self) -> list[Any]: ...
 
+    def start_data(self) -> None: ...
 
-# ---------------------------------------------------------------------------
-# Instrument Provider (shared by data + exec clients)
-# ---------------------------------------------------------------------------
+    def stop_data(self) -> None: ...
 
+    def submit_order(self, command: Any) -> Any: ...
 
-class MyExchangeInstrumentProvider(InstrumentProvider):
-    """Provides instrument definitions from MyExchange."""
-
-    def __init__(self, client, config=None):
-        super().__init__(config=config)
-        self._client = client
-
-    async def load_all_async(self, filters=None):
-        """Load all tradable instruments from exchange."""
-        # TODO: Fetch instrument info from exchange API
-        # Parse into NT instrument types (CryptoPerpetual, CurrencyPair, etc.)
-        # self.add(instrument)
-        pass
-
-    async def load_ids_async(self, instrument_ids: list[InstrumentId], filters=None):
-        """Load specific instruments by ID."""
-        pass
+    def cancel_order(self, command: Any) -> Any: ...
 
 
-# ---------------------------------------------------------------------------
-# Data Client
-# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class ExchangeAdapterConfig:
+    """Python control-plane config passed into the Rust core via PyO3."""
 
-class MyExchangeDataClient(LiveMarketDataClient):
-    """Market data client for MyExchange."""
-
-    def __init__(self, loop, client, msgbus, cache, clock, instrument_provider, config):
-        super().__init__(
-            loop=loop,
-            client_id=None,
-            venue=VENUE,
-            msgbus=msgbus,
-            cache=cache,
-            clock=clock,
-            instrument_provider=instrument_provider,
-            config=config,
-        )
-        self._client = client
-
-    async def _connect(self):
-        await self._instrument_provider.load_all_async()
-        # TODO: Connect WebSocket for streaming data
-
-    async def _disconnect(self):
-        # TODO: Close WebSocket connections
-        pass
-
-    async def _subscribe_trade_ticks(self, instrument_id: InstrumentId):
-        # TODO: Subscribe to trade stream via WebSocket
-        pass
-
-    async def _subscribe_quote_ticks(self, instrument_id: InstrumentId):
-        # TODO: Subscribe to orderbook/quote stream
-        pass
-
-    async def _subscribe_order_book_deltas(self, instrument_id: InstrumentId, **kwargs):
-        # TODO: Subscribe to order book delta stream
-        pass
-
-    async def _unsubscribe_trade_ticks(self, instrument_id: InstrumentId):
-        pass
-
-    async def _unsubscribe_quote_ticks(self, instrument_id: InstrumentId):
-        pass
+    venue: str
+    api_key: str | None = None
+    api_secret: str | None = None
+    base_url_http: str | None = None
+    base_url_ws: str | None = None
+    account_type: str = "spot"
 
 
-# ---------------------------------------------------------------------------
-# Execution Client
-# ---------------------------------------------------------------------------
+class ExchangeInstrumentProvider:
+    """Instrument provider delegates discovery/normalization to Rust core."""
 
-class MyExchangeExecClient(LiveExecutionClient):
-    """Execution client for MyExchange."""
+    def __init__(self, core: RustExchangeCore) -> None:
+        self._core = core
 
-    def __init__(self, loop, client, msgbus, cache, clock, instrument_provider, config):
-        super().__init__(
-            loop=loop,
-            client_id=None,
-            venue=VENUE,
-            oms_type=None,  # Set from venue config
-            account_type=None,  # Set from venue config
-            base_currency=None,
-            msgbus=msgbus,
-            cache=cache,
-            clock=clock,
-            instrument_provider=instrument_provider,
-            config=config,
-        )
-        self._client = client
-
-    async def _connect(self):
-        # TODO: Connect to execution WebSocket, authenticate
-        # Fetch account state:
-        #   self._handle_account_state(account_state)
-        pass
-
-    async def _disconnect(self):
-        # TODO: Close execution connections
-        pass
-
-    async def _submit_order(self, command):
-        """Submit order to exchange."""
-        # TODO: Convert command.order to exchange format
-        # TODO: Send via HTTP API
-        # TODO: Handle response, generate OrderAccepted/OrderRejected event
-        #   self._handle_event(order_accepted_event)
-        pass
-
-    async def _cancel_order(self, command):
-        """Cancel order on exchange."""
-        # TODO: Send cancel request
-        # TODO: Handle response, generate OrderCanceled event
-        pass
-
-    async def _modify_order(self, command):
-        """Modify order on exchange."""
-        # TODO: Send modify request (if exchange supports)
-        pass
-
-    async def generate_order_status_report(self, instrument_id, client_order_id, venue_order_id):
-        """Generate order status report for reconciliation."""
-        # TODO: Query exchange for order status
-        pass
-
-    async def generate_fill_reports(self, instrument_id, venue_order_id, start=None):
-        """Generate fill reports for reconciliation."""
-        # TODO: Query exchange for fill history
-        pass
-
-    async def generate_position_status_reports(self, instrument_id=None, start=None):
-        """Generate position reports for reconciliation."""
-        # TODO: Query exchange for positions
-        pass
+    def load_all(self) -> list[Any]:
+        return self._core.load_instruments()
 
 
-# ---------------------------------------------------------------------------
-# Factories
-# ---------------------------------------------------------------------------
+class ExchangeDataClient:
+    """Python Nautilus client wrapper around Rust market-data core."""
 
-class MyExchangeLiveDataClientFactory(LiveDataClientFactory):
-    """Factory for creating MyExchange data clients."""
+    def __init__(self, core: RustExchangeCore) -> None:
+        self._core = core
 
-    @staticmethod
-    def create(loop, name, config, msgbus, cache, clock):
-        client = None  # TODO: Create HTTP/WS client
-        provider = MyExchangeInstrumentProvider(client=client)
-        return MyExchangeDataClient(
-            loop=loop, client=client, msgbus=msgbus, cache=cache,
-            clock=clock, instrument_provider=provider, config=config,
-        )
+    def connect(self) -> None:
+        self._core.start_data()
+
+    def disconnect(self) -> None:
+        self._core.stop_data()
 
 
-class MyExchangeLiveExecClientFactory(LiveExecClientFactory):
-    """Factory for creating MyExchange execution clients."""
+class ExchangeExecClient:
+    """Python Nautilus execution wrapper around Rust order-entry core."""
 
-    @staticmethod
-    def create(loop, name, config, msgbus, cache, clock):
-        client = None  # TODO: Create HTTP/WS client
-        provider = MyExchangeInstrumentProvider(client=client)
-        return MyExchangeExecClient(
-            loop=loop, client=client, msgbus=msgbus, cache=cache,
-            clock=clock, instrument_provider=provider, config=config,
-        )
+    def __init__(self, core: RustExchangeCore) -> None:
+        self._core = core
+
+    def submit_order(self, command: Any) -> Any:
+        return self._core.submit_order(command)
+
+    def cancel_order(self, command: Any) -> Any:
+        return self._core.cancel_order(command)
+
+
+def build_rust_core(config: ExchangeAdapterConfig) -> RustExchangeCore:
+    """
+    Import the PyO3 module and construct the Rust core.
+
+    Replace `exchange_pyo3.ExchangeCore` with the crate module exported from
+    `crates/adapters/<venue>/src/python.rs`.
+    """
+
+    from exchange_pyo3 import ExchangeCore  # type: ignore[import-not-found]
+
+    return ExchangeCore(config)
+
+
+def build_exchange_adapter(config: ExchangeAdapterConfig) -> dict[str, Any]:
+    """Build the Python integration layer for a Rust-backed LiveNode."""
+
+    core = build_rust_core(config)
+    return {
+        "core": core,
+        "instrument_provider": ExchangeInstrumentProvider(core),
+        "data_client": ExchangeDataClient(core),
+        "exec_client": ExchangeExecClient(core),
+    }
+
+
+def wire_livenode(node: Any, config: ExchangeAdapterConfig) -> None:
+    """
+    Register Rust-backed clients with a LiveNode or equivalent v2 node surface.
+
+    Keep this function thin; adapter behavior belongs in the Rust core and its
+    capability-gated DataTester/ExecTester coverage.
+    """
+
+    adapter = build_exchange_adapter(config)
+    node.add_instrument_provider(config.venue, adapter["instrument_provider"])
+    node.add_data_client(config.venue, adapter["data_client"])
+    node.add_exec_client(config.venue, adapter["exec_client"])

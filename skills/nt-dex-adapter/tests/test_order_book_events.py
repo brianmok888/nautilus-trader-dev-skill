@@ -10,6 +10,8 @@ Verifies:
 
 import pytest
 
+pytest.importorskip("nautilus_trader")
+
 import importlib.util
 from pathlib import Path
 
