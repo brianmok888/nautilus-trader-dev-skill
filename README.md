@@ -4,7 +4,7 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 
 ## Overview
 
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-17; the upstream `develop` source package is 1.231.0 and PyPI pre-release readiness tracks 2.0.0rc1 / the documented `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-17; the upstream `develop` Rust workspace is `0.61.x` (`rust-version` 1.97.0) and the Python package version is derived at build from `nautilus_pyo3.NAUTILUS_VERSION`; PyPI pre-release readiness tracks 2.0.0rc1 / the documented `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
 
 ## Skills Map
 
@@ -38,6 +38,8 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 │   nt-model        Core domain objects, identifiers, instruments             │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
+
+> **V2 boundary**: live/production skills route new Rust-backed work to `LiveNode`; the legacy Python-live `TradingNode` path is retained for migration/reference only (see each skill's "NT v2 compatibility note" for the labelled legacy surface).
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                     DEVELOPER GUIDE & TESTING (2 skills)                     │
@@ -95,7 +97,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-signals` | Indicators, order books, analysis | Technical indicators, book imbalance |
 | `nt-data` | Market data types and pipelines | Subscriptions, catalogs, data model |
 | `nt-backtest` | Backtesting engine and config | BacktestEngine, actors, fill models |
-| `nt-live` | Live trading and production ops | LiveNode / TradingNode boundary, adapters, reconciliation |
+| `nt-live` | Live trading and production ops | `LiveNode` (Rust-backed v2) vs legacy Python-live `TradingNode` boundary, adapters, reconciliation |
 | `nt-adapters` | CeFi adapter specification | 7-phase implementation, 118KB official spec |
 | `nt-model` | Core domain objects | Instruments, identifiers, value objects |
 

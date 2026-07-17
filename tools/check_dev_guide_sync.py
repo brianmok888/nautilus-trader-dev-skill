@@ -413,9 +413,9 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
 }
 
 
-LEGACY_GUIDANCE_ROOTS = ("skills", "references")
+LEGACY_GUIDANCE_ROOTS = ("skills", "references", "docs")
 LEGACY_GUIDANCE_SUFFIXES = {".capnp", ".md", ".py", ".pyi", ".rs", ".toml"}
-LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__"}
+LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__", "superpowers"}
 TRADING_NODE_TERM = "TradingNode"
 TRADING_NODE_LABEL_TERMS = [
     "Python live",

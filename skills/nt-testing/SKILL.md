@@ -241,6 +241,13 @@ config = DataTesterConfig(
 
 The ExecTesterConfig API validates order lifecycle per venue. Each adapter has specific execution test configs.
 
+> **Rust-first / V2 default**: for Rust-backed adapters, the primary execution-test path is the
+> Rust `nautilus_testkit::testers::ExecTesterConfig` builder (see
+> [Current Rust ExecTesterConfig API](#current-rust-exectesterconfig-api) below). The Python
+> `ExecTesterConfig` API documented next is retained for Python-only integration work and the
+> AI/advisory lane, and as the reference matrix that the Rust path mirrors. New Rust adapter
+> docs should lead with the Rust builder, not the Python examples.
+
 ### ExecTesterConfig API
 
 ```python

@@ -920,6 +920,35 @@ def test_accepts_labelled_tradingnode_guidance(tmp_path: Path) -> None:
     assert not any("unlabelled TradingNode guidance" in e for e in result.errors)
 
 
+def test_reports_unlabelled_tradingnode_guidance_in_docs(tmp_path: Path) -> None:
+    write(
+        tmp_path / "docs" / "end_to_end_guide.md",
+        "Enable Redis/Postgres in TradingNodeConfig to save state.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled TradingNode guidance in docs/end_to_end_guide.md"
+        in result.errors
+    )
+
+
+def test_ignores_superpowers_meta_docs(tmp_path: Path) -> None:
+    write(
+        tmp_path / "docs" / "superpowers" / "plans" / "migration.md",
+        "Treat nautilus_trader.live.node.TradingNode as legacy v1.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any(
+        "unlabelled TradingNode guidance in docs/superpowers" in e
+        for e in result.errors
+    )
+
+
 def test_reports_unlabelled_legacy_cython_guidance(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-dev/references/guides/ffi.md",

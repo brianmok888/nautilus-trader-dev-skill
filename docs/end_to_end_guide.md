@@ -104,7 +104,7 @@ Create the live trading node.
 
 ### Step 2: Environment & Resilience
 
-1.  **Persistence**: Enable Redis/Postgres in `TradingNodeConfig` to save state.
+1.  **Persistence**: Enable Redis/Postgres in `TradingNodeConfig` to save state. NT v2 compatibility note: Python live/integration-specific `TradingNode`/`TradingNodeConfig`; for Rust v2 / Rust-backed work use `LiveNode`.
     ```python
     database=DatabaseConfig(type="redis", ...)
     ```
