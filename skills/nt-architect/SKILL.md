@@ -106,6 +106,39 @@ Research Element
     │                               - Feature vectors
 ```
 
+#### Language boundary: Rust core vs Python (V2 default)
+
+V2 is Rust-core with Python bindings. After assigning each element to a
+component above, assign its *language* using this boundary. The default for
+new V2 work is Rust; Python is reserved for the boundaries listed below.
+
+NT v2 compatibility note: this whole file references the legacy Python-live `TradingNode` only as reference-only context for migration; for Rust v2 / Rust-backed work use `LiveNode`.
+
+| Concern | Default language | Notes |
+|---|---|---|
+| Networking clients (HTTP/WebSocket), request signing, rate limiting | **Rust** (`crates/adapters/<venue>/src/{http,websocket}`) | Performance-critical; mirror the official adapter crate layout |
+| Venue parsing / data normalization | **Rust** (`crates/adapters/<venue>/src/common/parse.rs`) | Hot path |
+| Core domain model, identifiers, value types, engine state | **Rust** (`crates/`) | Execution-critical state stays in Rust |
+| Live node plumbing, execution engine | **Rust** (`LiveNode`, Rust-backed) | Prefer `LiveNode` for new production; legacy Python-live `TradingNode` is reference-only |
+| User strategy logic, config, orchestration | **Python** (PyO3 stubs) | Strategy/config boundaries |
+| AI / advisory lane (model inference, signal aggregation, EvoMap) | **Python**, async, off the hot path | Never execution-critical |
+
+Official Rust adapter crate layout (from the developer guide) to target when an
+element belongs in Rust:
+
+```
+crates/adapters/your_adapter/
+├── src/
+│   ├── common/    # consts.rs credential.rs enums.rs error.rs models.rs parse.rs retry.rs urls.rs testing.rs
+│   ├── http/      # client.rs error.rs models.rs parse.rs query.rs   (REST + auth + rate limit)
+│   └── websocket/ # client.rs dispatch.rs handler.rs messages.rs parse.rs subscription.rs
+```
+
+Rule of thumb: if the element sits on the networking/parse/perf/state path it
+goes in Rust; if it is user-facing strategy/config or the AI lane it stays in
+Python. Keep the AI/advisory lane asynchronous and never on an execution-
+critical path.
+
 ### Phase 3: Data Flow Design
 
 #### Message Bus Patterns

@@ -365,6 +365,10 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
         "missing invariant 'message immutability' in skills/nt-architect/SKILL.md"
         in result.errors
     )
+    assert (
+        "missing invariant 'crates/adapters/' in skills/nt-architect/SKILL.md"
+        in result.errors
+    )
 
 
 def test_reports_missing_live_runtime_boundary_terms(tmp_path: Path) -> None:
@@ -1589,7 +1593,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-architect/SKILL.md",
-        "Preserve message immutability in designs.\n"
+        "Preserve message immutability in designs. Layout Rust adapters under crates/adapters/.\n"
         "Rust-oriented v2.0 readiness means Rust core owns networking and execution-critical state. "
         "The AI/advisory lane remains Python.\n",
     )
