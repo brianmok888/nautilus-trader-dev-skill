@@ -337,6 +337,7 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-testing/SKILL.md", "# Testing\n")
     write(tmp_path / "skills/nt-adapters/SKILL.md", "# Adapters\n")
     write(tmp_path / "skills/nt-architect/SKILL.md", "# Architect\n")
+    write(tmp_path / "skills/nt-implement/SKILL.md", "# Implement\n")
 
     result = run_checks(tmp_path)
 
@@ -367,6 +368,10 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     )
     assert (
         "missing invariant 'crates/adapters/' in skills/nt-architect/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'V2 cutover' in skills/nt-implement/SKILL.md"
         in result.errors
     )
 
@@ -1658,7 +1663,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-implement/SKILL.md",
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
-        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n",
+        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead. "
+        "V2 cutover: route networking/parsing adapters under crates/adapters/ to Rust.\n",
     )
     write(
         tmp_path / "skills/nt-dex-adapter/rules/dos_and_donts.md",

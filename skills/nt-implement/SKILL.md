@@ -87,7 +87,9 @@ unless an official source explicitly documents a local mutable builder pattern.
 ## Implementation Workflow
 
 1. Start from architecture document
-2. Implement in dependency order:
+2. Implement in dependency order, choosing the **language** for each component
+   using the V2 cutover map below (default for new V2 work is Rust for
+   performance/state paths; Python for user strategy/config/AI lane):
    - Custom Data Types (if needed)
    - Custom Models (FillModel, MarginModel if backtesting)
    - Indicators
@@ -96,6 +98,28 @@ unless an official source explicitly documents a local mutable builder pattern.
    - Execution Algorithms (if needed)
    - Portfolio Statistics (for analysis)
 3. Validate each component before proceeding
+
+### V2 cutover: implement-in-which-language map
+
+NT v2 compatibility note: this whole file references the legacy Python-live
+`TradingNode` only as reference-only context for migration; for Rust v2 /
+Rust-backed work use `LiveNode`.
+
+| Component | Default language for V2 cutover | Notes |
+|---|---|---|
+| Custom Data Types | **Python** (`@customdataclass`, PyO3 stubs) | User-facing data crossing the message bus |
+| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
+| Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
+| Actors (model hosting, regime detection, signal aggregation) | **Python** unless performance-critical | AI/advisory inference stays Python, async, off the hot path |
+| Strategies (order/position logic, entry/exit) | **Python** (PyO3 stubs) | User strategy/config surface is Python in V2 |
+| Execution Algorithms | **Rust** (`crates/exec-algo/`, PyO3-exposed) | Execution-critical path stays in Rust |
+| Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
+| Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
+| Live node plumbing | **Rust** (`LiveNode`) | Prefer `LiveNode` for new production; `TradingNode` is legacy Python-live |
+
+Rule of thumb: if the component sits on the networking/parse/perf/state/execution
+path it is a Rust cutover target; if it is user strategy/config or the AI lane it
+stays Python. When unsure, check the architecture document's language boundary.
 
 ## EvoMap Sidecar Implementation Pattern (Optional)
 

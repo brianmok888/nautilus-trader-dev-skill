@@ -116,6 +116,7 @@ INVARIANT_TARGETS = {
         "`Live` / `LIVE`",
     ],
     Path("skills/nt-architect/SKILL.md"): ["message immutability", "crates/adapters/"],
+    Path("skills/nt-implement/SKILL.md"): ["V2 cutover", "crates/adapters/"],
     Path("skills/nt-data/SKILL.md"): ["time_bars_origin_offset", "order_owned"],
     Path("skills/nt-signals/SKILL.md"): ["priority", "ContinuousFutureAdjustmentType"],
     Path("skills/nt-trading/SKILL.md"): [
