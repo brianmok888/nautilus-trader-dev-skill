@@ -76,6 +76,7 @@ or misses current v2 migration fixes:
   `StrategyConfig`, and `ExecutionAlgorithmConfig`.
 - subclassable PyO3 stubs must not be marked final when controllers, execution
   algorithms, `FeeModel`, or `FillModel` are intended to be subclassed.
+- **Rust-oriented v2.0 readiness**: fail reviews that add unlabelled legacy/Cython/v1 guidance, route new performance or live-node work away from Cython/v1 templates, and keep Rust/PyO3/`LiveNode` as the default target.
 - v2 wranglers must detect raw fixed-point overflow before Arrow conversion.
 - Live reconciliation recency checks must use monotonic time and account for
   `RecencyMap`-based tracking.

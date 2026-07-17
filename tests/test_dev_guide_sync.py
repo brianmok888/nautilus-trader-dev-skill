@@ -39,6 +39,9 @@ def write_entry_skill(root: Path) -> None:
         "# Entry-point/router skill\n"
         "## Source of truth\n"
         "Use nautechsystems/nautilus_trader as source.\n"
+        "## Rust-oriented v2.0 readiness\n"
+        "Default new work is Rust-first/PyO3/LiveNode oriented. "
+        "AI/advisory lane remains Python and off execution-critical paths.\n"
         f"{routes}\n",
     )
 
@@ -554,7 +557,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            + "Rust MSRV 1.96.1 2.0.0rc1 develop_v1 Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
+            + "rust-toolchain.toml 1.97.0 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
@@ -576,7 +579,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
-        "1.231.0 final 1.x 2.0.0rc1 develop_v1 Rust MSRV 1.96.1 "
+        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.97.0 "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -723,8 +726,8 @@ def test_reports_runtime_boundary_terms_scattered_across_paragraphs(
 def test_reports_missing_execution_testing_contract_details(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
-        "Use DataTester and ExecTester evidence. Adapter baseline matrix. "
-        "Account reconciliation matrix. limit_aggressive test_modify_rejected DST readiness "
+        "Use DataTester and ExecTester evidence. limit_aggressive "
+        "test_modify_rejected DST readiness "
         "file sha256 size_bytes original_url licence added_at TC-E74 TC-E78 "
         "local prepare-failure carve-out OrderCancelRejected OrderModifyRejected "
         "due_post_only=true trigger-order signing expiry.\n",
@@ -930,6 +933,56 @@ def test_reports_unlabelled_legacy_cython_guidance(tmp_path: Path) -> None:
         "unlabelled legacy/Cython/v1 guidance in "
         "skills/nt-dev/references/guides/ffi.md" in result.errors
     )
+
+
+def test_reports_unlabelled_cython_language_constructs(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-data/templates/wrangler.py",
+        "cimport nautilus_trader.model.objects as objects\n"
+        "cdef class RustBypassWrangler:\n"
+        "    cpdef object handle(self, object item):\n"
+        "        return item\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-data/templates/wrangler.py" in result.errors
+    )
+
+
+def test_reports_unlabelled_legacy_guidance_in_rust_references(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-adapters/references/examples/rust_adapter.rs",
+        "let config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, qty);\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-adapters/references/examples/rust_adapter.rs" in result.errors
+    )
+
+
+def test_accepts_labelled_legacy_guidance_in_rust_references(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-adapters/references/examples/rust_adapter.rs",
+        "// NT v2 compatibility note: migration/reference-only legacy constructor; "
+        "prefer ExecTesterConfig::builder() for new Rust examples.\n"
+        "let config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, qty);\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any("unlabelled legacy/Cython/v1 guidance" in e for e in result.errors)
 
 
 def test_accepts_locally_labelled_legacy_reference_block(tmp_path: Path) -> None:
@@ -1260,26 +1313,56 @@ def test_reports_duplicate_python_fence_compatibility_labels(tmp_path: Path) -> 
     )
 
 
-def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
-    write(tmp_path / "skills/nt-dev/SKILL.md", "Rust v2 and PyO3 are preferred.\n")
-    write(tmp_path / "skills/nt-live/SKILL.md", "Use LiveNode for Rust v2.\n")
-    write(tmp_path / "skills/nt-review/SKILL.md", "Review PyO3 code.\n")
-    write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
-    write(tmp_path / "references/developer_guide/rust.md", "Rust guidance.\n")
+
+
+def test_reports_missing_rust_oriented_v2_readiness_boundary(tmp_path: Path) -> None:
+    write(tmp_path / "README.md", "Nautilus skills.\n")
+    write(tmp_path / "skills/nt/SKILL.md", "Route NautilusTrader skills.\n")
+    write(tmp_path / "skills/nt-dev/SKILL.md", "Rust v2 development.\n")
+    write(tmp_path / "skills/nt-review/SKILL.md", "Review Rust code.\n")
+    write(tmp_path / "skills/nt-architect/SKILL.md", "Keep advisory workflows isolated.\n")
 
     result = run_checks(tmp_path)
 
     assert result.ok is False
     assert (
-        "missing NT v2 cutover term '1.231.0' in skills/nt-dev/SKILL.md"
+        "missing Rust-oriented v2 readiness term 'Rust-oriented v2.0 readiness' "
+        "in README.md" in result.errors
+    )
+    assert (
+        "missing Rust-oriented v2 readiness term 'AI/advisory lane remains Python' "
+        "in skills/nt-architect/SKILL.md" in result.errors
+    )
+def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-dev/SKILL.md",
+        "Python v2 controller subclassing, subclassable execution algorithms, FeeModel, "
+        "FillModel.\n",
+    )
+    write(tmp_path / "skills/nt-live/SKILL.md", "Use LiveNode for Rust v2.\n")
+    write(tmp_path / "skills/nt-review/SKILL.md", "Review PyO3 code.\n")
+    write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
+    write(
+        tmp_path / "references/developer_guide/rust.md",
+        "Rust guidance with rust-toolchain.toml 1.97.0 "
+        "Generated Python bindings HIGH_PRECISION=true py-stubs-v2 "
+        "ffi,python,high-precision,defi "
+        "arrow,ffi,python,high-precision,streaming,defi.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT v2 cutover term 'v1.230.0' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
-        "missing NT v2 cutover term '2.0.0rc1' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term 'rust-toolchain.toml' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
-        "missing NT v2 cutover term 'develop_v1' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term '1.97.0' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -1295,7 +1378,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
         "in skills/nt-testing/SKILL.md" in result.errors
     )
     assert (
-        "missing NT v2 rust term 'Rust MSRV 1.96.1' "
+        "missing NT v2 rust term 'v1.230.0' "
         "in references/developer_guide/rust.md" in result.errors
     )
 
@@ -1419,8 +1502,11 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "pip-audit maturin\n"
         ),
         "rust.md": (
+            "v1.230.0 rust-toolchain.toml 1.97.0 "
             "Generated FFI bindings and precision mode HIGH_PRECISION=true\n"
             "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
+            "ffi,python,high-precision,defi\n"
+            "Generated Python bindings arrow,ffi,python,high-precision,streaming,defi\n"
             "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
         ),
         "python.md": (
@@ -1474,7 +1560,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-architect/SKILL.md",
-        "Preserve message immutability in designs.\n",
+        "Preserve message immutability in designs.\n"
+        "Rust-oriented v2.0 readiness means Rust core owns networking and execution-critical state. "
+        "The AI/advisory lane remains Python.\n",
     )
     write(
         tmp_path / "skills/nt-data/SKILL.md",
@@ -1501,7 +1589,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         tmp_path / "skills/nt-dev/SKILL.md",
         "NT v2 compatibility note: legacy Cython/v1 reference-only; "
         "prefer Rust v2/PyO3 for new work.\n"
-        "1.231.0 final 1.x 2.0.0rc1 develop_v1 Rust MSRV 1.96.1 "
+        "Rust-oriented v2.0 readiness: v1.230.0 latest release, 1.231.0 develop source, "
+        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.97.0. "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         "Do not copy current version numbers into docs. Generated FFI bindings and precision mode "
@@ -1509,6 +1598,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Tokio worker threads from running Python code. Typed CVec wrappers and Send are required "
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
+        "v1.230.0 rust-toolchain.toml 1.97.0 "
         "Generated Python artifacts make py-stubs-v2 arrow,ffi,python,high-precision,streaming,defi.\n"
         "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
@@ -1524,6 +1614,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         tmp_path / "skills/nt-review/SKILL.md",
         "NT v2 compatibility note: Python live/integration-specific TradingNode; "
         "use LiveNode for Rust v2/Rust-backed work.\n"
+        "NT v2 compatibility note: migration/reference-only legacy labels in this file; "
+        "prefer Rust v2/PyO3 for new work.\n"
+        "Rust-oriented v2.0 readiness rejects unlabelled legacy/Cython/v1 guidance. "
         "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific. "
         "Generated Python artifacts make py-stubs-v2. Python v2 config stub/readback drift, "
         "subclassable PyO3 stubs, v2 wranglers, raw fixed-point overflow, RecencyMap, "
@@ -1580,8 +1673,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            + "Rust MSRV 1.96.1 2.0.0rc1 develop_v1 Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
-            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "v1.230.0 1.231.0 rust-toolchain.toml 1.97.0 Generated Python bindings HIGH_PRECISION=true py-stubs-v2 ffi,python,high-precision,defi.\n"
+            + "2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
+            + "ffi,python,high-precision,defi arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
         )

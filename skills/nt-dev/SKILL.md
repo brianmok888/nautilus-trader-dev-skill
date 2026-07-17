@@ -217,6 +217,11 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   Preserve legacy Cython/v1 guidance where explicitly labelled, but target
   Rust v2 / PyO3 for new Rust-backed work only when the required engine,
   adapter, and test coverage exist.
+- Upstream `develop` source package version is 1.231.0; PyPI pre-release
+  readiness tracks 2.0.0rc1 and the official docs describe the v2
+  release-candidate line as `2.0.0rcN` before final 2.0.0.
+- Rust-oriented v2.0 readiness is the default: Rust core first, PyO3 bindings
+  second, Python only for user strategy/configuration and AI/advisory lanes.
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.

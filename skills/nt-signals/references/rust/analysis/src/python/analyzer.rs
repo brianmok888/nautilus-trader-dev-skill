@@ -262,12 +262,12 @@ impl PortfolioAnalyzer {
 
     #[pyo3(name = "add_positions")]
     fn py_add_positions(&mut self, py: Python, positions: Vec<Py<PyAny>>) -> PyResult<()> {
-        // Extract Position objects from Cython wrappers
+        // Extract Position objects from Python wrappers
         let positions: Vec<Position> = positions
             .iter()
             .map(|p| {
                 // Try to get the underlying Rust Position
-                // For now, we'll need to handle Cython Position by accessing its _mem field
+                // For now, handle Python Position wrappers by accessing their _mem field
                 p.getattr(py, "_mem")?
                     .extract::<Position>(py)
                     .map_err(Into::into)

@@ -18,10 +18,12 @@
 //! This example demonstrates paper trading against live CME futures data from Databento
 //! using the sandbox execution client for order simulation.
 //!
-//! Run with: `cargo run --example databento-cme-sandbox --package nautilus-sandbox`
+//! Edit the constants below to change the target instrument, account, and order size.
 //!
-//! Environment variables:
-//! - DATABENTO_API_KEY: Your Databento API key
+//! Run with: `cargo run --example databento-cme-sandbox --package nautilus-sandbox --features example-databento`
+//!
+//! Required credential environment variables:
+//! - `DATABENTO_API_KEY`.
 
 use std::path::PathBuf;
 
@@ -36,20 +38,28 @@ use nautilus_model::{
 };
 use nautilus_sandbox::{SandboxExecutionClientConfig, SandboxExecutionClientFactory};
 use nautilus_testkit::testers::{ExecTester, ExecTesterConfig};
+use nautilus_trading::strategy::StrategyConfig;
 use rust_decimal::Decimal;
+
+const TRADER_ID: &str = "SANDBOX-001";
+const NODE_NAME: &str = "DATABENTO-CME-SANDBOX";
+const VENUE: &str = "XCME";
+const ACCOUNT_ID: &str = "XCME-SANDBOX-001";
+const STRATEGY_ID: &str = "SANDBOX_TESTER-001";
+const CLIENT_ID: &str = "DATABENTO";
+const INSTRUMENT_ID: &str = "ESM6.XCME";
+const ORDER_QTY: &str = "1";
+const STARTING_BALANCE: f64 = 1_000_000.0;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
     let environment = Environment::Live;
-    let trader_id = TraderId::from("SANDBOX-001");
-    let node_name = "DATABENTO-CME-SANDBOX".to_string();
+    let trader_id = TraderId::from(TRADER_ID);
+    let node_name = NODE_NAME.to_string();
 
-    let api_key = get_env_var("DATABENTO_API_KEY").unwrap_or_else(|_| {
-        println!("WARNING: DATABENTO_API_KEY not found, using placeholder");
-        "db-placeholder-key".to_string()
-    });
+    let api_key = get_env_var("DATABENTO_API_KEY")?;
 
     let publishers_filepath = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -71,10 +81,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         true, // bars_timestamp_on_close
     );
 
-    let xcme_venue = Venue::new("XCME");
-    let account_id = AccountId::from("XCME-SANDBOX-001");
+    let xcme_venue = Venue::new(VENUE);
+    let account_id = AccountId::from(ACCOUNT_ID);
     let usd = Currency::USD();
-    let starting_balance = Money::new(1_000_000.0, usd);
+    let starting_balance = Money::new(STARTING_BALANCE, usd);
 
     let sandbox_config = SandboxExecutionClientConfig {
         trader_id,
@@ -87,6 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         default_leverage: Decimal::ONE,
         leverages: ahash::AHashMap::new(),
         book_type: BookType::L1_MBP,
+        fee_model: None,
         frozen_account: false,
         bar_execution: true,
         trade_execution: false,
@@ -110,28 +121,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Box::new(databento_factory),
             Box::new(databento_config),
         )?
-        .add_exec_client(
-            Some("XCME".to_string()),
+        .add_simulated_exec_client(
+            Some(VENUE.to_string()),
             Box::new(sandbox_factory),
             Box::new(sandbox_config),
         )?
         .with_delay_post_stop_secs(2)
         .build()?;
 
-    let instrument_id = InstrumentId::from("ESM6.XCME");
-    let client_id = ClientId::new("DATABENTO");
+    let instrument_id = InstrumentId::from(INSTRUMENT_ID);
+    let client_id = ClientId::new(CLIENT_ID);
+    let order_qty = Quantity::from(ORDER_QTY);
 
-    let mut tester_config = ExecTesterConfig::new(
-        StrategyId::from("SANDBOX_TESTER-001"),
-        instrument_id,
-        client_id,
-        Quantity::from("1"), // 1 contract
-    )
-    .with_subscribe_trades(true)
-    .with_subscribe_quotes(true)
-    .with_log_data(true);
-
-    tester_config.base.use_uuid_client_order_ids = true;
+    let tester_config = ExecTesterConfig::builder()
+        .base(StrategyConfig {
+            strategy_id: Some(StrategyId::from(STRATEGY_ID)),
+            use_uuid_client_order_ids: true,
+            ..Default::default()
+        })
+        .instrument_id(instrument_id)
+        .client_id(client_id)
+        .order_qty(order_qty)
+        .build()?;
 
     let tester = ExecTester::new(tester_config);
 

@@ -34,6 +34,7 @@ If the system integrates with EvoMap, LangChain, or LangGraph, model it as an **
 - **Execution authority stays local**: only Strategy/Actor logic inside Nautilus can affect orders.
 - **Advisory-only contract**: EvoMap outputs are suggestions, never auto-applied trading rule changes.
 - **Non-blocking architecture**: Proxy mailbox, LangChain, and LangGraph flows must run off the hot trading path.
+- **Rust-oriented v2.0 readiness**: Rust core owns networking, parsing, normalization, execution-critical state, and live-node plumbing; Python owns user strategy/configuration boundaries. The AI/advisory lane remains Python, asynchronous, auditable, and never execution-critical.
 - **Deterministic fallback**: define behavior when EvoMap is unavailable (continue local strategy, log degraded mode).
 - **Provenance**: include IDs linking internal decisions to external suggestion snapshots.
 - **Graph boundary**: LangGraph `StateGraph` checkpoints and human-in-the-loop interrupts are review artifacts, not executable trading state.

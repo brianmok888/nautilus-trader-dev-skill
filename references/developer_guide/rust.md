@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/latest/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-sync_date: 2026-07-08
+sync_date: 2026-07-17
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 ---
@@ -20,9 +20,12 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 
 - v1.230.0 is the latest NautilusTrader release baseline as of 2026-07-17.
   Legacy Cython/v1 guidance remains valid where explicitly labelled.
-- Treat v2 Rust/PyO3 as readiness-scoped: use it for new Rust-backed work
-  where the required engine, adapter, and test coverage exist; do not assume
-  complete v1-equivalent coverage.
+- Upstream `develop` source package version is 1.231.0; PyPI pre-release
+  readiness tracks 2.0.0rc1 and the official docs describe the v2
+  release-candidate line as `2.0.0rcN` before final 2.0.0.
+- Treat v2 Rust/PyO3/`LiveNode` work as the default for new Rust-backed code;
+  Cython/v1 references are migration/reference-only unless a paragraph says it is
+  current v2 guidance.
 - `rust-toolchain.toml` is the authority for the local Rust toolchain. Current
   source alignment uses Rust 1.97.0; public docs may still mention 1.96.x while
   they catch up.

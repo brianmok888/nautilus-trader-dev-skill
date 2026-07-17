@@ -50,8 +50,8 @@ impl LongRatio {
             return Ok(None);
         }
 
-        // Extract entry side from each Cython Position object
-        // OrderSide.Buy has value 1 in both Cython and Rust
+        // Extract entry side from each Python Position object
+        // OrderSide.Buy has value 1 across the Python wrapper and Rust enum
         let mut longs = 0;
         for position in &positions {
             let entry = position.getattr(py, "entry")?;

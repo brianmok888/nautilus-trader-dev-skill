@@ -320,7 +320,7 @@ let tester_config = ExecTesterConfig::builder()
 ### Adapter baseline matrix
 
 Baseline adapter execution compliance means the adapter passes ExecTester groups
-1-5 after DataTester groups 1-4 connectivity and data-flow coverage are already verified. Record the venue
+1–5 after DataTester groups 1-4 connectivity and data-flow coverage are already verified. Record the venue
 capability matrix in the adapter guide, including order types, TIFs, post-only
 behavior, modify/cancel support, trigger-order behavior, and which testnet/demo
 credentials and instruments were used. Do not claim baseline readiness from

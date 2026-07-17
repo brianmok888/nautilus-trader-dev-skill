@@ -58,6 +58,10 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 | Review NautilusTrader code before merge/live use | `nt-review` | `nt-testing`, relevant domain skill |
 | EvoMap advisory sidecar integration | `nt-evomap-integration` | `nt-architect`, `nt-review` |
 
+## Rust-oriented v2.0 readiness
+
+Default new work is Rust-first/PyO3/`LiveNode` oriented. Treat Python as the user strategy/configuration surface. The AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+
 ## Default workflows
 
 ### New trading system

@@ -30,12 +30,12 @@ REQUIRED_GUIDE_FILES = [
 ]
 
 METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
-CURRENT_SYNC_DATE = "2026-07-08"
-CURRENT_SYNC_COMMIT = "ff5fea909f6aba3b932d88e7e4a283c25195dee7"
+CURRENT_SYNC_DATE = "2026-07-17"
+CURRENT_SYNC_COMMIT = "63d8dd00e12225e06c4d00a63c357e59695adffa"
 CURRENT_RELEASE_TAG = "v1.230.0"
 CURRENT_RELEASE_DATE = "2026-06-29"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
-CURRENT_DATE = "2026-07-09"
+CURRENT_DATE = "2026-07-17"
 SOURCE_STALE_AFTER_DAYS = 14
 
 
@@ -298,11 +298,13 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
 
 NT_V2_CUTOVER_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
+        "v1.230.0",
         "1.231.0",
-        "final 1.x",
         "2.0.0rc1",
-        "develop_v1",
-        "Rust MSRV 1.96.1",
+        "2.0.0rcN",
+        "release-candidate",
+        "rust-toolchain.toml",
+        "1.97.0",
         "Python v2 controller subclassing",
         "subclassable execution algorithms",
         "FeeModel",
@@ -345,13 +347,47 @@ NT_V2_TESTING_TARGETS = {
 
 NT_V2_RUST_TARGETS = {
     Path("references/developer_guide/rust.md"): [
-        "Rust MSRV 1.96.1",
+        "v1.230.0",
+        "1.231.0",
         "2.0.0rc1",
-        "develop_v1",
-        "Python v2 controller subclassing",
-        "subclassable execution algorithms",
-        "FeeModel",
-        "FillModel",
+        "2.0.0rcN",
+        "release-candidate",
+        "rust-toolchain.toml",
+        "1.97.0",
+        "Generated Python artifacts",
+        "HIGH_PRECISION=true",
+        "py-stubs-v2",
+        "ffi,python,high-precision,defi",
+    ],
+}
+
+RUST_ORIENTED_V2_READINESS_TARGETS = {
+    Path("README.md"): [
+        "Rust-oriented v2.0 readiness",
+        "AI/advisory lane remains Python",
+        "2.0.0rc1",
+    ],
+    Path("skills/nt/SKILL.md"): [
+        "Rust-oriented v2.0 readiness",
+        "AI/advisory lane remains Python",
+    ],
+    Path("skills/nt-dev/SKILL.md"): [
+        "Rust-oriented v2.0 readiness",
+        "1.231.0",
+        "2.0.0rc1",
+        "2.0.0rcN",
+        "release-candidate",
+        "rust-toolchain.toml",
+        "1.97.0",
+    ],
+    Path("skills/nt-architect/SKILL.md"): [
+        "Rust-oriented v2.0 readiness",
+        "AI/advisory lane remains Python",
+        "Rust core owns",
+    ],
+    Path("skills/nt-review/SKILL.md"): [
+        "Rust-oriented v2.0 readiness",
+        "unlabelled legacy/Cython/v1 guidance",
     ],
 }
 
@@ -378,7 +414,7 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
 
 
 LEGACY_GUIDANCE_ROOTS = ("skills", "references")
-LEGACY_GUIDANCE_SUFFIXES = {".md", ".py"}
+LEGACY_GUIDANCE_SUFFIXES = {".capnp", ".md", ".py", ".pyi", ".rs", ".toml"}
 LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__"}
 TRADING_NODE_TERM = "TradingNode"
 TRADING_NODE_LABEL_TERMS = [
@@ -390,8 +426,12 @@ TRADING_NODE_LABEL_TERMS = [
 ]
 LEGACY_GUIDANCE_TERMS = [
     "Cython",
+    "cimport ",
+    "cdef ",
+    "cpdef ",
     ".pyx",
     ".pxd",
+    ".pxi",
     "as_legacy_cython",
     "legacy Cython",
     "legacy v1 core",
@@ -1085,6 +1125,12 @@ def run_checks(root: Path) -> CheckResult:
     _check_required_terms(root, errors, NT_V2_REVIEW_TARGETS, "NT v2 review")
     _check_required_terms(root, errors, NT_V2_TESTING_TARGETS, "NT v2 testing")
     _check_required_terms(root, errors, NT_V2_RUST_TARGETS, "NT v2 rust")
+    _check_required_terms(
+        root,
+        errors,
+        RUST_ORIENTED_V2_READINESS_TARGETS,
+        "Rust-oriented v2 readiness",
+    )
 
     for relative, required_terms in INVARIANT_TARGETS.items():
         absolute = root / relative
