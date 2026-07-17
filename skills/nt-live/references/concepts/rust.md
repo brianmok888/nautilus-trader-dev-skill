@@ -2,8 +2,9 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Rust
 
-Nautilus has a complete Rust implementation under the `crates/` directory.
-You can write actors, strategies, run backtests, and trade live without Python.
+Nautilus has an active, readiness-scoped Rust implementation under the `crates/` directory.
+You can write actors, strategies, run backtests, and trade live without Python
+where the required v2 engine, adapter, and test coverage are ready.
 The domain model is shared across all paths, and the v2 PyO3 path runs
 Python strategies on the Rust engine directly.
 
@@ -21,7 +22,8 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 
 - **v1 legacy**: Cython/Python classes under `nautilus_trader/`. Fully
   featured with the broadest component coverage.
-- **v2 Rust**: Pure Rust under `crates/`. Runs without Python.
+- **v2 Rust**: Pure Rust under `crates/`. Runs without Python where the
+  required engine, adapter, and test coverage exist.
 - **v2 PyO3**: Python user-components (actors, strategies) running on
   the Rust core via PyO3 bindings. Combines Python convenience with
   Rust engine performance.
@@ -79,9 +81,10 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 
 - **v1 legacy** is the most complete today. Use it if you need the
   Controller, tearsheets, Interactive Brokers, or config serialization.
-- **v2 Rust** gives native performance without a Python runtime. All core
-  trading functionality is available. Use it for latency-sensitive
-  deployments or teams that prefer a compiled language.
+- **v2 Rust** gives native performance without a Python runtime. Use it for
+  latency-sensitive deployments or teams that prefer a compiled language when
+  the required engine, adapter, and test coverage exist; do not assume complete
+  v1-equivalent coverage.
 - **v2 PyO3**: Python user-components (actors, strategies) run on the
   Rust core engine with Rust performance for data processing and
   execution, while keeping the Python authoring experience.
@@ -124,7 +127,9 @@ nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git"
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
-The minimum supported Rust version (MSRV) is **1.95.0**.
+Follow the checked-out `rust-toolchain.toml` for the active Rust version.
+Source-aligned work as of 2026-07-17 uses Rust 1.97.0; older 1.96.x
+release/docs references are lag notes unless the checked-out repository pins them.
 
 ### Feature flags
 

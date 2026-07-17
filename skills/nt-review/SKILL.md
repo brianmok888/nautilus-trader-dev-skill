@@ -90,8 +90,10 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 
 - message immutability across published events, commands, requests, and
   responses;
-- DataTester or equivalent evidence for claimed data adapter behavior;
-- ExecTester or equivalent evidence for claimed execution adapter behavior;
+- DataTester groups 1-4, or equivalent evidence, for claimed data adapter
+  baseline behavior;
+- ExecTester groups 1-5, or equivalent evidence, for claimed execution adapter
+  baseline behavior after data connectivity is verified;
 - complete adapter reconciliation reports for claimed live execution scope;
 - `LiveNode` use for Rust v2 / Rust-backed live-node paths, or a Python live /
   integration-specific label for `TradingNode` examples;

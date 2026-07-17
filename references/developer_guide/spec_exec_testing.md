@@ -131,6 +131,8 @@ acknowledged by the venue.
 
 ---
 
+Baseline adapter execution compliance means ExecTester groups 1-5 pass after DataTester groups 1-4 connectivity and data-flow coverage are verified.
+
 Each group below begins with a summary table, followed by detailed test cards.
 Test IDs use spaced numbering to allow insertion without renumbering.
 

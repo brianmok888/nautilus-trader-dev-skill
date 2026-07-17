@@ -175,12 +175,12 @@ fn fuzz_parse_trade(data: &[u8]) {
 
 ## Data Testing Spec
 
-The DataTesterConfig API validates adapter data flows end-to-end. Each adapter has specific data test configurations.
+The DataTesterConfig API validates adapter data flows end-to-end. Each adapter has specific data test configurations. Baseline adapter data compliance means DataTester groups 1-4 pass for the venue-supported subscriptions and requests before claiming data readiness.
 
 ### DataTesterConfig API
 
 ```python
-from nautilus_trader.test.adapters import DataTesterConfig
+from nautilus_trader.test_kit.strategies.tester_data import DataTesterConfig
 
 # Basic config
 config = DataTesterConfig(
@@ -244,7 +244,7 @@ The ExecTesterConfig API validates order lifecycle per venue. Each adapter has s
 ### ExecTesterConfig API
 
 ```python
-from nautilus_trader.test.adapters import ExecTesterConfig
+from nautilus_trader.test_kit.strategies.tester_exec import ExecTesterConfig
 
 # Basic execution test
 config = ExecTesterConfig(
@@ -320,7 +320,7 @@ let tester_config = ExecTesterConfig::builder()
 ### Adapter baseline matrix
 
 Baseline adapter execution compliance means the adapter passes ExecTester groups
-1–5 after DataTester connectivity is already verified. Record the venue
+1-5 after DataTester groups 1-4 connectivity and data-flow coverage are already verified. Record the venue
 capability matrix in the adapter guide, including order types, TIFs, post-only
 behavior, modify/cancel support, trigger-order behavior, and which testnet/demo
 credentials and instruments were used. Do not claim baseline readiness from

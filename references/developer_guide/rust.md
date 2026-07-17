@@ -16,15 +16,18 @@ while zero-cost abstractions and the absence of a garbage collector deliver C-li
 
 ## NT v2 transition baseline
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new Rust-backed work.
 
-- 1.231.0 is intended as the final 1.x release carrying the legacy Cython v1
-  core; new development targets Rust v2 / PyO3.
-- 2.0.0rc1 wheels are available for pre-release testing, while post-cutover
-  legacy v1 critical backports move to `develop_v1`.
-- Rust MSRV 1.96.1 is the current upstream Rust baseline.
+- v1.230.0 is the latest NautilusTrader release baseline as of 2026-07-17.
+  Legacy Cython/v1 guidance remains valid where explicitly labelled.
+- Treat v2 Rust/PyO3 as readiness-scoped: use it for new Rust-backed work
+  where the required engine, adapter, and test coverage exist; do not assume
+  complete v1-equivalent coverage.
+- `rust-toolchain.toml` is the authority for the local Rust toolchain. Current
+  source alignment uses Rust 1.97.0; public docs may still mention 1.96.x while
+  they catch up.
 - Python v2 controller subclassing and subclassable execution algorithms are
-  part of the supported Rust v2/PyO3 workflow.
+  part of the readiness-scoped Rust v2/PyO3 workflow.
 - Python v2 `FeeModel` and `FillModel` subclass support replaces legacy Cython
   extension patterns for custom backtest models.
 
@@ -1527,7 +1530,10 @@ The project uses several tools for code quality:
 
 ## Rust version management
 
-The project pins to a specific Rust version via `rust-toolchain.toml`.
+The project pins to a specific Rust version via `rust-toolchain.toml`. Current
+release-aligned guidance is Rust 1.97.0; public developer-guide pages
+mentioning Rust 1.96.x may lag the repository and should not override the
+checked-in toolchain pin.
 
 **Keep your toolchain synchronized with CI:**
 

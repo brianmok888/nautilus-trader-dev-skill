@@ -76,6 +76,8 @@ node.add_actor(tester)?;
 node.run().await?;
 ```
 
+Baseline adapter data compliance means DataTester groups 1-4 pass for venue-supported subscriptions and requests before claiming data readiness.
+
 Each group below begins with a summary table, followed by detailed test cards.
 Test IDs use spaced numbering to allow insertion without renumbering.
 

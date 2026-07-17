@@ -115,7 +115,7 @@ make format         # Auto-format all code
 make pre-commit     # Run full pre-commit suite
 ```
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new Rust-backed work.
 
 After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` or `make build-debug`.
 
@@ -209,18 +209,19 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 - **Logging**: `log::info!`, `log::warn!` etc. — always fully qualified
 - **Async**: `get_runtime().spawn()` in adapters (not `tokio::spawn()`); `#[tokio::test]` OK in tests
 
-### NT v2 transition baseline (1.231.0 Beta)
+### NT v2 transition baseline (v1.230.0 release)
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
-- NautilusTrader 1.231.0 is intended as the final 1.x release with legacy
-  Cython v1 core support; new feature work should target the Rust v2 / PyO3
-  runtime.
-- 2.0.0rc1 wheels are available on PyPI for `uv pip install --pre
-  nautilus_trader`; after the cutover, `develop` is v2-only and legacy v1
-  critical backports move to `develop_v1`.
-- Treat Rust MSRV 1.96.1 as the current upstream Rust baseline when aligning
-  examples, CI notes, and local toolchain checks.
+- NautilusTrader v1.230.0 is the latest release baseline as of 2026-07-17.
+  Preserve legacy Cython/v1 guidance where explicitly labelled, but target
+  Rust v2 / PyO3 for new Rust-backed work only when the required engine,
+  adapter, and test coverage exist.
+- Treat v2 status as readiness-scoped rather than complete v1-equivalent
+  coverage. Do not claim v2 production readiness from method presence,
+  generated stubs, or partial adapter wiring alone.
+- Treat `rust-toolchain.toml` as the Rust baseline. Current source alignment
+  uses Rust 1.97.0; public docs may still mention 1.96.x while they catch up.
 - Python v2 controller subclassing and importable controller configs are
   supported for backtest/live orchestration.
 - Python v2 subclassable execution algorithms are supported for routed orders.

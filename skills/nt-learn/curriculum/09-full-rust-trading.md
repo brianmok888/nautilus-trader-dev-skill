@@ -15,7 +15,8 @@ NautilusTrader's v2 Rust path provides:
 - **Native performance** — no Python GIL, no FFI overhead
 - **No Python runtime** — deploy as standalone binaries
 - **Same domain model** — shared types across all paths
-- **Full feature coverage** — all core trading functionality available
+- **Readiness-scoped coverage** — use the Rust path where the required engine,
+  adapter, and tests exist; do not assume complete v1-equivalent coverage
 
 ## Project Setup
 
@@ -53,7 +54,9 @@ ustr = "1"
 | `streaming` | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode` |
 | `defi` | `nautilus-model` | DeFi data types (implies `high-precision`) |
 
-MSRV: **1.95.0**
+Rust toolchain: follow the checked-out `rust-toolchain.toml`; source-aligned
+work as of 2026-07-17 uses Rust 1.97.0. Older 1.96.x release/docs
+references are lag notes unless the checked-out repository pins them.
 
 ## Writing a Rust Actor
 
