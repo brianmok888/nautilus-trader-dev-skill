@@ -20,6 +20,7 @@ performance/packaging decision, not a capability one.
 
 **Rust crate**: `nautilus-trading` → `crates/trading/src/strategy/`
 **Trait**: `pub trait Strategy: DataActor`
+**Runtime wiring**: store `StrategyCore`, invoke `nautilus_strategy!`, implement event handlers in `impl DataActor`
 **Config**: `StrategyConfig` (`bon::Builder`, serde, `deny_unknown_fields`)
 **Reference strategies** (official, in `crates/trading/src/examples/strategies/`):
 `EmaCross`, `CompositeMarketMaker`, `GridMarketMaker`, `DeltaNeutralVol`,
@@ -42,8 +43,11 @@ performance/packaging decision, not a capability one.
 
 ## Core API (authoritative, from `crates/trading/src/strategy/mod.rs`)
 
-A Rust strategy implements `Strategy`, which requires `DataActor`. The trait
-provides the order/portfolio APIs and a full set of `on_*` event handlers.
+A Rust strategy implements the `Strategy` runtime contract through
+`nautilus_strategy!`. `Strategy` extends `DataActor`, but normal event handlers
+(`on_start`, `on_quote`, `on_bar`, `on_stop`) belong in `impl DataActor`, not in
+an ad-hoc `impl Strategy` block. Store a `StrategyCore` field and call facade
+methods on `self` for order and portfolio APIs.
 
 ```rust
 pub trait Strategy: DataActor {
@@ -111,29 +115,48 @@ Key points:
        pub order_qty: Quantity,
    }
    ```
-3. **Implement `Strategy`**, modelled on `EmaCross`:
+3. **Implement the runtime shape**, modelled on upstream Rust strategies:
    ```rust
+   use nautilus_common::actor::DataActor;
+   use nautilus_trading::{
+       nautilus_strategy,
+       strategy::{Strategy, StrategyConfig, StrategyCore},
+   };
+
    pub struct YourStrategy {
-       strategy_id: StrategyId,
+       core: StrategyCore,
        instrument_id: InstrumentId,
        fast_period: usize,
        slow_period: usize,
+       order_qty: Quantity,
        // mutable state (EMA accumulators, position tracking, etc.)
    }
 
    impl YourStrategy {
        pub fn new(config: YourStrategyConfig) -> Self {
+           let core_config = StrategyConfig {
+               strategy_id: config.strategy_id,
+               order_id_tag: Some("001".to_string()),
+               ..Default::default()
+           };
            Self {
-               strategy_id: config.strategy_id.unwrap_or_default(),
+               core: StrategyCore::new(core_config),
                instrument_id: config.instrument_id,
                fast_period: config.fast_period,
                slow_period: config.slow_period,
+               order_qty: config.order_qty,
                // ...
            }
        }
+
+       pub fn from_config(config: YourStrategyConfig) -> anyhow::Result<Self> {
+           Ok(Self::new(config))
+       }
    }
 
-   impl Strategy for YourStrategy {
+   nautilus_strategy!(YourStrategy);
+
+   impl DataActor for YourStrategy {
        fn on_start(&mut self) -> anyhow::Result<()> {
            self.subscribe_quotes(self.instrument_id, None, None);
            Ok(())
@@ -144,7 +167,7 @@ Key points:
            Ok(())
        }
 
-       fn on_quote(&mut self, quote: &QuoteTick) -> anyhow::Result<()> {
+       fn on_quote(&mut self, _quote: &QuoteTick) -> anyhow::Result<()> {
            // update EMA state, then on crossover:
            let order = self.order().market(
                self.instrument_id,

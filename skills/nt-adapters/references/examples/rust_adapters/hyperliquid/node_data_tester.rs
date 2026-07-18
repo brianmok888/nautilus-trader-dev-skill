@@ -15,60 +15,73 @@
 
 //! Example demonstrating live data testing with the Hyperliquid adapter.
 //!
-//! Run with: `cargo run --example hyperliquid-data-tester --package nautilus-hyperliquid`
-
-use std::num::NonZeroUsize;
+//! Edit the constants below to change the environment, target instrument, and subscriptions.
+//!
+//! Run with: `cargo run --example hyperliquid-data-tester --package nautilus-hyperliquid --features examples`
+//!
+//! Credentials are read from the environment when set:
+//! - `HYPERLIQUID_PK` (or `HYPERLIQUID_TESTNET_PK` for testnet).
 
 use log::LevelFilter;
 use nautilus_common::{enums::Environment, logging::logger::LoggerConfig};
-use nautilus_hyperliquid::{HyperliquidDataClientConfig, HyperliquidDataClientFactory};
-use nautilus_live::node::LiveNode;
-use nautilus_model::{
-    identifiers::{ClientId, InstrumentId, TraderId},
-    stubs::TestDefault,
+use nautilus_hyperliquid::{
+    HyperliquidDataClientConfig, HyperliquidDataClientFactory,
+    common::{consts::HYPERLIQUID_CLIENT_ID, enums::HyperliquidEnvironment},
 };
+use nautilus_live::node::LiveNode;
+use nautilus_model::identifiers::{InstrumentId, TraderId};
 use nautilus_testkit::testers::{DataTester, DataTesterConfig};
+
+const HYPERLIQUID_ENVIRONMENT: HyperliquidEnvironment = HyperliquidEnvironment::Mainnet;
+const TRADER_ID: &str = "TESTER-001";
+const NODE_NAME: &str = "HYPERLIQUID-DATA-TESTER-001";
+const INSTRUMENT_ID: &str = "BTC-USD-PERP.HYPERLIQUID";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
-    let environment = Environment::Live;
-    let trader_id = TraderId::test_default();
-    let node_name = "HYPERLIQUID-DATA-TESTER-001".to_string();
+    let nt_environment = Environment::Live;
+    let hl_environment = HYPERLIQUID_ENVIRONMENT;
+    let trader_id = TraderId::from(TRADER_ID);
+    let node_name = NODE_NAME.to_string();
     let instrument_ids = vec![
-        InstrumentId::from("BTC-USD-PERP.HYPERLIQUID"),
+        InstrumentId::from(INSTRUMENT_ID),
         // InstrumentId::from("ETH-USD-PERP.HYPERLIQUID"),
     ];
 
     let hyperliquid_config = HyperliquidDataClientConfig {
-        is_testnet: false, // Set to true for testnet
+        environment: hl_environment,
         ..Default::default()
     };
 
     let client_factory = HyperliquidDataClientFactory::new();
-    let client_id = ClientId::new("HYPERLIQUID");
+    let client_id = *HYPERLIQUID_CLIENT_ID;
 
     let log_config = LoggerConfig {
         stdout_level: LevelFilter::Info,
         ..Default::default()
     };
 
-    let mut node = LiveNode::builder(trader_id, environment)?
+    let mut node = LiveNode::builder(trader_id, nt_environment)?
         .with_name(node_name)
         .with_logging(log_config)
         .with_delay_post_stop_secs(2)
         .add_data_client(None, Box::new(client_factory), Box::new(hyperliquid_config))?
         .build()?;
 
-    let tester_config = DataTesterConfig::new(client_id, instrument_ids)
-        .with_subscribe_quotes(true)
-        .with_subscribe_trades(true)
-        .with_subscribe_mark_prices(true)
-        .with_subscribe_index_prices(true)
-        .with_subscribe_funding_rates(true)
-        // .with_subscribe_book_at_interval(true)
-        .with_book_interval_ms(NonZeroUsize::new(10).unwrap());
+    let tester_config = DataTesterConfig::builder()
+        .client_id(client_id)
+        .instrument_ids(instrument_ids)
+        .subscribe_quotes(true)
+        .subscribe_trades(true)
+        .subscribe_mark_prices(true)
+        .subscribe_index_prices(true)
+        .subscribe_funding_rates(true)
+        // .subscribe_book_at_interval(true)
+        .book_interval_ms(10)
+        .manage_book(true)
+        .build()?;
     let tester = DataTester::new(tester_config);
 
     node.add_actor(tester)?;

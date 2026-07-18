@@ -424,6 +424,133 @@ def test_reports_missing_strategy_language_routing_invariants(tmp_path: Path) ->
     )
 
 
+def test_reports_missing_rust_strategy_runtime_shape(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder-rust/SKILL.md",
+        "Rust-native strategies mention pub trait Strategy, StrategyConfig, and "
+        "submit_order but omit the runtime wiring shape.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing invariant 'StrategyCore' in skills/nt-strategy-builder-rust/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'nautilus_strategy!' in skills/nt-strategy-builder-rust/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'impl DataActor' in skills/nt-strategy-builder-rust/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant '..Default::default()' in skills/nt-strategy-builder-rust/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_legacy_tradingnode_live_fallback_wording(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder/SKILL.md",
+        "For production live, use LiveNode or legacy Python-live TradingNode as fallback.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "legacy TradingNode fallback offered for new live/production work in "
+        "skills/nt-strategy-builder/SKILL.md"
+    ) in result.errors
+
+
+def test_reports_generic_python_strategy_builder_routing_without_language_gate(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "README.md",
+        "| Run a backtest | nt-strategy-builder |\n"
+        "| Deploy live trading | nt-strategy-builder |\n",
+    )
+    write(
+        tmp_path / "skills/nt/SKILL.md",
+        "New trading system -> nt-strategy-builder\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "generic backtest/live workflow routes to Python strategy builder without "
+        "language gate in README.md"
+    ) in result.errors
+    assert (
+        "generic new trading system workflow routes to Python strategy builder without "
+        "language gate in skills/nt/SKILL.md"
+    ) in result.errors
+
+
+def test_reports_generic_python_strategy_builder_routing_even_with_rust_mentions(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "README.md",
+        "| Run a backtest | nt-strategy-builder |\n"
+        "| Deploy live trading | nt-strategy-builder |\n"
+        "Elsewhere, Rust production uses nt-strategy-builder-rust.\n",
+    )
+    write(
+        tmp_path / "skills/nt/SKILL.md",
+        "New trading system -> nt-strategy-builder\n"
+        "Elsewhere, Rust production uses nt-strategy-builder-rust.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "generic backtest/live workflow routes to Python strategy builder without "
+        "language gate in README.md"
+    ) in result.errors
+    assert (
+        "generic new trading system workflow routes to Python strategy builder without "
+        "language gate in skills/nt/SKILL.md"
+    ) in result.errors
+
+
+def test_reports_architect_strategy_logic_defaulting_to_python(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-architect/SKILL.md",
+        "| User strategy logic, config, orchestration | **Python** | "
+        "Strategy/config boundaries |\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "production/performance strategy logic defaults to Python in "
+        "skills/nt-architect/SKILL.md"
+    ) in result.errors
+
+
+def test_reports_unlabelled_data_tester_config_new(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-adapters/references/examples/rust_adapters/example.rs",
+        "let tester_config = DataTesterConfig::new(client_id, instrument_ids);\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in "
+        "skills/nt-adapters/references/examples/rust_adapters/example.rs"
+    ) in result.errors
+
+
 def test_reports_missing_live_runtime_boundary_terms(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-live/SKILL.md", "Prefer LiveNode.\n")
     write(tmp_path / "skills/nt-strategy-builder/SKILL.md", "Use TradingNode.\n")
@@ -1782,7 +1909,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-strategy-builder-rust/SKILL.md",
         "Rust-native strategies implement pub trait Strategy with a StrategyConfig "
-        "builder and call submit_order from on_start/on_bar handlers.\n",
+        "builder, store StrategyCore, invoke nautilus_strategy!, implement "
+        "impl DataActor handlers, include ..Default::default(), provide "
+        "from_config, and call submit_order(order, None, None, None).\n",
     )
 
     result = run_checks(tmp_path)

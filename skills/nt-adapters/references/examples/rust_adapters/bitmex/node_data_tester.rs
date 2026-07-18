@@ -15,59 +15,61 @@
 
 //! Example demonstrating live data testing with the BitMEX adapter.
 //!
+//! Edit the constants below to change the environment and target instrument.
+//!
+//! Run with: `cargo run --example bitmex-data-tester --package nautilus-bitmex --features examples`
+//!
 //! Credentials are resolved from environment variables automatically when not passed
 //! explicitly in the config (`api_key` / `api_secret` fields):
 //! - Testnet: `BITMEX_TESTNET_API_KEY` / `BITMEX_TESTNET_API_SECRET`
 //! - Mainnet: `BITMEX_API_KEY` / `BITMEX_API_SECRET`
-//!
-//! Run with: `cargo run --example bitmex-data-tester --package nautilus-bitmex`
 
-use std::num::NonZeroUsize;
-
-use nautilus_bitmex::{config::BitmexDataClientConfig, factories::BitmexDataClientFactory};
+use nautilus_bitmex::{
+    common::{consts::BITMEX_CLIENT_ID, enums::BitmexEnvironment},
+    config::BitmexDataClientConfig,
+    factories::BitmexDataClientFactory,
+};
 use nautilus_common::enums::Environment;
 use nautilus_live::node::LiveNode;
-use nautilus_model::{
-    identifiers::{ClientId, InstrumentId, TraderId},
-    stubs::TestDefault,
-};
+use nautilus_model::identifiers::{InstrumentId, TraderId};
 use nautilus_testkit::testers::{DataTester, DataTesterConfig};
+
+const BITMEX_ENVIRONMENT: BitmexEnvironment = BitmexEnvironment::Testnet;
+const TRADER_ID: &str = "TESTER-001";
+const INSTRUMENT_ID: &str = "XBTUSD.BITMEX";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
-    let use_testnet = true;
-
     let environment = Environment::Live;
-    let trader_id = TraderId::test_default();
-    let instrument_ids = vec![
-        InstrumentId::from("XBTUSD.BITMEX"),
-        // InstrumentId::from("ETHUSD.BITMEX"),
-    ];
+    let trader_id = TraderId::from(TRADER_ID);
+    let instrument_ids = vec![InstrumentId::from(INSTRUMENT_ID)];
 
     let bitmex_config = BitmexDataClientConfig {
-        use_testnet,
+        environment: BITMEX_ENVIRONMENT,
         ..Default::default()
     };
 
     let client_factory = BitmexDataClientFactory::new();
-    let client_id = ClientId::new("BITMEX");
+    let client_id = *BITMEX_CLIENT_ID;
 
     let mut node = LiveNode::builder(trader_id, environment)?
         .with_delay_post_stop_secs(2)
         .add_data_client(None, Box::new(client_factory), Box::new(bitmex_config))?
         .build()?;
 
-    let tester_config = DataTesterConfig::new(client_id, instrument_ids)
-        .with_subscribe_quotes(true)
-        .with_subscribe_trades(true)
-        .with_subscribe_mark_prices(true)
-        .with_subscribe_index_prices(true)
-        .with_subscribe_funding_rates(true)
-        .with_subscribe_instrument_status(true)
-        .with_subscribe_book_at_interval(true)
-        .with_book_interval_ms(NonZeroUsize::new(10).expect("10 is non-zero"));
+    let tester_config = DataTesterConfig::builder()
+        .client_id(client_id)
+        .instrument_ids(instrument_ids)
+        .subscribe_quotes(true)
+        .subscribe_trades(true)
+        .subscribe_mark_prices(true)
+        .subscribe_index_prices(true)
+        .subscribe_funding_rates(true)
+        .subscribe_instrument_status(true)
+        .manage_book(true)
+        .build()?;
     let tester = DataTester::new(tester_config);
 
     node.add_actor(tester)?;

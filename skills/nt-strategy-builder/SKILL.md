@@ -28,10 +28,10 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 | Scenario | Approach |
 |---|---|
 | Replay historical data, no live connection | `BacktestEngine` + `ParquetDataCatalog` |
-| Test strategy on live data without real orders | Rust/v2 `LiveNode` paper mode; legacy Python-live `TradingNode` as fallback |
-| Deploy to production with CeFi exchange | Rust/v2 `LiveNode` + standard adapter (default); legacy Python-live `TradingNode` as fallback |
-| Deploy with custom DEX venue | Rust/v2 `LiveNode` + `nt-dex-adapter` factory (default); legacy Python-live `TradingNode` as fallback |
-| Multi-venue arb or signal aggregation | Rust/v2 `LiveNode` (default), legacy Python-live `TradingNode`, or `BacktestEngine` |
+| Test strategy on live data without real orders | Rust/v2 `LiveNode` paper mode; legacy Python-live `TradingNode` only for migration/reference |
+| Deploy to production with CeFi exchange | Rust/v2 `LiveNode` + standard adapter (default); legacy Python-live `TradingNode` only for migration/reference |
+| Deploy with custom DEX venue | Rust/v2 `LiveNode` + `nt-dex-adapter` factory (default); legacy Python-live `TradingNode` only for migration/reference |
+| Multi-venue arb or signal aggregation | Rust/v2 `LiveNode` (default) or `BacktestEngine`; legacy Python-live `TradingNode` only for migration/reference |
 
 ## Decision Tree: Which Execution Mode?
 
@@ -54,7 +54,7 @@ Are you using live market data?
 │           └─ Multi-venue   → templates/multi_venue_strategy.py
 │
 └─ YES ──► Runtime boundary
-            ├─ Python live/integration-specific → TradingNode templates
+            ├─ Python live/integration-specific migration/reference → TradingNode templates
             └─ Rust v2 / Rust-backed path       → LiveNode references
 ```
 

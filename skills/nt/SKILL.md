@@ -76,7 +76,9 @@ Load in order:
 
 1. `nt-architect` for component and data-flow design.
 2. `nt-implement` for Strategy/Actor/Indicator templates.
-3. `nt-strategy-builder` for backtest, paper, or live wiring.
+3. Choose strategy language before builder selection:
+   - Python research/config/AI lane -> `nt-strategy-builder`.
+   - Rust production/performance strategy -> `nt-strategy-builder-rust`.
 4. `nt-review` + `nt-testing` before live deployment or merge.
 
 ### Existing code review or bug investigation

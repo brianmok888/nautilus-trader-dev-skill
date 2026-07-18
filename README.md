@@ -67,8 +67,8 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | Design a new trading system | `nt` → `nt-architect` → `nt-implement` |
 | Build a CeFi adapter (Binance, OKX…) | `nt-adapters` + `nt-dev` |
 | Build a DEX adapter (on-chain) | `nt-dex-adapter` + `nt-implement` |
-| Run a backtest | `nt-strategy-builder` + `nt-backtest` |
-| Deploy live trading | `nt-strategy-builder` + `nt-live` |
+| Run a Python research backtest | `nt-strategy-builder` + `nt-backtest` |
+| Deploy Rust/v2 live trading | `nt-strategy-builder-rust` + `nt-live` |
 | Review code before merge | `nt-review` + `nt-testing` |
 | Learn NautilusTrader | `nt` → `nt-learn` (12-stage curriculum) |
 | Contribute to NautilusTrader core | `nt` → `nt-dev` + `nt-testing` |

@@ -132,7 +132,13 @@ INVARIANT_TARGETS = {
     Path("skills/nt-strategy-builder-rust/SKILL.md"): [
         "pub trait Strategy",
         "StrategyConfig",
+        "StrategyCore",
+        "nautilus_strategy!",
+        "impl DataActor",
+        "from_config",
+        "..Default::default()",
         "submit_order",
+        "submit_order(order, None, None, None)",
     ],
     Path("skills/nt/SKILL.md"): ["no cross-contamination"],
 }
@@ -450,6 +456,7 @@ LEGACY_GUIDANCE_TERMS = [
     "legacy v1 core",
     "Cython v1",
     "ExecTesterConfig::new(",
+    "DataTesterConfig::new(",
 ]
 
 LEGACY_GUIDANCE_PATTERNS = [
@@ -819,6 +826,75 @@ def _check_unlabelled_legacy_guidance(root: Path, errors: list[str]) -> None:
             errors.append(f"unlabelled legacy/Cython/v1 guidance in {_relative(path, root)}")
             break
 
+
+def _has_language_gate(line: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(Python|Rust|v2|research|config|AI|production|performance)\b",
+            line,
+        )
+    )
+
+
+def _is_generic_python_builder_route(line: str) -> bool:
+    if "nt-strategy-builder-rust" in line:
+        return False
+    if "nt-strategy-builder" not in line:
+        return False
+    return not _has_language_gate(line)
+
+
+def _check_v2_cutover_language_routing(root: Path, errors: list[str]) -> None:
+    strategy_builder = root / "skills/nt-strategy-builder/SKILL.md"
+    if strategy_builder.exists():
+        text = _read(strategy_builder)
+        if re.search(r"TradingNode[^\n]{0,80}\bas fallback\b", text, re.IGNORECASE):
+            errors.append(
+                "legacy TradingNode fallback offered for new live/production work in "
+                "skills/nt-strategy-builder/SKILL.md"
+            )
+
+    readme = root / "README.md"
+    if readme.exists():
+        stale_rows = [
+            line
+            for line in _read(readme).splitlines()
+            if re.search(r"\b(Run a backtest|Deploy live trading)\b", line, re.IGNORECASE)
+            and _is_generic_python_builder_route(line)
+        ]
+        if stale_rows:
+            errors.append(
+                "generic backtest/live workflow routes to Python strategy builder without "
+                "language gate in README.md"
+            )
+
+    nt_entry = root / "skills/nt/SKILL.md"
+    if nt_entry.exists():
+        stale_routes = []
+        for line in _read(nt_entry).splitlines():
+            if not re.search(r"New trading system", line, re.IGNORECASE):
+                continue
+            if _is_generic_python_builder_route(line):
+                stale_routes.append(line)
+        if stale_routes:
+            errors.append(
+                "generic new trading system workflow routes to Python strategy builder without "
+                "language gate in skills/nt/SKILL.md"
+            )
+
+    architect = root / "skills/nt-architect/SKILL.md"
+    if architect.exists():
+        text = _read(architect)
+        if re.search(
+            r"User strategy logic,\s*config,\s*orchestration[^\n]*\*\*Python\*\*",
+            text,
+            re.IGNORECASE,
+        ):
+            errors.append(
+                "production/performance strategy logic defaults to Python in "
+                "skills/nt-architect/SKILL.md"
+            )
+
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
     absolute = root / ENTRY_SKILL
     if not absolute.exists():
@@ -1090,6 +1166,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_duplicate_compatibility_labels(root, errors)
     _check_unlabelled_tradingnode_guidance(root, errors)
     _check_unlabelled_legacy_guidance(root, errors)
+    _check_v2_cutover_language_routing(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
