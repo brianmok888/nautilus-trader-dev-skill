@@ -338,6 +338,11 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-adapters/SKILL.md", "# Adapters\n")
     write(tmp_path / "skills/nt-architect/SKILL.md", "# Architect\n")
     write(tmp_path / "skills/nt-implement/SKILL.md", "# Implement\n")
+    write(tmp_path / "skills/nt-backtest/SKILL.md", "# Backtest\n")
+    write(tmp_path / "skills/nt-dev/SKILL.md", "# Dev\n")
+    write(tmp_path / "skills/nt-dex-adapter/SKILL.md", "# DEX\n")
+    write(tmp_path / "skills/nt-model/SKILL.md", "# Model\n")
+    write(tmp_path / "skills/nt-review/SKILL.md", "# Review\n")
 
     result = run_checks(tmp_path)
 
@@ -372,6 +377,26 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     )
     assert (
         "missing invariant 'V2 cutover' in skills/nt-implement/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'BacktestEngine' in skills/nt-backtest/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'cargo nextest' in skills/nt-dev/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'crates/adapters/' in skills/nt-dex-adapter/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'crates/model' in skills/nt-model/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'Rust-oriented v2.0 readiness' in skills/nt-review/SKILL.md"
         in result.errors
     )
 
@@ -1718,6 +1743,19 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
         )
+
+    write(
+        tmp_path / "skills/nt-backtest/SKILL.md",
+        "BacktestEngine runs historical venues with actor fill models.\n",
+    )
+    write(
+        tmp_path / "skills/nt-dex-adapter/SKILL.md",
+        "DEX adapter spec mirrors crates/adapters/ layout for on-chain plumbing.\n",
+    )
+    write(
+        tmp_path / "skills/nt-model/SKILL.md",
+        "Domain model types live in Rust crates/model and are exposed via PyO3.\n",
+    )
 
     result = run_checks(tmp_path)
 

@@ -117,6 +117,11 @@ INVARIANT_TARGETS = {
     ],
     Path("skills/nt-architect/SKILL.md"): ["message immutability", "crates/adapters/"],
     Path("skills/nt-implement/SKILL.md"): ["V2 cutover", "crates/adapters/"],
+    Path("skills/nt-backtest/SKILL.md"): ["BacktestEngine"],
+    Path("skills/nt-dev/SKILL.md"): ["cargo nextest"],
+    Path("skills/nt-dex-adapter/SKILL.md"): ["crates/adapters/"],
+    Path("skills/nt-model/SKILL.md"): ["crates/model"],
+    Path("skills/nt-review/SKILL.md"): ["Rust-oriented v2.0 readiness"],
     Path("skills/nt-data/SKILL.md"): ["time_bars_origin_offset", "order_owned"],
     Path("skills/nt-signals/SKILL.md"): ["priority", "ContinuousFutureAdjustmentType"],
     Path("skills/nt-trading/SKILL.md"): [
