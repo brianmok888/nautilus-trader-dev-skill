@@ -410,6 +410,185 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
     ],
 }
 
+NT_V2_READINESS_GATE_TARGETS = [
+    Path("skills/nt/SKILL.md"),
+    Path("skills/nt-adapters/SKILL.md"),
+    Path("skills/nt-architect/SKILL.md"),
+    Path("skills/nt-backtest/SKILL.md"),
+    Path("skills/nt-data/SKILL.md"),
+    Path("skills/nt-dev/SKILL.md"),
+    Path("skills/nt-dex-adapter/SKILL.md"),
+    Path("skills/nt-evomap-integration/SKILL.md"),
+    Path("skills/nt-implement/SKILL.md"),
+    Path("skills/nt-learn/SKILL.md"),
+    Path("skills/nt-live/SKILL.md"),
+    Path("skills/nt-model/SKILL.md"),
+    Path("skills/nt-review/SKILL.md"),
+    Path("skills/nt-signals/SKILL.md"),
+    Path("skills/nt-strategy-builder/SKILL.md"),
+    Path("skills/nt-strategy-builder-rust/SKILL.md"),
+    Path("skills/nt-testing/SKILL.md"),
+    Path("skills/nt-trading/SKILL.md"),
+]
+
+NT_V2_READINESS_SECTION = "## NT V2 Rust readiness gates"
+NT_V2_READINESS_STATUSES = ["Pass", "Pending", "Blocked", "N/A", "Waived"]
+NT_V2_READINESS_GATES = [
+    "G0 Upstream baseline",
+    "G1 Lane classification",
+    "G2 Legacy label",
+    "G3 Rust ownership",
+    "G4 NT V2 API shape",
+    "G5 Test evidence",
+    "G6 Safety/compliance",
+    "G7 Completion report",
+]
+
+NT_V2_RUST_CHECKER_GATE_TARGETS = {
+    Path("skills/nt-adapters/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "fuzz-adapter",
+    ],
+    Path("skills/nt-backtest/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "BacktestEngine",
+    ],
+    Path("skills/nt-data/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "fixed-point validation",
+    ],
+    Path("skills/nt-dev/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "cargo fmt --check",
+    ],
+    Path("skills/nt-dex-adapter/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "fuzz",
+    ],
+    Path("skills/nt-implement/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "status gate before coding",
+    ],
+    Path("skills/nt-live/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "LiveNode",
+    ],
+    Path("skills/nt-model/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "PyO3",
+    ],
+    Path("skills/nt-review/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "command evidence",
+    ],
+    Path("skills/nt-signals/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "Rust production",
+    ],
+    Path("skills/nt-strategy-builder-rust/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "StrategyCore",
+    ],
+    Path("skills/nt-testing/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "ExecTesterConfig::builder()",
+    ],
+    Path("skills/nt-trading/SKILL.md"): [
+        "cargo nextest",
+        "cargo clippy",
+        "cargo deny",
+        "order",
+    ],
+}
+
+AI_ADVISORY_PYTHON_BOUNDARY_GATE_TARGETS = {
+    Path("skills/nt/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-architect/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-evomap-integration/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+        "asynchronous",
+        "approval gate",
+    ],
+    Path("skills/nt-implement/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-review/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-signals/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-strategy-builder/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-strategy-builder-rust/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+    Path("skills/nt-trading/SKILL.md"): [
+        "AI/advisory lane remains Python and off execution-critical paths",
+    ],
+}
+
+NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
+    Path("skills/nt/SKILL.md"): [
+        "route production/performance work to Rust",
+        "Python research/config",
+    ],
+    Path("skills/nt-architect/SKILL.md"): [
+        "component ownership matrix",
+        "Rust core owns",
+        "Python research/config",
+    ],
+    Path("skills/nt-backtest/SKILL.md"): [
+        "Rust BacktestEngine",
+        "Python research/config",
+    ],
+    Path("skills/nt-data/SKILL.md"): [
+        "Arrow",
+        "serialization",
+    ],
+    Path("skills/nt-dex-adapter/SKILL.md"): [
+        "Rust-first default",
+        "on-chain",
+    ],
+    Path("skills/nt-learn/SKILL.md"): [
+        "Rust-first curriculum",
+        "legacy/Python labelling",
+    ],
+    Path("skills/nt-strategy-builder/SKILL.md"): [
+        "Python research/config",
+        "Route production/performance to nt-strategy-builder-rust",
+    ],
+}
+
 LATEST_SKILL_ALIGNMENT_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
         "make py-stubs-v2",
@@ -1052,6 +1231,48 @@ def _check_required_terms(
                     )
 
 
+def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
+    for relative in NT_V2_READINESS_GATE_TARGETS:
+        absolute = root / relative
+        if not absolute.exists():
+            continue
+        text = _read(absolute)
+        if not _contains_term(text, NT_V2_READINESS_SECTION):
+            errors.append(
+                f"missing NT V2 Rust readiness gates section in {relative.as_posix()}"
+            )
+            continue
+        for status in NT_V2_READINESS_STATUSES:
+            if not _contains_term(text, status):
+                errors.append(
+                    f"missing NT V2 readiness status '{status}' in {relative.as_posix()}"
+                )
+        for gate in NT_V2_READINESS_GATES:
+            if not _contains_term(text, gate):
+                errors.append(
+                    f"missing NT V2 readiness gate '{gate}' in {relative.as_posix()}"
+                )
+
+    _check_required_terms(
+        root,
+        errors,
+        NT_V2_RUST_CHECKER_GATE_TARGETS,
+        "NT V2 Rust checker gate",
+    )
+    _check_required_terms(
+        root,
+        errors,
+        AI_ADVISORY_PYTHON_BOUNDARY_GATE_TARGETS,
+        "AI/advisory Python boundary gate",
+    )
+    _check_required_terms(
+        root,
+        errors,
+        NT_V2_READINESS_DOMAIN_GATE_TARGETS,
+        "NT V2 readiness domain gate",
+    )
+
+
 def _check_contract_term_groups(root: Path, errors: list[str]) -> None:
     for (
         relative,
@@ -1167,6 +1388,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_unlabelled_tradingnode_guidance(root, errors)
     _check_unlabelled_legacy_guidance(root, errors)
     _check_v2_cutover_language_routing(root, errors)
+    _check_nt_v2_readiness_gates(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)

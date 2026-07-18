@@ -52,6 +52,33 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) -> str:
+    ai_boundary = (
+        "AI/advisory lane remains Python and off execution-critical paths; it stays "
+        "asynchronous, approval gate protected, and non-authoritative for Rust "
+        "production paths.\n"
+        if include_ai_boundary
+        else ""
+    )
+    return (
+        "NT v2 compatibility note: legacy Cython/v1/TradingNode guidance in this "
+        "file is retained only for migration/reference-only labelling; prefer "
+        "Rust v2/PyO3 and LiveNode for new Rust-backed work.\n"
+        "## NT V2 Rust readiness gates\n"
+        "Statuses: Pass, Pending, Blocked, N/A, Waived.\n"
+        "- G0 Upstream baseline: verify latest docs and upstream commit.\n"
+        "- G1 Lane classification: classify Rust, Python research/config, AI/advisory, or legacy.\n"
+        "- G2 Legacy label: mark Cython, v1, and TradingNode guidance reference-only.\n"
+        "- G3 Rust ownership: Rust owns production, performance, live, networking, parsing, and execution-critical paths.\n"
+        "- G4 NT V2 API shape: use current LiveNode, PyO3, builder APIs, and message bus patterns.\n"
+        "- G5 Test evidence: record command evidence before readiness is Pass.\n"
+        "- G6 Safety/compliance: enforce fail-closed risk, secrets, precision, and runtime boundaries.\n"
+        "- G7 Completion report: report Pass/Pending/Blocked/N/A/Waived for every gate.\n"
+        f"{ai_boundary}"
+        f"{extra}"
+    )
+
+
 def test_reports_missing_entry_skill(tmp_path: Path) -> None:
     result = run_checks(tmp_path)
 
@@ -1546,6 +1573,128 @@ def test_reports_missing_rust_oriented_v2_readiness_boundary(tmp_path: Path) -> 
         "missing Rust-oriented v2 readiness term 'AI/advisory lane remains Python' "
         "in skills/nt-architect/SKILL.md" in result.errors
     )
+
+
+def test_reports_missing_nt_v2_rust_readiness_gate_section(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-data/SKILL.md",
+        "Use Rust for production data wranglers and record test evidence.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT V2 Rust readiness gates section in skills/nt-data/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_incomplete_nt_v2_rust_readiness_gate_vocabulary(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-data/SKILL.md",
+        "## NT V2 Rust readiness gates\n"
+        "Statuses: Pass, Pending.\n"
+        "- G0 Upstream baseline: latest docs.\n"
+        "- G1 Lane classification: Rust or Python.\n"
+        "- G2 Legacy label: label legacy.\n"
+        "- G3 Rust ownership: Rust owns production paths.\n"
+        "- G4 NT V2 API shape: current APIs.\n"
+        "- G5 Test evidence: command evidence.\n"
+        "- G6 Safety/compliance: safety review.\n"
+        "- G7 Completion report: report gates.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT V2 readiness status 'Blocked' in skills/nt-data/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT V2 readiness status 'N/A' in skills/nt-data/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing NT V2 readiness status 'Waived' in skills/nt-data/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_incomplete_nt_v2_rust_readiness_gate_labels(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-data/SKILL.md",
+        "## NT V2 Rust readiness gates\n"
+        "Statuses: Pass, Pending, Blocked, N/A, Waived.\n"
+        "- G0 Upstream baseline: latest docs.\n"
+        "- G1 Lane classification: Rust or Python.\n"
+        "- G2 Legacy label: label legacy.\n"
+        "- G3 Rust ownership: Rust owns production paths.\n"
+        "- G4 NT V2 API shape: current APIs.\n"
+        "- G5 Test evidence: command evidence.\n"
+        "- G7 Completion report: report gates.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT V2 readiness gate 'G6 Safety/compliance' "
+        "in skills/nt-data/SKILL.md" in result.errors
+    )
+
+
+def test_reports_missing_nt_v2_rust_checker_gate_terms(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-strategy-builder-rust/SKILL.md",
+        readiness_gate_text(
+            "Build Rust strategies with StrategyCore and nautilus_strategy!.\n"
+        ),
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing NT V2 Rust checker gate term 'cargo nextest' "
+        "in skills/nt-strategy-builder-rust/SKILL.md" in result.errors
+    )
+    assert (
+        "missing NT V2 Rust checker gate term 'cargo clippy' "
+        "in skills/nt-strategy-builder-rust/SKILL.md" in result.errors
+    )
+    assert (
+        "missing NT V2 Rust checker gate term 'cargo deny' "
+        "in skills/nt-strategy-builder-rust/SKILL.md" in result.errors
+    )
+
+
+def test_reports_missing_ai_advisory_python_boundary_gate_terms(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-evomap-integration/SKILL.md",
+        readiness_gate_text(
+            "Integrate advisory workflows through a sidecar.\n",
+            include_ai_boundary=False,
+        ),
+    )
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing AI/advisory Python boundary gate term "
+        "'AI/advisory lane remains Python and off execution-critical paths' "
+        "in skills/nt-evomap-integration/SKILL.md" in result.errors
+    )
+
+
 def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
@@ -1913,6 +2062,68 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "impl DataActor handlers, include ..Default::default(), provide "
         "from_config, and call submit_order(order, None, None, None).\n",
     )
+
+    readiness_extras = {
+        Path("skills/nt/SKILL.md"): (
+            "route production/performance work to Rust skills and keep Python research/config paths explicit.\n"
+        ),
+        Path("skills/nt-adapters/SKILL.md"): (
+            "Adapter evidence includes cargo nextest, cargo clippy, cargo deny, and fuzz-adapter.\n"
+        ),
+        Path("skills/nt-architect/SKILL.md"): (
+            "Architecture includes a component ownership matrix: Rust core owns production paths, Python research/config is labelled, and AI/advisory lane remains Python.\n"
+        ),
+        Path("skills/nt-backtest/SKILL.md"): (
+            "Rust BacktestEngine evidence includes cargo nextest, cargo clippy, cargo deny, and Python research/config is labelled.\n"
+        ),
+        Path("skills/nt-data/SKILL.md"): (
+            "Data readiness covers Arrow serialization, fixed-point validation, cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-dev/SKILL.md"): (
+            "Development readiness includes cargo fmt --check, cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-dex-adapter/SKILL.md"): (
+            "Rust-first default for on-chain adapters requires cargo nextest, cargo clippy, cargo deny, and fuzz.\n"
+        ),
+        Path("skills/nt-evomap-integration/SKILL.md"): (
+            "AI/advisory lane remains Python, asynchronous, approval gate protected, and isolated from trading authority.\n"
+        ),
+        Path("skills/nt-implement/SKILL.md"): (
+            "AI/advisory lane remains Python; require status gate before coding plus cargo nextest, cargo clippy, and cargo deny for Rust.\n"
+        ),
+        Path("skills/nt-live/SKILL.md"): (
+            "LiveNode readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-model/SKILL.md"): (
+            "PyO3 model readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-review/SKILL.md"): (
+            "AI/advisory lane remains Python; approval requires command evidence for cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-signals/SKILL.md"): (
+            "AI/advisory lane remains Python; Rust production signals require cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-strategy-builder/SKILL.md"): (
+            "AI/advisory lane remains Python; Python research/config only. Route production/performance to nt-strategy-builder-rust.\n"
+        ),
+        Path("skills/nt-strategy-builder-rust/SKILL.md"): (
+            "AI/advisory lane remains Python; StrategyCore evidence includes cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+        Path("skills/nt-testing/SKILL.md"): (
+            "Testing evidence includes cargo nextest, cargo clippy, cargo deny, ExecTesterConfig::builder(), and DataTesterConfig::builder().\n"
+        ),
+        Path("skills/nt-trading/SKILL.md"): (
+            "AI/advisory lane remains Python; Rust order readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
+        ),
+    }
+    for relative in sync.NT_V2_READINESS_GATE_TARGETS:
+        absolute = tmp_path / relative
+        if absolute.exists():
+            absolute.write_text(
+                readiness_gate_text(readiness_extras.get(relative, ""))
+                + absolute.read_text(),
+                encoding="utf-8",
+            )
 
     result = run_checks(tmp_path)
 
