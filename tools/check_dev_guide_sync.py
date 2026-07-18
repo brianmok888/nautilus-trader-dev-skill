@@ -55,6 +55,7 @@ ENTRY_SKILL_ROUTING_TARGETS = [
     "nt-review",
     "nt-signals",
     "nt-strategy-builder",
+    "nt-strategy-builder-rust",
     "nt-testing",
     "nt-trading",
 ]
@@ -127,6 +128,11 @@ INVARIANT_TARGETS = {
     Path("skills/nt-trading/SKILL.md"): [
         "PortfolioSnapshot",
         "TryFrom<OrderInitialized>",
+    ],
+    Path("skills/nt-strategy-builder-rust/SKILL.md"): [
+        "pub trait Strategy",
+        "StrategyConfig",
+        "submit_order",
     ],
 }
 

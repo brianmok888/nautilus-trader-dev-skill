@@ -343,6 +343,7 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-dex-adapter/SKILL.md", "# DEX\n")
     write(tmp_path / "skills/nt-model/SKILL.md", "# Model\n")
     write(tmp_path / "skills/nt-review/SKILL.md", "# Review\n")
+    write(tmp_path / "skills/nt-strategy-builder-rust/SKILL.md", "# Rust strat\n")
 
     result = run_checks(tmp_path)
 
@@ -397,6 +398,10 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     )
     assert (
         "missing invariant 'Rust-oriented v2.0 readiness' in skills/nt-review/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'pub trait Strategy' in skills/nt-strategy-builder-rust/SKILL.md"
         in result.errors
     )
 
@@ -1755,6 +1760,11 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-model/SKILL.md",
         "Domain model types live in Rust crates/model and are exposed via PyO3.\n",
+    )
+    write(
+        tmp_path / "skills/nt-strategy-builder-rust/SKILL.md",
+        "Rust-native strategies implement pub trait Strategy with a StrategyConfig "
+        "builder and call submit_order from on_start/on_bar handlers.\n",
     )
 
     result = run_checks(tmp_path)

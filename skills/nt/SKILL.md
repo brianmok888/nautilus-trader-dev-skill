@@ -48,7 +48,8 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 | Indicators, signals, order-book analytics, custom data signals | `nt-signals` | `nt-data`, `nt-model` |
 | Market data, catalogs, persistence, serialization | `nt-data` | `nt-model`, `nt-testing` |
 | Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder`, `nt-testing` |
-| Wire an idea into backtest, paper, or live execution | `nt-strategy-builder` | `nt-backtest`, `nt-live`, `nt-adapters` |
+| Wire an idea into backtest, paper, or live execution (Python) | `nt-strategy-builder` | `nt-backtest`, `nt-live`, `nt-adapters` |
+| Build a performance-critical / production strategy in Rust | `nt-strategy-builder-rust` | `nt-trading`, `nt-testing`, `nt-live` |
 | Live trading runtime, `LiveNode`/`TradingNode`, reconciliation | `nt-live` | `nt-adapters`, `nt-review` |
 | Exchange/data-provider adapter work | `nt-adapters` | `nt-dev`, `nt-testing`, `nt-live` |
 | Custom on-chain/DEX adapter | `nt-dex-adapter` | `nt-adapters`, `nt-implement`, `nt-testing` |
