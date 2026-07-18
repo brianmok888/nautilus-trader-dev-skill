@@ -117,7 +117,7 @@ INVARIANT_TARGETS = {
         "`Live` / `LIVE`",
     ],
     Path("skills/nt-architect/SKILL.md"): ["message immutability", "crates/adapters/"],
-    Path("skills/nt-implement/SKILL.md"): ["V2 cutover", "crates/adapters/"],
+    Path("skills/nt-implement/SKILL.md"): ["V2 cutover", "crates/adapters/", "no cross-contamination"],
     Path("skills/nt-backtest/SKILL.md"): ["BacktestEngine"],
     Path("skills/nt-dev/SKILL.md"): ["cargo nextest"],
     Path("skills/nt-dex-adapter/SKILL.md"): ["crates/adapters/"],
@@ -134,6 +134,7 @@ INVARIANT_TARGETS = {
         "StrategyConfig",
         "submit_order",
     ],
+    Path("skills/nt/SKILL.md"): ["no cross-contamination"],
 }
 
 DATASET_METADATA_FIELDS = [

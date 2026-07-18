@@ -38,6 +38,11 @@ official source as authoritative and update/report the local drift.
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
+**Strategy routing is language-gated (no cross-contamination):**
+- Python strategy ("build a strategy in Python", research/AI lane) -> `nt-strategy-builder` ONLY.
+- Rust strategy ("build a strategy in Rust", HFT/perf/ships with a Rust adapter) -> `nt-strategy-builder-rust` ONLY.
+- Ambiguous ("build a strategy", no language stated) -> ask which language before loading either skill. Never mix the two skills in one strategy.
+
 | User goal | Primary skill | Supporting skills |
 |---|---|---|
 | Unsure where to start / general NautilusTrader task | `nt` then route | Load only after classifying |

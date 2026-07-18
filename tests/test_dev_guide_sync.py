@@ -42,6 +42,7 @@ def write_entry_skill(root: Path) -> None:
         "## Rust-oriented v2.0 readiness\n"
         "Default new work is Rust-first/PyO3/LiveNode oriented. "
         "AI/advisory lane remains Python and off execution-critical paths.\n"
+        "Strategy routing is language-gated: no cross-contamination between the Python and Rust strategy builders.\n"
         f"{routes}\n",
     )
 
@@ -402,6 +403,23 @@ def test_reports_missing_required_invariants(tmp_path: Path) -> None:
     )
     assert (
         "missing invariant 'pub trait Strategy' in skills/nt-strategy-builder-rust/SKILL.md"
+        in result.errors
+    )
+
+
+def test_reports_missing_strategy_language_routing_invariants(tmp_path: Path) -> None:
+    write(tmp_path / "skills/nt/SKILL.md", "# Router\n")
+    write(tmp_path / "skills/nt-implement/SKILL.md", "# Implement\n")
+
+    result = run_checks(tmp_path)
+
+    assert result.ok is False
+    assert (
+        "missing invariant 'no cross-contamination' in skills/nt/SKILL.md"
+        in result.errors
+    )
+    assert (
+        "missing invariant 'no cross-contamination' in skills/nt-implement/SKILL.md"
         in result.errors
     )
 
@@ -1694,7 +1712,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         tmp_path / "skills/nt-implement/SKILL.md",
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
         "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead. "
-        "V2 cutover: route networking/parsing adapters under crates/adapters/ to Rust.\n",
+        "V2 cutover: route networking/parsing adapters under crates/adapters/ to Rust. Strategy language is gated to avoid cross-contamination: no cross-contamination between the Python and Rust strategy builders.\n",
     )
     write(
         tmp_path / "skills/nt-dex-adapter/rules/dos_and_donts.md",

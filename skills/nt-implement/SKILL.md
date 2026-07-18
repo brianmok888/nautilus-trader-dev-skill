@@ -111,7 +111,7 @@ Rust-backed work use `LiveNode`.
 | Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
 | Actors (model hosting, regime detection, signal aggregation) | **Python** unless performance-critical | AI/advisory inference stays Python, async, off the hot path |
-| Strategies (order/position logic, entry/exit) | **Python** (PyO3 stubs) | User strategy/config surface is Python in V2 |
+| Strategies (order/position logic, entry/exit) | **Language = user choice** (see rule below) | Python (`nt-strategy-builder`) for research/AI lane; **Rust** (`nt-strategy-builder-rust`) for production/perf |
 | Execution Algorithms | **Rust** (`crates/exec-algo/`, PyO3-exposed) | Execution-critical path stays in Rust |
 | Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
@@ -120,6 +120,25 @@ Rust-backed work use `LiveNode`.
 Rule of thumb: if the component sits on the networking/parse/perf/state/execution
 path it is a Rust cutover target; if it is user strategy/config or the AI lane it
 stays Python. When unsure, check the architecture document's language boundary.
+
+
+### No cross-contamination: match the strategy language to its builder skill
+
+Strategies can be written in either language, but the two builder skills are
+**mutually exclusive by language**. There must be no cross-contamination between
+the Python and Rust strategy builders. Do not mix:
+
+- User asked for / scoped a **Python** strategy -> `nt-strategy-builder` only.
+  Do not pull Rust `Strategy` trait code or `nt-strategy-builder-rust` patterns
+  into a Python strategy (and vice versa).
+- User asked for / scoped a **Rust** strategy (HFT, perf-critical, ships with a
+  Rust adapter) -> `nt-strategy-builder-rust` only.
+- Ambiguous ("build a strategy" with no language stated) -> ask which language,
+  or start in Python and port to Rust when profiling demands it. Never silently
+  emit one language under the other skill's patterns.
+
+This keeps each skill's templates, conventions, and node-registration paths
+internally consistent and prevents hybrid strategies that fail both toolchains.
 
 ## EvoMap Sidecar Implementation Pattern (Optional)
 
