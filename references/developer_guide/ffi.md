@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/ffi/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/ffi.md
-source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
 sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high

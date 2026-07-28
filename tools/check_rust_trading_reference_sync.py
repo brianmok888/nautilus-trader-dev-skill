@@ -9,8 +9,12 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-EXPECTED_UPSTREAM_COMMIT = "f20f8af36e0f488779d3f543a217b2d19ea2db81"
-DEFAULT_UPSTREAM_ROOT = Path("/tmp/nautilus_trader_upstream_audit_20260728")
+try:
+    from tools.upstream_baseline import DEFAULT_UPSTREAM_ROOT, UPSTREAM_COMMIT
+except ModuleNotFoundError:  # Direct script execution adds tools/ to sys.path.
+    from upstream_baseline import DEFAULT_UPSTREAM_ROOT, UPSTREAM_COMMIT
+
+EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 UPSTREAM_EXAMPLES = Path("crates/trading/src/examples")
 LOCAL_EXAMPLES = Path("skills/nt-trading/references/examples/rust_trading/examples")
 CARGO_CHECK_COMMAND = (

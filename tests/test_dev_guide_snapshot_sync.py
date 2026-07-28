@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -40,6 +39,23 @@ def test_compare_snapshot_reports_changed_missing_and_extra_files(tmp_path: Path
 
 def test_pinned_upstream_checkout_matches_expected_commit() -> None:
     upstream = Path("/tmp/nautilus_trader_upstream_audit_20260728")
-    if not upstream.exists():
-        pytest.skip("pinned upstream checkout is not available")
     assert upstream_commit(upstream) == EXPECTED_UPSTREAM_COMMIT
+
+
+def test_missing_upstream_checkout_fails_closed(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-upstream"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/check_dev_guide_snapshot_sync.py",
+            "--upstream-root",
+            str(missing),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "No such file or directory" in result.stderr or "not a git repository" in result.stderr

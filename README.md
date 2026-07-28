@@ -7,7 +7,7 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 ## Overview
 
 NT v2 compatibility note: v1.x release/source labels in this baseline paragraph are release-history identifiers, not guidance to use legacy APIs.
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-28; upstream `develop` commit `f20f8af36e0f488779d3f543a217b2d19ea2db81` reports workspace `0.61.0`, Rust `1.97.1`, source label `v1.231.0`, and the V2 Python package `2.0.0rc2`; upstream release notes retain `2.0.0rc1` as the first public candidate and describe the rolling `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-28; upstream `develop` commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59` reports workspace `0.61.0`, Rust `1.97.1`, source label `v1.231.0`, and the V2 Python package `2.0.0rc2`; upstream release notes retain `2.0.0rc1` as the first public candidate and describe the rolling `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
 
 ## Skills Map
 
@@ -104,7 +104,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-adapters` | CeFi adapter specification | 7-phase implementation, 118KB official spec |
 | `nt-model` | Core domain objects | Instruments, identifiers, value objects |
 
-### Developer Guide (3)
+### Developer Guide Skills (2)
 | Skill | Description | Key Content |
 |---|---|---|
 | `nt-dev` | Official dev guide alignment | Coding standards, Rust/Python conventions, FFI memory, releases, release security |
@@ -162,12 +162,17 @@ Run the static drift checks after changing references, contracts, or skills:
 
 ```bash
 uv run python tools/check_dev_guide_sync.py
+uv run python tools/check_dev_guide_snapshot_sync.py
+python3 tools/check_rust_trading_reference_sync.py
+python3 tools/check_rust_trading_reference_sync.py --compile
 uv run --with pytest pytest tests/test_dev_guide_sync.py -q
 ```
 
 The checker validates required local developer-guide pages, source metadata,
 stale reference paths, and high-risk NautilusTrader invariants used by the skill
-suite.
+suite. The snapshot and Rust-reference commands require a NautilusTrader checkout
+at commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; pass its path with
+`--upstream-root` when it is not available at the documented default under `/tmp`.
 
 ## Source of Truth
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -31,3 +32,22 @@ def test_compile_command_checks_the_synced_upstream_example_crate() -> None:
         "examples,high-precision",
         "--lib",
     )
+
+
+def test_missing_upstream_checkout_fails_closed(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-upstream"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/check_rust_trading_reference_sync.py",
+            "--upstream-root",
+            str(missing),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "No such file or directory" in result.stderr or "not a git repository" in result.stderr
