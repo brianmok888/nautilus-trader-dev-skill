@@ -1,3 +1,7 @@
+# ARCHIVAL / MIGRATION NOTE
+
+This document contains historical NautilusTrader Cython/v1 or Python `TradingNode` material retained for migration/reference only. Prefer Rust v2/PyO3 guidance and Rust `LiveNode` patterns for new Rust-backed live work.
+
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
 # NautilusTrader Indicators Reference Guide

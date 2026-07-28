@@ -1,3 +1,7 @@
+# ARCHIVAL / MIGRATION NOTE
+
+This document contains historical NautilusTrader Cython/v1 or Python `TradingNode` material retained for migration/reference only. Prefer Rust v2/PyO3 guidance and Rust `LiveNode` patterns for new Rust-backed live work.
+
 # NautilusTrader Developer Guide Full Sync Design
 
 ## Context

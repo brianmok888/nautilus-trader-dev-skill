@@ -91,7 +91,11 @@ def report_sync(result: SyncResult) -> str:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compare developer-guide snapshot bodies with a pinned NautilusTrader checkout."
+        description=(
+            "Compare developer-guide snapshot bodies with the pinned, reproducible "
+            "NautilusTrader checkout. This check intentionally does not report "
+            "moving upstream drift; use tools/check_upstream_freshness.py for that."
+        )
     )
     parser.add_argument("--upstream-root", type=Path, default=DEFAULT_UPSTREAM_ROOT)
     return parser.parse_args(argv)
