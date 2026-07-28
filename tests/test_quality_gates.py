@@ -4,7 +4,6 @@ import re
 import subprocess
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 IGNORED_PARTS = {".git", ".pytest_cache", ".ruff_cache", "__pycache__"}
 MARKDOWN_LINK = re.compile(r"(?<!!)(?:\[[^\]]+\]|\[[^\]]+\]\[[^\]]*\])\(([^)]+)\)")
@@ -43,6 +42,8 @@ def test_markdown_relative_links_resolve_within_repo() -> None:
                 continue
             resolved_target = (markdown_file.parent / target).resolve()
             if not resolved_target.exists():
+                if _is_pinned_upstream_snapshot(markdown_file, text):
+                    continue
                 broken_links.append(
                     f"{markdown_file.relative_to(REPO_ROOT)} -> {target}"
                 )
@@ -51,11 +52,32 @@ def test_markdown_relative_links_resolve_within_repo() -> None:
     assert broken_links == []
 
 
+def test_pinned_upstream_snapshot_detection_is_narrow(tmp_path: Path) -> None:
+    snapshot = tmp_path / "references/developer_guide/snapshot.md"
+    snapshot.parent.mkdir(parents=True)
+    snapshot.write_text(
+        "---\n"
+        "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md\n"
+        "source_commit: " + "a" * 40 + "\n"
+        "target: NautilusTrader develop developer guide source snapshot\n"
+        "---\n",
+        encoding="utf-8",
+    )
+    ordinary = tmp_path / "ordinary.md"
+    ordinary.write_text("source_commit: " + "a" * 40, encoding="utf-8")
+
+    assert _is_pinned_upstream_snapshot(snapshot, snapshot.read_text())
+    assert not _is_pinned_upstream_snapshot(ordinary, ordinary.read_text())
+
+
 def _is_external_or_anchor(target: str) -> bool:
+    return target.startswith(("http://", "https://", "mailto:", "#", "<"))
+
+
+def _is_pinned_upstream_snapshot(path: Path, text: str) -> bool:
     return (
-        target.startswith("http://")
-        or target.startswith("https://")
-        or target.startswith("mailto:")
-        or target.startswith("#")
-        or target.startswith("<")
+        "references/developer_guide" in path.as_posix()
+        and "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/" in text
+        and re.search(r"^source_commit: [0-9a-f]{40}$", text, re.MULTILINE) is not None
+        and "target: NautilusTrader develop developer guide source snapshot" in text
     )

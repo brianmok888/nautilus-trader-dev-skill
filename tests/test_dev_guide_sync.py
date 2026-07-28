@@ -1,16 +1,19 @@
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_dev_guide_sync as sync
-from tools.check_dev_guide_sync import CheckResult
-from tools.check_dev_guide_sync import CURRENT_SYNC_DATE
-from tools.check_dev_guide_sync import CURRENT_TARGET
-from tools.check_dev_guide_sync import CURRENT_DEV_GUIDE_FILES
-from tools.check_dev_guide_sync import ENTRY_SKILL_ROUTING_TARGETS
-from tools.check_dev_guide_sync import run_checks
+from tools.check_dev_guide_sync import (
+    CURRENT_DEV_GUIDE_FILES,
+    CURRENT_SYNC_COMMIT,
+    CURRENT_SYNC_DATE,
+    CURRENT_TARGET,
+    ENTRY_SKILL_ROUTING_TARGETS,
+    PINNED_SNAPSHOT_LEGACY_POLICY,
+    CheckResult,
+    run_checks,
+)
 
 
 def current_metadata(name: str = "design_principles.md") -> str:
@@ -19,11 +22,36 @@ def current_metadata(name: str = "design_principles.md") -> str:
         "---\n"
         f"source_url: https://nautilustrader.io/docs/latest/developer_guide/{slug}\n"
         f"source_repo: nautechsystems/nautilus_trader/docs/developer_guide/{name}\n"
+        f"source_commit: {CURRENT_SYNC_COMMIT}\n"
         f"sync_date: {CURRENT_SYNC_DATE}\n"
         f"target: {CURRENT_TARGET}\n"
         "confidence: high\n"
+        f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}\n"
         "---\n"
     )
+
+
+def test_current_developer_guide_inventory_matches_pinned_upstream() -> None:
+    assert CURRENT_DEV_GUIDE_FILES == [
+        "adapters.md",
+        "benchmarking.md",
+        "coding_standards.md",
+        "design_principles.md",
+        "docs.md",
+        "environment_setup.md",
+        "ffi.md",
+        "index.md",
+        "markdown_style.md",
+        "plugins.md",
+        "python.md",
+        "release_security.md",
+        "releases.md",
+        "rust.md",
+        "spec_data_testing.md",
+        "spec_exec_testing.md",
+        "test_datasets.md",
+        "testing.md",
+    ]
 
 
 def write_entry_skill(root: Path) -> None:
@@ -65,15 +93,17 @@ def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) ->
         "file is retained only for migration/reference-only labelling; prefer "
         "Rust v2/PyO3 and LiveNode for new Rust-backed work.\n"
         "## NT V2 Rust readiness gates\n"
-        "Statuses: Pass, Pending, Blocked, N/A, Waived.\n"
-        "- G0 Upstream baseline: verify latest docs and upstream commit.\n"
-        "- G1 Lane classification: classify Rust, Python research/config, AI/advisory, or legacy.\n"
-        "- G2 Legacy label: mark Cython, v1, and TradingNode guidance reference-only.\n"
-        "- G3 Rust ownership: Rust owns production, performance, live, networking, parsing, and execution-critical paths.\n"
-        "- G4 NT V2 API shape: use current LiveNode, PyO3, builder APIs, and message bus patterns.\n"
-        "- G5 Test evidence: record command evidence before readiness is Pass.\n"
-        "- G6 Safety/compliance: enforce fail-closed risk, secrets, precision, and runtime boundaries.\n"
-        "- G7 Completion report: report Pass/Pending/Blocked/N/A/Waived for every gate.\n"
+        "\n"
+        "| Gate | Description | Status | Evidence |\n"
+        "|---|---|---|---|\n"
+        "| G0 Upstream baseline | Verify latest docs and upstream commit. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
+        "| G1 Lane classification | Classify Rust, Python research/config, AI/advisory, or legacy. | Pending | Awaiting the post-fix lane inventory. |\n"
+        "| G2 Legacy label | Mark Cython, v1, and TradingNode guidance reference-only. | Pending | Awaiting `uv run python tools/check_dev_guide_sync.py`. |\n"
+        "| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, and execution-critical paths. | Pending | Awaiting template reconciliation. |\n"
+        "| G4 NT V2 API shape | Use current LiveNode, PyO3, builder APIs, and message bus patterns. | Pending | Awaiting API audit. |\n"
+        "| G5 Test evidence | Record command evidence before readiness is Pass. | Pending | Awaiting targeted tests. |\n"
+        "| G6 Safety/compliance | Enforce fail-closed risk, secrets, precision, and runtime boundaries. | Pending | Awaiting review. |\n"
+        "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n"
         f"{ai_boundary}"
         f"{extra}"
     )
@@ -158,6 +188,19 @@ def test_reports_stale_metadata_target(tmp_path: Path) -> None:
 
     assert result.ok is False
     assert any("stale target" in error for error in result.errors)
+
+
+def test_reports_stale_source_commit(tmp_path: Path) -> None:
+    for name in CURRENT_DEV_GUIDE_FILES:
+        write(
+            tmp_path / "references/developer_guide" / name,
+            current_metadata(name).replace(CURRENT_SYNC_COMMIT, "0" * 40)
+            + f"# {name}\n",
+        )
+
+    result = run_checks(tmp_path)
+
+    assert any("stale source commit" in error for error in result.errors)
 
 
 def test_current_target_tracks_github_develop_baseline() -> None:
@@ -721,7 +764,7 @@ def test_reports_missing_current_reference_deltas(tmp_path: Path) -> None:
         "in references/developer_guide/adapters.md" in result.errors
     )
     assert (
-        "missing current guide delta 'trusted publishing' "
+        "missing current guide delta 'Trusted Publishing' "
         "in references/developer_guide/release_security.md" in result.errors
     )
     assert (
@@ -754,9 +797,9 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "TC-E78\n"
             + "due_post_only=true\n"
             + "trigger-order signing expiry\n"
-            + "trusted publishing\n"
+            + "Trusted Publishing\n"
             + "Sigstore\n"
-            + "SLSA provenance\n"
+            + "SLSA posture\n"
             + "cosign\n"
             + "Python v2 live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
@@ -768,7 +811,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            + "rust-toolchain.toml 1.97.0 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
+            + "rust-toolchain.toml 1.97.1 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
@@ -790,7 +833,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
-        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.97.0 "
+        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.97.1 "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -1068,10 +1111,6 @@ def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
 
     assert result.ok is False
     assert (
-        "missing latest upstream delta 'uv version pinned by `required-version`' "
-        "in references/developer_guide/rust.md" in result.errors
-    )
-    assert (
         "missing latest upstream delta 'arrow,ffi,python,high-precision,streaming,defi' "
         "in references/developer_guide/testing.md" in result.errors
     )
@@ -1271,6 +1310,23 @@ def test_ignores_non_core_legacy_and_version_mentions(tmp_path: Path) -> None:
 
 
 
+def test_ignores_hyper_util_client_legacy_logging_paths(tmp_path: Path) -> None:
+    write(
+        tmp_path / "references" / "concepts" / "logging.md",
+        "```\n"
+        "2026-01-24T05:51:42.809619000Z [DEBUG] "
+        "hyper_util::client::legacy::connect::http: connecting to 104.18.5.240:443\n"
+        "2026-01-24T05:51:42.810543000Z [DEBUG] "
+        "hyper_util::client::legacy::pool: pooling idle connection for "
+        '("https", api.example.com)\n'
+        "```\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
 def test_reports_unlabelled_generic_legacy_guidance(tmp_path: Path) -> None:
     write(
         tmp_path / "skills" / "nt-testing" / "SKILL.md",
@@ -1367,7 +1423,9 @@ def test_source_sync_metadata_accepts_recent_snapshot() -> None:
 
     assert errors == []
 
-def test_allows_file_level_legacy_label_in_curated_template(tmp_path: Path) -> None:
+def test_file_level_legacy_label_does_not_exempt_later_guidance(
+    tmp_path: Path,
+) -> None:
     write(
         tmp_path / "skills/nt-strategy-builder/templates/live_node.py",
         "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode\n"
@@ -1382,7 +1440,25 @@ def test_allows_file_level_legacy_label_in_curated_template(tmp_path: Path) -> N
 
     assert (
         "unlabelled TradingNode guidance in "
-        "skills/nt-strategy-builder/templates/live_node.py" not in result.errors
+        "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_source_pinned_snapshot_policy_labels_upstream_legacy_content(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "references/developer_guide/testing.md",
+        current_metadata("testing.md")
+        + "# Testing\n\nUpstream still documents a Cython v1 example.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any(
+        error
+        == "unlabelled legacy/Cython/v1 guidance in references/developer_guide/testing.md"
+        for error in errors
     )
 
 
@@ -1610,17 +1686,94 @@ def test_reports_incomplete_nt_v2_rust_readiness_gate_vocabulary(
     result = run_checks(tmp_path)
 
     assert result.ok is False
-    assert (
-        "missing NT V2 readiness status 'Blocked' in skills/nt-data/SKILL.md"
-        in result.errors
+    assert "missing NT V2 readiness table in skills/nt-data/SKILL.md" in result.errors
+
+
+def test_reports_readiness_table_without_status_and_evidence_columns(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-data/SKILL.md",
+        "## NT V2 Rust readiness gates\n"
+        "| Gate | Required check |\n"
+        "|---|---|\n"
+        "| G0 Upstream baseline | Pass after docs review. |\n"
+        "| G1 Lane classification | Pending. |\n"
+        "| G2 Legacy label | Blocked. |\n"
+        "| G3 Rust ownership | Pending. |\n"
+        "| G4 NT V2 API shape | Pending. |\n"
+        "| G5 Test evidence | Pending. |\n"
+        "| G6 Safety/compliance | Pending. |\n"
+        "| G7 Completion report | Pending. |\n",
     )
+
+    errors = run_checks(tmp_path).errors
+
     assert (
-        "missing NT V2 readiness status 'N/A' in skills/nt-data/SKILL.md"
-        in result.errors
+        "invalid NT V2 readiness table columns in skills/nt-data/SKILL.md"
+        in errors
     )
+
+
+def test_readiness_intro_with_legacy_terms_does_not_need_separate_label(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-data/SKILL.md",
+        "NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` "
+        "references in this file are retained for migration/reference-only context.\n\n"
+        "## NT V2 Rust readiness gates\n"
+        "\n"
+        "Use these gates for newly built work. Complete the status gate before coding "
+        "and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; "
+        "`Pass` requires explicit docs, diff, or command evidence.\n"
+        "| Gate | Description | Status | Evidence |\n"
+        "| --- | --- | --- | --- |\n"
+        "| G0 Upstream baseline | Confirm upstream docs. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
+        "| G1 Lane classification | Classify Rust or Python. | Pending | Awaiting lane inventory. |\n"
+        "| G2 Legacy label | Label legacy Cython/v1 and TradingNode guidance. | Pass | Compatibility note above labels legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |\n"
+        "| G3 Rust ownership | Rust owns production paths. | Pending | Awaiting template reconciliation. |\n"
+        "| G4 NT V2 API shape | Use current APIs. | Pending | Awaiting API audit. |\n"
+        "| G5 Test evidence | Record command evidence. | Pending | Awaiting targeted tests. |\n"
+        "| G6 Safety/compliance | Enforce safety boundaries. | Pending | Awaiting review. |\n"
+        "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any("unlabelled TradingNode guidance" in error for error in errors)
+    assert not any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
+
+
+def test_reports_pass_readiness_gate_without_measurable_evidence(
+    tmp_path: Path,
+) -> None:
+    card = readiness_gate_text().replace(
+        "`git rev-parse HEAD` recorded in `README.md`.",
+        "Looks correct.",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
     assert (
-        "missing NT V2 readiness status 'Waived' in skills/nt-data/SKILL.md"
-        in result.errors
+        "NT V2 readiness gate G0 Pass lacks measurable evidence in "
+        "skills/nt-data/SKILL.md" in errors
+    )
+
+
+def test_reports_self_referential_pass_readiness_evidence(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "`git rev-parse HEAD` recorded in `README.md`.",
+        "`grep -R \"Rust owns production\" skills/nt*/SKILL.md` finds the gate text.",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "NT V2 readiness gate G0 Pass uses self-referential evidence in "
+        "skills/nt-data/SKILL.md" in errors
     )
 
 
@@ -1706,7 +1859,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
     write(
         tmp_path / "references/developer_guide/rust.md",
-        "Rust guidance with rust-toolchain.toml 1.97.0 "
+        "Rust guidance with rust-toolchain.toml 1.97.1 "
         "Generated Python bindings HIGH_PRECISION=true py-stubs-v2 "
         "ffi,python,high-precision,defi "
         "arrow,ffi,python,high-precision,streaming,defi.\n",
@@ -1724,7 +1877,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
-        "missing NT v2 cutover term '1.97.0' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term '1.97.1' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -1738,10 +1891,6 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     assert (
         "missing NT v2 testing term 'Python v2 controller subclassing' "
         "in skills/nt-testing/SKILL.md" in result.errors
-    )
-    assert (
-        "missing NT v2 rust term 'v1.230.0' "
-        "in references/developer_guide/rust.md" in result.errors
     )
 
 
@@ -1864,10 +2013,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "pip-audit maturin\n"
         ),
         "rust.md": (
-            "v1.230.0 rust-toolchain.toml 1.97.0 "
+            "rust-toolchain.toml 1.97.1 "
             "Generated FFI bindings and precision mode HIGH_PRECISION=true\n"
-            "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            "ffi,python,high-precision,defi\n"
+            "Generated Python artifacts make py-stubs-v2 bon::bon try_order.\n"
             "Generated Python bindings arrow,ffi,python,high-precision,streaming,defi\n"
             "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
         ),
@@ -1876,7 +2024,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "from Tokio worker tasks\n"
         ),
         "ffi.md": "Typed CVec wrappers and Send Rust-owned CVec capsules with explicit drop\n",
-        "release_security.md": "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= gh attestation verify\n",
+        "release_security.md": "Trusted Publishing Sigstore SLSA posture cosign export TAG= export REPO= gh attestation verify\n",
     }
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
@@ -1952,7 +2100,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "NT v2 compatibility note: legacy Cython/v1 reference-only; "
         "prefer Rust v2/PyO3 for new work.\n"
         "Rust-oriented v2.0 readiness: v1.230.0 latest release, 1.231.0 develop source, "
-        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.97.0. "
+        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.97.1. "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         "Do not copy current version numbers into docs. Generated FFI bindings and precision mode "
@@ -1960,7 +2108,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Tokio worker threads from running Python code. Typed CVec wrappers and Send are required "
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
-        "v1.230.0 rust-toolchain.toml 1.97.0 "
+        "v1.230.0 rust-toolchain.toml 1.97.1 "
         "Generated Python artifacts make py-stubs-v2 arrow,ffi,python,high-precision,streaming,defi.\n"
         "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
@@ -2019,9 +2167,9 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "TC-E78\n"
             + "due_post_only=true\n"
             + "trigger-order signing expiry\n"
-            + "trusted publishing\n"
+            + "Trusted Publishing\n"
             + "Sigstore\n"
-            + "SLSA provenance\n"
+            + "SLSA posture\n"
             + "cosign\n"
             + "Python v2 live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
@@ -2034,11 +2182,13 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "pip-audit\n"
             + "maturin\n"
             + "rustup toolchain install nightly\n"
+            + "Bridge synchronous code with get_runtime().block_on() from sync_method into async_implementation.\n"
+            + "Never use `block_on` in trait methods for DataClient or ExecutionClient. Use `spawn_task` instead.\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
-            + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            + "v1.230.0 1.231.0 rust-toolchain.toml 1.97.0 Generated Python bindings HIGH_PRECISION=true py-stubs-v2 ffi,python,high-precision,defi.\n"
+            + "Generated Python artifacts make py-stubs-v2 bon::bon try_order.\n"
+            + "rust-toolchain.toml 1.97.1 Generated Python bindings HIGH_PRECISION=true py-stubs-v2.\n"
             + "2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
-            + "ffi,python,high-precision,defi arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
         )

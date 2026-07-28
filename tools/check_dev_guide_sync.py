@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-
 CURRENT_DEV_GUIDE_FILES = [
     "adapters.md",
     "benchmarking.md",
@@ -15,6 +14,8 @@ CURRENT_DEV_GUIDE_FILES = [
     "environment_setup.md",
     "ffi.md",
     "index.md",
+    "markdown_style.md",
+    "plugins.md",
     "python.md",
     "release_security.md",
     "releases.md",
@@ -29,14 +30,25 @@ REQUIRED_GUIDE_FILES = [
     Path("references/developer_guide") / name for name in CURRENT_DEV_GUIDE_FILES
 ]
 
-METADATA_KEYS = ["source_url:", "source_repo:", "sync_date:", "target:", "confidence:"]
-CURRENT_SYNC_DATE = "2026-07-17"
-CURRENT_SYNC_COMMIT = "63d8dd00e12225e06c4d00a63c357e59695adffa"
+METADATA_KEYS = [
+    "source_url:",
+    "source_repo:",
+    "source_commit:",
+    "sync_date:",
+    "target:",
+    "confidence:",
+    "legacy_policy:",
+]
+CURRENT_SYNC_DATE = "2026-07-28"
+CURRENT_SYNC_COMMIT = "f20f8af36e0f488779d3f543a217b2d19ea2db81"
 CURRENT_RELEASE_TAG = "v1.230.0"
 CURRENT_RELEASE_DATE = "2026-06-29"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
-CURRENT_DATE = "2026-07-17"
+CURRENT_DATE = "2026-07-28"
 SOURCE_STALE_AFTER_DAYS = 14
+PINNED_SNAPSHOT_LEGACY_POLICY = (
+    "source-pinned upstream snapshot; historical guidance is migration/reference-only"
+)
 
 
 ENTRY_SKILL = Path("skills/nt/SKILL.md")
@@ -256,11 +268,10 @@ CONTRACT_TERM_GROUPS = {
         "adapter runtime",
         "block_on boundary",
     ): [
-        "outside an ambient Tokio runtime",
-        "PyO3",
-        "DataClient",
-        "ExecutionClient",
-        "spawn",
+        "Bridge synchronous code",
+        "get_runtime().block_on()",
+        "sync_method",
+        "async_implementation",
     ],
     (
         Path("skills/nt-adapters/references/guides/rust.md"),
@@ -292,7 +303,6 @@ CONTRACT_TERM_GROUPS = {
 
 LATEST_UPSTREAM_DELTA_TARGETS = {
     Path("references/developer_guide/rust.md"): [
-        "uv version pinned by `required-version`",
         "Generated Python artifacts",
         "make py-stubs-v2",
         "bon::bon",
@@ -321,9 +331,8 @@ NT_V2_CUTOVER_TARGETS = {
         "1.231.0",
         "2.0.0rc1",
         "2.0.0rcN",
-        "release-candidate",
         "rust-toolchain.toml",
-        "1.97.0",
+        "1.97.1",
         "Python v2 controller subclassing",
         "subclassable execution algorithms",
         "FeeModel",
@@ -366,17 +375,10 @@ NT_V2_TESTING_TARGETS = {
 
 NT_V2_RUST_TARGETS = {
     Path("references/developer_guide/rust.md"): [
-        "v1.230.0",
-        "1.231.0",
-        "2.0.0rc1",
-        "2.0.0rcN",
-        "release-candidate",
         "rust-toolchain.toml",
-        "1.97.0",
         "Generated Python artifacts",
         "HIGH_PRECISION=true",
         "py-stubs-v2",
-        "ffi,python,high-precision,defi",
     ],
 }
 
@@ -395,9 +397,8 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
         "1.231.0",
         "2.0.0rc1",
         "2.0.0rcN",
-        "release-candidate",
         "rust-toolchain.toml",
-        "1.97.0",
+        "1.97.1",
     ],
     Path("skills/nt-architect/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
@@ -432,7 +433,7 @@ NT_V2_READINESS_GATE_TARGETS = [
 ]
 
 NT_V2_READINESS_SECTION = "## NT V2 Rust readiness gates"
-NT_V2_READINESS_STATUSES = ["Pass", "Pending", "Blocked", "N/A", "Waived"]
+NT_V2_READINESS_STATUSES = {"Pass", "Pending", "Blocked", "N/A", "Waived"}
 NT_V2_READINESS_GATES = [
     "G0 Upstream baseline",
     "G1 Lane classification",
@@ -677,25 +678,63 @@ PYTHON_CODE_BLOCK_RE = re.compile(
     r"^```(?:python|py)\s*\n(.*?)^```", re.MULTILINE | re.DOTALL
 )
 
-BLOCK_ON_CANONICAL_WARNING_TARGETS = [
-    Path("skills/nt-dev/SKILL.md"),
-    Path("skills/nt-adapters/SKILL.md"),
-    Path("skills/nt-implement/SKILL.md"),
-    Path("skills/nt-dex-adapter/rules/dos_and_donts.md"),
-    Path("references/developer_guide/rust.md"),
-    Path("skills/nt-adapters/references/guides/rust.md"),
-    Path("skills/nt-dev/references/guides/rust_conventions.md"),
-]
-
-BLOCK_ON_CANONICAL_WARNING_TERMS = [
-    "Never use",
-    "get_runtime().block_on()",
-    "inside live",
-    "DataClient",
-    "ExecutionClient",
-    "trait method implementations",
-    "spawn work",
-]
+BLOCK_ON_CANONICAL_WARNING_TARGETS = {
+    Path("skills/nt-dev/SKILL.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+        "trait method",
+    ],
+    Path("skills/nt-adapters/SKILL.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+        "trait method",
+    ],
+    Path("skills/nt-implement/SKILL.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+        "trait method",
+    ],
+    Path("skills/nt-dex-adapter/rules/dos_and_donts.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+    ],
+    Path("references/developer_guide/adapters.md"): [
+        "block_on",
+        "DataClient",
+        "ExecutionClient",
+        "Use `spawn_task` instead",
+    ],
+    Path("skills/nt-adapters/references/guides/rust.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+        "trait method",
+        "spawn work",
+    ],
+    Path("skills/nt-dev/references/guides/rust_conventions.md"): [
+        "Never use",
+        "get_runtime().block_on()",
+        "inside live",
+        "DataClient",
+        "ExecutionClient",
+        "trait method",
+        "spawn work",
+    ],
+}
 
 CURRENT_GUIDE_DELTA_TARGETS = {
     Path("references/developer_guide/adapters.md"): [
@@ -720,7 +759,6 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "current version numbers into docs",
         "rustup toolchain install nightly",
         "pip-audit",
-        "maturin",
     ],
     Path("references/developer_guide/rust.md"): [
         "Generated FFI bindings and precision mode",
@@ -735,9 +773,9 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "Rust-owned CVec capsules with explicit drop",
     ],
     Path("references/developer_guide/release_security.md"): [
-        "trusted publishing",
+        "Trusted Publishing",
         "Sigstore",
-        "SLSA provenance",
+        "SLSA posture",
         "cosign",
     ],
 }
@@ -866,6 +904,20 @@ def _block_with_previous_context(blocks: list[str], index: int) -> str:
     return blocks[index]
 
 
+def _is_readiness_gate_section_block(block: str) -> bool:
+    return "| Gate | Description | Status | Evidence |" in block and (
+        _contains_term(block, NT_V2_READINESS_SECTION)
+        or "| G0 Upstream baseline |" in block
+    )
+
+
+def _is_hyper_util_legacy_path(block: str) -> bool:
+    if "hyper_util::client::legacy" not in block:
+        return False
+    scrubbed = re.sub(r"hyper_util::client::legacy(?:::[A-Za-z0-9_]+)*", "", block)
+    return "legacy" not in scrubbed.lower()
+
+
 def _block_has_label(block: str, labels: list[str]) -> bool:
     return _contains_term(block, "NT v2 compatibility note") and any(
         _contains_term(block, label) for label in labels
@@ -958,6 +1010,19 @@ def _check_duplicate_compatibility_labels(root: Path, errors: list[str]) -> None
             previous_note = note
 
 
+def _is_current_source_pinned_dev_guide_snapshot(path: Path, root: Path) -> bool:
+    relative = path.relative_to(root)
+    if relative.parts[:2] != ("references", "developer_guide"):
+        return False
+    text = _read(path)
+    return (
+        f"source_commit: {CURRENT_SYNC_COMMIT}" in text
+        and f"sync_date: {CURRENT_SYNC_DATE}" in text
+        and f"target: {CURRENT_TARGET}" in text
+        and f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" in text
+    )
+
+
 def _has_legacy_guidance(text: str) -> bool:
     return any(term in text for term in LEGACY_GUIDANCE_TERMS) or any(
         pattern.search(text) for pattern in LEGACY_GUIDANCE_PATTERNS
@@ -970,13 +1035,15 @@ def _has_tradingnode_guidance(text: str) -> bool:
 
 def _check_unlabelled_tradingnode_guidance(root: Path, errors: list[str]) -> None:
     for path in _iter_legacy_guidance_files(root):
+        if _is_current_source_pinned_dev_guide_snapshot(path, root):
+            continue
         text = _read(path)
         text = _strip_labelled_python_fences(text)
-        if _has_file_level_label(text, TRADING_NODE_LABEL_TERMS):
-            continue
         blocks = _split_guidance_blocks(text)
         for index, block in enumerate(blocks):
             if not _has_tradingnode_guidance(block):
+                continue
+            if _is_readiness_gate_section_block(block):
                 continue
             if _block_has_label(block, TRADING_NODE_LABEL_TERMS):
                 continue
@@ -989,13 +1056,17 @@ def _check_unlabelled_tradingnode_guidance(root: Path, errors: list[str]) -> Non
 
 def _check_unlabelled_legacy_guidance(root: Path, errors: list[str]) -> None:
     for path in _iter_legacy_guidance_files(root):
+        if _is_current_source_pinned_dev_guide_snapshot(path, root):
+            continue
         text = _read(path)
         text = _strip_labelled_python_fences(text)
-        if _has_file_level_label(text, LEGACY_LABEL_TERMS):
-            continue
         blocks = _split_guidance_blocks(text)
         for index, block in enumerate(blocks):
             if not _has_legacy_guidance(block):
+                continue
+            if _is_readiness_gate_section_block(block):
+                continue
+            if _is_hyper_util_legacy_path(block):
                 continue
             if _block_has_label(block, LEGACY_LABEL_TERMS):
                 continue
@@ -1113,8 +1184,12 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             )
         if f"sync_date: {CURRENT_SYNC_DATE}" not in text:
             errors.append(f"stale sync date in {relative.as_posix()}")
+        if f"source_commit: {CURRENT_SYNC_COMMIT}" not in text:
+            errors.append(f"stale source commit in {relative.as_posix()}")
         if f"target: {CURRENT_TARGET}" not in text:
             errors.append(f"stale target in {relative.as_posix()}")
+        if f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" not in text:
+            errors.append(f"missing pinned snapshot legacy policy in {relative.as_posix()}")
 
 
 def _check_source_sync_metadata(
@@ -1242,15 +1317,77 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
                 f"missing NT V2 Rust readiness gates section in {relative.as_posix()}"
             )
             continue
-        for status in NT_V2_READINESS_STATUSES:
-            if not _contains_term(text, status):
-                errors.append(
-                    f"missing NT V2 readiness status '{status}' in {relative.as_posix()}"
-                )
         for gate in NT_V2_READINESS_GATES:
             if not _contains_term(text, gate):
                 errors.append(
                     f"missing NT V2 readiness gate '{gate}' in {relative.as_posix()}"
+                )
+
+        section = text.split(NT_V2_READINESS_SECTION, 1)[1]
+        next_heading = re.search(r"\n## (?!#)", section)
+        if next_heading:
+            section = section[: next_heading.start()]
+        rows = [line.strip() for line in section.splitlines() if line.lstrip().startswith("|")]
+        rows = [row for row in rows if not set(row.replace(" ", "")).issubset({"|", "-"})]
+        if not rows:
+            errors.append(f"missing NT V2 readiness table in {relative.as_posix()}")
+            continue
+
+        header = [cell.strip() for cell in rows[0].strip("|").split("|")]
+        if header != ["Gate", "Description", "Status", "Evidence"]:
+            errors.append(
+                f"invalid NT V2 readiness table columns in {relative.as_posix()}"
+            )
+            continue
+
+        gate_rows: dict[str, tuple[str, str]] = {}
+        for row in rows[1:]:
+            cells = [cell.strip() for cell in row.strip("|").split("|")]
+            if len(cells) != 4:
+                continue
+            gate_id = cells[0].split(maxsplit=1)[0]
+            gate_rows[gate_id] = (cells[2], cells[3])
+
+        for gate in NT_V2_READINESS_GATES:
+            gate_id = gate.split(maxsplit=1)[0]
+            if gate_id not in gate_rows:
+                errors.append(
+                    f"missing NT V2 readiness table row '{gate_id}' in {relative.as_posix()}"
+                )
+                continue
+            status, evidence = gate_rows[gate_id]
+            if status not in NT_V2_READINESS_STATUSES:
+                errors.append(
+                    f"invalid NT V2 readiness status '{status}' for {gate_id} in {relative.as_posix()}"
+                )
+            if not evidence or evidence in {"—", "-"}:
+                errors.append(
+                    f"missing NT V2 readiness evidence for {gate_id} in {relative.as_posix()}"
+                )
+            if status == "Pass" and not (
+                "`" in evidence
+                or "http://" in evidence
+                or "https://" in evidence
+                or re.search(r"(?:^|\s)[\w./-]+:\d+(?:\s|$)", evidence)
+            ):
+                errors.append(
+                    f"NT V2 readiness gate {gate_id} Pass lacks measurable evidence in {relative.as_posix()}"
+                )
+            if status == "Pass" and re.search(
+                r"`(?:grep|rg)\b[^`]*(?:SKILL\.md|readiness|gate text)",
+                evidence,
+                re.IGNORECASE,
+            ):
+                errors.append(
+                    f"NT V2 readiness gate {gate_id} Pass uses self-referential evidence in {relative.as_posix()}"
+                )
+            if status == "Blocked" and not re.search(
+                r"\b(?:because|blocked|missing|unavailable|requires|awaiting|fails?)\b",
+                evidence,
+                re.IGNORECASE,
+            ):
+                errors.append(
+                    f"NT V2 readiness gate {gate_id} Blocked lacks reason in {relative.as_posix()}"
                 )
 
     _check_required_terms(
@@ -1290,15 +1427,13 @@ def _check_contract_term_groups(root: Path, errors: list[str]) -> None:
 
 
 def _check_block_on_canonical_warnings(root: Path, errors: list[str]) -> None:
-    for relative in BLOCK_ON_CANONICAL_WARNING_TARGETS:
+    for relative, required_terms in BLOCK_ON_CANONICAL_WARNING_TARGETS.items():
         absolute = root / relative
         if not absolute.exists():
             continue
 
         text = _read(absolute)
-        if not _contains_terms_in_single_paragraph(
-            text, BLOCK_ON_CANONICAL_WARNING_TERMS
-        ):
+        if not _contains_terms_in_single_paragraph(text, required_terms):
             errors.append(
                 "missing adapter runtime contract 'block_on canonical warning' "
                 f"in {relative.as_posix()}"
@@ -1412,7 +1547,11 @@ def run_checks(root: Path) -> CheckResult:
             or 'required-version = "==0.11.12"' in text
         ):
             errors.append(f"stale uv required-version guidance in {relative}")
-        if UV_REQUIRED_VERSION_RE.search(text):
+        relative_path = markdown_file.relative_to(root)
+        if UV_REQUIRED_VERSION_RE.search(text) and relative_path.parts[:2] != (
+            "references",
+            "developer_guide",
+        ):
             errors.append(f"copied uv required-version guidance in {relative}")
         if "Current official baseline:" in text and "Python package" in text:
             errors.append(f"copied current Nautilus version guidance in {relative}")
