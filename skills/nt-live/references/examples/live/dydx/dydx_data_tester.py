@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/dydx/dydx_data_tester.py
+../../../../../nt-adapters/references/examples/legacy_migration/dydx/dydx_data_tester.py

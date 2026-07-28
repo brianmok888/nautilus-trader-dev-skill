@@ -74,19 +74,23 @@ def test_python_tradingnode_reference_examples_are_legacy_quarantined() -> None:
 
 
 def test_generic_migration_banner_does_not_bless_default_live_tradingnode() -> None:
-    text = "\n".join(
-        [
-            "# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default",
-            "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode",
-            "# references in this file are retained for migration/reference-only context.",
-            "# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.",
-            "",
-            "from nautilus_trader.live.node import TradingNode",
-            "node = TradingNode(config=config)",
-        ]
+    text = (
+        "# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default\n"
+        "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode\n"
+        "# references in this file are retained for migration/reference-only context.\n"
+        "# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.\n\n"
+        "from nautilus_trader.live.node import TradingNode\n"
+        "node = TradingNode(config=config)"
     )
 
     assert not _has_allowed_classification(text)
+
+
+def test_live_example_links_do_not_point_to_quarantined_legacy_paths() -> None:
+    live_examples = REPO_ROOT / "skills/nt-live/references/examples/live"
+    broken_links = [path for path in live_examples.rglob("*") if path.is_symlink() and not path.exists()]
+
+    assert broken_links == []
 
 
 def _is_legacy_quarantined_reference(relative: Path) -> bool:
@@ -100,7 +104,8 @@ def _has_allowed_classification(text: str) -> bool:
     for classification in ALLOWED_CLASSIFICATIONS:
         if f"{CLASSIFICATION_PREFIX}{classification}" not in header:
             continue
-        if "TradingNode" in text and classification == "migration/reference-only; not a production default":
-            return False
-        return True
+        return not (
+            "TradingNode" in text
+            and classification == "migration/reference-only; not a production default"
+        )
     return False

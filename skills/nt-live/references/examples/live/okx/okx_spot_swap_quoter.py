@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/okx/okx_spot_swap_quoter.py
+../../../../../nt-adapters/references/examples/legacy_migration/okx/okx_spot_swap_quoter.py

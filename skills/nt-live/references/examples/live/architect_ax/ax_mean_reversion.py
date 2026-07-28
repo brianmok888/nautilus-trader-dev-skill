@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/architect_ax/ax_mean_reversion.py
+../../../../../nt-adapters/references/examples/legacy_migration/architect_ax/ax_mean_reversion.py

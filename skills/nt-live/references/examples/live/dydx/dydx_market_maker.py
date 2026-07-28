@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/dydx/dydx_market_maker.py
+../../../../../nt-adapters/references/examples/legacy_migration/dydx/dydx_market_maker.py

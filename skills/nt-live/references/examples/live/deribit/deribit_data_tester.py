@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/deribit/deribit_data_tester.py
+../../../../../nt-adapters/references/examples/legacy_migration/deribit/deribit_data_tester.py

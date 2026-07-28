@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/binance/binance_spot_demo_exec_tester.py
+../../../../../nt-adapters/references/examples/legacy_migration/binance/binance_spot_demo_exec_tester.py

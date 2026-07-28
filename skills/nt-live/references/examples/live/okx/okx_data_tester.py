@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/okx/okx_data_tester.py
+../../../../../nt-adapters/references/examples/legacy_migration/okx/okx_data_tester.py

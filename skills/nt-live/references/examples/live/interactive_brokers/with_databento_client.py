@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/interactive_brokers/with_databento_client.py
+../../../../../nt-adapters/references/examples/legacy_migration/interactive_brokers/with_databento_client.py

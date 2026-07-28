@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/bitmex/bitmex_exec_tester.py
+../../../../../nt-adapters/references/examples/legacy_migration/bitmex/bitmex_exec_tester.py

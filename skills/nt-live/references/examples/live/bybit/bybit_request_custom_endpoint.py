@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/bybit/bybit_request_custom_endpoint.py
+../../../../../nt-adapters/references/examples/legacy_migration/bybit/bybit_request_custom_endpoint.py

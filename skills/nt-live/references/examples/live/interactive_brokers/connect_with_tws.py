@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/interactive_brokers/connect_with_tws.py
+../../../../../nt-adapters/references/examples/legacy_migration/interactive_brokers/connect_with_tws.py

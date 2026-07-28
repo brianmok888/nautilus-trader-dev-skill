@@ -1,1 +1,1 @@
-../../../../../../nt-adapters/references/examples/interactive_brokers/notebooks/spread_example.py
+../../../../../../nt-adapters/references/examples/legacy_migration/interactive_brokers/notebooks/spread_example.py

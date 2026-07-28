@@ -1,1 +1,1 @@
-../../../../../nt-adapters/references/examples/bybit/bybit_ema_cross_with_trailing_stop.py
+../../../../../nt-adapters/references/examples/legacy_migration/bybit/bybit_ema_cross_with_trailing_stop.py
