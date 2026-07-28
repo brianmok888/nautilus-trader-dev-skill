@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.upstream_baseline import DEFAULT_UPSTREAM_ROOT, UPSTREAM_COMMIT
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GUIDE = REPO_ROOT / "docs/end_to_end_guide.md"
@@ -17,7 +17,7 @@ README = REPO_ROOT / "README.md"
 NT_LIVE = REPO_ROOT / "skills/nt-live/SKILL.md"
 NT_TESTING = REPO_ROOT / "skills/nt-testing/SKILL.md"
 NT_RUST_STRATEGY = REPO_ROOT / "skills/nt-strategy-builder-rust/SKILL.md"
-UPSTREAM_ROOT = DEFAULT_UPSTREAM_ROOT
+UPSTREAM_ROOT = default_upstream_root()
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 
 

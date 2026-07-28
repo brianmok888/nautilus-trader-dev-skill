@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +15,21 @@ from tools.check_upstream_freshness import (
     build_freshness_report,
     render_text_report,
 )
+from tools.upstream_baseline import default_upstream_root
+
+
+def test_upstream_root_is_portable_and_environment_overridable(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    monkeypatch.setenv("NT_UPSTREAM_ROOT", str(tmp_path / "custom-upstream"))
+
+    assert default_upstream_root() == tmp_path / "custom-upstream"
+
+    monkeypatch.delenv("NT_UPSTREAM_ROOT")
+    resolved = default_upstream_root()
+    assert resolved.name == "nautilus_trader"
+    assert ".cache" in resolved.parts
+    assert "nautilus_trader_upstream_audit_20260728" not in str(resolved)
 
 
 def _git(repo: Path, *args: str) -> str:

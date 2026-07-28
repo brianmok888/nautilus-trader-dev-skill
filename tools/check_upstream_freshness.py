@@ -11,15 +11,15 @@ from pathlib import Path
 
 if __package__:
     from .upstream_baseline import (
-        DEFAULT_UPSTREAM_ROOT,
         UPSTREAM_COMMIT,
         UPSTREAM_REMOTE_REFS,
+        default_upstream_root,
     )
 else:  # Direct script execution adds tools/ to sys.path.
     from upstream_baseline import (  # pyright: ignore[reportImplicitRelativeImport]
-        DEFAULT_UPSTREAM_ROOT,
         UPSTREAM_COMMIT,
         UPSTREAM_REMOTE_REFS,
+        default_upstream_root,
     )
 
 
@@ -161,7 +161,7 @@ def render_text_report(report: FreshnessReport) -> str:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--upstream-root", type=Path, default=DEFAULT_UPSTREAM_ROOT)
+    parser.add_argument("--upstream-root", type=Path, default=default_upstream_root())
     parser.add_argument("--pinned-commit", default=UPSTREAM_COMMIT)
     parser.add_argument(
         "--ref",

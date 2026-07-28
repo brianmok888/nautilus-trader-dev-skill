@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 if __package__:
-    from .upstream_baseline import DEFAULT_UPSTREAM_ROOT, UPSTREAM_COMMIT
+    from .upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 else:  # Direct script execution adds tools/ to sys.path.
     from upstream_baseline import (  # pyright: ignore[reportImplicitRelativeImport]
-        DEFAULT_UPSTREAM_ROOT,
         UPSTREAM_COMMIT,
+        default_upstream_root,
     )
 
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
@@ -139,7 +139,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Validate Rust trading reference examples against a pinned NautilusTrader upstream checkout."
     )
-    parser.add_argument("--upstream-root", type=Path, default=DEFAULT_UPSTREAM_ROOT)
+    parser.add_argument("--upstream-root", type=Path, default=default_upstream_root())
     parser.add_argument("--sync", action="store_true", help="Replace local references with exact upstream files.")
     parser.add_argument("--compile", action="store_true", help="Compile local references inside a temporary upstream checkout.")
     return parser.parse_args(argv)

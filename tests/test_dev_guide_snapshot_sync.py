@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tools import check_dev_guide_snapshot_sync as snapshot_sync
 from tools.check_dev_guide_snapshot_sync import (
     EXPECTED_UPSTREAM_COMMIT,
     compare_snapshot,
@@ -38,7 +39,7 @@ def test_compare_snapshot_reports_changed_missing_and_extra_files(tmp_path: Path
 
 
 def test_pinned_upstream_checkout_matches_expected_commit() -> None:
-    upstream = Path("/tmp/nautilus_trader_upstream_audit_20260728")
+    upstream = snapshot_sync.default_upstream_root()
     assert upstream_commit(upstream) == EXPECTED_UPSTREAM_COMMIT
 
 
