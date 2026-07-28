@@ -13,26 +13,19 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Configuration for the book imbalance actor.
+//! Hurst/VPIN directional strategy.
+//!
+//! Subscribes to dollar bars, trades, and quotes for a single instrument.
+//! Estimates the Hurst exponent by rescaled range over dollar-bar log returns,
+//! computes VPIN from trade aggressor flow per completed bar, and opens a
+//! position on the next quote tick when both signals align. Exits on regime
+//! decay or holding-time cap.
 
-use nautilus_model::identifiers::{ActorId, InstrumentId};
+pub mod config;
+pub mod strategy;
 
-/// Configuration for the order book imbalance actor.
-#[derive(Debug, Clone, bon::Builder)]
-#[cfg_attr(
-    feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.trading", from_py_object)
-)]
-#[cfg_attr(
-    feature = "python",
-    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.trading")
-)]
-pub struct BookImbalanceActorConfig {
-    /// Instruments to subscribe to.
-    pub instrument_ids: Vec<InstrumentId>,
-    /// How often (in update count) to log a progress line. Set to 0 to disable.
-    #[builder(default = 100)]
-    pub log_interval: u64,
-    /// Actor identifier. Defaults to `BOOK_IMBALANCE-001`.
-    pub actor_id: Option<ActorId>,
-}
+#[cfg(test)]
+mod tests;
+
+pub use config::HurstVpinDirectionalConfig;
+pub use strategy::HurstVpinDirectional;

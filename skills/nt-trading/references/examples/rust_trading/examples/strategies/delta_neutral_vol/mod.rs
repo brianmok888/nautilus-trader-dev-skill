@@ -13,26 +13,22 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Configuration for the book imbalance actor.
+//! Delta-neutral short volatility hedger.
+//!
+//! Tracks a short OTM call and put (strangle) on a configurable option
+//! family and delta-hedges the net Greek exposure with the underlying
+//! perpetual swap. Rehedges when portfolio delta exceeds a configurable
+//! threshold or on a periodic timer.
+//!
+//! This strategy subscribes to venue-provided Greeks via
+//! `subscribe_option_greeks` and uses them to track portfolio delta.
+//! Strike selection uses a simple strike-percentile heuristic at startup.
 
-use nautilus_model::identifiers::{ActorId, InstrumentId};
+pub mod config;
+pub mod strategy;
 
-/// Configuration for the order book imbalance actor.
-#[derive(Debug, Clone, bon::Builder)]
-#[cfg_attr(
-    feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.trading", from_py_object)
-)]
-#[cfg_attr(
-    feature = "python",
-    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.trading")
-)]
-pub struct BookImbalanceActorConfig {
-    /// Instruments to subscribe to.
-    pub instrument_ids: Vec<InstrumentId>,
-    /// How often (in update count) to log a progress line. Set to 0 to disable.
-    #[builder(default = 100)]
-    pub log_interval: u64,
-    /// Actor identifier. Defaults to `BOOK_IMBALANCE-001`.
-    pub actor_id: Option<ActorId>,
-}
+#[cfg(test)]
+mod tests;
+
+pub use config::DeltaNeutralVolConfig;
+pub use strategy::DeltaNeutralVol;

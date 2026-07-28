@@ -13,7 +13,7 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Grid market making strategy implementation.
+//! Composite market making strategy implementation.
 
 use std::fmt::Debug;
 
@@ -30,123 +30,175 @@ use nautilus_model::{
 };
 use rust_decimal::Decimal;
 
-use super::config::GridMarketMakerConfig;
+use super::config::CompositeMarketMakerConfig;
 use crate::{
     nautilus_strategy,
     strategy::{Strategy, StrategyCore},
 };
 
-/// Grid market making strategy with inventory-based skewing.
+/// Composite market making strategy with book-mid quoting and signal-driven skew.
 ///
-/// Places a symmetric grid of limit buy and sell orders around the mid-price.
-/// Orders persist across ticks and are only replaced when the mid-price moves
-/// by at least `requote_threshold_bps`. The grid is shifted by a skew proportional
-/// to the current net position to discourage inventory buildup.
-pub struct GridMarketMaker {
+/// Quotes a single bid and a single ask around the target instrument's book mid.
+/// A second instrument (typically a `SyntheticInstrument`) supplies a signal
+/// whose residual against a baseline shifts both sides up or down. Inventory
+/// skew shifts both sides in the opposite direction of the current position.
+/// Orders persist across ticks and are only replaced when either the anchor
+/// or the signal residual's price impact (`signal_skew_factor * residual`)
+/// moves by at least `requote_threshold_bps` of the anchor.
+pub struct CompositeMarketMaker {
     pub(super) core: StrategyCore,
-    pub(super) config: GridMarketMakerConfig,
+    pub(super) config: CompositeMarketMakerConfig,
     pub(super) instrument: Option<InstrumentAny>,
     pub(super) trade_size: Option<Quantity>,
     pub(super) price_precision: Option<u8>,
-    pub(super) last_quoted_mid: Option<Price>,
+    pub(super) last_quoted_anchor: Option<Price>,
+    pub(super) last_quoted_residual: Option<f64>,
+    pub(super) signal_baseline: Option<f64>,
+    pub(super) last_signal: Option<f64>,
     pub(super) pending_self_cancels: AHashSet<ClientOrderId>,
 }
 
-impl GridMarketMaker {
-    /// Creates a new [`GridMarketMaker`] instance from config.
+impl CompositeMarketMaker {
+    /// Creates a new [`CompositeMarketMaker`] instance from config.
     #[must_use]
-    pub fn new(config: GridMarketMakerConfig) -> Self {
+    pub fn new(config: CompositeMarketMakerConfig) -> Self {
+        let signal_baseline = config.signal_baseline;
         Self {
             core: StrategyCore::new(config.base.clone()),
             instrument: None,
             trade_size: config.trade_size,
             config,
             price_precision: None,
-            last_quoted_mid: None,
+            last_quoted_anchor: None,
+            last_quoted_residual: None,
+            signal_baseline,
+            last_signal: None,
             pending_self_cancels: AHashSet::new(),
         }
     }
 
-    pub(super) fn should_requote(&self, mid: Price) -> bool {
-        match self.last_quoted_mid {
-            Some(last_mid) => {
-                let last_f64 = last_mid.as_f64();
+    pub(super) fn should_requote_on_anchor(&self, anchor: Price) -> bool {
+        match self.last_quoted_anchor {
+            Some(last_anchor) => {
+                let last_f64 = last_anchor.as_f64();
                 if last_f64 == 0.0 {
                     return true;
                 }
                 let threshold = self.config.requote_threshold_bps as f64 / 10_000.0;
-                (mid.as_f64() - last_f64).abs() / last_f64 >= threshold
+                (anchor.as_f64() - last_f64).abs() / last_f64 >= threshold
             }
             None => true,
         }
     }
 
-    pub(super) fn grid_orders(
+    pub(super) fn should_requote_on_residual(&self, residual: f64, anchor: Price) -> bool {
+        if self.config.signal_skew_factor == 0.0 {
+            return false;
+        }
+        let anchor_f64 = anchor.as_f64();
+        if anchor_f64 == 0.0 {
+            return false;
+        }
+
+        match self.last_quoted_residual {
+            Some(last) => {
+                // The signal's contribution to bid/ask price is signal_skew_factor * residual,
+                // so a residual delta translates to that price units. Compare against the same
+                // bps threshold expressed in price units of the anchor.
+                let price_delta = (residual - last).abs() * self.config.signal_skew_factor.abs();
+                let threshold = self.config.requote_threshold_bps as f64 / 10_000.0;
+                price_delta / anchor_f64 >= threshold
+            }
+            None => true,
+        }
+    }
+
+    pub(super) fn should_requote(&self, anchor: Price, residual: f64) -> bool {
+        self.should_requote_on_anchor(anchor) || self.should_requote_on_residual(residual, anchor)
+    }
+
+    pub(super) fn signal_residual(&self) -> f64 {
+        match (self.last_signal, self.signal_baseline) {
+            (Some(signal), Some(baseline)) if baseline != 0.0 => signal / baseline - 1.0,
+            _ => 0.0,
+        }
+    }
+
+    pub(super) fn compute_quotes(
         &self,
-        mid: Price,
+        anchor: Price,
+        signal_residual: f64,
         net_position: f64,
         worst_long: Decimal,
         worst_short: Decimal,
     ) -> anyhow::Result<Vec<(OrderSide, Price)>> {
         let Some(instrument) = self.instrument.as_ref() else {
-            anyhow::bail!("Cannot compute grid orders: instrument is not resolved");
+            anyhow::bail!("Cannot compute quotes: instrument is not resolved");
         };
-        let mid_f64 = mid.as_f64();
-        let skew_f64 = self.config.skew_factor * net_position;
-        let pct = self.config.grid_step_bps as f64 / 10_000.0;
         let Some(trade_size) = self.trade_size else {
-            anyhow::bail!("Cannot compute grid orders: trade_size is not resolved");
+            anyhow::bail!("Cannot compute quotes: trade_size is not resolved");
         };
         let trade_size = trade_size.as_decimal();
         let max_pos = self.config.max_position.as_decimal();
-        let mut projected_long = worst_long;
-        let mut projected_short = worst_short;
+
+        let anchor_f64 = anchor.as_f64();
+        let half_spread = anchor_f64 * (self.config.half_spread_bps as f64 / 10_000.0);
+        let inventory_shift = self.config.inventory_skew_factor * net_position;
+        let signal_shift = self.config.signal_skew_factor * signal_residual;
+        // Positive signal residual lifts both sides; positive inventory lowers both sides.
+        let total_shift = signal_shift - inventory_shift;
+
+        let bid_f64 = anchor_f64 - half_spread + total_shift;
+        let ask_f64 = anchor_f64 + half_spread + total_shift;
+        // next_bid_price floors to the nearest valid bid tick (<=bid_f64),
+        // next_ask_price ceils to the nearest valid ask tick (>=ask_f64),
+        // so a non-crossing pair stays non-crossing after rounding.
+        let bid_price = instrument.next_bid_price(bid_f64, 0);
+        let ask_price = instrument.next_ask_price(ask_f64, 0);
+
+        // Drop both sides if rounding has collapsed or crossed the spread,
+        // which can happen when skew exceeds the half-spread on coarse-tick instruments.
+        let crossed = match (bid_price, ask_price) {
+            (Some(bp), Some(ap)) => bp >= ap,
+            _ => false,
+        };
+
+        if crossed {
+            return Ok(Vec::new());
+        }
+
         let mut orders = Vec::new();
 
-        for level in 1..=self.config.num_levels {
-            let buy_f64 = mid_f64 * (1.0 - pct).powi(level as i32) - skew_f64;
-            let sell_f64 = mid_f64 * (1.0 + pct).powi(level as i32) - skew_f64;
-            // next_bid_price floors to the nearest valid bid tick (<=buy_f64),
-            // next_ask_price ceils to the nearest valid ask tick (>=sell_f64),
-            // preventing self-cross on coarse-tick instruments.
-            let buy_price = instrument.next_bid_price(buy_f64, 0);
-            let sell_price = instrument.next_ask_price(sell_f64, 0);
+        if let Some(price) = bid_price
+            && worst_long + trade_size <= max_pos
+        {
+            orders.push((OrderSide::Buy, price));
+        }
 
-            if let Some(buy_price) = buy_price
-                && projected_long + trade_size <= max_pos
-            {
-                orders.push((OrderSide::Buy, buy_price));
-                projected_long += trade_size;
-            }
-
-            if let Some(sell_price) = sell_price
-                && projected_short - trade_size >= -max_pos
-            {
-                orders.push((OrderSide::Sell, sell_price));
-                projected_short -= trade_size;
-            }
+        if let Some(price) = ask_price
+            && worst_short - trade_size >= -max_pos
+        {
+            orders.push((OrderSide::Sell, price));
         }
 
         Ok(orders)
     }
 }
 
-nautilus_strategy!(GridMarketMaker, {
+nautilus_strategy!(CompositeMarketMaker, {
     fn on_order_rejected(&mut self, event: OrderRejected) {
         self.pending_self_cancels.remove(&event.client_order_id);
-        // Reset so the next quote tick can retry placing the full grid
-        self.last_quoted_mid = None;
+        self.last_quoted_anchor = None;
+        self.last_quoted_residual = None;
     }
 
     fn on_order_expired(&mut self, event: OrderExpired) {
         self.pending_self_cancels.remove(&event.client_order_id);
-        // GTD expiry means the grid is gone; reset so re-quoting is not suppressed
-        self.last_quoted_mid = None;
+        self.last_quoted_anchor = None;
+        self.last_quoted_residual = None;
     }
 
     fn on_order_filled(&mut self, event: &OrderFilled) {
-        // Only discard once fully filled; partial fills must keep the ID so a
-        // subsequent self-cancel is not misclassified as external.
         let closed = {
             let cache = self.cache();
             cache
@@ -165,24 +217,28 @@ nautilus_strategy!(GridMarketMaker, {
         }
 
         if self.config.on_cancel_resubmit {
-            // Reset so the next incoming quote triggers a full grid resubmission
-            self.last_quoted_mid = None;
+            self.last_quoted_anchor = None;
+            self.last_quoted_residual = None;
         }
     }
 });
 
-impl Debug for GridMarketMaker {
+impl Debug for CompositeMarketMaker {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct(stringify!(GridMarketMaker))
+        f.debug_struct(stringify!(CompositeMarketMaker))
             .field("config", &self.config)
             .field("trade_size", &self.trade_size)
+            .field("signal_baseline", &self.signal_baseline)
+            .field("last_signal", &self.last_signal)
             .finish()
     }
 }
 
-impl DataActor for GridMarketMaker {
+impl DataActor for CompositeMarketMaker {
     fn on_start(&mut self) -> anyhow::Result<()> {
         let instrument_id = self.config.instrument_id;
+        let signal_instrument_id = self.config.signal_instrument_id;
+
         let (instrument, size_precision, min_quantity) = {
             let cache = self.cache();
             let instrument = cache.try_instrument(&instrument_id)?;
@@ -193,35 +249,50 @@ impl DataActor for GridMarketMaker {
         self.price_precision = Some(instrument.price_precision());
         self.instrument = Some(instrument);
 
-        // Resolve trade_size from instrument when not explicitly provided
         if self.trade_size.is_none() {
             self.trade_size =
                 Some(min_quantity.unwrap_or_else(|| Quantity::new(1.0, size_precision)));
         }
 
         self.subscribe_quotes(instrument_id, None, None);
+        self.subscribe_quotes(signal_instrument_id, None, None);
         Ok(())
     }
 
     fn on_stop(&mut self) -> anyhow::Result<()> {
         let instrument_id = self.config.instrument_id;
+        let signal_instrument_id = self.config.signal_instrument_id;
         self.cancel_all_orders(instrument_id, None, None, None)?;
         self.close_all_positions(instrument_id, None, None, None, None, None, None, None)?;
         self.unsubscribe_quotes(instrument_id, None, None);
+        self.unsubscribe_quotes(signal_instrument_id, None, None);
         Ok(())
     }
 
     fn on_quote(&mut self, quote: &QuoteTick) -> anyhow::Result<()> {
-        let mid_f64 = f64::midpoint(quote.bid_price.as_f64(), quote.ask_price.as_f64());
+        if quote.instrument_id == self.config.signal_instrument_id {
+            let signal_mid = f64::midpoint(quote.bid_price.as_f64(), quote.ask_price.as_f64());
+            self.last_signal = Some(signal_mid);
+            if self.signal_baseline.is_none() {
+                self.signal_baseline = Some(signal_mid);
+            }
+            return Ok(());
+        }
+
+        if quote.instrument_id != self.config.instrument_id {
+            return Ok(());
+        }
+
+        let anchor_f64 = f64::midpoint(quote.bid_price.as_f64(), quote.ask_price.as_f64());
         let price_precision = self.price_precision.ok_or_else(|| {
             anyhow::anyhow!("Cannot handle quote: price_precision is not resolved")
         })?;
-        let mid = Price::new(mid_f64, price_precision);
+        let anchor = Price::new(anchor_f64, price_precision);
 
+        let signal_residual = self.signal_residual();
         let instrument_id = self.config.instrument_id;
         let strategy_id = self.strategy_id().expect("Strategy must be registered");
 
-        // Always requote when the grid is empty, even if mid is within threshold
         let has_resting = {
             let cache = self.cache();
             let inst = Some(&instrument_id);
@@ -230,13 +301,14 @@ impl DataActor for GridMarketMaker {
                 || cache.orders_inflight_count(None, inst, sid, None, None) > 0
         };
 
-        if !self.should_requote(mid) && has_resting {
+        if !self.should_requote(anchor, signal_residual) && has_resting {
             return Ok(());
         }
 
         log::info!(
-            "Requoting grid: mid={mid}, last_mid={:?}, instrument={instrument_id}",
-            self.last_quoted_mid,
+            "Requoting: anchor={anchor}, last_anchor={:?}, residual={signal_residual:.6}, last_residual={:?}, instrument={instrument_id}",
+            self.last_quoted_anchor,
+            self.last_quoted_residual,
         );
 
         if self.config.on_cancel_resubmit {
@@ -256,8 +328,6 @@ impl DataActor for GridMarketMaker {
 
         self.cancel_all_orders(instrument_id, None, None, None)?;
 
-        // Compute worst-case per-side exposure for max_position checks,
-        // since cancels are async and pending orders may still fill
         let (net_position, worst_long, worst_short) = {
             let instrument_id = Some(&instrument_id);
             let strategy = Some(&strategy_id);
@@ -280,7 +350,6 @@ impl DataActor for GridMarketMaker {
             let mut pending_sell_dec = Decimal::ZERO;
             let mut seen = AHashSet::new();
 
-            // Deduplicate open/inflight (can overlap during state transitions)
             let open = cache.orders_open(None, instrument_id, strategy, None, None);
             let inflight = cache.orders_inflight(None, instrument_id, strategy, None, None);
             for order in open.iter().chain(inflight.iter()) {
@@ -301,11 +370,15 @@ impl DataActor for GridMarketMaker {
             )
         };
 
-        let grid = self.grid_orders(mid, net_position, worst_long, worst_short)?;
+        let quotes = self.compute_quotes(
+            anchor,
+            signal_residual,
+            net_position,
+            worst_long,
+            worst_short,
+        )?;
 
-        // Don't advance the requote anchor when no orders are placed,
-        // otherwise the strategy can stall with zero resting orders
-        if grid.is_empty() {
+        if quotes.is_empty() {
             return Ok(());
         }
 
@@ -322,7 +395,7 @@ impl DataActor for GridMarketMaker {
             None => (None, None),
         };
 
-        for (side, price) in grid {
+        for (side, price) in quotes {
             let order = self.order().limit(
                 instrument_id,
                 side,
@@ -344,7 +417,8 @@ impl DataActor for GridMarketMaker {
             self.submit_order(order, None, None, None)?;
         }
 
-        self.last_quoted_mid = Some(mid);
+        self.last_quoted_anchor = Some(anchor);
+        self.last_quoted_residual = Some(signal_residual);
         Ok(())
     }
 
@@ -352,7 +426,10 @@ impl DataActor for GridMarketMaker {
         self.instrument = None;
         self.trade_size = self.config.trade_size;
         self.price_precision = None;
-        self.last_quoted_mid = None;
+        self.last_quoted_anchor = None;
+        self.last_quoted_residual = None;
+        self.signal_baseline = self.config.signal_baseline;
+        self.last_signal = None;
         self.pending_self_cancels.clear();
         Ok(())
     }

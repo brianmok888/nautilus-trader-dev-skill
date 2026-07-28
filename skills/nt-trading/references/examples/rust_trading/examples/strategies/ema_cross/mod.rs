@@ -13,26 +13,17 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Configuration for the book imbalance actor.
+//! Dual-EMA crossover strategy.
+//!
+//! Subscribes to quotes for a single instrument, maintains fast and slow
+//! exponential moving averages, and submits market orders when the fast
+//! EMA crosses above (buy) or below (sell) the slow EMA.
 
-use nautilus_model::identifiers::{ActorId, InstrumentId};
+pub mod config;
+pub mod strategy;
 
-/// Configuration for the order book imbalance actor.
-#[derive(Debug, Clone, bon::Builder)]
-#[cfg_attr(
-    feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.trading", from_py_object)
-)]
-#[cfg_attr(
-    feature = "python",
-    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.trading")
-)]
-pub struct BookImbalanceActorConfig {
-    /// Instruments to subscribe to.
-    pub instrument_ids: Vec<InstrumentId>,
-    /// How often (in update count) to log a progress line. Set to 0 to disable.
-    #[builder(default = 100)]
-    pub log_interval: u64,
-    /// Actor identifier. Defaults to `BOOK_IMBALANCE-001`.
-    pub actor_id: Option<ActorId>,
-}
+#[cfg(test)]
+mod tests;
+
+pub use config::EmaCrossConfig;
+pub use strategy::EmaCross;
