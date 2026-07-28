@@ -158,4 +158,3 @@
 - Spec coverage: all confirmed Segments A-G, progressive gates, reconciliation, commits, merge, and push have an owning task.
 - Placeholder scan: no `TBD`, deferred implementation placeholder, or undefined interface remains.
 - Type/path consistency: the 18-skill G2 registry, named Rust fence, freshness reporter, evidence directory, and readiness-card paths are consistent across tasks.
-

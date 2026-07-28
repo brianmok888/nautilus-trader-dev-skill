@@ -66,4 +66,3 @@ Each segment begins with a failing regression test, implements only that segment
 - No upstream NautilusTrader source changes.
 - No claim that all supported upstream Python strategies are legacy; this repository's stricter policy only controls its own default skill routing.
 - No pull request creation.
-
