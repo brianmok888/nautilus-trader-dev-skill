@@ -200,7 +200,7 @@ class RegimeActor(Actor):
 ## Templates
 
 > **New in v1.227.0 (2026-05-18)** — Current baseline changes for new code:
-> - Use Rust crate version `0.57` in standalone examples.
+> - Read the target workspace version from its root `Cargo.toml` and use workspace/path dependencies for in-tree examples; do not copy a historical crate version into new code.
 > - Use adapter `environment` enums; Binance/Kraken live enum names are `Live` / `LIVE`.
 > - Use `time_bars_origin_offset`, not `time_bars_origins`.
 > - Use `DataActor.subscribe_signal(..., priority=None)` when ordered signal dispatch matters.

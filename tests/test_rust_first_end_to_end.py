@@ -16,6 +16,7 @@ GUIDE = REPO_ROOT / "docs/end_to_end_guide.md"
 README = REPO_ROOT / "README.md"
 NT_LIVE = REPO_ROOT / "skills/nt-live/SKILL.md"
 NT_TESTING = REPO_ROOT / "skills/nt-testing/SKILL.md"
+NT_RUST_STRATEGY = REPO_ROOT / "skills/nt-strategy-builder-rust/SKILL.md"
 UPSTREAM_ROOT = DEFAULT_UPSTREAM_ROOT
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 
@@ -34,6 +35,13 @@ def section(text: str, heading: str) -> str:
 def rust_fence(text: str) -> str:
     match = re.search(r"^```rust\n(?P<body>.*?)^```", text, flags=re.MULTILINE | re.DOTALL)
     assert match, "missing Rust source fence"
+    return match.group("body")
+
+
+def named_rust_fence(text: str, marker: str) -> str:
+    pattern = rf"<!-- {re.escape(marker)} -->\n```rust\n(?P<body>.*?)^```"
+    match = re.search(pattern, text, flags=re.MULTILINE | re.DOTALL)
+    assert match, f"missing named Rust source fence: {marker}"
     return match.group("body")
 
 
@@ -153,6 +161,40 @@ def test_rust_guidance_has_no_stale_057_or_removed_grid_constructor() -> None:
 
     assert stale == []
     assert removed_api == []
+
+
+def test_rust_strategy_skill_example_compiles_against_pinned_upstream(tmp_path: Path) -> None:
+    crate = tmp_path / "rust-strategy-skill-smoke"
+    (crate / "src").mkdir(parents=True)
+    (crate / "src/lib.rs").write_text(
+        named_rust_fence(read(NT_RUST_STRATEGY), "G2-COMPILE: rust-strategy"),
+        encoding="utf-8",
+    )
+    (crate / "Cargo.toml").write_text(
+        """[package]
+name = "nt-rust-strategy-skill-smoke"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97.1"
+
+[dependencies]
+anyhow = "1"
+nautilus-common = { path = "UPSTREAM/crates/common" }
+nautilus-model = { path = "UPSTREAM/crates/model" }
+nautilus-trading = { path = "UPSTREAM/crates/trading" }
+""".replace("UPSTREAM", UPSTREAM_ROOT.as_posix()),
+        encoding="utf-8",
+    )
+
+    cargo = ["rustup", "run", "1.97.1", "cargo"] if shutil.which("rustup") else ["cargo"]
+    result = subprocess.run(
+        [*cargo, "check", "--manifest-path", str(crate / "Cargo.toml")],
+        capture_output=True,
+        check=False,
+        env={**os.environ, "CARGO_TARGET_DIR": str(UPSTREAM_ROOT / "target")},
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_python_supported_v2_strategy_research_appendix_is_explicitly_labelled() -> None:

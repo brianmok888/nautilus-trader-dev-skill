@@ -115,91 +115,77 @@ Key points:
    ├── strategy.rs   # YourStrategy struct + impl Strategy
    └── tests.rs      # cargo tests (rstest fixtures)
    ```
-2. **Write the config first** (derive a `bon::Builder` for the concrete config and embed the base `StrategyConfig`):
-   ```rust
-   use nautilus_trading::strategy::StrategyConfig;
+2. **Start from one complete, compile-checked API example.** It intentionally
+   submits on every quote to demonstrate wiring, not production trading logic.
+   Add signal, position, and risk gates before adapting it.
 
-   #[derive(Clone, Debug, serde::Deserialize, serde::Serialize, bon::Builder)]
-   pub struct YourStrategyConfig {
-       #[builder(default = StrategyConfig {
-           strategy_id: Some(StrategyId::from("YOUR_STRATEGY-001")),
-           order_id_tag: Some("001".to_string()),
-           ..Default::default()
-       })]
-       pub base: StrategyConfig,
-       pub instrument_id: InstrumentId,
-       pub fast_period: usize,
-       pub slow_period: usize,
-       #[builder(default)]
-       pub order_qty: Quantity,
-   }
-   ```
-3. **Implement the runtime shape**, modelled on upstream Rust strategies:
-   ```rust
-   use nautilus_common::actor::DataActor;
-   use nautilus_trading::{
-       nautilus_strategy,
-       strategy::{Strategy, StrategyConfig, StrategyCore},
-   };
+<!-- G2-COMPILE: rust-strategy -->
+```rust
+use nautilus_common::actor::DataActor;
+use nautilus_model::{
+    data::QuoteTick,
+    enums::OrderSide,
+    identifiers::{InstrumentId, StrategyId},
+    types::Quantity,
+};
+use nautilus_trading::{
+    nautilus_strategy,
+    strategy::{Strategy, StrategyConfig, StrategyCore},
+};
 
-   pub struct YourStrategy {
-       core: StrategyCore,
-       instrument_id: InstrumentId,
-       fast_period: usize,
-       slow_period: usize,
-       order_qty: Quantity,
-       // mutable state (EMA accumulators, position tracking, etc.)
-   }
+pub struct MyStrategy {
+    core: StrategyCore,
+    instrument_id: InstrumentId,
+    trade_size: Quantity,
+}
 
-   impl YourStrategy {
-       pub fn new(config: YourStrategyConfig) -> Self {
-           Self {
-               core: StrategyCore::new(config.base),
-               instrument_id: config.instrument_id,
-               fast_period: config.fast_period,
-               slow_period: config.slow_period,
-               order_qty: config.order_qty,
-               // ...
-           }
-       }
+impl MyStrategy {
+    pub fn new(instrument_id: InstrumentId) -> Self {
+        let config = StrategyConfig {
+            strategy_id: Some(StrategyId::from("MY_STRAT-001")),
+            order_id_tag: Some("001".to_string()),
+            ..Default::default()
+        };
+        Self {
+            core: StrategyCore::new(config),
+            instrument_id,
+            trade_size: Quantity::from("1.0"),
+        }
+    }
+}
 
-       pub fn from_config(config: YourStrategyConfig) -> anyhow::Result<Self> {
-           Ok(Self::new(config))
-       }
-   }
+nautilus_strategy!(MyStrategy);
 
-   nautilus_strategy!(YourStrategy);
+impl std::fmt::Debug for MyStrategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MyStrategy").finish()
+    }
+}
 
-   impl DataActor for YourStrategy {
-       fn on_start(&mut self) -> anyhow::Result<()> {
-           self.subscribe_quotes(self.instrument_id, None, None);
-           Ok(())
-       }
+impl DataActor for MyStrategy {
+    fn on_start(&mut self) -> anyhow::Result<()> {
+        self.subscribe_quotes(self.instrument_id, None, None);
+        Ok(())
+    }
 
-       fn on_stop(&mut self) -> anyhow::Result<()> {
-           self.unsubscribe_quotes(self.instrument_id, None, None);
-           Ok(())
-       }
+    fn on_quote(&mut self, _quote: &QuoteTick) -> anyhow::Result<()> {
+        let order = self.order().market(
+            self.instrument_id,
+            OrderSide::Buy,
+            self.trade_size,
+            None, None, None, None, None, None, None,
+        );
+        self.submit_order(order, None, None, None)
+    }
+}
+```
 
-       fn on_quote(&mut self, _quote: &QuoteTick) -> anyhow::Result<()> {
-           // update EMA state, then on crossover:
-           let order = self.order().market(
-               self.instrument_id,
-               order_side,
-               self.order_qty,
-               None, // time_in_force
-               None, // reduce_only
-               None, // quote_quantity
-               None, // exec_algorithm_id
-               None, // exec_algorithm_params
-               None, // tags
-               None, // client_order_id
-           );
-           self.submit_order(order, None, None, None)?;
-           Ok(())
-       }
-   }
-   ```
+3. **Extend the complete shape** with a concrete config builder, indicators,
+   position checks, and fail-closed risk logic. Keep `StrategyCore`,
+   `nautilus_strategy!`, `Debug`, and `impl DataActor` intact. When a dynamic
+   config/registry surface needs `from_config`, parse into a concrete config and
+   delegate to the same constructor rather than maintaining a second runtime
+   shape.
 4. **Export via PyO3** (`#[pyclass]` + `#[pymethods]`) in the owning crate’s
    `src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates the crate submodule.
    Register the strategy config as importable so node config can load it.
@@ -208,8 +194,7 @@ Key points:
    - `LiveNode` — native Rust uses `node.add_strategy(your_strategy)?`. The upstream-only `add_builtin_strategy(...)` PyO3 helper is feature-gated to bundled example strategies and is not a general extension path. For custom production strategies, keep native Rust registration or expose a purpose-built owning-crate PyO3 registration surface. The legacy Python-live node is not a Rust-strategy target.
 6. **Test in Rust** before wiring Python:
    ```bash
-   cargo nextest run -p <your_crate> --features "python,ffi,high-precision,defi" \
-       --cargo-profile nextest
+   cargo nextest run -p <your_crate> --all-features --cargo-profile nextest
    cargo clippy --workspace --all-targets --no-deps \
        --features "ffi,python,high-precision,defi" -- -D warnings
    ```
@@ -230,9 +215,8 @@ NT v2 compatibility note: this whole file is Rust-native; the legacy Python-live
 | AI/advisory lane (model inference, signal aggregation) | **Python**, async, off hot path | Never execution-critical |
 | Needs a Python-only library not available in Rust | **Python** | Bind rather than rewrite |
 
-Rule of thumb: start in Python (`nt-strategy-builder`), port to Rust
-(`nt-strategy-builder-rust`) when profiling shows the strategy on the hot path or
-when the strategy ships as part of a production Rust adapter.
+Rule of thumb: start in Rust. Use `nt-strategy-builder` only when the request
+explicitly requires Python or belongs to the non-authoritative AI/advisory lane.
 
 ## Key Conventions
 

@@ -285,7 +285,10 @@ pub trait AdapterFactory {
 
 ### Available Rust Adapters
 
-All 16 adapters have Rust implementations with varying feature completeness. Check `crates/adapters/` for available adapters.
+Do not hard-code an adapter count: the integration inventory changes across
+release and `develop`. Check the official integration index and
+`crates/adapters/` at the selected upstream commit, then verify each adapter's
+data/execution completeness independently.
 
 ### Environment Variables
 

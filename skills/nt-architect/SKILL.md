@@ -225,18 +225,22 @@ class RegimeData(Data):
         return self._ts_init
 ```
 
-**Order Fill/Cancel Subscriptions** (monitor trading activity from Actors):
-```python
-# Actor subscribes to order fills for an instrument
-self.subscribe_order_fills(instrument_id)
-def on_order_filled(self, event: OrderFilled) -> None:
-    self.log.info(f"Fill: {event.order_side} {event.last_qty} @ {event.last_px}")
+**Order Fill/Cancel Handling** (keep execution lifecycle in a Rust strategy):
+```rust
+nautilus_strategy!(ExecutionStrategy, {
+    fn on_order_filled(&mut self, event: &OrderFilled) {
+        log::info!("Fill: {} {} @ {}", event.order_side, event.last_qty, event.last_px);
+    }
 
-# Actor subscribes to order cancels for an instrument
-self.subscribe_order_cancels(instrument_id)
-def on_order_canceled(self, event: OrderCanceled) -> None:
-    self.log.info(f"Cancel: {event.client_order_id}")
+    fn on_order_canceled(&mut self, event: &OrderCanceled) {
+        log::info!("Cancel: {}", event.client_order_id);
+    }
+});
 ```
+
+The strategy runtime dispatches `OrderEventAny` variants to these callbacks.
+Use the lower-level message-bus `subscribe_order_events` only for an explicitly
+external/custom observer, not ordinary strategy lifecycle handling.
 
 #### Typical Data Flow Patterns
 
@@ -388,7 +392,7 @@ After completing the design, produce a document with:
 3. **Cache for Framework State** - Orders, positions, instruments live in Cache
 4. **Warmup Before Live** - Always `request_bars` before `subscribe_bars`
 5. **Single Thread Model** - Nautilus runs on single thread; no async model inference in hot path
-6. **Actor Subscriptions** - Actors can subscribe to order fills/cancels via `subscribe_order_fills()` / `subscribe_order_cancels()`
+6. **Strategy Order Events** - Rust strategies handle fills and cancels through `on_order_filled(&OrderFilled)` and `on_order_canceled(&OrderCanceled)`; use `on_order_event(OrderEventAny)` for all lifecycle events
 7. **@customdataclass for Quick Custom Data** - Use `@customdataclass` decorator for auto-generated constructors; use manual `Data` subclass for full control
 8. **External Advisory Isolation** - Keep EvoMap or any external intelligence path advisory and asynchronous, never execution-critical
 

@@ -101,8 +101,9 @@ def test_rust_strategy_builder_does_not_present_builtin_examples_as_extension_ap
 
     assert "is not a general extension path" in text
     assert "node.add_builtin_strategy(\"YourStrategy\", config)" not in text
-    assert "pub base: StrategyConfig" in text
-    assert "StrategyCore::new(config.base)" in text
+    assert "core: StrategyCore" in text
+    assert "StrategyCore::new(config)" in text
+    assert "nautilus_strategy!(MyStrategy)" in text
 
 
 def test_rust_first_policy_preserves_supported_python_v2_strategies() -> None:
@@ -193,3 +194,18 @@ def test_pyo3_ownership_guidance_matches_current_cycle_handling() -> None:
     ]
     for claim in misleading_claims:
         assert claim not in text
+
+
+def test_current_v2_guidance_rejects_removed_order_subscriptions_and_brittle_versions() -> None:
+    architect = read("skills/nt-architect/SKILL.md")
+    implement = read("skills/nt-implement/SKILL.md")
+    adapters = read("skills/nt-adapters/SKILL.md")
+
+    assert "subscribe_order_fills" not in architect
+    assert "subscribe_order_cancels" not in architect
+    assert "on_order_filled(&OrderFilled)" in architect
+    assert "on_order_canceled(&OrderCanceled)" in architect
+    assert "Read the target workspace version" in implement
+    assert "Use Rust crate version `0.57`" not in implement
+    assert "All 16 adapters" not in adapters
+    assert "Do not hard-code an adapter count" in adapters
