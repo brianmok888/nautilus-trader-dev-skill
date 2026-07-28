@@ -2277,7 +2277,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "Adapter evidence includes cargo nextest, cargo clippy, cargo deny, and fuzz-adapter.\n"
         ),
         Path("skills/nt-architect/SKILL.md"): (
-            "Architecture includes a component ownership matrix: Rust core owns production paths, Python research/config is labelled, and AI/advisory lane remains Python.\n"
+            "Architecture includes a component ownership matrix: Rust owns strategy/configuration and production paths; non-AI Python is migration/reference-only, and AI/advisory lane remains Python.\n"
         ),
         Path("skills/nt-backtest/SKILL.md"): (
             "Rust BacktestEngine evidence includes cargo nextest, cargo clippy, cargo deny, and Python research/config is labelled.\n"

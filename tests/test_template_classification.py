@@ -3,21 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE_ROOTS = [
-    Path("skills/nt-implement/templates"),
-    Path("skills/nt-adapters/templates"),
-    Path("skills/nt-dex-adapter/templates"),
-    Path("skills/nt-backtest/templates"),
-    Path("skills/nt-signals/templates"),
-    Path("skills/nt-trading/templates"),
-    Path("skills/nt-strategy-builder/templates"),
-]
 REFERENCE_EXAMPLE_ROOT = Path("skills/nt-adapters/references/examples")
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
 ALLOWED_CLASSIFICATIONS = (
     "AI/advisory Python; non-production; off execution-critical paths",
-    "Python research/config; non-production; off execution-critical paths",
-    "Python control-plane for Rust/PyO3; non-production execution wrapper",
     "migration/reference-only; not a production default",
     "legacy executable; migration/reference-only; not a production default",
 )
@@ -31,16 +20,12 @@ MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES = {
 def test_python_templates_are_explicitly_classified() -> None:
     unclassified: list[str] = []
 
-    for template_root in TEMPLATE_ROOTS:
-        root = REPO_ROOT / template_root
-        if not root.exists():
+    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/templates/**/*.py")):
+        if "__pycache__" in path.parts:
             continue
-        for path in sorted(root.rglob("*.py")):
-            if "__pycache__" in path.parts:
-                continue
-            text = path.read_text(encoding="utf-8")
-            if not _has_allowed_classification(text):
-                unclassified.append(path.relative_to(REPO_ROOT).as_posix())
+        text = path.read_text(encoding="utf-8")
+        if not _has_allowed_classification(text):
+            unclassified.append(path.relative_to(REPO_ROOT).as_posix())
 
     assert unclassified == []
 
@@ -54,6 +39,34 @@ def test_active_ai_python_templates_live_under_canonical_ai_skill() -> None:
             continue
         if not path.is_relative_to(canonical_root):
             offenders.append(path.relative_to(REPO_ROOT).as_posix())
+
+    assert offenders == []
+
+
+def test_all_non_ai_python_skill_files_are_migration_namespaced_or_classified() -> None:
+    offenders: list[str] = []
+    canonical_ai_root = REPO_ROOT / "skills/nt-evomap-integration"
+    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/*.py")):
+        if "__pycache__" in path.parts or "tests" in path.parts:
+            continue
+        if path.is_relative_to(canonical_ai_root):
+            continue
+        relative = path.relative_to(REPO_ROOT)
+        header = "\n".join(path.read_text(encoding="utf-8").splitlines()[:12])
+        migration_namespace = (
+            "legacy_migration" in relative.parts
+            or "references" in relative.parts
+            or "templates" in relative.parts
+        )
+        migration_label = any(
+            f"{CLASSIFICATION_PREFIX}{classification}" in header
+            for classification in (
+                "migration/reference-only; not a production default",
+                "legacy executable; migration/reference-only; not a production default",
+            )
+        )
+        if not migration_namespace and not migration_label:
+            offenders.append(relative.as_posix())
 
     assert offenders == []
 

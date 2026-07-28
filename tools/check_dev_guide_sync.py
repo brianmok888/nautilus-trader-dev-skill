@@ -407,7 +407,7 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
     Path("skills/nt-architect/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
         "AI/advisory lane remains Python",
-        "Rust core owns",
+        "Rust owns strategy/configuration",
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
@@ -574,8 +574,8 @@ NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
     ],
     Path("skills/nt-architect/SKILL.md"): [
         "component ownership matrix",
-        "Rust core owns",
-        "Python research/config",
+        "Rust owns strategy",
+        "migration/reference-only",
     ],
     Path("skills/nt-backtest/SKILL.md"): [
         "Rust BacktestEngine",

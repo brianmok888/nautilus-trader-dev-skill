@@ -1,6 +1,6 @@
 {
-  "owned_content_sha256": "0e4c63ef19670efa472c199bc9723afb31f60b0c505baced3b9415f9480e1449",
-  "repository_commit": "109c50bc994594ec3e6b143b1504f0c4a404ea1b",
+  "owned_content_sha256": "2c058577c164d334cf1b52f5df576d3628815c1f7f3315116c83612e73942796",
+  "repository_commit": "6cd5c84c124b50d2e2ec9beb44c8d30db5cd0528",
   "schema_version": 1,
   "scope": "repository:review-policy-plus-upstream-safety-owners",
   "skill": "nt-review",
@@ -16,7 +16,7 @@
         "tests/test_v2_guidance_hardening.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.820491,
+      "duration_seconds": 1.966124,
       "returncode": 0
     },
     {
@@ -34,11 +34,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.357425,
+      "duration_seconds": 1.294805,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T23:13:49.872897+00:00"
+  "verified_at": "2026-07-28T23:20:33.763067+00:00"
 }

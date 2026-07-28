@@ -24,7 +24,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Architecture gates: produce a component ownership matrix that separates Rust core owns networking/parsing/normalization/execution-critical state from Python research/config and AI/advisory sidecars. Designs are `Pending` until the handoff names the Rust crate/module, PyO3 boundary, message bus flow, and tests for each production component.
+Architecture gates: produce a component ownership matrix where Rust owns strategy, research/config, networking, parsing, normalization, and execution-critical state. The sole active Python surface is the AI/advisory sidecar; all other Python material is migration/reference-only. Designs are `Pending` until the handoff names the Rust crate/module, PyO3 boundary, message bus flow, and tests for each production component.
 
 ## Overview
 
@@ -43,7 +43,7 @@ If the architecture includes a custom or modified adapter, enforce these constra
 - **Lifecycle ordering**: the architecture must preserve the adapter 7-phase dependency order.
 - **Boundary clarity**:
   - Rust owns production adapter contracts and implementations: `InstrumentProvider`, data/execution clients, factory wiring, networking, parsing, normalization, and execution-critical state.
-  - PyO3 projects reviewed Rust capabilities into supported Python V2 strategy, research, configuration, and orchestration surfaces; it does not transfer ownership of adapter hot paths to Python.
+  - PyO3 exposes reviewed Rust capabilities only through bounded bindings. Under this repository's cutover policy, non-AI Python strategy, research, configuration, and orchestration material is migration/reference-only.
 - **Contract completeness**: include explicit method families for provider/data/execution clients so implementation cannot skip required methods.
 - **Runtime and safety assumptions**: record async/runtime rules (`get_runtime().spawn()` in adapter Rust paths, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>` binding).
 - **Validation plan by phase**: each architecture output should map phases to concrete milestone checks and test artifacts (fixtures, integration tests, reconciliation checks).
@@ -55,7 +55,7 @@ If the system integrates with EvoMap, LangChain, or LangGraph, model it as an **
 - **Execution authority stays local**: only Strategy/Actor logic inside Nautilus can affect orders.
 - **Advisory-only contract**: EvoMap outputs are suggestions, never auto-applied trading rule changes.
 - **Non-blocking architecture**: Proxy mailbox, LangChain, and LangGraph flows must run off the hot trading path.
-- **Rust-oriented v2.0 readiness**: Rust core owns networking, parsing, normalization, execution-critical state, and live-node plumbing; Python owns user strategy/configuration boundaries. The AI/advisory lane remains Python, asynchronous, auditable, and never execution-critical.
+- **Rust-oriented v2.0 readiness**: Rust owns strategy/configuration, networking, parsing, normalization, execution-critical state, and live-node plumbing. Only the AI/advisory lane remains Python, asynchronous, auditable, and never execution-critical.
 - **Deterministic fallback**: define behavior when EvoMap is unavailable (continue local strategy, log degraded mode).
 - **Provenance**: include IDs linking internal decisions to external suggestion snapshots.
 - **Graph boundary**: LangGraph `StateGraph` checkpoints and human-in-the-loop interrupts are review artifacts, not executable trading state.
