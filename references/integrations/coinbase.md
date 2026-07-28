@@ -13,6 +13,7 @@ factory (see [Execution scope](#execution-scope)).
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
+NT v2 compatibility note: legacy Python TradingNode absence is migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
 :::note
 This adapter is Rust-only and is consumed by the v2 system (and the Rust
 `LiveNode`). It does not ship a legacy Python `TradingNode` integration;
@@ -24,6 +25,7 @@ entry points can construct them.
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
+NT v2 compatibility note: legacy Python TradingNode absence is migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
 The Coinbase adapter is implemented in Rust and consumed by the v2 system.
 The adapter does not ship a legacy Python `TradingNode` integration; only
 configuration and enum types are exported through PyO3 so v2 entry points can

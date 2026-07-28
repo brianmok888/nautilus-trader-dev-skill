@@ -20,9 +20,9 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 |-------|---------|-------------|
 | **nt** | Entry-point router for NautilusTrader tasks | `nt/SKILL.md` |
 | **nt-architect** | Decompose systems into Actor/Indicator/Strategy architecture | `nt-architect/SKILL.md` |
-| **nt-implement** | Implement NautilusTrader components from templates | `nt-implement/SKILL.md` |
+| **nt-implement** | Implement components with Rust-first hot-path defaults and classified supported Python V2 templates | `nt-implement/SKILL.md` |
 | **nt-review** | Review code before deployment | `nt-review/SKILL.md` |
-| **nt-strategy-builder** | Wire backtest, paper, and live systems | `nt-strategy-builder/SKILL.md` |
+| **nt-strategy-builder** | Wire supported Python V2 backtest, paper, and live systems; prefer Rust for hot paths | `nt-strategy-builder/SKILL.md` |
 | **nt-dex-adapter** | Build custom DEX adapters | `nt-dex-adapter/SKILL.md` |
 | **nt-evomap-integration** | Integrate EvoMap advisory sidecars safely | `nt-evomap-integration/SKILL.md` |
 | **nt-trading** | Orders, events, positions, and portfolio concepts | `nt-trading/SKILL.md` |
@@ -40,12 +40,12 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 
 ### All Skills Share
 - `SKILL.md` — Skill definition (description, when to use, workflow)
-- `templates/` — Executable Python templates
+- `templates/` — Classified Python templates; each `.py` file must declare `# TEMPLATE_CLASSIFICATION: ...` in its header
 - `references/` — API reference docs (symlinked from root `references/`)
 - `rules/` — DO/DON'T rulesets (some skills)
 
 ### Template Pattern
-All templates use `asyncio.run(main())` — no CLI framework.
+Python strategy templates are a supported NT V2 extension surface. Prefer Rust for performance-sensitive strategy logic and require Rust ownership for adapter networking/parsing, normalization, risk/execution state, and other execution-critical infrastructure. AI/advisory Python stays async, approval-gated, and off execution-critical paths.
 
 ## ANTI-PATTERNS
 
@@ -62,8 +62,8 @@ All templates use `asyncio.run(main())` — no CLI framework.
 | Start a NautilusTrader task and choose skills | `nt/` |
 | Design architecture | `nt-architect/` |
 | Write a strategy | `nt-implement/` |
-| Run a backtest | `nt-strategy-builder/templates/backtest_node.py` |
-| Go live | `nt-strategy-builder/templates/live_node.py` |
+| Research/config backtest | `nt-strategy-builder/templates/backtest_node.py` |
+| Production/perf live | Rust `LiveNode` path via `nt-strategy-builder-rust` + `nt-live`; Python `live_node.py` is migration/reference-only |
 | Add DEX support | `nt-dex-adapter/` |
 | Review before deploy | `nt-review/` |
 | Check setup/tooling | `nt-dev/` |

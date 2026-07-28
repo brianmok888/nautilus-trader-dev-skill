@@ -14,22 +14,24 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## NT V2 Rust readiness gates
 
-Use these gates for newly built or newly created work guided by this skill. Complete the status gate before coding and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; `Pass` requires explicit docs, diff, or command evidence, and `Waived` names the owner and reason.
+This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
 
-| Gate | Required check |
-| --- | --- |
-| G0 Upstream baseline | Verify latest official docs, GitHub `develop`, release tag, and local reference snapshot before copying APIs. |
-| G1 Lane classification | Classify every component as Rust production/performance/live, Python research/config, AI/advisory, or labelled migration/reference work. |
-| G2 Legacy label | NT v2 compatibility note: legacy Cython/v1/TradingNode template/reference guidance is reference-only; convert unlabelled guidance to Rust v2/PyO3/LiveNode before use. |
-| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, normalization, risk/execution state, and all execution-critical paths. |
-| G4 NT V2 API shape | Use current NT V2 Rust/PyO3 APIs: `LiveNode`, builder APIs, `StrategyCore`/`DataActor` when relevant, and message bus boundaries. |
-| G5 Test evidence | Capture targeted tests/checker output before readiness is `Pass`; Rust production gates usually include `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and adapter/parser `scripts/fuzz-adapter.sh` or fuzz/property tests when relevant. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. |
-| G7 Completion report | Reconcile all gates in the final report with status plus evidence path/command, leaving no silent `Pending` gate. |
+NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+
+| Gate | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G1 Lane classification | Classify the work as Rust execution-critical/performance, supported Python V2 strategy/config, Python AI/advisory, or legacy. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template lane inventory and Python/Rust V2 strategy boundary tests. |
+| G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
+| G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
+| G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Python strategy gates: this skill is for Python research/config, paper exploration, and AI/advisory orchestration only. Route production/performance to nt-strategy-builder-rust, keep live-default wiring on `LiveNode`, and mark `Pass` only when the completion report proves no execution-critical Rust path depends on Python advisory logic.
+Python strategy gates: this skill covers the supported NT V2 Python strategy surface for backtest, paper, and live systems, including Python research/config use. Route production/performance to nt-strategy-builder-rust when the strategy is performance-sensitive, and keep Rust ownership for adapter networking, parsing, normalization, risk/execution state, and other execution-critical infrastructure. Keep AI/advisory Python explicitly non-authoritative and off execution-critical paths.
 
 ## Overview
 
@@ -82,6 +84,9 @@ Are you using live market data?
 ### 1. Standard CeFi Adapters (Built-in)
 
 NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase (Rust/v2 `LiveNode` path), dYdX, Interactive Brokers, Databento, Tardis, and more.
+
+NT v2 compatibility note: dYdX v3 legacy adapter text below is migration/reference-only; use the renamed current `nautilus_trader.adapters.dydx` path for new work.
+
 
 > **v1.223.0**: dYdX v3 (legacy) adapter removed. Use `nautilus_trader.adapters.dydx` (module renamed from `dydx_v4`). Class prefix is now `Dydx` (e.g., `DydxDataClientConfig`, `DydxLiveDataClientFactory`). The dydx optional install extra is no longer needed.
 
@@ -176,7 +181,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 1. **Design** components with `nt-architect`
 2. **Implement** Strategy/Actor/Indicator with `nt-implement`
-3. **Wire venue(s)** using templates in this skill:
+3. **Wire venue(s)** using these templates for supported NT V2 Python strategies, research/config, paper exploration, AI/advisory orchestration, or migration/reference work. Prefer Rust `LiveNode` via `nt-strategy-builder-rust` + `nt-live` for performance-sensitive live systems and execution-critical infrastructure:
    a. Choose backtest / paper / live mode
    b. Configure venues (CeFi builtin or DEX via `nt-dex-adapter`)
    c. Configure data sources (catalog or live feeds)

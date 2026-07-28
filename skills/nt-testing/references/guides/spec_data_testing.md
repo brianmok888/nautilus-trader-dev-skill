@@ -32,7 +32,7 @@ Before running data tests:
 
 **Python node setup**:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: Python live/integration-specific TradingNode and legacy examples are migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
 
 Legacy examples still use `nautilus_trader.live.node.TradingNode`, but new Rust-backed
 PyO3 adapters should prefer `nautilus_trader.live.LiveNode`. Use `LiveNode.builder(...)`
@@ -61,8 +61,11 @@ node.add_actor_from_config(importable_actor_config)
 ```rust
 use nautilus_testkit::testers::{DataTester, DataTesterConfig};
 
-let tester_config = DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_quotes(true);
+let tester_config = DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .subscribe_quotes(true)
+    .build()?;
 let tester = DataTester::new(tester_config);
 node.add_actor(tester)?;
 node.run().await?;
@@ -105,8 +108,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_request_instruments(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .request_instruments(true)
 ```
 
 ### TC-D02: Subscribe instrument
@@ -131,8 +137,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_instrument(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_instrument(true)
 ```
 
 ### TC-D03: Load specific instrument
@@ -188,9 +197,12 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_book_deltas(true)
-    .with_book_type(BookType::L2_MBP)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_book_deltas(true)
+    .book_type(BookType::L2_MBP)
 ```
 
 ### TC-D11: Subscribe book at interval
@@ -218,11 +230,14 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_book_at_interval(true)
-    .with_book_type(BookType::L2_MBP)
-    .with_book_depth(Some(NonZeroUsize::new(10).unwrap()))
-    .with_book_interval_ms(NonZeroUsize::new(1000).unwrap())
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_book_at_interval(true)
+    .book_type(BookType::L2_MBP)
+    .book_depth(10)
+    .book_interval_ms(1000)
 ```
 
 ### TC-D12: Subscribe book depth
@@ -271,9 +286,12 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_request_book_snapshot(true)
-    .with_book_depth(Some(NonZeroUsize::new(10).unwrap()))
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .request_book_snapshot(true)
+    .book_depth(10)
 ```
 
 ### TC-D14: Managed book from deltas
@@ -306,10 +324,13 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_book_deltas(true)
-    .with_manage_book(true)
-    .with_book_type(BookType::L2_MBP)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_book_deltas(true)
+    .manage_book(true)
+    .book_type(BookType::L2_MBP)
 ```
 
 ### TC-D15: Request historical book deltas
@@ -366,8 +387,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_quotes(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_quotes(true)
 ```
 
 ### TC-D21: Request historical quotes
@@ -423,8 +447,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_trades(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_trades(true)
 ```
 
 ### TC-D31: Request historical trades
@@ -450,8 +477,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_request_trades(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .request_trades(true)
 ```
 
 ---
@@ -488,9 +518,12 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_bar_types(vec![bar_type])
-    .with_subscribe_bars(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .bar_types(vec![bar_type])
+    .subscribe_bars(true)
 ```
 
 ### TC-D41: Request historical bars
@@ -517,9 +550,12 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_bar_types(vec![bar_type])
-    .with_request_bars(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .bar_types(vec![bar_type])
+    .request_bars(true)
 ```
 
 ---
@@ -557,8 +593,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_mark_prices(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_mark_prices(true)
 ```
 
 ### TC-D51: Subscribe index prices
@@ -583,8 +622,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_index_prices(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_index_prices(true)
 ```
 
 ### TC-D52: Subscribe funding rates
@@ -609,8 +651,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_funding_rates(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_funding_rates(true)
 ```
 
 ### TC-D53: Request historical funding rates
@@ -635,8 +680,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_request_funding_rates(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .request_funding_rates(true)
 ```
 
 ---
@@ -677,8 +725,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_instrument_status(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_instrument_status(true)
 ```
 
 ### TC-D61: Subscribe instrument close
@@ -708,8 +759,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_instrument_close(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_instrument_close(true)
 ```
 
 ---
@@ -754,8 +808,11 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_option_greeks(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_option_greeks(true)
 ```
 
 ### TC-D63: Subscribe option chain
@@ -812,10 +869,13 @@ DataTesterConfig(
 **Rust config:**
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_quotes(true)
-    .with_subscribe_trades(true)
-    .with_can_unsubscribe(true)
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .build()?
+    .subscribe_quotes(true)
+    .subscribe_trades(true)
+    .can_unsubscribe(true)
 ```
 
 ### TC-D71: Custom subscribe params
@@ -853,7 +913,7 @@ DataTesterConfig::new(client_id, vec![instrument_id])
 ## DataTester configuration reference
 
 Quick reference for all `DataTesterConfig` parameters. Defaults shown are for the Python config.
-Note: Rust `DataTesterConfig::new` sets `manage_book=true`, while Python defaults it to `False`.
+Note: set `manage_book(true)` explicitly in Rust builder configs when the venue test owns book management; Python defaults it to `False`.
 
 | Parameter                    | Type              | Default         | Affects groups |
 |------------------------------|-------------------|-----------------|----------------|

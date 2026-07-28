@@ -9,18 +9,20 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## NT V2 Rust readiness gates
 
-Use these gates for newly built or newly created work guided by this skill. Complete the status gate before coding and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; `Pass` requires explicit docs, diff, or command evidence, and `Waived` names the owner and reason.
+This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
 
-| Gate | Required check |
-| --- | --- |
-| G0 Upstream baseline | Verify latest official docs, GitHub `develop`, release tag, and local reference snapshot before copying APIs. |
-| G1 Lane classification | Classify every component as Rust production/performance/live, Python research/config, AI/advisory, or labelled migration/reference work. |
-| G2 Legacy label | NT v2 compatibility note: legacy Cython/v1/TradingNode template/reference guidance is reference-only; convert unlabelled guidance to Rust v2/PyO3/LiveNode before use. |
-| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, normalization, risk/execution state, and all execution-critical paths. |
-| G4 NT V2 API shape | Use current NT V2 Rust/PyO3 APIs: `LiveNode`, builder APIs, `StrategyCore`/`DataActor` when relevant, and message bus boundaries. |
-| G5 Test evidence | Capture targeted tests/checker output before readiness is `Pass`; Rust production gates usually include `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and adapter/parser `scripts/fuzz-adapter.sh` or fuzz/property tests when relevant. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. |
-| G7 Completion report | Reconcile all gates in the final report with status plus evidence path/command, leaving no silent `Pending` gate. |
+NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+
+| Gate | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G1 Lane classification | Classify the work as Rust execution-critical/performance, supported Python V2 strategy/config, Python AI/advisory, or legacy. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template lane inventory and Python/Rust V2 strategy boundary tests. |
+| G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
+| G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
+| G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -283,31 +285,36 @@ During market exit, non-reduce-only orders are auto-denied; order lists with any
 
 ### Quick Reference: Which Template?
 
-| Need | Template | Key Feature |
-|------|----------|-------------|
-| Trading logic, orders | `strategy.py` | `submit_order()`, `market_exit()`, position management |
-| Model inference, signals | `actor.py` | `publish_signal()`, `publish_data()` |
-| Stateless calculations | `indicator.py` | `handle_bar()`, pure computation |
-| Structured data between components | `custom_data.py` | `@customdataclass`, serialization |
-| Order execution logic | `exec_algorithm.py` | Child order spawning |
-| Exchange/data connectivity | `adapters/` | LiveDataClient, LiveExecutionClient |
-| Custom fill simulation | `fill_model.py` | `prob_fill_on_limit`, `prob_slippage` (queue position) |
-| Custom margin calculation | `margin_model.py` | `calculate_margin_init/maint` |
-| Custom portfolio statistics | `portfolio_statistic.py` | `calculate_from_orders/positions` |
+Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
+Treat unclassified Python templates as invalid. Python is allowed only for AI/advisory,
+research/config, and Rust/PyO3 control-plane wrappers; production strategies, adapters,
+execution algorithms, live networking, parsing, normalization, risk/execution state, and
+order flow default to Rust.
+
+| Need | Template / route | Lane classification |
+|------|------------------|---------------------|
+| Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
+| Supported NT V2 Python strategy | `strategy.py` | current Python extension surface; prefer Rust for hot paths |
+| Model inference, advisory signals | `actor.py` | AI/advisory Python; non-production; off execution-critical paths |
+| Stateless calculations | `indicator.py` | Python research/config; promote hot paths to Rust |
+| Structured data between components | `custom_data.py` | Python research/config; Rust owns production serialization hot paths |
+| Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `exec_algorithm.py` is reference-only |
+| Exchange/data connectivity | `adapters/` only as Rust/PyO3 control-plane wrappers | Rust core owns networking, parsing, normalization, and order entry |
+| Custom fill/margin/statistics simulation | `fill_model.py`, `margin_model.py`, `portfolio_statistic.py` | Python research/backtest only; production risk stays Rust-owned |
 
 ### Template Files
 
 Templates are in `templates/` subdirectory:
-- `strategy.py` - Trading strategy with order management
-- `actor.py` - Actor for model inference and signal publishing
-- `indicator.py` - Custom indicator
-- `custom_data.py` - Custom data types for message bus
-- `exec_algorithm.py` - Execution algorithm
-- `fill_model.py` - Custom fill simulation model
-- `margin_model.py` - Custom margin calculation model
-- `portfolio_statistic.py` - Custom portfolio statistic
-- `adapters/exchange.py` - Exchange adapter (data + execution)
-- `adapters/data_provider.py` - Data-only adapter
+- `strategy.py` - supported NT V2 Python strategy example; prefer Rust for performance-sensitive logic
+- `actor.py` - AI/advisory model inference and signal publishing, off the hot path
+- `indicator.py` - research/config custom indicator
+- `custom_data.py` - research/config custom data types for message bus
+- `exec_algorithm.py` - migration/reference-only; route execution-critical algorithms to Rust
+- `fill_model.py` - research/backtest custom fill simulation model
+- `margin_model.py` - research/backtest custom margin calculation model
+- `portfolio_statistic.py` - research/backtest custom portfolio statistic
+- `adapters/exchange.py` - Rust/PyO3 control-plane wrapper; Rust owns data + execution
+- `adapters/data_provider.py` - Rust/PyO3 control-plane wrapper for data-only adapters
 
 ### Model Loading (msgspec preferred)
 

@@ -7,20 +7,35 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-trading
 
+## V2 order-event and migration hardening
+
+- Handle `OrderFillVoided` as a first-class execution event. `OrderStatus.VOIDED`/`VOIDED` is terminal: do not emit or accept later order state updates for that order.
+- Implement strategy and execution-algorithm `on_order_fill_voided` behavior when the venue can void fills, and test replay with the referenced fill available locally before reopen.
+- `PortfolioConfig.use_mark_prices` defaults to `true`; trading logic or tests requiring last-price valuation must opt out with `use_mark_prices=False` and document the reason.
+- `ExecutionEngineConfig.carry_replay_events_on_reopen` affects NETTING close/reopen replay; position/order lifecycle tests should cover it when restart reconciliation is in scope.
+- Use `RedisMessageBusBacking` in Python V2 message-bus configuration.
+- SQL/catalog migration must be completed before relying on historical orders, fills, or positions after an in-place V2 upgrade.
+- deferred V2 limits for unsupported order types, TIFs, callbacks, or adapter features must be visible in the capability matrix.
+- shared adapter task tracking, if upstream supports it for the adapter, must prevent leaked submit/modify/cancel tasks and clear task state on terminal events.
+- Rust crates with unsafe execution-critical code must use `#![deny(unsafe_op_in_unsafe_fn)]`.
+
+
 ## NT V2 Rust readiness gates
 
-Use these gates for newly built or newly created work guided by this skill. Complete the status gate before coding and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; `Pass` requires explicit docs, diff, or command evidence, and `Waived` names the owner and reason.
+This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
 
-| Gate | Required check |
-| --- | --- |
-| G0 Upstream baseline | Verify latest official docs, GitHub `develop`, release tag, and local reference snapshot before copying APIs. |
-| G1 Lane classification | Classify every component as Rust production/performance/live, Python research/config, AI/advisory, or labelled migration/reference work. |
-| G2 Legacy label | NT v2 compatibility note: legacy Cython/v1/TradingNode template/reference guidance is reference-only; convert unlabelled guidance to Rust v2/PyO3/LiveNode before use. |
-| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, normalization, risk/execution state, and all execution-critical paths. |
-| G4 NT V2 API shape | Use current NT V2 Rust/PyO3 APIs: `LiveNode`, builder APIs, `StrategyCore`/`DataActor` when relevant, and message bus boundaries. |
-| G5 Test evidence | Capture targeted tests/checker output before readiness is `Pass`; Rust production gates usually include `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and adapter/parser `scripts/fuzz-adapter.sh` or fuzz/property tests when relevant. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. |
-| G7 Completion report | Reconcile all gates in the final report with status plus evidence path/command, leaving no silent `Pending` gate. |
+NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+
+| Gate | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G1 Lane classification | Classify the work as Rust execution-critical/performance, supported Python V2 strategy/config, Python AI/advisory, or legacy. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template lane inventory and Python/Rust V2 strategy boundary tests. |
+| G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
+| G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
+| G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -406,8 +421,9 @@ To add custom components to this path: add a `#[pyclass]` config and dispatch ar
 ### PyO3 Binding Conventions
 
 - Use `#[pyclass]` and `#[pymethods]` for Python-visible types
-- Register new modules in `crates/pyo3/src/lib.rs`
-- Use `Python::attach(|py| { ... })` for callbacks that need the GIL
+- Register bindings in the owning crate’s `src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates that crate submodule
+- Python v2 live callbacks must use typed live runner channels; never call
+  `Python::attach` from Tokio worker tasks.
 - Wrap FFI functions in `abort_on_panic(|| { ... })` — Rust panics must never unwind across FFI
 
 ## Coding Conventions

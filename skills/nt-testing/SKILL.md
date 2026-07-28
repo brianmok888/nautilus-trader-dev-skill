@@ -9,20 +9,36 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-testing
 
+## V2 nightly migration regression coverage
+
+Add or require focused regression coverage for current nightly migration behavior before marking V2 readiness:
+
+- `OrderFillVoided` and terminal `OrderStatus.VOIDED`: replay must have the referenced fill locally before reopening, must not update after `VOIDED`, and strategy/algorithm `on_order_fill_voided` callbacks must be covered when the venue can void fills.
+- `PortfolioConfig.use_mark_prices` now defaults to `true`; tests that depend on last-price valuation must set `use_mark_prices=False` explicitly and document why.
+- `ExecutionEngineConfig.carry_replay_events_on_reopen` must be tested for NETTING close/reopen replay behavior when external order claims or restart reconciliation are involved.
+- `RedisMessageBusBacking` is the current Python V2 name; fail migration tests that still reference the old Redis backing class name.
+- SQL/catalog migration: regenerate or migrate catalogs and SQL schemas before in-place upgrades, then smoke replay old persisted events and new V2 events together.
+- deferred V2 limits: record unsupported order/TIF/callback paths as deferred V2 limits with explicit test gaps, not as passing coverage.
+- shared adapter task tracking: if upstream adapter support exists, verify spawned submit/modify/cancel tasks are tracked, forgotten on terminal events, and aborted on stop/drop.
+- Rust crates with unsafe code must enable `#![deny(unsafe_op_in_unsafe_fn)]`.
+
+
 ## NT V2 Rust readiness gates
 
-Use these gates for newly built or newly created work guided by this skill. Complete the status gate before coding and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; `Pass` requires explicit docs, diff, or command evidence, and `Waived` names the owner and reason.
+This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
 
-| Gate | Required check |
-| --- | --- |
-| G0 Upstream baseline | Verify latest official docs, GitHub `develop`, release tag, and local reference snapshot before copying APIs. |
-| G1 Lane classification | Classify every component as Rust production/performance/live, Python research/config, AI/advisory, or labelled migration/reference work. |
-| G2 Legacy label | NT v2 compatibility note: legacy Cython/v1/TradingNode template/reference guidance is reference-only; convert unlabelled guidance to Rust v2/PyO3/LiveNode before use. |
-| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, normalization, risk/execution state, and all execution-critical paths. |
-| G4 NT V2 API shape | Use current NT V2 Rust/PyO3 APIs: `LiveNode`, builder APIs, `StrategyCore`/`DataActor` when relevant, and message bus boundaries. |
-| G5 Test evidence | Capture targeted tests/checker output before readiness is `Pass`; Rust production gates usually include `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and adapter/parser `scripts/fuzz-adapter.sh` or fuzz/property tests when relevant. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. |
-| G7 Completion report | Reconcile all gates in the final report with status plus evidence path/command, leaving no silent `Pending` gate. |
+NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+
+| Gate | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G1 Lane classification | Classify the work as Rust execution-critical/performance, supported Python V2 strategy/config, Python AI/advisory, or legacy. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template lane inventory and Python/Rust V2 strategy boundary tests. |
+| G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
+| G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
+| G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -207,43 +223,54 @@ config = DataTesterConfig(
     instrument_ids=[instrument_id],
 )
 
-# With subscribe methods
+# Constructor-keyword scenarios
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_quotes()
+    subscribe_quotes=True,
+)
 
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_trades()
+    subscribe_trades=True,
+)
 
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_bars(bar_type=BarType.MINUTE)
+    bar_types=[bar_type],
+    subscribe_bars=True,
+)
 
 # Order book variants
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_book_deltas(book_type=BookType.L2_MBP)
+    subscribe_book_deltas=True,
+    book_type=BookType.L2_MBP,
+)
 
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_book_depth(book_type=BookType.L2_MBP, depth=10)
+    subscribe_book_depth=True,
+    book_type=BookType.L2_MBP,
+    book_depth=10,
+)
 
 # Instrument discovery
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_request_instruments()
+    request_instruments=True,
+)
 
 config = DataTesterConfig(
     client_id=ClientId("BINANCE"),
     instrument_ids=[instrument_id],
-).with_subscribe_instrument()
+    subscribe_instrument=True,
+)
 ```
 
 ### Data Validation Flow
@@ -270,7 +297,7 @@ The ExecTesterConfig API validates order lifecycle per venue. Each adapter has s
 ### ExecTesterConfig API
 
 ```python
-from nautilus_trader.test_kit.strategies.tester_exec import ExecTesterConfig
+from nautilus_trader.testkit import ExecTesterConfig
 
 # Basic execution test
 config = ExecTesterConfig(
@@ -286,47 +313,43 @@ config = ExecTesterConfig(
     instrument_id=instrument_id,
     client_id=ClientId("BINANCE"),
     order_qty=Quantity.from_str("0.01"),
-).with_enable_limit_buys()
-
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-).with_enable_limit_sells()
-
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-).with_use_post_only()
-
-# v1.227.0 execution-test coverage flags
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
+    enable_limit_buys=True,
 )
-config.limit_aggressive = True       # marketable limit paths crossing the spread
-config.test_modify_rejected = True   # venue modify-rejection path when supported
 
-# Reject tests
 config = ExecTesterConfig(
     strategy_id=StrategyId("test-strat"),
     instrument_id=instrument_id,
     client_id=ClientId("BINANCE"),
     order_qty=Quantity.from_str("0.01"),
-).with_test_reject_post_only()
+    enable_limit_sells=True,
+)
+
+config = ExecTesterConfig(
+    strategy_id=StrategyId("test-strat"),
+    instrument_id=instrument_id,
+    client_id=ClientId("BINANCE"),
+    order_qty=Quantity.from_str("0.01"),
+    use_post_only=True,
+)
+
+# Current Python V2 execution-test coverage flag exposed by the generated stub
+config = ExecTesterConfig(
+    strategy_id=StrategyId("test-strat"),
+    instrument_id=instrument_id,
+    client_id=ClientId("BINANCE"),
+    order_qty=Quantity.from_str("0.01"),
+    limit_aggressive=True,       # marketable limit paths crossing the spread
+)
+
+# `test_modify_rejected` and `test_reject_post_only` are Rust builder fields in
+# the current source but are not exposed by the generated Python constructor.
 ```
 
 
 ### Current Rust ExecTesterConfig API
 
 New Rust execution tester examples use `ExecTesterConfig::builder()` with a
-`StrategyConfig` base and finish with `build()?`; do not copy older
-`ExecTesterConfig::new(...)` examples into new Rust adapter docs.
+`StrategyConfig` base and finish with `build()?`; NT v2 compatibility note: older legacy positional-constructor examples are migration/reference-only; do not copy them into new Rust adapter docs.
 
 ```rust
 use nautilus_trading::strategy::StrategyConfig;

@@ -147,6 +147,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
       `__del__`/`__dealloc__` on the Python side:
 
       ```python
+      # NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
       cdef class OrderBook:
           cdef OrderBook_API _mem
 

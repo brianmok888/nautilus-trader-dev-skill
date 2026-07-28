@@ -31,9 +31,11 @@ DataTesterConfig(
 ### Rust
 
 ```rust
-DataTesterConfig::new(client_id, vec![instrument_id])  // client_id: ClientId, instrument_ids: Vec<InstrumentId>
-    .with_subscribe_quotes(true)
-    // ... builder methods
+DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .subscribe_quotes(true)
+    .build()?
 ```
 
 ## Parameters
@@ -75,40 +77,40 @@ DataTesterConfig::new(client_id, vec![instrument_id])  // client_id: ClientId, i
 | `use_pyo3_book`              | bool              | False           | 2              |
 | `log_data`                   | bool              | True            | All            |
 
-Note: Rust `DataTesterConfig::new` sets `manage_book=true`, while Python defaults it to `False`.
+Note: set `manage_book(true)` explicitly in Rust builder configs when the venue test owns book management; Python defaults it to `False`.
 
 ## Rust Builder Methods
 
-Each `with_*` method corresponds to a Python config parameter:
+Current builder methods correspond to Python config parameters:
 
 | Rust builder method                   | Python param equivalent                |
 |---------------------------------------|----------------------------------------|
-| `.with_request_instruments(bool)`     | `request_instruments`                  |
-| `.with_subscribe_instrument(bool)`    | `subscribe_instrument`                 |
-| `.with_subscribe_book_deltas(bool)`   | `subscribe_book_deltas`                |
-| `.with_subscribe_book_at_interval(bool)` | `subscribe_book_at_interval`        |
-| `.with_subscribe_book_depth(bool)`    | `subscribe_book_depth`                 |
-| `.with_request_book_snapshot(bool)`   | `request_book_snapshot`                |
-| `.with_request_book_deltas(bool)`     | `request_book_deltas`                  |
-| `.with_subscribe_quotes(bool)`        | `subscribe_quotes`                     |
-| `.with_request_quotes(bool)`          | `request_quotes`                       |
-| `.with_subscribe_trades(bool)`        | `subscribe_trades`                     |
-| `.with_request_trades(bool)`          | `request_trades`                       |
-| `.with_bar_types(Vec<BarType>)`       | `bar_types`                            |
-| `.with_subscribe_bars(bool)`          | `subscribe_bars`                       |
-| `.with_request_bars(bool)`            | `request_bars`                         |
-| `.with_subscribe_mark_prices(bool)`   | `subscribe_mark_prices`                |
-| `.with_subscribe_index_prices(bool)`  | `subscribe_index_prices`               |
-| `.with_subscribe_funding_rates(bool)` | `subscribe_funding_rates`              |
-| `.with_request_funding_rates(bool)`   | `request_funding_rates`                |
-| `.with_subscribe_instrument_status(bool)` | `subscribe_instrument_status`      |
-| `.with_subscribe_instrument_close(bool)` | `subscribe_instrument_close`        |
-| `.with_subscribe_option_greeks(bool)` | `subscribe_option_greeks`              |
-| `.with_manage_book(bool)`             | `manage_book`                          |
-| `.with_book_type(BookType)`           | `book_type`                            |
-| `.with_book_depth(Option<NonZeroUsize>)` | `book_depth`                         |
-| `.with_book_interval_ms(NonZeroUsize)` | `book_interval_ms`                    |
-| `.with_can_unsubscribe(bool)`         | `can_unsubscribe`                      |
+| `.request_instruments(bool)`          | `request_instruments`                  |
+| `.subscribe_instrument(bool)`         | `subscribe_instrument`                 |
+| `.subscribe_book_deltas(bool)`        | `subscribe_book_deltas`                |
+| `.subscribe_book_at_interval(bool)`   | `subscribe_book_at_interval`           |
+| `.subscribe_book_depth(bool)`         | `subscribe_book_depth`                 |
+| `.request_book_snapshot(bool)`        | `request_book_snapshot`                |
+| `.request_book_deltas(bool)`          | `request_book_deltas`                  |
+| `.subscribe_quotes(bool)`             | `subscribe_quotes`                     |
+| `.request_quotes(bool)`               | `request_quotes`                       |
+| `.subscribe_trades(bool)`             | `subscribe_trades`                     |
+| `.request_trades(bool)`               | `request_trades`                       |
+| `.bar_types(Vec<BarType>)`            | `bar_types`                            |
+| `.subscribe_bars(bool)`               | `subscribe_bars`                       |
+| `.request_bars(bool)`                 | `request_bars`                         |
+| `.subscribe_mark_prices(bool)`        | `subscribe_mark_prices`                |
+| `.subscribe_index_prices(bool)`       | `subscribe_index_prices`               |
+| `.subscribe_funding_rates(bool)`      | `subscribe_funding_rates`              |
+| `.request_funding_rates(bool)`        | `request_funding_rates`                |
+| `.subscribe_instrument_status(bool)`  | `subscribe_instrument_status`          |
+| `.subscribe_instrument_close(bool)`   | `subscribe_instrument_close`           |
+| `.subscribe_option_greeks(bool)`      | `subscribe_option_greeks`              |
+| `.manage_book(bool)`                  | `manage_book`                          |
+| `.book_type(BookType)`                | `book_type`                            |
+| `.book_depth(usize)`                  | `book_depth`                           |
+| `.book_interval_ms(usize)`            | `book_interval_ms`                     |
+| `.can_unsubscribe(bool)`              | `can_unsubscribe`                      |
 
 ## Test Groups
 
@@ -151,8 +153,11 @@ Reference: `examples/live/{adapter}/{adapter}_data_tester.py`
 ```rust
 use nautilus_testkit::testers::{DataTester, DataTesterConfig};
 
-let tester_config = DataTesterConfig::new(client_id, vec![instrument_id])
-    .with_subscribe_quotes(true);
+let tester_config = DataTesterConfig::builder()
+    .client_id(client_id)
+    .instrument_ids(vec![instrument_id])
+    .subscribe_quotes(true)
+    .build()?;
 let tester = DataTester::new(tester_config);
 node.add_actor(tester)?;
 node.run().await?;

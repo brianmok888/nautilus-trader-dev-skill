@@ -118,7 +118,10 @@ Quick check + Conventions + Trading Correctness + Performance + Testability + (i
 - Hyperliquid `builder_fee_refresh_mins` config removed
 - WS `connect()` needs `loop_=self._loop` in adapter code
 
+
 ## LIVE TRADING CHECKLIST (9+ items)
+NT v2 compatibility note: v1.x checklist items below are migration/reference-only where they mention legacy/v1 removals; prefer current Rust v2/PyO3 guidance for new work.
+
 
 - [ ] Reconciliation enabled with appropriate lookback (≥60 min)
 - [ ] Timeouts configured for all connection phases
@@ -149,3 +152,9 @@ Quick check + Conventions + Trading Correctness + Performance + Testability + (i
 ## PREVIOUS STEP
 
 Components implemented via **nt-implement** skill.
+
+## V2 hardening checkpoints
+
+- Reject stale ExecTester guidance: Python must use constructor keywords; Rust must use `ExecTesterConfig::builder()`.
+- Reject `Python::attach` from Tokio worker tasks for Python callbacks; require live runner channels.
+- Check `OrderFillVoided`/`VOIDED`, `use_mark_prices` default true, `carry_replay_events_on_reopen`, `RedisMessageBusBacking`, SQL/catalog migration, deferred V2 limits, shared adapter task tracking when supported, and `#![deny(unsafe_op_in_unsafe_fn)]`.

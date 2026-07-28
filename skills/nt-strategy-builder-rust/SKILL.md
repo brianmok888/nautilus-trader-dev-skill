@@ -7,18 +7,20 @@ description: "Use when building a NautilusTrader strategy in Rust (native V2). C
 
 ## NT V2 Rust readiness gates
 
-Use these gates for newly built or newly created work guided by this skill. Complete the status gate before coding and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; `Pass` requires explicit docs, diff, or command evidence, and `Waived` names the owner and reason.
+This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
 
-| Gate | Required check |
-| --- | --- |
-| G0 Upstream baseline | Verify latest official docs, GitHub `develop`, release tag, and local reference snapshot before copying APIs. |
-| G1 Lane classification | Classify every component as Rust production/performance/live, Python research/config, AI/advisory, or labelled migration/reference work. |
-| G2 Legacy label | NT v2 compatibility note: legacy Cython/v1/TradingNode template/reference guidance is reference-only; convert unlabelled guidance to Rust v2/PyO3/LiveNode before use. |
-| G3 Rust ownership | Rust owns production, performance, live, networking, parsing, normalization, risk/execution state, and all execution-critical paths. |
-| G4 NT V2 API shape | Use current NT V2 Rust/PyO3 APIs: `LiveNode`, builder APIs, `StrategyCore`/`DataActor` when relevant, and message bus boundaries. |
-| G5 Test evidence | Capture targeted tests/checker output before readiness is `Pass`; Rust production gates usually include `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and adapter/parser `scripts/fuzz-adapter.sh` or fuzz/property tests when relevant. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. |
-| G7 Completion report | Reconcile all gates in the final report with status plus evidence path/command, leaving no silent `Pending` gate. |
+NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+
+| Gate | Description | Status | Evidence |
+| --- | --- | --- | --- |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G1 Lane classification | Classify the work as Rust execution-critical/performance, supported Python V2 strategy/config, Python AI/advisory, or legacy. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template lane inventory and Python/Rust V2 strategy boundary tests. |
+| G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
+| G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
+| G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -82,21 +84,16 @@ pub trait Strategy: DataActor {
         params: Option<Params>,
     ) -> anyhow::Result<()> where Self: StrategyNative { ... }
     fn submit_order_list(...) -> anyhow::Result<()> where Self: StrategyNative { ... }
-    // event handlers (all default to no-op; override what you need):
-    fn on_start(&mut self) -> anyhow::Result<()> { ... }
-    fn on_stop(&mut self) -> anyhow::Result<()> { ... }
-    fn on_time_event(&mut self, event: &TimeEvent) -> anyhow::Result<()> { ... }
-    fn on_quote(&mut self, quote: &QuoteTick) -> anyhow::Result<()> { ... }
-    fn on_bar(&mut self, bar: &Bar) -> anyhow::Result<()> { ... }
     fn on_order_initialized(&mut self, event: OrderInitialized) {}
     fn on_order_event(&mut self, event: OrderEventAny) {}
     fn on_order_denied(&mut self, event: OrderDenied) {}
     fn on_order_submitted(&mut self, event: OrderSubmitted) {}
     fn on_order_rejected(&mut self, event: OrderRejected) {}
     fn on_order_accepted(&mut self, event: OrderAccepted) {}
-    fn on_order_filled(&mut self, event: OrderFilled) {}
+    fn on_order_filled(&mut self, event: &OrderFilled) {}
+    fn on_order_fill_voided(&mut self, event: &OrderFillVoided) {}
     fn on_order_canceled(&mut self, event: &OrderCanceled) {}
-    // ... modify/expire/trigger/reject handlers mirror the full order lifecycle
+    // Lifecycle and market-data handlers belong to `impl DataActor`.
 }
 ```
 
@@ -118,15 +115,18 @@ Key points:
    ├── strategy.rs   # YourStrategy struct + impl Strategy
    └── tests.rs      # cargo tests (rstest fixtures)
    ```
-2. **Write the config first** (`StrategyConfig` is a `bon::Builder`):
+2. **Write the config first** (derive a `bon::Builder` for the concrete config and embed the base `StrategyConfig`):
    ```rust
    use nautilus_trading::strategy::StrategyConfig;
 
    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize, bon::Builder)]
-   #[builder(finish_fn(name = "build_inner", vis = ""))]
-   #[serde(deny_unknown_fields)]
    pub struct YourStrategyConfig {
-       pub strategy_id: Option<StrategyId>,
+       #[builder(default = StrategyConfig {
+           strategy_id: Some(StrategyId::from("YOUR_STRATEGY-001")),
+           order_id_tag: Some("001".to_string()),
+           ..Default::default()
+       })]
+       pub base: StrategyConfig,
        pub instrument_id: InstrumentId,
        pub fast_period: usize,
        pub slow_period: usize,
@@ -153,13 +153,8 @@ Key points:
 
    impl YourStrategy {
        pub fn new(config: YourStrategyConfig) -> Self {
-           let core_config = StrategyConfig {
-               strategy_id: config.strategy_id,
-               order_id_tag: Some("001".to_string()),
-               ..Default::default()
-           };
            Self {
-               core: StrategyCore::new(core_config),
+               core: StrategyCore::new(config.base),
                instrument_id: config.instrument_id,
                fast_period: config.fast_period,
                slow_period: config.slow_period,
@@ -192,25 +187,25 @@ Key points:
                self.instrument_id,
                order_side,
                self.order_qty,
-               TimeInForce::Gtc,
-               None,
-               None,
-               false,
-               false,
-           )?;
+               None, // time_in_force
+               None, // reduce_only
+               None, // quote_quantity
+               None, // exec_algorithm_id
+               None, // exec_algorithm_params
+               None, // tags
+               None, // client_order_id
+           );
            self.submit_order(order, None, None, None)?;
            Ok(())
        }
    }
    ```
-4. **Export via PyO3** (`#[pyclass]` + `#[pymethods]`), registering new modules in
-   `crates/pyo3/src/lib.rs`. Register the strategy config as importable so it can be
-   loaded from a node config the same way Python strategies are.
+4. **Export via PyO3** (`#[pyclass]` + `#[pymethods]`) in the owning crate’s
+   `src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates the crate submodule.
+   Register the strategy config as importable so node config can load it.
 5. **Register with a node**:
-   - `BacktestEngine` — `engine.add_strategy(your_strategy, your_strategy_id)` (Rust API).
-   - `LiveNode` — register the strategy config factory; `LiveNode` is the Rust-backed
-     production default for new Rust strategies (the legacy Python-live node is not a
-     Rust-strategy target).
+   - `BacktestEngine` — `engine.add_strategy(your_strategy)?` (Rust API).
+   - `LiveNode` — native Rust uses `node.add_strategy(your_strategy)?`. The upstream-only `add_builtin_strategy(...)` PyO3 helper is feature-gated to bundled example strategies and is not a general extension path. For custom production strategies, keep native Rust registration or expose a purpose-built owning-crate PyO3 registration surface. The legacy Python-live node is not a Rust-strategy target.
 6. **Test in Rust** before wiring Python:
    ```bash
    cargo nextest run -p <your_crate> --features "python,ffi,high-precision,defi" \

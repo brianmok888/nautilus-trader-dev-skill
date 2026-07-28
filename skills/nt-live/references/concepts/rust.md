@@ -128,7 +128,7 @@ nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.gi
 ```
 
 Follow the checked-out `rust-toolchain.toml` for the active Rust version.
-Source-aligned work as of 2026-07-17 uses Rust 1.97.0; older 1.96.x
+Source-aligned work as of 2026-07-28 uses Rust 1.97.1; older 1.96.x
 release/docs references are lag notes unless the checked-out repository pins them.
 
 ### Feature flags

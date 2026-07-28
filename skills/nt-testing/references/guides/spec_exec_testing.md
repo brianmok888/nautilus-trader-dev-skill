@@ -22,6 +22,18 @@ handles TIF options, etc.) in the adapter's own guide, not here. Each adapter
 guide should include a capability matrix showing which order types, time-in-force
 options, actions, and flags it supports.
 
+### Current ExecTesterConfig API surface
+
+NT v2 compatibility note: migration/reference-only legacy positional-constructor guidance is not current; prefer Rust `ExecTesterConfig::builder()` and Python constructor keywords.
+
+- Python `ExecTesterConfig` is constructor-keyword based. Pass fields such as
+  `strategy_id=`, `instrument_id=`, `client_id=`, `order_qty=`,
+  `enable_limit_buys=`, and `enable_limit_sells=` directly to the constructor; do not
+  use removed `with_*` mutator examples for new Python guidance.
+- Rust uses `nautilus_testkit::testers::ExecTesterConfig::builder()` and `.build()?`.
+  Do not copy migration/reference-only legacy positional-constructor examples into new Rust adapter docs.
+
+
 ## Prerequisites
 
 Before running execution tests:
@@ -38,7 +50,7 @@ Before running execution tests:
 
 **Python node setup**:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: Python live/integration-specific TradingNode and legacy examples are migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
 
 Legacy examples still use `nautilus_trader.live.node.TradingNode`, but new Rust-backed
 PyO3 adapters should prefer `nautilus_trader.live.LiveNode`. Use `LiveNode.builder(...)`
@@ -64,9 +76,15 @@ node.add_strategy_from_config(importable_strategy_config)
 **Rust node setup** (reference: `crates/adapters/{adapter}/examples/node_exec_tester.rs`):
 
 ```rust
+use nautilus_trading::strategy::StrategyConfig;
 use nautilus_testkit::testers::{ExecTester, ExecTesterConfig};
 
-let tester_config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, order_qty);
+let tester_config = ExecTesterConfig::builder()
+    .base(StrategyConfig { strategy_id: Some(strategy_id), ..Default::default() })
+    .instrument_id(instrument_id)
+    .client_id(client_id)
+    .order_qty(order_qty)
+    .build()?;
 let tester = ExecTester::new(tester_config);
 node.add_strategy(tester)?;
 node.run().await?;
@@ -92,15 +110,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, dec!(0.001))
-    .with_open_position_on_start_qty(Some(dec!(0.001)))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(true)
-    .with_use_post_only(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 **Expected behavior:**
 
@@ -161,14 +171,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E02: Market SELL - submit and fill
 
@@ -192,14 +195,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(-1, 2)))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E03: Market order with IOC TIF
 
@@ -224,15 +220,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false);
-config.open_position_time_in_force = TimeInForce::Ioc;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E04: Market order with FOK TIF
 
@@ -262,15 +250,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false);
-config.open_position_time_in_force = TimeInForce::Fok;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E05: Market order with quote quantity
 
@@ -295,15 +275,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("100"))
-    .with_open_position_on_start(Some(Decimal::from(100)))
-    .with_use_quote_quantity(true)
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E06: Close position via market order on stop
 
@@ -334,15 +306,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_close_positions_on_stop(true)
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ---
 
@@ -390,13 +354,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E11: Limit SELL GTC - submit and accept
 
@@ -419,13 +377,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E12: Limit BUY and SELL pair
 
@@ -448,13 +400,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E13: Limit IOC aggressive fill
 
@@ -532,14 +478,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false);
-config.order_expire_time_delta_mins = Some(60);
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E18: Limit GTD expiry
 
@@ -618,16 +557,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-    .with_enable_stop_buys(true)
-    .with_enable_stop_sells(false)
-    .with_stop_order_type(OrderType::StopMarket)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E21: StopMarket SELL
 
@@ -653,16 +583,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-    .with_enable_stop_buys(false)
-    .with_enable_stop_sells(true)
-    .with_stop_order_type(OrderType::StopMarket)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E22: StopLimit BUY
 
@@ -693,17 +614,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-    .with_enable_stop_buys(true)
-    .with_enable_stop_sells(false)
-    .with_stop_order_type(OrderType::StopLimit);
-config.stop_limit_offset_ticks = Some(50);
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E23: StopLimit SELL
 
@@ -730,17 +641,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-    .with_enable_stop_buys(false)
-    .with_enable_stop_sells(true)
-    .with_stop_order_type(OrderType::StopLimit);
-config.stop_limit_offset_ticks = Some(50);
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E24: MarketIfTouched BUY
 
@@ -827,14 +728,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false);
-config.modify_orders_to_maintain_tob_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E31: Modify limit SELL price
 
@@ -858,14 +752,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(true);
-config.modify_orders_to_maintain_tob_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E32: Cancel-replace limit BUY
 
@@ -894,14 +781,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false);
-config.cancel_replace_orders_to_maintain_tob_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E33: Cancel-replace limit SELL
 
@@ -925,14 +805,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(true);
-config.cancel_replace_orders_to_maintain_tob_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E34: Modify stop trigger price
 
@@ -955,13 +828,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_stop_buys(true);
-config.modify_stop_orders_to_maintain_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E35: Cancel-replace stop order
 
@@ -984,13 +851,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_stop_buys(true);
-config.cancel_replace_stop_orders_to_maintain_offset = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E36: Modify rejected
 
@@ -1048,14 +909,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false)
-    .with_cancel_orders_on_stop(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E41: Cancel all on stop
 
@@ -1079,14 +933,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(true)
-    .with_cancel_orders_on_stop(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E42: Individual cancels on stop
 
@@ -1110,14 +957,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(true);
-config.use_individual_cancels_on_stop = true;
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E43: Batch cancel on stop
 
@@ -1141,14 +981,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(true)
-    .with_use_batch_cancel_on_stop(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E44: Cancel already-canceled order
 
@@ -1202,16 +1035,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_brackets(true)
-    .with_bracket_entry_order_type(OrderType::Limit)
-    .with_bracket_offset_ticks(500)
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E51: Bracket SELL
 
@@ -1283,14 +1107,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false)
-    .with_use_post_only(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E61: ReduceOnly on close
 
@@ -1316,16 +1133,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_reduce_only_on_stop(true)
-    .with_close_positions_on_stop(true)
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E62: Display quantity (iceberg)
 
@@ -1349,14 +1157,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-let mut config = ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("1.0"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false);
-config.order_display_qty = Some(Quantity::from("0.1"));
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E63: Custom order params
 
@@ -1414,15 +1215,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_enable_limit_buys(true)
-    .with_enable_limit_sells(false)
-    .with_use_post_only(true)
-    .with_test_reject_post_only(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E71: ReduceOnly rejection
 
@@ -1453,15 +1246,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-    .with_test_reject_reduce_only(true)
-    .with_enable_limit_buys(false)
-    .with_enable_limit_sells(false)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E72: Unsupported order type
 
@@ -1531,12 +1316,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_open_position_on_start(Some(Decimal::new(1, 2)))
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E81: Cancel orders on stop
 
@@ -1578,12 +1358,7 @@ ExecTesterConfig(
 )
 ```
 
-**Rust config:**
-
-```rust
-ExecTesterConfig::new(strategy_id, instrument_id, client_id, Quantity::from("0.01"))
-    .with_can_unsubscribe(true)
-```
+**Rust config:** Use the current `ExecTesterConfig::builder()` pattern from Node Setup above, setting the fields shown in the Python config with builder methods before `.build()?`.
 
 ### TC-E84: Reconcile open orders
 

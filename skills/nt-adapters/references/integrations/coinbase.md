@@ -11,11 +11,13 @@ order execution on both spot (Cash) and CFM derivatives (Margin) accounts
 through a shared execution client, with the account type selected by the
 factory (see [Execution scope](#execution-scope)).
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: Python live/integration-specific TradingNode and the missing Python live-node integration are migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
 
 :::note
+NT v2 compatibility note: missing Python live-node integration is migration/reference-only context; use Rust `LiveNode`/PyO3 entry points for new work.
+
 This adapter is Rust-only and is consumed by the v2 system (and the Rust
-`LiveNode`). It does not ship a legacy Python `TradingNode` integration;
+`LiveNode`). It does not ship a Python live-node integration;
 only configuration and enum types are exported through PyO3 so v2 Python
 entry points can construct them.
 :::
@@ -25,7 +27,7 @@ entry points can construct them.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The Coinbase adapter is implemented in Rust and consumed by the v2 system.
-The adapter does not ship a legacy Python `TradingNode` integration; only
+The adapter does not ship a Python live-node integration; only
 configuration and enum types are exported through PyO3 so v2 entry points can
 construct them from Python.
 
