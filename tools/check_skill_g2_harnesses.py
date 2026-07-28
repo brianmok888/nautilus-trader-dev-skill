@@ -257,7 +257,7 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-evomap-integration",
         scope="repository:python-ai-advisory-contract",
         summary="Validate the intentionally Python advisory lane and its safety invariants",
-        allowed_tokens=("ai_advisory_skill_stays_python",),
+        allowed_tokens=("ai_advisory",),
         steps=(
             repository_step(
                 PYTHON,
@@ -266,7 +266,7 @@ HARNESSES: dict[str, Harness] = {
                 "-q",
                 "tests/test_skill_g2_harnesses.py",
                 "-k",
-                "ai_advisory_skill_stays_python",
+                "ai_advisory",
             ),
         ),
         owned_paths=(
@@ -826,6 +826,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     errors = validate_harnesses(HARNESSES)
+    errors.extend(validate_ai_advisory_contract(repo_root()))
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1

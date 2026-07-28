@@ -1,6 +1,6 @@
 {
-  "owned_content_sha256": "74e6a01335f6763ae1a04aa06b83cbbb9feb1be3ea305f9a0b1c54a4d7e0f1f5",
-  "repository_commit": "af4370bf31f5bb14c057f744549f20e62f0cac98",
+  "owned_content_sha256": "722e37876cf736fd46f58cd73716b5a6fa4149fd9013f177b7c0e430974db5db",
+  "repository_commit": "473dbaf931661ed9d3f795ef18eeb9a6fd575f37",
   "schema_version": 1,
   "scope": "repository:python-ai-advisory-contract",
   "skill": "nt-evomap-integration",
@@ -13,14 +13,14 @@
         "-q",
         "tests/test_skill_g2_harnesses.py",
         "-k",
-        "ai_advisory_skill_stays_python"
+        "ai_advisory"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.565565,
+      "duration_seconds": 0.589573,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T18:18:13.333872+00:00"
+  "verified_at": "2026-07-28T22:19:50.693996+00:00"
 }
