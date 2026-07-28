@@ -287,6 +287,16 @@ def test_readiness_cards_reference_the_targeted_harness_command() -> None:
     assert errors == []
 
 
+def test_readiness_cards_do_not_report_stale_cutover_results() -> None:
+    for skill in sorted(EXPECTED_SKILLS):
+        text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
+
+        assert "passed 270 tests" not in text
+        assert "passed 110 safety" not in text
+        assert "with residual Pending gates retained below" not in text
+        assert "Cutover commits `9287019`" not in text
+
+
 def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)

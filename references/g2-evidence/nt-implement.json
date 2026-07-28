@@ -1,6 +1,6 @@
 {
-  "owned_content_sha256": "f52c2b4ea81ea89cd29b6a0a4e85a5a31276778af87cfa98b57ed550cd43127a",
-  "repository_commit": "e10e827f210c558a14ad15af008b1deec6756b8b",
+  "owned_content_sha256": "2ea0a4e58574d93919d624bccd18d782d41648773d34d506e11da20e45fc1eec",
+  "repository_commit": "c377fa6b0fbbed9652cb39eba7403ac29bb3e249",
   "schema_version": 1,
   "scope": "repository:implementation-templates-plus-upstream-owners",
   "skill": "nt-implement",
@@ -14,7 +14,7 @@
         "skills/nt-implement/templates"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.108956,
+      "duration_seconds": 0.091659,
       "returncode": 0
     },
     {
@@ -32,11 +32,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.70076,
+      "duration_seconds": 0.681895,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T22:26:15.569551+00:00"
+  "verified_at": "2026-07-28T22:33:29.816896+00:00"
 }
