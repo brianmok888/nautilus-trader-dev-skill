@@ -5,6 +5,11 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+try:
+    from tools.upstream_baseline import UPSTREAM_COMMIT
+except ModuleNotFoundError:  # Direct script execution adds tools/ to sys.path.
+    from upstream_baseline import UPSTREAM_COMMIT
+
 CURRENT_DEV_GUIDE_FILES = [
     "adapters.md",
     "benchmarking.md",
@@ -40,7 +45,7 @@ METADATA_KEYS = [
     "legacy_policy:",
 ]
 CURRENT_SYNC_DATE = "2026-07-28"
-CURRENT_SYNC_COMMIT = "f20f8af36e0f488779d3f543a217b2d19ea2db81"
+CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.230.0"
 CURRENT_RELEASE_DATE = "2026-06-29"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
@@ -267,10 +272,9 @@ CONTRACT_TERM_GROUPS = {
         "adapter runtime",
         "block_on boundary",
     ): [
-        "Bridge synchronous code",
         "get_runtime().block_on()",
-        "sync_method",
-        "async_implementation",
+        "synchronous adapter code",
+        "async function",
     ],
     (
         Path("skills/nt-adapters/references/guides/rust.md"),
@@ -374,7 +378,6 @@ NT_V2_TESTING_TARGETS = {
 
 NT_V2_RUST_TARGETS = {
     Path("references/developer_guide/rust.md"): [
-        "rust-toolchain.toml",
         "Generated Python artifacts",
         "HIGH_PRECISION=true",
         "py-stubs-v2",
@@ -432,7 +435,7 @@ NT_V2_READINESS_GATE_TARGETS = [
 ]
 
 NT_V2_READINESS_SECTION = "## NT V2 Rust readiness gates"
-NT_V2_READINESS_STATUSES = {"Pass", "Pending", "Blocked", "N/A", "Waived"}
+NT_V2_READINESS_STATUSES = {"Pass", "Pending", "Blocked"}
 NT_V2_READINESS_GATES = [
     "G0 Upstream baseline",
     "G1 Legacy label",
@@ -443,6 +446,11 @@ NT_V2_READINESS_GATES = [
     "G6 Safety/compliance",
     "G7 Completion report",
 ]
+
+SHARED_RUST_EXAMPLE_GATE_SKILLS = {
+    Path("skills/nt-strategy-builder-rust/SKILL.md"),
+    Path("skills/nt-trading/SKILL.md"),
+}
 
 NT_V2_RUST_CHECKER_GATE_TARGETS = {
     Path("skills/nt-adapters/SKILL.md"): [
@@ -714,7 +722,7 @@ BLOCK_ON_CANONICAL_WARNING_TARGETS = {
         "block_on",
         "DataClient",
         "ExecutionClient",
-        "Use `spawn_task` instead",
+        "spawn the operation",
     ],
     Path("skills/nt-adapters/references/guides/rust.md"): [
         "Never use",
@@ -739,9 +747,7 @@ BLOCK_ON_CANONICAL_WARNING_TARGETS = {
 CURRENT_GUIDE_DELTA_TARGETS = {
     Path("references/developer_guide/adapters.md"): [
         "Handler initialization handshake",
-        "Auth-token rotation",
         "CancellationToken",
-        "execution-path rate-limit response",
         "unknown outcome",
         "idempotent",
     ],
@@ -761,7 +767,7 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "pip-audit",
     ],
     Path("references/developer_guide/rust.md"): [
-        "Generated FFI bindings and precision mode",
+        "Generated Python artifacts",
         "HIGH_PRECISION=true",
     ],
     Path("references/developer_guide/python.md"): [
@@ -1381,6 +1387,15 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
             ):
                 errors.append(
                     f"NT V2 readiness gate {gate_id} Pass uses self-referential evidence in {relative.as_posix()}"
+                )
+            if (
+                status == "Pass"
+                and gate_id == "G2"
+                and "check_rust_trading_reference_sync.py" in evidence
+                and relative not in SHARED_RUST_EXAMPLE_GATE_SKILLS
+            ):
+                errors.append(
+                    f"NT V2 readiness gate G2 Pass uses unscoped shared Rust-example evidence in {relative.as_posix()}"
                 )
             if status == "Blocked" and not re.search(
                 r"\b(?:because|blocked|missing|unavailable|requires|awaiting|fails?)\b",

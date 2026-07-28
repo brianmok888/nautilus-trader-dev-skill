@@ -760,7 +760,7 @@ def test_reports_missing_current_reference_deltas(tmp_path: Path) -> None:
         "in references/developer_guide/spec_exec_testing.md" in result.errors
     )
     assert (
-        "missing current guide delta 'execution-path rate-limit response' "
+        "missing current guide delta 'CancellationToken' "
         "in references/developer_guide/adapters.md" in result.errors
     )
     assert (
@@ -1733,7 +1733,7 @@ def test_readiness_intro_with_legacy_terms_does_not_need_separate_label(
         "## NT V2 Rust readiness gates\n"
         "\n"
         "Use these gates for newly built work. Complete the status gate before coding "
-        "and mark each gate `Pass`, `Pending`, `Blocked`, `N/A`, or `Waived`; "
+        "and mark each gate `Pass`, `Pending`, or `Blocked`; "
         "`Pass` requires explicit docs, diff, or command evidence.\n"
         "| Gate | Description | Status | Evidence |\n"
         "| --- | --- | --- | --- |\n"
@@ -1770,6 +1770,21 @@ def test_reports_pass_readiness_gate_without_measurable_evidence(
     )
 
 
+def test_reports_readiness_status_outside_mission_contract(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | N/A |",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "invalid NT V2 readiness status 'N/A' for G2 in skills/nt-data/SKILL.md"
+        in errors
+    )
+
+
 def test_reports_self_referential_pass_readiness_evidence(tmp_path: Path) -> None:
     card = readiness_gate_text().replace(
         "`git rev-parse HEAD` recorded in `README.md`.",
@@ -1785,13 +1800,46 @@ def test_reports_self_referential_pass_readiness_evidence(tmp_path: Path) -> Non
     )
 
 
+def test_reports_pass_gate_with_unscoped_shared_example_evidence(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "Awaiting upstream-backed example validation.",
+        "`python3 tools/check_rust_trading_reference_sync.py --compile` passed.",
+    ).replace(
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "NT V2 readiness gate G2 Pass uses unscoped shared Rust-example evidence in "
+        "skills/nt-data/SKILL.md" in errors
+    )
+
+
+def test_allows_shared_example_evidence_for_rust_strategy_skill(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "Awaiting upstream-backed example validation.",
+        "`python3 tools/check_rust_trading_reference_sync.py --compile` passed.",
+    ).replace(
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
+    )
+    write(tmp_path / "skills/nt-strategy-builder-rust/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert not any("unscoped shared Rust-example evidence" in error for error in errors)
+
+
 def test_reports_incomplete_nt_v2_rust_readiness_gate_labels(
     tmp_path: Path,
 ) -> None:
     write(
         tmp_path / "skills/nt-data/SKILL.md",
         "## NT V2 Rust readiness gates\n"
-        "Statuses: Pass, Pending, Blocked, N/A, Waived.\n"
+        "Statuses: Pass, Pending, Blocked.\n"
         "- G0 Upstream baseline: latest docs.\n"
         "- G1 Legacy label: label legacy.\n"
         "- G2 V2 example validation: validate examples.\n"
@@ -2190,8 +2238,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "pip-audit\n"
             + "maturin\n"
             + "rustup toolchain install nightly\n"
-            + "Bridge synchronous code with get_runtime().block_on() from sync_method into async_implementation.\n"
-            + "Never use `block_on` in trait methods for DataClient or ExecutionClient. Use `spawn_task` instead.\n"
+            + "synchronous adapter code can use get_runtime().block_on() to call an async function.\n"
+            + "Never use `block_on` in trait methods for DataClient or ExecutionClient; spawn the operation and return.\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs-v2 bon::bon try_order.\n"
             + "rust-toolchain.toml 1.97.1 Generated Python bindings HIGH_PRECISION=true py-stubs-v2.\n"
