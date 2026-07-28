@@ -1,0 +1,8 @@
+extend-exclude = [
+    "references/**/*.py",
+    "skills/*/references/**/*.py",
+    "skills/*/templates/**/*.py",
+    "skills/nt-dex-adapter/tests/**/*.py",
+    "skills/nt-strategy-builder/tests/**/*.py",
+    "docs/prototypes/**/*.py",
+]

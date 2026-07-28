@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-try:
-    from tools.upstream_baseline import UPSTREAM_COMMIT
-except ModuleNotFoundError:  # Direct script execution adds tools/ to sys.path.
-    from upstream_baseline import UPSTREAM_COMMIT
+if __package__:
+    from .upstream_baseline import UPSTREAM_COMMIT
+else:  # Direct script execution adds tools/ to sys.path.
+    from upstream_baseline import (  # pyright: ignore[reportImplicitRelativeImport]
+        UPSTREAM_COMMIT,
+    )
 
 CURRENT_DEV_GUIDE_FILES = [
     "adapters.md",

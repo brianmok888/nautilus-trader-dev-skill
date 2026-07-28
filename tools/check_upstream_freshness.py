@@ -9,14 +9,14 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
 
-try:
-    from tools.upstream_baseline import (
+if __package__:
+    from .upstream_baseline import (
         DEFAULT_UPSTREAM_ROOT,
         UPSTREAM_COMMIT,
         UPSTREAM_REMOTE_REFS,
     )
-except ModuleNotFoundError:  # Direct script execution adds tools/ to sys.path.
-    from upstream_baseline import (
+else:  # Direct script execution adds tools/ to sys.path.
+    from upstream_baseline import (  # pyright: ignore[reportImplicitRelativeImport]
         DEFAULT_UPSTREAM_ROOT,
         UPSTREAM_COMMIT,
         UPSTREAM_REMOTE_REFS,

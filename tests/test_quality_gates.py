@@ -24,6 +24,15 @@ def test_full_repo_passes_ruff_quality_gate() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_ruff_quality_gate_has_explicit_snapshot_and_template_policy() -> None:
+    config = (REPO_ROOT / "ruff.toml").read_text(encoding="utf-8")
+
+    assert '"references/**/*.py"' in config
+    assert '"skills/*/references/**/*.py"' in config
+    assert '"skills/*/templates/**/*.py"' in config
+    assert '"skills/nt-strategy-builder/tests/**/*.py"' in config
+
+
 def test_markdown_relative_links_resolve_within_repo() -> None:
     # Given: the repo vendors partial NautilusTrader reference trees for skill context.
     markdown_files = [
