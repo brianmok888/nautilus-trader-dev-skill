@@ -1,4 +1,4 @@
-# TEMPLATE_CLASSIFICATION: Python research/config; non-production; off execution-critical paths
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 # -------------------------------------------------------------------------------------------------
 #  NautilusTrader Indicator Template
 #

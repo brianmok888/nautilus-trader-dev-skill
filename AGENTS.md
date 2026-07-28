@@ -27,7 +27,7 @@ nautilus-trader-dev-skill/
 │   ├── nt-implement/      # Strategy/Actor/Indicator implementation
 │   ├── nt-evomap-integration/ # EvoMap advisory sidecar integration
 │   ├── nt-strategy-builder-rust/ # Default production strategy and LiveNode wiring
-│   ├── nt-strategy-builder/ # Explicit Python and AI/advisory strategy workflows
+│   ├── nt-strategy-builder/ # Migration/reference-only Python strategy workflows
 │   ├── nt-dex-adapter/    # Custom DEX adapter development
 │   └── nt-review/         # Pre-deployment code review
 ├── references/            # NautilusTrader API reference docs
@@ -46,7 +46,8 @@ nautilus-trader-dev-skill/
 | Design component architecture | `skills/nt-architect/` | Start here for new projects |
 | Implement Strategy/Actor | `skills/nt-implement/` | Templates + conventions |
 | Production strategy or live-node work | `skills/nt-strategy-builder-rust/` | Rust strategy, backtest, and `LiveNode` paths |
-| Explicit Python or AI/advisory strategy work | `skills/nt-strategy-builder/` | Supported Python V2 lane; never execution authority for AI |
+| Explicit Python strategy request | `skills/nt-strategy-builder-rust/` | Repository cutover stays Rust; Python builder is migration/reference-only |
+| AI/advisory work | `skills/nt-evomap-integration/` | Sole active Python lane; never execution authority |
 | Build DEX adapter | `skills/nt-dex-adapter/` | 7-phase implementation |
 | Review before deployment | `skills/nt-review/` | FFI/Rust/Performance checklist |
 | Find API docs | `references/api_reference/` | Per-module API reference |
@@ -71,7 +72,7 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 3. **nt-implement** — Write individual components with templates
 4. **nt-evomap-integration** — (Optional) Add governed EvoMap advisory workflow
 5. **nt-strategy-builder-rust** — Default ambiguous, production, backtest, and Rust/v2 `LiveNode` strategy path
-6. **nt-strategy-builder** — Use only for explicit supported Python V2 or AI/advisory strategy intent
+6. **nt-strategy-builder** — Use only for explicitly labelled Python migration/reference work
 7. **nt-dex-adapter** — (Optional) Build custom DEX adapter
 8. **nt-review** — Review before live deployment
 

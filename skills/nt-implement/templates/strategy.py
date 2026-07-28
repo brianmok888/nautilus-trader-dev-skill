@@ -1,4 +1,4 @@
-# TEMPLATE_CLASSIFICATION: supported NT V2 Python strategy; prefer Rust for performance-sensitive paths
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 """
 Strategy Template for nautilus_trader.
 

@@ -70,7 +70,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | Design a new trading system | `nt` → `nt-architect` → `nt-implement` |
 | Build a CeFi adapter (Binance, OKX…) | `nt-adapters` + `nt-dev` |
 | Build a DEX adapter (on-chain) | `nt-dex-adapter` + `nt-implement` |
-| Run a Python research backtest | `nt-strategy-builder` + `nt-backtest` |
+| Run a research/config backtest, including explicit Python requests | `nt-strategy-builder-rust` + `nt-backtest` |
 | Deploy Rust/v2 live trading | `nt-strategy-builder-rust` + `nt-live` |
 | Review code before merge | `nt-review` + `nt-testing` |
 | Learn NautilusTrader | `nt` → `nt-learn` (12-stage curriculum) |
@@ -89,7 +89,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-architect` | Research → component architecture decomposition | Design patterns, data flow planning |
 | `nt-implement` | Templates for all NT component types | Strategy, Actor, Indicator, Adapter, FillModel, Rust+PyO3 |
 | `nt-review` | Code review for NT conventions | Trading correctness, FFI safety, perf benchmarks |
-| `nt-strategy-builder` | Idea → running system (backtest/paper/live) | Multi-venue wiring, fill models, DO/DON'Ts |
+| `nt-strategy-builder` | Migration/reference-only Python systems | Historical multi-venue wiring and migration examples |
 | `nt-strategy-builder-rust` | Default production strategy path | Rust `Strategy`, backtest, and `LiveNode` wiring |
 | `nt-dex-adapter` | Custom DEX adapter development | RPC nodes, wallet signing, pool discovery, test suite |
 | `nt-evomap-integration` | EvoMap.ai advisory sidecar | Non-blocking execution, approval gates |

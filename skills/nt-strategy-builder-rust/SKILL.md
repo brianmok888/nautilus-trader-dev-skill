@@ -1,6 +1,6 @@
 ---
 name: nt-strategy-builder-rust
-description: "Use when building a NautilusTrader strategy in Rust (native V2). Covers implementing the Rust `Strategy` trait, `StrategyConfig` builder, event handlers, order/portfolio APIs, PyO3 export, registration with LiveNode/BacktestEngine, and cargo testing. For Python strategies use nt-strategy-builder instead."
+description: "Use when building any new NautilusTrader strategy under this repository's Rust-first V2 cutover policy, including explicit Python requests. Covers implementing the Rust `Strategy` trait, `StrategyConfig` builder, event handlers, order/portfolio APIs, PyO3 export, registration with LiveNode/BacktestEngine, and cargo testing."
 ---
 
 # Build NautilusTrader Strategies in Rust (V2 native)
@@ -34,10 +34,11 @@ the engines — no Python on the hot path. Use this when the strategy is
 performance-critical (HFT, heavy per-tick computation, tight loops) or when you
 are shipping a production strategy as part of a Rust adapter/workspace.
 
-For Python strategies (user experimentation, config-heavy research strategies,
-the AI/advisory lane) use `nt-strategy-builder` instead. Rust and Python
-strategies both run on the same engines; the language choice is a
-performance/packaging decision, not a capability one.
+For explicit Python strategy requests, explain this repository's stricter cutover
+policy and use this skill. The AI/advisory lane routes to
+`nt-evomap-integration`; `nt-strategy-builder` is migration/reference-only.
+Upstream NT V2 supports both languages, but repository guidance intentionally
+standardizes new non-AI work on Rust.
 
 **Rust crate**: `nautilus-trading` → `crates/trading/src/strategy/`
 **Trait**: `pub trait Strategy: DataActor`
@@ -56,7 +57,7 @@ performance/packaging decision, not a capability one.
 
 ## When NOT To Use
 
-- **Python strategies** → `nt-strategy-builder` (Python `Strategy` class)
+- **Explicit Python strategy requests** → this Rust builder under the repository cutover policy; use `nt-strategy-builder` only for migration/reference
 - **Indicators / signal math** → `nt-signals` (Rust `Indicator` trait)
 - **Actors / model hosting** → implement `Actor`; see `nt-architect`
 - **Backtest engine config** → `nt-backtest` (works for both Rust and Python strategies)
@@ -211,12 +212,13 @@ NT v2 compatibility note: this whole file is Rust-native; the legacy Python-live
 | HFT / sub-millisecond per-event, large tick volume | **Rust** (`Strategy` trait) | No Python GIL, zero-cost abstractions |
 | Heavy per-tick math (order-book features, multi-TF) | **Rust** | Indicators/actors also Rust by default |
 | Strategy shipped inside a Rust adapter crate | **Rust** | Co-locate with adapter networking/parsing |
-| Research/experimentation, config-heavy, rapid iteration | **Python** (`nt-strategy-builder`) | Faster dev loop, PyO3 stubs |
+| Research/experimentation, config-heavy, rapid iteration | **Rust** (`nt-strategy-builder-rust`) | One production-oriented implementation path under the cutover policy |
 | AI/advisory lane (model inference, signal aggregation) | **Python**, async, off hot path | Never execution-critical |
-| Needs a Python-only library not available in Rust | **Python** | Bind rather than rewrite |
+| Needs a Python-only library not available in Rust | **Rust with a bounded PyO3 boundary** | Keep Python outside trading authority; route AI advisory integration separately |
 
-Rule of thumb: start in Rust. Use `nt-strategy-builder` only when the request
-explicitly requires Python or belongs to the non-authoritative AI/advisory lane.
+Rule of thumb: stay in Rust. Use `nt-strategy-builder` only when migrating an
+existing Python strategy. Use `nt-evomap-integration` for the non-authoritative
+AI/advisory lane.
 
 ## Key Conventions
 

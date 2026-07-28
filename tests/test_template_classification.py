@@ -15,7 +15,6 @@ TEMPLATE_ROOTS = [
 REFERENCE_EXAMPLE_ROOT = Path("skills/nt-adapters/references/examples")
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
 ALLOWED_CLASSIFICATIONS = (
-    "supported NT V2 Python strategy; prefer Rust for performance-sensitive paths",
     "AI/advisory Python; non-production; off execution-critical paths",
     "Python research/config; non-production; off execution-critical paths",
     "Python control-plane for Rust/PyO3; non-production execution wrapper",
@@ -23,7 +22,7 @@ ALLOWED_CLASSIFICATIONS = (
     "legacy executable; migration/reference-only; not a production default",
 )
 
-SUPPORTED_PYTHON_STRATEGY_TEMPLATES = {
+MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES = {
     Path("skills/nt-implement/templates/strategy.py"),
     Path("skills/nt-trading/templates/strategy.py"),
 }
@@ -46,12 +45,9 @@ def test_python_templates_are_explicitly_classified() -> None:
     assert unclassified == []
 
 
-def test_current_python_strategy_templates_are_not_migration_only() -> None:
-    expected = (
-        f"{CLASSIFICATION_PREFIX}supported NT V2 Python strategy; "
-        "prefer Rust for performance-sensitive paths"
-    )
-    for relative in SUPPORTED_PYTHON_STRATEGY_TEMPLATES:
+def test_non_ai_python_strategy_templates_are_migration_only() -> None:
+    expected = f"{CLASSIFICATION_PREFIX}migration/reference-only; not a production default"
+    for relative in MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES:
         header = "\n".join((REPO_ROOT / relative).read_text().splitlines()[:12])
         assert expected in header
 
@@ -86,11 +82,19 @@ def test_generic_migration_banner_does_not_bless_default_live_tradingnode() -> N
     assert not _has_allowed_classification(text)
 
 
-def test_live_example_links_do_not_point_to_quarantined_legacy_paths() -> None:
+def test_active_live_namespace_does_not_alias_quarantined_legacy_paths() -> None:
     live_examples = REPO_ROOT / "skills/nt-live/references/examples/live"
-    broken_links = [path for path in live_examples.rglob("*") if path.is_symlink() and not path.exists()]
+    offenders: list[str] = []
+    if not live_examples.exists():
+        return
+    for path in live_examples.rglob("*"):
+        if not path.is_symlink():
+            continue
+        resolved = path.resolve(strict=False)
+        if "legacy_migration" in resolved.parts:
+            offenders.append(path.relative_to(REPO_ROOT).as_posix())
 
-    assert broken_links == []
+    assert offenders == []
 
 
 def _is_legacy_quarantined_reference(relative: Path) -> bool:

@@ -569,8 +569,8 @@ AI_ADVISORY_PYTHON_BOUNDARY_GATE_TARGETS = {
 
 NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
     Path("skills/nt/SKILL.md"): [
-        "route production/performance work to Rust",
-        "Python research/config",
+        "route all non-AI strategy",
+        "stricter cutover policy",
     ],
     Path("skills/nt-architect/SKILL.md"): [
         "component ownership matrix",
@@ -594,8 +594,8 @@ NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
         "legacy/Python labelling",
     ],
     Path("skills/nt-strategy-builder/SKILL.md"): [
-        "Python research/config",
-        "Route production/performance to nt-strategy-builder-rust",
+        "migration/reference-only",
+        "route all new strategy",
     ],
 }
 

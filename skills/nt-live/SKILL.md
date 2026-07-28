@@ -484,4 +484,4 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 - `references/api/` — system, core, common, config, live
 - `references/developer_guide/` — coding standards, FFI, Python conventions, Rust conventions, environment setup
 - `references/developer_guide/contracts/live_runtime_contract.md` — LiveNode versus TradingNode guidance
-- `references/examples/live/` — per-adapter live examples (Binance, Bybit, Databento, etc.)
+- `references/examples/legacy_migration/README.md` — migration pointer for removed Python `TradingNode` aliases; new live examples must be Rust `LiveNode`

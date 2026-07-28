@@ -133,7 +133,7 @@ Rust-backed work use `LiveNode`.
 | Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
 | Actors (model hosting, regime detection, signal aggregation) | **Rust** | AI/advisory inference is the only Python-default exception and stays async, non-authoritative, and off the hot path |
-| Strategies (order/position logic, entry/exit) | **Rust** by default (see rule below) | Use Python (`nt-strategy-builder`) only for explicit Python intent or AI/advisory work; otherwise use `nt-strategy-builder-rust` |
+| Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI/advisory Python routes separately to `nt-evomap-integration` |
 | Execution Algorithms | **Rust** (`crates/exec-algo/`, PyO3-exposed) | Execution-critical path stays in Rust |
 | Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
@@ -141,24 +141,25 @@ Rust-backed work use `LiveNode`.
 
 Rule of thumb: if the component sits on the networking/parse/perf/state/execution
 path it is a Rust cutover target. The AI/advisory lane is the sole Python-default
-exception. Ambiguous strategy requests default to Rust; explicit Python requests
+exception. Ambiguous strategy requests default to Rust. Explicit Python strategy requests still route to Rust,
 remain a supported V2 surface but do not change this repository's routing default.
 
 
 ### No cross-contamination: match the strategy language to its builder skill
 
-Strategies can be written in either language, but the two builder skills are
-**mutually exclusive by language**. There must be no cross-contamination between
-the Python and Rust strategy builders. Do not mix:
+Upstream strategies can be written in either language, but this repository's
+cutover path uses the Rust builder for every new strategy. Do not mix active
+Rust guidance with migration/reference Python templates; this is the enforced
+no cross-contamination boundary:
 
-- User asked for / scoped a **Python** strategy -> `nt-strategy-builder` only.
-  Do not pull Rust `Strategy` trait code or `nt-strategy-builder-rust` patterns
-  into a Python strategy (and vice versa).
+- User asked for / scoped a **Python** strategy -> explain the repository policy
+  and route to `nt-strategy-builder-rust`. Use `nt-strategy-builder` only to
+  inspect an explicitly labelled migration/reference example.
 - User asked for / scoped a **Rust** strategy (HFT, perf-critical, ships with a
   Rust adapter) -> `nt-strategy-builder-rust` only.
 - Ambiguous ("build a strategy" with no language stated) ->
-  `nt-strategy-builder-rust` only. Select Python only for explicit Python intent
-  or AI/advisory work. Never silently emit one language under the other skill's
+  `nt-strategy-builder-rust` only. Select Python only for the isolated AI/advisory lane
+  via `nt-evomap-integration`. Never silently emit one language under the other skill's
   patterns.
 
 This keeps each skill's templates, conventions, and node-registration paths
@@ -289,19 +290,19 @@ During market exit, non-reduce-only orders are auto-denied; order lists with any
 ### Quick Reference: Which Template?
 
 Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
-Treat unclassified Python templates as invalid. Python and Rust strategies are supported
-NT V2 extension surfaces; prefer Rust for performance-sensitive strategy logic. AI/advisory,
-research/config, and Rust/PyO3 control-plane wrappers stay explicit. Rust owns adapter
-networking/parsing, normalization, risk/execution state, and other execution-critical
-infrastructure.
+Treat unclassified Python templates as invalid. Upstream NT V2 supports Python and
+Rust strategies, but this repository classifies non-AI Python executable templates as
+migration/reference-only. AI/advisory Python and bounded Rust/PyO3 control-plane wrappers
+stay explicit. Rust owns new strategy/config/backtest/live work plus adapter networking,
+parsing, normalization, risk/execution state, and other execution-critical infrastructure.
 
 | Need | Template / route | Lane classification |
 |------|------------------|---------------------|
 | Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
-| Supported NT V2 Python strategy | `strategy.py` | current Python extension surface; prefer Rust for hot paths |
+| Existing Python strategy migration | `strategy.py` | migration/reference-only; new work uses Rust |
 | Model inference, advisory signals | `actor.py` | AI/advisory Python; non-production; off execution-critical paths |
-| Stateless calculations | `indicator.py` | Python research/config; promote hot paths to Rust |
-| Structured data between components | `custom_data.py` | Python research/config; Rust owns production serialization hot paths |
+| Stateless calculations | Rust indicator path | Python `indicator.py` is migration/reference-only unless solely used by the AI advisory lane |
+| Structured data between components | Rust model/data path | Python `custom_data.py` is migration/reference-only unless solely used by the AI advisory lane |
 | Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `exec_algorithm.py` is reference-only |
 | Exchange/data connectivity | `adapters/` only as Rust/PyO3 control-plane wrappers | Rust core owns networking, parsing, normalization, and order entry |
 | Custom fill/margin/statistics simulation | `fill_model.py`, `margin_model.py`, `portfolio_statistic.py` | Python research/backtest only; production risk stays Rust-owned |
@@ -309,7 +310,7 @@ infrastructure.
 ### Template Files
 
 Templates are in `templates/` subdirectory:
-- `strategy.py` - supported NT V2 Python strategy example; prefer Rust for performance-sensitive logic
+- `strategy.py` - migration/reference-only Python strategy example; use `nt-strategy-builder-rust` for new work
 - `actor.py` - AI/advisory model inference and signal publishing, off the hot path
 - `indicator.py` - research/config custom indicator
 - `custom_data.py` - research/config custom data types for message bus

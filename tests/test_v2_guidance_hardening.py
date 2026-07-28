@@ -106,25 +106,34 @@ def test_rust_strategy_builder_does_not_present_builtin_examples_as_extension_ap
     assert "nautilus_strategy!(MyStrategy)" in text
 
 
-def test_rust_first_policy_preserves_supported_python_v2_strategies() -> None:
+def test_repository_cutover_restricts_python_to_ai_advisory_and_migration() -> None:
     upstream_python = read("references/developer_guide/python.md")
     router = read("skills/nt/SKILL.md")
     python_builder = read("skills/nt-strategy-builder/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
 
     assert "ideal for strategy development" in upstream_python
-    assert "Python and Rust strategies are both supported NT V2 extension surfaces" in router
-    assert "supported NT V2 Python strategy" in python_builder
-    assert "supported NT V2 Python strategy" in implement
+    assert "Upstream NT V2 supports Python strategies" in router
+    assert "this repository applies a stricter cutover policy" in router
+    assert "migration/reference-only" in python_builder
+    assert "AI/advisory lane stays Python through `nt-evomap-integration`" in python_builder
+    assert "Explicit Python strategy requests still route to Rust" in implement
 
     misleading_claims = [
-        "Python strategy migration example",
-        "Python research/config/AI lane -> `nt-strategy-builder`",
-        "this skill is for Python research/config, paper exploration, and AI/advisory orchestration only",
+        "Python and Rust strategies are both supported NT V2 extension surfaces",
+        "supported NT V2 Python strategy",
+        "Explicit Python strategy or AI/advisory lane -> `nt-strategy-builder`",
+        "Python strategy (\"build a strategy in Python\") -> `nt-strategy-builder` ONLY",
     ]
     combined = router + python_builder + implement
     for claim in misleading_claims:
         assert claim not in combined
+
+    assert (
+        "Python strategy (\"build a strategy in Python\") -> `nt-strategy-builder-rust` ONLY"
+        in router
+    )
+    assert "AI/advisory request -> `nt-evomap-integration` ONLY" in router
 
 
 def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
@@ -145,6 +154,7 @@ def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
         "ask which language before loading either skill",
         "or start in Python and port to Rust when profiling demands it",
         "Wire backtest or live node | `skills/nt-strategy-builder/templates/`",
+        "Explicit Python or AI/advisory strategy work | `skills/nt-strategy-builder/`",
     ]
     present = [term for term in forbidden if term in combined]
     assert present == []

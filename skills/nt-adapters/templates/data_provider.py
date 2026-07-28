@@ -1,4 +1,4 @@
-# TEMPLATE_CLASSIFICATION: Python control-plane for Rust/PyO3; non-production execution wrapper
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 # -------------------------------------------------------------------------------------------------
 #  NautilusTrader Data Provider Adapter Template
 #

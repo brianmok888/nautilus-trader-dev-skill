@@ -26,9 +26,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Router-specific gates: route production/performance work to Rust skills first (`nt-strategy-builder-rust`, `nt-adapters`, `nt-live`, `nt-trading`, `nt-dev`), keep `nt-strategy-builder` for supported NT V2 Python strategies including Python research/config use, and require the final router answer to include the gate status table before calling new NT work ready.
+Router-specific gates: route all non-AI strategy, configuration, backtest, paper, live, production, and performance work to Rust skills first (`nt-strategy-builder-rust`, `nt-adapters`, `nt-live`, `nt-trading`, `nt-dev`). Keep `nt-strategy-builder` migration/reference-only, route AI advisory work to `nt-evomap-integration`, and require the final router answer to include the gate status table before calling new NT work ready.
 
-Python and Rust strategies are both supported NT V2 extension surfaces. This repository recommends Rust for hot paths and execution-critical ownership; that policy is a default, not a claim that current Python strategies are legacy or unsupported. The separate AI/advisory Python lane remains non-authoritative and off execution-critical paths.
+Upstream NT V2 supports Python strategies and documents them as a current extension surface; this repository applies a stricter cutover policy. New strategy, configuration, backtest, paper, live, and production guidance is Rust-oriented. The only active Python lane is AI/advisory through `nt-evomap-integration`, which remains non-authoritative and off execution-critical paths; existing Python strategy material is migration/reference-only.
 
 Use this as the start point for NautilusTrader work. It does not replace the
 specialized `nt-*` skills; it chooses which ones to load and how to sequence
@@ -62,9 +62,10 @@ official source as authoritative and update/report the local drift.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 **Strategy routing is language-gated (no cross-contamination):**
-- Python strategy ("build a strategy in Python") -> `nt-strategy-builder` ONLY.
+- Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONLY. Explain this repository's stricter Rust cutover policy; use `nt-strategy-builder` only as explicitly labelled migration/reference material.
 - Rust strategy ("build a strategy in Rust", HFT/perf/ships with a Rust adapter) -> `nt-strategy-builder-rust` ONLY.
-- Ambiguous ("build a strategy", no language stated) -> `nt-strategy-builder-rust` ONLY. Rust is this repository's default; load `nt-strategy-builder` only when the user explicitly requests Python or the work is in the AI/advisory lane. Never mix the two skills in one strategy.
+- Ambiguous ("build a strategy", no language stated) -> `nt-strategy-builder-rust` ONLY. Rust is this repository's default; do not load `nt-strategy-builder` for new implementation work.
+- AI/advisory request -> `nt-evomap-integration` ONLY. The AI lane stays Python but cannot own execution or block trading handlers.
 
 
 NT v2 compatibility note: Python live/integration-specific TradingNode in the routing table is migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
@@ -79,7 +80,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode in the ro
 | Indicators, signals, order-book analytics, custom data signals | `nt-signals` | `nt-data`, `nt-model` |
 | Market data, catalogs, persistence, serialization | `nt-data` | `nt-model`, `nt-testing` |
 | Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder`, `nt-testing` |
-| Wire an idea into backtest, paper, or live execution (Python) | `nt-strategy-builder` | `nt-backtest`, `nt-live`, `nt-adapters` |
+| Wire an idea into backtest, paper, or live execution, including explicit Python requests | `nt-strategy-builder-rust` | `nt-backtest`, `nt-live`, `nt-adapters` |
 | Build a performance-critical / production strategy in Rust | `nt-strategy-builder-rust` | `nt-trading`, `nt-testing`, `nt-live` |
 | Live trading runtime, `LiveNode`/`TradingNode`, reconciliation | `nt-live` | `nt-adapters`, `nt-review` |
 | Exchange/data-provider adapter work | `nt-adapters` | `nt-dev`, `nt-testing`, `nt-live` |
@@ -103,8 +104,8 @@ Load in order:
 1. `nt-architect` for component and data-flow design.
 2. `nt-implement` for Strategy/Actor/Indicator templates.
 3. Select the builder without cross-contamination:
-   - Explicit supported NT V2 Python strategy or AI/advisory lane -> `nt-strategy-builder`.
-   - Ambiguous, production, performance, or explicit Rust strategy -> `nt-strategy-builder-rust`.
+   - Explicit Python, ambiguous, production, performance, backtest, paper, live, or explicit Rust strategy -> `nt-strategy-builder-rust`.
+   - AI/advisory lane -> `nt-evomap-integration`; Python remains isolated from execution authority.
 4. `nt-review` + `nt-testing` before live deployment or merge.
 
 ### Existing code review or bug investigation

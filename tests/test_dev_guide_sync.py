@@ -2271,7 +2271,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
 
     readiness_extras = {
         Path("skills/nt/SKILL.md"): (
-            "route production/performance work to Rust skills and keep Python research/config paths explicit.\n"
+            "route all non-AI strategy work to Rust under the stricter cutover policy.\n"
         ),
         Path("skills/nt-adapters/SKILL.md"): (
             "Adapter evidence includes cargo nextest, cargo clippy, cargo deny, and fuzz-adapter.\n"
@@ -2310,7 +2310,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "AI/advisory lane remains Python; Rust production signals require cargo nextest, cargo clippy, and cargo deny.\n"
         ),
         Path("skills/nt-strategy-builder/SKILL.md"): (
-            "AI/advisory lane remains Python; Python research/config only. Route production/performance to nt-strategy-builder-rust.\n"
+            "AI/advisory lane remains Python; migration/reference-only Python material. route all new strategy work to nt-strategy-builder-rust.\n"
         ),
         Path("skills/nt-strategy-builder-rust/SKILL.md"): (
             "AI/advisory lane remains Python; StrategyCore evidence includes cargo nextest, cargo clippy, and cargo deny.\n"

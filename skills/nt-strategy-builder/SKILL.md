@@ -31,7 +31,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Python strategy gates: this skill covers the supported NT V2 Python strategy surface for backtest, paper, and live systems, including Python research/config use. Route production/performance to nt-strategy-builder-rust when the strategy is performance-sensitive, and keep Rust ownership for adapter networking, parsing, normalization, risk/execution state, and other execution-critical infrastructure. Keep AI/advisory Python explicitly non-authoritative and off execution-critical paths.
+Migration gate: upstream NT V2 still supports Python strategies, but this repository applies a stricter Rust cutover policy. This skill and its executable templates are migration/reference-only; route all new strategy, research/config, backtest, paper, live, production, and performance implementation to `nt-strategy-builder-rust`. The AI/advisory lane stays Python through `nt-evomap-integration`, remains non-authoritative, and stays off execution-critical paths.
 
 ## Overview
 
@@ -181,7 +181,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 1. **Design** components with `nt-architect`
 2. **Implement** Strategy/Actor/Indicator with `nt-implement`
-3. **Wire venue(s)** using these templates for supported NT V2 Python strategies, research/config, paper exploration, AI/advisory orchestration, or migration/reference work. Prefer Rust `LiveNode` via `nt-strategy-builder-rust` + `nt-live` for performance-sensitive live systems and execution-critical infrastructure:
+3. **Migration/reference only:** inspect these templates only when converting an existing Python system. For all new strategy, research/config, backtest, paper, live, production, and performance work, use Rust `LiveNode` via `nt-strategy-builder-rust` + `nt-live`. AI/advisory work belongs to `nt-evomap-integration`, not this skill:
    a. Choose backtest / paper / live mode
    b. Configure venues (CeFi builtin or DEX via `nt-dex-adapter`)
    c. Configure data sources (catalog or live feeds)

@@ -20,9 +20,9 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 |-------|---------|-------------|
 | **nt** | Entry-point router for NautilusTrader tasks | `nt/SKILL.md` |
 | **nt-architect** | Decompose systems into Actor/Indicator/Strategy architecture | `nt-architect/SKILL.md` |
-| **nt-implement** | Implement components with Rust-first hot-path defaults and classified supported Python V2 templates | `nt-implement/SKILL.md` |
+| **nt-implement** | Implement components with Rust-first defaults and migration-labelled Python templates | `nt-implement/SKILL.md` |
 | **nt-review** | Review code before deployment | `nt-review/SKILL.md` |
-| **nt-strategy-builder** | Wire supported Python V2 backtest, paper, and live systems; prefer Rust for hot paths | `nt-strategy-builder/SKILL.md` |
+| **nt-strategy-builder** | Migration/reference-only Python backtest, paper, and live examples | `nt-strategy-builder/SKILL.md` |
 | **nt-strategy-builder-rust** | Default production strategy, Rust backtest, and LiveNode path | `nt-strategy-builder-rust/SKILL.md` |
 | **nt-dex-adapter** | Build custom DEX adapters | `nt-dex-adapter/SKILL.md` |
 | **nt-evomap-integration** | Integrate EvoMap advisory sidecars safely | `nt-evomap-integration/SKILL.md` |
@@ -46,7 +46,7 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 - `rules/` — DO/DON'T rulesets (some skills)
 
 ### Template Pattern
-Python strategy templates are a supported NT V2 extension surface. Prefer Rust for performance-sensitive strategy logic and require Rust ownership for adapter networking/parsing, normalization, risk/execution state, and other execution-critical infrastructure. AI/advisory Python stays async, approval-gated, and off execution-critical paths.
+Upstream NT V2 supports Python strategies, but this repository's stricter cutover policy classifies non-AI Python strategy templates as migration/reference-only. New strategy, config, backtest, paper, and live work routes to Rust. AI/advisory Python stays async, approval-gated, and off execution-critical paths through `nt-evomap-integration`.
 
 ## ANTI-PATTERNS
 
@@ -63,7 +63,7 @@ Python strategy templates are a supported NT V2 extension surface. Prefer Rust f
 | Start a NautilusTrader task and choose skills | `nt/` |
 | Design architecture | `nt-architect/` |
 | Write a strategy | `nt-implement/` |
-| Research/config backtest | `nt-strategy-builder/templates/backtest_node.py` |
+| Research/config backtest | Rust path via `nt-strategy-builder-rust` + `nt-backtest`; Python template is migration/reference-only |
 | Production/perf live | Rust `LiveNode` path via `nt-strategy-builder-rust` + `nt-live`; Python `live_node.py` is migration/reference-only |
 | Add DEX support | `nt-dex-adapter/` |
 | Review before deploy | `nt-review/` |
