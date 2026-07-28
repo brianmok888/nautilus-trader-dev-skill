@@ -425,7 +425,7 @@ HARNESSES: dict[str, Harness] = {
     "nt-strategy-builder": Harness(
         skill="nt-strategy-builder",
         scope="repository:python-v2-strategy-templates",
-        summary="Compile and test the supported Python V2 strategy/configuration lane",
+        summary="Validate migration-only Python strategy/configuration references against current V2 APIs",
         allowed_tokens=(
             "skills/nt-strategy-builder/templates",
             "skills/nt-strategy-builder/tests",
