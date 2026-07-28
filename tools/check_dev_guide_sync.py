@@ -623,6 +623,7 @@ LEGACY_GUIDANCE_ROOTS = ("skills", "references", "docs")
 LEGACY_GUIDANCE_ROOT_FILES = (Path("README.md"), Path("AGENTS.md"))
 LEGACY_GUIDANCE_SUFFIXES = {".capnp", ".md", ".py", ".pyi", ".rs", ".toml"}
 LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__", "superpowers"}
+LEGACY_EXECUTABLE_EXAMPLE_PART = "legacy_migration"
 TRADING_NODE_TERM = "TradingNode"
 TRADING_NODE_LABEL_TERMS = [
     "Python live",
@@ -899,6 +900,14 @@ def _iter_legacy_guidance_files(root: Path) -> list[Path]:
     return files
 
 
+
+def _is_legacy_executable_example_path(path: Path, root: Path) -> bool:
+    relative = path.relative_to(root)
+    return (
+        relative.parts[:4] == ("skills", "nt-adapters", "references", "examples")
+        and LEGACY_EXECUTABLE_EXAMPLE_PART in relative.parts
+    )
+
 def _split_guidance_blocks(text: str) -> list[str]:
     blocks = re.split(r"\n\s*\n", text)
     return [block for block in blocks if block.strip()]
@@ -1042,6 +1051,8 @@ def _has_tradingnode_guidance(text: str) -> bool:
 def _check_unlabelled_tradingnode_guidance(root: Path, errors: list[str]) -> None:
     for path in _iter_legacy_guidance_files(root):
         if _is_current_source_pinned_dev_guide_snapshot(path, root):
+            continue
+        if _is_legacy_executable_example_path(path, root):
             continue
         text = _read(path)
         text = _strip_labelled_python_fences(text)

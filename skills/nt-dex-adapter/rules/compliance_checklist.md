@@ -62,18 +62,14 @@ Then complete the manual checklist below.
 - [ ] Gas limit configurable with safe default
 - [ ] `InstrumentProviderConfig`, `DataClientConfig`, `ExecClientConfig` all defined
 
-### Factory
+### Factory (Rust V2 default)
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
-- [ ] `ClientFactory` class defined with:
-  - `create_live_data_client()` class method
-  - `create_live_exec_client()` class method
-- [ ] Factory registered with `TradingNode` via:
-  ```python
-  node.add_data_client_factory("VENUE_NAME", MyDEXLiveDataClientFactory)
-  node.add_exec_client_factory("VENUE_NAME", MyDEXLiveExecClientFactory)
-  ```
+- [ ] Rust data and execution client factory implementations compile in the adapter crate
+- [ ] Factories are registered through `LiveNode::builder(...)` / `LiveNodeBuilder`
+- [ ] Factory names and routing are explicit; duplicate names fail closed
+- [ ] Any Python `ClientFactory` is labelled legacy migration-only and is not used as the production default
 
 ---
 

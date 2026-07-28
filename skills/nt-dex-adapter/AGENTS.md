@@ -2,6 +2,9 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # NT-DEX-ADAPTER
 
+NT v2 compatibility note: any legacy Python `TradingNode` factory mentioned
+below is migration/reference-only; new production wiring uses Rust `LiveNode`.
+
 Custom DEX adapter development for NautilusTrader.
 
 ## OVERVIEW
@@ -34,7 +37,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 3. **Market Data** — QuoteTick synthesis, TradeTick from on-chain
 4. **Order Execution** — Build + sign + submit tx
 5. **Account Events** — Balance, position tracking
-6. **Config & Factory** — ClientFactory for TradingNode
+6. **Config & Factory** — Rust `LiveNodeBuilder` data/execution client factories; keep the Python factory template `legacy:` migration-only
 7. **Testing** — Unit + integration + compliance
 
 ## ADAPTER CANONICAL CONTRACT (2026)
@@ -49,7 +52,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ```
 crates/adapters/my_dex/     ← Rust core (client, signing, types)
-nautilus_trader/adapters/   ← Python layer (config, providers, factory)
+nautilus_trader/adapters/   ← Optional PyO3 control/config exposure only
 ```
 
 ## TEMPLATES
@@ -60,7 +63,7 @@ nautilus_trader/adapters/   ← Python layer (config, providers, factory)
 | `dex_instrument_provider.py` | 2 | Pool → Instrument |
 | `dex_data_client.py` | 3 | Pool state → QuoteTick |
 | `dex_exec_client.py` | 4-5 | Wallet-signed tx |
-| `dex_factory.py` | 6 | ClientFactory |
+| `dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
 
 ## CRITICAL DON'Ts
 

@@ -4,7 +4,11 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
-BacktestEngine and TradingNode wiring for NautilusTrader.
+NT v2 compatibility note: the legacy Python `TradingNode` templates named below
+are migration/reference-only; use Rust `LiveNode` for new production work.
+
+Explicit Python strategy and live-node migration references for
+NautilusTrader. Ambiguous or production work routes to `nt-strategy-builder-rust`.
 
 ## OVERVIEW
 
@@ -14,22 +18,22 @@ From idea → running system. Covers backtesting, paper trading, and live deploy
 
 | Template | Mode | Use When |
 |----------|------|----------|
-| `backtest_node.py` | Backtest | Historical data replay |
-| `live_node.py` | Live | Production with real orders |
-| `paper_node.py` | Paper | Live data, simulated execution |
-| `dex_venue_input.py` | DEX | Wire custom DEX adapter |
-| `multi_venue_strategy.py` | Multi-venue | 2+ venues simultaneously |
+| `backtest_node.py` | Python migration reference | Historical comparison |
+| `live_node.py` | Python migration reference | Move Python live wiring to Rust `LiveNode` |
+| `paper_node.py` | Python migration reference | Move paper wiring to Rust |
+| `dex_venue_input.py` | Python migration reference | Move DEX wiring to a Rust adapter factory |
+| `multi_venue_strategy.py` | Python migration reference | Move multi-venue wiring to Rust |
 
 ## DECISION TREE
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 ```
-Live market data?
-├─ NO  → BacktestEngine + templates/backtest_node.py
-└─ YES → TradingNode
-         ├─ Real orders? → templates/live_node.py
-         └─ Paper?       → templates/paper_node.py
+Explicit Python strategy or AI/advisory request?
+├─ YES → nt-strategy-builder (AI remains non-authoritative)
+└─ NO  → nt-strategy-builder-rust
+         ├─ Backtest → Rust backtest engine example
+         └─ Live     → Rust LiveNode example
 ```
 
 ## VENUE INPUTS

@@ -12,6 +12,7 @@ TEMPLATE_ROOTS = [
     Path("skills/nt-trading/templates"),
     Path("skills/nt-strategy-builder/templates"),
 ]
+REFERENCE_EXAMPLE_ROOT = Path("skills/nt-adapters/references/examples")
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
 ALLOWED_CLASSIFICATIONS = (
     "supported NT V2 Python strategy; prefer Rust for performance-sensitive paths",
@@ -19,6 +20,7 @@ ALLOWED_CLASSIFICATIONS = (
     "Python research/config; non-production; off execution-critical paths",
     "Python control-plane for Rust/PyO3; non-production execution wrapper",
     "migration/reference-only; not a production default",
+    "legacy executable; migration/reference-only; not a production default",
 )
 
 SUPPORTED_PYTHON_STRATEGY_TEMPLATES = {
@@ -54,9 +56,51 @@ def test_current_python_strategy_templates_are_not_migration_only() -> None:
         assert expected in header
 
 
+def test_python_tradingnode_reference_examples_are_legacy_quarantined() -> None:
+    offenders: list[str] = []
+    root = REPO_ROOT / REFERENCE_EXAMPLE_ROOT
+
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "TradingNode" not in text:
+            continue
+        relative = path.relative_to(REPO_ROOT)
+        if not _is_legacy_quarantined_reference(relative):
+            offenders.append(relative.as_posix())
+
+    assert offenders == []
+
+
+def test_generic_migration_banner_does_not_bless_default_live_tradingnode() -> None:
+    text = "\n".join(
+        [
+            "# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default",
+            "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode",
+            "# references in this file are retained for migration/reference-only context.",
+            "# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.",
+            "",
+            "from nautilus_trader.live.node import TradingNode",
+            "node = TradingNode(config=config)",
+        ]
+    )
+
+    assert not _has_allowed_classification(text)
+
+
+def _is_legacy_quarantined_reference(relative: Path) -> bool:
+    lowered_parts = {part.lower() for part in relative.parts}
+    lowered_name = relative.name.lower()
+    return "legacy_migration" in lowered_parts or lowered_name.startswith("legacy_")
+
+
 def _has_allowed_classification(text: str) -> bool:
     header = "\n".join(text.splitlines()[:12])
-    return any(
-        f"{CLASSIFICATION_PREFIX}{classification}" in header
-        for classification in ALLOWED_CLASSIFICATIONS
-    )
+    for classification in ALLOWED_CLASSIFICATIONS:
+        if f"{CLASSIFICATION_PREFIX}{classification}" not in header:
+            continue
+        if "TradingNode" in text and classification == "migration/reference-only; not a production default":
+            return False
+        return True
+    return False
