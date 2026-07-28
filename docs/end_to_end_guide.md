@@ -1,137 +1,213 @@
-# End-to-End Strategy Guide: From Research to Live Trading
+# End-to-End Strategy Guide: Rust Strategy to Live Trading
 
-This guide walks through the complete workflow of building, backtesting, and deploying a trading strategy using the NautilusTrader Development Skills.
+This guide gives the default NautilusTrader Development Skills workflow for a new production-oriented system. The primary path is Rust-first: create a Cargo project, build a native Rust strategy, attach it to a Rust `LiveNode`, and run it on Tokio. It follows the upstream `docs/how_to/run_rust_live_trading.md` pattern: `LiveNode::builder(...)`, adapter client factories, `node.add_strategy(...)`, then `node.run().await`.
+
+Python is still supported, but it is not the default production live path in this guide. Use the appendix for supported Python V2 strategy/research work and keep AI/advisory code on the Python research lane, off execution-critical paths.
 
 **Prerequisites**:
-- Installed `uv` (see `docs/uv_guide.md`)
-- Installed skills (`nt-architect`, `nt-implement`, `nt-strategy-builder`)
+- Rust 1.97.1 toolchain and Cargo installed for the pinned `6e59fd7` develop baseline.
+- NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder`, `nt-live`, `nt-testing`, and `nt-review`.
+- Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
 ---
 
-## Part 1: Strategy Design & Backtesting
+## Primary Path: Rust Strategy to LiveNode
 
-### Step 1: Project Setup
+### Step 1: Create a Rust Cargo project
 
-Initialize your project with `uv` for a fast, reproducible environment.
+Start with a standard Rust binary crate so the default deliverable is a compiled trading node.
 
 ```bash
-uv init my-strategy
+cargo new my-strategy --bin
 cd my-strategy
-uv add nautilus-trader pandas plotly msgspec
 ```
 
-### Step 2: Design with `nt-architect`
+Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. Match versions/features to the upstream baseline used by your skills and pinned repository snapshot.
 
-Before writing code, define your components.
-*Reference: `skills/nt-architect/SKILL.md`*
+```toml
+[dependencies]
+anyhow = "1"
+dotenvy = "0.15"
+log = "0.4"
+tokio = { version = "1", features = ["full"] }
 
-**Key Decisions**:
-- **Inputs**: What data bars? On what timeframe? (e.g., `ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL`)
-- **Indicators**: What technical indicators do you need? (e.g., EMA cross)
-- **Signal Logic**: Trigger conditions for entry/exit?
-- **Risk**: Position sizing rules?
+nautilus-common = "0.61"
+nautilus-backtest = { version = "0.61", features = ["streaming"] }
+nautilus-live = "0.61"
+nautilus-model = "0.61"
+nautilus-okx = "0.61"
+nautilus-trading = { version = "0.61", features = ["examples"] }
+```
 
-### Step 3: Implementation with `nt-implement`
+Use the relevant adapter crate for your venue; OKX is shown because the official upstream `docs/how_to/run_rust_live_trading.md` guide uses OKX.
 
-Create your strategy file using the template.
-*Reference: `skills/nt-implement/templates/strategy.py`*
+### Step 2: Design the native strategy and risk boundary
 
-1.  Copy `skills/nt-implement/templates/strategy.py` to `my_strategy.py`.
-2.  Implement `on_bar`:
-    ```python
-    def on_bar(self, bar: Bar) -> None:
-        # 1. Update indicators
-        self.fast_ema.update(bar.close)
-        self.slow_ema.update(bar.close)
+Use `nt-architect` before coding to document the production contract:
 
-        # 2. Check warmup
-        if not self.slow_ema.initialized:
-            return
+- **Venue/instrument**: exact `InstrumentId`, account, environment, and adapter crate.
+- **Strategy type**: native Rust strategy or a vetted built-in Rust strategy config.
+- **Signals**: market data subscriptions and deterministic signal transitions.
+- **Risk**: order sizing, exposure limits, kill-switch behavior, and reconciliation expectations.
+- **Testing evidence**: unit tests for strategy state transitions plus DataTester/ExecTester or adapter examples for venue behavior.
 
-        # 3. Generate signal
-        if self.fast_ema.value > self.slow_ema.value:
-            # 4. Execute
-            self.buy()
-    ```
-3.  Implement `buy()` with risk checks from `skills/nt-strategy-builder/rules/dos_and_donts.md`.
+For a first live wiring pass, use a native Rust strategy builder from `nautilus-trading` examples, then replace it with your custom Rust strategy after the node, adapter, and risk boundaries are proven.
 
-### Step 4: Backtest Configuration with `nt-strategy-builder`
+### Step 3: Build the LiveNode
 
-Create the backtest runner.
-*Reference: `skills/nt-strategy-builder/templates/backtest_node.py`*
+Create `src/main.rs` with the same shape as the upstream Rust live-trading how-to: configure adapter clients, build a `LiveNode`, add the strategy, and await the node run.
 
-1.  Copy `skills/nt-strategy-builder/templates/backtest_node.py` to `run_backtest.py`.
-2.  Configure your data catalog path:
-    ```python
-    CATALOG_PATH = Path("data/catalog")  # Ensure you have data here
-    ```
-3.  Wire up your strategy:
-    ```python
-    from my_strategy import MyStrategy, MyStrategyConfig
-    # ...
-    engine.add_strategy(MyStrategy(config=strategy_config))
-    ```
-4.  Run the backtest:
-    ```bash
-    uv run run_backtest.py
-    ```
-5.  **Visualize Results**: The template automatically generates `tearsheet.html` using `BacktestVisualizer` (`docs/visualization.md`). Open this file in your browser to analyze performance.
+```rust
+use anyhow::Result;
+use log::LevelFilter;
+use nautilus_common::{enums::Environment, logging::logger::LoggerConfig};
+use nautilus_live::node::LiveNode;
+use nautilus_model::{
+    identifiers::{AccountId, InstrumentId, TraderId},
+    types::Quantity,
+};
+use nautilus_okx::{
+    common::enums::OKXInstrumentType,
+    config::{OKXDataClientConfig, OKXExecClientConfig},
+    factories::{OKXDataClientFactory, OKXExecutionClientFactory},
+};
+use nautilus_trading::examples::strategies::{
+    GridMarketMaker, GridMarketMakerConfig,
+};
 
----
+#[tokio::main]
+async fn main() -> Result<()> {
+    dotenvy::dotenv().ok();
 
-## Part 2: Live Deployment
+    let trader_id = TraderId::from("TRADER-001");
+    let account_id = AccountId::from("OKX-001");
 
-Once your strategy is profitable in backtesting and verified with `nt-review`, deploy it.
+    let data_config = OKXDataClientConfig::builder()
+        .instrument_types(vec![OKXInstrumentType::Swap])
+        .build();
 
-### Step 1: Live Node Configuration
+    let exec_config = OKXExecClientConfig::builder()
+        .trader_id(trader_id)
+        .account_id(account_id)
+        .instrument_types(vec![OKXInstrumentType::Swap])
+        .build();
 
-Create the live trading node.
-*Reference: `skills/nt-strategy-builder/templates/live_node.py`*
+    let log_config = LoggerConfig {
+        stdout_level: LevelFilter::Info,
+        ..Default::default()
+    };
 
-1.  Copy `skills/nt-strategy-builder/templates/live_node.py` to `run_live.py`.
-2.  Configure your adapters (e.g., Binance, or your custom DEX adapter):
-    ```python
-    # For DEX:
-    from my_dex_adapter.factories import MyDEXLiveDataClientFactory, MyDEXLiveExecClientFactory
-    node.add_data_client_factory("MYDEX", MyDEXLiveDataClientFactory)
-    node.add_exec_client_factory("MYDEX", MyDEXLiveExecClientFactory)
-    ```
-3.  **Security**: Use environment variables for API keys/private keys.
-    ```bash
-    export BINANCE_API_KEY="your-key"
-    export BINANCE_API_SECRET="your-secret"
-    ```
+    let mut node = LiveNode::builder(trader_id, Environment::Live)?
+        .with_name("MY-NODE-001".to_string())
+        .with_logging(log_config)
+        .add_data_client(
+            None,
+            Box::new(OKXDataClientFactory::new()),
+            Box::new(data_config),
+        )?
+        .add_exec_client(
+            None,
+            Box::new(OKXExecutionClientFactory::new()),
+            Box::new(exec_config),
+        )?
+        .with_delay_post_stop_secs(5)
+        .build()?;
 
-### Step 2: Environment & Resilience
+    let mut strategy_config = GridMarketMakerConfig::builder()
+        .instrument_id(InstrumentId::from("ETH-USDT-SWAP.OKX"))
+        .max_position(Quantity::from("0.10"))
+        .num_levels(3)
+        .grid_step_bps(100)
+        .skew_factor(0.5)
+        .requote_threshold_bps(10)
+        .expire_time_secs(8)
+        .on_cancel_resubmit(true)
+        .build();
 
-1.  **Persistence**: Enable Redis/Postgres in `TradingNodeConfig` to save state. NT v2 compatibility note: Python live/integration-specific `TradingNode`/`TradingNodeConfig`; for Rust v2 / Rust-backed work use `LiveNode`.
-    ```python
-    database=DatabaseConfig(type="redis", ...)
-    ```
-2.  **Reconciliation**: Ensure `exec_engine.reconciliation=True` (enabled by default in `live_node.py`).
+    // OKX rejects hyphens in client order IDs.
+    strategy_config.base.use_hyphens_in_client_order_ids = false;
 
-### Step 3: Pre-Flight Checklist (`nt-review`)
+    let strategy = GridMarketMaker::new(strategy_config);
+    node.add_strategy(strategy)?;
+    node.run().await?;
 
-Run through `skills/nt-review/SKILL.md` before starting:
-- [ ] Are logs configured to write to file?
-- [ ] Is `open_check_lookback_mins` >= 60?
-- [ ] Are connection timeouts set?
-- [ ] Is risk engine enabled?
+    Ok(())
+}
+```
 
-### Step 4: Launch
+Production nodes should leave reconciliation enabled unless a venue-specific runbook documents why it is disabled. Treat any simplified demo setting as sandbox-only.
 
-Run the live node:
+### Step 4: Backtest the Rust strategy
+
+Before venue connectivity, exercise the native strategy with the official Rust backtesting surfaces. Follow upstream `docs/how_to/run_rust_backtest.md`: use `BacktestEngine` for direct in-memory control or `BacktestNode` for catalog streaming. The upstream EMA-cross examples are the executable reference shapes:
+
 ```bash
-uv run run_live.py
+cargo run -p nautilus-backtest --features examples --example engine-ema-cross
+cargo run -p nautilus-backtest --features examples,streaming --example node-ema-cross
 ```
 
-Monitor `logs/nautilus.log` for successful connection and order placement.
+For your own crate, add deterministic tests around signal transitions, simulated fills, position/risk limits, and shutdown state. Do not promote a strategy to the live node merely because the live wiring compiles.
+
+### Step 5: Configure credentials and environment
+
+Store secrets outside source control. For OKX-style adapters, use environment variables or `.env` loaded by `dotenvy`:
+
+```bash
+export OKX_API_KEY="your_api_key"
+export OKX_API_SECRET="your_api_secret"
+export OKX_API_PASSPHRASE="your_passphrase"
+```
+
+For demo/sandbox trading, use venue-provided demo credentials and set the adapter config fields required by that venue. Each adapter integration guide owns its exact credential and environment variable contract.
+
+### Step 6: Test before live execution
+
+Use `nt-testing` and `nt-review` to collect evidence before connecting to a venue:
+
+- `cargo fmt --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo nextest run --all-targets --all-features`
+- Adapter DataTester evidence for subscriptions and request/response data paths.
+- Adapter ExecTester evidence for submit/cancel/fill/reject/reconnect behavior.
+- A live safety dry run with sandbox credentials and logs captured.
+
+Do not mark the system production-ready until startup, shutdown, reconnect, reconciliation, risk checks, and audit logging have fresh evidence.
+
+### Step 7: Run the live node
+
+Run with release optimizations after tests pass and credentials are configured:
+
+```bash
+cargo run --release
+```
+
+The node runs until interrupted or shut down programmatically. Monitor structured logs for adapter connection, instrument discovery, subscriptions, reconciliation, and order lifecycle events.
 
 ---
 
-## Advanced: DEX Trading
+## Advanced: Adapter and DEX Work
 
-If trading on-chain:
-1.  **Build Adapter**: Use `skills/nt-dex-adapter/` templates to build your `InstrumentProvider`, `DataClient`, and `ExecClient`.
-2.  **Verify**: Run `skills/nt-dex-adapter/tests/test_dex_compliance.py`.
-3.  **Wire In**: Use the factory registration pattern in `run_live.py`.
+If your venue requires a custom adapter, keep the same Rust-first live shape and implement the venue boundary behind NautilusTrader adapter traits:
+
+1. Use `nt-adapters` or `nt-dex-adapter` to design the data client, execution client, instrument provider, and credentials model.
+2. Prove adapter behavior with DataTester and ExecTester before attaching strategy logic.
+3. Wire the adapter factories into `LiveNode::builder(...)` and keep secrets in environment/config, not code.
+4. Re-run `nt-review` for risk, reconciliation, async runtime, FFI, and deployment readiness.
+
+---
+
+## Appendix: Supported Python V2 Strategy and Research Lane
+
+NT v2 compatibility note: legacy `TradingNode` material is migration/reference-only unless a guide explicitly labels it as current Python-only integration guidance; use `LiveNode` for new Rust-backed live work.
+
+Python remains supported for V2 strategy research, notebooks, exploratory data analysis, and Python-authored strategy iteration. This appendix documents that supported lane; it is not the default production live path for this guide.
+
+Use Python when the work is explicitly labelled as one of these cases:
+
+- V2 strategy research or rapid prototyping where Python ergonomics are useful.
+- Data analysis, visualization, and tearsheet-style review outside the execution hot path.
+- AI/advisory lane remains Python, asynchronous, approval-gate protected, and off execution-critical paths.
+
+Python research/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Promote only reviewed, tested, and explicitly approved logic into the Rust production path.
+
+For new Rust-backed live work, use `LiveNode` and the primary Rust path above.

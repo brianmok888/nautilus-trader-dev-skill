@@ -7,7 +7,7 @@ guide covers both.
 For background on backtesting concepts, fill models, and matching engine
 behavior, see the [Backtesting](../concepts/backtesting.md) concept guide.
 For project setup and feature flags, see the
-[Rust](https://nautilustrader.io/docs/latest/../concepts/rust/#project-setup) concept guide.
+[Rust](https://nautilustrader.io/docs/nightly/concepts/rust/#project-setup) concept guide.
 
 ## Dependencies
 
@@ -17,11 +17,11 @@ Add the following to your `Cargo.toml`. The `streaming` and
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.57", features = ["streaming"] }
-nautilus-execution = "0.57"
-nautilus-model = { version = "0.57", features = ["stubs"] }
-nautilus-persistence = "0.57"
-nautilus-trading = { version = "0.57", features = ["examples"] }
+nautilus-backtest = { version = "0.60", features = ["streaming"] }
+nautilus-execution = "0.60"
+nautilus-model = { version = "0.60", features = ["stubs"] }
+nautilus-persistence = "0.60"
+nautilus-trading = { version = "0.60", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"
@@ -47,9 +47,12 @@ let mut engine = BacktestEngine::new(BacktestEngineConfig::default())?;
 
 ### 2. Add a venue
 
+`SimulatedVenueConfig` uses a `bon::Builder`: only required fields must be set,
+every other setting falls back to a documented default. `build()` validates the
+configuration and returns a `ConfigResult`, so propagate or unwrap it.
+
 ```rust
-use ahash::AHashMap;
-use nautilus_execution::models::{fee::FeeModelAny, fill::FillModelAny};
+use nautilus_backtest::config::SimulatedVenueConfig;
 use nautilus_model::{
     enums::{AccountType, BookType, OmsType},
     identifiers::Venue,
@@ -57,39 +60,18 @@ use nautilus_model::{
 };
 
 engine.add_venue(
-    Venue::from("SIM"),
-    OmsType::Hedging,
-    AccountType::Margin,
-    BookType::L1_MBP,
-    vec![Money::from("1_000_000 USD")],
-    None,            // base_currency
-    None,            // default_leverage
-    AHashMap::new(), // per-instrument leverages
-    None,            // margin_model
-    vec![],          // simulation modules
-    FillModelAny::default(),
-    FeeModelAny::default(),
-    None, // latency_model
-    None, // routing
-    None, // reject_stop_orders
-    None, // support_gtd_orders
-    None, // support_contingent_orders
-    None, // use_position_ids
-    None, // use_random_ids
-    None, // use_reduce_only
-    None, // use_message_queue
-    None, // use_market_order_acks
-    None, // bar_execution
-    None, // bar_adaptive_high_low_ordering
-    None, // trade_execution
-    None, // liquidity_consumption
-    None, // allow_cash_borrowing
-    None, // frozen_account
-    None, // queue_position
-    None, // oto_full_trigger
-    None, // price_protection_points
+    SimulatedVenueConfig::builder()
+        .venue(Venue::from("SIM"))
+        .oms_type(OmsType::Hedging)
+        .account_type(AccountType::Margin)
+        .book_type(BookType::L1_MBP)
+        .starting_balances(vec![Money::from("1_000_000 USD")])
+        .build()?,
 )?;
 ```
+
+Override any default by chaining setters, e.g. `.reject_stop_orders(false)` or
+`.allow_cash_borrowing(true)`.
 
 ### 3. Add instruments and data
 
@@ -103,7 +85,7 @@ let instrument_id = instrument.id();
 engine.add_instrument(&instrument)?;
 
 let quotes = generate_quotes(instrument_id); // Your data loading function
-engine.add_data(quotes, None, true, true);
+engine.add_data(quotes, None, true, true)?;
 ```
 
 ### 4. Register a strategy and run
@@ -160,74 +142,37 @@ let catalog = ParquetDataCatalog::new(
 );
 
 catalog.write_instruments(vec![instrument])?;
-catalog.write_to_parquet(quotes, None, None, None)?;
+catalog.write_to_parquet(&quotes, None, None, None)?;
 ```
 
 ### 2. Configure the run
 
 ```rust
 use nautilus_backtest::config::{
-    BacktestDataConfig, BacktestEngineConfig,
-    BacktestRunConfig, BacktestVenueConfig, NautilusDataType,
+    BacktestDataConfig, BacktestRunConfig, BacktestVenueConfig, NautilusDataType,
 };
 use nautilus_model::enums::{AccountType, BookType, OmsType};
-use ustr::Ustr;
 
-let venue_config = BacktestVenueConfig::new(
-    Ustr::from("SIM"),
-    OmsType::Hedging,
-    AccountType::Margin,
-    BookType::L1_MBP,
-    None, // routing
-    None, // frozen_account
-    None, // reject_stop_orders
-    None, // support_gtd_orders
-    None, // support_contingent_orders
-    None, // use_position_ids
-    None, // use_random_ids
-    None, // use_reduce_only
-    None, // bar_execution
-    None, // bar_adaptive_high_low_ordering
-    None, // trade_execution
-    None, // use_market_order_acks
-    None, // liquidity_consumption
-    None, // allow_cash_borrowing
-    None, // queue_position
-    None, // oto_trigger_mode
-    vec!["1_000_000 USD".to_string()],
-    None, // base_currency
-    None, // default_leverage
-    None, // leverages
-    None, // price_protection_points
-);
+let venue_config = BacktestVenueConfig::builder()
+    .name("SIM")
+    .oms_type(OmsType::Hedging)
+    .account_type(AccountType::Margin)
+    .book_type(BookType::L1_MBP)
+    .starting_balances(vec!["1_000_000 USD".to_string()])
+    .build()?;
 
-let data_config = BacktestDataConfig::new(
-    NautilusDataType::QuoteTick,
-    catalog_path,
-    None, // catalog_fs_protocol
-    None, // catalog_fs_storage_options
-    Some(instrument_id),
-    None, // instrument_ids
-    None, // start_time
-    None, // end_time
-    None, // filter_expr
-    None, // client_id
-    None, // metadata
-    None, // bar_spec
-    None, // bar_types
-    None, // optimize_file_loading
-);
+let data_config = BacktestDataConfig::builder()
+    .data_type(NautilusDataType::QuoteTick)
+    .catalog_path(catalog_path)
+    .instrument_id(instrument_id)
+    .build()?;
 
-let run_config = BacktestRunConfig::new(
-    Some("ema-cross-run".to_string()),
-    vec![venue_config],
-    vec![data_config],
-    BacktestEngineConfig::default(),
-    Some(100), // Stream in chunks of 100
-    None,      // dispose_on_completion
-    None,      // start
-    None,      // end
-);
+let run_config = BacktestRunConfig::builder()
+    .id("ema-cross-run".to_string())
+    .venues(vec![venue_config])
+    .data(vec![data_config])
+    .chunk_size(100)
+    .build()?;
 ```
 
 ### 3. Build, add strategies, and run

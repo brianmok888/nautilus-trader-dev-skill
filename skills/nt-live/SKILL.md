@@ -3,15 +3,15 @@ name: nt-live
 description: "Use when working with live trading nodes, system boot, NautilusKernel, engine configuration, component lifecycle, or deployment in NautilusTrader."
 ---
 
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
 # nt-live
+
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` material in this whole file is migration/reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
 
 ## V2 callback and nightly migration hardening
 
-NT v2 compatibility note: Python live/integration-specific TradingNode examples in this section are migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
 
 - Python callback rule: no `Python::attach` from Tokio worker tasks. Worker tasks must not acquire the GIL directly to call Python strategy, actor, execution-algorithm, or adapter callbacks; route work onto live runner channels and let the live runner drain/dispatch those channels.
+NT v2 compatibility note: Python live `TradingNode` examples are legacy/reference-only; use `LiveNode` for Rust v2/Rust-backed work.
 - For Python-facing live V2 work, prefer `LiveNode`/PyO3 paths. Treat Python `TradingNode` examples as legacy/reference-only unless a guide explicitly labels them current Python-only integration guidance.
 - `ExecutionEngineConfig.carry_replay_events_on_reopen` carries replay state across NETTING close/reopen cycles; keep reconciliation/restart tests for close/reopen sequences.
 - `PortfolioConfig.use_mark_prices` defaults to `true`; set `false` only when a test or deployment intentionally excludes mark-price valuation.
@@ -30,14 +30,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Validate repository Rust examples against the pinned NT V2 develop/master baseline. | Pass | `python3 tools/check_rust_trading_reference_sync.py --compile` matched pinned upstream f20f8af and `cargo check -p nautilus-trading --features examples,high-precision --lib` passed. |
+| G2 V2 example validation | Compile the Rust `LiveNode` example against the pinned NT V2 baseline. | Pass | `uv run pytest -q tests/test_rust_first_end_to_end.py` extracted the primary live `src/main.rs` fence and passed Cargo check against pinned upstream 6e59fd7 with Rust 1.97.1. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
 | G4 Lane and API shape | Classify supported Python V2, AI/advisory, config/control-plane, and Rust hot-path lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 254 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 108 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | Remediation commit `4d4be75` was pushed to `origin/main`; final independent code review returned APPROVE and architecture review returned CLEAR. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 270 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 110 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Current cutover commits and independent post-fix review evidence will be recorded in the final reconciliation report. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -229,11 +229,11 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.57"
-nautilus-live = "0.57"
-nautilus-model = "0.57"
-nautilus-okx = "0.57"          # or any venue adapter
-nautilus-trading = { version = "0.57", features = ["examples"] }
+nautilus-common = "0.61"
+nautilus-live = "0.61"
+nautilus-model = "0.61"
+nautilus-okx = "0.61"          # or any venue adapter
+nautilus-trading = { version = "0.61", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"
@@ -308,17 +308,16 @@ let mut node = LiveNode::builder(trader_id, Environment::Live)?
 use nautilus_model::{identifiers::InstrumentId, types::Quantity};
 use nautilus_trading::examples::strategies::{GridMarketMaker, GridMarketMakerConfig};
 
-let mut config = GridMarketMakerConfig::new(
-    InstrumentId::from("ETH-USDT-SWAP.OKX"),
-    Quantity::from("10.0"),  // max_position (hard cap on net exposure)
-)
-    .with_trade_size(Quantity::from("0.10"))  // per-order quantity
-    .with_num_levels(3)
-    .with_grid_step_bps(100)
-    .with_skew_factor(0.5)
-    .with_requote_threshold_bps(10)
-    .with_expire_time_secs(8)
-    .with_on_cancel_resubmit(true);
+let mut config = GridMarketMakerConfig::builder()
+    .instrument_id(InstrumentId::from("ETH-USDT-SWAP.OKX"))
+    .max_position(Quantity::from("0.10"))
+    .num_levels(3)
+    .grid_step_bps(100)
+    .skew_factor(0.5)
+    .requote_threshold_bps(10)
+    .expire_time_secs(8)
+    .on_cancel_resubmit(true)
+    .build();
 
 config.base.use_hyphens_in_client_order_ids = false; // OKX requirement
 

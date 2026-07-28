@@ -1,6 +1,6 @@
 # Run Live Trading (Rust)
 
-The `LiveNode` connects to real venues through adapter clients. This guide
+The `LiveNode` connects to real venues and data sources through adapter clients. This guide
 walks through a complete live trading setup using OKX as an example.
 
 For background on live trading architecture and reconciliation, see the
@@ -15,11 +15,11 @@ Add the live crate, your venue adapter, and supporting crates to
 
 ```toml
 [dependencies]
-nautilus-common = "0.57"
-nautilus-live = "0.57"
-nautilus-model = "0.57"
-nautilus-okx = "0.57"
-nautilus-trading = { version = "0.57", features = ["examples"] }
+nautilus-common = "0.60"
+nautilus-live = "0.60"
+nautilus-model = "0.60"
+nautilus-okx = "0.60"
+nautilus-trading = { version = "0.60", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"
@@ -46,17 +46,15 @@ use nautilus_okx::{
 let trader_id = TraderId::from("TESTER-001");
 let account_id = AccountId::from("OKX-001");
 
-let data_config = OKXDataClientConfig {
-    instrument_types: vec![OKXInstrumentType::Swap],
-    ..Default::default()
-};
+let data_config = OKXDataClientConfig::builder()
+    .instrument_types(vec![OKXInstrumentType::Swap])
+    .build();
 
-let exec_config = OKXExecClientConfig {
-    trader_id,
-    account_id,
-    instrument_types: vec![OKXInstrumentType::Swap],
-    ..Default::default()
-};
+let exec_config = OKXExecClientConfig::builder()
+    .trader_id(trader_id)
+    .account_id(account_id)
+    .instrument_types(vec![OKXInstrumentType::Swap])
+    .build();
 
 let log_config = LoggerConfig {
     stdout_level: LevelFilter::Info,
@@ -95,16 +93,16 @@ use nautilus_trading::examples::strategies::{
     GridMarketMaker, GridMarketMakerConfig,
 };
 
-let mut config = GridMarketMakerConfig::new(
-    InstrumentId::from("ETH-USDT-SWAP.OKX"),
-    Quantity::from("0.10"),
-)
-    .with_num_levels(3)
-    .with_grid_step_bps(100)
-    .with_skew_factor(0.5)
-    .with_requote_threshold_bps(10)
-    .with_expire_time_secs(8)
-    .with_on_cancel_resubmit(true);
+let mut config = GridMarketMakerConfig::builder()
+    .instrument_id(InstrumentId::from("ETH-USDT-SWAP.OKX"))
+    .max_position(Quantity::from("0.10"))
+    .num_levels(3)
+    .grid_step_bps(100)
+    .skew_factor(0.5)
+    .requote_threshold_bps(10)
+    .expire_time_secs(8)
+    .on_cancel_resubmit(true)
+    .build();
 
 // OKX rejects hyphens in client order IDs
 config.base.use_hyphens_in_client_order_ids = false;
@@ -128,11 +126,11 @@ export OKX_API_SECRET="your_api_secret"
 export OKX_API_PASSPHRASE="your_passphrase"
 ```
 
-For demo trading, set `is_demo: true` in both config structs and use demo
+For demo trading, set `.environment(OKXEnvironment::Demo)` on both config builders and use demo
 API credentials from OKX.
 
 Each adapter documents its required variables in the
-[integration guide](https://nautilustrader.io/docs/latest/../integrations/) for that venue.
+[integration guide](https://nautilustrader.io/docs/nightly/integrations/) for that venue.
 
 ## Async runtime
 
@@ -156,19 +154,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 Most adapters include runnable examples with data testers and execution
 testers:
 
-| Adapter      | Example directory                          |
-|--------------|--------------------------------------------|
-| Architect AX | `crates/adapters/architect_ax/examples/`   |
-| Betfair      | `crates/adapters/betfair/examples/`        |
-| Binance      | `crates/adapters/binance/examples/`        |
-| BitMEX       | `crates/adapters/bitmex/examples/`         |
-| Bybit        | `crates/adapters/bybit/examples/`          |
-| Databento    | `crates/adapters/databento/examples/`      |
-| Deribit      | `crates/adapters/deribit/examples/`        |
-| dYdX         | `crates/adapters/dydx/examples/`           |
-| Hyperliquid  | `crates/adapters/hyperliquid/examples/`    |
-| Kraken       | `crates/adapters/kraken/examples/`         |
-| OKX          | `crates/adapters/okx/examples/`            |
-| Polymarket   | `crates/adapters/polymarket/examples/`     |
-| Sandbox      | `crates/adapters/sandbox/examples/`        |
-| Tardis       | `crates/adapters/tardis/examples/`         |
+| Adapter             | Example directory                               |
+| ------------------- | ----------------------------------------------- |
+| Architect AX        | `crates/adapters/architect_ax/examples/`        |
+| Betfair             | `crates/adapters/betfair/examples/`             |
+| Binance             | `crates/adapters/binance/examples/`             |
+| BitMEX              | `crates/adapters/bitmex/examples/`              |
+| Blockchain          | `crates/adapters/blockchain/examples/`          |
+| Bybit               | `crates/adapters/bybit/examples/`               |
+| Coinbase            | `crates/adapters/coinbase/examples/`            |
+| Databento           | `crates/adapters/databento/examples/`           |
+| Deribit             | `crates/adapters/deribit/examples/`             |
+| Derive              | `crates/adapters/derive/examples/`              |
+| dYdX                | `crates/adapters/dydx/examples/`                |
+| Hyperliquid         | `crates/adapters/hyperliquid/examples/`         |
+| Interactive Brokers | `crates/adapters/interactive_brokers/examples/` |
+| Kraken              | `crates/adapters/kraken/examples/`              |
+| Lighter             | `crates/adapters/lighter/examples/`             |
+| OKX                 | `crates/adapters/okx/examples/`                 |
+| Polymarket          | `crates/adapters/polymarket/examples/`          |
+| Sandbox             | `crates/adapters/sandbox/examples/`             |
+| Tardis              | `crates/adapters/tardis/examples/`              |
