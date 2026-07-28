@@ -1,0 +1,24 @@
+{
+  "owned_content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "repository_commit": "af4370bf31f5bb14c057f744549f20e62f0cac98",
+  "schema_version": 1,
+  "scope": "upstream:crates/model-all-targets",
+  "skill": "nt-model",
+  "steps": [
+    {
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-model",
+        "--all-targets"
+      ],
+      "cwd": "upstream",
+      "duration_seconds": 0.662724,
+      "returncode": 0
+    }
+  ],
+  "upstream_clean": true,
+  "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
+  "verified_at": "2026-07-28T18:12:26.344406+00:00"
+}

@@ -1,0 +1,42 @@
+{
+  "owned_content_sha256": "b7b85dc109690a602fc3f27a4ec0978b8f984c196037aa69210763f9ec308019",
+  "repository_commit": "af4370bf31f5bb14c057f744549f20e62f0cac98",
+  "schema_version": 1,
+  "scope": "repository:implementation-templates-plus-upstream-owners",
+  "skill": "nt-implement",
+  "steps": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "compileall",
+        "-q",
+        "skills/nt-implement/templates"
+      ],
+      "cwd": "repository",
+      "duration_seconds": 0.077645,
+      "returncode": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-common",
+        "-p",
+        "nautilus-indicators",
+        "-p",
+        "nautilus-trading",
+        "-p",
+        "nautilus-backtest",
+        "--lib"
+      ],
+      "cwd": "upstream",
+      "duration_seconds": 0.717874,
+      "returncode": 0
+    }
+  ],
+  "upstream_clean": true,
+  "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
+  "verified_at": "2026-07-28T18:18:14.428110+00:00"
+}
