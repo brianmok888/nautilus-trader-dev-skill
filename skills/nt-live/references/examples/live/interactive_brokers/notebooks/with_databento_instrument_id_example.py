@@ -1,1 +1,0 @@
-../../../../../../nt-adapters/references/examples/legacy_migration/interactive_brokers/notebooks/with_databento_instrument_id_example.py

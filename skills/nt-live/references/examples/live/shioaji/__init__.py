@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/shioaji/__init__.py

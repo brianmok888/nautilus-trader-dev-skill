@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/legacy_migration/bybit/bybit_ema_cross_stop_entry.py

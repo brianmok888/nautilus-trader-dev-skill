@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/bybit/README_options_data_collector.md

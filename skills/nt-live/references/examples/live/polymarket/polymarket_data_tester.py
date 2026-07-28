@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/legacy_migration/polymarket/polymarket_data_tester.py

@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/legacy_migration/binance/binance_futures_testnet_exec_tester.py

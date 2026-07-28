@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/legacy_migration/kraken/kraken_exec_tester.py

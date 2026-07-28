@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/legacy_migration/betfair/betfair.py

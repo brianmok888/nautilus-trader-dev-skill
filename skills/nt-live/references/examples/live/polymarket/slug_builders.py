@@ -1,1 +1,0 @@
-../../../../../nt-adapters/references/examples/polymarket/slug_builders.py
