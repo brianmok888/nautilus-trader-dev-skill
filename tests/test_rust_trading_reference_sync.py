@@ -19,3 +19,15 @@ def test_rust_trading_references_match_pinned_upstream_examples() -> None:
     )
 
     assert result.ok, rust_sync.report_sync(result)
+
+
+def test_compile_command_checks_the_synced_upstream_example_crate() -> None:
+    assert rust_sync.CARGO_CHECK_COMMAND == (
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-trading",
+        "--features",
+        "examples,high-precision",
+        "--lib",
+    )

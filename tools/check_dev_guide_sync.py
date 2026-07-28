@@ -435,10 +435,10 @@ NT_V2_READINESS_SECTION = "## NT V2 Rust readiness gates"
 NT_V2_READINESS_STATUSES = {"Pass", "Pending", "Blocked", "N/A", "Waived"}
 NT_V2_READINESS_GATES = [
     "G0 Upstream baseline",
-    "G1 Lane classification",
-    "G2 Legacy label",
-    "G3 Rust ownership",
-    "G4 NT V2 API shape",
+    "G1 Legacy label",
+    "G2 V2 example validation",
+    "G3 Rust bindings/PyO3",
+    "G4 Lane and API shape",
     "G5 Test evidence",
     "G6 Safety/compliance",
     "G7 Completion report",

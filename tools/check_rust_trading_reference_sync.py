@@ -13,6 +13,15 @@ EXPECTED_UPSTREAM_COMMIT = "f20f8af36e0f488779d3f543a217b2d19ea2db81"
 DEFAULT_UPSTREAM_ROOT = Path("/tmp/nautilus_trader_upstream_audit_20260728")
 UPSTREAM_EXAMPLES = Path("crates/trading/src/examples")
 LOCAL_EXAMPLES = Path("skills/nt-trading/references/examples/rust_trading/examples")
+CARGO_CHECK_COMMAND = (
+    "cargo",
+    "check",
+    "-p",
+    "nautilus-trading",
+    "--features",
+    "examples,high-precision",
+    "--lib",
+)
 
 
 @dataclass(frozen=True)
@@ -111,15 +120,7 @@ def compile_examples(upstream_root: Path, local_examples: Path) -> subprocess.Co
     with tempfile.TemporaryDirectory(prefix="nt-rust-reference-compile-") as temp_dir:
         worktree = copy_upstream_for_compile(upstream_root, local_examples, Path(temp_dir))
         return subprocess.run(
-            [
-                "cargo",
-                "check",
-                "-p",
-                "nautilus-trading",
-                "--features",
-                "examples,high-precision",
-                "--lib",
-            ],
+            CARGO_CHECK_COMMAND,
             cwd=worktree,
             check=False,
             capture_output=True,
