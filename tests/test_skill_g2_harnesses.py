@@ -477,3 +477,13 @@ def test_ai_advisory_g2_owns_entire_skill_directory() -> None:
     harness = g2.HARNESSES["nt-evomap-integration"]
 
     assert Path("skills/nt-evomap-integration") in harness.owned_paths
+
+
+def test_ai_advisory_contract_accepts_canonical_advisory_template() -> None:
+    errors = g2.validate_ai_advisory_contract(g2.repo_root())
+
+    assert errors == []
+    assert (
+        g2.repo_root()
+        / "skills/nt-evomap-integration/templates/advisory_actor.py"
+    ).is_file()

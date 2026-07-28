@@ -93,7 +93,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode in the ro
 
 ## Rust-oriented v2.0 readiness
 
-Default new work is Rust-first/PyO3/`LiveNode` oriented. Treat Python as the user strategy/configuration surface. The AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+Default new work is Rust-first/PyO3/`LiveNode` oriented. Treat non-AI Python strategy/configuration material as migration/reference-only. The AI/advisory lane remains the sole active Python surface, asynchronous, and off execution-critical paths.
 
 ## Default workflows
 

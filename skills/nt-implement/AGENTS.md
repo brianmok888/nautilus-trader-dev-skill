@@ -11,7 +11,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 | Need | Template | Key Feature |
 |------|----------|-------------|
 | Trading logic, orders | `strategy.py` | `submit_order()`, `market_exit()`, position management |
-| Model inference, signals | `actor.py` | `publish_signal()`, `publish_data()` |
+| Model inference, signals | `skills/nt-evomap-integration/templates/advisory_actor.py` | Python AI/advisory lane only; `publish_signal()`, `publish_data()` |
 | Stateless calculations | `indicator.py` | `handle_bar()`, pure computation |
 | Structured data between components | `custom_data.py` | `@customdataclass`, serialization |
 | Order execution logic | `exec_algorithm.py` | Child order spawning |

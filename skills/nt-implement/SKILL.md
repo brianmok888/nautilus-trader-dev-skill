@@ -300,7 +300,7 @@ parsing, normalization, risk/execution state, and other execution-critical infra
 |------|------------------|---------------------|
 | Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
 | Existing Python strategy migration | `strategy.py` | migration/reference-only; new work uses Rust |
-| Model inference, advisory signals | `actor.py` | AI/advisory Python; non-production; off execution-critical paths |
+| Model inference, advisory signals | `skills/nt-evomap-integration/templates/advisory_actor.py` | Sole active Python lane; non-production; off execution-critical paths |
 | Stateless calculations | Rust indicator path | Python `indicator.py` is migration/reference-only unless solely used by the AI advisory lane |
 | Structured data between components | Rust model/data path | Python `custom_data.py` is migration/reference-only unless solely used by the AI advisory lane |
 | Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `exec_algorithm.py` is reference-only |
@@ -311,7 +311,7 @@ parsing, normalization, risk/execution state, and other execution-critical infra
 
 Templates are in `templates/` subdirectory:
 - `strategy.py` - migration/reference-only Python strategy example; use `nt-strategy-builder-rust` for new work
-- `actor.py` - AI/advisory model inference and signal publishing, off the hot path
+- AI/advisory actor template - `skills/nt-evomap-integration/templates/advisory_actor.py`
 - `indicator.py` - research/config custom indicator
 - `custom_data.py` - research/config custom data types for message bus
 - `exec_algorithm.py` - migration/reference-only; route execution-critical algorithms to Rust

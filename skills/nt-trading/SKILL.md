@@ -39,7 +39,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Trading gates: Rust owns execution-critical order, risk, position, portfolio, and execution-algorithm paths; Python is limited to research/config and AI/advisory sidecars off execution-critical paths. Mark `Pass` only with `cargo nextest`, `cargo clippy`, `cargo deny`, risk/order lifecycle tests, and fail-closed behavior evidence.
+Trading gates: Rust owns execution-critical order, risk, position, portfolio, and execution-algorithm paths; Non-AI Python material is migration/reference-only; the sole active Python lane is AI/advisory through `nt-evomap-integration`, off execution-critical paths. Mark `Pass` only with `cargo nextest`, `cargo clippy`, `cargo deny`, risk/order lifecycle tests, and fail-closed behavior evidence.
 
 ## What This Skill Covers
 

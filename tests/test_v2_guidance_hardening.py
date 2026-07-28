@@ -111,6 +111,8 @@ def test_repository_cutover_restricts_python_to_ai_advisory_and_migration() -> N
     router = read("skills/nt/SKILL.md")
     python_builder = read("skills/nt-strategy-builder/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
+    architect = read("skills/nt-architect/SKILL.md")
+    trading = read("skills/nt-trading/SKILL.md")
 
     assert "ideal for strategy development" in upstream_python
     assert "Upstream NT V2 supports Python strategies" in router
@@ -125,7 +127,7 @@ def test_repository_cutover_restricts_python_to_ai_advisory_and_migration() -> N
         "Explicit Python strategy or AI/advisory lane -> `nt-strategy-builder`",
         "Python strategy (\"build a strategy in Python\") -> `nt-strategy-builder` ONLY",
     ]
-    combined = router + python_builder + implement
+    combined = router + python_builder + implement + architect + trading
     for claim in misleading_claims:
         assert claim not in combined
 
@@ -134,6 +136,15 @@ def test_repository_cutover_restricts_python_to_ai_advisory_and_migration() -> N
         in router
     )
     assert "AI/advisory request -> `nt-evomap-integration` ONLY" in router
+
+    forbidden_active_python = [
+        "Treat Python as the user strategy/configuration surface",
+        "User orchestration, config, research strategy, AI lane | **Python**",
+        "user-facing strategy/config or the AI lane it stays in Python",
+        "Python is limited to research/config and AI/advisory sidecars",
+    ]
+    for claim in forbidden_active_python:
+        assert claim not in combined
 
 
 def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:

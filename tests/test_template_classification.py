@@ -45,6 +45,19 @@ def test_python_templates_are_explicitly_classified() -> None:
     assert unclassified == []
 
 
+def test_active_ai_python_templates_live_under_canonical_ai_skill() -> None:
+    offenders: list[str] = []
+    canonical_root = REPO_ROOT / "skills/nt-evomap-integration"
+    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/*.py")):
+        header = "\n".join(path.read_text(encoding="utf-8").splitlines()[:12])
+        if "TEMPLATE_CLASSIFICATION: AI/advisory Python" not in header:
+            continue
+        if not path.is_relative_to(canonical_root):
+            offenders.append(path.relative_to(REPO_ROOT).as_posix())
+
+    assert offenders == []
+
+
 def test_non_ai_python_strategy_templates_are_migration_only() -> None:
     expected = f"{CLASSIFICATION_PREFIX}migration/reference-only; not a production default"
     for relative in MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES:

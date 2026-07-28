@@ -141,7 +141,7 @@ NT v2 compatibility note: this whole file references the legacy Python-live `Tra
 | Venue parsing / data normalization | **Rust** (`crates/adapters/<venue>/src/common/parse.rs`) | Hot path |
 | Core domain model, identifiers, value types, engine state | **Rust** (`crates/`) | Execution-critical state stays in Rust |
 | Live node plumbing, execution engine | **Rust** (`LiveNode`, Rust-backed) | Prefer `LiveNode` for new production; legacy Python-live `TradingNode` is reference-only |
-| User orchestration, config, research strategy, AI lane | **Python** (PyO3 stubs) | User-facing and advisory boundaries |
+| User orchestration, config, and research strategy | **Rust** | Repository cutover policy; Python examples are migration/reference-only |
 | Production/performance strategy logic | **Rust** (`crates/trading/`, `nautilus_strategy!`) | HFT, tight loops, or strategies shipped with Rust adapters |
 | AI / advisory lane (model inference, signal aggregation, EvoMap) | **Python**, async, off the hot path | Never execution-critical |
 
@@ -157,8 +157,7 @@ crates/adapters/your_adapter/
 ```
 
 Rule of thumb: if the element sits on the networking/parse/perf/state path it
-goes in Rust; if it is user-facing strategy/config or the AI lane it stays in
-Python. Keep the AI/advisory lane asynchronous and never on an execution-
+goes in Rust; only the AI/advisory lane stays in Python. Keep that lane asynchronous and never on an execution-
 critical path.
 
 ### Phase 3: Data Flow Design
