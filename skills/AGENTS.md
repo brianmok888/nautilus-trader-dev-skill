@@ -1,6 +1,6 @@
 # SKILLS OVERVIEW
 
-17 specialized skills for NautilusTrader development. Use workflow skills for
+18 skills for NautilusTrader development. Use workflow skills for
 architecture, implementation, wiring, and review; use domain skills for focused
 NautilusTrader concepts; use developer-guide skills for setup and testing.
 
@@ -9,7 +9,7 @@ NautilusTrader concepts; use developer-guide skills for setup and testing.
 Start with `nt` for task classification and routing.
 
 ```
-nt-architect → nt-implement → nt-strategy-builder → nt-review
+nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
                     ↓                    ↓
       nt-evomap-integration (if EvoMap)  nt-dex-adapter (if DEX)
 ```
@@ -23,6 +23,7 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 | **nt-implement** | Implement components with Rust-first hot-path defaults and classified supported Python V2 templates | `nt-implement/SKILL.md` |
 | **nt-review** | Review code before deployment | `nt-review/SKILL.md` |
 | **nt-strategy-builder** | Wire supported Python V2 backtest, paper, and live systems; prefer Rust for hot paths | `nt-strategy-builder/SKILL.md` |
+| **nt-strategy-builder-rust** | Default production strategy, Rust backtest, and LiveNode path | `nt-strategy-builder-rust/SKILL.md` |
 | **nt-dex-adapter** | Build custom DEX adapters | `nt-dex-adapter/SKILL.md` |
 | **nt-evomap-integration** | Integrate EvoMap advisory sidecars safely | `nt-evomap-integration/SKILL.md` |
 | **nt-trading** | Orders, events, positions, and portfolio concepts | `nt-trading/SKILL.md` |

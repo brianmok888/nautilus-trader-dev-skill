@@ -76,20 +76,21 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | Learn NautilusTrader | `nt` → `nt-learn` (12-stage curriculum) |
 | Contribute to NautilusTrader core | `nt` → `nt-dev` + `nt-testing` |
 
-## Skill Inventory (17 skills)
+## Skill Inventory (18 skills)
 
 ### Entry Point (1)
 | Skill | Description | Key Content |
 |---|---|---|
 | `nt` | Start point/router for NautilusTrader tasks | Classifies intent, loads relevant `nt-*` skills |
 
-### Workflow Pipeline (6)
+### Workflow Pipeline (7)
 | Skill | Description | Key Content |
 |---|---|---|
 | `nt-architect` | Research → component architecture decomposition | Design patterns, data flow planning |
 | `nt-implement` | Templates for all NT component types | Strategy, Actor, Indicator, Adapter, FillModel, Rust+PyO3 |
 | `nt-review` | Code review for NT conventions | Trading correctness, FFI safety, perf benchmarks |
 | `nt-strategy-builder` | Idea → running system (backtest/paper/live) | Multi-venue wiring, fill models, DO/DON'Ts |
+| `nt-strategy-builder-rust` | Default production strategy path | Rust `Strategy`, backtest, and `LiveNode` wiring |
 | `nt-dex-adapter` | Custom DEX adapter development | RPC nodes, wallet signing, pool discovery, test suite |
 | `nt-evomap-integration` | EvoMap.ai advisory sidecar | Non-blocking execution, approval gates |
 

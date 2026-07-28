@@ -64,7 +64,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 **Strategy routing is language-gated (no cross-contamination):**
 - Python strategy ("build a strategy in Python") -> `nt-strategy-builder` ONLY.
 - Rust strategy ("build a strategy in Rust", HFT/perf/ships with a Rust adapter) -> `nt-strategy-builder-rust` ONLY.
-- Ambiguous ("build a strategy", no language stated) -> ask which language before loading either skill. Never mix the two skills in one strategy.
+- Ambiguous ("build a strategy", no language stated) -> `nt-strategy-builder-rust` ONLY. Rust is this repository's default; load `nt-strategy-builder` only when the user explicitly requests Python or the work is in the AI/advisory lane. Never mix the two skills in one strategy.
 
 
 NT v2 compatibility note: Python live/integration-specific TradingNode in the routing table is migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
@@ -102,9 +102,9 @@ Load in order:
 
 1. `nt-architect` for component and data-flow design.
 2. `nt-implement` for Strategy/Actor/Indicator templates.
-3. Choose strategy language before builder selection:
-   - Supported NT V2 Python strategy -> `nt-strategy-builder`.
-   - Rust production/performance strategy -> `nt-strategy-builder-rust`.
+3. Select the builder without cross-contamination:
+   - Explicit supported NT V2 Python strategy or AI/advisory lane -> `nt-strategy-builder`.
+   - Ambiguous, production, performance, or explicit Rust strategy -> `nt-strategy-builder-rust`.
 4. `nt-review` + `nt-testing` before live deployment or merge.
 
 ### Existing code review or bug investigation

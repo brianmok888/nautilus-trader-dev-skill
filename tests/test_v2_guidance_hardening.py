@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -123,6 +124,45 @@ def test_rust_first_policy_preserves_supported_python_v2_strategies() -> None:
     combined = router + python_builder + implement
     for claim in misleading_claims:
         assert claim not in combined
+
+
+def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
+    router = read("skills/nt/SKILL.md")
+    implement = read("skills/nt-implement/SKILL.md")
+    project = read("AGENTS.md")
+
+    required = [
+        "Ambiguous (\"build a strategy\", no language stated) -> `nt-strategy-builder-rust`",
+        "Ambiguous strategy requests default to Rust",
+        "Production strategy or live-node work | `skills/nt-strategy-builder-rust/`",
+    ]
+    combined = router + implement + project
+    missing = [term for term in required if term not in combined]
+    assert missing == []
+
+    forbidden = [
+        "ask which language before loading either skill",
+        "or start in Python and port to Rust when profiling demands it",
+        "Wire backtest or live node | `skills/nt-strategy-builder/templates/`",
+    ]
+    present = [term for term in forbidden if term in combined]
+    assert present == []
+
+
+def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
+    expected = {
+        path.parent.name
+        for path in (REPO_ROOT / "skills").glob("nt*/SKILL.md")
+    }
+    assert len(expected) == 18
+
+    for path in ["README.md", "skills/AGENTS.md"]:
+        text = read(path)
+        documented = set(re.findall(r"\| \*\*(nt(?:-[a-z0-9]+)*)\*\* \|", text))
+        if path == "README.md":
+            documented = set(re.findall(r"\| `(nt(?:-[a-z0-9]+)*)` \|", text))
+        assert "18 skills" in text
+        assert documented == expected
 
 
 def test_pyo3_ownership_guidance_matches_current_cycle_handling() -> None:

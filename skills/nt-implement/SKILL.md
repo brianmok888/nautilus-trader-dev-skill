@@ -129,19 +129,20 @@ Rust-backed work use `LiveNode`.
 
 | Component | Default language for V2 cutover | Notes |
 |---|---|---|
-| Custom Data Types | **Python** (`@customdataclass`, PyO3 stubs) | User-facing data crossing the message bus |
+| Custom Data Types | **Rust** (`crates/model/`, PyO3-exposed when required) | Rust owns production data types; Python declarations are reserved for explicit AI/advisory payloads |
 | Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
-| Actors (model hosting, regime detection, signal aggregation) | **Python** unless performance-critical | AI/advisory inference stays Python, async, off the hot path |
-| Strategies (order/position logic, entry/exit) | **Language = user choice** (see rule below) | Python (`nt-strategy-builder`) and Rust (`nt-strategy-builder-rust`) are supported V2 surfaces; prefer Rust for performance-sensitive logic |
+| Actors (model hosting, regime detection, signal aggregation) | **Rust** | AI/advisory inference is the only Python-default exception and stays async, non-authoritative, and off the hot path |
+| Strategies (order/position logic, entry/exit) | **Rust** by default (see rule below) | Use Python (`nt-strategy-builder`) only for explicit Python intent or AI/advisory work; otherwise use `nt-strategy-builder-rust` |
 | Execution Algorithms | **Rust** (`crates/exec-algo/`, PyO3-exposed) | Execution-critical path stays in Rust |
 | Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
 | Live node plumbing | **Rust** (`LiveNode`) | Prefer `LiveNode` for new production; `TradingNode` is legacy Python-live |
 
 Rule of thumb: if the component sits on the networking/parse/perf/state/execution
-path it is a Rust cutover target; if it is user strategy/config or the AI lane it
-stays Python. When unsure, check the architecture document's language boundary.
+path it is a Rust cutover target. The AI/advisory lane is the sole Python-default
+exception. Ambiguous strategy requests default to Rust; explicit Python requests
+remain a supported V2 surface but do not change this repository's routing default.
 
 
 ### No cross-contamination: match the strategy language to its builder skill
@@ -155,9 +156,10 @@ the Python and Rust strategy builders. Do not mix:
   into a Python strategy (and vice versa).
 - User asked for / scoped a **Rust** strategy (HFT, perf-critical, ships with a
   Rust adapter) -> `nt-strategy-builder-rust` only.
-- Ambiguous ("build a strategy" with no language stated) -> ask which language,
-  or start in Python and port to Rust when profiling demands it. Never silently
-  emit one language under the other skill's patterns.
+- Ambiguous ("build a strategy" with no language stated) ->
+  `nt-strategy-builder-rust` only. Select Python only for explicit Python intent
+  or AI/advisory work. Never silently emit one language under the other skill's
+  patterns.
 
 This keeps each skill's templates, conventions, and node-registration paths
 internally consistent and prevents hybrid strategies that fail both toolchains.
