@@ -20,8 +20,8 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G2 Legacy label | Label legacy Cython/v1 and Python live TradingNode guidance as migration/reference-only. | Pass | Compatibility note in this file names legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |
 | G3 Rust ownership | Rust owns runtime, adapter networking/parsing, normalization, risk/execution state, and performance-sensitive paths; Python and Rust strategies remain supported V2 surfaces. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the ownership-boundary regression tests; `references/developer_guide/python.md:12-14` records upstream Python strategy support. |
 | G4 NT V2 API shape | Use current NT V2/PyO3 API shapes and crate/module boundaries instead of retired APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` byte-compared all 18 guide bodies to pinned upstream f20f8af; `uv run pytest -q tests/test_v2_guidance_hardening.py` passed current API-shape regressions. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 247 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 102 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 252 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 104 safety, runtime, FFI, legacy, and V2 boundary regressions. |
 | G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Final Phase 4 reconciliation, logical commit SHAs, and push evidence are recorded only after the working tree is committed and pushed. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
@@ -286,10 +286,11 @@ During market exit, non-reduce-only orders are auto-denied; order lists with any
 ### Quick Reference: Which Template?
 
 Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
-Treat unclassified Python templates as invalid. Python is allowed only for AI/advisory,
-research/config, and Rust/PyO3 control-plane wrappers; production strategies, adapters,
-execution algorithms, live networking, parsing, normalization, risk/execution state, and
-order flow default to Rust.
+Treat unclassified Python templates as invalid. Python and Rust strategies are supported
+NT V2 extension surfaces; prefer Rust for performance-sensitive strategy logic. AI/advisory,
+research/config, and Rust/PyO3 control-plane wrappers stay explicit. Rust owns adapter
+networking/parsing, normalization, risk/execution state, and other execution-critical
+infrastructure.
 
 | Need | Template / route | Lane classification |
 |------|------------------|---------------------|

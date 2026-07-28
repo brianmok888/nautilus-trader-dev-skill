@@ -14,11 +14,17 @@ TEMPLATE_ROOTS = [
 ]
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
 ALLOWED_CLASSIFICATIONS = (
+    "supported NT V2 Python strategy; prefer Rust for performance-sensitive paths",
     "AI/advisory Python; non-production; off execution-critical paths",
     "Python research/config; non-production; off execution-critical paths",
     "Python control-plane for Rust/PyO3; non-production execution wrapper",
     "migration/reference-only; not a production default",
 )
+
+SUPPORTED_PYTHON_STRATEGY_TEMPLATES = {
+    Path("skills/nt-implement/templates/strategy.py"),
+    Path("skills/nt-trading/templates/strategy.py"),
+}
 
 
 def test_python_templates_are_explicitly_classified() -> None:
@@ -36,6 +42,16 @@ def test_python_templates_are_explicitly_classified() -> None:
                 unclassified.append(path.relative_to(REPO_ROOT).as_posix())
 
     assert unclassified == []
+
+
+def test_current_python_strategy_templates_are_not_migration_only() -> None:
+    expected = (
+        f"{CLASSIFICATION_PREFIX}supported NT V2 Python strategy; "
+        "prefer Rust for performance-sensitive paths"
+    )
+    for relative in SUPPORTED_PYTHON_STRATEGY_TEMPLATES:
+        header = "\n".join((REPO_ROOT / relative).read_text().splitlines()[:12])
+        assert expected in header
 
 
 def _has_allowed_classification(text: str) -> bool:

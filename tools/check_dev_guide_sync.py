@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 CURRENT_DEV_GUIDE_FILES = [
@@ -44,7 +44,6 @@ CURRENT_SYNC_COMMIT = "f20f8af36e0f488779d3f543a217b2d19ea2db81"
 CURRENT_RELEASE_TAG = "v1.230.0"
 CURRENT_RELEASE_DATE = "2026-06-29"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
-CURRENT_DATE = "2026-07-28"
 SOURCE_STALE_AFTER_DAYS = 14
 PINNED_SNAPSHOT_LEGACY_POLICY = (
     "source-pinned upstream snapshot; historical guidance is migration/reference-only"
@@ -1195,10 +1194,11 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
 def _check_source_sync_metadata(
     errors: list[str],
     *,
-    current_date: str = CURRENT_DATE,
+    current_date: str | None = None,
     sync_date: str = CURRENT_SYNC_DATE,
     stale_after_days: int = SOURCE_STALE_AFTER_DAYS,
 ) -> None:
+    current_date = current_date or datetime.now(UTC).date().isoformat()
     age_days = (date.fromisoformat(current_date) - date.fromisoformat(sync_date)).days
     if age_days > stale_after_days:
         errors.append(
