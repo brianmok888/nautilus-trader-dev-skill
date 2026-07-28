@@ -1,6 +1,6 @@
 {
-  "owned_content_sha256": "2c4cf73ee3c92532951ed633c36b58a708527e3b0fe5af8ae42c3943a241b1c1",
-  "repository_commit": "c377fa6b0fbbed9652cb39eba7403ac29bb3e249",
+  "owned_content_sha256": "1f86358a248a56304dd995256d8d4731c4cfad18d1b8bbbbe890f73d477a139d",
+  "repository_commit": "1eb701da5818aa11b053aab3570cd8944b66059f",
   "schema_version": 1,
   "scope": "upstream:hyperliquid-and-blockchain-adapters",
   "skill": "nt-dex-adapter",
@@ -14,7 +14,7 @@
         "skills/nt-dex-adapter/tests"
       ],
       "cwd": "repository",
-      "duration_seconds": 7.420765,
+      "duration_seconds": 7.448276,
       "returncode": 0
     },
     {
@@ -28,7 +28,7 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.035807,
+      "duration_seconds": 1.052342,
       "returncode": 0
     },
     {
@@ -42,11 +42,11 @@
         "hypersync"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.03082,
+      "duration_seconds": 1.080873,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T22:33:28.390543+00:00"
+  "verified_at": "2026-07-28T23:03:40.893037+00:00"
 }
