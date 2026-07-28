@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: Python control-plane for Rust/PyO3; non-production execution wrapper
 """
 Data Provider Adapter Template for nautilus_trader.
 

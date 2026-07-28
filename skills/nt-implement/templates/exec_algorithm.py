@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 """
 Execution Algorithm Template for nautilus_trader.
 

@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: Python research/config; non-production; off execution-critical paths
 from nautilus_trader.config import RiskEngineConfig
 
 def get_risk_config(

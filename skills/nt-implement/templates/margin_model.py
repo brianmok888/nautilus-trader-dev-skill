@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: Python research/config; non-production; off execution-critical paths
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2025 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io

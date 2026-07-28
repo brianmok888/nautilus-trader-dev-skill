@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: AI/advisory Python; non-production; off execution-critical paths
 """
 Actor Template for nautilus_trader.
 

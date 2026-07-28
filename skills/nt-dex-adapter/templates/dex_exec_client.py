@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 """
 DEX Adapter Template: Execution Client
 

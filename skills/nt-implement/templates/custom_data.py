@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: Python research/config; non-production; off execution-critical paths
 """
 Custom Data Types Template for nautilus_trader.
 

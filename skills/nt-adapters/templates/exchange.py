@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: Python control-plane for Rust/PyO3; non-production execution wrapper
 """
 Rust-first NautilusTrader v2 exchange adapter template.
 
