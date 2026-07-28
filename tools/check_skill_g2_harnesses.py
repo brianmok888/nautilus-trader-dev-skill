@@ -96,6 +96,7 @@ HARNESSES: dict[str, Harness] = {
             ),
         ),
         owned_paths=(
+            Path("skills/nt/SKILL.md"),
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_v2_guidance_hardening.py"),
             Path("tools/check_skill_g2_harnesses.py"),
@@ -119,6 +120,7 @@ HARNESSES: dict[str, Harness] = {
                 "examples",
             ),
         ),
+        owned_paths=(Path("skills/nt-adapters/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-adapters.json"),
     ),
     "nt-architect": Harness(
@@ -141,6 +143,7 @@ HARNESSES: dict[str, Harness] = {
                 "--lib",
             ),
         ),
+        owned_paths=(Path("skills/nt-architect/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-architect.json"),
     ),
     "nt-backtest": Harness(
@@ -159,6 +162,7 @@ HARNESSES: dict[str, Harness] = {
                 "examples",
             ),
         ),
+        owned_paths=(Path("skills/nt-backtest/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-backtest.json"),
     ),
     "nt-data": Harness(
@@ -179,6 +183,7 @@ HARNESSES: dict[str, Harness] = {
                 "--lib",
             ),
         ),
+        owned_paths=(Path("skills/nt-data/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-data.json"),
     ),
     "nt-dev": Harness(
@@ -202,6 +207,7 @@ HARNESSES: dict[str, Harness] = {
                 "--lib",
             ),
         ),
+        owned_paths=(Path("skills/nt-dev/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-dev.json"),
     ),
     "nt-dex-adapter": Harness(
@@ -241,6 +247,7 @@ HARNESSES: dict[str, Harness] = {
             ),
         ),
         owned_paths=(
+            Path("skills/nt-dex-adapter/SKILL.md"),
             Path("skills/nt-dex-adapter/templates"),
             Path("skills/nt-dex-adapter/tests"),
         ),
@@ -289,7 +296,10 @@ HARNESSES: dict[str, Harness] = {
                 "--lib",
             ),
         ),
-        owned_paths=(Path("skills/nt-implement/templates"),),
+        owned_paths=(
+            Path("skills/nt-implement/SKILL.md"),
+            Path("skills/nt-implement/templates"),
+        ),
         evidence_file=Path("references/g2-evidence/nt-implement.json"),
     ),
     "nt-learn": Harness(
@@ -318,6 +328,7 @@ HARNESSES: dict[str, Harness] = {
             ),
         ),
         owned_paths=(
+            Path("skills/nt-learn/SKILL.md"),
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_template_classification.py"),
         ),
@@ -331,7 +342,32 @@ HARNESSES: dict[str, Harness] = {
         steps=(
             upstream_step("cargo", "check", "-p", "nautilus-model", "--all-targets"),
         ),
+        owned_paths=(Path("skills/nt-model/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-model.json"),
+    ),
+    "nt-live": Harness(
+        skill="nt-live",
+        scope="upstream:live-node-and-rust-live-example",
+        summary="Compile LiveNode and the canonical Rust live trading example",
+        allowed_tokens=("nautilus-live", "bitmex-grid-mm"),
+        steps=(
+            upstream_step("cargo", "check", "-p", "nautilus-live", "--lib"),
+            upstream_step(
+                "cargo",
+                "check",
+                "-p",
+                "nautilus-bitmex",
+                "--example",
+                "bitmex-grid-mm",
+                "--features",
+                "examples",
+            ),
+        ),
+        owned_paths=(
+            Path("skills/nt-live/SKILL.md"),
+            Path("skills/nt-live/references/guides/run_rust_live_trading.md"),
+        ),
+        evidence_file=Path("references/g2-evidence/nt-live.json"),
     ),
     "nt-review": Harness(
         skill="nt-review",
@@ -363,6 +399,7 @@ HARNESSES: dict[str, Harness] = {
             ),
         ),
         owned_paths=(
+            Path("skills/nt-review/SKILL.md"),
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_template_classification.py"),
             Path("tests/test_v2_guidance_hardening.py"),
@@ -384,6 +421,7 @@ HARNESSES: dict[str, Harness] = {
             ),
             upstream_step("cargo", "check", "-p", "nautilus-indicators", "--all-targets"),
         ),
+        owned_paths=(Path("skills/nt-signals/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-signals.json"),
     ),
     "nt-strategy-builder": Harness(
@@ -414,10 +452,31 @@ HARNESSES: dict[str, Harness] = {
             ),
         ),
         owned_paths=(
+            Path("skills/nt-strategy-builder/SKILL.md"),
             Path("skills/nt-strategy-builder/templates"),
             Path("skills/nt-strategy-builder/tests"),
         ),
         evidence_file=Path("references/g2-evidence/nt-strategy-builder.json"),
+    ),
+    "nt-strategy-builder-rust": Harness(
+        skill="nt-strategy-builder-rust",
+        scope="repository:compile-extracted-rust-strategy-skill-example",
+        summary="Extract and compile the Rust strategy skill example against pinned V2",
+        allowed_tokens=("test_rust_strategy_skill_example_compiles",),
+        steps=(
+            repository_step(
+                PYTHON,
+                "-m",
+                "pytest",
+                "-q",
+                "tests/test_rust_first_end_to_end.py::test_rust_strategy_skill_example_compiles_against_pinned_upstream",
+            ),
+        ),
+        owned_paths=(
+            Path("skills/nt-strategy-builder-rust/SKILL.md"),
+            Path("tests/test_rust_first_end_to_end.py"),
+        ),
+        evidence_file=Path("references/g2-evidence/nt-strategy-builder-rust.json"),
     ),
     "nt-testing": Harness(
         skill="nt-testing",
@@ -442,7 +501,29 @@ HARNESSES: dict[str, Harness] = {
                 "examples",
             ),
         ),
+        owned_paths=(Path("skills/nt-testing/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-testing.json"),
+    ),
+    "nt-trading": Harness(
+        skill="nt-trading",
+        scope="repository:rust-trading-reference-sync-and-compile",
+        summary="Validate and compile the mirrored canonical Rust trading examples",
+        allowed_tokens=("test_rust_trading_reference_sync.py",),
+        steps=(
+            repository_step(
+                PYTHON,
+                "-m",
+                "pytest",
+                "-q",
+                "tests/test_rust_trading_reference_sync.py",
+            ),
+        ),
+        owned_paths=(
+            Path("skills/nt-trading/SKILL.md"),
+            Path("skills/nt-trading/references/examples/rust_trading"),
+            Path("tests/test_rust_trading_reference_sync.py"),
+        ),
+        evidence_file=Path("references/g2-evidence/nt-trading.json"),
     ),
 }
 
@@ -589,6 +670,7 @@ def validate_readiness_cards(
     *,
     require_evidence: bool = True,
     excluded_evidence: set[str] | None = None,
+    expected_repository_commit: str | None = None,
 ) -> list[str]:
     errors: list[str] = []
     excluded = set() if excluded_evidence is None else excluded_evidence
@@ -631,6 +713,13 @@ def validate_readiness_cards(
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
         if payload.get("upstream_clean") is not True:
             errors.append(f"{skill} durable evidence was not produced from a clean upstream")
+        if (
+            expected_repository_commit is not None
+            and payload.get("repository_commit") != expected_repository_commit
+        ):
+            errors.append(
+                f"{skill} durable evidence does not match the repository provenance"
+            )
         if payload.get("owned_content_sha256") != owned_content_hash(
             root, harnesses[skill].owned_paths
         ):
@@ -651,6 +740,34 @@ def validate_readiness_cards(
             ]
             if recorded != expected:
                 errors.append(f"{skill} durable evidence commands do not match its harness")
+    return errors
+
+
+def validate_ai_advisory_contract(root: Path) -> list[str]:
+    path = root / "skills/nt-evomap-integration/SKILL.md"
+    text = path.read_text(encoding="utf-8")
+    errors: list[str] = []
+    forbidden = (
+        "self.submit_order(",
+        ".submit_order(",
+        "ExecutionClient",
+        "ExecClient",
+        "execution_client",
+    )
+    for token in forbidden:
+        if token in text:
+            errors.append(f"AI advisory contract exposes forbidden execution authority: {token}")
+    required = (
+        "Nautilus remains the only execution authority",
+        "No external network I/O",
+        "timeout",
+        "fallback",
+        "approval gate",
+        "Every accepted or rejected suggestion must be traceable",
+    )
+    for token in required:
+        if token not in text:
+            errors.append(f"AI advisory contract lacks required invariant: {token}")
     return errors
 
 

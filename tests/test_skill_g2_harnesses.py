@@ -23,17 +23,20 @@ EXPECTED_SKILLS = {
     "nt-evomap-integration",
     "nt-implement",
     "nt-learn",
+    "nt-live",
     "nt-model",
     "nt-review",
     "nt-signals",
     "nt-strategy-builder",
+    "nt-strategy-builder-rust",
     "nt-testing",
+    "nt-trading",
 }
 
 
-def test_manifest_covers_exactly_the_fifteen_requested_skills() -> None:
+def test_manifest_covers_exactly_all_eighteen_nt_skills() -> None:
     assert set(g2.HARNESSES) == EXPECTED_SKILLS
-    assert len(g2.HARNESSES) == 15
+    assert len(g2.HARNESSES) == 18
 
 
 def test_each_harness_has_a_unique_domain_scope_and_nonempty_steps() -> None:
@@ -250,11 +253,30 @@ def test_dry_run_prints_commands_without_executing(
     assert "nautilus-data" in output
 
 
-def test_list_outputs_only_the_fifteen_harnesses(capsys: pytest.CaptureFixture[str]) -> None:
+def test_list_outputs_only_the_eighteen_harnesses(capsys: pytest.CaptureFixture[str]) -> None:
     exit_code = g2.main(["--list"])
 
     assert exit_code == 0
     assert set(capsys.readouterr().out.splitlines()) == EXPECTED_SKILLS
+
+
+def test_each_harness_owns_its_skill_and_nonempty_content() -> None:
+    root = g2.repo_root()
+    empty_hash = g2.owned_content_hash(root, ())
+    for skill, harness in g2.HARNESSES.items():
+        assert Path("skills") / skill / "SKILL.md" in harness.owned_paths
+        assert g2.owned_content_hash(root, harness.owned_paths) != empty_hash
+
+
+def test_missing_rust_first_harnesses_have_targeted_executable_checks() -> None:
+    expected_tokens = {
+        "nt-live": "nautilus-live",
+        "nt-trading": "test_rust_trading_reference_sync.py",
+        "nt-strategy-builder-rust": "test_rust_strategy_skill_example_compiles",
+    }
+    for skill, token in expected_tokens.items():
+        commands = [argument for step in g2.HARNESSES[skill].steps for argument in step.command]
+        assert any(token in argument for argument in commands), (skill, commands)
 
 
 def test_readiness_cards_reference_the_targeted_harness_command() -> None:
@@ -350,6 +372,42 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
     assert "nt-data durable evidence commands do not match its harness" in errors
 
 
+def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
+    evidence_path.parent.mkdir(parents=True)
+    skill_path.write_text(
+        "| G2 V2 example validation | Validate. | Pass | "
+        f"`{g2.evidence_command('nt-data')}` passed; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+    harness = g2.HARNESSES["nt-data"]
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "skill": "nt-data",
+                "scope": harness.scope,
+                "repository_commit": "not-a-commit",
+                "owned_content_sha256": g2.owned_content_hash(tmp_path, harness.owned_paths),
+                "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
+                "upstream_clean": True,
+                "steps": [
+                    {"command": list(step.command), "cwd": step.cwd.value, "returncode": 0}
+                    for step in harness.steps
+                ],
+            }
+        )
+    )
+
+    errors = g2.validate_readiness_cards(
+        tmp_path, {"nt-data": harness}, expected_repository_commit="expected-commit"
+    )
+
+    assert "nt-data durable evidence does not match the repository provenance" in errors
+
+
 def test_router_harness_requires_subordinate_evidence() -> None:
     command = g2.HARNESSES["nt"].steps[1].command
 
@@ -364,3 +422,9 @@ def test_ai_advisory_skill_stays_python_and_off_execution_paths() -> None:
     assert "Nautilus remains the only execution authority" in text
     assert "No external network I/O" in text
     assert "Every accepted or rejected suggestion must be traceable" in text
+
+
+def test_ai_advisory_contract_forbids_order_authority_and_hot_handler_io() -> None:
+    errors = g2.validate_ai_advisory_contract(g2.repo_root())
+
+    assert errors == []

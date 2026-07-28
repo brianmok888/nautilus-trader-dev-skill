@@ -1,0 +1,39 @@
+{
+  "owned_content_sha256": "c3393c1b1a571e083914ace9fb293cf2b0743ae697615c8226bfe48909a9dcfe",
+  "repository_commit": "ecc4680f528ddcf1c413ca624b90cfa6af3d0324",
+  "schema_version": 1,
+  "scope": "upstream:live-node-and-rust-live-example",
+  "skill": "nt-live",
+  "steps": [
+    {
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-live",
+        "--lib"
+      ],
+      "cwd": "upstream",
+      "duration_seconds": 0.653145,
+      "returncode": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-bitmex",
+        "--example",
+        "bitmex-grid-mm",
+        "--features",
+        "examples"
+      ],
+      "cwd": "upstream",
+      "duration_seconds": 0.862536,
+      "returncode": 0
+    }
+  ],
+  "upstream_clean": true,
+  "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
+  "verified_at": "2026-07-28T22:16:29.624941+00:00"
+}
