@@ -52,6 +52,23 @@ def test_python_v2_callbacks_must_use_live_runner_channels_not_tokio_attach() ->
     assert "live runner channels" in text
 
 
+def test_current_pyo3_registration_uses_owning_crate_module() -> None:
+    texts = [
+        read("skills/nt-data/SKILL.md"),
+        read("skills/nt-model/SKILL.md"),
+        read("skills/nt-signals/SKILL.md"),
+        read("skills/nt-trading/SKILL.md"),
+        read("skills/nt-live/SKILL.md"),
+        read("skills/nt-backtest/SKILL.md"),
+        read("skills/nt-strategy-builder-rust/SKILL.md"),
+    ]
+
+    for text in texts:
+        assert "src/python/mod.rs" in text
+        assert "crates/pyo3/src/lib.rs" in text
+        assert "aggregates" in text
+
+
 def test_nightly_migration_guidance_covers_current_v2_features() -> None:
     text = "\n".join(
         read(path)

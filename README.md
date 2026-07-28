@@ -1,9 +1,12 @@
 # NautilusTrader Development Skills for AI Agents
 
+NT v2 compatibility note: legacy Cython/v1 and Python-live `TradingNode` material in this file is migration/release-history reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
+
 A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for developing trading systems with [NautilusTrader](https://github.com/nautechsystems/nautilus_trader) — a high-performance algorithmic trading platform written in Rust with Python bindings.
 
 ## Overview
 
+NT v2 compatibility note: v1.x release/source labels in this baseline paragraph are release-history identifiers, not guidance to use legacy APIs.
 These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-28; upstream `develop` commit `f20f8af36e0f488779d3f543a217b2d19ea2db81` reports workspace `0.61.0`, Rust `1.97.1`, source label `v1.231.0`, and the V2 Python package `2.0.0rc2`; upstream release notes retain `2.0.0rc1` as the first public candidate and describe the rolling `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
 
 ## Skills Map
@@ -33,7 +36,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 │   nt-signals      Indicators, order books, data analysis                     │
 │   nt-data         Market data types, subscriptions, catalogs                │
 │   nt-backtest     BacktestEngine, venues, actors, fill models               │
-│   nt-live         LiveNode / TradingNode boundary, adapters, reconciliation │
+│   nt-live         LiveNode/runtime boundary, adapters, reconciliation       │
 │   nt-adapters     CeFi adapter spec (Binance, OKX, Bybit…), 7-phase build   │
 │   nt-model        Core domain objects, identifiers, instruments             │
 │                                                                              │
@@ -97,7 +100,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-signals` | Indicators, order books, analysis | Technical indicators, book imbalance |
 | `nt-data` | Market data types and pipelines | Subscriptions, catalogs, data model |
 | `nt-backtest` | Backtesting engine and config | BacktestEngine, actors, fill models |
-| `nt-live` | Live trading and production ops | `LiveNode` (Rust-backed v2) vs legacy Python-live `TradingNode` boundary, adapters, reconciliation |
+| `nt-live` | Live trading and production ops | Rust-backed `LiveNode` versus labelled Python-live runtime boundary, adapters, reconciliation |
 | `nt-adapters` | CeFi adapter specification | 7-phase implementation, 118KB official spec |
 | `nt-model` | Core domain objects | Instruments, identifiers, value objects |
 

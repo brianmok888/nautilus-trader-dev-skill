@@ -1,5 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
+NT v2 compatibility note: legacy/v1 removal-history items in this file are migration/release-history reference-only; prefer current Rust v2/PyO3 guidance for new work.
+
 **Generated:** 2026-06-08
 **Commit:** 618653c
 **Branch:** main
@@ -66,7 +68,7 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 2. **nt-architect** — Decompose system into Actor/Indicator/Strategy components
 3. **nt-implement** — Write individual components with templates
 4. **nt-evomap-integration** — (Optional) Add governed EvoMap advisory workflow
-5. **nt-strategy-builder** — Wire BacktestEngine, Python TradingNode, or Rust/v2 LiveNode paths
+5. **nt-strategy-builder** — Wire BacktestEngine, supported Python V2 strategy, or Rust/v2 LiveNode paths
 6. **nt-dex-adapter** — (Optional) Build custom DEX adapter
 7. **nt-review** — Review before live deployment
 
@@ -100,6 +102,7 @@ nt-architect → nt-implement → nt-strategy-builder → nt-review
 
 ## ANTI-PATTERNS (CRITICAL)
 
+NT v2 compatibility note: v1.x and removed-item entries in the table below are migration/release-history reference-only.
 | Pattern | Consequence |
 |---------|-------------|
 | Panic across FFI | Undefined behavior |

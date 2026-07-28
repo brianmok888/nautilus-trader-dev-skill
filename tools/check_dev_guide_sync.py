@@ -612,6 +612,7 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
 
 
 LEGACY_GUIDANCE_ROOTS = ("skills", "references", "docs")
+LEGACY_GUIDANCE_ROOT_FILES = (Path("README.md"), Path("AGENTS.md"))
 LEGACY_GUIDANCE_SUFFIXES = {".capnp", ".md", ".py", ".pyi", ".rs", ".toml"}
 LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__", "superpowers"}
 TRADING_NODE_TERM = "TradingNode"
@@ -877,7 +878,7 @@ def _contains_terms_in_single_paragraph(text: str, terms: list[str]) -> bool:
 
 
 def _iter_legacy_guidance_files(root: Path) -> list[Path]:
-    files: list[Path] = []
+    files = [root / path for path in LEGACY_GUIDANCE_ROOT_FILES if (root / path).is_file()]
     for root_name in LEGACY_GUIDANCE_ROOTS:
         base = root / root_name
         if not base.exists():

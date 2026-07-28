@@ -1338,6 +1338,14 @@ def test_reports_unlabelled_generic_legacy_guidance(tmp_path: Path) -> None:
     assert any("unlabelled legacy/Cython/v1 guidance" in error for error in errors)
 
 
+def test_reports_unlabelled_tradingnode_guidance_in_root_agents(tmp_path: Path) -> None:
+    write(tmp_path / "AGENTS.md", "Use Python TradingNode for live work.\n")
+
+    errors = run_checks(tmp_path).errors
+
+    assert "unlabelled TradingNode guidance in AGENTS.md" in errors
+
+
 def test_reports_unlabelled_v1_runtime_guidance(tmp_path: Path) -> None:
     write(
         tmp_path / "skills" / "nt-testing" / "SKILL.md",
