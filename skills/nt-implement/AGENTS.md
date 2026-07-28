@@ -128,7 +128,7 @@ pub fn new(params) -> Self { Self::new_checked(params).expect(FAILED) }
 ### PyO3 Conventions
 - `py_*` prefix on Rust function names
 - `#[pyo3(name = "...")]` for clean Python API
-- Plain `PyObject` (never `Arc<PyObject>`)
+- Plain `PyObject` / `Py<T>` for ordinary callbacks; `Arc<Py<T>>` only with documented shared-ownership need, cycle audit, and cleanup plan
 - Manual `Clone` using `clone_py_object()`
 
 ### Runtime

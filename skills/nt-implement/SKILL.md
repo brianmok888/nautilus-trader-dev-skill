@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Validate repository Rust examples against the pinned NT V2 develop/master baseline. | Pass | `python3 tools/check_rust_trading_reference_sync.py --compile` matched pinned upstream f20f8af and `cargo check -p nautilus-trading --features examples,high-precision --lib` passed. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pending | This repository has no skill-scoped compile harness for this domain; the shared `nautilus-trading` compile is not accepted as proof here. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
 | G4 Lane and API shape | Classify supported Python V2, AI/advisory, config/control-plane, and Rust hot-path lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 254 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 108 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | Remediation commit `4d4be75` was pushed to `origin/main`; final independent code review returned APPROVE and architecture review returned CLEAR. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 270 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 110 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Current cutover commits and independent post-fix review evidence will be recorded in the final reconciliation report. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -77,7 +77,8 @@ When implementing adapters, enforce these constraints across all templates and g
 - **Use official factory signature** for data/exec factories: `create(loop, name, config, msgbus, cache, clock)`.
 - **Follow runtime and FFI safety rules**:
   - use `get_runtime().spawn()` for adapter Rust async tasks
-  - avoid `Arc<PyObject>` in bindings
+  - store owned Python handles as `Py<T>` / `Py<PyAny>`; avoid redundant `Arc<Py<T>>` unless a separate Rust shared-owner design explicitly requires it
+  - model cycles explicitly: plain `Py<T>` does not break cycles; use weakrefs for backrefs and conditional PyO3 `__traverse__`/`__clear__` plus explicit callback cleanup for pyclass-owned traceable cycles
   - keep lock-heavy structures out of hot message paths
 - **Enforce modern testing doctrine**:
   - use real captured payload fixtures (docs/live API), not invented schemas
@@ -1078,17 +1079,20 @@ pub extern "C" fn custom_momentum_update(
    - Capitalize messages, omit terminal periods
 
 4. **Python Memory Management**:
-   - Never use `Arc<PyObject>` (causes reference cycles)
-   - Use `clone_py_object()` from `nautilus_core::python` for cloning Python callbacks
+   - `Py<T>` / `Py<PyAny>` owns a Python object reference; `Py::clone_ref` and `clone_py_object()` increment that reference count while attached to the interpreter
+   - `Arc<Py<T>>` is normally redundant because `Py<T>` already gives owned, shareable Python handles; use an `Arc` wrapper only when an independent Rust shared-owner/lifetime design needs it
+   - plain `Py<T>` does not itself break Python reference cycles; removing `Arc` simplifies ownership but does not make back-references safe
+   - Use Python weak references for back-references that must not keep their target alive
+   - For PyO3 pyclasses that own Python references or other GC-traceable objects which can participate in cycles, implement `__traverse__` and `__clear__`; also provide explicit callback cleanup for external resources or long-lived callback registrations
+   - Use `clone_py_object()` from `nautilus_core::python` or `Py::clone_ref` for cloning Python callbacks
    - Implement manual `Clone` for callback-holding structs
-   - Use plain `PyObject` without `Arc` wrapper
 
    ```rust
    use nautilus_core::python::clone_py_object;
 
-   // CORRECT: Plain PyObject, manual Clone
+   // CORRECT: owned Python handle, manual Clone
    struct CallbackHolder {
-       handler: Option<PyObject>,  // ✅ No Arc wrapper
+       handler: Option<PyObject>,  // Py<PyAny>; already owns a Python reference
    }
 
    impl Clone for CallbackHolder {

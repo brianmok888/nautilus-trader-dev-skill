@@ -123,3 +123,33 @@ def test_rust_first_policy_preserves_supported_python_v2_strategies() -> None:
     combined = router + python_builder + implement
     for claim in misleading_claims:
         assert claim not in combined
+
+
+def test_pyo3_ownership_guidance_matches_current_cycle_handling() -> None:
+    text = "\n".join(
+        read(path)
+        for path in [
+            "skills/nt-implement/SKILL.md",
+            "skills/nt-review/SKILL.md",
+        ]
+    )
+
+    required_terms = [
+        "`Py<T>` / `Py<PyAny>` owns a Python object reference",
+        "`Arc<Py<T>>` is normally redundant",
+        "plain `Py<T>` does not itself break Python reference cycles",
+        "Use Python weak references for back-references",
+        "For PyO3 pyclasses that own Python references or other GC-traceable objects which can participate in cycles",
+        "implement `__traverse__` and `__clear__`",
+        "explicit callback cleanup",
+    ]
+    missing = [term for term in required_terms if term not in text]
+    assert missing == []
+
+    misleading_claims = [
+        "Arc wrapper causes reference cycles",
+        "Arc<PyObject>` anywhere (causes reference cycles)",
+        "Never use `Arc<PyObject>` (causes reference cycles)",
+    ]
+    for claim in misleading_claims:
+        assert claim not in text

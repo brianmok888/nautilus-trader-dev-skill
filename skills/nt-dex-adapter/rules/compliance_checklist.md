@@ -90,7 +90,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 - [ ] `abort_on_panic` wrapper on every `extern "C"` FFI function
 - [ ] Matching `drop` function for every FFI constructor
 - [ ] Type-specific CVec drop functions (if CVec used)
-- [ ] No `Arc<PyObject>` (use plain `PyObject` + `clone_py_object()`)
+- [ ] PyO3 callbacks prefer direct `PyObject` / `Py<T>` plus `clone_py_object()`; any `Arc<Py<T>>` use is justified, cycle-audited, and paired with weakrefs/cleanup/GC hooks when needed
 - [ ] `py_*` prefix on all Rust functions exposed via PyO3
 - [ ] `SAFETY:` comment on every `unsafe` block
 - [ ] `#[repr(C)]` on all FFI types

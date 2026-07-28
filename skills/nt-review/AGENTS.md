@@ -48,7 +48,7 @@ Fail review if missing:
 - Phase compliance (7-phase dependency order with milestone evidence)
 - Required interfaces: InstrumentProvider async loaders, LiveDataClient contract, LiveExecutionClient reconciliation
 - Factory/config contract: `create(loop, name, config, msgbus, cache, clock)` with safe credential handling
-- Runtime/FFI safety: no `tokio::spawn()` in adapters, no `Arc<PyObject>`, no blocking hot handlers
+- Runtime/FFI safety: no `tokio::spawn()` in adapters, direct `PyObject`/`Py<T>` for ordinary callbacks, justified/cycle-audited `Arc<Py<T>>` exceptions only, no blocking hot handlers
 - Testing doctrine: real payload fixtures, no sleep-based timing, cover providers/data/execution/factories
 
 ## EVOMAP REVIEW GATE (Optional)
@@ -95,7 +95,7 @@ Quick check + Conventions + Trading Correctness + Performance + Testability + (i
 - [ ] `abort_on_panic` on all FFI functions
 - [ ] Matching drop for every constructor
 - [ ] Type-specific CVec drops (never generic)
-- [ ] No `Arc<PyObject>` (use plain `PyObject` + `clone_py_object`)
+- [ ] PyO3 callbacks prefer direct `PyObject` / `Py<T>` plus `clone_py_object()`; any `Arc<Py<T>>` exception is justified, cycle-audited, and paired with weakrefs/cleanup/GC hooks when needed
 - [ ] `py_*` prefix on Rust function names
 - [ ] SAFETY comments on all unsafe blocks
 - [ ] `#[repr(C)]` on FFI types

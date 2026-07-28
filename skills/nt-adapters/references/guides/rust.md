@@ -1149,39 +1149,48 @@ Patterns to avoid:
 
 ## Rust-Python memory management
 
-When working with PyO3 bindings, it's critical to understand and avoid reference cycles between Rust's `Arc` reference counting and Python's garbage collector.
-This section documents best practices for handling Python objects in Rust callback-holding structures.
+When working with PyO3 bindings, distinguish Python ownership from Rust shared
+ownership. `Py<T>` / `PyObject` already owns a Python reference and can be moved
+across threads under PyO3's rules; adding `Arc<Py<T>>` is normally redundant for
+callback storage in NautilusTrader bindings, and upstream NT generally avoids
+that pattern.
 
-### The reference cycle problem
+### The callback ownership issue
 
-**Problem**: Using `Arc<PyObject>` in callback-holding structs creates circular references:
+**Problem**: `Arc<PyObject>` in callback-holding structs is usually the wrong
+ownership model:
 
-1. **Rust `Arc` holds Python objects** -> increases Python reference count.
-2. **Python objects might reference Rust objects** -> creates cycles.
-3. **Neither side can be garbage collected** -> memory leak.
+1. **`PyObject` already owns a Python reference** -> `Arc` adds a second Rust
+   ownership layer without improving Python lifetime management.
+2. **Callbacks can capture their holder** -> Python callbacks, Rust structs, and
+   async tasks may form cycles through strong backrefs.
+3. **Cycles, not `Arc` alone, cause retention** -> `Arc<PyObject>` is not a
+   universal leak, but it can hide ownership edges and make cycle cleanup harder.
 
-**Example of problematic pattern**:
+**Pattern to avoid for ordinary callbacks**:
 
 ```rust
-// AVOID: This creates reference cycles
+// AVOID for ordinary NautilusTrader callback storage: redundant strong owner.
 struct CallbackHolder {
-    handler: Option<Arc<PyObject>>,  // ❌ Arc wrapper causes cycles
+    handler: Option<Arc<PyObject>>,  // ❌ Prefer PyObject/Py<T> directly.
 }
 ```
 
-### The solution: GIL-based cloning
+### Preferred NautilusTrader pattern: GIL-based cloning
 
-**Solution**: Use plain `PyObject` with proper GIL-based cloning via `clone_py_object()`:
+Use plain `PyObject` / `Py<T>` with proper GIL-based cloning via
+`clone_py_object()` unless there is a documented, reviewed need for Rust-side
+shared ownership:
 
 ```rust
 use nautilus_core::python::clone_py_object;
 
-// CORRECT: Use plain PyObject without Arc wrapper
+// Preferred: store the PyO3-owned reference directly.
 struct CallbackHolder {
-    handler: Option<PyObject>,  // ✅ No Arc wrapper
+    handler: Option<PyObject>,
 }
 
-// Manual Clone implementation using clone_py_object
+// Manual Clone implementation using clone_py_object.
 impl Clone for CallbackHolder {
     fn clone(&self) -> Self {
         Self {
@@ -1196,23 +1205,23 @@ impl Clone for CallbackHolder {
 #### 1. Use `clone_py_object()` for Python object cloning
 
 ```rust
-// When cloning Python callbacks
+// When cloning Python callbacks.
 let cloned_callback = clone_py_object(&original_callback);
 
-// In manual Clone implementations
+// In manual Clone implementations.
 self.py_handler.as_ref().map(clone_py_object)
 ```
 
 #### 2. Remove `#[derive(Clone)]` from callback-holding structs
 
 ```rust
-// BEFORE: Automatic derive causes issues with PyObject
-#[derive(Clone)]  // ❌ Remove this
+// BEFORE: Automatic derive is not appropriate for callback ownership review.
+#[derive(Clone)]  // ❌ Remove this when the struct stores PyObject/Py<T> callbacks.
 struct Config {
     handler: Option<PyObject>,
 }
 
-// AFTER: Manual implementation with proper cloning
+// AFTER: Manual implementation with explicit Python-object cloning.
 struct Config {
     handler: Option<PyObject>,
 }
@@ -1220,34 +1229,47 @@ struct Config {
 impl Clone for Config {
     fn clone(&self) -> Self {
         Self {
-            // Clone regular fields normally
+            // Clone regular fields normally.
             url: self.url.clone(),
-            // Use clone_py_object for Python objects
+            // Use clone_py_object for Python objects.
             handler: self.handler.as_ref().map(clone_py_object),
         }
     }
 }
 ```
 
-#### 3. Update function signatures to accept `PyObject`
+#### 3. Prefer direct `PyObject` / `Py<T>` in function signatures
 
 ```rust
-// BEFORE: Arc wrapper in function signatures
-fn spawn_task(handler: Arc<PyObject>) { ... }  // ❌
+// BEFORE: Redundant Rust shared owner for ordinary callback transfer.
+fn spawn_task(handler: Arc<PyObject>) { ... }  // ❌ Usually avoid in NT bindings.
 
-// AFTER: Plain PyObject
+// AFTER: Pass the PyO3-owned reference directly.
 fn spawn_task(handler: PyObject) { ... }  // ✅
 ```
 
 #### 4. Avoid `Arc::new()` when creating Python callbacks
 
 ```rust
-// BEFORE: Wrapping in Arc
-let callback = Arc::new(py_function);  // ❌
+// BEFORE: Wrapping in Arc without a reviewed shared-ownership need.
+let callback = Arc::new(py_function);  // ❌ Usually redundant.
 
-// AFTER: Use directly
+// AFTER: Use directly.
 let callback = py_function;  // ✅
 ```
+
+#### 5. Audit real cycle edges and cleanup paths
+
+- Inspect whether Python callbacks capture Rust holders, tasks, channels, or
+  owner objects through strong references.
+- Use Python `weakref` for Python-side backrefs when the callback needs to refer
+  back to its owner.
+- Provide explicit cleanup on stop/close/drop paths: clear stored callbacks,
+  break task/channel ownership chains, and release Python references under the
+  GIL when required.
+- Add PyO3 GC hooks conditionally for `#[pyclass]` types that can participate in
+  Python-visible cycles; do not add GC boilerplate to Rust-only structs that are
+  not exposed to Python's collector.
 
 ### Why this works
 
@@ -1255,10 +1277,14 @@ The `clone_py_object()` function:
 
 - **Acquires the Python GIL** before performing clone operations.
 - **Uses Python's native reference counting** via `clone_ref()`.
-- **Avoids Rust Arc wrappers** that interfere with Python GC.
+- **Avoids redundant Rust `Arc` wrappers** for ordinary callback ownership.
+- **Keeps ownership review focused on real cycles** and explicit cleanup paths.
 - **Maintains thread safety** through proper GIL management.
 
-This approach allows both Rust and Python garbage collectors to work correctly, eliminating memory leaks from reference cycles.
+This approach matches upstream NautilusTrader practice: prefer direct PyO3-owned
+references for callbacks, document any exceptional `Arc<Py<T>>` use, and verify
+cycle-breaking behavior with weakrefs, cleanup, or PyO3 GC integration when the
+bound type can actually participate in Python garbage collection.
 
 ## Design by contract
 

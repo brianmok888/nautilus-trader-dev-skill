@@ -69,7 +69,7 @@ Actors can monitor trading activity:
 - Preserve 7-phase dependency order in design doc
 - Rust core owns networking/parsing; Python layer owns Nautilus integration
 - Include explicit method families: InstrumentProvider, LiveDataClient, LiveExecutionClient
-- Record runtime rules: `get_runtime().spawn()`, no blocking hot handlers, no `Arc<PyObject>`
+- Record runtime rules: `get_runtime().spawn()`, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>`
 - Map phases to concrete test artifacts per milestone
 
 ## EVOMAP BOUNDARY (optional)

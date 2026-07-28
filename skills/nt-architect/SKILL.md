@@ -13,14 +13,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as f20f8af36e0f488779d3f543a217b2d19ea2db81. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Validate repository Rust examples against the pinned NT V2 develop/master baseline. | Pass | `python3 tools/check_rust_trading_reference_sync.py --compile` matched pinned upstream f20f8af and `cargo check -p nautilus-trading --features examples,high-precision --lib` passed. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pending | This repository has no skill-scoped compile harness for this domain; the shared `nautilus-trading` compile is not accepted as proof here. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
 | G4 Lane and API shape | Classify supported Python V2, AI/advisory, config/control-plane, and Rust hot-path lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 254 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 108 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | Remediation commit `4d4be75` was pushed to `origin/main`; final independent code review returned APPROVE and architecture review returned CLEAR. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 270 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 110 safety, runtime, FFI, legacy, and V2 boundary regressions. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pending | Current cutover commits and independent post-fix review evidence will be recorded in the final reconciliation report. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -42,10 +42,10 @@ If the architecture includes a custom or modified adapter, enforce these constra
 
 - **Lifecycle ordering**: the architecture must preserve the adapter 7-phase dependency order.
 - **Boundary clarity**:
-  - Rust core owns networking, parsing, and performance-critical normalization.
-  - Python layer owns Nautilus integration (`InstrumentProvider`, `LiveDataClient`, `LiveExecutionClient`, factory wiring).
+  - Rust owns production adapter contracts and implementations: `InstrumentProvider`, data/execution clients, factory wiring, networking, parsing, normalization, and execution-critical state.
+  - PyO3 projects reviewed Rust capabilities into supported Python V2 strategy, research, configuration, and orchestration surfaces; it does not transfer ownership of adapter hot paths to Python.
 - **Contract completeness**: include explicit method families for provider/data/execution clients so implementation cannot skip required methods.
-- **Runtime and safety assumptions**: record async/runtime rules (`get_runtime().spawn()` in adapter Rust paths, no blocking hot handlers, no `Arc<PyObject>` bindings).
+- **Runtime and safety assumptions**: record async/runtime rules (`get_runtime().spawn()` in adapter Rust paths, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>` binding).
 - **Validation plan by phase**: each architecture output should map phases to concrete milestone checks and test artifacts (fixtures, integration tests, reconciliation checks).
 
 ## EvoMap Integration Boundary (Optional)

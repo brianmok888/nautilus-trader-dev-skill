@@ -42,7 +42,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 - Keep phase order fixed: Rust infra -> instruments -> market data -> execution/reconciliation -> advanced -> config/factory -> tests/docs
 - Implement complete provider/data/exec method contracts before marking adapter ready
 - Use `get_runtime().spawn()` in adapter Rust runtime paths
-- Never use `Arc<PyObject>` in bindings; avoid blocking hot handlers
+- Prefer direct `PyObject`/`Py<T>` for ordinary PyO3 callbacks; justify and cycle-audit any `Arc<Py<T>>`; avoid blocking hot handlers
 - Prefer real payload fixtures and condition-based async waits in tests
 
 ## ARCHITECTURE
@@ -68,7 +68,7 @@ nautilus_trader/adapters/   ← Python layer (config, providers, factory)
 - ❌ Store private keys as plain str — use SecretStr
 - ❌ Skip `generate_order_status_report()`
 - ❌ Use `tokio::spawn()` — use `get_runtime().spawn()`
-- ❌ Use `Arc<PyObject>` — memory leak
+- ❌ Use `Arc<PyObject>` as ordinary callback storage without a shared-ownership justification, cycle audit, weakrefs/cleanup, and PyO3 GC hooks when applicable
 
 ## TESTING
 

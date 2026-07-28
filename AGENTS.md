@@ -114,7 +114,7 @@ NT v2 compatibility note: v1.x and removed-item entries in the table below are m
 | `time.sleep()` in handlers | Blocks event loop |
 | Unbounded lists | Memory leak |
 | `reconciliation=False` live | State drift |
-| `Arc<PyObject>` | Memory leak |
+| Redundant `Arc<Py<T>>` around Python callbacks | Usually unnecessary; analyze the ownership graph, use weakrefs for back-references, and release callback registrations explicitly |
 | `prob_fill_on_stop` in FillModel | Deprecated — use `prob_slippage` |
 | `from nautilus_trader.adapters.dydx_v4` | **Removed in v1.223.0** — use `nautilus_trader.adapters.dydx` |
 | `listen_key_ping_max_failures` in Binance config | **Removed in v1.223.0** — Binance now uses WebSocket API auth |

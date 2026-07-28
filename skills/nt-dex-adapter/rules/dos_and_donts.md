@@ -260,13 +260,13 @@ tokio::spawn(async move { ... });
 get_runtime().spawn(async move { ... });
 ```
 
-**DON'T** use `Arc<PyObject>` — causes reference cycles.
+**DON'T** use `Arc<PyObject>` for ordinary callback storage — `PyObject` already owns a Python reference, and `Arc` is normally redundant in NT bindings. Audit real callback cycles instead.
 ```rust
 // ❌ WRONG
-handler: Option<Arc<PyObject>>,
+handler: Option<Arc<PyObject>>,  // Usually redundant; justify and audit cycles if kept.
 
 // ✅ CORRECT
-handler: Option<PyObject>,
+handler: Option<PyObject>,  // Preferred: direct PyO3-owned reference.
 // with manual Clone using clone_py_object()
 ```
 
