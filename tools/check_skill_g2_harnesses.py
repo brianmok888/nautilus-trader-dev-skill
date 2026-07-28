@@ -14,7 +14,7 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.upstream_baseline import DEFAULT_UPSTREAM_ROOT, UPSTREAM_COMMIT
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 SHARED_TRADING_COMMAND = (
@@ -268,6 +268,7 @@ HARNESSES: dict[str, Harness] = {
         ),
         owned_paths=(
             Path("skills/nt-evomap-integration/SKILL.md"),
+            Path("skills/nt-evomap-integration"),
             Path("tests/test_skill_g2_harnesses.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-evomap-integration.json"),
@@ -362,7 +363,7 @@ HARNESSES: dict[str, Harness] = {
         ),
         owned_paths=(
             Path("skills/nt-live/SKILL.md"),
-            Path("skills/nt-live/references/guides/run_rust_live_trading.md"),
+            Path("skills/nt-live/references"),
         ),
         evidence_file=Path("references/g2-evidence/nt-live.json"),
     ),
@@ -741,7 +742,8 @@ def validate_readiness_cards(
 
 
 def validate_ai_advisory_contract(root: Path) -> list[str]:
-    path = root / "skills/nt-evomap-integration/SKILL.md"
+    skill_root = root / "skills/nt-evomap-integration"
+    path = skill_root / "SKILL.md"
     text = path.read_text(encoding="utf-8")
     errors: list[str] = []
     forbidden = (
@@ -751,9 +753,18 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
         "ExecClient",
         "execution_client",
     )
-    for token in forbidden:
-        if token in text:
-            errors.append(f"AI advisory contract exposes forbidden execution authority: {token}")
+    textual_suffixes = {".md", ".py", ".pyi", ".rs", ".toml", ".json", ".yaml", ".yml"}
+    for owned_path in sorted(skill_root.rglob("*")):
+        if not owned_path.is_file() or owned_path.suffix.lower() not in textual_suffixes:
+            continue
+        owned_text = owned_path.read_text(encoding="utf-8")
+        relative = owned_path.relative_to(skill_root).as_posix()
+        for token in forbidden:
+            if token in owned_text:
+                errors.append(
+                    "AI advisory contract exposes forbidden execution authority "
+                    f"in {relative}: {token}"
+                )
     required = (
         "Nautilus remains the only execution authority",
         "No external network I/O",
@@ -809,7 +820,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run domain-scoped NT V2 G2 validation harnesses for skill readiness cards."
     )
-    parser.add_argument("--upstream-root", type=Path, default=DEFAULT_UPSTREAM_ROOT)
+    parser.add_argument("--upstream-root", type=Path, default=default_upstream_root())
     parser.add_argument("--skill", action="append", choices=sorted(HARNESSES))
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

@@ -453,3 +453,27 @@ def test_ai_advisory_contract_rejects_execution_authority(tmp_path: Path) -> Non
     errors = g2.validate_ai_advisory_contract(tmp_path)
 
     assert any("forbidden execution authority" in error for error in errors)
+
+
+def test_ai_advisory_contract_scans_nested_owned_surfaces(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "Nautilus remains the only execution authority\n"
+        "No external network I/O\n"
+        "timeout fallback approval gate\n"
+        "Every accepted or rejected suggestion must be traceable\n"
+    )
+    leak = skill.parent / "templates/leak.py"
+    leak.parent.mkdir()
+    leak.write_text("self.submit_order(order)\n")
+
+    errors = g2.validate_ai_advisory_contract(tmp_path)
+
+    assert any("templates/leak.py" in error for error in errors)
+
+
+def test_ai_advisory_g2_owns_entire_skill_directory() -> None:
+    harness = g2.HARNESSES["nt-evomap-integration"]
+
+    assert Path("skills/nt-evomap-integration") in harness.owned_paths
