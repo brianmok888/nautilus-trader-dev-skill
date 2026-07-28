@@ -1,6 +1,6 @@
 {
-  "owned_content_sha256": "1e09fc7c822b804afcbee4026cd9639d5f290c9ea429bdeaa549baa6706edb8d",
-  "repository_commit": "af4370bf31f5bb14c057f744549f20e62f0cac98",
+  "owned_content_sha256": "da35ed16fa9418d2431921a8c33735bac4d9e4fa2c06afc578a5076ea0a12474",
+  "repository_commit": "e10e827f210c558a14ad15af008b1deec6756b8b",
   "schema_version": 1,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
@@ -15,23 +15,21 @@
         "tests/test_v2_guidance_hardening.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.768089,
+      "duration_seconds": 1.878017,
       "returncode": 0
     },
     {
       "command": [
         "/usr/bin/python3",
         "tools/check_skill_g2_harnesses.py",
-        "--check-cards",
-        "--exclude-evidence",
-        "nt"
+        "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.110201,
+      "duration_seconds": 0.137388,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T18:18:23.122780+00:00"
+  "verified_at": "2026-07-28T22:25:41.438742+00:00"
 }

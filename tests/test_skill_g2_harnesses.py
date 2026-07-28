@@ -408,11 +408,10 @@ def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path
     assert "nt-data durable evidence does not match the repository provenance" in errors
 
 
-def test_router_harness_requires_subordinate_evidence() -> None:
+def test_router_harness_requires_subordinate_card_declarations() -> None:
     command = g2.HARNESSES["nt"].steps[1].command
 
-    assert "--check-cards" in command
-    assert command[-2:] == ("--exclude-evidence", "nt")
+    assert command[-1] == "--check-card-declarations"
 
 
 def test_ai_advisory_skill_stays_python_and_off_execution_paths() -> None:

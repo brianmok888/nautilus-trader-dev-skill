@@ -75,8 +75,7 @@ HARNESSES: dict[str, Harness] = {
         allowed_tokens=(
             "test_dev_guide_sync.py",
             "test_v2_guidance_hardening.py",
-            "--check-cards",
-            "--exclude-evidence",
+            "--check-card-declarations",
         ),
         steps=(
             repository_step(
@@ -90,9 +89,7 @@ HARNESSES: dict[str, Harness] = {
             repository_step(
                 PYTHON,
                 "tools/check_skill_g2_harnesses.py",
-                "--check-cards",
-                "--exclude-evidence",
-                "nt",
+                "--check-card-declarations",
             ),
         ),
         owned_paths=(
