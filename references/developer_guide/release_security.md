@@ -1,19 +1,14 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/release_security/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/release_security/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/release_security.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
 
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
 # Release Security Architecture
-
-
-## Local alignment note
-
-This reference is the release-security source for trusted publishing and SLSA provenance review in the Nautilus skill set. Treat package provenance, Sigstore identity, and cosign verification as required release-readiness evidence.
 
 This page describes the security model for the NautilusTrader release pipeline.
 It explains how release artifacts are built, published, attested, and verified.
@@ -232,7 +227,7 @@ Example:
 ```bash
 export IMAGE_BASE=ghcr.io/nautechsystems/nautilus_trader
 export DIGEST=$(crane digest "$IMAGE_BASE:latest")
-export IMAGE="$IMAGE_BASE@$DIGEST"
+export IMAGE=$IMAGE_BASE@$DIGEST
 export ISSUER=https://token.actions.githubusercontent.com
 export IDENTITY='^https://github\.com/nautechsystems/nautilus_trader/\.github/workflows/docker\.yml@refs/heads/(master|nightly)$'
 
@@ -293,7 +288,3 @@ This page does not assert a named SLSA level for all artifact classes. Any futur
 SLSA level claim must cite this architecture, name the artifact classes it covers,
 and include CI validation that the published provenance parses as the claimed
 predicate type.
-
-## Bash verification note
-
-Use bash-style `export TAG=...` and `export REPO=...` examples for release artifact verification; verify source archives with `gh attestation verify` before trusting package provenance.

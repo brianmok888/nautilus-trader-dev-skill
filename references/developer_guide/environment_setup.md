@@ -1,16 +1,14 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/environment_setup/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/environment_setup/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/environment_setup.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
 
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
 # Environment Setup
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 For development we recommend using the PyCharm *Professional* edition IDE, as it interprets Cython syntax. Alternatively, you could use Visual Studio Code with a Cython extension.
 
@@ -83,12 +81,12 @@ make build-debug
 ```
 
 Windows users should follow the source installation steps in the
-[installation guide](https://nautilustrader.io/docs/latest/getting_started/installation/#from-source), then use the relevant commands
+[installation guide](../getting_started/installation.md#from-source), then use the relevant commands
 from this guide.
 
 ### 1. Install dependencies
 
-Follow the [installation guide](https://nautilustrader.io/docs/latest/getting_started/installation/) to set up the project with a modification to the final command to install development and test dependencies:
+Follow the [installation guide](../getting_started/installation.md) to set up the project with a modification to the final command to install development and test dependencies:
 
 ```bash tab="uv"
 uv sync --active --all-groups --all-extras
@@ -152,7 +150,7 @@ current version numbers into docs, runner images, or scripts unless there is no 
 to read them.
 
 | Source file or section                       | Defines                                               |
-|----------------------------------------------|-------------------------------------------------------|
+| -------------------------------------------- | ----------------------------------------------------- |
 | `rust-toolchain.toml`                        | Rust toolchain.                                       |
 | `Cargo.toml` and `Cargo.lock`                | Rust workspace dependencies and exact resolution.     |
 | `Cargo.toml` `[workspace.metadata.tools]`    | Cargo‑installable development tools.                  |
@@ -161,7 +159,7 @@ to read them.
 | `tools.toml`                                 | External CLIs and binaries without a native manifest. |
 
 The external tool pins in `tools.toml` include `prek`, `pip-audit`, `pypi-attestations`,
-`maturin`, `osv-scanner`, and `capnp`.
+`osv-scanner`, and `capnp`.
 
 The Makefile reads these via `scripts/cargo-tool-version.sh`, `scripts/tool-version.sh`, and
 `scripts/uv-version.sh`, so bumping a version in the source file is the only required version
@@ -232,7 +230,8 @@ Python dependencies are managed by [uv](https://docs.astral.sh/uv). The `[tool.u
   by `scripts/uv-version.sh` for Makefile, CI, and Docker builds. If your local uv drifts off the
   pin, `uv lock`/`uv sync` will fail with `Required uv version ... does not match the running
   version ...`. Run `make update-uv` to install the pinned version (or follow uv's own
-  `uv self update <version>` hint).
+  `uv self update <version>` hint). The v2 stub targets check the `python/pyproject.toml` pin
+  before running `uv`; see [Generated Python artifacts](rust.md#generated-python-artifacts).
 - **`exclude-newer = "3 days"`**: `uv lock` ignores package versions published within the last
   3 days. This gives the community time to detect and quarantine compromised releases before they
   enter the lockfile. The value accepts an RFC 3339 timestamp (`"2026-03-30T00:00:00Z"`), a friendly
@@ -278,8 +277,6 @@ To update the pinned uv version, change `required-version` in both `pyproject.to
 `make update-uv` to install the new pinned version locally.
 
 ## Builds
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 Following any changes to `.rs`, `.pyx` or `.pxd` files, you can re-compile by running:
 

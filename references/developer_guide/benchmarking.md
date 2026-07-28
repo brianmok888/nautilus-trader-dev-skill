@@ -1,9 +1,11 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/benchmarking/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/benchmarking/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
 
 # Benchmarking
@@ -13,7 +15,7 @@ NautilusTrader benchmarks. It covers tooling specifics, directory layout,
 example code, local execution, and flamegraph profiling.
 
 For policy (what we benchmark, when, with what rigor, how it ties into CI),
-see [`/BENCHMARKING.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/BENCHMARKING.md) at the repository root.
+see [`/BENCHMARKING.md`](../../BENCHMARKING.md) at the repository root.
 
 ---
 
@@ -22,7 +24,7 @@ see [`/BENCHMARKING.md`](https://github.com/nautechsystems/nautilus_trader/blob/
 NautilusTrader uses two complementary Rust benchmarking frameworks:
 
 | Framework                                                    | What it measures                          | When to prefer it                                    |
-|--------------------------------------------------------------|-------------------------------------------|------------------------------------------------------|
+| ------------------------------------------------------------ | ----------------------------------------- | ---------------------------------------------------- |
 | [**Criterion**](https://docs.rs/criterion/latest/criterion/) | Wall‑clock time with confidence bands     | Anything ≥ 100 ns; absolute measurement; comparison. |
 | [**iai**](https://docs.rs/iai/latest/iai/)                   | Retired CPU instructions (via Cachegrind) | Sub‑100 ns functions; CI regression detection.       |
 
@@ -139,13 +141,13 @@ allocation-free functions.
 
 ## Running benches locally
 
-| Goal                                | Command                                                              |
-|-------------------------------------|----------------------------------------------------------------------|
-| All benches in one crate            | `cargo bench -p nautilus-execution`                                  |
-| One bench module                    | `cargo bench -p nautilus-execution --bench matching_core`            |
-| One specific bench by name pattern  | `cargo bench -p nautilus-execution --bench matching_core -- iterate` |
-| Quick smoke run (low sample count)  | `cargo bench ... -- --quick`                                         |
-| All CI-tracked benches              | `make cargo-ci-benches`                                              |
+| Goal                               | Command                                                              |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| All benches in one crate           | `cargo bench -p nautilus-execution`                                  |
+| One bench module                   | `cargo bench -p nautilus-execution --bench matching_core`            |
+| One specific bench by name pattern | `cargo bench -p nautilus-execution --bench matching_core -- iterate` |
+| Quick smoke run (low sample count) | `cargo bench ... -- --quick`                                         |
+| All CI-tracked benches             | `make cargo-ci-benches`                                              |
 
 Criterion writes HTML reports to `target/criterion/`. Open
 `target/criterion/report/index.html`. The report includes per-bench violin

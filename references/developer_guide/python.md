@@ -1,12 +1,12 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/python/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/python/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/python.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
 # Python
 
@@ -63,7 +63,7 @@ class ThrottledEnqueuer(Generic[T]):
 The [NumPy docstring spec](https://numpydoc.readthedocs.io/en/latest/format.html) is used throughout the codebase.
 This needs to be followed consistently so the docs build correctly.
 
-**Python** docstrings should be written in the **imperative mood** – e.g. *"Return a cached client."*
+**Python** docstrings should be written in the **imperative mood** - e.g. *"Return a cached client."*
 
 This convention aligns with the prevailing style of the Python ecosystem and makes generated
 documentation feel natural to end-users.
@@ -124,8 +124,6 @@ When adding Python-aware live code:
 - Do not call `Python::attach` from Tokio worker tasks in Python v2 live trading.
 - Do not add adapter business logic in Python to fit callback routing.
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
 Legacy Cython `LiveClock` callbacks are a separate FFI path. They use capsule-style
 callback arguments for v1 compatibility and can be created without a live runner sender.
 Keep that ABI distinct until time event dispatch can be unified across v1 and v2.
@@ -144,20 +142,12 @@ def test_sma_with_single_input_returns_expected_value(self):
 
 [ruff](https://astral.sh/ruff) is used to lint the codebase. Ruff rules can be found in the top-level `pyproject.toml`, with ignore justifications typically commented.
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
 ## Cython (legacy)
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 :::note
 This section covers Cython conventions for `.pyx` and `.pxd` files.
 :::
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
 For `.pyx` and `.pxd` files, make sure all functions and methods returning `void` or a primitive C type (such as `bint`, `int`, `double`) include the `except *` keyword in the signature. Without it, Python exceptions are silently ignored.
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 For more information, see the [Cython docs](https://cython.readthedocs.io/en/latest/index.html).

@@ -1,9 +1,11 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/design_principles/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/design_principles/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/design_principles.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
 
 # Design Principles

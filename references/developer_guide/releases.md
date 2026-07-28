@@ -1,12 +1,12 @@
 ---
-source_url: https://nautilustrader.io/docs/latest/developer_guide/releases/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/releases/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/releases.md
-sync_date: 2026-07-17
+source_commit: f20f8af36e0f488779d3f543a217b2d19ea2db81
+sync_date: 2026-07-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
 # Releases
 
@@ -17,7 +17,7 @@ This guide covers the release process and the standards for writing release note
 NautilusTrader uses a three-branch model:
 
 - **`develop`**: active development; publishes dev wheels to Cloudflare R2 on every push.
-- **`nightly`**: pre-release testing; publishes alpha wheels and CLI binaries.
+- **`nightly`**: pre-release testing; publishes v1 and v2 pre-release wheels and CLI binaries.
 - **`master`**: stable releases; triggers the full release pipeline.
 
 Pushing to `master` automatically tags the version from `pyproject.toml`, creates a draft GitHub
@@ -77,20 +77,22 @@ Keep these sequencing rules intact when editing `.github/workflows/build.yml`:
   `id-token: write`; those registrations depend on the `release` environment.
 - Non-OIDC integrity and asset-upload jobs should avoid `environment: release` unless they need
   release environment secrets or approvals.
-- `publish-release-integrity` must run after PyPI and crates.io publishing so it verifies the
-  registries against the release manifest before attaching final integrity assets.
+- `publish-release-integrity` must run after PyPI and crates.io publishing. It generates the
+  release manifest first, verifies registries against that manifest, then attaches final integrity
+  assets only after verification passes.
 - `publish-github-release` must be the final stable release job. GitHub recommends creating a
   draft release, attaching all assets, then publishing the draft before enabling release
   immutability. Once GitHub release immutability is enabled for the repo, published release assets
   and the release tag cannot be changed; only the title and release notes remain editable. The job
-  verifies GitHub's release attestation after publishing the draft.
+  verifies the final draft asset set before publishing and verifies GitHub's release attestation
+  after publishing the draft.
 
 ## Versioning
 
 The project maintains two version numbers:
 
 | File                     | Scope          | Example   |
-|--------------------------|----------------|-----------|
+| ------------------------ | -------------- | --------- |
 | `pyproject.toml`         | Python package | `1.223.0` |
 | `Cargo.toml` (workspace) | Rust crates    | `0.55.0`  |
 
@@ -103,7 +105,7 @@ crates.io Trusted Publishing through GitHub Actions OIDC, so it does not use a p
 token. Configure each crate on crates.io with:
 
 | Field       | Value             |
-|-------------|-------------------|
+| ----------- | ----------------- |
 | Owner       | `nautechsystems`  |
 | Repository  | `nautilus_trader` |
 | Workflow    | `build.yml`       |
@@ -123,7 +125,11 @@ an absent crate would leave that feature unusable.
 
 Post-publish verification treats an existing crate version as `previously_published` only when
 crates.io shows it was trusted-published by this repository. It still fails for user-published
-crate versions, wrong trusted-publishing repositories, and checksum or sparse-index mismatches.
+crate versions unless `CRATES_IO_MANUAL_PUBLISH_EXCEPTIONS` names each recovered `crate@version`
+entry for emergency token-publish recovery. Accepted manual entries are recorded in
+`crates-manifest.json` with `release_status: "manual_token_publish"`, and malformed or unused
+exception entries fail the job. Wrong trusted-publishing repositories and checksum or sparse-index
+mismatches also fail.
 
 ## Release checklist
 
@@ -142,11 +148,13 @@ crate versions, wrong trusted-publishing repositories, and checksum or sparse-in
 - [ ] Verify the `build` workflow completes:
   - Wheels built for Linux x86/ARM, macOS, Windows
   - `cargo-deny` and `cargo-vet` pass
+  - Release docs/features and Cargo publish preflights pass before tagging
   - Tag and draft GitHub release created
   - Wheels and sdist attached to the GitHub release before package registry publishing
   - Cargo crates published to crates.io or skipped because the version already exists
   - Wheels and sdist published to PyPI
-  - Release checksums, registry verification, crates manifest, and attestation siblings published
+  - Registry verification passes before release checksums, crates manifest, and attestation siblings
+    are attached
   - GitHub release published after all release assets and integrity assets are attached
 - [ ] Verify the `docker` workflow completes (images built and pushed)
 - [ ] Verify the `build-docs` workflow completes (docs rebuild triggered)
@@ -220,8 +228,6 @@ Security hardening and fixes that prevent crashes, undefined behavior, or data c
 Includes significant hardening improvements elevated from Internal Improvements.
 
 **Format**:
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```markdown
 - Fixed non-executable stack for Cython extensions to support hardened Linux systems
@@ -311,8 +317,8 @@ Features marked for removal.
 **Be specific**:
 
 ```markdown
-❌ Improved Binance adapter
-✅ Improved Binance fill handling when instrument not cached
+Bad:  Improved Binance adapter
+Good: Improved Binance fill handling when instrument not cached
 ```
 
 ## Security classification
@@ -333,8 +339,6 @@ Note: Plain logic panics belong in Fixes unless they threaten system stability o
 ## Examples
 
 **Security** (could cause crashes/corruption):
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 ```markdown
 - Fixed divide-by-zero in margin calculations that could crash the engine
