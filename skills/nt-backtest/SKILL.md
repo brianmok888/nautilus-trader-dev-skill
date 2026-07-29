@@ -51,6 +51,21 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Live deployment** → use `nt-live`
 - **Indicator logic** → use `nt-signals`
 
+## Develop-only `BacktestResult` analysis
+
+Current `origin/develop` commit
+[`501ebe4a8`](https://github.com/nautechsystems/nautilus_trader/commit/501ebe4a8)
+adds `BacktestResult.returns_series`. Rust stores it as an ordered
+`BTreeMap<UnixNanos, f64>`; the PyO3 property is `dict[int, float]`, keyed by
+nanosecond timestamps. It supports a result-only tearsheet after the node or
+engine is no longer retained. A cache-backed chart still needs live node state,
+and multi-currency analysis should pass an explicit currency where the
+tearsheet API requires one.
+
+This property is not present at the pinned G2 baseline. Version-gate consumers
+or keep using the pinned result statistics (`stats_pnls`, `stats_returns`, and
+`stats_general`) until the baseline advances.
+
 ## v1.227.0 backtest/matching deltas
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.

@@ -7,7 +7,11 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 ## Overview
 
 NT v2 compatibility note: v1.x release/source labels in this baseline paragraph are release-history identifiers, not guidance to use legacy APIs.
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Current release baseline: NautilusTrader v1.230.0 latest release, verified 2026-07-28; upstream `develop` commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59` reports workspace `0.61.0`, Rust `1.97.1`, source label `v1.231.0`, and the V2 Python package `2.0.0rc2`; upstream release notes retain `2.0.0rc1` as the first public candidate and describe the rolling `2.0.0rcN` release-candidate line. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter.
+
+**Pinned reproducible baseline (verified 2026-07-28):** commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, workspace crates `0.61.0`, source label `v1.231.0`, and Python package `2.0.0rc2`; the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.230.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
+
+**Current develop observation (2026-07-29):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `uv run python tools/check_upstream_freshness.py` for the current delta. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
 
 ## Skills Map
 

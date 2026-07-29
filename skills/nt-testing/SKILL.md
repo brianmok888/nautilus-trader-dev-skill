@@ -6,6 +6,20 @@ description: "Use when writing or running tests for NautilusTrader, setting up t
 
 # nt-testing
 
+## Execution specification freshness
+
+The official current `spec_exec_testing.md` remains the measurable adapter
+execution contract: implement the supported capability matrix, and treat groups 1–5
+as the baseline-compliant subset. Both upstream Python and Rust `ExecTester`
+surfaces are current; this skill repository still routes new production work to
+Rust and keeps Python execution examples migration/reference-only.
+
+The source file is unchanged between the pinned snapshot and current `origin/develop`
+as verified by
+`git -C "$NT_UPSTREAM_ROOT" diff 6e59fd74eaacacbb7410936f1766bd89fcce6f59..origin/develop -- docs/developer_guide/spec_exec_testing.md`.
+Official mirrors: [latest](https://nautilustrader.io/docs/latest/developer_guide/spec_exec_testing/)
+and [nightly](https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/).
+
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` material in this whole file is migration/reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
 
 ## V2 nightly migration regression coverage

@@ -463,3 +463,62 @@ def test_current_v2_guidance_rejects_removed_order_subscriptions_and_brittle_ver
     assert "Use Rust crate version `0.57`" not in implement
     assert "All 16 adapters" not in adapters
     assert "Do not hard-code an adapter count" in adapters
+
+
+def test_post_pin_develop_features_are_version_scoped_and_source_backed() -> None:
+    data = read("skills/nt-data/SKILL.md")
+    model = read("skills/nt-model/SKILL.md")
+    backtest = read("skills/nt-backtest/SKILL.md")
+    live = read("skills/nt-live/SKILL.md")
+    testing = read("skills/nt-testing/SKILL.md")
+
+    assert "aabb824cb377d62ea7ff6a7ce9489a92c705580a" in data
+    for accessor in [
+        "mark_price_count",
+        "index_price_count",
+        "funding_rate_count",
+        "instrument_status_count",
+        "has_mark_prices",
+        "has_index_prices",
+        "has_funding_rates",
+        "has_instrument_statuses",
+    ]:
+        assert accessor in data
+
+    assert "d46f56505" in model
+    assert "OrderInitialized::new_checked" in model
+    assert "contingent order" in model
+    assert "execution spawn ID" in model
+
+    assert "501ebe4a8" in backtest
+    assert "BacktestResult.returns_series" in backtest
+    assert "dict[int, float]" in backtest
+    assert "result-only tearsheet" in backtest
+
+    assert "32bc6b680" in live
+    for invariant in [
+        "exactly once",
+        "post-halt",
+        "embedded `seq`",
+        "undecodable",
+        "filesystem order",
+    ]:
+        assert invariant in live
+
+    assert "spec_exec_testing.md" in testing
+    assert "groups 1–5" in testing
+    assert "unchanged between the pinned snapshot and current `origin/develop`" in testing
+
+
+def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
+    readme = read("README.md")
+    dev = read("skills/nt-dev/SKILL.md")
+
+    for text in [readme, dev]:
+        assert "Python 3.12-3.14" in text
+        assert "repository toolchain is pinned to Rust 1.97.1" in text
+        assert "not a permanent MSRV promise" in text
+
+    assert "Current release baseline: NautilusTrader v1.230.0 latest release" not in readme
+    assert "Pinned reproducible baseline" in readme
+    assert "Current develop observation" in readme

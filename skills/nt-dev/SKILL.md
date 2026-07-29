@@ -246,8 +246,9 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
-- Treat `rust-toolchain.toml` as the Rust baseline. Current source alignment
-  uses Rust 1.97.1; public docs may still mention 1.96.x while they catch up.
+- Officially supported Python versions are Python 3.12-3.14.
+- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise;
+  upstream policy generally follows the latest stable Rust release.
 - Python v2 controller subclassing and importable controller configs are
   supported for backtest/live orchestration.
 - Python v2 subclassable execution algorithms are supported for routed orders.

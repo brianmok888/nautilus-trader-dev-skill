@@ -7,6 +7,20 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-model
 
+## Develop-only order metadata validation
+
+Current `origin/develop` commit
+[`d46f56505`](https://github.com/nautechsystems/nautilus_trader/commit/d46f56505)
+adds `OrderInitialized::new_checked`. The fallible constructor rejects a
+contingent order without linked order IDs and rejects an execution algorithm
+without its execution spawn ID. `OrderInitialized::new` now delegates to that
+validation and panics on invalid metadata.
+
+This API is newer than the pinned G2 baseline
+`6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Use `new_checked` when code must
+handle invalid external or persisted order metadata, but gate that code on a
+current-develop dependency until the baseline advances.
+
 ## NT V2 Rust readiness gates
 
 This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.

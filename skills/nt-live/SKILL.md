@@ -351,6 +351,15 @@ The node runs until interrupted (Ctrl+C) or shut down programmatically.
 - Python and PyO3 configs support WebSocket transport backend selection.
 - The `event_store` format changed in v1.230.0; beta v1.227-v1.229 stores
   must be regenerated rather than migrated in-place.
+- Current develop commit
+  [`32bc6b680`](https://github.com/nautechsystems/nautilus_trader/commit/32bc6b680)
+  hardens the evolving/alpha event store beyond the pinned baseline: capture
+  avoids queue/execute duplication and preserves a message when encoding fails;
+  reads reject a table key whose embedded `seq` differs; the verifier records an
+  undecodable entry and continues; equal-start run listing and retention no
+  longer depend on filesystem order; and writer halt fires exactly once and
+  rejects post-halt submissions. Treat any backend, verifier, replay, or capture
+  failure as fail-stop evidence, not as an event that may be silently skipped.
 - Live reconciliation uses monotonic-time gates and `RecencyMap` tracking;
   review recency-sensitive checks for monotonic-clock use before deployment.
 

@@ -100,6 +100,24 @@ self.subscribe_order_book_depth(instrument_id, depth=10)
 - `DataEngineConfig` / `LiveDataEngineConfig` renamed `time_bars_origins` to `time_bars_origin_offset`.
 - `Cache.purge_instrument(...)` trims unused instrument records.
 - Rust cache accessors now use scoped borrow wrappers (`OrderRef`, `AccountRef`, `PositionRef`); use `order_owned`, `account_owned`, or `position_owned` when an owned snapshot must cross a boundary. Use `try_order` or `try_order_owned` when a missing order is an error, so callers receive `OrderLookupError` instead of inventing ad hoc not-found errors.
+
+### Develop-only cache history introspection
+
+Current `origin/develop` commit
+[`aabb824cb377d62ea7ff6a7ce9489a92c705580a`](https://github.com/nautechsystems/nautilus_trader/commit/aabb824cb377d62ea7ff6a7ce9489a92c705580a),
+which is newer than this repository's pinned G2 baseline, adds the following Rust
+`CacheApi`/`Cache` pairs for bounded market-data histories:
+
+- `mark_price_count` / `has_mark_prices`
+- `index_price_count` / `has_index_prices`
+- `funding_rate_count` / `has_funding_rates`
+- `instrument_status_count` / `has_instrument_statuses`
+
+Treat these as develop-only until the reproducible baseline advances. Do not
+copy the names into code compiled against the pinned commit. When targeting
+current develop, use the `*_count` result as the authoritative count and the
+matching `has_*` method for the non-empty predicate; both return zero/false for
+a missing history.
 - Custom Arrow storage supports `#[custom_data_field(json)]` for JSON-backed Serde fields with PyO3 dict conversion for `IndexMap` / `HashMap` values.
 
 ### Cache Queries
