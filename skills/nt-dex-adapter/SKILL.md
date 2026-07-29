@@ -83,7 +83,7 @@ DEX adapter readiness requires:
 
 This maps directly to the canonical adapter implementation pattern. Complete each phase fully before moving to the next.
 
-### Phase 1: Rust Core Infrastructure (if Rust-first)
+### Phase 1: Rust Core Infrastructure
 - HTTP JSON-RPC client in `crates/adapters/my_dex/` using **`nautilus_network::http::HttpClient`** (not `reqwest` directly — this provides built-in rate limiting, retry logic, and consistent error handling matching the canonical adapters)
 - WebSocket event subscription client using `nautilus_network::websocket::WebSocketClient`
 - Wallet signing utilities (ECDSA for EVM, ed25519 for Solana) — implement in Rust core, never in Python layer
@@ -113,11 +113,9 @@ This maps directly to the canonical adapter implementation pattern. Complete eac
 - Position tracking (DEX perps: on-chain position query)
 - `generate_order_status_report()` for reconciliation
 
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
 ### Phase 6: Configuration & Factory
-- `InstrumentProviderConfig`, `DataClientConfig`, `ExecClientConfig`
-- `ClientFactory` class registered with `TradingNode`
+- Rust `InstrumentProvider`, data client, and execution client configuration
+- Rust data and execution client factories registered through `LiveNodeBuilder`
 - `sandbox_mode: bool` flag for test networks / local fork
 
 ### Phase 7: Testing & Documentation
@@ -136,17 +134,20 @@ crates/adapters/my_dex/           ← Rust core
     ws_client.rs     ← WebSocket event client (if available)
     signing.rs       ← Wallet key management + tx signing
     types.rs         ← RPC response structs, pool state types
-    python/          ← PyO3 bindings
-
-nautilus_trader/adapters/my_dex/  ← Python layer
-  __init__.py
-  config.py          ← Pydantic configs
-  providers.py       ← InstrumentProvider
-  data.py            ← LiveMarketDataClient
-  execution.py       ← LiveExecutionClient
-  factory.py         ← ClientFactory
-  utils.py           ← DEX-specific helpers (AMM math, ABI decoding)
+    python/          ← PyO3 configuration/control bindings when required
 ```
+
+## Migration/reference-only Python architecture
+
+NT v2 compatibility note: retained Python `TradingNode`, live-client, and
+`ClientFactory` architecture is migration/reference-only and is not a production
+default. Use the quarantined `templates/legacy_migration/` files only to migrate
+existing Python adapters to Rust clients, Rust factories, PyO3 control bindings,
+and `LiveNodeBuilder`.
+
+The historical Python tree used `nautilus_trader/adapters/my_dex/` modules for
+configuration, providers, live data/execution clients, and factories. Do not use
+that tree for new implementations.
 
 ## Template Quick Reference
 

@@ -211,6 +211,26 @@ def test_live_client_subclasses_require_legacy_quarantine(tmp_path: Path) -> Non
         )
 
 
+def test_aliased_legacy_imports_require_legacy_quarantine(tmp_path: Path) -> None:
+    imports = (
+        "from nautilus_trader.live.node import TradingNode as Node",
+        "from nautilus_trader.live.data_client import LiveDataClient as DataClient",
+        "from nautilus_trader.live.execution_client import LiveExecutionClient as ExecClient",
+        "from nautilus_trader.live.factories import LiveExecClientFactory as Factory",
+        "from venue.factories import MyVenueLiveDataClientFactory as Factory",
+    )
+    for index, statement in enumerate(imports):
+        path = tmp_path / "skills/nt-example/templates" / f"alias_{index}.py"
+        _write(
+            path,
+            f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n{statement}\n",
+        )
+
+        assert classification_error(path, tmp_path) == (
+            "legacy executable requires the exact legacy classification"
+        )
+
+
 def _shipped_python_files(root: Path) -> list[Path]:
     files: list[Path] = []
     for path in sorted((root / "skills").glob("nt*/**/*")):

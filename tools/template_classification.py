@@ -84,14 +84,16 @@ def has_legacy_executable_signal(path: Path) -> bool:
 
 
 def _is_legacy_node(node: ast.AST) -> bool:
-    name: str | None = None
     match node:
         case ast.Name(id=identifier):
-            name = identifier
+            names = (identifier,)
         case ast.Attribute(attr=attribute):
-            name = attribute
+            names = (attribute,)
         case ast.alias(name=imported, asname=alias):
-            name = alias or imported.rsplit(".", 1)[-1]
+            names = (imported.rsplit(".", 1)[-1], alias or "")
         case _:
             return False
-    return name in LEGACY_EXACT_NAMES or bool(CONCRETE_FACTORY_RE.fullmatch(name))
+    return any(
+        name in LEGACY_EXACT_NAMES or bool(CONCRETE_FACTORY_RE.fullmatch(name))
+        for name in names
+    )

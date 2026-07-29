@@ -281,6 +281,33 @@ def test_dex_python_live_templates_are_quarantined_and_not_approvable() -> None:
     assert "cannot receive APPROVED FOR USE" in checklist
 
 
+def test_dex_canonical_skill_is_unconditionally_rust_first() -> None:
+    text = read("skills/nt-dex-adapter/SKILL.md")
+    canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
+
+    assert "Rust Core Infrastructure (if Rust-first)" not in canonical
+    assert "Phase 1: Rust Core Infrastructure" in canonical
+    assert "Rust data and execution client factories" in canonical
+    assert "LiveNodeBuilder" in canonical
+    assert "registered with `TradingNode`" not in canonical
+    assert "nautilus_trader/adapters/my_dex/" not in canonical
+
+
+def test_dex_current_compliance_does_not_import_migration_executables() -> None:
+    current = read("skills/nt-dex-adapter/tests/test_dex_compliance.py")
+    migration = read(
+        "skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py"
+    )
+    checklist = read("skills/nt-dex-adapter/rules/compliance_checklist.md")
+
+    assert "legacy_migration" not in current
+    assert "MyDEXLiveDataClientFactory" not in current
+    assert "MyDEXLiveExecClientFactory" not in current
+    assert "legacy_migration" in migration
+    assert "non-production migration smoke" in checklist
+    assert "does not gate production approval" in checklist
+
+
 def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     text = read("skills/nt-model/SKILL.md")
     expected = {

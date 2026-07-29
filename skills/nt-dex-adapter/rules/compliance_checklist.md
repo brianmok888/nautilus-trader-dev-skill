@@ -3,11 +3,19 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 # DEX Adapter Compliance Checklist
 
 Every custom DEX adapter must clear this checklist before use in backtesting or live trading.
-Run the structural compliance test first:
+Run the current structural compliance test first:
 
 ```bash
 uv run pytest skills/nt-dex-adapter/tests/test_dex_compliance.py -v
 ```
+
+The quarantined Python files have a separate non-production migration smoke:
+
+```bash
+uv run pytest skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py -v
+```
+
+This migration smoke does not gate production approval.
 
 Then complete the manual checklist below.
 
