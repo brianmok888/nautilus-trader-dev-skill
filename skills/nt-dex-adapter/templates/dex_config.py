@@ -74,6 +74,12 @@ class MyDEXDataClientConfig(LiveDataClientConfig, frozen=True):
         but watch RPC rate limits.
     sandbox_mode : bool
         If True, uses mock/testnet data instead of mainnet.
+
+    Notes
+    -----
+    A nested ``MyDEXInstrumentProviderConfig`` is authoritative for every
+    provider field. These direct legacy fields apply only when the standard
+    base ``InstrumentProviderConfig`` default is retained.
     """
 
     rpc_url: str = "http://127.0.0.1:8545"
@@ -115,6 +121,12 @@ class MyDEXExecClientConfig(LiveExecClientConfig, frozen=True):
         Fixed gas price in Gwei. If None, uses network suggestion.
     sandbox_mode : bool
         If True, uses testnet or local fork. No real funds at risk.
+
+    Notes
+    -----
+    A nested ``MyDEXInstrumentProviderConfig`` is authoritative for every
+    provider field. These direct legacy fields apply only when the standard
+    base ``InstrumentProviderConfig`` default is retained.
     """
 
     rpc_url: str = "http://127.0.0.1:8545"

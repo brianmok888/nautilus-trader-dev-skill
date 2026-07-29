@@ -390,3 +390,65 @@ Repository-wide type checking remains red from residual diagnostics outside
 this Round 4 diff. Filtering that same normal run found zero errors in all five
 changed Python files; no type-check suppression or alternate configuration was
 used.
+
+## Review fix Round 5/5
+
+### RED evidence
+
+Executable tests were added before implementation for nested provider authority,
+complete inherited-control identity, identical effective-config reuse, both
+factory paths, and legacy direct-field fallback:
+
+```text
+uv run pytest skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py -q
+......................................FFFFF.F..                          [100%]
+6 failed, 41 passed in 2.72s
+```
+
+The failures proved the factory ignored nested DEX provider configs, reset
+`load_all`, `load_ids`, `filters`, and other inherited controls, aliased distinct
+provider identities, and passed the reconstructed default through both data and
+execution factory paths.
+
+### GREEN implementation
+
+- One immutable effective `MyDEXInstrumentProviderConfig` now drives provider
+  construction and cache identity.
+- Precedence is explicit and consistent: a nested
+  `MyDEXInstrumentProviderConfig` is authoritative for every provider field.
+  When the standard base `InstrumentProviderConfig` default is retained, its
+  inherited controls are preserved and direct legacy DEX client fields supply
+  RPC URL, chain ID, pools, and sandbox mode.
+- The cache key is the normalized serialization of the complete effective
+  provider config rather than inherited equality/hash or a partial tuple. It
+  includes DEX fields and all inherited standard controls.
+- Data and execution factories therefore share only identical effective configs;
+  different chains, discovery controls, filters, pools, or other provider fields
+  remain isolated.
+- Empty `NautilusConfig` remains the intentional secret-safe component boundary;
+  operational wallet config is not serialized.
+
+### Validation evidence
+
+```text
+focused DEX safety/imports: 56 passed in 11.11s
+full DEX: 88 passed in 19.36s
+classification: 14 passed in 0.36s
+V2 guidance: 22 passed in 0.07s
+developer guide sync: passed
+Ruff: passed
+compileall: exit 0
+git diff --check: exit 0
+runtime package smoke: chain 1 reused across data/exec; chain 42161 isolated
+```
+
+Normal basedpyright ran without ignores or alternate configuration:
+
+```text
+uv run basedpyright --outputjson
+261 errors, 6480 warnings, 0 notes
+exit 1
+```
+
+Repository-wide diagnostics remain pre-existing residual. Filtering the same
+normal run found zero errors in all three changed Python files.

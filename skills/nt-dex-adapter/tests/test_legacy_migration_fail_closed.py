@@ -452,6 +452,130 @@ def test_provider_cache_separates_chains_and_preserves_chain_id() -> None:
     assert arbitrum_provider._config.chain_id == 42161
 
 
+def test_nested_provider_config_is_authoritative_and_fully_preserved() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    nested = factory_module.MyDEXInstrumentProviderConfig(
+        rpc_url="https://nested.example",
+        chain_id=42161,
+        pools=["0xnested"],
+        sandbox_mode=False,
+        load_all=True,
+        load_ids=frozenset({"WETH-USDC.MYDEX"}),
+        filters={"quote_currency": "USDC"},
+        log_warnings=False,
+        use_gamma_markets=True,
+    )
+    client_config = factory_module.MyDEXDataClientConfig(
+        instrument_provider=nested,
+        rpc_url="https://direct.example",
+        chain_id=1,
+        pool_addresses=["0xdirect"],
+        sandbox_mode=True,
+    )
+
+    provider = factory_module._get_or_create_instrument_provider(client_config)
+
+    assert provider._config == nested
+
+
+@pytest.mark.parametrize(
+    "provider_config",
+    (
+        _config_module.MyDEXInstrumentProviderConfig(load_all=True),
+        _config_module.MyDEXInstrumentProviderConfig(load_ids=frozenset({"WETH-USDC.MYDEX"})),
+        _config_module.MyDEXInstrumentProviderConfig(filters={"quote_currency": "USDC"}),
+        _config_module.MyDEXInstrumentProviderConfig(pools=["0x2"]),
+    ),
+)
+def test_provider_cache_identity_includes_all_effective_fields(provider_config) -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    provider_config = factory_module.MyDEXInstrumentProviderConfig(**provider_config.dict())
+    default_config = factory_module.MyDEXDataClientConfig(
+        instrument_provider=factory_module.MyDEXInstrumentProviderConfig(),
+    )
+    changed_config = factory_module.MyDEXDataClientConfig(instrument_provider=provider_config)
+
+    default_provider = factory_module._get_or_create_instrument_provider(default_config)
+    changed_provider = factory_module._get_or_create_instrument_provider(changed_config)
+
+    assert changed_provider is not default_provider
+    assert changed_provider._config == provider_config
+
+
+def test_identical_full_effective_provider_config_reuses_cached_provider() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    first_config = factory_module.MyDEXDataClientConfig(
+        instrument_provider=factory_module.MyDEXInstrumentProviderConfig(
+            chain_id=42161,
+            load_all=True,
+            filters={"quote_currency": "USDC"},
+        ),
+    )
+    second_config = factory_module.MyDEXExecClientConfig(
+        instrument_provider=factory_module.MyDEXInstrumentProviderConfig(
+            chain_id=42161,
+            load_all=True,
+            filters={"quote_currency": "USDC"},
+        ),
+    )
+
+    first = factory_module._get_or_create_instrument_provider(first_config)
+    second = factory_module._get_or_create_instrument_provider(second_config)
+
+    assert second is first
+
+
+def test_data_and_execution_factories_honor_nested_provider_config() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    nested = factory_module.MyDEXInstrumentProviderConfig(chain_id=42161, load_all=True)
+    loop = asyncio.new_event_loop()
+
+    try:
+        data_client = factory_module.MyDEXLiveDataClientFactory.create(
+            loop,
+            "MYDEX",
+            factory_module.MyDEXDataClientConfig(instrument_provider=nested),
+            TestComponentStubs.msgbus(),
+            TestComponentStubs.cache(),
+            TestComponentStubs.clock(),
+        )
+        exec_client = factory_module.MyDEXLiveExecClientFactory.create(
+            loop,
+            "MYDEX",
+            factory_module.MyDEXExecClientConfig(instrument_provider=nested),
+            TestComponentStubs.msgbus(),
+            TestComponentStubs.cache(),
+            TestComponentStubs.clock(),
+        )
+    finally:
+        loop.close()
+
+    assert data_client._instrument_provider is exec_client._instrument_provider
+    assert data_client._instrument_provider._config == nested
+
+
+def test_direct_legacy_provider_fields_apply_when_nested_config_is_standard_default() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    client_config = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://direct.example",
+        chain_id=1,
+        pool_addresses=["0xdirect"],
+        sandbox_mode=False,
+    )
+
+    provider = factory_module._get_or_create_instrument_provider(client_config)
+
+    assert provider._config.rpc_url == "https://direct.example"
+    assert provider._config.chain_id == 1
+    assert provider._config.pools == ["0xdirect"]
+    assert provider._config.sandbox_mode is False
+
+
 def test_templates_remain_classified_as_legacy_migration_only() -> None:
     for name in ("dex_exec_client.py", "dex_data_client.py"):
         path = _LEGACY_TEMPLATES / name

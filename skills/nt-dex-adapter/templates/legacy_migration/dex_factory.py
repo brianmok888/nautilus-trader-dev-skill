@@ -160,10 +160,26 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
 # Shared Instrument Provider Cache
 # =============================================================================
 
-_instrument_providers: dict[
-    tuple[str, int, tuple[str, ...], bool],
-    MyDEXInstrumentProvider,
-] = {}
+_instrument_providers: dict[bytes, MyDEXInstrumentProvider] = {}
+
+
+def _effective_instrument_provider_config(config) -> MyDEXInstrumentProviderConfig:
+    nested = config.instrument_provider
+    if isinstance(nested, MyDEXInstrumentProviderConfig):
+        return nested
+
+    return MyDEXInstrumentProviderConfig(
+        load_all=nested.load_all,
+        load_ids=nested.load_ids,
+        filters=nested.filters,
+        filter_callable=nested.filter_callable,
+        log_warnings=nested.log_warnings,
+        use_gamma_markets=nested.use_gamma_markets,
+        rpc_url=config.rpc_url,
+        chain_id=config.chain_id,
+        pools=list(getattr(config, "pool_addresses", [])),
+        sandbox_mode=config.sandbox_mode,
+    )
 
 
 def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
@@ -173,19 +189,10 @@ def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
     Data and execution clients share one provider to avoid double-loading
     pool metadata from the chain.
     """
-    rpc_url = getattr(config, "rpc_url", "default")
-    chain_id = getattr(config, "chain_id", 31337)
-    pools = tuple(getattr(config, "pool_addresses", None) or getattr(config, "pools", []))
-    sandbox_mode = getattr(config, "sandbox_mode", False)
-    key = (rpc_url, chain_id, pools, sandbox_mode)
+    provider_config = _effective_instrument_provider_config(config)
+    key = provider_config.json()
 
     if key not in _instrument_providers:
-        provider_config = MyDEXInstrumentProviderConfig(
-            rpc_url=rpc_url,
-            chain_id=chain_id,
-            pools=list(pools),
-            sandbox_mode=sandbox_mode,
-        )
         _instrument_providers[key] = MyDEXInstrumentProvider(config=provider_config)
 
     return _instrument_providers[key]
