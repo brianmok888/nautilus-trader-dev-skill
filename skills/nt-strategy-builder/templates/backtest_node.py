@@ -22,6 +22,7 @@ from pathlib import Path
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.backtest.config import BacktestEngineConfig, BacktestVenueConfig
+from nautilus_trader.common.config import LoggingConfig
 from nautilus_trader.config import BacktestDataConfig, BacktestRunConfig
 from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.enums import AccountType, OmsType
@@ -97,7 +98,7 @@ data_config = BacktestDataConfig(
 
 engine_config = BacktestEngineConfig(
     trader_id="BACKTESTER-001",
-    logging={"log_level": "WARNING"},    # Reduce noise; use DEBUG for debugging
+    logging=LoggingConfig(log_level="WARNING"),
 )
 
 
@@ -162,7 +163,7 @@ def run_backtest() -> None:
 
         print("Generating tearsheet...")
         config = TearsheetConfig()
-        create_tearsheet(engine, output_path="tearsheet.html", config=config)
+        _ = create_tearsheet(engine, output_path="tearsheet.html", config=config)
         print("Tearsheet saved to tearsheet.html")
     except ImportError:
         print('Install the visualization extra: uv add "nautilus_trader[visualization]"')
