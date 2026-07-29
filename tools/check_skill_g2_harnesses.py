@@ -602,8 +602,12 @@ def owned_content_hash(root: Path, paths: tuple[Path, ...]) -> str:
 
 
 def validate_harnesses(
-    harnesses: Mapping[str, Harness], *, expected_skills: set[str] | None = None
+    harnesses: Mapping[str, Harness],
+    *,
+    expected_skills: set[str] | None = None,
+    root: Path | None = None,
 ) -> list[str]:
+    validation_root = repo_root() if root is None else root
     expected = set(HARNESSES) if expected_skills is None else expected_skills
     actual = set(harnesses)
     errors = [f"missing G2 harness: {skill}" for skill in sorted(expected - actual)]
@@ -617,6 +621,21 @@ def validate_harnesses(
             errors.append(f"{key} has no validation steps")
         if not harness.allowed_tokens:
             errors.append(f"{key} has no machine-checkable scope tokens")
+        if not harness.owned_paths:
+            errors.append(f"{key} has no owned paths")
+        required_skill_path = Path("skills") / key / "SKILL.md"
+        if required_skill_path not in harness.owned_paths:
+            errors.append(f"{key} owned paths omit {required_skill_path.as_posix()}")
+        for owned_path in harness.owned_paths:
+            if not (validation_root / owned_path).exists():
+                errors.append(
+                    f"{key} owned path does not exist: {owned_path.as_posix()}"
+                )
+            evidence_file = harness.evidence_file
+            if evidence_file is not None and (
+                owned_path == evidence_file or owned_path in evidence_file.parents
+            ):
+                errors.append(f"{key} evidence artifact is included in owned content")
         previous = scopes.get(harness.scope)
         if previous is not None:
             errors.append(f"duplicate G2 scope {harness.scope}: {previous}, {key}")
@@ -680,7 +699,6 @@ def validate_readiness_cards(
     *,
     require_evidence: bool = True,
     excluded_evidence: set[str] | None = None,
-    expected_repository_commit: str | None = None,
 ) -> list[str]:
     errors: list[str] = []
     excluded = set() if excluded_evidence is None else excluded_evidence
@@ -715,7 +733,7 @@ def validate_readiness_cards(
         except (OSError, json.JSONDecodeError):
             errors.append(f"{skill} durable evidence artifact is not valid JSON")
             continue
-        if payload.get("schema_version") != 1:
+        if payload.get("schema_version") != 2:
             errors.append(f"{skill} durable evidence has an unsupported schema")
         if payload.get("skill") != skill or payload.get("scope") != harnesses[skill].scope:
             errors.append(f"{skill} durable evidence does not match its harness")
@@ -723,13 +741,8 @@ def validate_readiness_cards(
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
         if payload.get("upstream_clean") is not True:
             errors.append(f"{skill} durable evidence was not produced from a clean upstream")
-        if (
-            expected_repository_commit is not None
-            and payload.get("repository_commit") != expected_repository_commit
-        ):
-            errors.append(
-                f"{skill} durable evidence does not match the repository provenance"
-            )
+        if "repository_commit" in payload:
+            errors.append(f"{skill} durable evidence uses self-referential provenance")
         if payload.get("owned_content_sha256") != owned_content_hash(
             root, harnesses[skill].owned_paths
         ):
@@ -845,17 +858,6 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
     return errors
 
 
-def repository_commit(root: Path) -> str:
-    result = subprocess.run(
-        ("git", "rev-parse", "HEAD"),
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
-
-
 def write_evidence(
     harness: Harness, *, root: Path, upstream_root: Path, results: list[dict[str, object]]
 ) -> None:
@@ -864,10 +866,9 @@ def write_evidence(
     destination = root / harness.evidence_file
     destination.parent.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "skill": harness.skill,
         "scope": harness.scope,
-        "repository_commit": repository_commit(root),
         "owned_content_sha256": owned_content_hash(root, harness.owned_paths),
         "upstream_commit": upstream_commit(upstream_root),
         "upstream_clean": upstream_is_clean(upstream_root),

@@ -268,6 +268,66 @@ def test_each_harness_owns_its_skill_and_nonempty_content() -> None:
         assert g2.owned_content_hash(root, harness.owned_paths) != empty_hash
 
 
+def test_validator_rejects_empty_owned_paths() -> None:
+    harness = replace(g2.HARNESSES["nt-data"], owned_paths=())
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}
+    )
+
+    assert "nt-data has no owned paths" in errors
+
+
+def test_validator_requires_the_skill_file_in_owned_paths(tmp_path: Path) -> None:
+    owned = tmp_path / "tests/test_data.py"
+    owned.parent.mkdir(parents=True)
+    owned.write_text("def test_placeholder():\n    pass\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("tests/test_data.py"),),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data owned paths omit skills/nt-data/SKILL.md" in errors
+
+
+def test_validator_rejects_missing_owned_paths(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"), Path("tests/missing.py")),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data owned path does not exist: tests/missing.py" in errors
+
+
+def test_validator_rejects_evidence_inside_owned_content(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    evidence_root = tmp_path / "references/g2-evidence"
+    evidence_root.mkdir(parents=True)
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"), Path("references/g2-evidence")),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data evidence artifact is included in owned content" in errors
+
+
 def test_missing_rust_first_harnesses_have_targeted_executable_checks() -> None:
     expected_tokens = {
         "nt-live": "nautilus-live",
@@ -382,7 +442,7 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
     assert "nt-data durable evidence commands do not match its harness" in errors
 
 
-def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path) -> None:
+def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: Path) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
@@ -396,11 +456,10 @@ def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path
     evidence_path.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "skill": "nt-data",
                 "scope": harness.scope,
-                "repository_commit": "not-a-commit",
-                "owned_content_sha256": g2.owned_content_hash(tmp_path, harness.owned_paths),
+                "owned_content_sha256": "not-the-owned-content",
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
                 "steps": [
@@ -411,11 +470,34 @@ def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path
         )
     )
 
-    errors = g2.validate_readiness_cards(
-        tmp_path, {"nt-data": harness}, expected_repository_commit="expected-commit"
-    )
+    errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
 
-    assert "nt-data durable evidence does not match the repository provenance" in errors
+    assert "nt-data durable evidence does not match owned skill content" in errors
+
+
+def test_evidence_schema_has_no_self_referential_repository_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"),),
+    )
+    monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+
+    g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+
+    assert harness.evidence_file is not None
+    payload = json.loads((tmp_path / harness.evidence_file).read_text())
+    assert payload["schema_version"] == 2
+    assert "repository_commit" not in payload
+    assert payload["owned_content_sha256"] == g2.owned_content_hash(
+        tmp_path, harness.owned_paths
+    )
 
 
 def test_router_harness_requires_subordinate_card_declarations() -> None:
