@@ -11,7 +11,7 @@
         "tests/test_ai_advisory_boundary.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.119251,
+      "duration_seconds": 0.888974,
       "returncode": 0
     },
     {
@@ -25,11 +25,11 @@
         "ai_advisory"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.796959,
+      "duration_seconds": 0.876477,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-29T16:36:27.736923+00:00"
+  "verified_at": "2026-07-29T17:54:03.667630+00:00"
 }
