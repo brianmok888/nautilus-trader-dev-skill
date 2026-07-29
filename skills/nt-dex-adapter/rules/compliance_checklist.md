@@ -13,7 +13,9 @@ Then complete the manual checklist below.
 
 ---
 
-## Python Layer
+## Quarantined Python Migration Layer
+
+Python-only live adapters are migration/reference-only and cannot receive APPROVED FOR USE. Current production approval requires the Rust core, Rust clients/factories, and `LiveNodeBuilder` wiring below.
 
 ### InstrumentProvider
 
@@ -73,7 +75,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ---
 
-## Rust Core (if applicable)
+## Rust Core (required for production approval)
 
 - [ ] Copyright header on every source file (`2015-2026 Nautech Systems Pty Ltd`)
 - [ ] Module-level `//!` documentation
@@ -124,8 +126,8 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 | Item | Status | Notes |
 |---|---|---|
-| Python layer complete | ☐ / ✓ | |
-| Rust core complete (if applicable) | ☐ / ✓ | N/A if Python-only |
+| Quarantined Python migration references reviewed | ☐ / ✓ | Not a production approval gate |
+| Rust core, clients, factories, and `LiveNodeBuilder` wiring complete | ☐ / ✓ | Required |
 | All tests pass offline | ☐ / ✓ | |
 | Compliance structural test passes | ☐ / ✓ | |
 | Documentation complete | ☐ / ✓ | |

@@ -9,7 +9,7 @@ Custom DEX adapter development for NautilusTrader.
 
 ## OVERVIEW
 
-Build production-grade DEX adapters identical in structure to built-in OKX/Bybit adapters, but with DEX plumbing (RPC, wallet signing, pool discovery).
+Build production-grade Rust DEX adapters with Rust clients and factories wired through `LiveNodeBuilder`; quarantined Python live templates are migration/reference-only.
 
 ## WHEN TO USE
 
@@ -61,8 +61,8 @@ nautilus_trader/adapters/   ← Optional PyO3 control/config exposure only
 |----------|-------|---------|
 | `dex_config.py` | 6 | Provider/data/exec configs |
 | `dex_instrument_provider.py` | 2 | Pool → Instrument |
-| `dex_data_client.py` | 3 | Pool state → QuoteTick |
-| `dex_exec_client.py` | 4-5 | Wallet-signed tx |
+| `legacy_migration/dex_data_client.py` | 3 | Legacy Python live-client migration reference |
+| `legacy_migration/dex_exec_client.py` | 4-5 | Legacy Python live-client migration reference |
 | `legacy_migration/dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
 
 ## CRITICAL DON'Ts

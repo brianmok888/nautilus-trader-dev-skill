@@ -238,6 +238,20 @@ def test_ignores_hidden_superpowers_sdd_scratch(tmp_path: Path) -> None:
     assert not any(".superpowers/sdd/task-notes.md" in error for error in result.errors)
 
 
+def test_checks_non_sdd_superpowers_markdown(tmp_path: Path) -> None:
+    write(
+        tmp_path / ".superpowers/review/findings.md",
+        "Use references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "stale references/guides path in .superpowers/review/findings.md"
+        in result.errors
+    )
+
+
 def test_reports_stale_references_guides_path(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
@@ -1476,6 +1490,24 @@ def test_legacy_migration_path_does_not_exempt_unlabelled_guidance(
     assert (
         "unlabelled TradingNode guidance in "
         "skills/nt-example/legacy_migration/example.py" in result.errors
+    )
+
+
+def test_adapter_example_legacy_migration_path_needs_exact_header(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path
+        / "skills/nt-adapters/references/examples/legacy_migration/venue/node.py",
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-adapters/references/examples/legacy_migration/venue/node.py"
+        in result.errors
     )
 
 

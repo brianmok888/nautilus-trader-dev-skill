@@ -268,6 +268,19 @@ def test_backtest_template_uses_typed_logging_config() -> None:
     assert 'logging={"log_level": "WARNING"}' not in text
 
 
+def test_dex_python_live_templates_are_quarantined_and_not_approvable() -> None:
+    agents = read("skills/nt-dex-adapter/AGENTS.md")
+    checklist = read("skills/nt-dex-adapter/rules/compliance_checklist.md")
+
+    assert "legacy_migration/dex_data_client.py" in agents
+    assert "legacy_migration/dex_exec_client.py" in agents
+    assert "Rust `LiveNodeBuilder`" in agents
+    assert "Rust Core (if applicable)" not in checklist
+    assert "N/A if Python-only" not in checklist
+    assert "Python-only" in checklist
+    assert "cannot receive APPROVED FOR USE" in checklist
+
+
 def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     text = read("skills/nt-model/SKILL.md")
     expected = {

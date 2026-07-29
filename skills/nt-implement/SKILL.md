@@ -319,7 +319,7 @@ Templates are in `templates/` subdirectory:
 - `margin_model.py` - research/backtest custom margin calculation model
 - `portfolio_statistic.py` - research/backtest custom portfolio statistic
 - `legacy_migration/adapters/exchange.py` - migration/reference-only Python adapter; Rust/PyO3 owns current data + execution
-- `adapters/data_provider.py` - Rust/PyO3 control-plane wrapper for data-only adapters
+- `legacy_migration/adapters/data_provider.py` - migration/reference-only Python live data client; current data clients are Rust/PyO3
 
 ### Model Loading (msgspec preferred)
 

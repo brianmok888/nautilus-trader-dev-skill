@@ -17,6 +17,7 @@ tested in `test_instrument_parsing.py` and `test_order_book_events.py`.
 """
 
 import importlib.util
+import sys
 from inspect import iscoroutinefunction
 from inspect import signature
 from pathlib import Path
@@ -27,6 +28,7 @@ pytest.importorskip("pydantic")
 
 _templates = Path(__file__).parent.parent / "templates"
 _legacy_templates = _templates / "legacy_migration"
+sys.path.insert(0, str(_templates))
 
 
 def _load_module(name: str, *, legacy: bool = False):
@@ -37,12 +39,15 @@ def _load_module(name: str, *, legacy: bool = False):
     return mod
 
 
-# Load all template modules
+def _load_migration_module(name: str):
+    return _load_module(name, legacy=True)
+
+
 _config_mod = _load_module("dex_config")
 _provider_mod = _load_module("dex_instrument_provider")
-_data_mod = _load_module("dex_data_client")
-_exec_mod = _load_module("dex_exec_client")
-_factory_mod = _load_module("dex_factory", legacy=True)
+_data_mod = _load_migration_module("dex_data_client")
+_exec_mod = _load_migration_module("dex_exec_client")
+_factory_mod = _load_migration_module("dex_factory")
 
 MyDEXInstrumentProviderConfig = _config_mod.MyDEXInstrumentProviderConfig
 MyDEXDataClientConfig = _config_mod.MyDEXDataClientConfig
@@ -79,9 +84,7 @@ class TestInstrumentProviderInterface:
         assert hasattr(MyDEXInstrumentProvider, "_parse_pool_to_instrument")
 
 
-class TestDataClientInterface:
-    """Checks all required LiveMarketDataClient methods are present."""
-
+class TestMigrationDataClientImportability:
     REQUIRED_ASYNC_METHODS = [
         "_connect",
         "_disconnect",
@@ -108,9 +111,7 @@ class TestDataClientInterface:
         assert hasattr(MyDEXDataClient, "_swap_event_to_trade_tick")
 
 
-class TestExecutionClientInterface:
-    """Checks all required LiveExecutionClient methods are present."""
-
+class TestMigrationExecutionClientImportability:
     REQUIRED_ASYNC_METHODS = [
         "_connect",
         "_disconnect",
@@ -247,7 +248,7 @@ class TestConfigInterface:
             )
 
 
-class TestFactoryInterface:
+class TestMigrationFactoryImportability:
     """Checks that factory classes expose static create() methods."""
 
     def test_data_factory_has_create(self):

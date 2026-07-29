@@ -16,7 +16,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 | Structured data between components | `custom_data.py` | `@customdataclass`, serialization |
 | Order execution logic | `exec_algorithm.py` | Child order spawning |
 | Exchange connectivity migration reference | `legacy_migration/adapters/exchange.py` | Legacy Python LiveDataClient, LiveExecutionClient |
-| Data-only adapter | `adapters/data_provider.py` | Data streaming only |
+| Data-only adapter | `legacy_migration/adapters/data_provider.py` | Data streaming only |
 | Internal (simulated) adapter | `adapters/internal.py` | Backtest venue adapter |
 | Exchange-specific config example | `legacy_migration/adapters/kraken_config.py` | Venue configuration patterns |
 | Custom fill simulation | `fill_model.py` | `prob_fill_on_limit`, `prob_slippage` |
