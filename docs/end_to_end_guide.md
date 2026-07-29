@@ -6,7 +6,7 @@ Python is still supported, but it is not the default production live path in thi
 
 **Prerequisites**:
 - Rust 1.97.1 toolchain and Cargo installed for the pinned `6e59fd7` develop baseline.
-- NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder`, `nt-live`, `nt-testing`, and `nt-review`.
+- NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
 ---

@@ -1,6 +1,6 @@
 ---
 name: nt-strategy-builder
-description: Use when building NautilusTrader backtesting, paper-trading, or live-trading systems
+description: Use when migrating or referencing existing Python NautilusTrader backtest, paper-trading, or live-trading systems
 ---
 
 NT v2 compatibility note: legacy/v1/Cython/TradingNode references in this file are labelled legacy/reference-only unless an adjacent paragraph explicitly says they are current Rust/PyO3/LiveNode guidance.
@@ -35,7 +35,7 @@ Migration gate: upstream NT V2 still supports Python strategies, but this reposi
 
 ## Overview
 
-This skill guides you from **idea → running system** — whether you are running a historical backtest, paper-trading on live market data, or deploying a live-trading node. It handles all supported venue data inputs: standard CeFi adapters (Binance, Bybit, OKX, …), custom DEX adapters built with `nt-dex-adapter`, Databento/Tardis data feeds, and mixed multi-venue setups.
+This migration/reference-only skill documents existing Python systems from **idea → running system** for historical backtests, paper trading, and live-trading nodes. Route all new strategy implementation to `nt-strategy-builder-rust`; use this material only to understand or migrate existing Python systems. It covers standard CeFi adapters (Binance, Bybit, OKX, …), custom DEX adapters built with `nt-dex-adapter`, Databento/Tardis data feeds, and mixed multi-venue setups.
 
 Complements the existing skills:
 - **nt-architect** – use first to decide component decomposition (Actor/Indicator/Strategy split)

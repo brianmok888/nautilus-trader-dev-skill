@@ -79,7 +79,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode in the ro
 | Strategy logic, order lifecycle, positions, portfolio, risk | `nt-trading` | `nt-model`, `nt-testing` |
 | Indicators, signals, order-book analytics, custom data signals | `nt-signals` | `nt-data`, `nt-model` |
 | Market data, catalogs, persistence, serialization | `nt-data` | `nt-model`, `nt-testing` |
-| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder`, `nt-testing` |
+| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder-rust`, `nt-testing` |
 | Wire an idea into backtest, paper, or live execution, including explicit Python requests | `nt-strategy-builder-rust` | `nt-backtest`, `nt-live`, `nt-adapters` |
 | Build a performance-critical / production strategy in Rust | `nt-strategy-builder-rust` | `nt-trading`, `nt-testing`, `nt-live` |
 | Live trading runtime, `LiveNode`/`TradingNode`, reconciliation | `nt-live` | `nt-adapters`, `nt-review` |
@@ -131,6 +131,6 @@ When this entry skill routes a task, state the selected primary/supporting
 skills briefly, then proceed with those skills. Example:
 
 ```text
-Using nt as entry point. Routing to nt-strategy-builder with nt-backtest and
+Using nt as entry point. Routing to nt-strategy-builder-rust with nt-backtest and
 nt-testing because the task is backtest wiring plus validation.
 ```

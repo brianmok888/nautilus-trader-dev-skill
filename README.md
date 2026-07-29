@@ -23,7 +23,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 │  architecture            from templates           correctness, perf         │
 │                              │                                              │
 │                              ▼                                              │
-│                     nt-strategy-builder ◄── nt-dex-adapter                 │
+│                  nt-strategy-builder-rust ◄── nt-dex-adapter              │
 │                     Wire & run systems        Build on-chain                │
 │                     (backtest, paper, live)   DEX venues                    │
 │                                                                              │

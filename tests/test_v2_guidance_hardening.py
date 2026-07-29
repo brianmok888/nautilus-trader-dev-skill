@@ -171,6 +171,29 @@ def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
     assert present == []
 
 
+def test_public_strategy_routing_uses_rust_builder_for_new_work() -> None:
+    readme = read("README.md")
+    router = read("skills/nt/SKILL.md")
+    python_builder = read("skills/nt-strategy-builder/SKILL.md")
+    guide = read("docs/end_to_end_guide.md")
+
+    assert "nt-strategy-builder-rust ◄── nt-dex-adapter" in readme
+    assert (
+        "| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` "
+        "| `nt-strategy-builder-rust`, `nt-testing` |"
+    ) in router
+    assert (
+        "Routing to nt-strategy-builder-rust with nt-backtest and\n"
+        "nt-testing because the task is backtest wiring plus validation."
+    ) in router
+    assert "description: Use when migrating or referencing existing Python" in python_builder
+    assert "## Overview\n\nThis migration/reference-only skill" in python_builder
+    assert (
+        "especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, "
+        "`nt-live`, `nt-testing`, and `nt-review`"
+    ) in guide
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name
