@@ -185,5 +185,5 @@ python examples/live_node.py
 
 - `nt-architect` for boundary definition and lifecycle placement.
 - `nt-implement` for component-level implementation patterns.
-- `nt-strategy-builder` for runtime wiring in backtest/paper/live nodes.
+- `nt-strategy-builder-rust` for Rust `LiveNode` or backtest runtime wiring; `nt-strategy-builder` is migration/reference-only.
 - `nt-review` for final safety and readiness checks.

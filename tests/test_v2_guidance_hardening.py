@@ -194,6 +194,27 @@ def test_public_strategy_routing_uses_rust_builder_for_new_work() -> None:
     ) in guide
 
 
+def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
+    guide = read("docs/end_to_end_guide.md")
+    dex_skill = read("skills/nt-dex-adapter/SKILL.md")
+    dex_agents = read("skills/nt-dex-adapter/AGENTS.md")
+    evomap = read("skills/nt-evomap-integration/SKILL.md")
+
+    assert "## Appendix: Python Migration Reference and Active AI/Advisory Lane" in guide
+    assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in guide
+    assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in guide
+    assert "Python remains supported for V2 strategy research" not in guide
+
+    combined_dex = dex_skill + dex_agents
+    assert "`nt-strategy-builder-rust`" in combined_dex
+    assert "Rust `LiveNode` or backtest wiring" in combined_dex
+    assert "nt-strategy-builder/dex_venue_input.py" not in combined_dex
+    assert "`nt-strategy-builder` skill's `dex_venue_input.py`" not in combined_dex
+
+    assert "`nt-strategy-builder-rust` for Rust `LiveNode` or backtest runtime wiring" in evomap
+    assert "`nt-strategy-builder` for runtime wiring" not in evomap
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name

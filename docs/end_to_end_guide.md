@@ -196,18 +196,17 @@ If your venue requires a custom adapter, keep the same Rust-first live shape and
 
 ---
 
-## Appendix: Supported Python V2 Strategy and Research Lane
+## Appendix: Python Migration Reference and Active AI/Advisory Lane
 
 NT v2 compatibility note: legacy `TradingNode` material is migration/reference-only unless a guide explicitly labels it as current Python-only integration guidance; use `LiveNode` for new Rust-backed live work.
 
-Python remains supported for V2 strategy research, notebooks, exploratory data analysis, and Python-authored strategy iteration. This appendix documents that supported lane; it is not the default production live path for this guide.
+Existing non-AI Python strategy, notebook, exploratory analysis, and prototyping material is migration/reference-only under this repository's stricter cutover policy. New strategy research and rapid prototyping route to `nt-strategy-builder-rust`; use existing Python material only to understand or migrate prior systems.
 
-Use Python when the work is explicitly labelled as one of these cases:
+The Python boundaries are:
 
-- V2 strategy research or rapid prototyping where Python ergonomics are useful.
-- Data analysis, visualization, and tearsheet-style review outside the execution hot path.
-- AI/advisory lane remains Python, asynchronous, approval-gate protected, and off execution-critical paths.
+- Existing Python strategy research, data analysis, visualization, and tearsheet workflows are migration/reference-only.
+- Only AI/advisory through `nt-evomap-integration` remains active Python; it stays asynchronous, approval-gate protected, and off execution-critical paths.
 
-Python research/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Promote only reviewed, tested, and explicitly approved logic into the Rust production path.
+Migration/reference Python and active AI/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Implement new reviewed and tested strategy logic directly in the Rust path.
 
 For new Rust-backed live work, use `LiveNode` and the primary Rust path above.

@@ -86,5 +86,5 @@ Study: `_template`, OKX, BitMEX, Bybit (built-in), dYdX v4, Hyperliquid
 
 ## NEXT
 
-- Wire adapter → `nt-strategy-builder/dex_venue_input.py`
+- Wire adapter → `nt-strategy-builder-rust` with Rust `LiveNode` or backtest wiring
 - Review code → `nt-review` (Rust/FFI checklist)

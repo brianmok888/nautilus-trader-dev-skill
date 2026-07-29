@@ -32,7 +32,7 @@ DEX adapter gates: Rust-first default applies to on-chain/off-chain clients, sig
 
 Build a custom on-chain DEX adapter that plugs into NautilusTrader's adapter framework — identical in structure to the built-in OKX, Bybit, or BitMEX adapters, but with DEX-specific plumbing (RPC nodes, wallet signing, pool discovery) instead of REST/WebSocket API keys.
 
-Once built, your adapter is consumed by the `nt-strategy-builder` skill's `dex_venue_input.py` template with zero framework changes.
+Once built, wire your adapter through `nt-strategy-builder-rust` using Rust `LiveNode` or backtest wiring. The Python `nt-strategy-builder` examples are migration/reference-only.
 
 **Canonical CeFi reference adapters**: OKX, BitMEX, Bybit — study their Python layer and Rust core before customising.
 
@@ -218,5 +218,5 @@ Load these for detailed API information (relative to nt-implement skill folder):
 
 ## Next Steps
 
-- Wire your adapter: use **nt-strategy-builder** `dex_venue_input.py`
+- Wire your adapter: use **nt-strategy-builder-rust** for Rust `LiveNode` or backtest wiring
 - Review code: use **nt-review** Rust/FFI checklist before deployment
