@@ -43,7 +43,11 @@ Trading gates: Rust owns execution-critical order, risk, position, portfolio, an
 
 ## Rust production lane
 
+Keep strategy execution, order lifecycle, risk checks, positions, portfolio state, accounting, and execution algorithms in Rust. Enforce fail-closed decisions and terminal-event invariants, then verify order, fill, void, cancel, reconciliation, and precision behavior with targeted Rust tests and the required cargo gates.
+
 ## PyO3 control-plane lane
+
+Use PyO3 only for typed configuration, Rust component registration, lifecycle control, and read-only inspection of trading results. Python must not submit, modify, or cancel orders, own risk decisions, mutate authoritative portfolio state, or process execution-critical callbacks.
 
 ## Migration/reference lane
 
@@ -51,7 +55,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 

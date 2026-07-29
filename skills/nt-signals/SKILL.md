@@ -30,7 +30,11 @@ Signal gates: Python may prototype indicators, research/config notebooks, and AI
 
 ## Rust production lane
 
+Implement production indicators, aggregators, custom data, and signal state machines in Rust using deterministic updates and fixed-point-safe domain values where applicable. Keep per-event computation and state mutation off Python paths, and validate warm-up, reset, ordering, and numerical edge cases with Rust tests.
+
 ## PyO3 control-plane lane
+
+Use PyO3 to construct and configure Rust indicators, register signal components, and inspect derived outputs. Python may orchestrate bounded analysis but must not own production market-data subscriptions, event handlers, mutable signal state, or trading decisions.
 
 ## Migration/reference lane
 
@@ -38,7 +42,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 

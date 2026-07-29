@@ -33,6 +33,26 @@ AI/advisory lane remains Python and off execution-critical paths; it stays async
 
 Migration gate: upstream NT V2 still supports Python strategies, but this repository applies a stricter Rust cutover policy. This skill and its executable templates are migration/reference-only; route all new strategy, research/config, backtest, paper, live, production, and performance implementation to `nt-strategy-builder-rust`. The AI/advisory lane stays Python through `nt-evomap-integration`, remains non-authoritative, and stays off execution-critical paths.
 
+## Rust production lane
+
+Build new strategy systems in Rust through `nt-strategy-builder-rust`. Rust owns `StrategyCore`, event handlers, order submission, risk decisions, backtest execution, and `LiveNode` wiring. Keep prices and quantities in Nautilus fixed-precision domain types, make configuration deserialization fail closed, and verify both deterministic backtests and live reconciliation before deployment.
+
+Use `BacktestEngine` for historical execution and Rust `LiveNode` for paper/live execution. A venue is ready only when its data and execution factories, provider lifecycle, report generation, and shutdown path have focused tests. AI output may propose signals, but Rust validates and authorizes every execution-critical transition.
+
+## PyO3 control-plane lane
+
+Use PyO3 only as a bounded configuration, inspection, and callback seam around Rust-owned strategy state. Convert Python inputs into validated Rust types at the boundary; return typed errors rather than silently substituting defaults. Store callback handles as `Py<T>`/`Py<PyAny>`, acquire the GIL only at the call boundary, and never expose order submission, risk mutation, or runtime ownership to Python.
+
+The Python API may select a registered Rust strategy, provide serializable parameters, or receive non-authoritative telemetry. Rust retains `StrategyCore`, clock, cache, portfolio, order factory, and execution authority.
+
+## Migration/reference lane
+
+Historical non-AI Python prose and examples are pointer-only from this root. Read `migration_reference/python/venue-and-simulation-examples.md` and `templates/legacy_migration/` only when translating an existing Python system. New non-AI implementation still routes to `nt-strategy-builder-rust`; active Python is limited to `nt-evomap-integration` AI/advisory work.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+
 ## Overview
 
 This migration/reference-only skill documents existing Python systems from **idea → running system** for historical backtests, paper trading, and live-trading nodes. Route all new strategy implementation to `nt-strategy-builder-rust`; use this material only to understand or migrate existing Python systems. It covers standard CeFi adapters (Binance, Bybit, OKX, …), custom DEX adapters built with `nt-dex-adapter`, Databento/Tardis data feeds, and mixed multi-venue setups.
@@ -81,84 +101,7 @@ Are you using live market data?
 
 ## Venue Data Input Types
 
-### 1. Standard CeFi Adapters (Built-in)
-
-NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase (Rust/v2 `LiveNode` path), dYdX, Interactive Brokers, Databento, Tardis, and more.
-
-NT v2 compatibility note: dYdX v3 legacy adapter text below is migration/reference-only; use the renamed current `nautilus_trader.adapters.dydx` path for new work.
-
-
-> **v1.223.0**: dYdX v3 (legacy) adapter removed. Use `nautilus_trader.adapters.dydx` (module renamed from `dydx_v4`). Class prefix is now `Dydx` (e.g., `DydxDataClientConfig`, `DydxLiveDataClientFactory`). The dydx optional install extra is no longer needed.
-
-> **v1.223.0 Binance**: `listen_key_ping_max_failures` removed from `BinanceExecClientConfig`. Binance now authenticates via WebSocket API (Ed25519/HMAC auto-detected from `api_secret` format). Credentials from `BINANCE_API_KEY`/`BINANCE_API_SECRET` env vars.
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.binance.factories import BinanceLiveDataClientFactory
-from nautilus_trader.config import TradingNodeConfig, LiveDataEngineConfig
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={
-        "BINANCE": BinanceDataClientConfig(
-            api_key=os.environ["BINANCE_API_KEY"],
-            api_secret=os.environ["BINANCE_API_SECRET"],
-            testnet=False,
-        ),
-    },
-)
-```
-
-### 2. Custom DEX Adapter (nt-dex-adapter)
-
-After building a DEX adapter with the `nt-dex-adapter` skill, wire it in exactly like a CeFi adapter:
-
-```python
-from my_dex_adapter.factory import MyDEXLiveDataClientFactory, MyDEXLiveExecClientFactory
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={"MYDEX": MyDEXDataClientConfig(rpc_url="https://...", wallet_address="0x...")},
-    exec_clients={"MYDEX": MyDEXExecClientConfig(rpc_url="https://...", private_key=SecretStr(...))},
-    data_client_factories={"MYDEX": MyDEXLiveDataClientFactory},
-    exec_client_factories={"MYDEX": MyDEXLiveExecClientFactory},
-)
-```
-
-See `templates/legacy_migration/dex_venue_input.py` for a complete wiring example.
-
-### 3. Catalog Data (Backtest / Replay)
-
-Use `ParquetDataCatalog` for any historical data — CeFi, DEX, or custom:
-
-```python
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
-from nautilus_trader.config import BacktestDataConfig
-
-catalog = ParquetDataCatalog("/path/to/catalog")
-
-data_config = BacktestDataConfig(
-    catalog_path=str(catalog.path),
-    data_cls="nautilus_trader.model.data:Bar",
-    instrument_id="WETH-USDC.UNISWAP_V3",
-    start_time="2024-01-01",
-    end_time="2024-12-31",
-)
-```
-
-### 4. Multi-Venue (Mixed CeFi + DEX)
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-Wire multiple venues into a single `TradingNode` or `BacktestEngine`. Each venue gets its own:
-- `data_client` entry
-- `exec_client` entry (if trading)
-- `BacktestVenueConfig` (backtest) / `LiveDataEngineConfig` (live)
-
-See `templates/legacy_migration/multi_venue_strategy.py`.
+Use Rust adapter factories and `LiveNodeBuilder` for CeFi and custom DEX venues. Use `ParquetDataCatalog` inputs through the Rust backtest path for replay, and give each venue independent data/execution configuration plus deterministic reconciliation. Historical Python CeFi, DEX, catalog, and multi-venue wiring examples moved to `migration_reference/python/venue-and-simulation-examples.md`.
 
 ## Template Quick Reference
 
@@ -218,64 +161,7 @@ If any invariant fails, block deployment and return to `nt-dex-adapter` + `nt-re
 
 ## Simulation Model Patterns
 
-### FillModel — Backtest Realism
-
-> **v1.223.0**: `prob_fill_on_stop` is deprecated. Use `prob_slippage` for market/stop order slippage probability.
-
-```python
-from nautilus_trader.backtest.models import FillModel
-
-# DEX-realistic: high slippage, lower limit fill probability
-dex_fill_model = FillModel(
-    prob_fill_on_limit=0.3,   # DEX: limit orders rarely at exact price
-    prob_slippage=0.7,        # DEX: high slippage probability
-    random_seed=42,
-)
-
-# CeFi realistic
-cefi_fill_model = FillModel(
-    prob_fill_on_limit=0.5,
-    prob_slippage=0.2,
-    random_seed=42,
-)
-```
-
-### BacktestVenueConfig — Account Types
-
-```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
-
-# Crypto spot
-venue_config = BacktestVenueConfig(
-    name="BINANCE",
-    oms_type="NETTING",
-    account_type="CASH",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT", "1 BTC"],
-    fill_model=fill_model,
-)
-
-# DEX (treat as CASH, no margin)
-dex_venue_config = BacktestVenueConfig(
-    name="UNISWAP_V3",
-    oms_type="NETTING",
-    account_type="CASH",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT"],
-    fill_model=dex_fill_model,
-)
-
-# Futures / perps
-perp_venue_config = BacktestVenueConfig(
-    name="BYBIT",
-    oms_type="NETTING",
-    account_type="MARGIN",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT"],
-    default_leverage=Decimal("10"),
-    fill_model=fill_model,
-)
-```
+Model fill probability, slippage, fees, latency, and account constraints in Rust-owned backtest configuration. Seed stochastic models for reproducibility, preserve fixed-point price/quantity boundaries, and test DEX cash and leveraged perp venues separately. The retired Python `FillModel` and `BacktestVenueConfig` examples moved to `migration_reference/python/venue-and-simulation-examples.md`.
 
 ## DO and DON'Ts
 

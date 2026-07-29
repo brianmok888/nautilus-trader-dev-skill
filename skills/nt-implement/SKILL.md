@@ -30,11 +30,19 @@ Implementation gates: no new component starts until the status gate before codin
 
 ## Rust production lane
 
+Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings.
+
+For adapters, complete provider, data, execution, reconciliation, factory, and shutdown contracts. Rust owns order commands and state transitions; fail closed on invalid input, overflow, stale state, unknown execution outcomes, and unsupported venue capabilities.
+
 ## PyO3 control-plane lane
+
+PyO3 is a narrow boundary for validated configuration, component registration, lifecycle control, and read-only inspection. Convert Python objects into owned Rust domain types immediately, return typed exceptions on validation failures, and keep `StrategyCore`, clients, runtime tasks, signing, risk checks, and order submission in Rust.
+
+Prefer `Py<T>`/`Py<PyAny>` for callback handles, document cleanup and cycle behavior, acquire the GIL only at Python call boundaries, and avoid `Arc<Py<T>>` unless an independent Rust shared-owner design requires it.
 
 ## Migration/reference lane
 
-Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`.
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New non-AI work remains Rust-first; the only active Python lane is AI/advisory work in `nt-evomap-integration`, off execution-critical paths.
 
 ## Source-pinned upstream lane
 
@@ -42,11 +50,12 @@ Source: [`references/developer_guide/rust.md`](../../references/developer_guide/
 
 ## Overview
 
-Implement nautilus_trader components using correct patterns and templates. This skill provides ready-to-use templates and common implementation patterns for all component types, including:
+Implement NautilusTrader components with Rust-first patterns and physically
+quarantined migration references. This skill covers:
 
-- **Python components**: Strategy, Actor, Indicator, Custom Data, Execution Algorithm, Adapters
-- **Simulation models**: Custom FillModel, MarginModel, PortfolioStatistic
-- **Rust+PyO3 bindings**: High-performance core implementations with Python interop
+- **Rust components**: Strategy, Actor, Indicator, custom data, execution algorithms, and adapters
+- **Rust simulation models**: FillModel, MarginModel, and portfolio statistics
+- **Rust+PyO3 bindings**: bounded configuration and inspection around Rust ownership
 
 ## Risk Engine
 
@@ -63,8 +72,8 @@ Implement nautilus_trader components using correct patterns and templates. This 
 ## Adapter Architecture (Rust-First)
 
 NautilusTrader adapters follow a **Rust-first** layered architecture:
-- **Rust core** (`crates/adapters/your_adapter/`): networking clients, performance-critical operations
-- **Python layer** (`nautilus_trader/adapters/your_adapter/`): integrates Rust clients into platform engines
+- **Rust core** (`crates/adapters/your_adapter/`): networking, parsing, state, and execution
+- **PyO3 control plane** (`src/python/`): validated configuration and read-only inspection
 
 Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
 
@@ -82,11 +91,10 @@ Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
 When implementing adapters, enforce these constraints across all templates and generated code:
 
 - **Do phases in order** and complete each milestone before progressing.
-- **Implement required Python interfaces completely**:
-  - `InstrumentProvider`: `load_all_async`, `load_ids_async`, `load_async`
-  - `LiveDataClient`: `_connect`, `_disconnect`, `_subscribe`, `_unsubscribe`, `_request`
-  - `LiveExecutionClient`: submit/modify/cancel methods and all reconciliation report generators
-- **Use official factory signature** for data/exec factories: `create(loop, name, config, msgbus, cache, clock)`.
+- **Implement current Rust provider, data, execution, and reconciliation traits completely**.
+- **Register Rust data/exec factories through `LiveNodeBuilder`**; prior Python
+  interfaces and factory signatures are migration/reference-only under
+  `migration_reference/python/`.
 - **Follow runtime and FFI safety rules**:
   - use `get_runtime().spawn()` for adapter Rust async tasks
   - store owned Python handles as `Py<T>` / `Py<PyAny>`; avoid redundant `Arc<Py<T>>` unless a separate Rust shared-owner design explicitly requires it
@@ -95,7 +103,7 @@ When implementing adapters, enforce these constraints across all templates and g
 - **Enforce modern testing doctrine**:
   - use real captured payload fixtures (docs/live API), not invented schemas
   - avoid arbitrary sleeps in async tests; use condition-based waiting
-  - cover Rust unit+integration and Python integration (`providers`, `data`, `execution`, `factories`)
+  - cover Rust unit, integration, provider, data, execution, and factory behavior
 
 ## When to Use
 
@@ -122,8 +130,8 @@ unless an official source explicitly documents a local mutable builder pattern.
 
 1. Start from architecture document
 2. Implement in dependency order, choosing the **language** for each component
-   using the V2 cutover map below (default for new V2 work is Rust for
-   performance/state paths; Python for user strategy/config/AI lane):
+   using the V2 cutover map below (default for every non-AI component is Rust;
+   the only active Python lane is AI/advisory):
    - Custom Data Types (if needed)
    - Custom Models (FillModel, MarginModel if backtesting)
    - Indicators
@@ -142,7 +150,7 @@ Rust-backed work use `LiveNode`.
 | Component | Default language for V2 cutover | Notes |
 |---|---|---|
 | Custom Data Types | **Rust** (`crates/model/`, PyO3-exposed when required) | Rust owns production data types; Python declarations are reserved for explicit AI/advisory payloads |
-| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
+| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; non-AI Python prototypes are migration/reference-only |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
 | Actors (model hosting, regime detection, signal aggregation) | **Rust** | AI/advisory inference is the only Python-default exception and stays async, non-authoritative, and off the hot path |
 | Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI/advisory Python routes separately to `nt-evomap-integration` |

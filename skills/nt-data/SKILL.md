@@ -32,7 +32,11 @@ Data gates: Rust owns serialization, Arrow schemas, catalog/wrangler hot paths, 
 
 ## Rust production lane
 
+Implement production ingestion, normalization, aggregation, caching, serialization, and catalog access in Rust with deterministic ordering and fixed-point-safe model types. Keep high-volume data handlers and persistence boundaries Rust-owned, and verify schema compatibility, replay behavior, and relevant cargo gates.
+
 ## PyO3 control-plane lane
+
+Use PyO3 for bounded configuration, catalog queries, component registration, and result inspection around Rust data services. Do not move streaming handlers, cache mutation authority, aggregation state, or execution-facing data delivery into Python.
 
 ## Migration/reference lane
 
@@ -40,7 +44,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 

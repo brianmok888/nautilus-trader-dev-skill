@@ -26,7 +26,7 @@ from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.model.enums import AccountType, OmsType
 from nautilus_trader.model.objects import Money, Price, Quantity
 
-_templates = Path(__file__).parent.parent / "templates"
+_templates = Path(__file__).parent.parent / "migration_reference" / "python" / "templates"
 
 
 def _load_module(name: str):

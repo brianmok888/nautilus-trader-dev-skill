@@ -62,9 +62,13 @@ def _validate_lane_bodies(sections: tuple[Section, ...], path: Path, root: Path)
             continue
         body = "\n".join(section.body)
         label = f"{path.relative_to(root).as_posix()}:{section.line_number} {heading}"
-        if heading == "Rust production lane" and "```python" in body:
-            errors.append(f"{label}: Rust production lane contains a Python fence")
-        elif heading == "Migration/reference lane":
+        if heading in {"Rust production lane", "PyO3 control-plane lane"} and not _has_content(
+            section.body
+        ):
+            errors.append(f"{label}: {heading} is empty")
+        if heading != "PyO3 control-plane lane" and "```python" in body:
+            errors.append(f"{label}: {heading} contains a Python fence")
+        if heading == "Migration/reference lane":
             if "```" in body:
                 errors.append(f"{label}: migration lane must be pointer-only")
             if "migration_reference" not in body:
@@ -77,6 +81,14 @@ def _validate_lane_bodies(sections: tuple[Section, ...], path: Path, root: Path)
         elif heading == "PyO3 control-plane lane":
             errors.extend(_pyo3_errors(label, body))
     return errors
+
+
+def _has_content(body: tuple[str, ...]) -> bool:
+    return any(
+        line.strip()
+        and not line.lstrip().startswith(("#", "<!--"))
+        for line in body
+    )
 
 
 def _sections(text: str) -> tuple[Section, ...]:

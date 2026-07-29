@@ -26,6 +26,22 @@ AI/advisory lane remains Python and off execution-critical paths; it stays async
 
 Rust strategy gates: production/performance strategies must own `StrategyCore`, `StrategyConfig`, `DataActor` handlers, `nautilus_strategy!` registration, order submission shape, and FFI exposure if needed. Before `Pass`, run `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, targeted strategy/backtest tests, and document any Python research/config or AI/advisory boundary separately.
 
+## Rust production lane
+
+Implement every new non-AI strategy with Rust `StrategyCore`, `StrategyConfig`, `DataActor` handlers, and `nautilus_strategy!` registration. Keep signals, portfolio reads, risk gates, order creation, submission, and lifecycle handling in Rust, then prove behavior with targeted strategy and backtest tests plus the required cargo gates.
+
+## PyO3 control-plane lane
+
+Use PyO3 only to expose typed strategy configuration, instantiate and register the Rust strategy, control node lifecycle, and inspect outputs. Python must not own market-data handlers, strategy state transitions, order submission, position management, or risk authority.
+
+## Migration/reference lane
+
+Existing non-AI Python strategy material belongs under `migration_reference/` and is used only to map behavior during an explicit Rust migration. The only active Python lane is asynchronous, approval-gated AI/advisory work in `nt-evomap-integration`.
+
+## Source-pinned upstream lane
+
+Validate strategy APIs and registration patterns against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; treat later upstream examples as version-scoped evidence.
+
 ## What This Skill Covers
 
 Authoritative Rust-native strategy development for NautilusTrader V2. Strategies

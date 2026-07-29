@@ -1,6 +1,6 @@
 ---
 name: nt-learn
-description: "Use when learning NautilusTrader from scratch or deepening understanding. Provides a structured curriculum from installation to building custom NT components in Python and Rust."
+description: "Use when learning NautilusTrader from scratch or deepening understanding through a Rust-first V2 curriculum with bounded PyO3 and labelled migration references."
 ---
 
 # Learn NautilusTrader
@@ -26,9 +26,27 @@ AI/advisory lane remains Python and off execution-critical paths; it stays async
 
 Learning gates: the Rust-first curriculum is the default for production readiness, while Python labs are labelled Python research/config or AI/advisory and legacy/Python labelling is required before using older examples. Learners mark `Pending` until they can run the matching Rust build/test/check commands and explain each gate.
 
+## Rust production lane
+
+Teach the Rust architecture, model types, data flow, strategy lifecycle, backtest runtime, and `LiveNode` path as the default progression toward production readiness. A learner completes this lane by building and testing Rust components and explaining deterministic ordering, fixed-point precision, risk, and lifecycle boundaries.
+
+## PyO3 control-plane lane
+
+Teach PyO3 as the bounded interface for typed configuration, Rust component registration, node lifecycle control, and result inspection. Learners must be able to explain why Python does not own order execution, market-data handlers, risk decisions, adapter state, or live-node liveness.
+
+## Migration/reference lane
+
+Older non-AI Python and v1 curriculum material belongs under `migration_reference/` and is used only to understand or migrate an existing system. The only active Python lane is AI/advisory, which remains asynchronous and non-authoritative.
+
+## Source-pinned upstream lane
+
+Anchor lessons and API exercises to [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, and identify newer upstream examples as version-scoped before using them.
+
 ## Overview
 
-A structured learning pathway from beginner to NT developer. Walks through installation, examples, concepts, and progressively deeper implementation — from Python strategies to Rust internals to full Rust trading systems.
+A structured Rust-first pathway from installation and domain concepts through
+Rust strategies, adapters, backtests, PyO3 control boundaries, and complete Rust
+trading systems. Historical Python strategies are migration/reference-only.
 
 ## Workflow
 

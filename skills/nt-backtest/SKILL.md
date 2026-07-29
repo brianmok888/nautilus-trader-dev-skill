@@ -30,7 +30,11 @@ Backtest gates: prefer Rust BacktestEngine/BacktestNode for production/performan
 
 ## Rust production lane
 
+Build production and performance simulations with Rust `BacktestEngine` or `BacktestNode`, Rust strategies, deterministic event ordering, and explicit venue, fill, fee, latency, account, and reconciliation models. Keep matching and execution-critical simulation behavior in Rust and validate it with targeted tests plus the required cargo gates.
+
 ## PyO3 control-plane lane
+
+Use PyO3 only to assemble backtest configuration, register Rust components, initiate bounded runs, and inspect immutable results. Python must not own matching, fill decisions, order submission, risk checks, or event sequencing; those remain inside the Rust engine.
 
 ## Migration/reference lane
 
@@ -38,7 +42,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 

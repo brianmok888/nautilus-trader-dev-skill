@@ -254,3 +254,12 @@ def test_non_ai_migration_python_is_physically_quarantined(tmp_path: Path) -> No
     assert classification_error(path, tmp_path) == (
         "non-AI migration Python requires a migration_reference path component"
     )
+
+
+def test_dex_migration_python_is_physically_quarantined(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-dex-adapter/templates/dex_config.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n")
+
+    assert classification_error(path, tmp_path) == (
+        "non-AI migration Python requires a migration_reference path component"
+    )

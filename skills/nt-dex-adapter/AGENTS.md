@@ -59,11 +59,11 @@ nautilus_trader/adapters/   ← Optional PyO3 control/config exposure only
 
 | Template | Phase | Purpose |
 |----------|-------|---------|
-| `dex_config.py` | 6 | Provider/data/exec configs |
-| `dex_instrument_provider.py` | 2 | Pool → Instrument |
-| `legacy_migration/dex_data_client.py` | 3 | Legacy Python live-client migration reference |
-| `legacy_migration/dex_exec_client.py` | 4-5 | Legacy Python live-client migration reference |
-| `legacy_migration/dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
+| `migration_reference/python/templates/dex_config.py` | 6 | Provider/data/exec configs |
+| `migration_reference/python/templates/dex_instrument_provider.py` | 2 | Pool → Instrument |
+| `migration_reference/python/templates/legacy_migration/dex_data_client.py` | 3 | Legacy Python live-client migration reference |
+| `migration_reference/python/templates/legacy_migration/dex_exec_client.py` | 4-5 | Legacy Python live-client migration reference |
+| `migration_reference/python/templates/legacy_migration/dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
 
 ## CRITICAL DON'Ts
 

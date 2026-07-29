@@ -47,7 +47,11 @@ Live gates: `LiveNode` is the default for Rust-backed production live work; Pyth
 
 ## Rust production lane
 
+Build live systems around Rust `LiveNode`, Rust adapters, and Rust-owned execution, risk, reconciliation, and lifecycle state. Startup, shutdown, reconnect, task tracking, and fail-closed behavior must remain deterministic and must be proven with targeted live-runtime tests and the required cargo gates.
+
 ## PyO3 control-plane lane
+
+Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness.
 
 ## Migration/reference lane
 
@@ -55,7 +59,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 

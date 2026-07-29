@@ -42,6 +42,45 @@ AI/advisory lane remains Python and off execution-critical paths; it stays async
 
 Model gates: Rust owns identifiers, instruments, enums, fixed-point values, and precision-sensitive invariants; Python receives PyO3 bindings only. Mark `Pass` only after `cargo nextest`, `cargo clippy`, `cargo deny`, high-precision/overflow tests, and binding/stub evidence match the current model API.
 
+## Rust production lane
+
+Rust owns identifiers, instruments, enums, currencies, events, and fixed-point values. Enforce precision, overflow, identifier formatting, and instrument invariants at construction boundaries; use owned snapshots when scoped cache wrappers would cross async or event boundaries. New model types belong in `nautilus_model` and must retain exact raw-value semantics across FFI.
+
+```rust
+use nautilus_model::{
+    identifiers::InstrumentId,
+    types::{Price, Quantity},
+};
+
+let instrument_id: InstrumentId = "ETHUSDT-PERP.BINANCE".parse()?;
+let price = Price::from_raw(185_050, 2);
+let quantity = Quantity::from_raw(15, 1);
+```
+
+## PyO3 control-plane lane
+
+PyO3 provides construction, inspection, serialization, and conversion of Rust-owned model values. Register bindings in `nautilus_model/src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates the owning crate submodule. Preserve raw fixed-point values across the boundary, translate fallible validation into Python errors, and keep domain invariants in Rust rather than duplicating them in Python.
+
+```rust
+use pyo3::prelude::*;
+
+#[pymethods]
+impl MyIdentifier {
+    #[new]
+    fn py_new(value: &str) -> PyResult<Self> {
+        value.parse().map_err(|err| pyo3::exceptions::PyValueError::new_err(err.to_string()))
+    }
+}
+```
+
+## Migration/reference lane
+
+Prior Python model examples and extension guidance are quarantined under `migration_reference/python/`. They document migration and API comparison only; they are not an active production lane.
+
+## Source-pinned upstream lane
+
+Use `references/developer_guide/rust.md` and the model snapshots under `references/api/model/` as source-pinned upstream material at commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Version-scope post-pin APIs such as `OrderInitialized::new_checked` until the baseline advances.
+
 ## What This Skill Covers
 
 NautilusTrader **domain model** — instruments, identifiers, value types, enums, and currencies.
@@ -65,147 +104,6 @@ NautilusTrader **domain model** — instruments, identifiers, value types, enums
 - **Data persistence** → use `nt-data`
 - **Adapter-specific instrument loading** → use `nt-adapters`
 
-## Python Usage
-
-### v1.227.0 model deltas
-
-- `InstrumentId::parse_parent_components` and `InstrumentClass` parent suffix conversion helpers are exposed via PyO3.
-- Rust cache model accessors may return scoped wrapper newtypes (`OrderRef`, `AccountRef`, `PositionRef`) rather than raw references; request owned snapshots when values cross async/event boundaries.
-
-### Identifiers
-
-```python
-from nautilus_trader.model.identifiers import InstrumentId, Venue, Symbol, TraderId, StrategyId
-
-instrument_id = InstrumentId.from_str("ETHUSDT-PERP.BINANCE")
-venue = Venue("BINANCE")
-symbol = Symbol("ETHUSDT-PERP")
-
-# Identifier components
-instrument_id.venue  # Venue("BINANCE")
-instrument_id.symbol  # Symbol("ETHUSDT-PERP")
-```
-
-### Value Types
-
-```python
-from nautilus_trader.model.objects import Price, Quantity, Money, Currency
-
-# Price with precision
-price = Price.from_str("1850.50")
-price = Price(1850.50, precision=2)
-
-# Quantity with precision
-qty = Quantity.from_str("1.5")
-qty = Quantity(1.5, precision=1)
-
-# Money
-balance = Money(10_000, Currency.from_str("USD"))
-balance = Money.from_str("10000 USD")
-
-# Arithmetic
-total = price * qty  # Returns float
-```
-
-### Instruments
-
-```python
-from nautilus_trader.model.instruments import CurrencyPair, Equity, CryptoPerpetual, FuturesContract
-
-# Instruments are typically loaded from adapters or created for backtests
-# Access via cache:
-instrument = self.cache.instrument(instrument_id)
-
-# Key properties:
-instrument.id           # InstrumentId
-instrument.venue        # Venue
-instrument.base_currency    # Currency (for pairs)
-instrument.quote_currency   # Currency
-instrument.price_precision  # int
-instrument.size_precision   # int
-instrument.lot_size         # Quantity
-instrument.min_quantity     # Quantity
-instrument.max_quantity     # Quantity
-instrument.min_price        # Price
-instrument.max_price        # Price
-
-# Create quantity/price with correct precision:
-qty = instrument.make_qty(1.5)
-price = instrument.make_price(1850.50)
-```
-
-**18 `InstrumentAny` variants:**
-- `BettingInstrument` — betting markets
-- `BinaryOption` — binary options
-- `Cfd` — contracts for difference
-- `Commodity` — commodities
-- `CryptoFuture` — crypto dated futures
-- `CryptoFuturesSpread` — crypto futures spreads
-- `CryptoOption` — crypto options
-- `CryptoOptionSpread` — crypto option spreads
-- `CryptoPerpetual` — crypto perpetual swaps
-- `CurrencyPair` — FX pairs (EUR/USD)
-- `Equity` — stocks
-- `FuturesContract` — dated futures
-- `FuturesSpread` — futures spreads
-- `IndexInstrument` — indices
-- `OptionContract` — dated options
-- `OptionSpread` — option spreads
-- `PerpetualContract` — generic perpetual contracts
-- `TokenizedAsset` — tokenized assets
-
-SyntheticInstrument is separate from `InstrumentAny` and is not one of these variants.
-
-### Enums
-
-```python
-from nautilus_trader.model.enums import (
-    OrderSide,       # BUY, SELL
-    OrderType,       # MARKET, LIMIT, STOP_MARKET, STOP_LIMIT, etc.
-    TimeInForce,     # GTC, IOC, FOK, GTD, DAY
-    PositionSide,    # LONG, SHORT, FLAT
-    OmsType,         # HEDGING, NETTING
-    AccountType,     # CASH, MARGIN
-    OrderStatus,     # INITIALIZED, SUBMITTED, ACCEPTED, FILLED, CANCELED, etc.
-    BarAggregation,  # TICK, SECOND, MINUTE, HOUR, DAY, etc.
-    PriceType,       # BID, ASK, MID, LAST
-    BookType,        # L1_MBP, L2_MBP, L3_MBO
-)
-```
-
-### Currencies
-
-```python
-from nautilus_trader.model.currencies import BTC, ETH, USD, USDT
-
-# Or dynamically:
-currency = Currency.from_str("USD")
-```
-
-## Python Extension
-
-### SyntheticInstrument
-
-```python
-from nautilus_trader.model.instruments import SyntheticInstrument
-
-# Define a synthetic instrument from a formula combining other instruments
-synthetic = SyntheticInstrument(
-    symbol=Symbol("SPREAD-1"),
-    price_precision=2,
-    components=[instrument_id_1, instrument_id_2],
-    formula="(component_0 - component_1)",
-)
-```
-
-### Custom Tick Schemes
-
-```python
-from nautilus_trader.model.tick_scheme import TickScheme
-
-# Define custom tick schemes for instruments with non-uniform tick sizes
-```
-
 ## Rust Usage
 
 ```rust
@@ -218,6 +116,28 @@ use nautilus_model::enums::{OrderSide, OrderType};
 ## Rust Extension
 
 ### New Instrument Types
+
+**18 `InstrumentAny` variants:**
+- `BettingInstrument` — betting markets
+- `BinaryOption` — binary options
+- `Cfd` — contracts for difference
+- `Commodity` — commodities
+- `CryptoFuture` — crypto dated futures
+- `CryptoFuturesSpread` — crypto futures spreads
+- `CryptoOption` — crypto options
+- `CryptoOptionSpread` — crypto option spreads
+- `CryptoPerpetual` — crypto perpetual swaps
+- `CurrencyPair` — FX pairs
+- `Equity` — stocks
+- `FuturesContract` — dated futures
+- `FuturesSpread` — futures spreads
+- `IndexInstrument` — indices
+- `OptionContract` — dated options
+- `OptionSpread` — option spreads
+- `PerpetualContract` — generic perpetual contracts
+- `TokenizedAsset` — tokenized assets
+
+SyntheticInstrument is separate from `InstrumentAny` and is not one of these variants.
 
 All 18 `InstrumentAny` variants are defined in Rust (`crates/model/src/instruments/`) and exposed to Python via PyO3. `SyntheticInstrument` remains a separate type. New instruments follow the same pattern:
 

@@ -34,6 +34,22 @@ Use this as the start point for NautilusTrader work. It does not replace the
 specialized `nt-*` skills; it chooses which ones to load and how to sequence
 them.
 
+## Rust production lane
+
+Route every new non-AI strategy, backtest, data, live, signal, and trading task to the Rust-first specialized skill. Keep execution authority, risk checks, adapter state, and runtime liveness in Rust, and require the specialized skill's Rust verification evidence before reporting readiness.
+
+## PyO3 control-plane lane
+
+Use PyO3 only as a bounded control plane for constructing configuration, registering Rust components, starting or stopping nodes, and inspecting results. The router must not turn that boundary into a Python execution path; order placement, market-data handlers, risk decisions, and production state transitions remain Rust-owned.
+
+## Migration/reference lane
+
+Legacy non-AI Python guidance is pointer-only and belongs under `migration_reference/`; load it only for an explicitly scoped migration or historical comparison. The only active Python lane is AI/advisory through `nt-evomap-integration`.
+
+## Source-pinned upstream lane
+
+Resolve API claims against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, then report any version-scoped drift separately.
+
 ## Source of truth
 
 Prioritize current NautilusTrader sources over downstream skill repos:

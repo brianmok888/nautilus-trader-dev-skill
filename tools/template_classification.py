@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 from pathlib import Path
 from typing import Final
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from tools.cutover_inventory import ACTIVE_PYTHON_SKILL, CUTOVER_SKILL_NAMES
 
 CLASSIFICATION_PREFIX: Final = "# TEMPLATE_CLASSIFICATION: "
 AI_CLASSIFICATION: Final = (
@@ -18,7 +24,7 @@ ALLOWED_CLASSIFICATIONS: Final = {
     MIGRATION_CLASSIFICATION,
     LEGACY_CLASSIFICATION,
 }
-AI_SKILL: Final = Path("skills/nt-evomap-integration")
+AI_SKILL: Final = Path("skills") / ACTIVE_PYTHON_SKILL
 LEGACY_EXACT_NAMES: Final = {
     "TradingNode",
     "TradingNodeConfig",
@@ -66,20 +72,12 @@ def classification_error(path: Path, root: Path) -> str | None:
         return "legacy classification requires a legacy_migration path component"
     if has_legacy_executable_signal(path) and classification != LEGACY_CLASSIFICATION:
         return "legacy executable requires the exact legacy classification"
-    rust_skill_templates = {
-        "nt-trading",
-        "nt-backtest",
-        "nt-signals",
-        "nt-live",
-        "nt-data",
-        "nt-implement",
-    }
     if (
         classification == MIGRATION_CLASSIFICATION
         and len(relative.parts) > 2
         and relative.parts[0] == "skills"
-        and relative.parts[1] in rust_skill_templates
-        and "templates" in relative.parts
+        and relative.parts[1] in CUTOVER_SKILL_NAMES
+        and relative.parts[1] != ACTIVE_PYTHON_SKILL
         and "migration_reference" not in relative.parts
     ):
         return "non-AI migration Python requires a migration_reference path component"

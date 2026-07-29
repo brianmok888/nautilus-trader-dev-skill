@@ -23,7 +23,7 @@ from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 from nautilus_trader.test_kit.stubs.component import TestComponentStubs
 from pydantic import SecretStr
 
-_TEMPLATES = Path(__file__).parent.parent / "templates"
+_TEMPLATES = Path(__file__).parent.parent / "migration_reference" / "python" / "templates"
 _LEGACY_TEMPLATES = _TEMPLATES / "legacy_migration"
 
 

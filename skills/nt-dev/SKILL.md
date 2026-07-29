@@ -28,6 +28,24 @@ AI/advisory lane remains Python and off execution-critical paths; it stays async
 
 Development gates: the minimum Rust compliance evidence for changed production code is `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and relevant PyO3/stub regeneration checks; add Python lint/tests only for Python research/config or AI/advisory lane changes.
 
+## Rust production lane
+
+Use the Rust workspace as the default development surface for non-AI production code, including formatting, tests, linting, dependency policy, benchmarks, unsafe-code review, and FFI ownership checks. Preserve crate boundaries and require fresh cargo evidence for every changed production path.
+
+## PyO3 control-plane lane
+
+Treat PyO3 as a narrow binding and lifecycle boundary: expose typed construction, configuration, registration, and inspection while keeping ownership and failure semantics explicit. Regenerate and verify bindings or stubs when that boundary changes, but do not give Python execution authority over trading, risk, adapters, or runtime liveness.
+
+## Migration/reference lane
+
+NT v2 compatibility note: legacy non-AI Python, Cython, and v1 development
+guidance belongs under `migration_reference/` and is migration/reference-only;
+it is not a template for new production implementation.
+
+## Source-pinned upstream lane
+
+Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; label newer upstream behavior as version-scoped drift.
+
 ## What This Skill Covers
 
 NautilusTrader **developer workflow** — environment setup, coding standards, testing, benchmarking, FFI memory contracts, documentation style, and release process.
@@ -241,8 +259,9 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 - Upstream `develop` source label is 1.231.0 and `python/pyproject.toml` is
   `2.0.0rc2`; upstream release notes identify 2.0.0rc1 as the first public
   candidate and describe the rolling `2.0.0rcN` line before final 2.0.0.
-- Rust-oriented v2.0 readiness is the default: Rust core first, PyO3 bindings
-  second, Python only for user strategy/configuration and AI/advisory lanes.
+- Rust-oriented v2.0 readiness is the default: Rust core first and bounded PyO3
+  configuration/inspection second. The only active Python lane in this
+  repository is AI/advisory; non-AI Python remains migration/reference-only.
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
@@ -328,7 +347,7 @@ hint before rerunning if local uv differs.
 ### Running Tests
 
 ```bash
-# v1 legacy Python tests (tests/)
+# NT v2 compatibility note: legacy v1 Python tests are migration/reference-only.
 make pytest
 
 # v2 Python tests (python/tests/) — uses debug Rust extension

@@ -248,7 +248,7 @@ HARNESSES: dict[str, Harness] = {
         ),
         owned_paths=(
             Path("skills/nt-dex-adapter/SKILL.md"),
-            Path("skills/nt-dex-adapter/templates"),
+            Path("skills/nt-dex-adapter/migration_reference/python/templates"),
             Path("skills/nt-dex-adapter/tests"),
         ),
         evidence_file=Path("references/g2-evidence/nt-dex-adapter.json"),

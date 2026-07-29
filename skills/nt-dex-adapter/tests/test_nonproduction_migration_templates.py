@@ -14,7 +14,7 @@ from nautilus_trader.test_kit.stubs.component import TestComponentStubs
 
 pytest.importorskip("pydantic")
 
-_templates = Path(__file__).parent.parent / "templates"
+_templates = Path(__file__).parent.parent / "migration_reference" / "python" / "templates"
 _legacy_templates = _templates / "legacy_migration"
 
 
