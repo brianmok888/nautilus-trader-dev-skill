@@ -204,6 +204,15 @@ def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
     assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in guide
     assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in guide
     assert "Python remains supported for V2 strategy research" not in guide
+    contradictory_python_guidance = [
+        phrase
+        for phrase in [
+            "supported Python V2 strategy/research work",
+            "current Python-only integration guidance",
+        ]
+        if phrase in guide
+    ]
+    assert contradictory_python_guidance == []
 
     combined_dex = dex_skill + dex_agents
     assert "`nt-strategy-builder-rust`" in combined_dex

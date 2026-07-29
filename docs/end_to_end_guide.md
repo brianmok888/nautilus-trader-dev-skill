@@ -2,7 +2,7 @@
 
 This guide gives the default NautilusTrader Development Skills workflow for a new production-oriented system. The primary path is Rust-first: create a Cargo project, build a native Rust strategy, attach it to a Rust `LiveNode`, and run it on Tokio. It follows the upstream `docs/how_to/run_rust_live_trading.md` pattern: `LiveNode::builder(...)`, adapter client factories, `node.add_strategy(...)`, then `node.run().await`.
 
-Python is still supported, but it is not the default production live path in this guide. Use the appendix for supported Python V2 strategy/research work and keep AI/advisory code on the Python research lane, off execution-critical paths.
+All new strategy, research, prototyping, integration, and live work follows the Rust-first path in this guide. Only AI/advisory through `nt-evomap-integration` remains active Python, isolated from execution-critical paths; the appendix labels all other Python material migration/reference-only.
 
 **Prerequisites**:
 - Rust 1.97.1 toolchain and Cargo installed for the pinned `6e59fd7` develop baseline.
@@ -198,7 +198,7 @@ If your venue requires a custom adapter, keep the same Rust-first live shape and
 
 ## Appendix: Python Migration Reference and Active AI/Advisory Lane
 
-NT v2 compatibility note: legacy `TradingNode` material is migration/reference-only unless a guide explicitly labels it as current Python-only integration guidance; use `LiveNode` for new Rust-backed live work.
+NT v2 compatibility note: legacy `TradingNode` and non-AI Python integration material are migration/reference-only. Use Rust `LiveNode` for all new integration and live work; only EvoMap AI/advisory remains active Python.
 
 Existing non-AI Python strategy, notebook, exploratory analysis, and prototyping material is migration/reference-only under this repository's stricter cutover policy. New strategy research and rapid prototyping route to `nt-strategy-builder-rust`; use existing Python material only to understand or migrate prior systems.
 
