@@ -323,7 +323,10 @@ class MyDEXDataClient(LiveMarketDataClient):
         is_buy : bool
             True if base token is being bought.
         """
-        execution_price = amount_out / amount_in if amount_in > 0 else 0.0
+        if amount_in <= 0:
+            raise ValueError("amount_in must be greater than zero")
+
+        execution_price = amount_out / amount_in
 
         return TradeTick(
             instrument_id=instrument_id,

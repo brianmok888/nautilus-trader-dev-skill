@@ -16,30 +16,24 @@ Key differences from CeFi execution clients:
 Replace 'MyDEX' with your actual DEX name throughout.
 """
 
-import asyncio
 import sys
 from pathlib import Path
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
 from nautilus_trader.live.execution_client import LiveExecutionClient
-from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.enums import (
     AccountType,
-    LiquiditySide,
     OmsType,
-    PositionSide,
 )
 from nautilus_trader.model.identifiers import (
     AccountId,
     ClientId,
     ClientOrderId,
     InstrumentId,
-    TradeId,
     VenueOrderId,
     Venue,
 )
-from nautilus_trader.model.objects import Money, Price
 from nautilus_trader.model.orders import Order
 from nautilus_trader.execution.reports import OrderStatusReport
 
@@ -148,58 +142,20 @@ class MyDEXExecutionClient(LiveExecutionClient):
         Submit an order as a signed on-chain transaction.
 
         Flow:
-        1. Get instrument from provider
-        2. Calculate min_amount_out from slippage tolerance
-        3. Build + sign tx via Rust signing client
-        4. Broadcast tx
-        5. Emit OrderSubmitted event
-        6. Wait for receipt (async), then emit OrderFilled or OrderRejected
+        1. Build and sign via the venue client
+        2. Broadcast the transaction
+        3. Validate the returned transaction hash
+        4. Emit submission only after successful broadcast
+        5. Resolve lifecycle only from authoritative receipt data
 
         Parameters
         ----------
         order : Order
             The Nautilus order to submit.
         """
-        order = command.order
-        instrument = self._instrument_provider.find(order.instrument_id)
-        if instrument is None:
-            self.generate_order_rejected(
-                order=order,
-                reason=f"Instrument not found: {order.instrument_id}",
-                ts_event=self.clock.timestamp_ns(),
-            )
-            return
-
-        # Calculate minimum output (slippage protection):
-        # min_amount_out = order.quantity * (1 - Decimal(str(self._config.max_slippage_bps)) / Decimal("10000"))
-
-        try:
-            # ── Build and sign transaction ──
-            # tx_hash = await self._signing_client.submit_swap(
-            #     pool_address=instrument.info.get("pool_address"),
-            #     amount_in=float(order.quantity),
-            #     min_amount_out=float(min_amount_out),
-            #     deadline_secs=30,
-            # )
-
-            # Emit submitted event immediately (tx in mempool)
-            self.generate_order_submitted(
-                order=order,
-                ts_event=self.clock.timestamp_ns(),
-            )
-
-            # Track pending tx
-            # self._pending_txs[order.client_order_id] = tx_hash
-
-            # Monitor tx completion asynchronously
-            # asyncio.ensure_future(self._wait_for_receipt(order, tx_hash))
-
-        except Exception as e:
-            self.generate_order_rejected(
-                order=order,
-                reason=str(e),
-                ts_event=self.clock.timestamp_ns(),
-            )
+        raise NotImplementedError(
+            "DEX transaction building, signing, and broadcast must be implemented before submission",
+        )
 
     async def _cancel_order(self, command) -> None:
         """
@@ -209,18 +165,14 @@ class MyDEXExecutionClient(LiveExecutionClient):
         Implement speed-bump cancellation (replace-by-fee) or raise NotImplementedError
         with a clear explanation.
         """
-        order = command.order
-        self.log.warning(
-            f"Order cancellation not supported on AMM DEX: {order.client_order_id}. "
-            "AMM swaps execute atomically; cancel via replace-by-fee if tx is pending."
+        raise NotImplementedError(
+            "DEX cancellation requires an authoritative venue cancel or replace-by-fee transaction",
         )
-        # For perp DEX / on-chain CLOB with cancel support:
-        # tx_hash = await self._signing_client.cancel_order(order.venue_order_id)
-        # ...
 
     async def _cancel_all_orders(self, command) -> None:
-        """Cancel all open orders (AMM: usually no-op; perp DEX: close open positions)."""
-        self.log.info("cancel_all_orders: not applicable for AMM DEX")
+        raise NotImplementedError(
+            "DEX bulk cancellation requires an authoritative venue cancel transaction",
+        )
 
     async def _modify_order(self, command) -> None:
         """Modify is not supported on most DEX venues."""
@@ -247,23 +199,9 @@ class MyDEXExecutionClient(LiveExecutionClient):
         - After every trade execution
         - Periodically to stay in sync (use a timer in the actor)
         """
-        try:
-            # balances = await self._signing_client.fetch_balances()
-            # self.generate_account_state(
-            #     balances=[
-            #         AccountBalance(
-            #             total=Money(balances["USDT"], USDT),
-            #             locked=Money(0, USDT),
-            #             free=Money(balances["USDT"], USDT),
-            #         ),
-            #     ],
-            #     margins=[],
-            #     reported=True,
-            #     ts_event=self.clock.timestamp_ns(),
-            # )
-            pass
-        except Exception as e:
-            self.log.error(f"Failed to fetch account state: {e}")
+        raise NotImplementedError(
+            "DEX account state requires a successful authoritative on-chain balance query",
+        )
 
     # ─── RECONCILIATION ────────────────────────────────────────────────────────
 
@@ -276,96 +214,47 @@ class MyDEXExecutionClient(LiveExecutionClient):
         """
         Generate an order status report for reconciliation.
 
-        For DEX: query on-chain tx receipt by tx_hash (venue_order_id).
-        Returns None if the tx cannot be found.
+        Reconciliation follows TC-E84–87: only a successful authoritative venue
+        query can establish order, fill, position, or zero-result state.
         """
-        self.log.debug(
-            f"generate_order_status_report: {client_order_id} / {venue_order_id}"
+        raise NotImplementedError(
+            "DEX order reconciliation requires an authoritative venue transaction query",
         )
-        # tx_hash = str(venue_order_id) if venue_order_id else None
-        # if tx_hash:
-        #     receipt = await self._signing_client.get_receipt(tx_hash)
-        #     return self._receipt_to_order_status_report(receipt, instrument_id, client_order_id)
-        return None
 
     async def generate_order_status_reports(self, *args, **kwargs):
         """Generate all available order status reports for reconciliation."""
-        return []
+        raise NotImplementedError(
+            "DEX order reconciliation requires a successful authoritative venue query",
+        )
 
     async def generate_fill_reports(self, *args, **kwargs):
         """Generate fill reports for reconciliation."""
-        return []
+        raise NotImplementedError(
+            "DEX fill reconciliation requires parsed authoritative on-chain logs",
+        )
 
     async def generate_position_status_reports(self, *args, **kwargs):
         """Generate position status reports for reconciliation."""
-        return []
+        raise NotImplementedError(
+            "DEX position reconciliation requires a successful authoritative venue query",
+        )
 
     async def generate_mass_status(self, *args, **kwargs):
         """Generate mass status for reconciliation."""
-        return None
+        raise NotImplementedError(
+            "DEX mass status requires successful authoritative venue queries",
+        )
 
     # ─── TX RECEIPT HANDLER ────────────────────────────────────────────────────
 
     async def _wait_for_receipt(self, order: Order, tx_hash: str) -> None:
         """
-        Wait for transaction confirmation and emit order lifecycle events.
+        Wait for an authoritative transaction receipt.
 
-        On success → generate_order_filled
-        On revert  → generate_order_rejected
-        On timeout → generate_order_expired
+        Unknown transport, parse, timeout, retry, and batch outcomes must remain
+        unresolved per TC-E74–78. A terminal lifecycle event requires a parsed,
+        authoritative receipt and incremental fill values.
         """
-        try:
-            # Timeout after 120 seconds
-            receipt = None  # TODO: await self._signing_client.wait_for_receipt(tx_hash, timeout=120)
-
-            if receipt is None:
-                self.generate_order_expired(
-                    order=order,
-                    ts_event=self.clock.timestamp_ns(),
-                )
-                return
-
-            if True:  # receipt.status == 1 (success)
-                instrument = self._instrument_provider.find(order.instrument_id)
-
-                # In a real implementation, parse actual amount from receipt logs
-                # actual_amount_out = parse_swap_event(receipt)
-                # gas_cost = receipt.gas_used * receipt.effective_gas_price / 1e18
-
-                self.generate_order_filled(
-                    order=order,
-                    venue_order_id=VenueOrderId(tx_hash),
-                    venue_position_id=None,
-                    trade_id=TradeId(tx_hash),
-                    position_side=PositionSide.FLAT,
-                    last_qty=order.quantity,
-                    last_px=Price.from_str(
-                        "1.000000"
-                    ),  # Replace with actual fill price
-                    quote_currency=instrument.quote_currency if instrument else USDT,
-                    commission=Money(0, USDT),  # Replace with actual gas cost
-                    liquidity_side=LiquiditySide.TAKER,
-                    ts_event=self.clock.timestamp_ns(),
-                    ts_init=self.clock.timestamp_ns(),
-                )
-            else:
-                self.generate_order_rejected(
-                    order=order,
-                    reason=f"Transaction reverted: {tx_hash}",
-                    ts_event=self.clock.timestamp_ns(),
-                )
-
-            # Update account state after every completed tx
-            await self._update_account_state()
-
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            self.log.error(f"Error waiting for tx receipt {tx_hash}: {e}")
-            self.generate_order_rejected(
-                order=order,
-                reason=f"Receipt error: {e}",
-                ts_event=self.clock.timestamp_ns(),
-            )
-        finally:
-            self._pending_txs.pop(order.client_order_id, None)
+        raise NotImplementedError(
+            "DEX receipt monitoring requires authoritative receipt parsing before lifecycle events",
+        )
