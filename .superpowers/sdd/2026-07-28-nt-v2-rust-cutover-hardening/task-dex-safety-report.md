@@ -172,3 +172,93 @@ safety logic and were left scoped out rather than hidden with ignores or config.
 The earlier report section's temporary basic-config basedpyright result must not
 be interpreted as repository type-check cleanliness; this Round 1 normal-command
 result supersedes that claim.
+
+## Review fix Round 2/5
+
+### RED evidence
+
+Executable tests were added before implementation for derived precision safety,
+the exact mass-status fail-closed override, and direct construction through the
+current live-client base contracts:
+
+```text
+uv run pytest skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py -q
+...............F..........FFF.F......F                                   [100%]
+6 failed, 32 passed in 2.77s
+```
+
+The failures showed that inherited mass status entered framework logic instead
+of failing immediately, tiny/overflowing derived values reached Nautilus value
+construction, and the migration clients did not accept the required event loop.
+One construction test initially referenced the provider config from the wrong
+dynamically loaded module; that test wiring error was corrected before using the
+remaining constructor failures as implementation evidence. The next RED run
+then reached the live base constructor and proved the provider was not a current
+`InstrumentProvider`, followed by an execution-config serialization failure.
+
+### GREEN implementation
+
+- Swap conversion now validates the raw input and output, derived execution
+  price, and six/eight-decimal serialized price/size before constructing
+  `Price`, `Quantity`, or `TradeTick`.
+- Tests cover a price quantizing to zero, a ratio overflowing to infinity, a
+  size quantizing to zero, and an ordinary positive trade that constructs.
+- The exact pinned `generate_mass_status(self, lookback_mins: int | None = None)
+  -> ExecutionMassStatus | None` override now raises immediately. Its executable
+  test proves the reconciliation flag remains false.
+- Data and execution constructors now accept and pass `loop` and
+  `instrument_provider`; the data constructor passes its compatible config.
+  The execution base receives `config=None` because the migration config's
+  `SecretStr` is not serializable by the pinned Nautilus component config
+  encoder; the complete migration config remains retained on the client.
+- The migration provider now subclasses the pinned `InstrumentProvider`, and
+  the factory forwards its existing loop to both clients.
+- The existing migration harness now imports and constructs both clients with
+  real test-kit clock, message bus, cache, provider, and configs.
+
+### Validation evidence
+
+```text
+uv run pytest skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py -q
+38 passed in 2.53s
+
+uv run pytest skills/nt-dex-adapter/tests -q
+70 passed in 11.38s
+
+uv run pytest tests/test_template_classification.py -q
+14 passed in 0.37s
+
+uv run pytest tests/test_v2_guidance_hardening.py -q
+22 passed in 0.10s
+
+uv run python tools/check_dev_guide_sync.py
+Developer guide sync checks passed.
+
+uv run ruff check <six changed Python files>
+All checks passed!
+
+python3 -m compileall -q <six changed Python files>
+exit 0
+
+git diff --check
+exit 0
+```
+
+Normal repository type checking was run without ignores or alternate config:
+
+```text
+uv run basedpyright --outputjson
+276 errors, 6358 warnings, 0 notes
+exit 1
+```
+
+This remains a repository-wide red gate and is not claimed as a pass. The normal
+run has no error in either changed test and no data/execution constructor call
+error, task generic error, or execution-client reconciliation override error.
+It reports 25 errors across the changed templates: 14 existing dynamic
+standalone/package sibling-import diagnostics, 10 strict typing diagnostics in
+the migration provider's pre-existing dynamic fallback/raw metadata surface,
+and one pre-existing factory execution `create` override mismatch involving its
+extra `account_id` argument. Runtime import and construction are covered by the
+38-test GREEN run. The remaining diagnostics are recorded explicitly rather
+than hidden with basedpyright configuration or ignores.

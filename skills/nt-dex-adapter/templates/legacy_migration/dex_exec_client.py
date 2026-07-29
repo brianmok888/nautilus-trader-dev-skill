@@ -16,6 +16,7 @@ Key differences from CeFi execution clients:
 Replace 'MyDEX' with your actual DEX name throughout.
 """
 
+import asyncio
 import sys
 from pathlib import Path
 
@@ -26,6 +27,7 @@ from nautilus_trader.execution.messages import GenerateOrderStatusReport
 from nautilus_trader.execution.messages import GenerateOrderStatusReports
 from nautilus_trader.execution.messages import GeneratePositionStatusReports
 from nautilus_trader.execution.reports import FillReport
+from nautilus_trader.execution.reports import ExecutionMassStatus
 from nautilus_trader.execution.reports import OrderStatusReport
 from nautilus_trader.execution.reports import PositionStatusReport
 from nautilus_trader.live.execution_client import LiveExecutionClient
@@ -85,6 +87,7 @@ class MyDEXExecutionClient(LiveExecutionClient):
 
     def __init__(
         self,
+        loop: asyncio.AbstractEventLoop,
         client_id: ClientId,
         venue: Venue,
         account_id: AccountId,
@@ -95,14 +98,17 @@ class MyDEXExecutionClient(LiveExecutionClient):
         config: MyDEXExecClientConfig,
     ) -> None:
         super().__init__(
+            loop=loop,
             client_id=client_id,
             venue=venue,
             oms_type=OmsType.NETTING,
             account_type=AccountType.CASH,
             base_currency=None,
+            instrument_provider=instrument_provider,
             msgbus=msgbus,
             cache=cache,
             clock=clock,
+            config=None,
         )
         self._instrument_provider = instrument_provider
         self._config = config
@@ -243,6 +249,14 @@ class MyDEXExecutionClient(LiveExecutionClient):
         """Generate position status reports for reconciliation."""
         raise NotImplementedError(
             "DEX position reconciliation requires a successful authoritative venue query",
+        )
+
+    async def generate_mass_status(
+        self,
+        lookback_mins: int | None = None,
+    ) -> ExecutionMassStatus | None:
+        raise NotImplementedError(
+            "DEX mass status requires successful authoritative venue queries",
         )
 
     # ─── TX RECEIPT HANDLER ────────────────────────────────────────────────────

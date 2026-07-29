@@ -76,6 +76,7 @@ class MyDEXDataClient(LiveMarketDataClient):
 
     def __init__(
         self,
+        loop: asyncio.AbstractEventLoop,
         client_id: ClientId,
         venue: Venue,
         msgbus: MessageBus,
@@ -85,17 +86,20 @@ class MyDEXDataClient(LiveMarketDataClient):
         config: MyDEXDataClientConfig,
     ) -> None:
         super().__init__(
+            loop=loop,
             client_id=client_id,
             venue=venue,
             msgbus=msgbus,
             cache=cache,
             clock=clock,
+            instrument_provider=instrument_provider,
+            config=config,
         )
         self._instrument_provider = instrument_provider
         self._config = config
 
         # Pool subscriptions: instrument_id → polling task
-        self._poll_tasks: dict[InstrumentId, asyncio.Task] = {}
+        self._poll_tasks: dict[InstrumentId, asyncio.Task[None]] = {}
         # NOTE: Wrap your RPC client in a MyDEXHttpClient that uses
         # nautilus_network::http::HttpClient (via PyO3), NOT reqwest::Client directly.
         # This gives you built-in rate limiting, retry logic, and consistent error handling.
@@ -330,11 +334,20 @@ class MyDEXDataClient(LiveMarketDataClient):
             raise ValueError("amount_out must be finite and greater than zero")
 
         execution_price = amount_out / amount_in
+        if not math.isfinite(execution_price) or execution_price <= 0:
+            raise ValueError("execution_price must be finite and greater than zero")
+
+        serialized_price = f"{execution_price:.6f}"
+        serialized_size = f"{amount_in:.8f}"
+        if not math.isfinite(float(serialized_price)) or float(serialized_price) <= 0:
+            raise ValueError("serialized price must be finite and greater than zero")
+        if not math.isfinite(float(serialized_size)) or float(serialized_size) <= 0:
+            raise ValueError("serialized size must be finite and greater than zero")
 
         return TradeTick(
             instrument_id=instrument_id,
-            price=Price.from_str(f"{execution_price:.6f}"),
-            size=Quantity.from_str(f"{amount_in:.8f}"),
+            price=Price.from_str(serialized_price),
+            size=Quantity.from_str(serialized_size),
             aggressor_side=AggressorSide.BUYER if is_buy else AggressorSide.SELLER,
             trade_id=TradeId(tx_hash),
             ts_event=block_timestamp_ns,

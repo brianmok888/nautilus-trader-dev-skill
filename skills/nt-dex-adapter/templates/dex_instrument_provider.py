@@ -11,6 +11,7 @@ Replace 'MyDEX' with your actual DEX name and fill in the RPC client calls.
 
 from decimal import Decimal
 
+from nautilus_trader.common.providers import InstrumentProvider
 from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CurrencyPair
 from nautilus_trader.model.currencies import Currency
@@ -29,7 +30,7 @@ except ImportError:
     MyDEXInstrumentProviderConfig = _mod.MyDEXInstrumentProviderConfig
 
 
-class MyDEXInstrumentProvider:
+class MyDEXInstrumentProvider(InstrumentProvider):
     """
     Instrument provider for MyDEX.
 
@@ -48,13 +49,12 @@ class MyDEXInstrumentProvider:
     VENUE = Venue("MYDEX")
 
     def __init__(self, config: MyDEXInstrumentProviderConfig) -> None:
-        self._config = config
-        self._instruments: dict[InstrumentId, CurrencyPair] = {}
+        super().__init__(config=config)
         # self._http_client = MyDEXHttpClient(rpc_url=config.rpc_url)
 
     # ─── PUBLIC API (required by NautilusTrader adapter framework) ─────────────
 
-    async def load_all_async(self) -> None:
+    async def load_all_async(self, filters: dict | None = None) -> None:
         """
         Load all available pools from the DEX.
 
@@ -77,7 +77,11 @@ class MyDEXInstrumentProvider:
                 # Log and continue — don't fail all pools for one bad address
                 print(f"Warning: failed to load pool {address}: {e}")
 
-    async def load_ids_async(self, instrument_ids: list[InstrumentId]) -> None:
+    async def load_ids_async(
+        self,
+        instrument_ids: list[InstrumentId],
+        filters: dict | None = None,
+    ) -> None:
         """
         Load specific instruments by ID.
 
@@ -101,14 +105,6 @@ class MyDEXInstrumentProvider:
             pool_metadata = await self._fetch_pool_metadata(pool_address)
             instrument = self._parse_pool_to_instrument(pool_metadata)
             self._instruments[instrument.id] = instrument
-
-    def get_all(self) -> dict[InstrumentId, CurrencyPair]:
-        """Return all loaded instruments."""
-        return self._instruments.copy()
-
-    def find(self, instrument_id: InstrumentId) -> CurrencyPair | None:
-        """Find an instrument by ID."""
-        return self._instruments.get(instrument_id)
 
     # ─── PARSING HELPERS ───────────────────────────────────────────────────────
 

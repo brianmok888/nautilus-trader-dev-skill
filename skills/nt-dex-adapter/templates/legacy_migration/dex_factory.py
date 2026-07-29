@@ -103,6 +103,7 @@ class MyDEXLiveDataClientFactory(LiveDataClientFactory):
         provider = _get_or_create_instrument_provider(config)
 
         return MyDEXDataClient(
+            loop=loop,
             client_id=ClientId(name),
             venue=Venue(name),
             msgbus=msgbus,
@@ -160,6 +161,7 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
         provider = _get_or_create_instrument_provider(config)
 
         return MyDEXExecutionClient(
+            loop=loop,
             client_id=ClientId(name),
             venue=Venue(name),
             account_id=account_id,
