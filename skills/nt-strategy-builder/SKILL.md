@@ -70,9 +70,9 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 Are you using live market data?
 │
 ├─ NO  ──► BacktestEngine
-│           ├─ Single venue  → templates/backtest_node.py
-│           ├─ DEX venue     → templates/dex_venue_input.py
-│           └─ Multi-venue   → templates/multi_venue_strategy.py
+│           ├─ Single venue  → templates/legacy_migration/backtest_node.py
+│           ├─ DEX venue     → templates/legacy_migration/dex_venue_input.py
+│           └─ Multi-venue   → templates/legacy_migration/multi_venue_strategy.py
 │
 └─ YES ──► Runtime boundary
             ├─ Python live/integration-specific migration/reference → TradingNode templates
@@ -128,7 +128,7 @@ config = TradingNodeConfig(
 )
 ```
 
-See `templates/dex_venue_input.py` for a complete wiring example.
+See `templates/legacy_migration/dex_venue_input.py` for a complete wiring example.
 
 ### 3. Catalog Data (Backtest / Replay)
 
@@ -158,7 +158,7 @@ Wire multiple venues into a single `TradingNode` or `BacktestEngine`. Each venue
 - `exec_client` entry (if trading)
 - `BacktestVenueConfig` (backtest) / `LiveDataEngineConfig` (live)
 
-See `templates/multi_venue_strategy.py`.
+See `templates/legacy_migration/multi_venue_strategy.py`.
 
 ## Template Quick Reference
 
@@ -166,11 +166,11 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 | Template | When to use |
 |---|---|
-| `backtest_node.py` | Full backtest with catalog data, custom FillModel/MarginModel |
-| `live_node.py` | Production TradingNode with reconciliation, timeouts, persistence |
-| `paper_node.py` | Paper-trading: real market data, simulated execution |
-| `dex_venue_input.py` | Wire a custom DEX adapter as venue (backtest or live) |
-| `multi_venue_strategy.py` | Strategy consuming data from 2+ venues simultaneously |
+| `legacy_migration/backtest_node.py` | Full backtest with catalog data, custom FillModel/MarginModel |
+| `legacy_migration/live_node.py` | Legacy Python TradingNode migration reference; use `nt-strategy-builder-rust` and `nt-live` for current production wiring |
+| `legacy_migration/paper_node.py` | Paper-trading: real market data, simulated execution |
+| `legacy_migration/dex_venue_input.py` | Wire a custom DEX adapter as venue (backtest or live) |
+| `legacy_migration/multi_venue_strategy.py` | Strategy consuming data from 2+ venues simultaneously |
 
 ## Modern Tooling Standards
 - **Project Management**: Use `uv` for lightning-fast dependency resolution and environment management (see `docs/uv_guide.md`).

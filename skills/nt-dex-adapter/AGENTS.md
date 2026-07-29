@@ -63,7 +63,7 @@ nautilus_trader/adapters/   ← Optional PyO3 control/config exposure only
 | `dex_instrument_provider.py` | 2 | Pool → Instrument |
 | `dex_data_client.py` | 3 | Pool state → QuoteTick |
 | `dex_exec_client.py` | 4-5 | Wallet-signed tx |
-| `dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
+| `legacy_migration/dex_factory.py` | 6 | Legacy: Python live-node migration reference; new factories are Rust `LiveNodeBuilder` factories |
 
 ## CRITICAL DON'Ts
 

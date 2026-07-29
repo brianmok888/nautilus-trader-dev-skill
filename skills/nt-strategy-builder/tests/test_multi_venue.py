@@ -1,7 +1,7 @@
 """
 Strategy Builder Tests: Multi-Venue Signal Routing
 
-Verifies the MultiVenueStrategy from templates/multi_venue_strategy.py
+Verifies the MultiVenueStrategy from templates/legacy_migration/multi_venue_strategy.py
 by running it in a BacktestEngine with two synthetic venues.
 
 Tests confirm:
@@ -24,7 +24,7 @@ import importlib.util
 from pathlib import Path
 
 # Dynamically load template to test it without installing as a package
-_template_path = Path(__file__).parent.parent / "templates" / "multi_venue_strategy.py"
+_template_path = Path(__file__).parent.parent / "templates" / "legacy_migration" / "multi_venue_strategy.py"
 _spec = importlib.util.spec_from_file_location("multi_venue_strategy", _template_path)
 _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)

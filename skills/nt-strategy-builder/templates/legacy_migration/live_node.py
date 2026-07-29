@@ -13,7 +13,7 @@ Demonstrates a production-ready Python live/integration-specific TradingNode wit
 - Proper adapter factory wiring (CeFi or DEX)
 - Logging, monitoring
 
-Run with: uv run skills/nt-strategy-builder/templates/live_node.py
+Run with: uv run skills/nt-strategy-builder/templates/legacy_migration/live_node.py
 
 Replace MyStrategy, MyExchange* with your actual adapters and strategies.
 For Rust v2 / Rust-backed live-node work, use the LiveNode path in nt-live.

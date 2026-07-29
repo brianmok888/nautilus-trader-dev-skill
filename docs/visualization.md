@@ -33,4 +33,4 @@ config = TearsheetConfig()
 create_tearsheet(engine, output_path="tearsheet.html", config=config)
 ```
 
-See [backtest_viz.py](../skills/nt-implement/templates/backtest_viz.py) for a full template.
+See [backtest_viz.py](../skills/nt-implement/templates/legacy_migration/backtest_viz.py) for a legacy Python migration reference.

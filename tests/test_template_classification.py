@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -81,6 +82,69 @@ def test_ai_classification_is_rejected_outside_evomap_skill(tmp_path: Path) -> N
     )
 
 
+def test_migration_classification_does_not_bless_trading_node(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-example/legacy_migration/node.py"
+    _write(
+        path,
+        f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n"
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    assert _classification_error(path, tmp_path) == (
+        "legacy executable requires the exact legacy classification"
+    )
+
+
+def test_legacy_classification_requires_legacy_migration_namespace(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "skills/nt-example/templates/node.py"
+    _write(
+        path,
+        f"{CLASSIFICATION_PREFIX}{LEGACY_CLASSIFICATION}\n"
+        "from nautilus_trader.config import TradingNodeConfig\n",
+    )
+
+    assert _classification_error(path, tmp_path) == (
+        "legacy classification requires a legacy_migration path component"
+    )
+
+
+def test_legacy_classification_inside_legacy_migration_passes(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-example/legacy_migration/node.py"
+    _write(
+        path,
+        f"{CLASSIFICATION_PREFIX}{LEGACY_CLASSIFICATION}\n"
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    assert _classification_error(path, tmp_path) is None
+
+
+def test_cython_and_v1_executable_signals_require_legacy_quarantine(
+    tmp_path: Path,
+) -> None:
+    cython = tmp_path / "skills/nt-example/templates/clock.pyx"
+    v1_api = tmp_path / "skills/nt-example/templates/config.py"
+    _write(
+        cython,
+        f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n"
+        "cdef class LegacyClock:\n    pass\n",
+    )
+    _write(
+        v1_api,
+        f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n"
+        "from nautilus_trader.live.factories import LiveDataClientFactory\n",
+    )
+
+    assert _classification_error(cython, tmp_path) == (
+        "legacy executable requires the exact legacy classification"
+    )
+    assert _classification_error(v1_api, tmp_path) == (
+        "legacy executable requires the exact legacy classification"
+    )
+
+
 def _shipped_python_files(root: Path) -> list[Path]:
     files: list[Path] = []
     for path in sorted((root / "skills").glob("nt*/**/*")):
@@ -115,7 +179,29 @@ def _classification_error(path: Path, root: Path) -> str | None:
     relative = path.relative_to(root)
     if classification == AI_CLASSIFICATION and not relative.is_relative_to(AI_SKILL):
         return "AI classification is only allowed under skills/nt-evomap-integration"
+    if classification == LEGACY_CLASSIFICATION and "legacy_migration" not in relative.parts:
+        return "legacy classification requires a legacy_migration path component"
+    if _has_legacy_executable_signal(path) and classification != LEGACY_CLASSIFICATION:
+        return "legacy executable requires the exact legacy classification"
     return None
+
+
+def _has_legacy_executable_signal(path: Path) -> bool:
+    text = path.read_text(encoding="utf-8")
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return bool(
+            path.suffix in {".pyx", ".pxd", ".pxi"}
+            or any(term in text for term in ("cdef ", "cpdef ", "cimport "))
+        )
+
+    legacy_names = {"TradingNode", "TradingNodeConfig", "LiveDataClientFactory"}
+    return any(
+        isinstance(node, ast.Name) and node.id in legacy_names
+        or isinstance(node, ast.alias) and node.name.rsplit(".", 1)[-1] in legacy_names
+        for node in ast.walk(tree)
+    )
 
 
 def _write(path: Path, text: str) -> None:

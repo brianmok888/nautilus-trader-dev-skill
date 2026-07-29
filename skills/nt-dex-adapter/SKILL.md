@@ -156,7 +156,7 @@ nautilus_trader/adapters/my_dex/  ← Python layer
 | `dex_instrument_provider.py` | 2 | On-chain pool → Nautilus instrument |
 | `dex_data_client.py` | 3 | Pool state polling → QuoteTick/OrderBookDelta |
 | `dex_exec_client.py` | 4–5 | Wallet-signed tx submission + account state |
-| `dex_factory.py` | 6 | ClientFactory wiring |
+| `legacy_migration/dex_factory.py` | 6 | Legacy Python ClientFactory migration reference |
 | `dex_order_book_builder.py` | 3 | AMM pool reserves → L2 order book |
 
 ## DO and DON'Ts

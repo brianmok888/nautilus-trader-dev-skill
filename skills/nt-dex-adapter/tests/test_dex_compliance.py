@@ -26,10 +26,12 @@ import pytest
 pytest.importorskip("pydantic")
 
 _templates = Path(__file__).parent.parent / "templates"
+_legacy_templates = _templates / "legacy_migration"
 
 
-def _load_module(name: str):
-    spec = importlib.util.spec_from_file_location(name, _templates / f"{name}.py")
+def _load_module(name: str, *, legacy: bool = False):
+    root = _legacy_templates if legacy else _templates
+    spec = importlib.util.spec_from_file_location(name, root / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -40,7 +42,7 @@ _config_mod = _load_module("dex_config")
 _provider_mod = _load_module("dex_instrument_provider")
 _data_mod = _load_module("dex_data_client")
 _exec_mod = _load_module("dex_exec_client")
-_factory_mod = _load_module("dex_factory")
+_factory_mod = _load_module("dex_factory", legacy=True)
 
 MyDEXInstrumentProviderConfig = _config_mod.MyDEXInstrumentProviderConfig
 MyDEXDataClientConfig = _config_mod.MyDEXDataClientConfig
