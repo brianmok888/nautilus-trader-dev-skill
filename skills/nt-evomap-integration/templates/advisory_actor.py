@@ -1,232 +1,335 @@
 # TEMPLATE_CLASSIFICATION: AI/advisory Python; non-production; off execution-critical paths
-"""
-Actor Template for nautilus_trader.
+"""NT V2 AI advisory mailbox bridge with no trading or network authority.
 
-An Actor handles data processing, model inference, and signal generation.
-Actors cannot submit orders - use Strategy for trading logic.
+An external Python proxy owns all network and model work. This actor only stages
+already-produced local mailbox records for offline configuration/change review.
+It never publishes market data or signals and can never authorize trading.
 """
+
+from __future__ import annotations
 
 from collections import deque
+from dataclasses import dataclass
+from datetime import timedelta
+from enum import Enum
+from typing import Final, Self, override
 
-import msgspec
+from nautilus_trader.common import DataActor, DataActorConfig, TimeEvent
+from nautilus_trader.model import ActorId
 
-from nautilus_trader.common.actor import Actor
-from nautilus_trader.config import ActorConfig
-from nautilus_trader.core.data import Data
-from nautilus_trader.model.data import Bar
-from nautilus_trader.model.data import BarType
-from nautilus_trader.model.identifiers import InstrumentId
-
-
-class ModelState(msgspec.Struct):
-    """
-    Serializable model state using msgspec.
-
-    Use msgspec for model serialization (preferred over pickle).
-    """
-
-    weights: list[float]
-    threshold: float
-    version: str
+_MAILBOX_TIMER: Final = "advisory-mailbox"
 
 
-class MyActorConfig(ActorConfig):
-    """
-    Configuration for MyActor.
+class AdvisoryAuthority(Enum):
+    """Maximum authority granted by an approved advisory suggestion."""
 
-    Parameters
-    ----------
-    instrument_id : InstrumentId
-        The instrument to process.
-    bar_type : BarType
-        The bar type to subscribe to.
-    model_path : str
-        Path to the serialized model.
-    lookback : int
-        Number of bars to keep in buffer.
-    """
-
-    instrument_id: InstrumentId
-    bar_type: BarType
-    model_path: str
-    lookback: int = 100
+    NONE = "none"
+    OFFLINE_CHANGE_REVIEW = "offline_change_review"
 
 
-class MyActor(Actor):
-    """
-    Example actor for model inference and signal publishing.
+class AdvisoryResultStatus(Enum):
+    """Deterministic result-consumption outcomes."""
 
-    Hosts ML models, processes data, and publishes signals to strategies.
-    """
+    EMPTY = "empty"
+    STAGED = "staged"
+    LATE = "late"
+    REJECTED = "rejected"
+    AUDIT_BLOCKED = "audit_blocked"
 
-    def __init__(self, config: MyActorConfig) -> None:
-        """
-        Initialize the actor.
 
-        Parameters
-        ----------
-        config : MyActorConfig
-            The actor configuration.
-        """
+@dataclass(frozen=True, slots=True)
+class AdvisoryRequest:
+    """Bounded request exported to the external advisory proxy."""
+
+    request_id: str
+    artifact_hash: str
+    deadline_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryResult:
+    """Non-actionable suggestion returned by the external advisory proxy."""
+
+    request_id: str
+    suggestion_id: str
+    artifact_hash: str
+    suggestion_hash: str
+    received_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryDecision:
+    """Human decision for one exact staged suggestion."""
+
+    request_id: str
+    suggestion_id: str
+    suggestion_hash: str
+    approved: bool
+    decided_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryAuditRecord:
+    """Immutable decision provenance accepted before state changes."""
+
+    request_id: str
+    suggestion_id: str | None
+    outcome: str
+    reason: str
+    recorded_ns: int
+
+
+class AdvisoryMailboxPort:
+    """Bounded, non-blocking in-memory port shared with a local proxy adapter."""
+
+    def __init__(self, capacity: int, *, audit_capacity: int | None = None) -> None:
+        if capacity <= 0:
+            raise ValueError("capacity must be positive")
+        resolved_audit_capacity = capacity if audit_capacity is None else audit_capacity
+        if resolved_audit_capacity <= 0:
+            raise ValueError("audit_capacity must be positive")
+        self._requests: deque[AdvisoryRequest] = deque(maxlen=capacity)
+        self._results: deque[AdvisoryResult] = deque(maxlen=capacity)
+        self._audits: deque[AdvisoryAuditRecord] = deque(
+            maxlen=resolved_audit_capacity,
+        )
+
+    def try_put_request(self, request: AdvisoryRequest) -> bool:
+        """Return immediately; never discard an older request to make room."""
+        if len(self._requests) == self._requests.maxlen:
+            return False
+        self._requests.append(request)
+        return True
+
+    def try_take_request(self) -> AdvisoryRequest | None:
+        """Return the oldest request without waiting."""
+        return self._requests.popleft() if self._requests else None
+
+    def try_put_result(self, result: AdvisoryResult) -> bool:
+        """Return immediately; never discard an older result to make room."""
+        if len(self._results) == self._results.maxlen:
+            return False
+        self._results.append(result)
+        return True
+
+    def try_take_result(self) -> AdvisoryResult | None:
+        """Return the oldest result without waiting."""
+        return self._results.popleft() if self._results else None
+
+    def try_restore_result(self, result: AdvisoryResult) -> None:
+        self._results.appendleft(result)
+
+    def try_append_audit(self, record: AdvisoryAuditRecord) -> bool:
+        """Fail closed when durable audit transfer is backpressured."""
+        if len(self._audits) == self._audits.maxlen:
+            return False
+        self._audits.append(record)
+        return True
+
+    def try_take_audit(self) -> AdvisoryAuditRecord | None:
+        """Return the oldest audit record without waiting."""
+        return self._audits.popleft() if self._audits else None
+
+    def clear_runtime_queues(self) -> None:
+        """Clear bridge-owned request and result queues during lifecycle reset."""
+        self._requests.clear()
+        self._results.clear()
+
+
+class AdvisoryBridgeActorConfig(DataActorConfig):
+    """Importable NT V2 actor configuration for local advisory mailbox polling."""
+
+    def __new__(
+        cls,
+        mailbox_capacity: int = 64,
+        poll_interval_ms: int = 100,
+        actor_id: ActorId | None = None,
+        log_events: bool = True,
+        log_commands: bool = True,
+    ) -> Self:
+        return super().__new__(cls)
+
+    def __init__(
+        self,
+        mailbox_capacity: int = 64,
+        poll_interval_ms: int = 100,
+        actor_id: ActorId | None = None,
+        log_events: bool = True,
+        log_commands: bool = True,
+    ) -> None:
+        super().__init__()
+        self.actor_id: ActorId | None = actor_id
+        self.log_events: bool = log_events
+        self.log_commands: bool = log_commands
+        self.mailbox_capacity: int = mailbox_capacity
+        self.poll_interval_ms: int = poll_interval_ms
+
+
+class AdvisoryBridgeActor(DataActor):
+    """Stage local advisory records for offline review, never for execution."""
+
+    def __init__(
+        self,
+        config: AdvisoryBridgeActorConfig,
+    ) -> None:
         super().__init__(config)
+        if config.mailbox_capacity <= 0:
+            raise ValueError("mailbox_capacity must be positive")
+        if config.poll_interval_ms <= 0:
+            raise ValueError("poll_interval_ms must be positive")
+        self._config: AdvisoryBridgeActorConfig = config
+        self._mailbox: AdvisoryMailboxPort = AdvisoryMailboxPort(config.mailbox_capacity)
+        self._pending_request: AdvisoryRequest | None = None
+        self._staged_result: AdvisoryResult | None = None
+        self._staged_identity: tuple[str, str, str] | None = None
+        self._decision_finalized: bool = False
+        self._authority: AdvisoryAuthority = AdvisoryAuthority.NONE
 
-        # Actor state
-        self.model: ModelState | None = None
-        self.bar_buffer: deque[Bar] = deque(maxlen=config.lookback)
-        self.current_regime: str = "unknown"
+    @property
+    def staged_result(self) -> AdvisoryResult | None:
+        """Return the current non-actionable suggestion, if any."""
+        return self._staged_result
 
-    # ==================== LIFECYCLE HANDLERS ====================
+    @property
+    def authority(self) -> AdvisoryAuthority:
+        """Return offline review authority; trading authority is unrepresentable."""
+        return self._authority
 
+    @override
     def on_start(self) -> None:
-        """
-        Handle actor start.
+        """Register one short callback that only drains the local mailbox."""
+        self.clock.set_timer(
+            name=_MAILBOX_TIMER,
+            interval=timedelta(milliseconds=self._config.poll_interval_ms),
+            callback=self._on_mailbox_tick,
+        )
 
-        Load models, request historical data, subscribe to live data.
-        """
-        # 1. Load model (msgspec preferred)
-        self._load_model()
-
-        # 2. Request historical data for warmup
-        self.request_bars(self.config.bar_type)
-
-        # 3. Subscribe to live data
-        self.subscribe_bars(self.config.bar_type)
-
+    @override
     def on_stop(self) -> None:
-        """Handle actor stop."""
-        self.unsubscribe_bars(self.config.bar_type)
+        """Stop local polling without waiting for the external proxy."""
+        self.clock.cancel_timer(_MAILBOX_TIMER)
 
+    @override
     def on_reset(self) -> None:
-        """Reset actor state."""
-        self.model = None
-        self.bar_buffer.clear()
-        self.current_regime = "unknown"
+        """Clear staged state and return to no-authority operation."""
+        self._mailbox.clear_runtime_queues()
+        self._pending_request = None
+        self._staged_result = None
+        self._staged_identity = None
+        self._decision_finalized = False
+        self._authority = AdvisoryAuthority.NONE
 
-    # ==================== DATA HANDLERS ====================
+    @override
+    def on_dispose(self) -> None:
+        """Release local records; framework disposal clears clock callbacks."""
+        self.on_reset()
 
-    def on_bar(self, bar: Bar) -> None:
-        """
-        Handle new bar data.
+    def request_review(self, request: AdvisoryRequest) -> bool:
+        """Queue one review request without blocking or replacing older work."""
+        if self._pending_request is not None:
+            return False
+        if not self._mailbox.try_put_request(request):
+            return False
+        self._pending_request = request
+        self._staged_result = None
+        self._staged_identity = None
+        self._decision_finalized = False
+        self._authority = AdvisoryAuthority.NONE
+        return True
 
-        Parameters
-        ----------
-        bar : Bar
-            The bar received.
-        """
-        self.bar_buffer.append(bar)
+    def poll_result(self, now_ns: int) -> AdvisoryResultStatus:
+        """Consume at most one local result and stage it only after audit."""
+        result = self._mailbox.try_take_result()
+        if result is None:
+            return AdvisoryResultStatus.EMPTY
+        identity = (result.request_id, result.suggestion_id, result.suggestion_hash)
+        if identity == self._staged_identity:
+            return self._reject_result(result, "result_replay", now_ns)
+        request = self._pending_request
+        if request is None:
+            return self._reject_result(result, "unknown_request", now_ns)
+        if now_ns >= request.deadline_ns:
+            return self._reject_result(result, "late_result", now_ns)
+        if result.request_id != request.request_id:
+            return self._reject_result(result, "request_id_mismatch", now_ns)
+        if result.artifact_hash != request.artifact_hash:
+            return self._reject_result(result, "artifact_hash_mismatch", now_ns)
+        record = AdvisoryAuditRecord(
+            request_id=result.request_id,
+            suggestion_id=result.suggestion_id,
+            outcome="staged",
+            reason="ready_for_review",
+            recorded_ns=now_ns,
+        )
+        if not self._mailbox.try_append_audit(record):
+            self._mailbox.try_restore_result(result)
+            return AdvisoryResultStatus.AUDIT_BLOCKED
+        self._staged_result = result
+        self._staged_identity = identity
+        return AdvisoryResultStatus.STAGED
 
-        if len(self.bar_buffer) < self.config.lookback:
-            return  # Not enough data yet
+    def approve(self, decision: AdvisoryDecision) -> bool:
+        """Approve only the exact staged suggestion for offline change review."""
+        result = self._staged_result
+        reason = self._decision_rejection_reason(decision, result)
+        request = self._pending_request
+        if reason is None and self._decision_finalized:
+            reason = "decision_replay"
+        if reason is None and request is not None and decision.decided_ns >= request.deadline_ns:
+            reason = "decision_late"
+        outcome = "approved" if reason is None and decision.approved else "rejected"
+        record = AdvisoryAuditRecord(
+            request_id=decision.request_id,
+            suggestion_id=decision.suggestion_id,
+            outcome=outcome,
+            reason=reason or (
+                "offline_change_review" if decision.approved else "operator_rejected"
+            ),
+            recorded_ns=decision.decided_ns,
+        )
+        if not self._mailbox.try_append_audit(record):
+            return False
+        if reason is not None or not decision.approved:
+            return False
+        self._decision_finalized = True
+        self._authority = AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
+        return True
 
-        # Run inference
-        regime = self._infer_regime()
+    def _on_mailbox_tick(self, event: TimeEvent) -> None:
+        """Drain at most one already-local result in the event-loop callback."""
+        _ = self.poll_result(now_ns=event.ts_event)
 
-        # Publish signal if regime changed
-        if regime != self.current_regime:
-            self.current_regime = regime
-            self.publish_signal(
-                name="regime",
-                value=regime,
-                ts_event=bar.ts_event,
-            )
+    def _reject_result(
+        self,
+        result: AdvisoryResult,
+        reason: str,
+        now_ns: int,
+    ) -> AdvisoryResultStatus:
+        record = AdvisoryAuditRecord(
+            request_id=result.request_id,
+            suggestion_id=result.suggestion_id,
+            outcome="rejected",
+            reason=reason,
+            recorded_ns=now_ns,
+        )
+        if not self._mailbox.try_append_audit(record):
+            self._mailbox.try_restore_result(result)
+            return AdvisoryResultStatus.AUDIT_BLOCKED
+        if reason == "late_result":
+            return AdvisoryResultStatus.LATE
+        return AdvisoryResultStatus.REJECTED
 
-    def on_historical_data(self, data: Data) -> None:
-        """
-        Handle historical data.
-
-        Parameters
-        ----------
-        data : Data
-            The historical data.
-        """
-        if isinstance(data, Bar):
-            self.bar_buffer.append(data)
-
-    def on_data(self, data: Data) -> None:
-        """
-        Handle custom data from other actors.
-
-        Parameters
-        ----------
-        data : Data
-            The custom data.
-        """
-        pass
-
-    # ==================== PRIVATE METHODS ====================
-
-    def _load_model(self) -> None:
-        """Load model from disk using msgspec."""
-        try:
-            with open(self.config.model_path, "rb") as f:
-                self.model = msgspec.msgpack.decode(f.read(), type=ModelState)
-            self.log.info(f"Loaded model version {self.model.version}")
-        except FileNotFoundError:
-            self.log.error(f"Model file not found: {self.config.model_path}")
-        except Exception as e:
-            self.log.error(f"Failed to load model: {e}")
-
-    def _infer_regime(self) -> str:
-        """
-        Run model inference on buffered data.
-
-        Returns
-        -------
-        str
-            The detected regime.
-        """
-        if self.model is None:
-            return "unknown"
-
-        # Example: compute features and run inference
-        bars = list(self.bar_buffer)
-        closes = [float(b.close) for b in bars]
-
-        # Simple example: trend detection
-        recent_avg = sum(closes[-10:]) / 10
-        older_avg = sum(closes[-50:-40]) / 10 if len(closes) >= 50 else recent_avg
-
-        if recent_avg > older_avg * (1 + self.model.threshold):
-            return "uptrend"
-        elif recent_avg < older_avg * (1 - self.model.threshold):
-            return "downtrend"
-        else:
-            return "ranging"
-
-
-# =============================================================================
-# ONNX Model Actor (Alternative Pattern)
-# =============================================================================
-
-# Uncomment and modify if using ONNX models:
-#
-# import numpy as np
-# import onnxruntime as ort
-#
-# class OnnxActorConfig(ActorConfig):
-#     instrument_id: InstrumentId
-#     bar_type: BarType
-#     onnx_model_path: str
-#     feature_count: int = 10
-#
-# class OnnxActor(Actor):
-#     def __init__(self, config: OnnxActorConfig) -> None:
-#         super().__init__(config)
-#         self.session: ort.InferenceSession | None = None
-#         self.input_name: str = ""
-#
-#     def on_start(self) -> None:
-#         self.session = ort.InferenceSession(self.config.onnx_model_path)
-#         self.input_name = self.session.get_inputs()[0].name
-#         self.subscribe_bars(self.config.bar_type)
-#
-#     def on_bar(self, bar: Bar) -> None:
-#         features = self._compute_features(bar)
-#         inputs = {self.input_name: features.astype(np.float32).reshape(1, -1)}
-#         outputs = self.session.run(None, inputs)
-#         prediction = float(outputs[0][0])
-#         self.publish_signal(name="prediction", value=prediction, ts_event=bar.ts_event)
-#
-#     def _compute_features(self, bar: Bar) -> np.ndarray:
-#         # Implement feature computation
-#         return np.zeros(self.config.feature_count)
+    @staticmethod
+    def _decision_rejection_reason(
+        decision: AdvisoryDecision,
+        result: AdvisoryResult | None,
+    ) -> str | None:
+        if result is None:
+            return "no_staged_result"
+        if decision.request_id != result.request_id:
+            return "request_id_mismatch"
+        if decision.suggestion_id != result.suggestion_id:
+            return "suggestion_id_mismatch"
+        if decision.suggestion_hash != result.suggestion_hash:
+            return "suggestion_hash_mismatch"
+        return None

@@ -48,13 +48,18 @@ Do not use this skill for building venue adapters. Use `nt-dex-adapter` for adap
 
 ## Integration architecture
 
-Use five explicit components:
+Use two separated processes and one local contract:
 
-- `EvoMapProxyMailboxClient`: thin local gateway for Proxy mailbox and asset endpoints.
-- `CapsuleMapper`: transforms internal events and model outputs into bounded payloads.
-- `CapsulePolicy`: enforces allowlists, retry budgets, approval gate, and payload redaction.
-- `ProvenanceStore`: records `event_id`, asset id, suggestion hash, and decision reason.
-- `AdvisoryOrchestrator` (optional): LangChain/LangGraph workflow for offline analysis, never trading-loop execution.
+- External Python proxy: owns Proxy HTTP, model/graph work, redaction, retries, and durable provenance.
+- `AdvisoryBridgeActor`: NT V2 `DataActor` that drains only a bounded local mailbox on a short timer callback.
+- `AdvisoryMailboxPort`: non-blocking request/result/audit queues. The actor owns this local port; the proxy-facing integration may only transfer records into and out of it. It has no network client, message-bus, signal, data-publication, or execution capability.
+
+The actor stages immutable `AdvisoryRequest`, `AdvisoryResult`,
+`AdvisoryDecision`, and `AdvisoryAuditRecord` values. Approval must match the
+request ID, suggestion ID, and suggestion hash. Its maximum representable
+authority is `OFFLINE_CHANGE_REVIEW`; it cannot submit orders or change live
+trading behavior. Audit acceptance occurs before any approval state transition,
+so audit backpressure fails closed.
 
 ### Proxy mailbox contract
 
@@ -89,20 +94,21 @@ If advisory reasoning uses LangChain or LangGraph:
 
 ## Recommended flow
 
-1. Emit lightweight internal events from Strategy/Actor to a bounded queue.
-2. On timer events, map queue items into sanitized assets and call `asset/submit` through the local Proxy mailbox client.
-3. Poll for suggestions or asset review results on timer boundaries, validate through policy, and stage for review.
-4. Apply only approved local configuration changes outside hot handlers and persist outcome metadata.
-5. Report accepted/rejected outcomes through mailbox/asset events for EvoMap provenance.
+1. Build an offline review artifact outside NT market handlers.
+2. Enqueue an immutable request through the bounded local mailbox.
+3. Let the external proxy perform all network/model work outside the actor.
+4. On the actor timer, drain at most one already-local result, reject late or mismatched identity, write audit provenance, and stage it as non-actionable.
+5. Accept an exact human decision only after audit capacity is available; use approval solely for offline configuration/change review.
+6. Continue Rust trading, adapter, risk, and live-node operation unchanged when the mailbox or proxy is unavailable.
 
 ## Implementation checklist
 
-- [ ] Create a Proxy mailbox sidecar client and keep endpoint semantics isolated from trading logic.
-- [ ] Add timer-driven sync loop and bounded queue.
-- [ ] Implement policy checks for field allowlist, approval gate, retry budgets, and payload redaction.
-- [ ] Add deterministic fallback when EvoMap, LangChain, or LangGraph orchestration is unavailable.
-- [ ] Add provenance logging for all suggestion decisions.
-- [ ] Cover behavior in tests for success, timeout, degraded mode, and approval-gated resume.
+- [ ] Keep Proxy HTTP and model/graph work in the external Python proxy, never the actor.
+- [ ] Use the bounded non-blocking `AdvisoryMailboxPort`; never wait or replace older work.
+- [ ] Match request ID, suggestion ID, and suggestion hash before approval.
+- [ ] Reject `now_ns >= deadline_ns` as late and reject every replay deterministically.
+- [ ] Require audit acceptance before staged/approved state changes.
+- [ ] Cover success, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
 
 ## Safety review checklist
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import subprocess
@@ -254,8 +255,17 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-evomap-integration",
         scope="repository:python-ai-advisory-contract",
         summary="Validate the intentionally Python advisory lane and its safety invariants",
-        allowed_tokens=("ai_advisory",),
+        allowed_tokens=(
+            "run_pinned_v2_pytest.py",
+            "test_ai_advisory_boundary.py",
+            "ai_advisory",
+        ),
         steps=(
+            repository_step(
+                PYTHON,
+                "tools/run_pinned_v2_pytest.py",
+                "tests/test_ai_advisory_boundary.py",
+            ),
             repository_step(
                 PYTHON,
                 "-m",
@@ -269,7 +279,9 @@ HARNESSES: dict[str, Harness] = {
         owned_paths=(
             Path("skills/nt-evomap-integration/SKILL.md"),
             Path("skills/nt-evomap-integration"),
+            Path("tests/test_ai_advisory_boundary.py"),
             Path("tests/test_skill_g2_harnesses.py"),
+            Path("tools/run_pinned_v2_pytest.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-evomap-integration.json"),
     ),
@@ -746,25 +758,79 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
     path = skill_root / "SKILL.md"
     text = path.read_text(encoding="utf-8")
     errors: list[str] = []
-    forbidden = (
+    forbidden_text = (
         "self.submit_order(",
         ".submit_order(",
         "ExecutionClient",
         "ExecClient",
         "execution_client",
     )
+    forbidden_handlers = {
+        "on_bar",
+        "on_book",
+        "on_book_deltas",
+        "on_data",
+        "on_historical_bars",
+        "on_historical_data",
+        "on_quote",
+        "on_signal",
+        "on_trade",
+    }
+    forbidden_calls = {
+        "cancel_order",
+        "close_position",
+        "modify_order",
+        "open",
+        "publish_data",
+        "publish_signal",
+        "queue_for_executor",
+        "request_bars",
+        "run_in_executor",
+        "shutdown_system",
+        "submit_order",
+        "subscribe_bars",
+    }
+    publication_calls = {"publish", "publish_data", "publish_signal", "send"}
     textual_suffixes = {".md", ".py", ".pyi", ".rs", ".toml", ".json", ".yaml", ".yml"}
     for owned_path in sorted(skill_root.rglob("*")):
         if not owned_path.is_file() or owned_path.suffix.lower() not in textual_suffixes:
             continue
         owned_text = owned_path.read_text(encoding="utf-8")
         relative = owned_path.relative_to(skill_root).as_posix()
-        for token in forbidden:
+        for token in forbidden_text:
             if token in owned_text:
                 errors.append(
                     "AI advisory contract exposes forbidden execution authority "
                     f"in {relative}: {token}"
                 )
+        if owned_path.suffix not in {".py", ".pyi"}:
+            continue
+        try:
+            tree = ast.parse(owned_text, filename=relative)
+        except SyntaxError as exc:
+            errors.append(f"AI advisory Python surface does not parse in {relative}: {exc.msg}")
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in forbidden_handlers:
+                errors.append(
+                    f"AI advisory contract exposes market handler in {relative}: {node.name}"
+                )
+            if isinstance(node, ast.Call):
+                name = (
+                    node.func.attr
+                    if isinstance(node.func, ast.Attribute)
+                    else node.func.id
+                    if isinstance(node.func, ast.Name)
+                    else ""
+                )
+                if name in forbidden_calls:
+                    errors.append(
+                        f"AI advisory contract exposes forbidden capability in {relative}: {name}"
+                    )
+                if name in publication_calls:
+                    errors.append(
+                        f"AI advisory contract exposes publication capability in {relative}: {name}"
+                    )
     required = (
         "Nautilus remains the only execution authority",
         "No external network I/O",
