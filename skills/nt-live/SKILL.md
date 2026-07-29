@@ -233,7 +233,7 @@ nautilus-common = "0.61"
 nautilus-live = "0.61"
 nautilus-model = "0.61"
 nautilus-okx = "0.61"          # or any venue adapter
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"

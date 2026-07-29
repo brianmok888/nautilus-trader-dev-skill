@@ -19,7 +19,7 @@ nautilus-common = "0.60"
 nautilus-live = "0.60"
 nautilus-model = "0.60"
 nautilus-okx = "0.60"
-nautilus-trading = { version = "0.60", features = ["examples"] }
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"

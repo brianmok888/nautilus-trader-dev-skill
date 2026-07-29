@@ -200,11 +200,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.61", features = ["streaming"] }
+nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
 nautilus-execution = "0.61"
-nautilus-model = { version = "0.61", features = ["stubs"] }
+nautilus-model = { version = "0.61.0", features = ["stubs"] }
 nautilus-persistence = "0.61"
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"

@@ -294,6 +294,35 @@ def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     assert "All 14 instrument types" not in text
 
 
+def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None:
+    paths = [
+        "skills/nt-backtest/references/guides/run_rust_backtest.md",
+        "skills/nt-live/references/guides/run_rust_live_trading.md",
+        "docs/end_to_end_guide.md",
+        "skills/nt-backtest/SKILL.md",
+        "skills/nt-live/SKILL.md",
+        "skills/nt-live/references/concepts/rust.md",
+    ]
+    stale: list[str] = []
+    pinned_dependencies = 0
+    for path in paths:
+        text = read(path)
+        stale.extend(
+            f"{path}:{version}"
+            for version in re.findall(
+                r'nautilus-[a-z-]+ = \{ version = "(0\.60|0\.61)"',
+                text,
+            )
+        )
+        pinned_dependencies += len(
+            re.findall(r'nautilus-[a-z-]+ = \{ version = "0\.61\.0"', text)
+        )
+
+    assert stale == []
+    assert pinned_dependencies > 0
+    assert "Rust 1.97.1" in read("docs/end_to_end_guide.md")
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name

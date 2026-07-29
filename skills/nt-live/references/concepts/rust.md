@@ -100,8 +100,8 @@ The Nautilus crates are published to
 nautilus-backtest = "0.61"
 nautilus-common = "0.61"
 nautilus-execution = "0.61"
-nautilus-model = { version = "0.61", features = ["stubs"] }
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-model = { version = "0.61.0", features = ["stubs"] }
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"

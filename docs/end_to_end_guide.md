@@ -32,11 +32,11 @@ log = "0.4"
 tokio = { version = "1", features = ["full"] }
 
 nautilus-common = "0.61"
-nautilus-backtest = { version = "0.61", features = ["streaming"] }
+nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
 nautilus-live = "0.61"
 nautilus-model = "0.61"
 nautilus-okx = "0.61"
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 ```
 
 Use the relevant adapter crate for your venue; OKX is shown because the official upstream `docs/how_to/run_rust_live_trading.md` guide uses OKX.
