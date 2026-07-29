@@ -17,11 +17,10 @@ Replace 'MyDEX' with your actual DEX name throughout.
 """
 
 import asyncio
-import sys
-from pathlib import Path
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
+from nautilus_trader.common.config import NautilusConfig
 from nautilus_trader.execution.messages import GenerateFillReports
 from nautilus_trader.execution.messages import GenerateOrderStatusReport
 from nautilus_trader.execution.messages import GenerateOrderStatusReports
@@ -43,19 +42,8 @@ from nautilus_trader.model.identifiers import (
 )
 from nautilus_trader.model.orders import Order
 
-_TEMPLATE_DIR = Path(__file__).resolve().parent
-if str(_TEMPLATE_DIR) not in sys.path:
-    sys.path.append(str(_TEMPLATE_DIR))
-
-# The templates must work both as package imports and as standalone files loaded
-# by compliance tests or copied into a project. The sys.path bridge above keeps
-# fallback sibling imports available in the latter mode.
-try:
-    from .dex_config import MyDEXExecClientConfig  # noqa: E402
-    from .dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
-except ImportError:
-    from dex_config import MyDEXExecClientConfig  # noqa: E402
-    from dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
+from ..dex_config import MyDEXExecClientConfig
+from ..dex_instrument_provider import MyDEXInstrumentProvider
 
 
 class MyDEXExecutionClient(LiveExecutionClient):
@@ -108,11 +96,12 @@ class MyDEXExecutionClient(LiveExecutionClient):
             msgbus=msgbus,
             cache=cache,
             clock=clock,
-            config=None,
+            config=(component_config := NautilusConfig()),
         )
         self._instrument_provider = instrument_provider
-        self._config = config
-        self._account_id = account_id
+        self._component_config = component_config
+        self._operational_config = config
+        self._set_account_id(account_id)
 
         # DEX execution state
         self._pending_txs: dict[ClientOrderId, str] = {}  # order_id → tx_hash
@@ -135,7 +124,7 @@ class MyDEXExecutionClient(LiveExecutionClient):
         3. Instruments must already be loaded by the data client
         """
         self.log.info(
-            f"Connecting to MyDEX execution (wallet: {self._config.wallet_address})"
+            f"Connecting to MyDEX execution (wallet: {self._operational_config.wallet_address})"
         )
 
         # Fetch and report initial account state

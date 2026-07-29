@@ -262,3 +262,69 @@ and one pre-existing factory execution `create` override mismatch involving its
 extra `account_id` argument. Runtime import and construction are covered by the
 38-test GREEN run. The remaining diagnostics are recorded explicitly rather
 than hidden with basedpyright configuration or ignores.
+## Review fix Round 3/5
+
+### RED evidence
+
+Executable tests were added before implementation for fixed-point range errors,
+canonical factory invocation, framework account identity, clean package imports,
+secret-safe component config, provider cache isolation, and the real
+`reconciliation_active` state. After correcting test-loader wiring so
+package-relative imports reached their intended modules, the focused feature RED
+included:
+
+```text
+6 failed, 40 passed in 3.65s
+```
+
+The failures showed clean subprocess imports and secret-safe base configuration
+were not yet satisfied. Earlier RED runs in the same cycle also demonstrated
+out-of-range Nautilus fixed-point exceptions escaping without a template-domain
+error, a seventh required factory argument, parallel account identity, an
+RPC-only provider cache key, and mass-status verification against an invented
+flag.
+
+### GREEN implementation
+
+- Finite but out-of-range serialized price/size values are parsed before tick
+  creation; Nautilus range failures become `InvalidSwapEventError`, with no tick.
+- Execution factory has the pinned six-argument signature and derives
+  `AccountId(f"{name}-001")` without credentials.
+- Execution construction calls `_set_account_id(account_id)` and runtime asserts
+  the framework `client.account_id`.
+- Legacy executables use package-relative imports without `sys.path` mutation;
+  each imports in a clean subprocess.
+- The live base receives a serializable empty `NautilusConfig`; operational
+  `SecretStr` config remains private. Serialization/repr checks exclude secrets.
+- Provider caching keys on RPC URL, ordered pools, and sandbox mode.
+- Mass status proves the actual `reconciliation_active` property remains false.
+
+### Validation evidence
+
+```text
+focused: 46 passed in 12.37s
+full DEX: 78 passed in 18.66s
+classification: 14 passed in 0.37s
+V2 guidance: 22 passed in 0.11s
+developer guide sync: passed
+Ruff: passed
+compileall: exit 0
+git diff --check: exit 0
+```
+
+Normal basedpyright ran without ignores or alternate config:
+
+```text
+uv run basedpyright --outputjson
+261 errors, 6368 warnings, 0 notes
+exit 1
+```
+
+This remains a repository-wide red gate. There are no errors in the changed
+tests or legacy data, execution, and factory templates: constructor, canonical
+factory, reconciliation, and package-import errors are gone. The only 10 errors
+among changed files are in the retained migration provider's pre-existing
+dynamic fallback and raw metadata typing surface: three unchecked `ModuleSpec`
+errors, one dynamic config type-expression error, three raw-dict generic errors,
+and three narrowed-config attribute/raw metadata errors. They are reported, not
+suppressed.

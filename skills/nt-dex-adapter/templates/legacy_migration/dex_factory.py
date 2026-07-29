@@ -20,37 +20,18 @@ Usage in TradingNode:
 Replace 'MyDEX' with your actual DEX name throughout.
 """
 
-import sys
-from pathlib import Path
-
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
+from nautilus_trader.live.config import LiveDataClientConfig, LiveExecClientConfig
+from nautilus_trader.live.data_client import LiveDataClient
+from nautilus_trader.live.execution_client import LiveExecutionClient
 from nautilus_trader.live.factories import LiveDataClientFactory, LiveExecClientFactory
 from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 
-_TEMPLATE_DIR = Path(__file__).resolve().parent
-if str(_TEMPLATE_DIR) not in sys.path:
-    sys.path.append(str(_TEMPLATE_DIR))
-
-# The templates must work both as package imports and as standalone files loaded
-# by compliance tests or copied into a project. The sys.path bridge above keeps
-# fallback sibling imports available in the latter mode.
-try:
-    from .dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig  # noqa: E402
-    from .dex_data_client import MyDEXDataClient  # noqa: E402
-    from .dex_exec_client import MyDEXExecutionClient  # noqa: E402
-    from .dex_instrument_provider import (  # noqa: E402
-        MyDEXInstrumentProvider,
-        MyDEXInstrumentProviderConfig,
-    )
-except ImportError:
-    from dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig  # noqa: E402
-    from dex_data_client import MyDEXDataClient  # noqa: E402
-    from dex_exec_client import MyDEXExecutionClient  # noqa: E402
-    from dex_instrument_provider import (  # noqa: E402
-        MyDEXInstrumentProvider,
-        MyDEXInstrumentProviderConfig,
-    )
+from ..dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig
+from ..dex_instrument_provider import MyDEXInstrumentProvider, MyDEXInstrumentProviderConfig
+from .dex_data_client import MyDEXDataClient
+from .dex_exec_client import MyDEXExecutionClient
 
 
 VENUE_NAME = "MYDEX"  # ← Change to your actual venue name (e.g. "UNISWAP_V3")
@@ -74,11 +55,11 @@ class MyDEXLiveDataClientFactory(LiveDataClientFactory):
     def create(
         loop,
         name: str,
-        config: MyDEXDataClientConfig,
+        config: LiveDataClientConfig,
         msgbus: MessageBus,
         cache: Cache,
         clock: LiveClock,
-    ) -> MyDEXDataClient:
+    ) -> LiveDataClient:
         """
         Create and return a MyDEX data client.
 
@@ -98,6 +79,8 @@ class MyDEXLiveDataClientFactory(LiveDataClientFactory):
         clock : LiveClock
             The Nautilus clock.
         """
+        if not isinstance(config, MyDEXDataClientConfig):
+            raise TypeError("config must be MyDEXDataClientConfig")
         # Share instrument provider between data and exec clients
         # Use a simple module-level cache to avoid double-loading
         provider = _get_or_create_instrument_provider(config)
@@ -132,12 +115,11 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
     def create(
         loop,
         name: str,
-        config: MyDEXExecClientConfig,
+        config: LiveExecClientConfig,
         msgbus: MessageBus,
         cache: Cache,
         clock: LiveClock,
-        account_id: AccountId,
-    ) -> MyDEXExecutionClient:
+    ) -> LiveExecutionClient:
         """
         Create and return a MyDEX execution client.
 
@@ -155,10 +137,11 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
             The Nautilus cache.
         clock : LiveClock
             The Nautilus clock.
-        account_id : AccountId
-            The account identifier derived from wallet address.
         """
+        if not isinstance(config, MyDEXExecClientConfig):
+            raise TypeError("config must be MyDEXExecClientConfig")
         provider = _get_or_create_instrument_provider(config)
+        account_id = AccountId(f"{name}-001")
 
         return MyDEXExecutionClient(
             loop=loop,
@@ -177,7 +160,7 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
 # Shared Instrument Provider Cache
 # =============================================================================
 
-_instrument_providers: dict[str, MyDEXInstrumentProvider] = {}
+_instrument_providers: dict[tuple[str, tuple[str, ...], bool], MyDEXInstrumentProvider] = {}
 
 
 def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
@@ -187,15 +170,15 @@ def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
     Data and execution clients share one provider to avoid double-loading
     pool metadata from the chain.
     """
-    key = getattr(config, "rpc_url", "default")
+    rpc_url = getattr(config, "rpc_url", "default")
+    pools = tuple(getattr(config, "pool_addresses", None) or getattr(config, "pools", []))
+    sandbox_mode = getattr(config, "sandbox_mode", False)
+    key = (rpc_url, pools, sandbox_mode)
 
     if key not in _instrument_providers:
-        sandbox_mode = getattr(config, "sandbox_mode", False)
-        pools = getattr(config, "pool_addresses", None) or getattr(config, "pools", [])
-
         provider_config = MyDEXInstrumentProviderConfig(
-            rpc_url=key,
-            pools=pools,
+            rpc_url=rpc_url,
+            pools=list(pools),
             sandbox_mode=sandbox_mode,
         )
         _instrument_providers[key] = MyDEXInstrumentProvider(config=provider_config)

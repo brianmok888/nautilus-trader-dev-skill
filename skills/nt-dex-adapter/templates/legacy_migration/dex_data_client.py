@@ -18,8 +18,6 @@ Replace 'MyDEX' with your actual DEX name throughout.
 
 import asyncio
 import math
-import sys
-from pathlib import Path
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
@@ -32,19 +30,12 @@ from nautilus_trader.model.enums import AggressorSide
 from nautilus_trader.model.identifiers import ClientId, InstrumentId, TradeId, Venue
 from nautilus_trader.model.objects import Price, Quantity
 
-_TEMPLATE_DIR = Path(__file__).resolve().parent
-if str(_TEMPLATE_DIR) not in sys.path:
-    sys.path.append(str(_TEMPLATE_DIR))
+from ..dex_config import MyDEXDataClientConfig
+from ..dex_instrument_provider import MyDEXInstrumentProvider
 
-# The templates must work both as package imports and as standalone files loaded
-# by compliance tests or copied into a project. The sys.path bridge above keeps
-# fallback sibling imports available in the latter mode.
-try:
-    from .dex_config import MyDEXDataClientConfig  # noqa: E402
-    from .dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
-except ImportError:
-    from dex_config import MyDEXDataClientConfig  # noqa: E402
-    from dex_instrument_provider import MyDEXInstrumentProvider  # noqa: E402
+
+class InvalidSwapEventError(ValueError):
+    pass
 
 
 class MyDEXDataClient(LiveMarketDataClient):
@@ -344,10 +335,16 @@ class MyDEXDataClient(LiveMarketDataClient):
         if not math.isfinite(float(serialized_size)) or float(serialized_size) <= 0:
             raise ValueError("serialized size must be finite and greater than zero")
 
+        try:
+            price = Price.from_str(serialized_price)
+            size = Quantity.from_str(serialized_size)
+        except ValueError as error:
+            raise InvalidSwapEventError("swap values exceed fixed-point range") from error
+
         return TradeTick(
             instrument_id=instrument_id,
-            price=Price.from_str(serialized_price),
-            size=Quantity.from_str(serialized_size),
+            price=price,
+            size=size,
             aggressor_side=AggressorSide.BUYER if is_buy else AggressorSide.SELLER,
             trade_id=TradeId(tx_hash),
             ts_event=block_timestamp_ns,

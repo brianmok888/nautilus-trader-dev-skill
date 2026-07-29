@@ -4,9 +4,11 @@ import inspect
 import math
 import sys
 from pathlib import Path
+from types import ModuleType
 from types import SimpleNamespace
 
 import pytest
+from pydantic import SecretStr
 from nautilus_trader.execution.messages import GenerateFillReports
 from nautilus_trader.execution.messages import GenerateOrderStatusReport
 from nautilus_trader.execution.messages import GenerateOrderStatusReports
@@ -23,12 +25,22 @@ from nautilus_trader.test_kit.stubs.component import TestComponentStubs
 
 _TEMPLATES = Path(__file__).parent.parent / "templates"
 _LEGACY_TEMPLATES = _TEMPLATES / "legacy_migration"
-sys.path.insert(0, str(_TEMPLATES))
+
+
+def _install_template_package() -> None:
+    templates_package = ModuleType("dex_templates")
+    templates_package.__path__ = [str(_TEMPLATES)]
+    legacy_package = ModuleType("dex_templates.legacy_migration")
+    legacy_package.__path__ = [str(_LEGACY_TEMPLATES)]
+    sys.modules["dex_templates"] = templates_package
+    sys.modules["dex_templates.legacy_migration"] = legacy_package
 
 
 def _load_module(name: str):
-    root = _LEGACY_TEMPLATES if name in {"dex_data_client", "dex_exec_client"} else _TEMPLATES
-    spec = importlib.util.spec_from_file_location(name, root / f"{name}.py")
+    _install_template_package()
+    root = _LEGACY_TEMPLATES if name in {"dex_data_client", "dex_exec_client", "dex_factory"} else _TEMPLATES
+    package = "dex_templates.legacy_migration" if root == _LEGACY_TEMPLATES else "dex_templates"
+    spec = importlib.util.spec_from_file_location(f"{package}.{name}", root / f"{name}.py")
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -168,12 +180,16 @@ def test_reconciliation_signatures_match_pinned_contract(
 
 
 def test_mass_status_fails_without_toggling_reconciliation_state() -> None:
-    probe = _LifecycleProbe()
+    client, loop = _construct_execution_client()
 
-    with pytest.raises(NotImplementedError):
-        asyncio.run(_ExecutionClient.generate_mass_status(probe, lookback_mins=15))
+    try:
+        assert client.reconciliation_active is False
+        with pytest.raises(NotImplementedError):
+            loop.run_until_complete(client.generate_mass_status(lookback_mins=15))
+        assert client.reconciliation_active is False
+    finally:
+        loop.close()
 
-    assert probe._generate_mass_status_reconciliation is False
     signature = inspect.signature(_ExecutionClient.generate_mass_status, eval_str=True)
     assert tuple(signature.parameters) == ("self", "lookback_mins")
     assert signature.parameters["lookback_mins"].annotation == int | None
@@ -269,6 +285,52 @@ def test_ordinary_positive_swap_constructs_trade_tick(monkeypatch: pytest.Monkey
     assert str(result["size"]) == "2.00000000"
 
 
+@pytest.mark.parametrize(
+    "amount_in,amount_out",
+    (
+        (1.0, 1e100),
+        (1e100, 1e100),
+    ),
+)
+def test_out_of_range_fixed_point_values_raise_domain_error_before_trade_tick(
+    amount_in: float,
+    amount_out: float,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    trade_ticks: list[dict[str, object]] = []
+    monkeypatch.setattr(_data_module, "TradeTick", lambda **kwargs: trade_ticks.append(kwargs))
+
+    with pytest.raises(_data_module.InvalidSwapEventError):
+        _DataClient._swap_event_to_trade_tick(
+            SimpleNamespace(),
+            SimpleNamespace(),
+            amount_in,
+            amount_out,
+            "0xabc",
+            1,
+            True,
+        )
+
+    assert trade_ticks == []
+
+
+def _construct_execution_client(private_key: str = ""):
+    loop = asyncio.new_event_loop()
+    provider = _exec_module.MyDEXInstrumentProvider(_config_module.MyDEXInstrumentProviderConfig())
+    client = _ExecutionClient(
+        loop=loop,
+        client_id=ClientId("MYDEX"),
+        venue=Venue("MYDEX"),
+        account_id=AccountId("MYDEX-001"),
+        msgbus=TestComponentStubs.msgbus(),
+        cache=TestComponentStubs.cache(),
+        clock=TestComponentStubs.clock(),
+        instrument_provider=provider,
+        config=_exec_module.MyDEXExecClientConfig(private_key=SecretStr(private_key)),
+    )
+    return client, loop
+
+
 def test_legacy_clients_construct_with_current_base_contract() -> None:
     loop = asyncio.new_event_loop()
     clock = TestComponentStubs.clock()
@@ -304,6 +366,66 @@ def test_legacy_clients_construct_with_current_base_contract() -> None:
 
     assert data_client._instrument_provider is provider
     assert exec_client._instrument_provider is provider
+    assert exec_client.account_id == AccountId("MYDEX-001")
+
+
+def test_execution_base_config_serializes_without_operational_secret() -> None:
+    secret = "round-three-secret"
+    client, loop = _construct_execution_client(private_key=secret)
+
+    try:
+        serialized = client._component_config.json().decode()
+        assert secret not in serialized
+        assert secret not in repr(client._operational_config)
+    finally:
+        loop.close()
+
+
+def test_exec_factory_uses_canonical_contract_and_derives_account_id() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    loop = asyncio.new_event_loop()
+
+    try:
+        client = factory_module.MyDEXLiveExecClientFactory.create(
+            loop,
+            "MYDEX",
+            factory_module.MyDEXExecClientConfig(),
+            TestComponentStubs.msgbus(),
+            TestComponentStubs.cache(),
+            TestComponentStubs.clock(),
+        )
+    finally:
+        loop.close()
+
+    assert client.account_id == AccountId("MYDEX-001")
+    signature = inspect.signature(factory_module.MyDEXLiveExecClientFactory.create)
+    assert tuple(signature.parameters) == ("loop", "name", "config", "msgbus", "cache", "clock")
+
+
+def test_provider_cache_key_includes_rpc_pools_and_sandbox_inputs() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    base = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://rpc.example",
+        pool_addresses=["0x1"],
+        sandbox_mode=True,
+    )
+    different_pool = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://rpc.example",
+        pool_addresses=["0x2"],
+        sandbox_mode=True,
+    )
+    different_sandbox = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://rpc.example",
+        pool_addresses=["0x1"],
+        sandbox_mode=False,
+    )
+
+    first = factory_module._get_or_create_instrument_provider(base)
+    assert factory_module._get_or_create_instrument_provider(base) is first
+    assert factory_module._get_or_create_instrument_provider(different_pool) is not first
+    assert factory_module._get_or_create_instrument_provider(different_sandbox) is not first
 
 
 def test_templates_remain_classified_as_legacy_migration_only() -> None:
