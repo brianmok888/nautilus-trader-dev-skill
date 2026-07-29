@@ -31,11 +31,11 @@ dotenvy = "0.15"
 log = "0.4"
 tokio = { version = "1", features = ["full"] }
 
-nautilus-common = "0.61"
+nautilus-common = "0.61.0"
 nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
-nautilus-live = "0.61"
-nautilus-model = "0.61"
-nautilus-okx = "0.61"
+nautilus-live = "0.61.0"
+nautilus-model = "0.61.0"
+nautilus-okx = "0.61.0"
 nautilus-trading = { version = "0.61.0", features = ["examples"] }
 ```
 

@@ -229,10 +229,10 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.61"
-nautilus-live = "0.61"
-nautilus-model = "0.61"
-nautilus-okx = "0.61"          # or any venue adapter
+nautilus-common = "0.61.0"
+nautilus-live = "0.61.0"
+nautilus-model = "0.61.0"
+nautilus-okx = "0.61.0"          # or any venue adapter
 nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 anyhow = "1"

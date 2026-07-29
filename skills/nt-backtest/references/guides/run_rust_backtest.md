@@ -18,9 +18,9 @@ Add the following to your `Cargo.toml`. The `streaming` and
 ```toml
 [dependencies]
 nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
-nautilus-execution = "0.60"
+nautilus-execution = "0.61.0"
 nautilus-model = { version = "0.61.0", features = ["stubs"] }
-nautilus-persistence = "0.60"
+nautilus-persistence = "0.61.0"
 nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 ahash = "0.8"

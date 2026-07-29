@@ -260,6 +260,14 @@ def test_visualization_guidance_uses_current_tearsheet_api() -> None:
     assert "migration/reference-only" in read("skills/nt-strategy-builder/templates/backtest_node.py")
 
 
+def test_backtest_template_uses_typed_logging_config() -> None:
+    text = read("skills/nt-strategy-builder/templates/backtest_node.py")
+
+    assert "from nautilus_trader.common.config import LoggingConfig" in text
+    assert 'logging=LoggingConfig(log_level="WARNING")' in text
+    assert 'logging={"log_level": "WARNING"}' not in text
+
+
 def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     text = read("skills/nt-model/SKILL.md")
     expected = {
@@ -303,23 +311,20 @@ def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None
         "skills/nt-live/SKILL.md",
         "skills/nt-live/references/concepts/rust.md",
     ]
-    stale: list[str] = []
-    pinned_dependencies = 0
+    dependency_pattern = re.compile(
+        r'^nautilus-[a-z-]+\s*=\s*(?:"(?P<plain>[^"]+)"|\{[^\n]*version\s*=\s*"(?P<table>[^"]+)")',
+        re.MULTILINE,
+    )
+    dependencies: list[tuple[str, str]] = []
     for path in paths:
         text = read(path)
-        stale.extend(
-            f"{path}:{version}"
-            for version in re.findall(
-                r'nautilus-[a-z-]+ = \{ version = "(0\.60|0\.61)"',
-                text,
-            )
-        )
-        pinned_dependencies += len(
-            re.findall(r'nautilus-[a-z-]+ = \{ version = "0\.61\.0"', text)
-        )
+        for match in dependency_pattern.finditer(text):
+            version = match.group("plain") or match.group("table")
+            assert version is not None
+            dependencies.append((path, version))
 
-    assert stale == []
-    assert pinned_dependencies > 0
+    assert dependencies
+    assert [(path, version) for path, version in dependencies if version != "0.61.0"] == []
     assert "Rust 1.97.1" in read("docs/end_to_end_guide.md")
 
 
@@ -373,11 +378,25 @@ def test_current_v2_guidance_rejects_removed_order_subscriptions_and_brittle_ver
     architect = read("skills/nt-architect/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
     adapters = read("skills/nt-adapters/SKILL.md")
+    actor_guidance = "\n".join(
+        read(path)
+        for path in [
+            "skills/nt-architect/AGENTS.md",
+            "references/concepts/actors.md",
+            "skills/nt-trading/references/concepts/actors.md",
+        ]
+    )
 
-    assert "subscribe_order_fills" not in architect
-    assert "subscribe_order_cancels" not in architect
+    combined = architect + actor_guidance
+    assert "subscribe_order_fills" not in combined
+    assert "subscribe_order_cancels" not in combined
+    assert "unsubscribe_order_fills" not in combined
+    assert "unsubscribe_order_cancels" not in combined
     assert "on_order_filled(&OrderFilled)" in architect
     assert "on_order_canceled(&OrderCanceled)" in architect
+    assert "message bus" in actor_guidance.lower()
+    assert "on_order_filled" in actor_guidance
+    assert "on_order_canceled" in actor_guidance
     assert "Read the target workspace version" in implement
     assert "Use Rust crate version `0.57`" not in implement
     assert "All 16 adapters" not in adapters
