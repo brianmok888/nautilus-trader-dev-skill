@@ -30,6 +30,7 @@ def test_ruff_quality_gate_has_explicit_snapshot_and_template_policy() -> None:
     assert '"references/**/*.py"' in config
     assert '"skills/*/references/**/*.py"' in config
     assert '"skills/*/templates/**/*.py"' in config
+    assert '"skills/*/migration_reference/**/*.py"' in config
     assert '"skills/nt-strategy-builder/tests/**/*.py"' in config
 
 

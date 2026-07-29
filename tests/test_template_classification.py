@@ -245,3 +245,12 @@ def _shipped_python_files(root: Path) -> list[Path]:
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def test_non_ai_migration_python_is_physically_quarantined(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-trading/templates/strategy.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n")
+
+    assert classification_error(path, tmp_path) == (
+        "non-AI migration Python requires a migration_reference path component"
+    )

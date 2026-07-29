@@ -646,3 +646,21 @@ def test_ai_advisory_contract_accepts_canonical_advisory_template() -> None:
         g2.repo_root()
         / "skills/nt-evomap-integration/templates/advisory_actor.py"
     ).is_file()
+
+
+def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:
+    for skill in sorted(EXPECTED_SKILLS):
+        text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
+        for line in text.splitlines():
+            if not line.startswith("| G"):
+                continue
+            assert "passed 356 tests" not in line
+            assert "2026-07-29:" not in line
+
+
+def test_implement_g2_does_not_compile_migration_python_as_production() -> None:
+    harness = g2.HARNESSES["nt-implement"]
+    command_text = " ".join(argument for step in harness.steps for argument in step.command)
+
+    assert "compileall" not in command_text
+    assert all(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)

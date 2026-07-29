@@ -34,8 +34,8 @@ CONCRETE_FACTORY_RE: Final = re.compile(
 )
 TEXTUAL_LEGACY_RE: Final = re.compile(
     r"\b(?:TradingNode|TradingNodeConfig|LiveDataClientFactory|"
-    r"LiveExecClientFactory|LiveExecutionClientFactory|LiveDataClient|LiveMarketDataClient|"
-    r"LiveExecutionClient|[A-Za-z_][A-Za-z0-9_]*Live(?:Data|Exec|Execution)ClientFactory)\b"
+    + r"LiveExecClientFactory|LiveExecutionClientFactory|LiveDataClient|LiveMarketDataClient|"
+    + r"LiveExecutionClient|[A-Za-z_][A-Za-z0-9_]*Live(?:Data|Exec|Execution)ClientFactory)\b"
 )
 
 
@@ -66,6 +66,23 @@ def classification_error(path: Path, root: Path) -> str | None:
         return "legacy classification requires a legacy_migration path component"
     if has_legacy_executable_signal(path) and classification != LEGACY_CLASSIFICATION:
         return "legacy executable requires the exact legacy classification"
+    rust_skill_templates = {
+        "nt-trading",
+        "nt-backtest",
+        "nt-signals",
+        "nt-live",
+        "nt-data",
+        "nt-implement",
+    }
+    if (
+        classification == MIGRATION_CLASSIFICATION
+        and len(relative.parts) > 2
+        and relative.parts[0] == "skills"
+        and relative.parts[1] in rust_skill_templates
+        and "templates" in relative.parts
+        and "migration_reference" not in relative.parts
+    ):
+        return "non-AI migration Python requires a migration_reference path component"
     return None
 
 
@@ -84,15 +101,14 @@ def has_legacy_executable_signal(path: Path) -> bool:
 
 
 def _is_legacy_node(node: ast.AST) -> bool:
-    match node:
-        case ast.Name(id=identifier):
-            names = (identifier,)
-        case ast.Attribute(attr=attribute):
-            names = (attribute,)
-        case ast.alias(name=imported, asname=alias):
-            names = (imported.rsplit(".", 1)[-1], alias or "")
-        case _:
-            return False
+    if isinstance(node, ast.Name):  # noqa: IF_VARIANT_OK
+        names = (node.id,)
+    elif isinstance(node, ast.Attribute):  # noqa: IF_VARIANT_OK
+        names = (node.attr,)
+    elif isinstance(node, ast.alias):
+        names = (node.name.rsplit(".", 1)[-1], node.asname or "")
+    else:
+        return False
     return any(
         name in LEGACY_EXACT_NAMES or bool(CONCRETE_FACTORY_RE.fullmatch(name))
         for name in names

@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+# noqa: SIZE_OK - scenario fixtures intentionally exercise the complete sync contract.
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_dev_guide_sync as sync
@@ -106,6 +108,19 @@ def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) ->
         "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n"
         f"{ai_boundary}"
         f"{extra}"
+    )
+
+
+def rust_lane_text() -> str:
+    return (
+        "## Rust production lane\n"
+        "Rust owns production behavior.\n"
+        "## PyO3 control-plane lane\n"
+        "PyO3 is limited to control-plane integration.\n"
+        "## Migration/reference lane\n"
+        "See migration_reference/python for quarantined Python guidance.\n"
+        "## Source-pinned upstream lane\n"
+        f"See references/developer_guide/rust.md at {CURRENT_SYNC_COMMIT}.\n"
     )
 
 
@@ -2401,8 +2416,15 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     for relative in sync.NT_V2_READINESS_GATE_TARGETS:
         absolute = tmp_path / relative
         if absolute.exists():
+            lane_contract = (
+                rust_lane_text()
+                if relative.parent.name
+                in {"nt-trading", "nt-backtest", "nt-signals", "nt-live", "nt-data", "nt-implement"}
+                else ""
+            )
             absolute.write_text(
                 readiness_gate_text(readiness_extras.get(relative, ""))
+                + lane_contract
                 + absolute.read_text(),
                 encoding="utf-8",
             )

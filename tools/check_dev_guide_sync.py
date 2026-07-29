@@ -6,9 +6,13 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 if __package__:
+    from .markdown_lane_contract import validate_rust_skill_lanes
     from .template_classification import classification_error
     from .upstream_baseline import UPSTREAM_COMMIT
 else:  # Direct script execution adds tools/ to sys.path.
+    from markdown_lane_contract import (
+        validate_rust_skill_lanes,  # pyright: ignore[reportImplicitRelativeImport]
+    )
     from template_classification import (  # pyright: ignore[reportImplicitRelativeImport]
         classification_error,
     )
@@ -1552,6 +1556,10 @@ def run_checks(root: Path) -> CheckResult:
     _check_unlabelled_tradingnode_guidance(root, errors)
     _check_unlabelled_legacy_guidance(root, errors)
     _check_v2_cutover_language_routing(root, errors)
+    for skill in ("nt-trading", "nt-backtest", "nt-signals", "nt-live", "nt-data", "nt-implement"):
+        skill_path = root / "skills" / skill / "SKILL.md"
+        if skill_path.is_file():
+            errors.extend(validate_rust_skill_lanes(skill_path, root))
     _check_nt_v2_readiness_gates(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):

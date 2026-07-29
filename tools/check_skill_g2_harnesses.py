@@ -290,10 +290,9 @@ HARNESSES: dict[str, Harness] = {
     "nt-implement": Harness(
         skill="nt-implement",
         scope="repository:implementation-templates-plus-upstream-owners",
-        summary="Compile owned Python templates and representative Rust component owners",
-        allowed_tokens=("skills/nt-implement/templates", "nautilus-common", "nautilus-indicators", "nautilus-trading", "nautilus-backtest"),
+        summary="Compile representative Rust component owners for implementation guidance",
+        allowed_tokens=("nautilus-common", "nautilus-indicators", "nautilus-trading", "nautilus-backtest"),
         steps=(
-            repository_step(PYTHON, "-m", "compileall", "-q", "skills/nt-implement/templates"),
             upstream_step(
                 "cargo",
                 "check",

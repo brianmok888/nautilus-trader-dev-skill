@@ -30,16 +30,28 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | --- | --- | --- | --- |
 | G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-29: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-trading` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-trading.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-trading` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-trading.json`. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py -k 'lane or python or rust or current_develop'` passed 13 tests; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-29: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 356 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
 | G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix audit; `uv run python tools/check_skill_g2_harnesses.py --check-cards` validates all 18 cards and evidence artifacts. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Trading gates: Rust owns execution-critical order, risk, position, portfolio, and execution-algorithm paths; Non-AI Python material is migration/reference-only; the sole active Python lane is AI/advisory through `nt-evomap-integration`, off execution-critical paths. Mark `Pass` only with `cargo nextest`, `cargo clippy`, `cargo deny`, risk/order lifecycle tests, and fail-closed behavior evidence.
+
+## Rust production lane
+
+## PyO3 control-plane lane
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-trading`.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 
@@ -68,133 +80,20 @@ NautilusTrader **trading domain** — strategy logic, order execution, risk mana
 
 ## Python Usage
 
-### Strategy
-
-Subclass `Strategy` from `nautilus_trader.trading.strategy`:
-
-```python
-from nautilus_trader.trading.strategy import Strategy
-from nautilus_trader.config import StrategyConfig
-
-class MyStrategyConfig(StrategyConfig, frozen=True):
-    instrument_id: str = None
-    bar_type: str = None
-
-class MyStrategy(Strategy):
-    def __init__(self, config: MyStrategyConfig):
-        super().__init__(config)
-        # Store config, initialize state
-
-    def on_start(self):
-        # Subscribe to data, register indicators
-        self.subscribe_bars(self.bar_type)
-
-    def on_bar(self, bar):
-        # Core trading logic
-        pass
-
-    def on_quote_tick(self, tick):
-        pass
-
-    def on_trade_tick(self, tick):
-        pass
-
-    def on_order_filled(self, event):
-        # Post-fill logic
-        pass
-
-    def on_position_changed(self, event):
-        pass
-
-    def on_stop(self):
-        # Cleanup
-        pass
-```
-
-**Key order methods** (inherited from `Actor` → `Strategy`):
-- `self.submit_order(order)` — submit to execution
-- `self.cancel_order(order)` — cancel open order
-- `self.modify_order(order, quantity=None, price=None, trigger_price=None)` — modify open order
-- `self.cancel_all_orders(instrument_id)` — cancel all for instrument
-- `self.close_position(position)` — close position with market order
-- `self.close_all_positions(instrument_id)` — close all for instrument
-
-**Order creation** (via `OrderFactory` on `self.order_factory`):
-- `self.order_factory.market(instrument_id, side, quantity)`
-- `self.order_factory.limit(instrument_id, side, quantity, price)`
-- `self.order_factory.stop_market(instrument_id, side, quantity, trigger_price)`
-- `self.order_factory.stop_limit(instrument_id, side, quantity, price, trigger_price)`
-- `self.order_factory.trailing_stop_market(instrument_id, side, quantity, trailing_offset, ...)`
-
-### Actor
-
-Subclass `Actor` from `nautilus_trader.trading.actor` for non-trading components (data processing, signal publishing, monitoring):
-
-```python
-from nautilus_trader.trading.actor import Actor
-from nautilus_trader.config import ActorConfig
-
-class MyActor(Actor):
-    def __init__(self, config: ActorConfig):
-        super().__init__(config)
-
-    def on_start(self):
-        self.subscribe_data(...)
-
-    def on_bar(self, bar):
-        # Process data, publish signals via msgbus
-        self.publish_signal(name="my_signal", value=signal_value)
-```
-
-### Risk & Execution Configuration
-
-```python
-from nautilus_trader.config import ExecEngineConfig, RiskEngineConfig
-
-exec_config = ExecEngineConfig(
-    load_cache=True,
-    allow_cash_positions=True,
-)
-
-risk_config = RiskEngineConfig(
-    bypass=False,
-    max_order_submit_rate="100/00:00:01",  # 100 per second
-    max_order_modify_rate="100/00:00:01",
-    max_notional_per_order={"GBP/USD.SIM": 1_000_000},
-)
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Usage migration reference](migration_reference/python/python-usage.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Python Extension
 
-### Custom ExecAlgorithm
-
-Subclass `ExecAlgorithm` from `nautilus_trader.execution.algorithm`:
-
-```python
-from nautilus_trader.execution.algorithm import ExecAlgorithm
-
-class MyExecAlgorithm(ExecAlgorithm):
-    def on_start(self):
-        pass
-
-    def on_order(self, order):
-        # Custom execution logic — split, time-slice, etc.
-        self.submit_order(order)
-
-    def on_stop(self):
-        pass
-```
-
-Register in config:
-```python
-exec_algorithms=[MyExecAlgorithm.fully_qualified_name()]
-```
-
-### Custom Margin/Position Sizing
-
-Extend risk calculations by subclassing margin models or implementing custom position sizing logic in your Strategy.
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Extension migration reference](migration_reference/python/python-extension.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## v1.227.0 Rust trading deltas
+Source: upstream NautilusTrader pin `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 - `PortfolioSnapshot` events provide per-account mark-to-market snapshots when `snapshot_interval_ms` is configured; subscribe through the portfolio message-bus APIs when snapshot streams are part of the strategy contract.
 - Rust `Strategy` order APIs take optional `Params`; pass `None` when no custom params are needed to avoid needless `IndexMap` allocation.
@@ -473,5 +372,6 @@ Positions transition: `OPENING → OPEN → CLOSING → CLOSED`. A position's `s
 - `references/concepts/` — strategies, actors, execution, orders, positions, portfolio, rust
 - `references/api/` — trading, execution, risk, portfolio, accounting, orders, position, events
 - `references/developer_guide/` — testing patterns, write_rust_strategy, write_rust_actor
-- `references/examples/` — backtest examples (EMA cross, actor data/signals, msgbus), Rust strategies (ema_cross, grid_mm), Rust actors (imbalance)
-- `templates/` — strategy.py, actor.py, exec_algorithm.py
+- `references/examples/` — Rust strategies (ema_cross, grid_mm) and Rust actors (imbalance)
+- `migration_reference/python/examples/` — quarantined Python EMA, actor, and msgbus examples
+- `migration_reference/python/templates/` — quarantined Python strategy and execution-algorithm references
