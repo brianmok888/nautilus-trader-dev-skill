@@ -14,7 +14,8 @@ sys.path.insert(0, str(_templates))
 
 
 def _load_migration_module(name: str):
-    spec = importlib.util.spec_from_file_location(name, _legacy_templates / f"{name}.py")
+    root = _legacy_templates if name in {"dex_data_client", "dex_exec_client", "dex_factory"} else _templates
+    spec = importlib.util.spec_from_file_location(name, root / f"{name}.py")
     assert spec is not None
     assert spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
@@ -24,7 +25,13 @@ def _load_migration_module(name: str):
 
 @pytest.mark.parametrize(
     "module_name",
-    ("dex_data_client", "dex_exec_client", "dex_factory"),
+    (
+        "dex_config",
+        "dex_instrument_provider",
+        "dex_data_client",
+        "dex_exec_client",
+        "dex_factory",
+    ),
 )
 def test_quarantined_migration_template_imports(module_name: str) -> None:
     assert _load_migration_module(module_name) is not None

@@ -308,6 +308,28 @@ def test_dex_current_compliance_does_not_import_migration_executables() -> None:
     assert "does not gate production approval" in checklist
 
 
+def test_dex_current_compliance_loads_no_classified_python_templates() -> None:
+    current = read("skills/nt-dex-adapter/tests/test_dex_compliance.py")
+    migration = read(
+        "skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py"
+    )
+
+    classified_templates = {
+        path.name
+        for path in (REPO_ROOT / "skills/nt-dex-adapter/templates").rglob("*.py")
+        if path.read_text(encoding="utf-8").startswith("# TEMPLATE_CLASSIFICATION:")
+    }
+    loaded_by_current = {
+        template
+        for template in classified_templates
+        if template.removesuffix(".py") in current
+    }
+
+    assert loaded_by_current == set()
+    assert "dex_config" in migration
+    assert "dex_instrument_provider" in migration
+
+
 def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     text = read("skills/nt-model/SKILL.md")
     expected = {
