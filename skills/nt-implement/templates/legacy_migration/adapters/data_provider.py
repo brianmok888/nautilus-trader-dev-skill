@@ -1,4 +1,4 @@
-# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
+# TEMPLATE_CLASSIFICATION: legacy executable; migration/reference-only; not a production default
 """
 Data Provider Adapter Template for nautilus_trader.
 
