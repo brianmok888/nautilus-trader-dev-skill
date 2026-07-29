@@ -368,6 +368,9 @@ def test_readiness_cards_do_not_report_stale_cutover_results() -> None:
 
         assert "passed 270 tests" not in text
         assert "passed 110 safety" not in text
+        assert "passed 308 tests" not in text
+        assert "passed 113 safety" not in text
+        assert "2026-07-28:" not in text
         assert "with residual Pending gates retained below" not in text
         assert "Cutover commits `9287019`" not in text
 
