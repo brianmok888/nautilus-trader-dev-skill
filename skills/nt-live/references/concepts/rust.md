@@ -221,9 +221,8 @@ and
 
 ### Running Rust components
 
-Rust strategies and actors can run through three paths. The examples
-below use strategies, but the same pattern applies to actors via
-`add_actor` (pure Rust) and `add_native_actor` (from Python).
+Rust strategies and actors use direct native registration. Python can register
+only bundled examples compiled behind the examples feature.
 
 #### Pure Rust
 
@@ -233,31 +232,22 @@ binary with `cargo build`. This path requires no Python runtime.
 ```rust
 let strategy = GridMarketMaker::new(config);
 node.add_strategy(strategy)?;
+node.add_actor(actor)?;
 node.run().await?;
 ```
 
 See [Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) for a
 full walkthrough.
 
-#### Native config from Python
+#### Bundled examples from Python
 
-Pass a config to `add_native_strategy` to register a built-in Rust
-strategy from Python. The Rust side constructs the strategy and
-registers it with the engine. Python provides the configuration;
-all execution happens in Rust.
+Use `add_builtin_strategy(type_name, config)` or
+`add_builtin_actor(type_name, config)` only for bundled Rust examples. These
+methods require the examples feature and are not a first-class extension API.
 
 ```python
-from nautilus_trader.core.nautilus_pyo3.trading import GridMarketMakerConfig
-
-config = GridMarketMakerConfig(
-    instrument_id=InstrumentId.from_str("BTC-USDT-SWAP.OKX"),
-    max_position=Quantity.from_str("10.0"),
-    trade_size=Quantity.from_str("0.1"),
-    num_levels=5,
-    grid_step_bps=15,
-)
-
-node.add_native_strategy(config)
+node.add_builtin_strategy(type_name, config)
+node.add_builtin_actor(type_name, config)
 ```
 
 Built-in strategy configs:
@@ -268,16 +258,15 @@ Built-in strategy configs:
 | `GridMarketMakerConfig` | `GridMarketMaker`     |
 | `DeltaNeutralVolConfig` | `DeltaNeutralVol`     |
 
-Built-in actor configs (via `add_native_actor`):
+Built-in actor configs (via `add_builtin_actor(type_name, config)`):
 
 | Config                     | Actor                 |
 |----------------------------|-----------------------|
 | `BookImbalanceActorConfig` | `BookImbalanceActor`  |
 
-Users who compile from source can add their own components to this
-path. Add a `#[pyclass]` config and a dispatch arm in
-`add_native_strategy` or `add_native_actor`. The component then
-works from Python without PyO3 wrappers on the type itself.
+Custom components are implemented in Rust and registered directly with
+`node.add_strategy(strategy)?` or `node.add_actor(actor)?`. The bundled Python
+methods are not a general extension path.
 
 #### Plugin loading (planned)
 

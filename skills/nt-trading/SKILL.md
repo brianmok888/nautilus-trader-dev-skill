@@ -375,23 +375,23 @@ All handlers have default no-op implementations. Override only what you need:
 
 ### Running Rust Components
 
-Three paths to run Rust strategies/actors:
+Two supported registration paths run Rust strategies/actors:
 
 1. **Pure Rust** — standalone binary, no Python runtime:
    ```rust
    let strategy = MyStrategy::new(instrument_id);
    node.add_strategy(strategy)?;
+   node.add_actor(actor)?;
    node.run().await?;
    ```
 
-2. **Native config from Python** — register built-in Rust strategies from Python:
+2. **Bundled examples from Python** — register only bundled Rust examples by type name:
    ```python
-   from nautilus_trader.core.nautilus_pyo3.trading import GridMarketMakerConfig
-   config = GridMarketMakerConfig(instrument_id=..., trade_size=...)
-   node.add_native_strategy(config)
+   node.add_builtin_strategy(type_name, config)
+   node.add_builtin_actor(type_name, config)
    ```
 
-3. **Plugin loading** (planned) — load compiled `cdylib` crates at runtime.
+   These methods require the examples feature and are not a first-class extension API.
 
 ### Guard Safety
 
@@ -402,9 +402,9 @@ When accessing other actors in callbacks:
 
 ## Rust Extension (PyO3 Path)
 
-### Exposing Rust Strategies to Python
+### Bundled Rust Examples from Python
 
-Use `#[pyclass]` configs with `add_native_strategy`/`add_native_actor` dispatch:
+`add_builtin_strategy(type_name, config)` and `add_builtin_actor(type_name, config)` expose only the Rust examples compiled with the examples feature. They are not a first-class extension API for custom components.
 
 | Config | Strategy |
 |---|---|
@@ -416,7 +416,7 @@ Use `#[pyclass]` configs with `add_native_strategy`/`add_native_actor` dispatch:
 |---|---|
 | `BookImbalanceActorConfig` | `BookImbalanceActor` |
 
-To add custom components to this path: add a `#[pyclass]` config and dispatch arm in `add_native_strategy` or `add_native_actor`.
+Implement custom strategies and actors in Rust and register them directly with `node.add_strategy(strategy)?` or `node.add_actor(actor)?`.
 
 ### PyO3 Binding Conventions
 

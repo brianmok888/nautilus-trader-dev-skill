@@ -224,6 +224,23 @@ def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
     assert "`nt-strategy-builder` for runtime wiring" not in evomap
 
 
+def test_component_registration_uses_current_native_and_bundled_apis() -> None:
+    texts = [
+        read("skills/nt-trading/SKILL.md"),
+        read("skills/nt-live/references/concepts/rust.md"),
+    ]
+    combined = "\n".join(texts)
+
+    assert "node.add_strategy(strategy)?" in combined
+    assert "node.add_actor(actor)?" in combined
+    assert "add_builtin_strategy(type_name, config)" in combined
+    assert "add_builtin_actor(type_name, config)" in combined
+    assert "examples feature" in combined
+    assert "not a first-class extension API" in combined
+    assert "add_native_strategy" not in combined
+    assert "add_native_actor" not in combined
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name
