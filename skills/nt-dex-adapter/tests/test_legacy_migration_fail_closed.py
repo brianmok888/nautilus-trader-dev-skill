@@ -4,24 +4,24 @@ import inspect
 import math
 import sys
 from pathlib import Path
-from types import ModuleType
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import pytest
-from pydantic import SecretStr
-from nautilus_trader.execution.messages import GenerateFillReports
-from nautilus_trader.execution.messages import GenerateOrderStatusReport
-from nautilus_trader.execution.messages import GenerateOrderStatusReports
-from nautilus_trader.execution.messages import GeneratePositionStatusReports
-from nautilus_trader.execution.reports import FillReport
-from nautilus_trader.execution.reports import ExecutionMassStatus
-from nautilus_trader.execution.reports import OrderStatusReport
-from nautilus_trader.execution.reports import PositionStatusReport
-from nautilus_trader.model.identifiers import AccountId
-from nautilus_trader.model.identifiers import ClientId
-from nautilus_trader.model.identifiers import Venue
+from nautilus_trader.execution.messages import (
+    GenerateFillReports,
+    GenerateOrderStatusReport,
+    GenerateOrderStatusReports,
+    GeneratePositionStatusReports,
+)
+from nautilus_trader.execution.reports import (
+    ExecutionMassStatus,
+    FillReport,
+    OrderStatusReport,
+    PositionStatusReport,
+)
+from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 from nautilus_trader.test_kit.stubs.component import TestComponentStubs
-
+from pydantic import SecretStr
 
 _TEMPLATES = Path(__file__).parent.parent / "templates"
 _LEGACY_TEMPLATES = _TEMPLATES / "legacy_migration"
@@ -504,6 +504,50 @@ def test_provider_cache_identity_includes_all_effective_fields(provider_config) 
     assert changed_provider._config == provider_config
 
 
+def test_effective_provider_config_owns_deeply_immutable_source_values() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    pools = ["0x1"]
+    filters = {"quote_currency": "USDC"}
+    source = factory_module.MyDEXInstrumentProviderConfig(
+        pools=pools,
+        filters=filters,
+    )
+    client_config = factory_module.MyDEXDataClientConfig(instrument_provider=source)
+
+    provider = factory_module._get_or_create_instrument_provider(client_config)
+    pools.append("0x2")
+    filters["base_currency"] = "WETH"
+
+    assert provider._config is not source
+    assert provider._config.pools == ("0x1",)
+    assert provider._config.filters == {"quote_currency": "USDC"}
+    with pytest.raises(TypeError):
+        provider._config.filters["base_currency"] = "WETH"
+
+
+def test_semantically_identical_provider_config_reuses_canonical_identity() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    first = factory_module.MyDEXDataClientConfig(
+        instrument_provider=factory_module.MyDEXInstrumentProviderConfig(
+            load_ids=frozenset({"ETH-USDC.MYDEX", "BTC-USDC.MYDEX"}),
+            filters={"quote_currency": "USDC", "base_currency": "WETH"},
+        ),
+    )
+    second = factory_module.MyDEXExecClientConfig(
+        instrument_provider=factory_module.MyDEXInstrumentProviderConfig(
+            load_ids=frozenset({"BTC-USDC.MYDEX", "ETH-USDC.MYDEX"}),
+            filters={"base_currency": "WETH", "quote_currency": "USDC"},
+        ),
+    )
+
+    first_provider = factory_module._get_or_create_instrument_provider(first)
+    second_provider = factory_module._get_or_create_instrument_provider(second)
+
+    assert second_provider is first_provider
+
+
 def test_identical_full_effective_provider_config_reuses_cached_provider() -> None:
     factory_module = _load_module("dex_factory")
     factory_module._instrument_providers.clear()
@@ -572,7 +616,7 @@ def test_direct_legacy_provider_fields_apply_when_nested_config_is_standard_defa
 
     assert provider._config.rpc_url == "https://direct.example"
     assert provider._config.chain_id == 1
-    assert provider._config.pools == ["0xdirect"]
+    assert provider._config.pools == ("0xdirect",)
     assert provider._config.sandbox_mode is False
 
 

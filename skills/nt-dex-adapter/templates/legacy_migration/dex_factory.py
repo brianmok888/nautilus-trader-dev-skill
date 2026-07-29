@@ -20,6 +20,8 @@ Usage in TradingNode:
 Replace 'MyDEX' with your actual DEX name throughout.
 """
 
+import msgspec
+from frozendict import frozendict
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
 from nautilus_trader.live.config import LiveDataClientConfig, LiveExecClientConfig
@@ -29,10 +31,12 @@ from nautilus_trader.live.factories import LiveDataClientFactory, LiveExecClient
 from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 
 from ..dex_config import MyDEXDataClientConfig, MyDEXExecClientConfig
-from ..dex_instrument_provider import MyDEXInstrumentProvider, MyDEXInstrumentProviderConfig
+from ..dex_instrument_provider import (
+    MyDEXInstrumentProvider,
+    MyDEXInstrumentProviderConfig,
+)
 from .dex_data_client import MyDEXDataClient
 from .dex_exec_client import MyDEXExecutionClient
-
 
 VENUE_NAME = "MYDEX"  # ← Change to your actual venue name (e.g. "UNISWAP_V3")
 
@@ -166,19 +170,27 @@ _instrument_providers: dict[bytes, MyDEXInstrumentProvider] = {}
 def _effective_instrument_provider_config(config) -> MyDEXInstrumentProviderConfig:
     nested = config.instrument_provider
     if isinstance(nested, MyDEXInstrumentProviderConfig):
-        return nested
+        rpc_url = nested.rpc_url
+        chain_id = nested.chain_id
+        pools = nested.pools
+        sandbox_mode = nested.sandbox_mode
+    else:
+        rpc_url = config.rpc_url
+        chain_id = config.chain_id
+        pools = getattr(config, "pool_addresses", ())
+        sandbox_mode = config.sandbox_mode
 
     return MyDEXInstrumentProviderConfig(
         load_all=nested.load_all,
-        load_ids=nested.load_ids,
-        filters=nested.filters,
+        load_ids=frozenset(nested.load_ids) if nested.load_ids is not None else None,
+        filters=frozendict(nested.filters) if nested.filters is not None else None,
         filter_callable=nested.filter_callable,
         log_warnings=nested.log_warnings,
         use_gamma_markets=nested.use_gamma_markets,
-        rpc_url=config.rpc_url,
-        chain_id=config.chain_id,
-        pools=list(getattr(config, "pool_addresses", [])),
-        sandbox_mode=config.sandbox_mode,
+        rpc_url=rpc_url,
+        chain_id=chain_id,
+        pools=tuple(pools),
+        sandbox_mode=sandbox_mode,
     )
 
 
@@ -190,7 +202,7 @@ def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
     pool metadata from the chain.
     """
     provider_config = _effective_instrument_provider_config(config)
-    key = provider_config.json()
+    key = msgspec.json.encode(provider_config, order="deterministic")
 
     if key not in _instrument_providers:
         _instrument_providers[key] = MyDEXInstrumentProvider(config=provider_config)

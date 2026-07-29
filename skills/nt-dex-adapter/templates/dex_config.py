@@ -10,9 +10,13 @@ Defines all three config classes required by NautilusTrader's adapter framework:
 Replace 'MyDEX' with your actual DEX/venue name throughout.
 """
 
+from frozendict import frozendict
+from nautilus_trader.config import (
+    InstrumentProviderConfig,
+    LiveDataClientConfig,
+    LiveExecClientConfig,
+)
 from pydantic import SecretStr
-
-from nautilus_trader.config import InstrumentProviderConfig, LiveDataClientConfig, LiveExecClientConfig
 
 
 class UnsafeLiveDEXConfigError(ValueError):
@@ -36,15 +40,16 @@ class MyDEXInstrumentProviderConfig(InstrumentProviderConfig, frozen=True):
         HTTP JSON-RPC endpoint (e.g. Infura, Alchemy, local node).
     chain_id : int
         EVM chain ID (1=mainnet, 42161=Arbitrum, etc.)
-    pools : list[str]
+    pools : tuple[str, ...]
         Specific pool contract addresses to load. If empty, loads all known pools.
     sandbox_mode : bool
         If True, uses testnet RPC and skips chain calls in tests.
     """
 
+    filters: frozendict[str, object] | None = None
     rpc_url: str = "http://127.0.0.1:8545"
     chain_id: int = 31337
-    pools: list[str] = []      # Empty → load all known pools
+    pools: tuple[str, ...] = ()  # Empty → load all known pools
     sandbox_mode: bool = True
 
 
@@ -68,7 +73,8 @@ class MyDEXDataClientConfig(LiveDataClientConfig, frozen=True):
     chain_id : int
         EVM chain ID.
     pool_addresses : list[str]
-        Specific pools to subscribe to. Overrides instrument_provider pools.
+        Legacy direct pools used only when the standard base
+        ``InstrumentProviderConfig`` default is retained.
     poll_interval_secs : float
         Seconds between RPC polls (if WS not available). Reduce for fresher data,
         but watch RPC rate limits.

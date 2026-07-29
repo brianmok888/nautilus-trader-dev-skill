@@ -452,3 +452,46 @@ exit 1
 
 Repository-wide diagnostics remain pre-existing residual. Filtering the same
 normal run found zero errors in all three changed Python files.
+
+## Review fix breaker adjudication
+
+Independent Round 5 review found two load-bearing identity defects at
+`7d58381522569614479853e70205ffb7538c0d11`: caller-owned mutable pools and
+filters could drift after cache insertion, and raw JSON preserved mapping
+insertion order. The same review also found contradictory `pool_addresses`
+precedence wording. This is the planned five-round breaker, so the leader
+adjudicated the narrowly scoped correction directly rather than dispatching a
+sixth review-fix worker round.
+
+### RED evidence
+
+Two regressions failed against the reviewed commit:
+
+```text
+uv run pytest -q skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py -k 'deeply_immutable or canonical_identity'
+FF
+2 failed, 47 deselected
+```
+
+The first reproduced mutation of the provider retained under its stale cache
+key. The second proved semantically equal filters with reversed insertion order
+created two providers.
+
+### GREEN implementation
+
+- Every effective config is now a detached snapshot, including nested configs.
+- Pools are stored as tuples, load IDs as frozensets, and filters as
+  `frozendict`; the provider cannot mutate away from its identity.
+- `msgspec.json.encode(..., order="deterministic")` canonicalizes mapping and
+  unordered-collection identity while preserving tuple pool order.
+- The direct `pool_addresses` documentation now matches nested-provider
+  authority.
+
+### Validation evidence
+
+```text
+full DEX: 90 passed
+import sorting: passed
+compileall: exit 0
+git diff --check: exit 0
+```
