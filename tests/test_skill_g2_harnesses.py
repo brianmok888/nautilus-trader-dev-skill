@@ -121,6 +121,21 @@ def test_all_upstream_steps_pin_the_authoritative_commit() -> None:
     assert g2.EXPECTED_UPSTREAM_COMMIT == g2.UPSTREAM_COMMIT
 
 
+def test_ffi_steps_preserve_the_pinned_high_precision_bindings() -> None:
+    ffi_steps = [
+        step
+        for harness in g2.HARNESSES.values()
+        for step in harness.steps
+        if step.cwd is g2.WorkingDirectory.UPSTREAM
+        and any("ffi" in argument.split(",") for argument in step.command)
+    ]
+
+    assert ffi_steps
+    for step in ffi_steps:
+        features = step.command[step.command.index("--features") + 1].split(",")
+        assert "high-precision" in features, step.command
+
+
 def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
     subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
     subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
