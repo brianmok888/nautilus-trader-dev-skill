@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import hashlib
 import json
 import subprocess
 import sys
@@ -15,6 +14,11 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tools.g2_owned_content import (
+    OwnedContentError,
+    assert_owned_content_tracked,
+    harness_content_hash,
+)
 from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
@@ -580,27 +584,6 @@ def command_matches_scope(command: tuple[str, ...], allowed_tokens: tuple[str, .
     return any(token in argument for token in allowed_tokens for argument in command)
 
 
-def owned_content_hash(root: Path, paths: tuple[Path, ...]) -> str:
-    digest = hashlib.sha256()
-    files: list[Path] = []
-    for relative in paths:
-        path = root / relative
-        if path.is_dir():
-            files.extend(
-                candidate
-                for candidate in path.rglob("*")
-                if candidate.is_file() and "__pycache__" not in candidate.parts
-            )
-        elif path.is_file():
-            files.append(path)
-    for path in sorted(files):
-        digest.update(path.relative_to(root).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
-
-
 def validate_harnesses(
     harnesses: Mapping[str, Harness],
     *,
@@ -623,6 +606,10 @@ def validate_harnesses(
             errors.append(f"{key} has no machine-checkable scope tokens")
         if not harness.owned_paths:
             errors.append(f"{key} has no owned paths")
+        try:
+            harness_content_hash(validation_root, harness)
+        except OwnedContentError as exc:
+            errors.append(f"{key} owned content is invalid: {exc}")
         required_skill_path = Path("skills") / key / "SKILL.md"
         if required_skill_path not in harness.owned_paths:
             errors.append(f"{key} owned paths omit {required_skill_path.as_posix()}")
@@ -743,8 +730,8 @@ def validate_readiness_cards(
             errors.append(f"{skill} durable evidence was not produced from a clean upstream")
         if "repository_commit" in payload:
             errors.append(f"{skill} durable evidence uses self-referential provenance")
-        if payload.get("owned_content_sha256") != owned_content_hash(
-            root, harnesses[skill].owned_paths
+        if payload.get("owned_content_sha256") != harness_content_hash(
+            root, harnesses[skill]
         ):
             errors.append(f"{skill} durable evidence does not match owned skill content")
         steps = payload.get("steps")
@@ -869,7 +856,7 @@ def write_evidence(
         "schema_version": 2,
         "skill": harness.skill,
         "scope": harness.scope,
-        "owned_content_sha256": owned_content_hash(root, harness.owned_paths),
+        "owned_content_sha256": harness_content_hash(root, harness),
         "upstream_commit": upstream_commit(upstream_root),
         "upstream_clean": upstream_is_clean(upstream_root),
         "verified_at": datetime.now(UTC).isoformat(),
@@ -941,6 +928,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     for harness in plan:
+        try:
+            assert_owned_content_tracked(repo_root(), harness)
+        except (OwnedContentError, subprocess.CalledProcessError) as exc:
+            print(exc, file=sys.stderr)
+            return 1
         print(f"==> {harness.skill}: {harness.summary}", flush=True)
         result = run_harness(
             harness,

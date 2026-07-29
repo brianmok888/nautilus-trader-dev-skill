@@ -11,6 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_skill_g2_harnesses as g2
+from tools import g2_owned_content as ownership
 
 EXPECTED_SKILLS = {
     "nt",
@@ -277,10 +278,10 @@ def test_list_outputs_only_the_eighteen_harnesses(capsys: pytest.CaptureFixture[
 
 def test_each_harness_owns_its_skill_and_nonempty_content() -> None:
     root = g2.repo_root()
-    empty_hash = g2.owned_content_hash(root, ())
+    empty_hash = ownership.owned_content_hash(root, ())
     for skill, harness in g2.HARNESSES.items():
         assert Path("skills") / skill / "SKILL.md" in harness.owned_paths
-        assert g2.owned_content_hash(root, harness.owned_paths) != empty_hash
+        assert g2.harness_content_hash(root, harness) != empty_hash
 
 
 def test_validator_rejects_empty_owned_paths() -> None:
@@ -411,7 +412,7 @@ def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path:
                 "schema_version": 1,
                 "skill": "nt-data",
                 "scope": g2.HARNESSES["nt-data"].scope,
-                "owned_content_sha256": g2.owned_content_hash(tmp_path, ()),
+                "owned_content_sha256": ownership.owned_content_hash(tmp_path, ()),
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
                 "steps": [{"returncode": 1}],
@@ -439,7 +440,7 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
                 "schema_version": 1,
                 "skill": "nt-data",
                 "scope": harness.scope,
-                "owned_content_sha256": g2.owned_content_hash(
+                "owned_content_sha256": ownership.owned_content_hash(
                     tmp_path, harness.owned_paths
                 ),
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
@@ -513,8 +514,8 @@ def test_evidence_schema_has_no_self_referential_repository_commit(
     payload = json.loads((tmp_path / harness.evidence_file).read_text())
     assert payload["schema_version"] == 2
     assert "repository_commit" not in payload
-    assert payload["owned_content_sha256"] == g2.owned_content_hash(
-        tmp_path, harness.owned_paths
+    assert payload["owned_content_sha256"] == g2.harness_content_hash(
+        tmp_path, harness
     )
 
 
