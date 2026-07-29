@@ -227,6 +227,17 @@ def test_ignores_omx_runtime_context(tmp_path: Path) -> None:
     )
 
 
+def test_ignores_hidden_superpowers_sdd_scratch(tmp_path: Path) -> None:
+    write(
+        tmp_path / ".superpowers/sdd/task-notes.md",
+        "Historical notes mention references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any(".superpowers/sdd/task-notes.md" in error for error in result.errors)
+
+
 def test_reports_stale_references_guides_path(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
@@ -1449,6 +1460,39 @@ def test_file_level_legacy_label_does_not_exempt_later_guidance(
     assert (
         "unlabelled TradingNode guidance in "
         "skills/nt-strategy-builder/templates/live_node.py" in result.errors
+    )
+
+
+def test_legacy_migration_path_does_not_exempt_unlabelled_guidance(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-example/legacy_migration/example.py",
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-example/legacy_migration/example.py" in result.errors
+    )
+
+
+def test_block_local_note_only_labels_adjacent_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-example/SKILL.md",
+        "NT v2 compatibility note: legacy Cython example; use PyO3 for new work.\n\n"
+        "Use cdef only while migrating this example.\n\n"
+        "Current setup.\n\n"
+        "Use cpdef for this later executable block.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in skills/nt-example/SKILL.md"
+        in result.errors
     )
 
 

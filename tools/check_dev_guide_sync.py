@@ -843,6 +843,8 @@ def _iter_checked_markdown_files(root: Path) -> list[Path]:
             continue
         if relative.parts and relative.parts[0] == ".omx":
             continue
+        if relative.parts and relative.parts[0] == ".superpowers":
+            continue
         if relative.parts[:2] == ("docs", "superpowers"):
             continue
         if (
