@@ -241,6 +241,25 @@ def test_component_registration_uses_current_native_and_bundled_apis() -> None:
     assert "add_native_actor" not in combined
 
 
+def test_visualization_guidance_uses_current_tearsheet_api() -> None:
+    paths = [
+        "docs/visualization.md",
+        "references/README.md",
+        "skills/nt-implement/templates/backtest_viz.py",
+        "skills/nt-strategy-builder/SKILL.md",
+        "skills/nt-strategy-builder/templates/backtest_node.py",
+        "skills/nt-dex-adapter/SKILL.md",
+    ]
+    combined = "\n".join(read(path) for path in paths)
+
+    assert "BacktestVisualizer" not in combined
+    assert "from nautilus_trader.analysis import TearsheetConfig, create_tearsheet" in combined
+    assert 'create_tearsheet(engine, output_path="tearsheet.html", config=' in combined
+    assert "visualization" in combined
+    assert "migration/reference-only" in read("skills/nt-implement/templates/backtest_viz.py")
+    assert "migration/reference-only" in read("skills/nt-strategy-builder/templates/backtest_node.py")
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name

@@ -3,7 +3,7 @@
 This directory contains reference documentation for NautilusTrader concepts, APIs, and development guides.
 
 > [!IMPORTANT]
-> **Modern Tooling**: For the latest recommended workflows including `uv`, `msgspec`, and `BacktestVisualizer`, please see the [docs/](../docs/) directory.
+> **Modern Tooling**: For current workflows including `uv`, `msgspec`, and `create_tearsheet`, please see the [docs/](../docs/) directory. Non-AI Python examples are migration/reference-only.
 >
 > - [End-to-End Guide](../docs/end_to_end_guide.md)
 > - [uv Guide](../docs/uv_guide.md)

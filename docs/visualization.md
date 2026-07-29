@@ -1,15 +1,13 @@
 # Visualization in NautilusTrader
 
-NautilusTrader v1.221.0+ introduces advanced visualization capabilities using Plotly for interactive, browser-based tearsheets.
+NautilusTrader provides Plotly-based, browser-viewable tearsheets. This Python workflow is migration/reference-only for non-AI systems; new strategy and research work follows the Rust-first path.
 
 ## Requirements
 
-Ensure you have Plotly installed in your environment:
+Install the visualization extra in the migration environment:
 
 ```bash
-uv add plotly
-# or
-pip install "plotly>=6.3.1"
+uv add "nautilus_trader[visualization]"
 ```
 
 ## Features
@@ -29,10 +27,10 @@ The new tearsheets include critical performance metrics by default:
 ## Usage Example
 
 ```python
-from nautilus_trader.analysis.visualizer import BacktestVisualizer
+from nautilus_trader.analysis import TearsheetConfig, create_tearsheet
 
-visualizer = BacktestVisualizer(results=results)
-visualizer.tearsheet(output_path="report.html")
+config = TearsheetConfig()
+create_tearsheet(engine, output_path="tearsheet.html", config=config)
 ```
 
 See [backtest_viz.py](../skills/nt-implement/templates/backtest_viz.py) for a full template.

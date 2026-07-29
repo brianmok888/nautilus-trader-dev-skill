@@ -193,7 +193,7 @@ Required checks before claiming adapter readiness:
 ## Modern Tooling Standards
 - **Dependencies**: Use `uv` for managing the adapter dev environment.
 - **Serialization**: For internal data passing, `msgspec` structs are faster than standard classes.
-- **Visualization**: Verify your data feed quality using `BacktestVisualizer` on recorded data.
+- **Visualization (migration/reference-only)**: Inspect recorded data with `TearsheetConfig` and `create_tearsheet`; install the `visualization` extra.
 
 ## Testing Strategy
 

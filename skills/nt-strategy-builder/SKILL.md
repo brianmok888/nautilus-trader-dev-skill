@@ -175,7 +175,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 ## Modern Tooling Standards
 - **Project Management**: Use `uv` for lightning-fast dependency resolution and environment management (see `docs/uv_guide.md`).
 - **Serialization**: Prefer `msgspec.Struct` for custom data types over standard dataclasses for 10-100x speedups (see `docs/serialization.md`).
-- **Visualization**: Use the new `BacktestVisualizer` (Plotly-based) for interactive tearsheets instead of static matplotlib plots (see `docs/visualization.md`).
+- **Visualization (migration/reference-only)**: Use `TearsheetConfig` with `create_tearsheet` from `nautilus_trader.analysis` and install the `visualization` extra (see `docs/visualization.md`).
 
 ## Implementation Workflow
 

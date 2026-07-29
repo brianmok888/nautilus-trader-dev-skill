@@ -158,13 +158,14 @@ def run_backtest() -> None:
 
     # Visualization (requires plotly)
     try:
-        from nautilus_trader.analysis.visualizer import BacktestVisualizer
+        from nautilus_trader.analysis import TearsheetConfig, create_tearsheet
+
         print("Generating tearsheet...")
-        visualizer = BacktestVisualizer(results=engine)
-        visualizer.tearsheet(output_path="tearsheet.html")
+        config = TearsheetConfig()
+        create_tearsheet(engine, output_path="tearsheet.html", config=config)
         print("Tearsheet saved to tearsheet.html")
     except ImportError:
-        print("Install plotly to generate tearsheet: uv add plotly")
+        print('Install the visualization extra: uv add "nautilus_trader[visualization]"')
 
     engine.dispose()
 
