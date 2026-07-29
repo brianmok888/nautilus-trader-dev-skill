@@ -30,7 +30,10 @@ separately and do not silently replace that baseline.
 | Current V2 component, event, visualization, instrument, and crate APIs drifted from upstream. | P1 | Closed | `tests/test_v2_guidance_hardening.py:234`, `:255`, `:338`, `:453`, and `:463` enforce the corrected APIs and inventories. | — |
 | The Python V2 boundary test was collected in the repository's default V1 environment. | P1 | Closed | `pytest.ini:1` isolates the pinned-only module; `tools/run_pinned_v2_pytest.py:1` clears inherited `addopts`; `tests/test_pytest_environment_split.py:1` locks both environments. | — |
 | G2 FFI compiles could rewrite pinned high-precision generated bindings and invalidate provenance. | P0 | Closed | `tools/check_skill_g2_harnesses.py:204` and `:407` enable `python,ffi,high-precision`; `tests/test_skill_g2_harnesses.py:124` enforces the feature on every FFI step. | — |
-| G2 readiness could pass with missing skills, empty ownership, mutable/self-referential provenance, stale commands, or dirty upstream state. | P0 | Closed | `tests/test_skill_g2_harnesses.py:15` defines exactly 18 skills; `tools/check_skill_g2_harnesses.py:624` rejects empty ownership; lines 736-765 validate schema, pin, clean state, owned-content hash, and exact commands. | — |
+| G2 readiness could pass with missing skills, empty ownership, mutable/self-referential provenance, stale commands, or dirty upstream state. | P0 | Closed | `tests/test_skill_g2_harnesses.py:15` defines exactly 18 skills; `tools/check_skill_g2_harnesses.py` rejects empty ownership and validates schema, pin, clean state, owned-content hash, and exact commands. | — |
+| G2 ownership covered declared files but not the complete skill tree or in-repo symlink targets. | P0 | Closed | `tools/g2_owned_content.py:56` walks every owned tree entry, line 74 records symlink text and recursively includes in-repo targets, line 142 hashes logical paths/types/payloads, and line 159 rejects untracked owned sources; `tests/test_g2_owned_content.py` covers broken, escaping, cyclic, unsupported, and changed-content cases. | — |
+| A rejected advisory decision could be approved later because audit append and decision finalization were not atomic. | P0 | Closed | `skills/nt-evomap-integration/templates/advisory_actor.py:290` requires audit persistence before line 293 finalizes the decision; `tests/test_ai_advisory_boundary.py` verifies later approval fails as `decision_replay`. | — |
+| DEX G2 ran ambient Python migration suites instead of the pinned V2 compliance contract. | P0 | Closed | `tests/test_dex_g2_harness.py:11` pins `test_dex_compliance.py` through `tools/run_pinned_v2_pytest.py` and retains Hyperliquid/blockchain Cargo checks; line 41 excludes legacy migration execution from production G2. | — |
 
 ### Legacy/unlabelled v1, Cython, or template content
 
@@ -40,6 +43,7 @@ separately and do not silently replace that baseline.
 | Generic banners or directory placement could bless `TradingNode`, live-client/factory, Cython, or V1 executable content. | P0 | Closed | `tests/test_template_classification.py:36`, `:89`, `:128`, `:152`, and `:214` cover directory, alias, syntax-error, Cython, V1, and qualified-call bypasses; `tools/template_classification.py:65` requires the `legacy_migration` namespace. | — |
 | Retained live/DEX/adapter Python executables remained in default template paths. | P1 | Closed | Retained files are quarantined under `skills/nt-adapters/templates/legacy_migration/`, `skills/nt-dex-adapter/templates/legacy_migration/`, `skills/nt-implement/templates/legacy_migration/`, and `skills/nt-strategy-builder/templates/legacy_migration/`; `skills/nt-dex-adapter/templates/legacy_migration/dex_exec_client.py:1` shows the exact legacy header. | — |
 | Markdown could contain unlabelled Cython/V1/`TradingNode` guidance or offer a legacy fallback for new production work. | P1 | Closed | `tools/check_dev_guide_sync.py:1051` scans unlabelled `TradingNode`, line 1076 scans unlabelled legacy/Cython/V1 guidance, and line 1120 rejects legacy fallbacks for new live/production work. | — |
+| Ordinary non-AI Python examples and templates remained mixed into active Rust-oriented skill trees. | P0 | Closed | `skills/nt-{trading,backtest,signals,live,data,implement}/SKILL.md` expose ordered Rust, PyO3, migration, and source-pinned H2 lanes; ordinary Python is physically under each skill's `migration_reference/python/`; `tools/markdown_lane_contract.py` and `tools/template_classification.py` enforce the structure and quarantine. | — |
 
 ### Improvement opportunities versus current nightly/develop
 
@@ -48,7 +52,8 @@ separately and do not silently replace that baseline.
 | Moving upstream changes were not distinguished from the reproducible G2 baseline. | P1 | Closed | `README.md:14` labels current-develop observations; `tools/check_upstream_freshness.py:101` reports each ref as current, drifted, or diverged without mutating the pin. | — |
 | New develop-only cache, order-constructor, and backtest-result APIs were not covered or version-scoped. | P2 | Closed | `skills/nt-data/SKILL.md:107` scopes cache APIs to commit `aabb824cb`; `skills/nt-model/SKILL.md:12` scopes `OrderInitialized::new_checked`; `skills/nt-backtest/SKILL.md:56` scopes `BacktestResult.returns_series`. | — |
 | Adapter execution-spec freshness versus develop was unknown. | P2 | Closed | `skills/nt-testing/SKILL.md:11` keeps `spec_exec_testing` as the measurable contract, and line 17 records that it is unchanged between the pin and current `origin/develop`. | — |
-| Readiness claims were static rather than domain-scoped and content-bound. | P1 | Closed | Every `skills/nt*/SKILL.md` contains G0-G7; `tools/check_skill_g2_harnesses.py:696` validates targeted commands and schema-v2 evidence; the artifacts live under `references/g2-evidence/`. | — |
+| Readiness claims were static rather than domain-scoped and content-bound. | P1 | Closed | Every `skills/nt*/SKILL.md` contains G0-G7; `tools/check_skill_g2_harnesses.py` validates targeted commands and schema-v2 evidence; `tools/g2_owned_content.py` binds evidence to complete skill trees; the artifacts live under `references/g2-evidence/`. | — |
+| Gate cards embedded volatile dates and test counts that could become stale without a behavior change. | P2 | Closed | `tests/test_skill_g2_harnesses.py::test_readiness_cards_do_not_embed_volatile_test_counts` rejects dated/count-bound gate evidence; all 18 cards now cite stable commands and artifacts. | — |
 
 ## Progressive gate result
 
@@ -70,6 +75,7 @@ The reconciliation uses these measurable checks:
 uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'
 uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'
 uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py -k 'lane or python or rust or current_develop'
+uv run pytest -q tests/test_markdown_lane_contract.py tests/test_g2_owned_content.py tests/test_dex_g2_harness.py
 uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'
 uv run pytest -q --ignore=tests/test_quality_gates.py
 uv run pytest -q tests/test_quality_gates.py
