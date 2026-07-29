@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     if not tests:
         raise ValueError("at least one pytest path is required")
     result = subprocess.run(
-        (str(python), "-m", "pytest", "-q", *tests),
+        (str(python), "-m", "pytest", "-q", "-o", "addopts=", *tests),
         cwd=Path(__file__).resolve().parents[1],
         check=False,
     )
