@@ -217,17 +217,15 @@ HARNESSES: dict[str, Harness] = {
         scope="upstream:hyperliquid-and-blockchain-adapters",
         summary="Run local DEX template tests and compile Rust networking/signing surfaces",
         allowed_tokens=(
-            "skills/nt-dex-adapter/tests",
+            "test_dex_compliance.py",
             "nautilus-hyperliquid",
             "nautilus-blockchain",
         ),
         steps=(
             repository_step(
                 PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "skills/nt-dex-adapter/tests",
+                "tools/run_pinned_v2_pytest.py",
+                "skills/nt-dex-adapter/tests/test_dex_compliance.py",
             ),
             upstream_step(
                 "cargo",
