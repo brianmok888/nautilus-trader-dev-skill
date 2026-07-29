@@ -289,9 +289,10 @@ class AdvisoryBridgeActor(DataActor):
         )
         if not self._mailbox.try_append_audit(record):
             return False
+        if reason is None:
+            self._decision_finalized = True
         if reason is not None or not decision.approved:
             return False
-        self._decision_finalized = True
         self._authority = AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
         return True
 

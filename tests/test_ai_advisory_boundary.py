@@ -383,6 +383,31 @@ def test_late_or_duplicate_approval_is_rejected() -> None:
     assert mailbox.try_take_audit().reason == "decision_replay"
 
 
+def test_rejected_advisory_decision_cannot_later_be_approved() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=4)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_put_result(_result(module)) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
+
+    rejected = module.AdvisoryDecision(
+        request_id="request-1",
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        approved=False,
+        decided_ns=60,
+    )
+    assert actor.approve(rejected) is False
+    assert mailbox.try_take_audit().reason == "operator_rejected"
+    assert actor.authority is module.AdvisoryAuthority.NONE
+
+    assert actor.approve(_decision(module)) is False
+    assert mailbox.try_take_audit().reason == "decision_replay"
+    assert actor.authority is module.AdvisoryAuthority.NONE
+
+
 def test_advisory_result_at_or_after_deadline_is_rejected_as_late() -> None:
     module = _module()
     mailbox = module.AdvisoryMailboxPort(capacity=4)
