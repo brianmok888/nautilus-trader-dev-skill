@@ -17,6 +17,7 @@ Replace 'MyDEX' with your actual DEX name throughout.
 """
 
 import asyncio
+import math
 import sys
 from pathlib import Path
 
@@ -323,8 +324,10 @@ class MyDEXDataClient(LiveMarketDataClient):
         is_buy : bool
             True if base token is being bought.
         """
-        if amount_in <= 0:
-            raise ValueError("amount_in must be greater than zero")
+        if not math.isfinite(amount_in) or amount_in <= 0:
+            raise ValueError("amount_in must be finite and greater than zero")
+        if not math.isfinite(amount_out) or amount_out <= 0:
+            raise ValueError("amount_out must be finite and greater than zero")
 
         execution_price = amount_out / amount_in
 

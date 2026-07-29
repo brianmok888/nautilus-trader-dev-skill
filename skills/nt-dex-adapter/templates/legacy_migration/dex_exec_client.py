@@ -21,6 +21,13 @@ from pathlib import Path
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock, MessageBus
+from nautilus_trader.execution.messages import GenerateFillReports
+from nautilus_trader.execution.messages import GenerateOrderStatusReport
+from nautilus_trader.execution.messages import GenerateOrderStatusReports
+from nautilus_trader.execution.messages import GeneratePositionStatusReports
+from nautilus_trader.execution.reports import FillReport
+from nautilus_trader.execution.reports import OrderStatusReport
+from nautilus_trader.execution.reports import PositionStatusReport
 from nautilus_trader.live.execution_client import LiveExecutionClient
 from nautilus_trader.model.enums import (
     AccountType,
@@ -30,12 +37,9 @@ from nautilus_trader.model.identifiers import (
     AccountId,
     ClientId,
     ClientOrderId,
-    InstrumentId,
-    VenueOrderId,
     Venue,
 )
 from nautilus_trader.model.orders import Order
-from nautilus_trader.execution.reports import OrderStatusReport
 
 _TEMPLATE_DIR = Path(__file__).resolve().parent
 if str(_TEMPLATE_DIR) not in sys.path:
@@ -176,17 +180,15 @@ class MyDEXExecutionClient(LiveExecutionClient):
 
     async def _modify_order(self, command) -> None:
         """Modify is not supported on most DEX venues."""
-        self.log.warning(f"Order modification not supported on DEX: {command.client_order_id}")
+        raise NotImplementedError(
+            "DEX order modification requires an authoritative venue modify transaction",
+        )
 
     async def _query_order(self, command) -> None:
         """Query order status by checking on-chain tx receipt."""
-        client_order_id = command.client_order_id
-        tx_hash = self._pending_txs.get(client_order_id)
-        if tx_hash is None:
-            self.log.warning(f"No tx hash found for order: {client_order_id}")
-            return
-        # receipt = await self._signing_client.get_receipt(tx_hash)
-        # self._handle_receipt(client_order_id, receipt)
+        raise NotImplementedError(
+            "DEX order queries require an authoritative venue transaction query",
+        )
 
     # ─── ACCOUNT STATE ─────────────────────────────────────────────────────────
 
@@ -207,9 +209,7 @@ class MyDEXExecutionClient(LiveExecutionClient):
 
     async def generate_order_status_report(
         self,
-        instrument_id: InstrumentId,
-        client_order_id: ClientOrderId | None = None,
-        venue_order_id: VenueOrderId | None = None,
+        command: GenerateOrderStatusReport,
     ) -> OrderStatusReport | None:
         """
         Generate an order status report for reconciliation.
@@ -221,28 +221,28 @@ class MyDEXExecutionClient(LiveExecutionClient):
             "DEX order reconciliation requires an authoritative venue transaction query",
         )
 
-    async def generate_order_status_reports(self, *args, **kwargs):
+    async def generate_order_status_reports(
+        self,
+        command: GenerateOrderStatusReports,
+    ) -> list[OrderStatusReport]:
         """Generate all available order status reports for reconciliation."""
         raise NotImplementedError(
             "DEX order reconciliation requires a successful authoritative venue query",
         )
 
-    async def generate_fill_reports(self, *args, **kwargs):
+    async def generate_fill_reports(self, command: GenerateFillReports) -> list[FillReport]:
         """Generate fill reports for reconciliation."""
         raise NotImplementedError(
             "DEX fill reconciliation requires parsed authoritative on-chain logs",
         )
 
-    async def generate_position_status_reports(self, *args, **kwargs):
+    async def generate_position_status_reports(
+        self,
+        command: GeneratePositionStatusReports,
+    ) -> list[PositionStatusReport]:
         """Generate position status reports for reconciliation."""
         raise NotImplementedError(
             "DEX position reconciliation requires a successful authoritative venue query",
-        )
-
-    async def generate_mass_status(self, *args, **kwargs):
-        """Generate mass status for reconciliation."""
-        raise NotImplementedError(
-            "DEX mass status requires successful authoritative venue queries",
         )
 
     # ─── TX RECEIPT HANDLER ────────────────────────────────────────────────────
