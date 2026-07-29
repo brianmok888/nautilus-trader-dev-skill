@@ -68,6 +68,12 @@ def classification_error(path: Path, root: Path) -> str | None:
     relative = path.relative_to(root)
     if classification == AI_CLASSIFICATION and not relative.is_relative_to(AI_SKILL):
         return "AI classification is only allowed under skills/nt-evomap-integration"
+    if (
+        classification == AI_CLASSIFICATION
+        and "python_sidecar" not in relative.parts
+        and "templates" not in relative.parts
+    ):
+        return "AI classification requires the python_sidecar path component"
     if classification == LEGACY_CLASSIFICATION and "legacy_migration" not in relative.parts:
         return "legacy classification requires a legacy_migration path component"
     if has_legacy_executable_signal(path) and classification != LEGACY_CLASSIFICATION:

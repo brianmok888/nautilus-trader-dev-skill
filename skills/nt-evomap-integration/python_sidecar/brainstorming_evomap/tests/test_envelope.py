@@ -4,23 +4,7 @@
 
 """Tests for A2A envelope builder and validation."""
 
-import importlib.util
-from pathlib import Path
-
-
-_module_dir = Path(__file__).parent.parent
-
-
-def _load_module(name: str):
-    """Load a module directly from file path."""
-    path = _module_dir / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-envelope = _load_module("envelope")
+from brainstorming_evomap import envelope
 
 
 def test_envelope_contains_required_fields():

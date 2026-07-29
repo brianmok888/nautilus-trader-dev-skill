@@ -24,13 +24,36 @@ def test_full_repo_passes_ruff_quality_gate() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_active_ai_and_dex_migration_lanes_pass_ruff_quality_gate() -> None:
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "--no-force-exclude",
+            "skills/nt-evomap-integration/python_sidecar",
+            "skills/nt-dex-adapter/migration_reference",
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_ruff_quality_gate_has_explicit_snapshot_and_template_policy() -> None:
     config = (REPO_ROOT / "ruff.toml").read_text(encoding="utf-8")
 
     assert '"references/**/*.py"' in config
     assert '"skills/*/references/**/*.py"' in config
     assert '"skills/*/templates/**/*.py"' in config
-    assert '"skills/*/migration_reference/**/*.py"' in config
+    assert '"skills/*/migration_reference/**/*.py"' not in config
+    assert '"skills/nt-dex-adapter/migration_reference/**/*.py"' not in config
     assert '"skills/nt-strategy-builder/tests/**/*.py"' in config
 
 

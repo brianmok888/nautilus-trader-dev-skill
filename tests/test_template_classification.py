@@ -86,6 +86,22 @@ def test_ai_classification_is_rejected_outside_evomap_skill(tmp_path: Path) -> N
     )
 
 
+def test_ai_classification_requires_python_sidecar_namespace(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-evomap-integration/proxy_client.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
+
+    assert classification_error(path, tmp_path) == (
+        "AI classification requires the python_sidecar path component"
+    )
+
+
+def test_shipped_python_discovery_includes_executable_docs_prototypes(tmp_path: Path) -> None:
+    path = tmp_path / "docs/prototypes/sidecar/client.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
+
+    assert path in _shipped_python_files(tmp_path)
+
+
 def test_migration_classification_does_not_bless_trading_node(tmp_path: Path) -> None:
     path = tmp_path / "skills/nt-example/legacy_migration/node.py"
     _write(
@@ -233,10 +249,17 @@ def test_aliased_legacy_imports_require_legacy_quarantine(tmp_path: Path) -> Non
 
 def _shipped_python_files(root: Path) -> list[Path]:
     files: list[Path] = []
-    for path in sorted((root / "skills").glob("nt*/**/*")):
+    for path in sorted(root.rglob("*")):
         if not path.is_file() or path.suffix not in PYTHON_SUFFIXES:
             continue
-        if "tests" in path.parts or "__pycache__" in path.parts:
+        relative = path.relative_to(root)
+        if (
+            "tests" in relative.parts
+            or "__pycache__" in relative.parts
+            or relative.parts[0]
+            in {".git", ".omx", ".worktrees", "references", "tools"}
+            or relative.name == "conftest.py"
+        ):
             continue
         files.append(path)
     return files

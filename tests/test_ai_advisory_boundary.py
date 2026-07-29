@@ -134,13 +134,16 @@ def _decision(
     request_id: str = "request-1",
     suggestion_id: str = "suggestion-1",
     suggestion_hash: str = "suggestion-hash",
+    *,
+    approved: bool = True,
+    decided_ns: int = 60,
 ):
     return module.AdvisoryDecision(
         request_id=request_id,
         suggestion_id=suggestion_id,
         suggestion_hash=suggestion_hash,
-        approved=True,
-        decided_ns=60,
+        approved=approved,
+        decided_ns=decided_ns,
     )
 
 
@@ -297,6 +300,70 @@ def test_advisory_approval_grants_only_offline_change_review_authority() -> None
     assert actor.authority is module.AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
 
 
+def test_approved_review_releases_actor_for_next_request() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=4)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_put_result(_result(module)) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+
+    assert actor.approve(_decision(module)) is True
+    assert actor.staged_result is None
+    next_request = module.AdvisoryRequest(
+        request_id="request-2",
+        artifact_hash="artifact-hash",
+        deadline_ns=300,
+    )
+    assert actor.request_review(next_request) is True
+
+
+def test_rejected_review_releases_actor_for_next_request() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=4)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_put_result(_result(module)) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+
+    assert actor.approve(_decision(module, approved=False)) is False
+    assert actor.staged_result is None
+    assert actor.request_review(_request(module, "request-2")) is True
+
+
+def test_timed_out_review_releases_actor_for_next_request() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=4)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+
+    assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.TIMED_OUT
+    assert mailbox.try_take_audit().reason == "request_timeout"
+    assert actor.request_review(_request(module, "request-2")) is True
+
+
+def test_timeout_audit_backpressure_keeps_request_pending() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=2, audit_capacity=1)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_append_audit(
+        module.AdvisoryAuditRecord(
+            request_id="occupied",
+            suggestion_id=None,
+            outcome="occupied",
+            reason="test_backpressure",
+            recorded_ns=90,
+        ),
+    ) is True
+
+    assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.AUDIT_BLOCKED
+    assert actor.request_review(_request(module, "request-2")) is False
+    assert mailbox.try_take_audit().reason == "test_backpressure"
+    assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.TIMED_OUT
+    assert actor.request_review(_request(module, "request-2")) is True
+
+
 def test_advisory_audit_backpressure_prevents_state_transition() -> None:
     module = _module()
     mailbox = module.AdvisoryMailboxPort(capacity=2, audit_capacity=1)
@@ -357,7 +424,7 @@ def test_timely_result_replay_is_rejected() -> None:
     assert mailbox.try_take_audit().reason == "result_replay"
 
 
-def test_late_or_duplicate_approval_is_rejected() -> None:
+def test_late_approval_ends_request_and_releases_actor() -> None:
     module = _module()
     mailbox = module.AdvisoryMailboxPort(capacity=4)
     actor = _actor_with_mailbox(module, mailbox)
@@ -376,14 +443,11 @@ def test_late_or_duplicate_approval_is_rejected() -> None:
     assert actor.approve(late) is False
     assert mailbox.try_take_audit().reason == "decision_late"
     assert actor.authority is module.AdvisoryAuthority.NONE
-
-    assert actor.approve(_decision(module)) is True
-    assert mailbox.try_take_audit().reason == "offline_change_review"
-    assert actor.approve(_decision(module)) is False
-    assert mailbox.try_take_audit().reason == "decision_replay"
+    assert actor.staged_result is None
+    assert actor.request_review(_request(module, "request-2")) is True
 
 
-def test_rejected_advisory_decision_cannot_later_be_approved() -> None:
+def test_rejected_advisory_decision_is_terminal_and_releases_actor() -> None:
     module = _module()
     mailbox = module.AdvisoryMailboxPort(capacity=4)
     actor = _actor_with_mailbox(module, mailbox)
@@ -402,10 +466,8 @@ def test_rejected_advisory_decision_cannot_later_be_approved() -> None:
     assert actor.approve(rejected) is False
     assert mailbox.try_take_audit().reason == "operator_rejected"
     assert actor.authority is module.AdvisoryAuthority.NONE
-
-    assert actor.approve(_decision(module)) is False
-    assert mailbox.try_take_audit().reason == "decision_replay"
-    assert actor.authority is module.AdvisoryAuthority.NONE
+    assert actor.staged_result is None
+    assert actor.request_review(_request(module, "request-2")) is True
 
 
 def test_advisory_result_at_or_after_deadline_is_rejected_as_late() -> None:
@@ -429,6 +491,14 @@ def test_advisory_result_for_timed_out_request_remains_rejected_on_replay() -> N
 
     assert mailbox.try_put_result(result) is True
     assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.LATE
+    assert mailbox.try_take_audit().reason == "late_result"
+    next_request = module.AdvisoryRequest(
+        request_id="request-2",
+        artifact_hash="artifact-hash",
+        deadline_ns=300,
+    )
+    assert actor.request_review(next_request) is True
     assert mailbox.try_put_result(result) is True
-    assert actor.poll_result(now_ns=200) == module.AdvisoryResultStatus.LATE
+    assert actor.poll_result(now_ns=200) == module.AdvisoryResultStatus.REJECTED
+    assert mailbox.try_take_audit().reason == "result_replay"
     assert actor.staged_result is None

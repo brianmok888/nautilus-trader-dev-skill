@@ -33,6 +33,7 @@ separately and do not silently replace that baseline.
 | G2 readiness could pass with missing skills, empty ownership, mutable/self-referential provenance, stale commands, or dirty upstream state. | P0 | Closed | `tests/test_skill_g2_harnesses.py:15` defines exactly 18 skills; `tools/check_skill_g2_harnesses.py` rejects empty ownership and validates schema, pin, clean state, owned-content hash, and exact commands. | — |
 | G2 ownership covered declared files but not the complete skill tree or in-repo symlink targets. | P0 | Closed | `tools/g2_owned_content.py:56` walks every owned tree entry, line 74 records symlink text and recursively includes in-repo targets, line 142 hashes logical paths/types/payloads, and line 159 rejects untracked owned sources; `tests/test_g2_owned_content.py` covers broken, escaping, cyclic, unsupported, and changed-content cases. | — |
 | A rejected advisory decision could be approved later because audit append and decision finalization were not atomic. | P0 | Closed | `skills/nt-evomap-integration/templates/advisory_actor.py:290` requires audit persistence before line 293 finalizes the decision; `tests/test_ai_advisory_boundary.py` verifies later approval fails as `decision_replay`. | — |
+| The advisory actor retained terminal request state, so the sole active Python lane accepted only one review until lifecycle reset. | P1 | Closed | `skills/nt-evomap-integration/templates/advisory_actor.py` releases request state only after an audited approval, operator rejection, late decision/result, or timeout; `tests/test_ai_advisory_boundary.py` covers sequential requests after each terminal outcome in the pinned V2 runtime. | — |
 | DEX G2 ran ambient Python migration suites instead of the pinned V2 compliance contract. | P0 | Closed | `tests/test_dex_g2_harness.py:11` pins `test_dex_compliance.py` through `tools/run_pinned_v2_pytest.py` and retains Hyperliquid/blockchain Cargo checks; line 41 excludes legacy migration execution from production G2. | — |
 
 ### Legacy/unlabelled v1, Cython, or template content
@@ -44,6 +45,7 @@ separately and do not silently replace that baseline.
 | Retained live/DEX/adapter Python executables remained in default template paths. | P1 | Closed | Retained files are quarantined under `skills/nt-adapters/templates/legacy_migration/`, `skills/nt-dex-adapter/migration_reference/python/templates/`, `skills/nt-implement/templates/legacy_migration/`, and `skills/nt-strategy-builder/templates/legacy_migration/`; `skills/nt-dex-adapter/migration_reference/python/templates/legacy_migration/dex_exec_client.py:1` shows the exact legacy header. | — |
 | Markdown could contain unlabelled Cython/V1/`TradingNode` guidance or offer a legacy fallback for new production work. | P1 | Closed | `tools/check_dev_guide_sync.py:1051` scans unlabelled `TradingNode`, line 1076 scans unlabelled legacy/Cython/V1 guidance, and line 1120 rejects legacy fallbacks for new live/production work. | — |
 | Ordinary non-AI Python examples and templates remained mixed into active Rust-oriented skill trees. | P0 | Closed | `skills/nt-{trading,backtest,signals,live,data,implement}/SKILL.md` expose ordered Rust, PyO3, migration, and source-pinned H2 lanes; ordinary Python is physically under each skill's `migration_reference/python/`; `tools/markdown_lane_contract.py` and `tools/template_classification.py` enforce the structure and quarantine. | — |
+| Executable Python under `docs/prototypes` was outside skill-scoped lane discovery and the EvoMap network-capability boundary. | P0 | Closed | The prototype now lives under `skills/nt-evomap-integration/python_sidecar/brainstorming_evomap`; `tests/test_template_classification.py` scans repository Python outside excluded test/tool/reference surfaces, and `tools/check_skill_g2_harnesses.py` rejects network calls outside `python_sidecar`. | — |
 
 ### Improvement opportunities versus current nightly/develop
 
@@ -54,6 +56,7 @@ separately and do not silently replace that baseline.
 | Adapter execution-spec freshness versus develop was unknown. | P2 | Closed | `skills/nt-testing/SKILL.md:11` keeps `spec_exec_testing` as the measurable contract, and line 17 records that it is unchanged between the pin and current `origin/develop`. | — |
 | Readiness claims were static rather than domain-scoped and content-bound. | P1 | Closed | Every `skills/nt*/SKILL.md` contains G0-G7; `tools/check_skill_g2_harnesses.py` validates targeted commands and schema-v2 evidence; `tools/g2_owned_content.py` binds evidence to complete skill trees; the artifacts live under `references/g2-evidence/`. | — |
 | Gate cards embedded volatile dates and test counts that could become stale without a behavior change. | P2 | Closed | `tests/test_skill_g2_harnesses.py::test_readiness_cards_do_not_embed_volatile_test_counts` rejects dated/count-bound gate evidence; all 18 cards now cite stable commands and artifacts. | — |
+| G0/G1/G3-G7 Pass rows could cite the card validator itself, circularly treating card shape and G2 provenance as proof of unrelated gates. | P0 | Closed | Every non-G2 row now cites a direct command or the reconciliation report; both `tools/check_dev_guide_sync.py` and `tools/check_skill_g2_harnesses.py` reject `--check-cards` as non-G2 Pass evidence. | — |
 
 ## Progressive gate result
 
@@ -63,9 +66,10 @@ separately and do not silently replace that baseline.
 - Status: **144 Pass, 0 Pending, 0 Blocked**
 - Card validator: `uv run python tools/check_skill_g2_harnesses.py --check-cards`
 - G2 execution: `uv run python tools/check_skill_g2_harnesses.py --execute`
-- Durable evidence: `references/g2-evidence/*.json` (schema version 2, pinned
-  upstream commit, clean-upstream flag, exact successful commands, and owned
-  content hash).
+- G2 durable evidence: `references/g2-evidence/*.json` (schema version 2,
+  pinned upstream commit, clean-upstream flag including untracked files, exact
+  successful commands, and owned content hash). G0/G1/G3-G7 rely on the direct
+  command or report cited by each row rather than these G2 artifacts.
 
 ## Post-fix validation evidence
 
@@ -99,3 +103,9 @@ gate results:
    expected to return non-zero whenever a tracked ref moves beyond or diverges
    from the reproducible pin. Review the report periodically and deliberately
    choose a new baseline in a dedicated update.
+3. **P2 — embedded-fence coverage:** G2 validates each skill's declared V2
+   owner surface and content-binds the complete skill tree, but it does not
+   independently compile every Rust fence or execute every optional prose
+   command such as `nextest`, `clippy`, or `deny`. Treat such commands as
+   additional project-level evidence until a future fence extractor can compile
+   them without inventing missing crate context.

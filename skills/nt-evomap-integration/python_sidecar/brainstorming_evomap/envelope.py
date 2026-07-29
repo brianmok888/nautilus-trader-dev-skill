@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: AI/advisory Python; non-production; off execution-critical paths
 # Copyright (C) 2025 Nautech Systems, Inc. All rights reserved.
 # Nautech Systems, Inc. Proprietary and Confidential.
 # Use subject to license terms.
@@ -9,7 +10,6 @@ import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any
-
 
 PROTOCOL = "gep-a2a"
 PROTOCOL_VERSION = "1.0.0"

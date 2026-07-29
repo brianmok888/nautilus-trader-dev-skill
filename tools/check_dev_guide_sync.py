@@ -1415,6 +1415,15 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
                 )
             if (
                 status == "Pass"
+                and gate_id != "G2"
+                and "tools/check_skill_g2_harnesses.py --check-cards" in evidence
+            ):
+                errors.append(
+                    f"NT V2 readiness gate {gate_id} Pass uses the card validator "
+                    f"as evidence in {relative.as_posix()}"
+                )
+            if (
+                status == "Pass"
                 and gate_id == "G2"
                 and "check_rust_trading_reference_sync.py" in evidence
                 and relative not in SHARED_RUST_EXAMPLE_GATE_SKILLS

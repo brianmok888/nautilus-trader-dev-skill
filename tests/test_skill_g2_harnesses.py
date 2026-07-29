@@ -154,6 +154,21 @@ def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
         g2.assert_expected_upstream(tmp_path, expected_commit=actual)
 
 
+def test_untracked_upstream_content_fails_closed(tmp_path: Path) -> None:
+    subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "config", "user.name", "G2 Test"), cwd=tmp_path, check=True)
+    (tmp_path / "tracked").write_text("clean\n")
+    subprocess.run(("git", "add", "tracked"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "commit", "-qm", "test"), cwd=tmp_path, check=True)
+    actual = g2.upstream_commit(tmp_path)
+    (tmp_path / "untracked.rs").write_text("pub const CONTAMINATION: bool = true;\n")
+
+    assert g2.upstream_is_clean(tmp_path) is False
+    with pytest.raises(RuntimeError, match="uncommitted changes"):
+        g2.assert_expected_upstream(tmp_path, expected_commit=actual)
+
+
 def test_supported_python_v2_harness_uses_the_pinned_upstream_runtime() -> None:
     harness = g2.HARNESSES["nt-strategy-builder"]
 
@@ -391,6 +406,26 @@ def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> 
     assert "nt-data has no durable evidence artifact configured" in errors
 
 
+def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(tmp_path: Path) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    skill_path.write_text(
+        "| G0 Upstream baseline | Validate. | Pass | "
+        "`uv run python tools/check_skill_g2_harnesses.py --check-cards` passed. |\n"
+        "| G2 V2 example validation | Validate. | Pass | "
+        f"`{g2.evidence_command('nt-data')}` passed; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+
+    errors = g2.validate_readiness_cards(
+        tmp_path,
+        {"nt-data": g2.HARNESSES["nt-data"]},
+        require_evidence=False,
+    )
+
+    assert any("G0 readiness row uses the card validator as evidence" in error for error in errors)
+
+
 def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path: Path) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
@@ -622,6 +657,26 @@ def test_ai_advisory_contract_allows_networking_in_external_proxy_surface(
     errors = g2.validate_ai_advisory_contract(tmp_path)
 
     assert errors == []
+
+
+def test_ai_advisory_contract_rejects_networking_outside_python_sidecar(
+    tmp_path: Path,
+) -> None:
+    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "Nautilus remains the only execution authority\n"
+        "No external network I/O\n"
+        "timeout fallback approval gate\n"
+        "Every accepted or rejected suggestion must be traceable\n"
+    )
+    leak = skill.parent / "templates/http_client.py"
+    leak.parent.mkdir()
+    leak.write_text("from urllib import request\nrequest.urlopen('http://127.0.0.1')\n")
+
+    errors = g2.validate_ai_advisory_contract(tmp_path)
+
+    assert any("network capability outside python_sidecar" in error for error in errors)
 
 
 def test_ai_advisory_harness_uses_pinned_v2_runner() -> None:

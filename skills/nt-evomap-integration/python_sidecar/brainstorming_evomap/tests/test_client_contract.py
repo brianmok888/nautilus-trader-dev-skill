@@ -4,24 +4,9 @@
 
 """Contract tests for EvoMap Capsule Client."""
 
-import importlib.util
-from pathlib import Path
-
 import pytest
 
-_module_dir = Path(__file__).parent.parent
-
-
-def _load_module(name: str):
-    """Load a module directly from file path."""
-    path = _module_dir / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_client_mod = _load_module("evomap_capsule_client")
+from brainstorming_evomap import evomap_capsule_client as _client_mod
 
 
 def test_client_exposes_proxy_mailbox_methods():

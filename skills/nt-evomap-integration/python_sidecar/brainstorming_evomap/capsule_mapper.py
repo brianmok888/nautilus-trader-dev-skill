@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: AI/advisory Python; non-production; off execution-critical paths
 # Copyright (C) 2025 Nautech Systems, Inc. All rights reserved.
 # Nautech Systems, Inc. Proprietary and Confidential.
 # Use subject to license terms.
@@ -6,14 +7,9 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
-from typing import Final
+from typing import Any, Final
 
-try:
-    from .envelope import compute_content_hash
-except ImportError:
-    from envelope import compute_content_hash
-
+from .envelope import compute_content_hash
 
 DEFAULT_ALLOWED_METADATA_KEYS: Final = frozenset(
     {

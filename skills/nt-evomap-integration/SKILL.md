@@ -20,7 +20,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix audit; `uv run python tools/check_skill_g2_harnesses.py --check-cards` validates all 18 cards and evidence artifacts. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -51,6 +51,9 @@ Do not use this skill for building venue adapters. Use `nt-dex-adapter` for adap
 Use two separated processes and one local contract:
 
 - External Python proxy: owns Proxy HTTP, model/graph work, redaction, retries, and durable provenance.
+- `python_sidecar/brainstorming_evomap`: the only shipped executable Python
+  network client in this skill; it may call the localhost Proxy and must not be
+  imported by the actor or any Rust execution path.
 - `AdvisoryBridgeActor`: NT V2 `DataActor` that drains only a bounded local mailbox on a short timer callback.
 - `AdvisoryMailboxPort`: non-blocking request/result/audit queues. The actor owns this local port; the proxy-facing integration may only transfer records into and out of it. It has no network client, message-bus, signal, data-publication, or execution capability.
 
@@ -98,7 +101,7 @@ If advisory reasoning uses LangChain or LangGraph:
 2. Enqueue an immutable request through the bounded local mailbox.
 3. Let the external proxy perform all network/model work outside the actor.
 4. On the actor timer, drain at most one already-local result, reject late or mismatched identity, write audit provenance, and stage it as non-actionable.
-5. Accept an exact human decision only after audit capacity is available; use approval solely for offline configuration/change review.
+5. Accept an exact human decision only after audit capacity is available; use approval solely for offline configuration/change review, then release terminal request state so later reviews can proceed.
 6. Continue Rust trading, adapter, risk, and live-node operation unchanged when the mailbox or proxy is unavailable.
 
 ## Implementation checklist
@@ -108,7 +111,8 @@ If advisory reasoning uses LangChain or LangGraph:
 - [ ] Match request ID, suggestion ID, and suggestion hash before approval.
 - [ ] Reject `now_ns >= deadline_ns` as late and reject every replay deterministically.
 - [ ] Require audit acceptance before staged/approved state changes.
-- [ ] Cover success, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
+- [ ] Release the request slot only after audited approval, operator rejection, or timeout.
+- [ ] Cover sequential success, rejection, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
 
 ## Safety review checklist
 

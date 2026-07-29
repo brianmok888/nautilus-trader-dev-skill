@@ -4,25 +4,8 @@
 
 """Tests for capsule mapper."""
 
-import importlib.util
-import sys
-from pathlib import Path
 
-_module_dir = Path(__file__).parent.parent
-if str(_module_dir) not in sys.path:
-    sys.path.insert(0, str(_module_dir))
-
-
-def _load_module(name: str):
-    """Load a module directly from file path."""
-    path = _module_dir / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-capsule_mapper = _load_module("capsule_mapper")
+from brainstorming_evomap import capsule_mapper
 
 
 def test_mapper_builds_capsule_bundle_with_assets():
@@ -141,8 +124,10 @@ def test_section_delta_redacts_sensitive_values_in_allowed_metadata():
         metadata={
             "summary": "token sk-live-secret",
             "constraints": [
-                "private key "
-                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                (
+                    "private key "
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                )
             ],
         },
     )

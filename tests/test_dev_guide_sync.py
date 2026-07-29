@@ -1891,6 +1891,21 @@ def test_reports_self_referential_pass_readiness_evidence(tmp_path: Path) -> Non
     )
 
 
+def test_reports_card_validator_used_as_non_g2_evidence(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "`git rev-parse HEAD` recorded in `README.md`.",
+        "`uv run python tools/check_skill_g2_harnesses.py --check-cards` passed.",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "NT V2 readiness gate G0 Pass uses the card validator as evidence in "
+        "skills/nt-data/SKILL.md" in errors
+    )
+
+
 def test_reports_pass_gate_with_unscoped_shared_example_evidence(tmp_path: Path) -> None:
     card = readiness_gate_text().replace(
         "Awaiting upstream-backed example validation.",

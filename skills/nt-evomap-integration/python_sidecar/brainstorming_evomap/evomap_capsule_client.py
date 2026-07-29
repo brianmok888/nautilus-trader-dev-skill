@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: AI/advisory Python; non-production; off execution-critical paths
 # Copyright (C) 2025 Nautech Systems, Inc. All rights reserved.
 # Nautech Systems, Inc. Proprietary and Confidential.
 # Use subject to license terms.
@@ -8,11 +9,10 @@ The agent-side integration talks to the local Proxy. The Proxy owns Hub sync,
 retries, authentication, and low-level GEP/A2A protocol details.
 """
 
-from collections.abc import Callable
 import json
+from collections.abc import Callable
 from typing import Any
 from urllib import parse, request
-
 
 Transport = Callable[[str, str, dict[str, Any] | None], dict[str, Any]]
 

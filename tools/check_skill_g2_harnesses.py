@@ -556,7 +556,7 @@ def upstream_commit(upstream_root: Path) -> str:
 
 def upstream_is_clean(upstream_root: Path) -> bool:
     result = subprocess.run(
-        ("git", "status", "--porcelain=v1", "--untracked-files=no"),
+        ("git", "status", "--porcelain=v1", "--untracked-files=all"),
         cwd=upstream_root,
         check=True,
         capture_output=True,
@@ -691,7 +691,17 @@ def validate_readiness_cards(
         if not path.is_file():
             errors.append(f"missing readiness card: {path}")
             continue
-        g2_rows = [line for line in path.read_text().splitlines() if line.startswith("| G2 ")]
+        gate_rows = [line for line in path.read_text().splitlines() if line.startswith("| G")]
+        for row in gate_rows:
+            cells = [cell.strip() for cell in row.strip("|").split("|")]
+            if len(cells) != 4 or cells[2] != "Pass":
+                continue
+            gate_id = cells[0].split(maxsplit=1)[0]
+            if "tools/check_skill_g2_harnesses.py --check-cards" in cells[3]:
+                errors.append(
+                    f"{skill} {gate_id} readiness row uses the card validator as evidence"
+                )
+        g2_rows = [line for line in gate_rows if line.startswith("| G2 ")]
         if len(g2_rows) != 1:
             errors.append(f"{skill} must contain exactly one G2 readiness row")
             continue
@@ -788,6 +798,7 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
         "subscribe_bars",
     }
     publication_calls = {"publish", "publish_data", "publish_signal", "send"}
+    network_calls = {"urlopen"}
     textual_suffixes = {".md", ".py", ".pyi", ".rs", ".toml", ".json", ".yaml", ".yml"}
     for owned_path in sorted(skill_root.rglob("*")):
         if not owned_path.is_file() or owned_path.suffix.lower() not in textual_suffixes:
@@ -827,6 +838,11 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
                 if name in publication_calls:
                     errors.append(
                         f"AI advisory contract exposes publication capability in {relative}: {name}"
+                    )
+                if name in network_calls and "python_sidecar" not in owned_path.parts:
+                    errors.append(
+                        "AI advisory contract exposes network capability outside "
+                        f"python_sidecar in {relative}: {name}"
                     )
     required = (
         "Nautilus remains the only execution authority",

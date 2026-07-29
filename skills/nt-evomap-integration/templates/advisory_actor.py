@@ -35,6 +35,7 @@ class AdvisoryResultStatus(Enum):
     LATE = "late"
     REJECTED = "rejected"
     AUDIT_BLOCKED = "audit_blocked"
+    TIMED_OUT = "timed_out"
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +183,9 @@ class AdvisoryBridgeActor(DataActor):
         self._pending_request: AdvisoryRequest | None = None
         self._staged_result: AdvisoryResult | None = None
         self._staged_identity: tuple[str, str, str] | None = None
+        self._completed_identities: deque[tuple[str, str, str]] = deque(
+            maxlen=config.mailbox_capacity,
+        )
         self._decision_finalized: bool = False
         self._authority: AdvisoryAuthority = AdvisoryAuthority.NONE
 
@@ -216,6 +220,7 @@ class AdvisoryBridgeActor(DataActor):
         self._pending_request = None
         self._staged_result = None
         self._staged_identity = None
+        self._completed_identities.clear()
         self._decision_finalized = False
         self._authority = AdvisoryAuthority.NONE
 
@@ -241,9 +246,23 @@ class AdvisoryBridgeActor(DataActor):
         """Consume at most one local result and stage it only after audit."""
         result = self._mailbox.try_take_result()
         if result is None:
+            request = self._pending_request
+            if request is not None and now_ns >= request.deadline_ns:
+                record = AdvisoryAuditRecord(
+                    request_id=request.request_id,
+                    suggestion_id=None,
+                    outcome="rejected",
+                    reason="request_timeout",
+                    recorded_ns=now_ns,
+                )
+                if not self._mailbox.try_append_audit(record):
+                    return AdvisoryResultStatus.AUDIT_BLOCKED
+                self._decision_finalized = True
+                self._complete_request()
+                return AdvisoryResultStatus.TIMED_OUT
             return AdvisoryResultStatus.EMPTY
         identity = (result.request_id, result.suggestion_id, result.suggestion_hash)
-        if identity == self._staged_identity:
+        if identity == self._staged_identity or identity in self._completed_identities:
             return self._reject_result(result, "result_replay", now_ns)
         request = self._pending_request
         if request is None:
@@ -291,10 +310,14 @@ class AdvisoryBridgeActor(DataActor):
             return False
         if reason is None:
             self._decision_finalized = True
-        if reason is not None or not decision.approved:
-            return False
-        self._authority = AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
-        return True
+            if decision.approved:
+                self._authority = AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
+            self._complete_request()
+            return decision.approved
+        if reason == "decision_late":
+            self._decision_finalized = True
+            self._complete_request()
+        return False
 
     def _on_mailbox_tick(self, event: TimeEvent) -> None:
         """Drain at most one already-local result in the event-loop callback."""
@@ -317,8 +340,22 @@ class AdvisoryBridgeActor(DataActor):
             self._mailbox.try_restore_result(result)
             return AdvisoryResultStatus.AUDIT_BLOCKED
         if reason == "late_result":
+            self._decision_finalized = True
+            self._complete_request(
+                (result.request_id, result.suggestion_id, result.suggestion_hash),
+            )
             return AdvisoryResultStatus.LATE
         return AdvisoryResultStatus.REJECTED
+
+    def _complete_request(
+        self,
+        completed_identity: tuple[str, str, str] | None = None,
+    ) -> None:
+        self._pending_request = None
+        self._staged_result = None
+        identity = completed_identity or self._staged_identity
+        if identity is not None:
+            self._completed_identities.append(identity)
 
     @staticmethod
     def _decision_rejection_reason(
