@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 from collections import deque
 
 from nautilus_trader.common.enums import LogColor

@@ -1,3 +1,4 @@
+# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default
 # -------------------------------------------------------------------------------------------------
 #  Copyright (C) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
 #  https://nautechsystems.io

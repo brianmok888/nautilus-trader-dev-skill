@@ -3,139 +3,121 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-REFERENCE_EXAMPLE_ROOT = Path("skills/nt-adapters/references/examples")
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
-ALLOWED_CLASSIFICATIONS = (
-    "AI/advisory Python; non-production; off execution-critical paths",
-    "migration/reference-only; not a production default",
-    "legacy executable; migration/reference-only; not a production default",
+AI_CLASSIFICATION = "AI/advisory Python; non-production; off execution-critical paths"
+MIGRATION_CLASSIFICATION = "migration/reference-only; not a production default"
+LEGACY_CLASSIFICATION = (
+    "legacy executable; migration/reference-only; not a production default"
 )
-
-MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES = {
-    Path("skills/nt-implement/templates/strategy.py"),
-    Path("skills/nt-trading/templates/strategy.py"),
+ALLOWED_CLASSIFICATIONS = {
+    AI_CLASSIFICATION,
+    MIGRATION_CLASSIFICATION,
+    LEGACY_CLASSIFICATION,
 }
+PYTHON_SUFFIXES = {".py", ".pyi", ".pyx", ".pxd", ".pxi"}
+AI_SKILL = Path("skills/nt-evomap-integration")
 
 
-def test_python_templates_are_explicitly_classified() -> None:
-    unclassified: list[str] = []
+def test_every_shipped_python_guidance_file_has_one_exact_classification() -> None:
+    errors = {
+        path.relative_to(REPO_ROOT).as_posix(): error
+        for path in _shipped_python_files(REPO_ROOT)
+        if (error := _classification_error(path, REPO_ROOT)) is not None
+    }
 
-    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/templates/**/*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        text = path.read_text(encoding="utf-8")
-        if not _has_allowed_classification(text):
-            unclassified.append(path.relative_to(REPO_ROOT).as_posix())
-
-    assert unclassified == []
+    assert errors == {}
 
 
-def test_active_ai_python_templates_live_under_canonical_ai_skill() -> None:
-    offenders: list[str] = []
-    canonical_root = REPO_ROOT / "skills/nt-evomap-integration"
-    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/*.py")):
-        header = "\n".join(path.read_text(encoding="utf-8").splitlines()[:12])
-        if "TEMPLATE_CLASSIFICATION: AI/advisory Python" not in header:
-            continue
-        if not path.is_relative_to(canonical_root):
-            offenders.append(path.relative_to(REPO_ROOT).as_posix())
+def test_directory_membership_does_not_classify_python(tmp_path: Path) -> None:
+    for directory in ("references", "templates", "legacy_migration"):
+        path = tmp_path / "skills/nt-example" / directory / "example.py"
+        _write(path, "print('not classified')\n")
 
-    assert offenders == []
+        assert _classification_error(path, tmp_path) == "missing classification"
 
 
-def test_all_non_ai_python_skill_files_are_migration_namespaced_or_classified() -> None:
-    offenders: list[str] = []
-    canonical_ai_root = REPO_ROOT / "skills/nt-evomap-integration"
-    for path in sorted((REPO_ROOT / "skills").glob("nt*/**/*.py")):
-        if "__pycache__" in path.parts or "tests" in path.parts:
-            continue
-        if path.is_relative_to(canonical_ai_root):
-            continue
-        relative = path.relative_to(REPO_ROOT)
-        header = "\n".join(path.read_text(encoding="utf-8").splitlines()[:12])
-        migration_namespace = (
-            "legacy_migration" in relative.parts
-            or "references" in relative.parts
-            or "templates" in relative.parts
-        )
-        migration_label = any(
-            f"{CLASSIFICATION_PREFIX}{classification}" in header
-            for classification in (
-                "migration/reference-only; not a production default",
-                "legacy executable; migration/reference-only; not a production default",
-            )
-        )
-        if not migration_namespace and not migration_label:
-            offenders.append(relative.as_posix())
+def test_malformed_duplicate_and_unknown_classifications_fail(tmp_path: Path) -> None:
+    cases = {
+        "malformed.py": f"{CLASSIFICATION_PREFIX[:-1]}{MIGRATION_CLASSIFICATION}\n",
+        "duplicate.py": (
+            f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n"
+            f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n"
+        ),
+        "unknown.py": f"{CLASSIFICATION_PREFIX}reference only\n",
+    }
 
-    assert offenders == []
+    errors: dict[str, str | None] = {}
+    for name, text in cases.items():
+        path = tmp_path / "skills/nt-example" / name
+        _write(path, text)
+        errors[name] = _classification_error(path, tmp_path)
+
+    assert errors == {
+        "malformed.py": "missing classification",
+        "duplicate.py": "expected exactly one classification, found 2",
+        "unknown.py": "unknown classification: reference only",
+    }
 
 
-def test_non_ai_python_strategy_templates_are_migration_only() -> None:
-    expected = f"{CLASSIFICATION_PREFIX}migration/reference-only; not a production default"
-    for relative in MIGRATION_ONLY_PYTHON_STRATEGY_TEMPLATES:
-        header = "\n".join((REPO_ROOT / relative).read_text().splitlines()[:12])
-        assert expected in header
-
-
-def test_python_tradingnode_reference_examples_are_legacy_quarantined() -> None:
-    offenders: list[str] = []
-    root = REPO_ROOT / REFERENCE_EXAMPLE_ROOT
-
-    for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        text = path.read_text(encoding="utf-8")
-        if "TradingNode" not in text:
-            continue
-        relative = path.relative_to(REPO_ROOT)
-        if not _is_legacy_quarantined_reference(relative):
-            offenders.append(relative.as_posix())
-
-    assert offenders == []
-
-
-def test_generic_migration_banner_does_not_bless_default_live_tradingnode() -> None:
-    text = (
-        "# TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default\n"
-        "# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode\n"
-        "# references in this file are retained for migration/reference-only context.\n"
-        "# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.\n\n"
-        "from nautilus_trader.live.node import TradingNode\n"
-        "node = TradingNode(config=config)"
+def test_classification_must_be_first_line_or_follow_shebang(tmp_path: Path) -> None:
+    late = tmp_path / "skills/nt-example/late.py"
+    shebang = tmp_path / "skills/nt-example/shebang.py"
+    _write(late, f"# comment\n{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n")
+    _write(
+        shebang,
+        f"#!/usr/bin/env python3\n{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n",
     )
 
-    assert not _has_allowed_classification(text)
+    assert _classification_error(late, tmp_path) == "classification is not in header"
+    assert _classification_error(shebang, tmp_path) is None
 
 
-def test_active_live_namespace_does_not_alias_quarantined_legacy_paths() -> None:
-    live_examples = REPO_ROOT / "skills/nt-live/references/examples/live"
-    offenders: list[str] = []
-    if not live_examples.exists():
-        return
-    for path in live_examples.rglob("*"):
-        if not path.is_symlink():
+def test_ai_classification_is_rejected_outside_evomap_skill(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-example/example.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
+
+    assert _classification_error(path, tmp_path) == (
+        "AI classification is only allowed under skills/nt-evomap-integration"
+    )
+
+
+def _shipped_python_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for path in sorted((root / "skills").glob("nt*/**/*")):
+        if not path.is_file() or path.suffix not in PYTHON_SUFFIXES:
             continue
-        resolved = path.resolve(strict=False)
-        if "legacy_migration" in resolved.parts:
-            offenders.append(path.relative_to(REPO_ROOT).as_posix())
-
-    assert offenders == []
-
-
-def _is_legacy_quarantined_reference(relative: Path) -> bool:
-    lowered_parts = {part.lower() for part in relative.parts}
-    lowered_name = relative.name.lower()
-    return "legacy_migration" in lowered_parts or lowered_name.startswith("legacy_")
-
-
-def _has_allowed_classification(text: str) -> bool:
-    header = "\n".join(text.splitlines()[:12])
-    for classification in ALLOWED_CLASSIFICATIONS:
-        if f"{CLASSIFICATION_PREFIX}{classification}" not in header:
+        if "tests" in path.parts or "__pycache__" in path.parts:
             continue
-        return not (
-            "TradingNode" in text
-            and classification == "migration/reference-only; not a production default"
-        )
-    return False
+        files.append(path)
+    return files
+
+
+def _classification_error(path: Path, root: Path) -> str | None:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    classifications = [
+        line.removeprefix(CLASSIFICATION_PREFIX)
+        for line in lines
+        if line.startswith(CLASSIFICATION_PREFIX)
+    ]
+    if not classifications:
+        return "missing classification"
+    if len(classifications) != 1:
+        return f"expected exactly one classification, found {len(classifications)}"
+
+    classification = classifications[0]
+    if classification not in ALLOWED_CLASSIFICATIONS:
+        return f"unknown classification: {classification}"
+
+    header_index = 1 if lines and lines[0].startswith("#!") else 0
+    if lines[header_index] != f"{CLASSIFICATION_PREFIX}{classification}":
+        return "classification is not in header"
+
+    relative = path.relative_to(root)
+    if classification == AI_CLASSIFICATION and not relative.is_relative_to(AI_SKILL):
+        return "AI classification is only allowed under skills/nt-evomap-integration"
+    return None
+
+
+def _write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
