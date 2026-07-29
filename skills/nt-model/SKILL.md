@@ -32,7 +32,7 @@ Model gates: Rust owns identifiers, instruments, enums, fixed-point values, and 
 
 NautilusTrader **domain model** — instruments, identifiers, value types, enums, and currencies.
 
-**Python modules**: `model/identifiers`, `model/instruments/` (14 types), `model/types/`, `model/objects`, `model/enums`, `model/tick_scheme/`
+**Python modules**: `model/identifiers`, `model/instruments/`, `model/types/`, `model/objects`, `model/enums`, `model/tick_scheme/`
 **Rust crates**: `nautilus_model` (identifiers, instruments, types, enums)
 
 ## When To Use
@@ -120,21 +120,27 @@ qty = instrument.make_qty(1.5)
 price = instrument.make_price(1850.50)
 ```
 
-**14 instrument types:**
+**18 `InstrumentAny` variants:**
+- `BettingInstrument` — betting markets
+- `BinaryOption` — binary options
+- `Cfd` — contracts for difference
+- `Commodity` — commodities
+- `CryptoFuture` — crypto dated futures
+- `CryptoFuturesSpread` — crypto futures spreads
+- `CryptoOption` — crypto options
+- `CryptoOptionSpread` — crypto option spreads
+- `CryptoPerpetual` — crypto perpetual swaps
 - `CurrencyPair` — FX pairs (EUR/USD)
 - `Equity` — stocks
 - `FuturesContract` — dated futures
+- `FuturesSpread` — futures spreads
+- `IndexInstrument` — indices
 - `OptionContract` — dated options
-- `CryptoPerpetual` — perpetual swaps
-- `CryptoFuture` — crypto dated futures
-- `CryptoOption` — crypto options
-- `Commodity` — commodities
-- `Index` — indices
-- `CFD` — contracts for difference
-- `BettingInstrument` — betting markets
-- `BinaryOption` — binary options
-- `SyntheticInstrument` — user-defined synthetic
-- `Instrument` — base class
+- `OptionSpread` — option spreads
+- `PerpetualContract` — generic perpetual contracts
+- `TokenizedAsset` — tokenized assets
+
+SyntheticInstrument is separate from `InstrumentAny` and is not one of these variants.
 
 ### Enums
 
@@ -199,7 +205,7 @@ use nautilus_model::enums::{OrderSide, OrderType};
 
 ### New Instrument Types
 
-All 14 instrument types are defined in Rust (`crates/model/src/instruments/`) and exposed to Python via PyO3. New instruments follow the same pattern:
+All 18 `InstrumentAny` variants are defined in Rust (`crates/model/src/instruments/`) and exposed to Python via PyO3. `SyntheticInstrument` remains a separate type. New instruments follow the same pattern:
 
 ```rust
 use pyo3::prelude::*;

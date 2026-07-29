@@ -260,6 +260,40 @@ def test_visualization_guidance_uses_current_tearsheet_api() -> None:
     assert "migration/reference-only" in read("skills/nt-strategy-builder/templates/backtest_node.py")
 
 
+def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
+    text = read("skills/nt-model/SKILL.md")
+    expected = {
+        "BettingInstrument",
+        "BinaryOption",
+        "Cfd",
+        "Commodity",
+        "CryptoFuture",
+        "CryptoFuturesSpread",
+        "CryptoOption",
+        "CryptoOptionSpread",
+        "CryptoPerpetual",
+        "CurrencyPair",
+        "Equity",
+        "FuturesContract",
+        "FuturesSpread",
+        "IndexInstrument",
+        "OptionContract",
+        "OptionSpread",
+        "PerpetualContract",
+        "TokenizedAsset",
+    }
+    inventory = re.search(
+        r"\*\*18 `InstrumentAny` variants:\*\*\n(?P<body>(?:- `[^`]+`.*\n)+)",
+        text,
+    )
+    assert inventory is not None
+    documented = set(re.findall(r"^- `([^`]+)`", inventory.group("body"), re.MULTILINE))
+    assert documented == expected
+    assert "SyntheticInstrument is separate from `InstrumentAny`" in text
+    assert "**14 instrument types:**" not in text
+    assert "All 14 instrument types" not in text
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name
