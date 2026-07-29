@@ -331,9 +331,9 @@ class MyDEXDataClient(LiveMarketDataClient):
         serialized_price = f"{execution_price:.6f}"
         serialized_size = f"{amount_in:.8f}"
         if not math.isfinite(float(serialized_price)) or float(serialized_price) <= 0:
-            raise ValueError("serialized price must be finite and greater than zero")
+            raise InvalidSwapEventError("serialized price must be finite and greater than zero")
         if not math.isfinite(float(serialized_size)) or float(serialized_size) <= 0:
-            raise ValueError("serialized size must be finite and greater than zero")
+            raise InvalidSwapEventError("serialized size must be finite and greater than zero")
 
         try:
             price = Price.from_str(serialized_price)

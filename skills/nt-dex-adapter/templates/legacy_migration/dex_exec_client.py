@@ -85,6 +85,9 @@ class MyDEXExecutionClient(LiveExecutionClient):
         instrument_provider: MyDEXInstrumentProvider,
         config: MyDEXExecClientConfig,
     ) -> None:
+        # The framework config deliberately records no operational fields: preserving
+        # component lifecycle provenance is less important here than ensuring wallet
+        # credentials can never enter serialization, logs, or component snapshots.
         super().__init__(
             loop=loop,
             client_id=client_id,

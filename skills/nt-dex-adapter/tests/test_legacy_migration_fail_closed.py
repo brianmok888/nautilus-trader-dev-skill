@@ -290,7 +290,9 @@ def test_ordinary_positive_swap_constructs_trade_tick(monkeypatch: pytest.Monkey
     (
         (1.0, 1e100),
         (1e100, 1e100),
+        (1e12, 1.0),
     ),
+    ids=("price", "quantity", "finite-quantity"),
 )
 def test_out_of_range_fixed_point_values_raise_domain_error_before_trade_tick(
     amount_in: float,
@@ -426,6 +428,28 @@ def test_provider_cache_key_includes_rpc_pools_and_sandbox_inputs() -> None:
     assert factory_module._get_or_create_instrument_provider(base) is first
     assert factory_module._get_or_create_instrument_provider(different_pool) is not first
     assert factory_module._get_or_create_instrument_provider(different_sandbox) is not first
+
+
+def test_provider_cache_separates_chains_and_preserves_chain_id() -> None:
+    factory_module = _load_module("dex_factory")
+    factory_module._instrument_providers.clear()
+    ethereum = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://rpc.example",
+        chain_id=1,
+        pool_addresses=["0x1"],
+    )
+    arbitrum = factory_module.MyDEXDataClientConfig(
+        rpc_url="https://rpc.example",
+        chain_id=42161,
+        pool_addresses=["0x1"],
+    )
+
+    ethereum_provider = factory_module._get_or_create_instrument_provider(ethereum)
+    arbitrum_provider = factory_module._get_or_create_instrument_provider(arbitrum)
+
+    assert arbitrum_provider is not ethereum_provider
+    assert ethereum_provider._config.chain_id == 1
+    assert arbitrum_provider._config.chain_id == 42161
 
 
 def test_templates_remain_classified_as_legacy_migration_only() -> None:

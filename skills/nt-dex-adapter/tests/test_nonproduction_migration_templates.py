@@ -2,6 +2,7 @@
 
 import importlib.util
 import asyncio
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -88,26 +89,14 @@ def test_quarantined_migration_clients_construct() -> None:
 
 @pytest.mark.parametrize("module_name", ("dex_data_client", "dex_exec_client", "dex_factory"))
 def test_legacy_executable_imports_in_clean_subprocess(module_name: str) -> None:
-    script = f"""
-import importlib
-import sys
-from pathlib import Path
-from types import ModuleType
-templates = Path({str(_templates)!r})
-legacy = templates / 'legacy_migration'
-package = ModuleType('dex_templates')
-package.__path__ = [str(templates)]
-legacy_package = ModuleType('dex_templates.legacy_migration')
-legacy_package.__path__ = [str(legacy)]
-sys.modules['dex_templates'] = package
-sys.modules['dex_templates.legacy_migration'] = legacy_package
-importlib.import_module('dex_templates.legacy_migration.{module_name}')
-"""
+    # Templates are package modules: direct-file execution is intentionally unsupported.
+    script = f"import templates.legacy_migration.{module_name}"
     result = subprocess.run(
         [sys.executable, "-c", script],
         check=False,
         capture_output=True,
         text=True,
+        env={**os.environ, "PYTHONPATH": str(_templates.parent)},
     )
 
     assert result.returncode == 0, result.stderr

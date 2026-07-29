@@ -328,3 +328,65 @@ dynamic fallback and raw metadata typing surface: three unchecked `ModuleSpec`
 errors, one dynamic config type-expression error, three raw-dict generic errors,
 and three narrowed-config attribute/raw metadata errors. They are reported, not
 suppressed.
+
+## Review fix Round 4/5
+
+### RED evidence
+
+Tests were added before implementation for chain-aware provider identity and
+ordinary package imports in fresh subprocesses. The focused RED run failed on
+the provider behavior while all three package imports passed:
+
+```text
+uv run pytest skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py::test_provider_cache_separates_chains_and_preserves_chain_id skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py::test_legacy_executable_imports_in_clean_subprocess -q
+F...                                                                     [100%]
+1 failed, 3 passed in 10.31s
+```
+
+The failure proved that chain 1 and chain 42161 reused the same provider. A
+finite quantity case was then added to the existing fixed-point range test and
+failed because the serialized range guard raised a generic `ValueError` instead
+of `InvalidSwapEventError`; no `TradeTick` was emitted.
+
+### GREEN implementation
+
+- Effective provider identity now includes RPC URL, chain ID, ordered pools, and
+  sandbox mode, and the requested chain ID is copied into
+  `MyDEXInstrumentProviderConfig`. Chain 1 and chain 42161 cannot share a
+  provider.
+- The clean-import smoke uses ordinary namespace/package import in a fresh
+  subprocess with only `skills/nt-dex-adapter` on `PYTHONPATH`; synthetic
+  `ModuleType` package installation is no longer part of that contract.
+  Templates are package modules and direct-file execution remains unsupported.
+- Finite out-of-range price and quantity cases now both raise
+  `InvalidSwapEventError` before `TradeTick` construction.
+- The empty `NautilusConfig` boundary remains intentionally secret-safe. It
+  sacrifices operational lifecycle provenance in framework serialization so
+  wallet credentials never enter serialized component config, logs, or
+  snapshots; the complete operational config remains private on the client.
+
+### Validation evidence
+
+```text
+focused: 48 passed in 11.32s
+full DEX: 80 passed in 21.09s
+classification: 14 passed in 0.37s
+V2 guidance: 22 passed in 0.07s
+developer guide sync: passed
+Ruff: passed
+compileall: exit 0
+git diff --check: exit 0
+```
+
+Normal basedpyright ran without ignores or alternate configuration:
+
+```text
+uv run basedpyright --outputjson
+261 errors, 6383 warnings, 0 notes
+exit 1
+```
+
+Repository-wide type checking remains red from residual diagnostics outside
+this Round 4 diff. Filtering that same normal run found zero errors in all five
+changed Python files; no type-check suppression or alternate configuration was
+used.

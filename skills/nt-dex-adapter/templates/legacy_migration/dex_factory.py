@@ -160,24 +160,29 @@ class MyDEXLiveExecClientFactory(LiveExecClientFactory):
 # Shared Instrument Provider Cache
 # =============================================================================
 
-_instrument_providers: dict[tuple[str, tuple[str, ...], bool], MyDEXInstrumentProvider] = {}
+_instrument_providers: dict[
+    tuple[str, int, tuple[str, ...], bool],
+    MyDEXInstrumentProvider,
+] = {}
 
 
 def _get_or_create_instrument_provider(config) -> MyDEXInstrumentProvider:
     """
-    Get or create a shared instrument provider for the given RPC URL.
+    Get or create a provider for the complete effective provider configuration.
 
     Data and execution clients share one provider to avoid double-loading
     pool metadata from the chain.
     """
     rpc_url = getattr(config, "rpc_url", "default")
+    chain_id = getattr(config, "chain_id", 31337)
     pools = tuple(getattr(config, "pool_addresses", None) or getattr(config, "pools", []))
     sandbox_mode = getattr(config, "sandbox_mode", False)
-    key = (rpc_url, pools, sandbox_mode)
+    key = (rpc_url, chain_id, pools, sandbox_mode)
 
     if key not in _instrument_providers:
         provider_config = MyDEXInstrumentProviderConfig(
             rpc_url=rpc_url,
+            chain_id=chain_id,
             pools=list(pools),
             sandbox_mode=sandbox_mode,
         )
