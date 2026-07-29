@@ -288,11 +288,9 @@ Two supported registration paths run Rust strategies/actors:
    node.run().await?;
    ```
 
-2. **Bundled examples from Python** — register only bundled Rust examples by type name:
-   ```python
-   node.add_builtin_strategy(type_name, config)
-   node.add_builtin_actor(type_name, config)
-   ```
+2. **Bundled examples from PyO3** — register bundled Rust examples by calling
+   `node.add_builtin_strategy(type_name, config)` or
+   `node.add_builtin_actor(type_name, config)` from the Python control plane.
 
    These methods require the examples feature and are not a first-class extension API.
 

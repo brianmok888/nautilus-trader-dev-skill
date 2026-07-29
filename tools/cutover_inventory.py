@@ -55,7 +55,7 @@ def validate_root_skill_python_fences(paths: Iterable[Path], root: Path) -> list
         if not path.is_file():
             continue
         for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if line == "```python":
+            if line.lstrip() == "```python":
                 errors.append(
                     f"{path.relative_to(root).as_posix()}:{line_number}: "
                     "non-AI root skill contains a Python fence"

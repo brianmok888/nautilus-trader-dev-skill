@@ -127,6 +127,15 @@ def test_non_ai_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -
     ]
 
 
+def test_indented_non_ai_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -> None:
+    path = tmp_path / "skills/nt-data/SKILL.md"
+    _write(path, "# Data\n\n   ```python\n   print('outside every lane')\n   ```\n")
+
+    assert validate_root_skill_python_fences((path,), tmp_path) == [
+        "skills/nt-data/SKILL.md:3: non-AI root skill contains a Python fence"
+    ]
+
+
 def test_repository_has_no_non_ai_root_skill_python_fences() -> None:
     paths = tuple(
         REPO_ROOT / "skills" / skill / "SKILL.md" for skill in RUST_ROOT_SKILLS
