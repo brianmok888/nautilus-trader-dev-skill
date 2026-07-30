@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "upstream_ref": "origin/develop",
+  "pinned_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
+  "reviewed_commit": "45903fc8b925adae6323035fb0b4fb5b49b4f89b",
+  "reviewed_on": "2026-07-30",
+  "deltas": [
+    {
+      "commit": "d46f56505a8675ae49025bc6abaa851d33f60c56",
+      "subject": "Enforce v2 order execution metadata invariants",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/factories/order.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/src/order_manager/manager.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/execution/tests/matching_engine.rs",
+        "crates/infrastructure/src/sql/models/orders.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/model/src/events/order/initialized.rs",
+        "crates/model/src/events/order/spec/initialized.rs",
+        "crates/model/src/orders/builder.rs",
+        "crates/model/src/orders/limit.rs",
+        "crates/model/src/orders/limit_if_touched.rs",
+        "crates/model/src/orders/market.rs",
+        "crates/model/src/orders/market_if_touched.rs",
+        "crates/model/src/orders/market_to_limit.rs",
+        "crates/model/src/orders/mod.rs",
+        "crates/model/src/orders/stop_limit.rs",
+        "crates/model/src/orders/stop_market.rs",
+        "crates/model/src/orders/trailing_stop_limit.rs",
+        "crates/model/src/orders/trailing_stop_market.rs",
+        "crates/model/src/python/events/order/initialized.rs",
+        "crates/model/src/python/orders/limit_if_touched.rs",
+        "crates/model/src/python/orders/market_to_limit.rs",
+        "crates/model/src/python/orders/stop_limit.rs",
+        "crates/model/src/python/orders/stop_market.rs",
+        "crates/trading/src/algorithm/mod.rs",
+        "crates/trading/src/algorithm/twap.rs",
+        "python/tests/acceptance/test_backtest.py",
+        "python/tests/strategies/backtest_surface.py",
+        "python/tests/strategies/ema_cross_twap.py",
+        "python/tests/unit/backtest/test_backtest_engine_surface.py",
+        "python/tests/unit/model/test_orders.py"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "501ebe4a804bccc1ee885c2871556f75bc10e96c",
+      "subject": "Support PyO3 backtest results in tearsheets (#4563)",
+      "upstream_paths": [
+        "crates/analysis/src/analyzer.rs",
+        "crates/analysis/src/python/snapshot.rs",
+        "crates/analysis/src/snapshot.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/python/result.rs",
+        "crates/backtest/src/result.rs",
+        "nautilus_trader/analysis/reporter.py",
+        "nautilus_trader/analysis/tearsheet.py",
+        "python/nautilus_trader/analysis/__init__.pyi",
+        "python/nautilus_trader/analysis/tearsheet.py",
+        "python/nautilus_trader/backtest/__init__.pyi",
+        "python/tests/unit/analysis/test_tearsheet.py",
+        "tests/unit_tests/analysis/test_reports.py",
+        "tests/unit_tests/analysis/test_tearsheet.py"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "f85c6d71c3a61e301616bd2008fa36c491c9743f",
+      "subject": "Fix order book identity handling",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/benches/book_iai.rs",
+        "crates/model/src/orderbook/aggregation.rs",
+        "crates/model/src/orderbook/book.rs",
+        "crates/model/src/orderbook/error.rs",
+        "crates/model/src/orderbook/ladder.rs",
+        "crates/model/src/orderbook/level.rs",
+        "crates/model/src/orderbook/own.rs",
+        "crates/model/src/orderbook/tests.rs",
+        "docs/concepts/order_book.md"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "395e95cadf1ffa4255af25d8e2eed9c16c636027",
+      "subject": "Sync order book Python documentation",
+      "upstream_paths": [
+        "crates/model/src/python/orderbook/book.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "2c0356771170f33e3a3d6553773fcea571e255ce",
+      "subject": "Update dependencies and tools",
+      "upstream_paths": [
+        ".docker/DockerfileUbuntu",
+        ".docker/jupyterlab.dockerfile",
+        ".docker/nautilus_trader.dockerfile",
+        ".pre-commit-config.yaml",
+        ".supply-chain/audits.toml",
+        ".supply-chain/config.toml",
+        ".supply-chain/imports.lock",
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/network/src/transport/sockudo.rs",
+        "pyproject.toml",
+        "python/pyproject.toml",
+        "python/uv.lock",
+        "uv.lock"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "5c7554a94ed37dacd326301ded0b7d9e147000fb",
+      "subject": "Consume response handlers after data response dispatch (#4583)",
+      "upstream_paths": [
+        "crates/common/src/msgbus/api.rs",
+        "crates/common/src/msgbus/core.rs",
+        "crates/data/tests/engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "dd81866a3aedf22199a82019469c467cb93514ca",
+      "subject": "Refine Python v2 result tearsheet state handling",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/backtest/src/python/node.rs",
+        "docs/concepts/visualization.md",
+        "nautilus_trader/analysis/tearsheet.py",
+        "python/nautilus_trader/analysis/tearsheet.py",
+        "python/nautilus_trader/backtest/__init__.pyi",
+        "python/tests/unit/analysis/test_tearsheet.py",
+        "python/tests/unit/backtest/test_backtest_node.py",
+        "tests/unit_tests/analysis/test_tearsheet.py"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "befd33ea4295e2317ffbf6eb3dd1293df722ec87",
+      "subject": "Upgrade Cython",
+      "upstream_paths": [
+        "RELEASES.md",
+        "pyproject.toml",
+        "uv.lock"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "ec5444fc49712ac048c62185613b604471d4fa9a",
+      "subject": "Fix Kraken Futures fill type parsing",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/kraken/src/common/enums.rs",
+        "crates/adapters/kraken/src/common/parse.rs",
+        "crates/adapters/kraken/src/http/futures/models.rs",
+        "crates/adapters/kraken/src/websocket/futures/parse.rs",
+        "crates/adapters/kraken/test_data/futures_fill_types.json",
+        "crates/adapters/kraken/test_data/http_futures_fills.json"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "c3ac974d3b78f58199e8f4bee17f2db35a0706e6",
+      "subject": "Fix v2 position duplicate fill replay",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/model/src/position.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "4ce18213638a10104d46f74e048c68f9f17a4292",
+      "subject": "Fix DataActor point-in-time request ranges",
+      "upstream_paths": [
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/tests.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "0945d1e4ee6a35a2b6b32e51b3abc7ed61694796",
+      "subject": "Fail fast when infrastructure tests have no Redis or PostgreSQL (#4587)",
+      "upstream_paths": [
+        "crates/infrastructure/src/redis/msgbus.rs",
+        "crates/infrastructure/tests/test_cache_database_postgres.rs",
+        "crates/infrastructure/tests/test_cache_postgres.rs",
+        "crates/infrastructure/tests/test_cache_redis.rs",
+        "crates/infrastructure/tests/test_redis_queries.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "cf4ab43bd3c143cbd58f8c80ada8cff0edd017dd",
+      "subject": "Restore execution algorithm subscriptions from cached orders (#4590)",
+      "upstream_paths": [
+        "crates/system/src/trader.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "fbf2fc13fe96c8bf715882c1072bd2eb8b57b2fa",
+      "subject": "Fix Trader execution algorithm order fixtures",
+      "upstream_paths": [
+        "crates/system/src/trader.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "43f861082801652f9a7f4034e51a9a1aa5210010",
+      "subject": "Fix Polymarket v2 fee and RTDS handling",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/benches/data.rs",
+        "crates/adapters/polymarket/examples/node_exec_tester.rs",
+        "crates/adapters/polymarket/src/data_types.rs",
+        "crates/adapters/polymarket/src/execution/orders.rs",
+        "crates/adapters/polymarket/src/execution/parse.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/query.rs",
+        "crates/adapters/polymarket/src/rtds.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md",
+        "python/examples/polymarket/data_tester.py",
+        "python/examples/polymarket/exec_tester.py",
+        "python/tests/unit/adapters/example_modules.py",
+        "python/tests/unit/adapters/polymarket/test_polymarket_factories.py"
+      ],
+      "affected_files": [
+        "references/integrations/polymarket.md",
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "e45ddc3b2c4451a0a3b91aaf3dd0b4c4bc781bf3",
+      "subject": "Fix Derive mass status position flattening",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "32bc6b6809266e67d05a79c956bc75000199fcf1",
+      "subject": "Fix event-store capture, halt, verify, and replay defects",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/event_store/src/backend/memory.rs",
+        "crates/event_store/src/backend/redb.rs",
+        "crates/event_store/src/bin/verify.rs",
+        "crates/event_store/src/capture/adapter.rs",
+        "crates/event_store/src/capture/builtins.rs",
+        "crates/event_store/src/error.rs",
+        "crates/event_store/src/kernel.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/event_store/src/retention.rs",
+        "crates/event_store/src/verifier/mod.rs",
+        "crates/event_store/src/writer/batcher.rs",
+        "crates/event_store/src/writer/halt.rs",
+        "crates/event_store/src/writer/mod.rs",
+        "crates/event_store/tests/redb.rs",
+        "crates/event_store/tests/retention.rs",
+        "crates/event_store/tests/verifier.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "1c555c143f73bd6e66c8960561b0c46493533660",
+      "subject": "Fix Lighter subscription recovery",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/common/consts.rs",
+        "crates/adapters/lighter/src/websocket/client.rs",
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/adapters/lighter/tests/data_client.rs"
+      ],
+      "affected_files": [
+        "references/integrations/lighter.md",
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "aabb824cb377d62ea7ff6a7ce9489a92c705580a",
+      "subject": "Add Cache introspection for market-data histories (#4586)",
+      "upstream_paths": [
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/python/cache.rs",
+        "python/nautilus_trader/common/__init__.pyi",
+        "python/tests/unit/common/test_cache.py"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "998005124e298e9b0c2f6c60be21e581f3426da1",
+      "subject": "Allow custom data injection into PyO3 backtests (#4582)",
+      "upstream_paths": [
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/tests/backtest_engine.rs",
+        "python/tests/unit/backtest/test_backtest_engine_custom_data.py"
+      ],
+      "affected_files": [
+        "skills/nt-backtest/SKILL.md"
+      ]
+    },
+    {
+      "commit": "be24b7b2dbc8128c8b9b1cc784e48f1908833747",
+      "subject": "Add network WebSocket backend benchmarks",
+      "upstream_paths": [
+        "crates/network/Cargo.toml",
+        "crates/network/README.md",
+        "crates/network/benches/BENCHMARKS.md",
+        "crates/network/benches/websocket_latency.rs",
+        "crates/network/benches/websocket_transport.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "22e802bc2366181393919ad43393bdb18b000c1d",
+      "subject": "Restore Lighter order identity after restart",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/tests/exec_client.rs",
+        "docs/integrations/lighter.md"
+      ],
+      "affected_files": [
+        "references/integrations/lighter.md",
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "184e231f192ea7410aeb7730d6118fedfdf2c4d7",
+      "subject": "Fix Polymarket v2 tester close residuals",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/examples/node_exec_tester.rs",
+        "crates/testkit/src/python/testers.rs",
+        "crates/testkit/src/testers/exec/config.rs",
+        "crates/testkit/src/testers/exec/strategy.rs",
+        "crates/testkit/src/testers/exec/tests.rs",
+        "docs/developer_guide/spec_exec_testing.md",
+        "docs/integrations/polymarket.md",
+        "python/examples/polymarket/exec_tester.py",
+        "python/examples/polymarket/updown_smoke_tester.py",
+        "python/nautilus_trader/testkit/__init__.pyi",
+        "python/tests/unit/adapters/polymarket/test_polymarket_factories.py",
+        "python/tests/unit/testkit/test_tester_configs.py"
+      ],
+      "affected_files": [
+        "skills/nt-testing/SKILL.md"
+      ]
+    },
+    {
+      "commit": "86b96ad7b5a9a54c8a0626a142a64e70a9318099",
+      "subject": "Fix Position replay fragment handling",
+      "upstream_paths": [
+        "crates/model/Cargo.toml",
+        "crates/model/benches/position_replay_criterion.rs",
+        "crates/model/src/position.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "3e408704d7606eff969d61642192b1efd471949c",
+      "subject": "Fix DeFi SwapTradeInfo zero spot price panics",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/defi/data/swap_trade_info.rs",
+        "crates/model/src/defi/pool_analysis/quote.rs",
+        "crates/model/src/defi/pool_analysis/tests.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "99f526a3d4e9a19d148257746fb8cae1a57c886d",
+      "subject": "Make Lighter reconnect auth-token rotation venue-visible (#4603)",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/adapters/lighter/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "1830d09b8ab10b4983935eedb82ec77bf116b440",
+      "subject": "Fix Derive cancel-by-label zero matches",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/derive/examples/node_exec_tester.rs",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/client.rs",
+        "crates/adapters/derive/src/http/models.rs",
+        "crates/adapters/derive/src/websocket/client.rs",
+        "crates/adapters/derive/test_data/common/ws_cancel_by_label_nonzero.json",
+        "crates/adapters/derive/test_data/common/ws_cancel_by_label_zero.json",
+        "crates/adapters/derive/tests/exec_client.rs",
+        "crates/adapters/derive/tests/http.rs",
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "4a869abe4d351ee5201acc6d75846c67a89d32e1",
+      "subject": "Enforce venue order ID ownership in the cache (#4595)",
+      "upstream_paths": [
+        "crates/backtest/tests/netting_fill_void.rs",
+        "crates/common/src/cache/error.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/src/matching_engine/engine.rs",
+        "crates/execution/src/matching_engine/ids_generator.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/trading/src/strategy/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "342a2f3670640472757b462e0a6063e6e6deeb96",
+      "subject": "Fix Polymarket market batch parsing",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/websocket/handler.rs",
+        "crates/adapters/polymarket/test_data/ws_market_mixed_known_unknown.json"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "c127b87043917dd399602f6d312e8b2854857bac",
+      "subject": "Reconstruct DataType cache fields on deserialization (#4592)",
+      "upstream_paths": [
+        "crates/event_store/src/codec.rs",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/data/registry.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "fcb6d76d5594530f258a842a171b28de2518c691",
+      "subject": "Add Python v2 position sizing bindings",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/risk/src/python/mod.rs",
+        "crates/risk/src/python/sizing.rs",
+        "crates/risk/src/sizing.rs",
+        "python/generate_stubs.py",
+        "python/nautilus_trader/risk/__init__.pyi",
+        "python/tests/unit/risk/test_sizing.py",
+        "python/tests/unit/test_generate_stubs.py"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "99f56028bc28335b7a82332c9677132de4eb0032",
+      "subject": "Fix Derive nonce allocation across clients",
+      "upstream_paths": [
+        "crates/adapters/derive/benches/signing.rs",
+        "crates/adapters/derive/fuzz/README.md",
+        "crates/adapters/derive/fuzz/fuzz_targets/fuzz_nonce_sequence.rs",
+        "crates/adapters/derive/src/signing/nonce.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "cc2214331e0bdda632812a1d1c9fc29e417eec8e",
+      "subject": "Refine Testkit feature dependencies",
+      "upstream_paths": [
+        "Cargo.toml",
+        "crates/adapters/architect_ax/Cargo.toml",
+        "crates/adapters/betfair/Cargo.toml",
+        "crates/adapters/binance/Cargo.toml",
+        "crates/adapters/bitmex/Cargo.toml",
+        "crates/adapters/bybit/Cargo.toml",
+        "crates/adapters/coinbase/Cargo.toml",
+        "crates/adapters/databento/Cargo.toml",
+        "crates/adapters/deribit/Cargo.toml",
+        "crates/adapters/derive/Cargo.toml",
+        "crates/adapters/dydx/Cargo.toml",
+        "crates/adapters/hyperliquid/Cargo.toml",
+        "crates/adapters/interactive_brokers/Cargo.toml",
+        "crates/adapters/kraken/Cargo.toml",
+        "crates/adapters/lighter/Cargo.toml",
+        "crates/adapters/okx/Cargo.toml",
+        "crates/adapters/polymarket/Cargo.toml",
+        "crates/adapters/sandbox/Cargo.toml",
+        "crates/adapters/tardis/Cargo.toml",
+        "crates/backtest/Cargo.toml",
+        "crates/live/Cargo.toml",
+        "crates/persistence/Cargo.toml",
+        "crates/pyo3/Cargo.toml",
+        "crates/testkit/Cargo.toml",
+        "crates/testkit/README.md",
+        "crates/testkit/src/events.rs",
+        "crates/testkit/src/lib.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "9a9e5fe7b762410229b380d5af92d32c13169c3a",
+      "subject": "Add v2 actor and strategy state persistence",
+      "upstream_paths": [
+        "Cargo.lock",
+        "RELEASES.md",
+        "crates/backtest/Cargo.toml",
+        "crates/backtest/src/config.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/node.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/infrastructure/src/sql/cache.rs",
+        "crates/infrastructure/tests/test_cache_postgres.rs",
+        "crates/live/Cargo.toml",
+        "crates/live/src/node/config.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/python/node.rs",
+        "crates/system/Cargo.toml",
+        "crates/system/src/config.rs",
+        "crates/system/src/kernel.rs",
+        "crates/system/src/trader.rs",
+        "crates/testkit/Cargo.toml",
+        "crates/testkit/README.md",
+        "crates/testkit/src/cache.rs",
+        "crates/testkit/src/components.rs",
+        "crates/testkit/src/lib.rs"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md",
+        "skills/nt-trading/SKILL.md"
+      ]
+    },
+    {
+      "commit": "30ced0c05079f7791fb983e120e20535b2cdf3af",
+      "subject": "Test Lighter pending auth across reconnects",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/websocket/handler.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "2a1edbf01ce85685a0f4f0e623eae45a4c566dea",
+      "subject": "Fix Lighter funding timestamp semantics",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/adapters/lighter/src/websocket/parse.rs",
+        "crates/adapters/lighter/test_data/ws_market_stats_update_all.json",
+        "crates/adapters/lighter/test_data/ws_market_stats_update_single.json",
+        "crates/adapters/lighter/tests/websocket.rs",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "58c4f090cfd6bca103343a01bff0b759d4a0a5bd",
+      "subject": "Fix Polymarket Gamma cursor loops",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "04ce01bbf68554687ed778640ec4742a604bc9cb",
+      "subject": "Correct bincode advisory provenance",
+      "upstream_paths": [
+        ".cargo/audit.toml",
+        "deny.toml"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    },
+    {
+      "commit": "118d75b331c3de814e7ca7a1d474dd6e1c173cae",
+      "subject": "Fix serialization metadata and wire edge cases",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/serialization/generated/capnp/data/market_capnp.rs",
+        "crates/serialization/schemas/capnp/data/market.capnp",
+        "crates/serialization/src/arrow/delta.rs",
+        "crates/serialization/src/arrow/mod.rs",
+        "crates/serialization/src/capnp/conversions.rs",
+        "crates/serialization/src/python/arrow.rs",
+        "crates/serialization/src/sbe/error.rs",
+        "crates/serialization/src/sbe/market/ticks.rs",
+        "crates/serialization/tests/test_market_data_capnp.rs",
+        "crates/serialization/tests/test_market_data_sbe.rs",
+        "crates/serialization/tests/test_types_capnp.rs"
+      ],
+      "affected_files": [
+        "skills/nt-implement/templates/capnp_schema.capnp",
+        "skills/nt-implement/SKILL.md"
+      ]
+    },
+    {
+      "commit": "45903fc8b925adae6323035fb0b4fb5b49b4f89b",
+      "subject": "Fix serialization Clippy coverage",
+      "upstream_paths": [
+        "crates/serialization/src/arrow/mod.rs",
+        "scripts/clippy-changed.sh"
+      ],
+      "no_impact_rationale": "Reviewed in the 2026-07-30 cutover audit; no additional skill guidance change was required beyond the version-scoped overlays mapped by affected delta entries."
+    }
+  ]
+}

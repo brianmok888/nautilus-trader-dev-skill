@@ -12,6 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 from tools.check_upstream_freshness import (
     FreshnessStatus,
     build_freshness_report,
+    render_json_report,
     render_text_report,
 )
 from tools.upstream_baseline import default_upstream_root
@@ -50,6 +51,34 @@ def _commit(repo: Path, filename: str, text: str, message: str) -> str:
     return _git(repo, "rev-parse", "HEAD")
 
 
+def _write_manifest(
+    path: Path,
+    *,
+    baseline: str,
+    current: str,
+    delta_commit: str,
+    upstream_path: str = "guide.md",
+) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "upstream_ref": "develop",
+                "pinned_commit": baseline,
+                "reviewed_commit": current,
+                "deltas": [
+                    {
+                        "commit": delta_commit,
+                        "upstream_paths": [upstream_path],
+                        "affected_files": ["references/developer_guide/index.md"],
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+
 
 def _make_repo(tmp_path: Path) -> tuple[Path, str, str]:
     repo = tmp_path / "upstream"
@@ -79,6 +108,99 @@ def test_report_distinguishes_pinned_baseline_from_current_drift(tmp_path: Path)
     assert report.refs[0].status is FreshnessStatus.DRIFTED
     assert report.refs[0].commits_ahead == 1
     assert report.refs[0].pinned_is_ancestor is True
+
+
+def test_drift_report_enumerates_changed_commits_and_paths(tmp_path: Path) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+    )
+
+    assert report.refs[0].changed_commits == (current,)
+    assert report.refs[0].changed_paths == ("guide.md",)
+    payload = json.loads(render_json_report(report))
+    assert payload["refs"][0]["changed_commits"] == [current]
+    assert payload["refs"][0]["changed_paths"] == ["guide.md"]
+
+
+def test_complete_review_manifest_is_reported_as_covering_delta(tmp_path: Path) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+    manifest = tmp_path / "upstream-delta-review.json"
+    _write_manifest(
+        manifest,
+        baseline=baseline,
+        current=current,
+        delta_commit=current,
+    )
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+        manifest_path=manifest,
+    )
+
+    assert report.manifest_reviewed is True
+    assert report.manifest_error is None
+    assert report.ok is True
+
+
+def test_review_manifest_rejects_unmapped_delta_commit(tmp_path: Path) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+    manifest = tmp_path / "upstream-delta-review.json"
+    _write_manifest(
+        manifest,
+        baseline=baseline,
+        current=current,
+        delta_commit=baseline,
+    )
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+        manifest_path=manifest,
+    )
+
+    assert report.manifest_reviewed is False
+    assert report.manifest_error is not None
+    assert current in report.manifest_error
+
+
+def test_review_manifest_requires_impact_or_explicit_no_impact(tmp_path: Path) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+    manifest = tmp_path / "upstream-delta-review.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "upstream_ref": "develop",
+                "pinned_commit": baseline,
+                "reviewed_commit": current,
+                "deltas": [
+                    {
+                        "commit": current,
+                        "upstream_paths": ["guide.md"],
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+        manifest_path=manifest,
+    )
+
+    assert report.manifest_reviewed is False
+    assert report.manifest_error is not None
+    assert "affected_files or no_impact_rationale" in report.manifest_error
 
 
 
