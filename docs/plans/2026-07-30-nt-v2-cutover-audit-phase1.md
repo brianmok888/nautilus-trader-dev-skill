@@ -125,8 +125,8 @@ migration/reference-only detector evidence; prefer Rust/PyO3 for new work.
 - Phase 3 progressive cards: regenerated as **143 Pass, 1 Pending, 0 Blocked**;
   `nt-implement` G2 remains Pending because `capnp` is not installed, so actual
   schema generation and round-trip validation could not run.
-- Phase 4 reconciliation: all 16 finding implementations closed; the Cap'n
-  Proto execution gate and pre-ship exact-SHA attestation remain explicitly
-  Pending until their required evidence exists.
+- Phase 4 reconciliation: P0 3/3 and P2 4/4 are closed; P1 is 7 closed and 2
+  Pending because Cap'n Proto execution and pre-ship exact-SHA attestation still
+  require their final evidence.
 - Phase 5 ship evidence: exact repository SHA, commands, and independent review
   verdicts are recorded in an external attestation and are not self-referential.

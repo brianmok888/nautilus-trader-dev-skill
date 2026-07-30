@@ -15,31 +15,31 @@ avoid self-referential evidence.
 
 | Phase 1 finding | Severity | Status | Post-fix evidence |
 | --- | --- | --- | --- |
-| Active non-AI guidance authorized Python prototyping, labs, notebooks, or tests. | P0 | Closed | `tests/test_rust_lane_cutover.py:16`; `tests/test_markdown_lane_contract.py`; `skills/nt/SKILL.md:112` |
+| Active non-AI guidance authorized Python prototyping, labs, notebooks, or tests. | P0 | Closed | `tests/test_rust_lane_cutover.py`; `tests/test_markdown_lane_contract.py`; every active learning stage is Rust-first and historical Python/Cython lessons live under `skills/nt-learn/migration_reference/python/curriculum/`. |
 | Active learning/live references exposed copyable Python `TradingNode`. | P0 | Closed | `tests/test_rust_lane_cutover.py:40`; `skills/nt-learn/curriculum/07-live-trading.md`; `skills/nt-adapters/references/integrations/ib.md:1555` |
 | G3 used a non-current PyO3 root projection for `ExecTesterConfig`. | P0 | Closed | `tests/test_rust_lane_cutover.py:91`; `skills/nt-testing/migration_reference/python/exec_tester_config.md:7` |
 | Execution-spec freshness falsely claimed no develop drift. | P1 | Closed | `skills/nt-testing/SKILL.md:17`; `tests/test_exec_spec_current_overlay.py:33` |
 | Adapter delivery used seven phases instead of the official ten. | P1 | Closed | `skills/nt-adapters/SKILL.md:188`; `tests/test_nt_v2_adapter_overlays.py:13` |
 | Polymarket fee guidance used stale rates/model. | P1 | Closed | `references/integrations/polymarket.md:483`; `tests/test_nt_v2_adapter_overlays.py:51` |
 | Lighter identity omitted 31-bit probing and restart recovery. | P1 | Closed | `references/integrations/lighter.md:226`; `tests/test_nt_v2_adapter_overlays.py:67` |
-| Cap'n Proto trading values used `Float64` without schema validation. | P1 | Implementation closed; execution Pending | `skills/nt-implement/templates/capnp_schema.capnp:13`; structural fixed-point validation passes, but `tests/test_capnp_schema_precision.py` cannot compile/round-trip without `capnp`, so `nt-implement` G2 remains Pending. |
-| G0-G7 evidence lacked an exact-SHA external ship attestation. | P1 | Implementation closed; ship validation Pending | `tools/check_cutover_attestation.py`; `tests/test_cutover_attestation.py`; the external ship attestation is generated and validated only after the final commit and exact-SHA reviews. |
+| Cap'n Proto trading values used `Float64` without schema validation. | P1 | Pending | `skills/nt-implement/templates/capnp_schema.capnp:13`; structural fixed-point validation passes, but `tests/test_capnp_schema_precision.py` cannot compile/round-trip without `capnp`, so `nt-implement` G2 remains Pending. |
+| G0-G7 evidence lacked an exact-SHA external ship attestation. | P1 | Pending until ship | `tools/check_cutover_attestation.py`; `tests/test_cutover_attestation.py`; command outputs and review artifacts are content-hashed, and the external ship attestation is generated and validated only after the final commit and exact-SHA reviews. |
 | Standalone legacy-labelling gate and wrapper were absent. | P1 | Closed | `tools/check_legacy_labelling.py`; `tests/test_legacy_labelling.py` |
 | Reference Python bypassed classification/Ruff. | P1 | Closed | `tools/template_classification.py:23`; `ruff.toml`; `tests/test_quality_gates.py:58` |
 | Source-pinned guide bodies had a blanket legacy exemption. | P1 | Closed | `tools/check_dev_guide_sync.py:76`; `tests/test_dev_guide_sync.py:1562` |
-| Upstream freshness could not prove every develop delta was dispositioned. | P2 | Closed | `tools/check_upstream_freshness.py:117`; `references/upstream-delta-review.json` maps all 40 develop delta commits. |
+| Upstream freshness could not prove every develop delta was dispositioned. | P2 | Closed | `tools/check_upstream_freshness.py`; `references/upstream-delta-review.json` maps all 40 develop delta commits, validates their subjects and paths against Git, and proves nightly containment. |
 | Current PyO3 `CustomData` injection was absent. | P2 | Closed | `skills/nt-backtest/SKILL.md`; `tests/test_nt_v2_state_and_custom_data.py:15` |
 | Rust actor/strategy state persistence was absent. | P2 | Closed | `skills/nt-live/SKILL.md`; `skills/nt-trading/SKILL.md`; `tests/test_nt_v2_state_and_custom_data.py:38` |
 | Rust benchmark templates were not formatted or compiled. | P2 | Closed | `references/dev_templates/criterion_template.rs`; `references/dev_templates/iai_template.rs`; `tests/test_rust_benchmark_templates.py` |
 
 ### Closure totals
 
-| Severity | Phase 1 | Closed | Residual |
+| Severity | Phase 1 | Closed | Pending |
 | --- | ---: | ---: | ---: |
 | P0 | 3 | 3 | 0 |
-| P1 | 9 | 9 implemented | 2 validation gates Pending |
+| P1 | 9 | 7 | 2 |
 | P2 | 4 | 4 | 0 |
-| **Total** | **16** | **16 implemented** | **2 validation gates Pending** |
+| **Total** | **16** | **14** | **2** |
 
 ## Progressive gate result
 

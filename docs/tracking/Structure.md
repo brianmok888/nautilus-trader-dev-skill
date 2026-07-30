@@ -86,7 +86,7 @@ Current reconciliation: `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-
 
 ## Test surface
 
-- **Repository suites:** 396 non-quality tests and 5 quality-gate tests passed at the merged cutover reconciliation.
+- **Repository suites:** final exact-SHA counts are reported by the external cutover attestation; the committed tree must pass both `uv run pytest -q --ignore=tests/test_quality_gates.py` and `uv run pytest -q tests/test_quality_gates.py` without relying on stale inventory totals.
 - **Core sync/gate tests:** `test_dev_guide_sync`, `test_dev_guide_snapshot_sync`, `test_quality_gates`, `test_rust_first_end_to_end`, `test_rust_trading_reference_sync`, `test_skill_g2_harnesses`, `test_upstream_freshness`.
 - **Cutover boundary tests:** `test_ai_advisory_boundary`, `test_dex_g2_harness`, `test_g2_owned_content`, `test_markdown_lane_contract`, `test_pytest_environment_split`, `test_template_classification`, `test_v2_guidance_hardening`.
 - **Lint:** `uv run --with ruff ruff check .` passes.
