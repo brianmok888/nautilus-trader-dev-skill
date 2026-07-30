@@ -8,6 +8,8 @@ It never publishes market data or signals and can never authorize trading.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections import deque
 from dataclasses import dataclass
 from datetime import timedelta
@@ -77,11 +79,29 @@ class AdvisoryAuditRecord:
 
     request_id: str
     request_sequence: int
-    checkpoint_id: str
     suggestion_id: str | None
+    suggestion_hash: str | None
     outcome: str
     reason: str
     recorded_ns: int
+
+    @property
+    def checkpoint_id(self) -> str:
+        payload = json.dumps(
+            {
+                "outcome": self.outcome,
+                "reason": self.reason,
+                "recorded_ns": self.recorded_ns,
+                "request_id": self.request_id,
+                "request_sequence": self.request_sequence,
+                "suggestion_hash": self.suggestion_hash,
+                "suggestion_id": self.suggestion_id,
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode()
+        return hashlib.sha256(payload).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +123,7 @@ class AdvisoryMailboxPort:
         self._audits: deque[AdvisoryAuditRecord] = deque(
             maxlen=resolved_audit_capacity,
         )
+        self._checkpoints: deque[AdvisoryAuditRecord] = deque(maxlen=capacity)
         self._checkpoint_acks: deque[AdvisoryCheckpointAck] = deque(maxlen=capacity)
 
     def try_put_request(self, request: AdvisoryRequest) -> bool:
@@ -137,12 +158,24 @@ class AdvisoryMailboxPort:
         self._audits.append(record)
         return True
 
-    def try_take_audit(self) -> AdvisoryAuditRecord | None:
-        """Return the oldest audit record without waiting."""
-        return self._audits.popleft() if self._audits else None
-
     def try_peek_audit(self) -> AdvisoryAuditRecord | None:
         return self._audits[0] if self._audits else None
+
+    def acknowledge_audit(self, checkpoint_id: str) -> bool:
+        record = self.try_peek_audit()
+        if record is None or record.checkpoint_id != checkpoint_id:
+            return False
+        self._audits.popleft()
+        return True
+
+    def _try_append_checkpoint(self, record: AdvisoryAuditRecord) -> bool:
+        if len(self._checkpoints) == self._checkpoints.maxlen:
+            return False
+        self._checkpoints.append(record)
+        return True
+
+    def try_peek_checkpoint(self) -> AdvisoryAuditRecord | None:
+        return self._checkpoints[0] if self._checkpoints else None
 
     def try_put_checkpoint_ack(self, ack: AdvisoryCheckpointAck) -> bool:
         if len(self._checkpoint_acks) == self._checkpoint_acks.maxlen:
@@ -153,17 +186,21 @@ class AdvisoryMailboxPort:
     def try_take_checkpoint_ack(self) -> AdvisoryCheckpointAck | None:
         return self._checkpoint_acks.popleft() if self._checkpoint_acks else None
 
-    def acknowledge_audit(self, checkpoint_id: str) -> bool:
-        record = self.try_peek_audit()
-        if record is None or record.checkpoint_id != checkpoint_id:
-            return False
-        self._audits.popleft()
-        return True
+    def _acknowledge_checkpoint(
+        self,
+        expected: AdvisoryAuditRecord,
+    ) -> AdvisoryAuditRecord | None:
+        record = self.try_peek_checkpoint()
+        if record != expected:
+            return None
+        return self._checkpoints.popleft()
 
     def clear_runtime_queues(self) -> None:
         """Clear bridge-owned request and result queues during lifecycle reset."""
         self._requests.clear()
         self._results.clear()
+
+    def _clear_checkpoint_acks(self) -> None:
         self._checkpoint_acks.clear()
 
 
@@ -257,6 +294,7 @@ class AdvisoryBridgeActor(DataActor):
         """Clear staged state and return to no-authority operation."""
         self._mailbox.clear_runtime_queues()
         if self._pending_checkpoint is None:
+            self._mailbox._clear_checkpoint_acks()
             self._pending_request = None
             self._staged_result = None
             self._staged_identity = None
@@ -295,13 +333,13 @@ class AdvisoryBridgeActor(DataActor):
                 record = AdvisoryAuditRecord(
                     request_id=request.request_id,
                     request_sequence=request.request_sequence,
-                    checkpoint_id=f"{request.request_sequence}:request_timeout",
                     suggestion_id=None,
+                    suggestion_hash=None,
                     outcome="rejected",
                     reason="request_timeout",
                     recorded_ns=now_ns,
                 )
-                if not self._mailbox.try_append_audit(record):
+                if not self._mailbox._try_append_checkpoint(record):
                     return AdvisoryResultStatus.AUDIT_BLOCKED
                 self._decision_finalized = True
                 self._pending_checkpoint = record
@@ -332,8 +370,8 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
             request_sequence=result.request_sequence,
-            checkpoint_id=f"{result.request_sequence}:ready_for_review",
             suggestion_id=result.suggestion_id,
+            suggestion_hash=result.suggestion_hash,
             outcome="staged",
             reason="ready_for_review",
             recorded_ns=now_ns,
@@ -358,19 +396,21 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=decision.request_id,
             request_sequence=result.request_sequence if result is not None else 0,
-            checkpoint_id=(
-                f"{result.request_sequence}:{reason or ('approved' if decision.approved else 'rejected')}"
-                if result is not None
-                else f"0:{reason or 'missing_result'}"
-            ),
             suggestion_id=decision.suggestion_id,
+            suggestion_hash=decision.suggestion_hash,
             outcome=outcome,
             reason=reason or (
                 "offline_change_review" if decision.approved else "operator_rejected"
             ),
             recorded_ns=decision.decided_ns,
         )
-        if not self._mailbox.try_append_audit(record):
+        terminal = reason is None or reason == "decision_late"
+        append = (
+            self._mailbox._try_append_checkpoint
+            if terminal
+            else self._mailbox.try_append_audit
+        )
+        if not append(record):
             return False
         if reason is None:
             self._decision_finalized = True
@@ -393,12 +433,13 @@ class AdvisoryBridgeActor(DataActor):
             return False
         if ack.checkpoint_id != pending.checkpoint_id:
             return False
+        removed = self._mailbox._acknowledge_checkpoint(pending)
+        if removed is None:
+            return False
         self._completed_request_sequence = max(
             self._completed_request_sequence,
-            pending.request_sequence,
+            removed.request_sequence,
         )
-        if not self._mailbox.acknowledge_audit(ack.checkpoint_id):
-            return False
         self._authority = self._pending_authority
         self._pending_checkpoint = None
         self._pending_authority = AdvisoryAuthority.NONE
@@ -419,13 +460,18 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
             request_sequence=result.request_sequence,
-            checkpoint_id=f"{result.request_sequence}:{reason}",
             suggestion_id=result.suggestion_id,
+            suggestion_hash=result.suggestion_hash,
             outcome="rejected",
             reason=reason,
             recorded_ns=now_ns,
         )
-        if not self._mailbox.try_append_audit(record):
+        append = (
+            self._mailbox._try_append_checkpoint
+            if reason == "late_result"
+            else self._mailbox.try_append_audit
+        )
+        if not append(record):
             self._mailbox.try_restore_result(result)
             return AdvisoryResultStatus.AUDIT_BLOCKED
         if reason == "late_result":

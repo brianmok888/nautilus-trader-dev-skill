@@ -55,14 +55,28 @@ Use two separated processes and one local contract:
   network client in this skill; it may call the localhost Proxy and must not be
   imported by the actor or any Rust execution path.
 - `AdvisoryBridgeActor`: NT V2 `DataActor` that drains only a bounded local mailbox on a short timer callback.
-- `AdvisoryMailboxPort`: non-blocking request/result/audit queues. The actor owns this local port; the proxy-facing integration may only transfer records into and out of it. It has no network client, message-bus, signal, data-publication, or execution capability.
+- `AdvisoryMailboxPort`: non-blocking request/result queues plus two independent durable-transfer outboxes: one FIFO for non-terminal provenance and one FIFO for terminal checkpoints. The actor owns this local port; the proxy-facing integration may only transfer records into and out of it. It has no network client, message-bus, signal, data-publication, or execution capability.
 
 The actor stages immutable `AdvisoryRequest`, `AdvisoryResult`,
 `AdvisoryDecision`, and `AdvisoryAuditRecord` values. Approval must match the
 request ID, suggestion ID, and suggestion hash. Its maximum representable
 authority is `OFFLINE_CHANGE_REVIEW`; it cannot submit orders or change live
 trading behavior. Audit acceptance occurs before any approval state transition,
-so audit backpressure fails closed.
+so audit backpressure fails closed. Each terminal checkpoint ID is a SHA-256
+digest of the complete immutable record, including request and suggestion
+identity, outcome, reason, and timestamp; sequence/outcome pairs alone are not
+checkpoint identities.
+
+The proxy must persist before removal on both outboxes: peek the oldest record,
+durably persist it, then acknowledge that exact digest so the port removes that
+exact head record. No destructive `take` operation is exposed for proxy-facing
+audit or checkpoint transfer. Terminal persistence also atomically advances the
+durable `request_sequence_floor` before the proxy enqueues the matching local
+checkpoint acknowledgment. The actor removes the exact checkpoint before it
+mutates its sequence floor, authority, or request slot. Mismatched/stale
+acknowledgments fail closed, duplicate decisions cannot replace a pending
+terminal checkpoint, and lifecycle reset preserves a pending checkpoint and an
+already-enqueued acknowledgment for idempotent recovery.
 
 ### Proxy mailbox contract
 
@@ -101,7 +115,7 @@ If advisory reasoning uses LangChain or LangGraph:
 2. Enqueue an immutable request through the bounded local mailbox.
 3. Let the external proxy perform all network/model work outside the actor.
 4. On the actor timer, drain at most one already-local result, reject late or mismatched identity, write audit provenance, and stage it as non-actionable.
-5. Accept an exact human decision only after audit capacity is available; the external proxy atomically persists the terminal audit record and `request_sequence_floor`, then returns a local checkpoint acknowledgment. Grant offline review authority and release terminal request state only after the actor consumes that acknowledgment.
+5. Accept an exact human decision only after terminal-checkpoint capacity is available; keep the staging provenance FIFO independent from the terminal checkpoint outbox. The external proxy peeks and atomically persists the complete terminal record plus `request_sequence_floor`, then returns its record-bound digest as a local acknowledgment. Remove that exact checkpoint before granting offline review authority or releasing terminal request state.
 6. Continue Rust trading, adapter, risk, and live-node operation unchanged when the mailbox or proxy is unavailable.
 
 ## Implementation checklist
@@ -111,7 +125,9 @@ If advisory reasoning uses LangChain or LangGraph:
 - [ ] Match request sequence, request ID, suggestion ID, and suggestion hash before approval.
 - [ ] Assign strictly increasing request sequences from durable proxy state, restore `request_sequence_floor` from the durable audit checkpoint after restart, reject `now_ns >= deadline_ns` as late, and reject every replay deterministically.
 - [ ] Keep terminal requests pending until the external proxy acknowledges atomic persistence of the audit record and sequence floor.
-- [ ] Require audit acceptance before staged/approved state changes.
+- [ ] Use separate provenance and terminal-checkpoint outboxes; persist-peek-ack-remove each exact record and expose no destructive proxy-facing transfer.
+- [ ] Bind each checkpoint digest to the complete immutable record, reject stale/mismatched acknowledgments, and preserve pending checkpoint acknowledgments across reset.
+- [ ] Require provenance or checkpoint acceptance before staged/approved state changes.
 - [ ] Release the request slot only after the durable checkpoint acknowledgment for an audited approval, operator rejection, or timeout.
 - [ ] Cover sequential success, rejection, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
 
