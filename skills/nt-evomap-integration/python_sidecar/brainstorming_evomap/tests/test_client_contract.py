@@ -4,6 +4,8 @@
 
 """Contract tests for EvoMap Capsule Client."""
 
+import sqlite3
+
 import pytest
 
 from brainstorming_evomap import evomap_capsule_client as _client_mod
@@ -80,3 +82,110 @@ def test_submit_assets_uses_asset_submit_endpoint():
             {"assets": [{"type": "Gene", "id": "g1"}]},
         )
     ]
+
+
+def test_terminal_checkpoint_persists_record_and_floor_before_ack(tmp_path):
+    database = tmp_path / "advisory.sqlite3"
+    store = _client_mod.AdvisoryCheckpointStore(database)
+    record = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-1",
+        request_id="request-1",
+        request_sequence=7,
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=50,
+    )
+
+    ack = store.persist_terminal(record)
+
+    assert ack == _client_mod.AdvisoryCheckpointAck(checkpoint_id="checkpoint-1")
+    reopened = _client_mod.AdvisoryCheckpointStore(database)
+    assert reopened.request_sequence_floor() == 7
+    assert reopened.terminal_record("checkpoint-1") == record
+
+
+def test_terminal_checkpoint_rolls_back_precommit_failure(tmp_path):
+    database = tmp_path / "advisory.sqlite3"
+    store = _client_mod.AdvisoryCheckpointStore(database)
+    record = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-1",
+        request_id="request-1",
+        request_sequence=7,
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=50,
+    )
+
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "CREATE TRIGGER interrupt_before_floor BEFORE UPDATE ON advisory_state "
+            "BEGIN SELECT RAISE(ABORT, 'simulated crash'); END",
+        )
+
+    with pytest.raises(sqlite3.IntegrityError, match="simulated crash"):
+        store.persist_terminal(record)
+
+    reopened = _client_mod.AdvisoryCheckpointStore(database)
+    assert reopened.request_sequence_floor() == 0
+    assert reopened.terminal_record("checkpoint-1") is None
+
+
+def test_terminal_checkpoint_is_idempotent_after_commit_before_ack_delivery(tmp_path):
+    database = tmp_path / "advisory.sqlite3"
+    store = _client_mod.AdvisoryCheckpointStore(database)
+    record = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-1",
+        request_id="request-1",
+        request_sequence=7,
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=50,
+    )
+
+    assert store.persist_terminal(record).checkpoint_id == "checkpoint-1"
+    assert store.persist_terminal(record).checkpoint_id == "checkpoint-1"
+
+    with sqlite3.connect(database) as connection:
+        row_count = connection.execute(
+            "SELECT COUNT(*) FROM advisory_terminal_checkpoint",
+        ).fetchone()[0]
+    assert row_count == 1
+    assert store.request_sequence_floor() == 7
+
+
+def test_terminal_checkpoint_rejects_digest_reuse_for_a_different_record(tmp_path):
+    database = tmp_path / "advisory.sqlite3"
+    store = _client_mod.AdvisoryCheckpointStore(database)
+    first = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-1",
+        request_id="request-1",
+        request_sequence=7,
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=50,
+    )
+    conflicting = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-1",
+        request_id="request-2",
+        request_sequence=8,
+        suggestion_id="suggestion-2",
+        suggestion_hash="different-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=60,
+    )
+    assert store.persist_terminal(first).checkpoint_id == "checkpoint-1"
+
+    with pytest.raises(sqlite3.IntegrityError):
+        store.persist_terminal(conflicting)
+
+    assert store.terminal_record("checkpoint-1") == first
+    assert store.request_sequence_floor() == 7

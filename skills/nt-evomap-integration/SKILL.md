@@ -76,7 +76,13 @@ checkpoint acknowledgment. The actor removes the exact checkpoint before it
 mutates its sequence floor, authority, or request slot. Mismatched/stale
 acknowledgments fail closed, duplicate decisions cannot replace a pending
 terminal checkpoint, and lifecycle reset preserves a pending checkpoint and an
-already-enqueued acknowledgment for idempotent recovery.
+already-enqueued acknowledgment for idempotent recovery. The sidecar's
+`AdvisoryCheckpointStore` is the reference durable adapter: one SQLite
+transaction inserts the immutable terminal record and advances the sequence
+floor, then returns the acknowledgment. Retrying after commit but before
+acknowledgment delivery is idempotent; injected failures before commit roll back
+both writes. This adapter is a reference implementation for the trusted local
+proxy boundary, not a network service and not an execution-authority component.
 
 ### Proxy mailbox contract
 

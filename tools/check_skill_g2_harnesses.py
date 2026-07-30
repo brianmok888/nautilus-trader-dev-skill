@@ -261,6 +261,7 @@ HARNESSES: dict[str, Harness] = {
             "run_pinned_v2_pytest.py",
             "test_ai_advisory_boundary.py",
             "ai_advisory",
+            "brainstorming_evomap/tests",
         ),
         steps=(
             repository_step(
@@ -276,6 +277,14 @@ HARNESSES: dict[str, Harness] = {
                 "tests/test_skill_g2_harnesses.py",
                 "-k",
                 "ai_advisory",
+            ),
+            repository_step(
+                PYTHON,
+                "-m",
+                "pytest",
+                "-q",
+                "skills/nt-evomap-integration/python_sidecar/"
+                "brainstorming_evomap/tests",
             ),
         ),
         owned_paths=(

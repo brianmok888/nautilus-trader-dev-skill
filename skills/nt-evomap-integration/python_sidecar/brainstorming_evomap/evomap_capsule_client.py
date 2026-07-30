@@ -10,11 +10,105 @@ retries, authentication, and low-level GEP/A2A protocol details.
 """
 
 import json
+import sqlite3
 from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 from urllib import parse, request
 
 Transport = Callable[[str, str, dict[str, Any] | None], dict[str, Any]]
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryTerminalRecord:
+    checkpoint_id: str
+    request_id: str
+    request_sequence: int
+    suggestion_id: str | None
+    suggestion_hash: str | None
+    outcome: str
+    reason: str
+    recorded_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryCheckpointAck:
+    checkpoint_id: str
+
+
+class AdvisoryCheckpointStore:
+    def __init__(self, database: Path) -> None:
+        self._database = database
+        self._initialize()
+
+    def persist_terminal(
+        self,
+        record: AdvisoryTerminalRecord,
+    ) -> AdvisoryCheckpointAck:
+        payload = json.dumps(
+            asdict(record),
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        with sqlite3.connect(self._database) as connection:
+            connection.execute(
+                "INSERT OR IGNORE INTO advisory_terminal_checkpoint "
+                "(checkpoint_id, record_json) VALUES (?, ?)",
+                (record.checkpoint_id, payload),
+            )
+            stored = connection.execute(
+                "SELECT record_json FROM advisory_terminal_checkpoint "
+                "WHERE checkpoint_id = ?",
+                (record.checkpoint_id,),
+            ).fetchone()
+            if stored is None or stored[0] != payload:
+                raise sqlite3.IntegrityError(
+                    "checkpoint_id already binds a different record",
+                )
+            connection.execute(
+                "UPDATE advisory_state SET request_sequence_floor = MAX("
+                "request_sequence_floor, ?) WHERE singleton = 1",
+                (record.request_sequence,),
+            )
+        return AdvisoryCheckpointAck(checkpoint_id=record.checkpoint_id)
+
+    def request_sequence_floor(self) -> int:
+        with sqlite3.connect(self._database) as connection:
+            row = connection.execute(
+                "SELECT request_sequence_floor FROM advisory_state "
+                "WHERE singleton = 1",
+            ).fetchone()
+        return 0 if row is None else int(row[0])
+
+    def terminal_record(self, checkpoint_id: str) -> AdvisoryTerminalRecord | None:
+        with sqlite3.connect(self._database) as connection:
+            row = connection.execute(
+                "SELECT record_json FROM advisory_terminal_checkpoint "
+                "WHERE checkpoint_id = ?",
+                (checkpoint_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        payload = json.loads(row[0])
+        return AdvisoryTerminalRecord(**payload)
+
+    def _initialize(self) -> None:
+        with sqlite3.connect(self._database) as connection:
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS advisory_terminal_checkpoint ("
+                "checkpoint_id TEXT PRIMARY KEY, record_json TEXT NOT NULL)",
+            )
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS advisory_state ("
+                "singleton INTEGER PRIMARY KEY CHECK (singleton = 1), "
+                "request_sequence_floor INTEGER NOT NULL)",
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO advisory_state "
+                "(singleton, request_sequence_floor) VALUES (1, 0)",
+            )
 
 
 class EvoMapProxyMailboxClient:
