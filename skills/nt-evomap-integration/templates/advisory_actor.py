@@ -77,6 +77,7 @@ class AdvisoryAuditRecord:
 
     request_id: str
     request_sequence: int
+    checkpoint_id: str
     suggestion_id: str | None
     outcome: str
     reason: str
@@ -85,8 +86,7 @@ class AdvisoryAuditRecord:
 
 @dataclass(frozen=True, slots=True)
 class AdvisoryCheckpointAck:
-    request_id: str
-    request_sequence: int
+    checkpoint_id: str
 
 
 class AdvisoryMailboxPort:
@@ -141,6 +141,9 @@ class AdvisoryMailboxPort:
         """Return the oldest audit record without waiting."""
         return self._audits.popleft() if self._audits else None
 
+    def try_peek_audit(self) -> AdvisoryAuditRecord | None:
+        return self._audits[0] if self._audits else None
+
     def try_put_checkpoint_ack(self, ack: AdvisoryCheckpointAck) -> bool:
         if len(self._checkpoint_acks) == self._checkpoint_acks.maxlen:
             return False
@@ -149,6 +152,13 @@ class AdvisoryMailboxPort:
 
     def try_take_checkpoint_ack(self) -> AdvisoryCheckpointAck | None:
         return self._checkpoint_acks.popleft() if self._checkpoint_acks else None
+
+    def acknowledge_audit(self, checkpoint_id: str) -> bool:
+        record = self.try_peek_audit()
+        if record is None or record.checkpoint_id != checkpoint_id:
+            return False
+        self._audits.popleft()
+        return True
 
     def clear_runtime_queues(self) -> None:
         """Clear bridge-owned request and result queues during lifecycle reset."""
@@ -246,12 +256,12 @@ class AdvisoryBridgeActor(DataActor):
     def on_reset(self) -> None:
         """Clear staged state and return to no-authority operation."""
         self._mailbox.clear_runtime_queues()
-        self._pending_request = None
-        self._staged_result = None
-        self._staged_identity = None
-        self._pending_checkpoint = None
-        self._pending_authority = AdvisoryAuthority.NONE
-        self._decision_finalized = False
+        if self._pending_checkpoint is None:
+            self._pending_request = None
+            self._staged_result = None
+            self._staged_identity = None
+            self._pending_authority = AdvisoryAuthority.NONE
+            self._decision_finalized = False
         self._authority = AdvisoryAuthority.NONE
 
     @override
@@ -276,6 +286,8 @@ class AdvisoryBridgeActor(DataActor):
 
     def poll_result(self, now_ns: int) -> AdvisoryResultStatus:
         """Consume at most one local result and stage it only after audit."""
+        if self._pending_checkpoint is not None:
+            return AdvisoryResultStatus.AUDIT_BLOCKED
         result = self._mailbox.try_take_result()
         if result is None:
             request = self._pending_request
@@ -283,6 +295,7 @@ class AdvisoryBridgeActor(DataActor):
                 record = AdvisoryAuditRecord(
                     request_id=request.request_id,
                     request_sequence=request.request_sequence,
+                    checkpoint_id=f"{request.request_sequence}:request_timeout",
                     suggestion_id=None,
                     outcome="rejected",
                     reason="request_timeout",
@@ -319,6 +332,7 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
             request_sequence=result.request_sequence,
+            checkpoint_id=f"{result.request_sequence}:ready_for_review",
             suggestion_id=result.suggestion_id,
             outcome="staged",
             reason="ready_for_review",
@@ -344,6 +358,11 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=decision.request_id,
             request_sequence=result.request_sequence if result is not None else 0,
+            checkpoint_id=(
+                f"{result.request_sequence}:{reason or ('approved' if decision.approved else 'rejected')}"
+                if result is not None
+                else f"0:{reason or 'missing_result'}"
+            ),
             suggestion_id=decision.suggestion_id,
             outcome=outcome,
             reason=reason or (
@@ -372,15 +391,14 @@ class AdvisoryBridgeActor(DataActor):
         pending = self._pending_checkpoint
         if ack is None or pending is None:
             return False
-        if (
-            ack.request_id != pending.request_id
-            or ack.request_sequence != pending.request_sequence
-        ):
+        if ack.checkpoint_id != pending.checkpoint_id:
             return False
         self._completed_request_sequence = max(
             self._completed_request_sequence,
-            ack.request_sequence,
+            pending.request_sequence,
         )
+        if not self._mailbox.acknowledge_audit(ack.checkpoint_id):
+            return False
         self._authority = self._pending_authority
         self._pending_checkpoint = None
         self._pending_authority = AdvisoryAuthority.NONE
@@ -401,6 +419,7 @@ class AdvisoryBridgeActor(DataActor):
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
             request_sequence=result.request_sequence,
+            checkpoint_id=f"{result.request_sequence}:{reason}",
             suggestion_id=result.suggestion_id,
             outcome="rejected",
             reason=reason,

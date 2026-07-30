@@ -68,6 +68,8 @@ class _MailboxPort(Protocol):
 
     def try_take_audit(self): ...
 
+    def try_peek_audit(self): ...
+
 
 class _Actor(Protocol):
     _mailbox: _MailboxPort
@@ -86,6 +88,8 @@ class _Actor(Protocol):
 
     def poll_checkpoint_ack(self) -> bool: ...
 
+    def on_reset(self) -> None: ...
+
 
 class _RequestRecord(Protocol):
     request_id: str
@@ -96,15 +100,14 @@ class _CheckpointStore:
         self.request_sequence_floor = 0
 
     def persist_terminal(self, module: ModuleType, mailbox: _MailboxPort) -> str:
-        record = mailbox.try_take_audit()
+        record = mailbox.try_peek_audit()
         assert record is not None
         self.request_sequence_floor = max(
             self.request_sequence_floor,
             record.request_sequence,
         )
         ack = module.AdvisoryCheckpointAck(
-            request_id=record.request_id,
-            request_sequence=record.request_sequence,
+            checkpoint_id=record.checkpoint_id,
         )
         assert mailbox.try_put_checkpoint_ack(ack) is True
         return record.reason
@@ -278,6 +281,7 @@ def test_advisory_records_are_frozen_and_slotted() -> None:
             module.AdvisoryAuditRecord(
                 request_id="request-1",
                 request_sequence=1,
+                checkpoint_id="1:test",
                 suggestion_id="suggestion-1",
             outcome="staged",
             reason="ready_for_review",
@@ -409,6 +413,7 @@ def test_timeout_audit_backpressure_keeps_request_pending() -> None:
             module.AdvisoryAuditRecord(
                 request_id="occupied",
                 request_sequence=0,
+                checkpoint_id="0:occupied",
                 suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
@@ -436,6 +441,7 @@ def test_advisory_audit_backpressure_prevents_state_transition() -> None:
             module.AdvisoryAuditRecord(
                 request_id="occupied",
                 request_sequence=0,
+                checkpoint_id="0:occupied",
                 suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
@@ -457,6 +463,7 @@ def test_advisory_poll_backpressure_retains_result_until_audit_accepts() -> None
             module.AdvisoryAuditRecord(
                 request_id="occupied",
                 request_sequence=0,
+                checkpoint_id="0:occupied",
                 suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
@@ -579,11 +586,54 @@ def test_crash_before_checkpoint_ack_restores_only_durable_floor() -> None:
     assert mailbox.try_take_audit().reason == "ready_for_review"
     assert actor.approve(_decision(module, request_id="request-5")) is True
     assert actor.request_sequence_floor == 4
+    assert mailbox.try_peek_audit().reason == "offline_change_review"
 
     restarted = module.AdvisoryBridgeActor(
         module.AdvisoryBridgeActorConfig(request_sequence_floor=4),
     )
     assert restarted.request_review(request) is True
+
+
+def test_pending_checkpoint_blocks_timeout_and_survives_reset() -> None:
+    module = _module()
+    checkpoint_store = _CheckpointStore()
+    mailbox = module.AdvisoryMailboxPort(capacity=2)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_put_result(_result(module)) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
+    assert actor.approve(_decision(module)) is True
+    terminal = mailbox.try_peek_audit()
+    assert terminal.reason == "offline_change_review"
+
+    assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.AUDIT_BLOCKED
+    assert mailbox.try_peek_audit() == terminal
+    actor.on_reset()
+    assert actor.request_review(_request(module)) is False
+    assert mailbox.try_peek_audit() == terminal
+    assert _persist_terminal(module, mailbox, actor, checkpoint_store) == "offline_change_review"
+    assert actor.authority is module.AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
+
+
+def test_checkpoint_ack_must_match_exact_terminal_record() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=2)
+    actor = _actor_with_mailbox(module, mailbox)
+    assert actor.request_review(_request(module)) is True
+    assert mailbox.try_put_result(_result(module)) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
+    assert actor.approve(_decision(module)) is True
+    terminal = mailbox.try_peek_audit()
+    assert terminal is not None
+    assert mailbox.try_put_checkpoint_ack(
+        module.AdvisoryCheckpointAck(checkpoint_id="1:request_timeout"),
+    ) is True
+
+    assert actor.poll_checkpoint_ack() is False
+    assert mailbox.try_peek_audit() == terminal
+    assert actor.authority is module.AdvisoryAuthority.NONE
 
 
 def test_late_approval_ends_request_and_releases_actor() -> None:
