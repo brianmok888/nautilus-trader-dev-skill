@@ -35,6 +35,45 @@ def _current_sha(repo_root: Path) -> str:
     ).stdout.strip()
 
 
+def _current_tree_sha(repo_root: Path) -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD^{tree}"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _working_tree_status(repo_root: Path) -> tuple[str, ...]:
+    output = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return tuple(output.splitlines())
+
+
+def _tracked_files(repo_root: Path, tree_sha: str) -> list[dict[str, str]]:
+    output = subprocess.run(
+        ["git", "ls-tree", "-r", "--full-tree", tree_sha],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    files = []
+    for line in output.splitlines():
+        metadata, path = line.split("\t", maxsplit=1)
+        mode, entry_type, object_id = metadata.split()
+        files.append(
+            {"mode": mode, "type": entry_type, "object": object_id, "path": path},
+        )
+    return files
+
+
 def _manifest_path(repo_root: Path, raw_path: str) -> Path:
     path = Path(raw_path)
     return path if path.is_absolute() else repo_root / path
@@ -114,6 +153,53 @@ def _validate_command_artifact(
     return tuple(errors)
 
 
+def _validate_run_manifest(
+    repo_root: Path,
+    path: Path,
+    repo_sha: str,
+    tree_sha: str,
+    commands: object,
+) -> tuple[str, ...]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return (f"manifest: cannot read run manifest JSON: {exc}",)
+    if not isinstance(payload, dict):
+        return ("manifest: root must be an object",)
+    errors: list[str] = []
+    if payload.get("schema_version") != 1:
+        errors.append("manifest.schema_version: expected 1")
+    if payload.get("repo_sha") != repo_sha:
+        errors.append("manifest.repo_sha: does not match attested repository SHA")
+    if payload.get("tree_sha") != tree_sha:
+        errors.append("manifest.tree_sha: does not match attested repository tree")
+    if payload.get("detached_head") is not True:
+        errors.append("manifest.detached_head: expected true")
+    if payload.get("status_before") != []:
+        errors.append("manifest.status_before: expected a clean execution tree")
+    if payload.get("status_after") != []:
+        errors.append("manifest.status_after: expected a clean execution tree")
+    if payload.get("tracked_files") != _tracked_files(repo_root, tree_sha):
+        errors.append("manifest.tracked_files: does not cover the exact committed tree")
+    expected_commands = []
+    if isinstance(commands, list):
+        for command in commands:
+            if not isinstance(command, dict):
+                continue
+            output = command.get("output")
+            output_hash = output.get("sha256") if isinstance(output, dict) else None
+            expected_commands.append(
+                {
+                    "command": command.get("command"),
+                    "returncode": command.get("returncode"),
+                    "output_sha256": output_hash,
+                },
+            )
+    if payload.get("commands") != expected_commands:
+        errors.append("manifest.commands: does not match attested command artifacts")
+    return tuple(errors)
+
+
 def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, ...]:
     try:
         payload = json.loads(attestation_path.read_text(encoding="utf-8"))
@@ -129,8 +215,16 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
     if repo_sha != _current_sha(repo_root):
         errors.append("repo_sha: does not match current repository HEAD")
     exact_sha = repo_sha if isinstance(repo_sha, str) else "<invalid>"
+    current_tree_sha = _current_tree_sha(repo_root)
+    tree_sha = payload.get("tree_sha")
+    if tree_sha != current_tree_sha:
+        errors.append("tree_sha: does not match current repository tree")
+    exact_tree_sha = tree_sha if isinstance(tree_sha, str) else "<invalid>"
+    if _working_tree_status(repo_root):
+        errors.append("repository: worktree is not clean")
 
     manifest = payload.get("manifest")
+    manifest_path: Path | None = None
     if not isinstance(manifest, dict):
         errors.append("manifest: expected an object")
     else:
@@ -142,6 +236,7 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
             errors.append("manifest.sha256: expected a string")
         else:
             path = _manifest_path(repo_root, raw_path)
+            manifest_path = path
             try:
                 actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
             except OSError as exc:
@@ -181,6 +276,16 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
         missing_commands = sorted(set(REQUIRED_COMMANDS) - recorded_commands)
         if missing_commands:
             errors.append("commands: missing required commands: " + ", ".join(missing_commands))
+    if manifest_path is not None:
+        errors.extend(
+            _validate_run_manifest(
+                repo_root,
+                manifest_path,
+                exact_sha,
+                exact_tree_sha,
+                commands,
+            ),
+        )
 
     code_reviewer = payload.get("code_reviewer")
     if not isinstance(code_reviewer, dict) or code_reviewer.get("verdict") != "APPROVE":
