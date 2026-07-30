@@ -1,6 +1,6 @@
 ---
 name: nt-strategy-builder
-description: Use when building NautilusTrader backtesting, paper-trading, or live-trading systems
+description: Use when migrating or referencing existing Python NautilusTrader backtest, paper-trading, or live-trading systems
 ---
 
 NT v2 compatibility note: legacy/v1/Cython/TradingNode references in this file are labelled legacy/reference-only unless an adjacent paragraph explicitly says they are current Rust/PyO3/LiveNode guidance.
@@ -20,22 +20,42 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-strategy-builder.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Migration gate: upstream NT V2 still supports Python strategies, but this repository applies a stricter Rust cutover policy. This skill and its executable templates are migration/reference-only; route all new strategy, research/config, backtest, paper, live, production, and performance implementation to `nt-strategy-builder-rust`. The AI/advisory lane stays Python through `nt-evomap-integration`, remains non-authoritative, and stays off execution-critical paths.
 
+## Rust production lane
+
+Build new strategy systems in Rust through `nt-strategy-builder-rust`. Rust owns `StrategyCore`, event handlers, order submission, risk decisions, backtest execution, and `LiveNode` wiring. Keep prices and quantities in Nautilus fixed-precision domain types, make configuration deserialization fail closed, and verify both deterministic backtests and live reconciliation before deployment.
+
+Use `BacktestEngine` for historical execution and Rust `LiveNode` for paper/live execution. A venue is ready only when its data and execution factories, provider lifecycle, report generation, and shutdown path have focused tests. AI output may propose signals, but Rust validates and authorizes every execution-critical transition.
+
+## PyO3 control-plane lane
+
+Use PyO3 only as a bounded configuration, inspection, and callback seam around Rust-owned strategy state. Convert Python inputs into validated Rust types at the boundary; return typed errors rather than silently substituting defaults. Store callback handles as `Py<T>`/`Py<PyAny>`, acquire the GIL only at the call boundary, and never expose order submission, risk mutation, or runtime ownership to Python.
+
+The Python API may select a registered Rust strategy, provide serializable parameters, or receive non-authoritative telemetry. Rust retains `StrategyCore`, clock, cache, portfolio, order factory, and execution authority.
+
+## Migration/reference lane
+
+Historical non-AI Python prose and examples are pointer-only from this root. Read `migration_reference/python/venue-and-simulation-examples.md` and `templates/legacy_migration/` only when translating an existing Python system. New non-AI implementation still routes to `nt-strategy-builder-rust`; active Python is limited to `nt-evomap-integration` AI/advisory work.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+
 ## Overview
 
-This skill guides you from **idea → running system** — whether you are running a historical backtest, paper-trading on live market data, or deploying a live-trading node. It handles all supported venue data inputs: standard CeFi adapters (Binance, Bybit, OKX, …), custom DEX adapters built with `nt-dex-adapter`, Databento/Tardis data feeds, and mixed multi-venue setups.
+This migration/reference-only skill documents existing Python systems from **idea → running system** for historical backtests, paper trading, and live-trading nodes. Route all new strategy implementation to `nt-strategy-builder-rust`; use this material only to understand or migrate existing Python systems. It covers standard CeFi adapters (Binance, Bybit, OKX, …), custom DEX adapters built with `nt-dex-adapter`, Databento/Tardis data feeds, and mixed multi-venue setups.
 
 Complements the existing skills:
 - **nt-architect** – use first to decide component decomposition (Actor/Indicator/Strategy split)
@@ -70,9 +90,9 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 Are you using live market data?
 │
 ├─ NO  ──► BacktestEngine
-│           ├─ Single venue  → templates/backtest_node.py
-│           ├─ DEX venue     → templates/dex_venue_input.py
-│           └─ Multi-venue   → templates/multi_venue_strategy.py
+│           ├─ Single venue  → templates/legacy_migration/backtest_node.py
+│           ├─ DEX venue     → templates/legacy_migration/dex_venue_input.py
+│           └─ Multi-venue   → templates/legacy_migration/multi_venue_strategy.py
 │
 └─ YES ──► Runtime boundary
             ├─ Python live/integration-specific migration/reference → TradingNode templates
@@ -81,84 +101,7 @@ Are you using live market data?
 
 ## Venue Data Input Types
 
-### 1. Standard CeFi Adapters (Built-in)
-
-NautilusTrader ships adapters for Binance, Bybit, OKX, Coinbase (Rust/v2 `LiveNode` path), dYdX, Interactive Brokers, Databento, Tardis, and more.
-
-NT v2 compatibility note: dYdX v3 legacy adapter text below is migration/reference-only; use the renamed current `nautilus_trader.adapters.dydx` path for new work.
-
-
-> **v1.223.0**: dYdX v3 (legacy) adapter removed. Use `nautilus_trader.adapters.dydx` (module renamed from `dydx_v4`). Class prefix is now `Dydx` (e.g., `DydxDataClientConfig`, `DydxLiveDataClientFactory`). The dydx optional install extra is no longer needed.
-
-> **v1.223.0 Binance**: `listen_key_ping_max_failures` removed from `BinanceExecClientConfig`. Binance now authenticates via WebSocket API (Ed25519/HMAC auto-detected from `api_secret` format). Credentials from `BINANCE_API_KEY`/`BINANCE_API_SECRET` env vars.
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.binance.factories import BinanceLiveDataClientFactory
-from nautilus_trader.config import TradingNodeConfig, LiveDataEngineConfig
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={
-        "BINANCE": BinanceDataClientConfig(
-            api_key=os.environ["BINANCE_API_KEY"],
-            api_secret=os.environ["BINANCE_API_SECRET"],
-            testnet=False,
-        ),
-    },
-)
-```
-
-### 2. Custom DEX Adapter (nt-dex-adapter)
-
-After building a DEX adapter with the `nt-dex-adapter` skill, wire it in exactly like a CeFi adapter:
-
-```python
-from my_dex_adapter.factory import MyDEXLiveDataClientFactory, MyDEXLiveExecClientFactory
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={"MYDEX": MyDEXDataClientConfig(rpc_url="https://...", wallet_address="0x...")},
-    exec_clients={"MYDEX": MyDEXExecClientConfig(rpc_url="https://...", private_key=SecretStr(...))},
-    data_client_factories={"MYDEX": MyDEXLiveDataClientFactory},
-    exec_client_factories={"MYDEX": MyDEXLiveExecClientFactory},
-)
-```
-
-See `templates/dex_venue_input.py` for a complete wiring example.
-
-### 3. Catalog Data (Backtest / Replay)
-
-Use `ParquetDataCatalog` for any historical data — CeFi, DEX, or custom:
-
-```python
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
-from nautilus_trader.config import BacktestDataConfig
-
-catalog = ParquetDataCatalog("/path/to/catalog")
-
-data_config = BacktestDataConfig(
-    catalog_path=str(catalog.path),
-    data_cls="nautilus_trader.model.data:Bar",
-    instrument_id="WETH-USDC.UNISWAP_V3",
-    start_time="2024-01-01",
-    end_time="2024-12-31",
-)
-```
-
-### 4. Multi-Venue (Mixed CeFi + DEX)
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-Wire multiple venues into a single `TradingNode` or `BacktestEngine`. Each venue gets its own:
-- `data_client` entry
-- `exec_client` entry (if trading)
-- `BacktestVenueConfig` (backtest) / `LiveDataEngineConfig` (live)
-
-See `templates/multi_venue_strategy.py`.
+Use Rust adapter factories and `LiveNodeBuilder` for CeFi and custom DEX venues. Use `ParquetDataCatalog` inputs through the Rust backtest path for replay, and give each venue independent data/execution configuration plus deterministic reconciliation. Historical Python CeFi, DEX, catalog, and multi-venue wiring examples moved to `migration_reference/python/venue-and-simulation-examples.md`.
 
 ## Template Quick Reference
 
@@ -166,16 +109,16 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 | Template | When to use |
 |---|---|
-| `backtest_node.py` | Full backtest with catalog data, custom FillModel/MarginModel |
-| `live_node.py` | Production TradingNode with reconciliation, timeouts, persistence |
-| `paper_node.py` | Paper-trading: real market data, simulated execution |
-| `dex_venue_input.py` | Wire a custom DEX adapter as venue (backtest or live) |
-| `multi_venue_strategy.py` | Strategy consuming data from 2+ venues simultaneously |
+| `legacy_migration/backtest_node.py` | Full backtest with catalog data, custom FillModel/MarginModel |
+| `legacy_migration/live_node.py` | Legacy Python TradingNode migration reference; use `nt-strategy-builder-rust` and `nt-live` for current production wiring |
+| `legacy_migration/paper_node.py` | Paper-trading: real market data, simulated execution |
+| `legacy_migration/dex_venue_input.py` | Wire a custom DEX adapter as venue (backtest or live) |
+| `legacy_migration/multi_venue_strategy.py` | Strategy consuming data from 2+ venues simultaneously |
 
 ## Modern Tooling Standards
 - **Project Management**: Use `uv` for lightning-fast dependency resolution and environment management (see `docs/uv_guide.md`).
 - **Serialization**: Prefer `msgspec.Struct` for custom data types over standard dataclasses for 10-100x speedups (see `docs/serialization.md`).
-- **Visualization**: Use the new `BacktestVisualizer` (Plotly-based) for interactive tearsheets instead of static matplotlib plots (see `docs/visualization.md`).
+- **Visualization (migration/reference-only)**: Use `TearsheetConfig` with `create_tearsheet` from `nautilus_trader.analysis` and install the `visualization` extra (see `docs/visualization.md`).
 
 ## Implementation Workflow
 
@@ -218,64 +161,7 @@ If any invariant fails, block deployment and return to `nt-dex-adapter` + `nt-re
 
 ## Simulation Model Patterns
 
-### FillModel — Backtest Realism
-
-> **v1.223.0**: `prob_fill_on_stop` is deprecated. Use `prob_slippage` for market/stop order slippage probability.
-
-```python
-from nautilus_trader.backtest.models import FillModel
-
-# DEX-realistic: high slippage, lower limit fill probability
-dex_fill_model = FillModel(
-    prob_fill_on_limit=0.3,   # DEX: limit orders rarely at exact price
-    prob_slippage=0.7,        # DEX: high slippage probability
-    random_seed=42,
-)
-
-# CeFi realistic
-cefi_fill_model = FillModel(
-    prob_fill_on_limit=0.5,
-    prob_slippage=0.2,
-    random_seed=42,
-)
-```
-
-### BacktestVenueConfig — Account Types
-
-```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
-
-# Crypto spot
-venue_config = BacktestVenueConfig(
-    name="BINANCE",
-    oms_type="NETTING",
-    account_type="CASH",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT", "1 BTC"],
-    fill_model=fill_model,
-)
-
-# DEX (treat as CASH, no margin)
-dex_venue_config = BacktestVenueConfig(
-    name="UNISWAP_V3",
-    oms_type="NETTING",
-    account_type="CASH",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT"],
-    fill_model=dex_fill_model,
-)
-
-# Futures / perps
-perp_venue_config = BacktestVenueConfig(
-    name="BYBIT",
-    oms_type="NETTING",
-    account_type="MARGIN",
-    base_currency="USDT",
-    starting_balances=["10_000 USDT"],
-    default_leverage=Decimal("10"),
-    fill_model=fill_model,
-)
-```
+Model fill probability, slippage, fees, latency, and account constraints in Rust-owned backtest configuration. Seed stochastic models for reproducibility, preserve fixed-point price/quantity boundaries, and test DEX cash and leveraged perp venues separately. The retired Python `FillModel` and `BacktestVenueConfig` examples moved to `migration_reference/python/venue-and-simulation-examples.md`.
 
 ## DO and DON'Ts
 

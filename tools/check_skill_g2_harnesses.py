@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
+import ast
 import json
 import subprocess
 import sys
@@ -14,6 +14,11 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tools.g2_owned_content import (
+    OwnedContentError,
+    assert_owned_content_tracked,
+    harness_content_hash,
+)
 from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
@@ -200,7 +205,7 @@ HARNESSES: dict[str, Harness] = {
                 "-p",
                 "nautilus-pyo3",
                 "--features",
-                "python,ffi",
+                "python,ffi,high-precision",
                 "--lib",
             ),
         ),
@@ -212,17 +217,15 @@ HARNESSES: dict[str, Harness] = {
         scope="upstream:hyperliquid-and-blockchain-adapters",
         summary="Run local DEX template tests and compile Rust networking/signing surfaces",
         allowed_tokens=(
-            "skills/nt-dex-adapter/tests",
+            "test_dex_compliance.py",
             "nautilus-hyperliquid",
             "nautilus-blockchain",
         ),
         steps=(
             repository_step(
                 PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "skills/nt-dex-adapter/tests",
+                "tools/run_pinned_v2_pytest.py",
+                "skills/nt-dex-adapter/tests/test_dex_compliance.py",
             ),
             upstream_step(
                 "cargo",
@@ -245,7 +248,7 @@ HARNESSES: dict[str, Harness] = {
         ),
         owned_paths=(
             Path("skills/nt-dex-adapter/SKILL.md"),
-            Path("skills/nt-dex-adapter/templates"),
+            Path("skills/nt-dex-adapter/migration_reference/python/templates"),
             Path("skills/nt-dex-adapter/tests"),
         ),
         evidence_file=Path("references/g2-evidence/nt-dex-adapter.json"),
@@ -254,8 +257,18 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-evomap-integration",
         scope="repository:python-ai-advisory-contract",
         summary="Validate the intentionally Python advisory lane and its safety invariants",
-        allowed_tokens=("ai_advisory",),
+        allowed_tokens=(
+            "run_pinned_v2_pytest.py",
+            "test_ai_advisory_boundary.py",
+            "ai_advisory",
+            "brainstorming_evomap/tests",
+        ),
         steps=(
+            repository_step(
+                PYTHON,
+                "tools/run_pinned_v2_pytest.py",
+                "tests/test_ai_advisory_boundary.py",
+            ),
             repository_step(
                 PYTHON,
                 "-m",
@@ -265,21 +278,30 @@ HARNESSES: dict[str, Harness] = {
                 "-k",
                 "ai_advisory",
             ),
+            repository_step(
+                PYTHON,
+                "-m",
+                "pytest",
+                "-q",
+                "skills/nt-evomap-integration/python_sidecar/"
+                "brainstorming_evomap/tests",
+            ),
         ),
         owned_paths=(
             Path("skills/nt-evomap-integration/SKILL.md"),
             Path("skills/nt-evomap-integration"),
+            Path("tests/test_ai_advisory_boundary.py"),
             Path("tests/test_skill_g2_harnesses.py"),
+            Path("tools/run_pinned_v2_pytest.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-evomap-integration.json"),
     ),
     "nt-implement": Harness(
         skill="nt-implement",
         scope="repository:implementation-templates-plus-upstream-owners",
-        summary="Compile owned Python templates and representative Rust component owners",
-        allowed_tokens=("skills/nt-implement/templates", "nautilus-common", "nautilus-indicators", "nautilus-trading", "nautilus-backtest"),
+        summary="Compile representative Rust component owners for implementation guidance",
+        allowed_tokens=("nautilus-common", "nautilus-indicators", "nautilus-trading", "nautilus-backtest"),
         steps=(
-            repository_step(PYTHON, "-m", "compileall", "-q", "skills/nt-implement/templates"),
             upstream_step(
                 "cargo",
                 "check",
@@ -392,7 +414,7 @@ HARNESSES: dict[str, Harness] = {
                 "-p",
                 "nautilus-pyo3",
                 "--features",
-                "python,ffi",
+                "python,ffi,high-precision",
                 "--all-targets",
             ),
         ),
@@ -543,7 +565,7 @@ def upstream_commit(upstream_root: Path) -> str:
 
 def upstream_is_clean(upstream_root: Path) -> bool:
     result = subprocess.run(
-        ("git", "status", "--porcelain=v1", "--untracked-files=no"),
+        ("git", "status", "--porcelain=v1", "--untracked-files=all"),
         cwd=upstream_root,
         check=True,
         capture_output=True,
@@ -568,30 +590,13 @@ def command_matches_scope(command: tuple[str, ...], allowed_tokens: tuple[str, .
     return any(token in argument for token in allowed_tokens for argument in command)
 
 
-def owned_content_hash(root: Path, paths: tuple[Path, ...]) -> str:
-    digest = hashlib.sha256()
-    files: list[Path] = []
-    for relative in paths:
-        path = root / relative
-        if path.is_dir():
-            files.extend(
-                candidate
-                for candidate in path.rglob("*")
-                if candidate.is_file() and "__pycache__" not in candidate.parts
-            )
-        elif path.is_file():
-            files.append(path)
-    for path in sorted(files):
-        digest.update(path.relative_to(root).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
-
-
 def validate_harnesses(
-    harnesses: Mapping[str, Harness], *, expected_skills: set[str] | None = None
+    harnesses: Mapping[str, Harness],
+    *,
+    expected_skills: set[str] | None = None,
+    root: Path | None = None,
 ) -> list[str]:
+    validation_root = repo_root() if root is None else root
     expected = set(HARNESSES) if expected_skills is None else expected_skills
     actual = set(harnesses)
     errors = [f"missing G2 harness: {skill}" for skill in sorted(expected - actual)]
@@ -605,6 +610,25 @@ def validate_harnesses(
             errors.append(f"{key} has no validation steps")
         if not harness.allowed_tokens:
             errors.append(f"{key} has no machine-checkable scope tokens")
+        if not harness.owned_paths:
+            errors.append(f"{key} has no owned paths")
+        try:
+            harness_content_hash(validation_root, harness)
+        except OwnedContentError as exc:
+            errors.append(f"{key} owned content is invalid: {exc}")
+        required_skill_path = Path("skills") / key / "SKILL.md"
+        if required_skill_path not in harness.owned_paths:
+            errors.append(f"{key} owned paths omit {required_skill_path.as_posix()}")
+        for owned_path in harness.owned_paths:
+            if not (validation_root / owned_path).exists():
+                errors.append(
+                    f"{key} owned path does not exist: {owned_path.as_posix()}"
+                )
+            evidence_file = harness.evidence_file
+            if evidence_file is not None and (
+                owned_path == evidence_file or owned_path in evidence_file.parents
+            ):
+                errors.append(f"{key} evidence artifact is included in owned content")
         previous = scopes.get(harness.scope)
         if previous is not None:
             errors.append(f"duplicate G2 scope {harness.scope}: {previous}, {key}")
@@ -668,7 +692,6 @@ def validate_readiness_cards(
     *,
     require_evidence: bool = True,
     excluded_evidence: set[str] | None = None,
-    expected_repository_commit: str | None = None,
 ) -> list[str]:
     errors: list[str] = []
     excluded = set() if excluded_evidence is None else excluded_evidence
@@ -677,7 +700,17 @@ def validate_readiness_cards(
         if not path.is_file():
             errors.append(f"missing readiness card: {path}")
             continue
-        g2_rows = [line for line in path.read_text().splitlines() if line.startswith("| G2 ")]
+        gate_rows = [line for line in path.read_text().splitlines() if line.startswith("| G")]
+        for row in gate_rows:
+            cells = [cell.strip() for cell in row.strip("|").split("|")]
+            if len(cells) != 4 or cells[2] != "Pass":
+                continue
+            gate_id = cells[0].split(maxsplit=1)[0]
+            if "tools/check_skill_g2_harnesses.py --check-cards" in cells[3]:
+                errors.append(
+                    f"{skill} {gate_id} readiness row uses the card validator as evidence"
+                )
+        g2_rows = [line for line in gate_rows if line.startswith("| G2 ")]
         if len(g2_rows) != 1:
             errors.append(f"{skill} must contain exactly one G2 readiness row")
             continue
@@ -703,7 +736,7 @@ def validate_readiness_cards(
         except (OSError, json.JSONDecodeError):
             errors.append(f"{skill} durable evidence artifact is not valid JSON")
             continue
-        if payload.get("schema_version") != 1:
+        if payload.get("schema_version") != 2:
             errors.append(f"{skill} durable evidence has an unsupported schema")
         if payload.get("skill") != skill or payload.get("scope") != harnesses[skill].scope:
             errors.append(f"{skill} durable evidence does not match its harness")
@@ -711,15 +744,10 @@ def validate_readiness_cards(
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
         if payload.get("upstream_clean") is not True:
             errors.append(f"{skill} durable evidence was not produced from a clean upstream")
-        if (
-            expected_repository_commit is not None
-            and payload.get("repository_commit") != expected_repository_commit
-        ):
-            errors.append(
-                f"{skill} durable evidence does not match the repository provenance"
-            )
-        if payload.get("owned_content_sha256") != owned_content_hash(
-            root, harnesses[skill].owned_paths
+        if "repository_commit" in payload:
+            errors.append(f"{skill} durable evidence uses self-referential provenance")
+        if payload.get("owned_content_sha256") != harness_content_hash(
+            root, harnesses[skill]
         ):
             errors.append(f"{skill} durable evidence does not match owned skill content")
         steps = payload.get("steps")
@@ -746,25 +774,85 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
     path = skill_root / "SKILL.md"
     text = path.read_text(encoding="utf-8")
     errors: list[str] = []
-    forbidden = (
+    forbidden_text = (
         "self.submit_order(",
         ".submit_order(",
         "ExecutionClient",
         "ExecClient",
         "execution_client",
     )
+    forbidden_handlers = {
+        "on_bar",
+        "on_book",
+        "on_book_deltas",
+        "on_data",
+        "on_historical_bars",
+        "on_historical_data",
+        "on_quote",
+        "on_signal",
+        "on_trade",
+    }
+    forbidden_calls = {
+        "cancel_order",
+        "close_position",
+        "modify_order",
+        "open",
+        "publish_data",
+        "publish_signal",
+        "queue_for_executor",
+        "request_bars",
+        "run_in_executor",
+        "shutdown_system",
+        "submit_order",
+        "subscribe_bars",
+    }
+    publication_calls = {"publish", "publish_data", "publish_signal", "send"}
+    network_calls = {"urlopen"}
     textual_suffixes = {".md", ".py", ".pyi", ".rs", ".toml", ".json", ".yaml", ".yml"}
     for owned_path in sorted(skill_root.rglob("*")):
         if not owned_path.is_file() or owned_path.suffix.lower() not in textual_suffixes:
             continue
         owned_text = owned_path.read_text(encoding="utf-8")
         relative = owned_path.relative_to(skill_root).as_posix()
-        for token in forbidden:
+        for token in forbidden_text:
             if token in owned_text:
                 errors.append(
                     "AI advisory contract exposes forbidden execution authority "
                     f"in {relative}: {token}"
                 )
+        if owned_path.suffix not in {".py", ".pyi"}:
+            continue
+        try:
+            tree = ast.parse(owned_text, filename=relative)
+        except SyntaxError as exc:
+            errors.append(f"AI advisory Python surface does not parse in {relative}: {exc.msg}")
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in forbidden_handlers:
+                errors.append(
+                    f"AI advisory contract exposes market handler in {relative}: {node.name}"
+                )
+            if isinstance(node, ast.Call):
+                name = (
+                    node.func.attr
+                    if isinstance(node.func, ast.Attribute)
+                    else node.func.id
+                    if isinstance(node.func, ast.Name)
+                    else ""
+                )
+                if name in forbidden_calls:
+                    errors.append(
+                        f"AI advisory contract exposes forbidden capability in {relative}: {name}"
+                    )
+                if name in publication_calls:
+                    errors.append(
+                        f"AI advisory contract exposes publication capability in {relative}: {name}"
+                    )
+                if name in network_calls and "python_sidecar" not in owned_path.parts:
+                    errors.append(
+                        "AI advisory contract exposes network capability outside "
+                        f"python_sidecar in {relative}: {name}"
+                    )
     required = (
         "Nautilus remains the only execution authority",
         "No external network I/O",
@@ -779,17 +867,6 @@ def validate_ai_advisory_contract(root: Path) -> list[str]:
     return errors
 
 
-def repository_commit(root: Path) -> str:
-    result = subprocess.run(
-        ("git", "rev-parse", "HEAD"),
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
-
-
 def write_evidence(
     harness: Harness, *, root: Path, upstream_root: Path, results: list[dict[str, object]]
 ) -> None:
@@ -798,11 +875,10 @@ def write_evidence(
     destination = root / harness.evidence_file
     destination.parent.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "skill": harness.skill,
         "scope": harness.scope,
-        "repository_commit": repository_commit(root),
-        "owned_content_sha256": owned_content_hash(root, harness.owned_paths),
+        "owned_content_sha256": harness_content_hash(root, harness),
         "upstream_commit": upstream_commit(upstream_root),
         "upstream_clean": upstream_is_clean(upstream_root),
         "verified_at": datetime.now(UTC).isoformat(),
@@ -874,6 +950,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     for harness in plan:
+        try:
+            assert_owned_content_tracked(repo_root(), harness)
+        except (OwnedContentError, subprocess.CalledProcessError) as exc:
+            print(exc, file=sys.stderr)
+            return 1
         print(f"==> {harness.skill}: {harness.summary}", flush=True)
         result = run_harness(
             harness,

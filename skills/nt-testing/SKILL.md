@@ -6,6 +6,20 @@ description: "Use when writing or running tests for NautilusTrader, setting up t
 
 # nt-testing
 
+## Execution specification freshness
+
+The official current `spec_exec_testing.md` remains the measurable adapter
+execution contract: implement the supported capability matrix, and treat groups 1–5
+as the baseline-compliant subset. Both upstream Python and Rust `ExecTester`
+surfaces are current; this skill repository still routes new production work to
+Rust and keeps Python execution examples migration/reference-only.
+
+The source file is unchanged between the pinned snapshot and current `origin/develop`
+as verified by
+`git -C "$NT_UPSTREAM_ROOT" diff 6e59fd74eaacacbb7410936f1766bd89fcce6f59..origin/develop -- docs/developer_guide/spec_exec_testing.md`.
+Official mirrors: [latest](https://nautilustrader.io/docs/latest/developer_guide/spec_exec_testing/)
+and [nightly](https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/).
+
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` material in this whole file is migration/reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
 
 ## V2 nightly migration regression coverage
@@ -21,7 +35,6 @@ Add or require focused regression coverage for current nightly migration behavio
 - shared adapter task tracking: if upstream adapter support exists, verify spawned submit/modify/cancel tasks are tracked, forgotten on terminal events, and aborted on stop/drop.
 - Rust crates with unsafe code must enable `#![deny(unsafe_op_in_unsafe_fn)]`.
 
-
 ## NT V2 Rust readiness gates
 
 This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
@@ -30,18 +43,56 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-testing.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Testing gates: Rust tests are the default readiness evidence for production/performance/live paths. Require `cargo nextest`, `cargo clippy`, `cargo deny`, `ExecTesterConfig::builder()`, `DataTesterConfig::builder()`, adapter baseline matrices, reconciliation matrices, fuzz/property tests where parsing/execution outcomes vary, and Python tests only for research/config or AI/advisory lane code.
+
+## Rust production lane
+
+Rust tests are the production readiness authority. Use deterministic unit and integration tests for invariants, `DataTesterConfig::builder()` and `ExecTesterConfig::builder()` for adapter compliance, `proptest` for broad input spaces, fuzz targets for untrusted parsers, and subprocess isolation for panic/abort-prone FFI boundaries. Unknown execution outcomes remain non-terminal until reconciliation proves the venue result. Execution coverage includes marketable limits via `limit_aggressive` and rejected modify behavior via `test_modify_rejected` when supported.
+
+```rust
+use nautilus_testkit::testers::ExecTesterConfig;
+use nautilus_trading::strategy::StrategyConfig;
+
+let config = ExecTesterConfig::builder()
+    .base(StrategyConfig::default())
+    .instrument_id(instrument_id)
+    .client_id(client_id)
+    .order_qty(order_qty)
+    .build()?;
+```
+
+## PyO3 control-plane lane
+
+PyO3 tests verify binding registration, configuration round trips, error translation, ownership, and callback routing. They may exercise Python-visible configuration and observation surfaces, but production behavior must be asserted against Rust-owned state and Rust test harnesses. Isolate interpreter-terminating paths and never treat importability or method presence as execution readiness.
+
+```rust
+use pyo3::prelude::*;
+
+Python::attach(|py| -> PyResult<()> {
+    let module = PyModule::import(py, "nautilus_trader.core.nautilus_pyo3")?;
+    assert!(module.getattr("ExecTesterConfig")?.is_callable());
+    Ok(())
+})?;
+```
+
+## Migration/reference lane
+
+The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quarantined under `migration_reference/python/`. Use them only to migrate or compare legacy integrations; Python is not an active production testing lane outside AI/advisory work.
+
+## Source-pinned upstream lane
+
+Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
 
 ## What This Skill Covers
 
@@ -54,7 +105,7 @@ The complete NautilusTrader testing framework:
 
 ## When To Use
 
-- Writing new tests for NT components (Python or Rust)
+- Writing new Rust tests or bounded PyO3-boundary tests for NT components
 - Setting up DataTesterConfig or ExecTesterConfig for adapter validation
 - Creating or managing test datasets (Parquet, JSON fixtures)
 - Configuring CI pipelines for NT contributions
@@ -78,11 +129,10 @@ Current v2 testing deltas:
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
-- Cover Python v2 controller subclassing and importable controller configs with
-  backtest/live config round-trip tests when orchestration code changes.
-- Cover subclassable execution algorithms for routed-order behavior.
-- Cover custom Python v2 `FeeModel` and `FillModel` subclasses in backtest
-  scenarios without relying on legacy Cython extension hooks.
+- Treat upstream **Python v2 controller subclassing**, **subclassable execution
+  algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
+  migration/reference evidence. This repository's active non-AI behavior tests
+  target Rust ownership and bounded PyO3 configuration/error boundaries.
 
 Required testing rules:
 
@@ -213,64 +263,8 @@ The DataTesterConfig API validates adapter data flows end-to-end. Each adapter h
 
 ### DataTesterConfig API
 
-```python
-from nautilus_trader.test_kit.strategies.tester_data import DataTesterConfig
+Use the Rust `DataTesterConfig::builder()` API documented in `references/api/data_tester_config.md`. Legacy Python constructor examples moved to `migration_reference/python/data_tester_config.md`.
 
-# Basic config
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-)
-
-# Constructor-keyword scenarios
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    subscribe_quotes=True,
-)
-
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    subscribe_trades=True,
-)
-
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    bar_types=[bar_type],
-    subscribe_bars=True,
-)
-
-# Order book variants
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    subscribe_book_deltas=True,
-    book_type=BookType.L2_MBP,
-)
-
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    subscribe_book_depth=True,
-    book_type=BookType.L2_MBP,
-    book_depth=10,
-)
-
-# Instrument discovery
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    request_instruments=True,
-)
-
-config = DataTesterConfig(
-    client_id=ClientId("BINANCE"),
-    instrument_ids=[instrument_id],
-    subscribe_instrument=True,
-)
-```
 
 ### Data Validation Flow
 
@@ -286,63 +280,14 @@ config = DataTesterConfig(
 
 The ExecTesterConfig API validates order lifecycle per venue. Each adapter has specific execution test configs.
 
-> **Rust-first / V2 default**: for Rust-backed adapters, the primary execution-test path is the
-> Rust `nautilus_testkit::testers::ExecTesterConfig` builder (see
-> [Current Rust ExecTesterConfig API](#current-rust-exectesterconfig-api) below). The Python
-> `ExecTesterConfig` API documented next is retained for Python-only integration work and the
-> AI/advisory lane, and as the reference matrix that the Rust path mirrors. New Rust adapter
-> docs should lead with the Rust builder, not the Python examples.
+> **Rust-first / V2 default**: the primary execution-test path is the Rust
+> `nautilus_testkit::testers::ExecTesterConfig` builder below. Quarantined Python examples
+> are migration/reference-only and do not define an active production lane.
 
 ### ExecTesterConfig API
 
-```python
-from nautilus_trader.testkit import ExecTesterConfig
+Use the Rust `ExecTesterConfig::builder()` API below and in `references/api/exec_tester_config.md`. Legacy Python constructor examples moved to `migration_reference/python/exec_tester_config.md`.
 
-# Basic execution test
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.001"),
-)
-
-# With specific features
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-    enable_limit_buys=True,
-)
-
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-    enable_limit_sells=True,
-)
-
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-    use_post_only=True,
-)
-
-# Current Python V2 execution-test coverage flag exposed by the generated stub
-config = ExecTesterConfig(
-    strategy_id=StrategyId("test-strat"),
-    instrument_id=instrument_id,
-    client_id=ClientId("BINANCE"),
-    order_qty=Quantity.from_str("0.01"),
-    limit_aggressive=True,       # marketable limit paths crossing the spread
-)
-
-# `test_modify_rejected` and `test_reject_post_only` are Rust builder fields in
-# the current source but are not exposed by the generated Python constructor.
-```
 
 
 ### Current Rust ExecTesterConfig API

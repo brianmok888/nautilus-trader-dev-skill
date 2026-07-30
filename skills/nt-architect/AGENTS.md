@@ -42,9 +42,9 @@ Research Element
 
 ### Actor Subscriptions
 
-Actors can monitor trading activity:
-- `subscribe_order_fills(instrument_id)` → `on_order_filled(event)`
-- `subscribe_order_cancels(instrument_id)` → `on_order_canceled(event)`
+Actors monitor trading activity through current message-bus order-event handlers:
+- `OrderFilled` messages → `on_order_filled(event)`
+- `OrderCanceled` messages → `on_order_canceled(event)`
 
 ## STATE MANAGEMENT
 

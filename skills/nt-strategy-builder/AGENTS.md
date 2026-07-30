@@ -19,11 +19,11 @@ From idea → running system. Covers backtesting, paper trading, and live deploy
 
 | Template | Mode | Use When |
 |----------|------|----------|
-| `backtest_node.py` | Python migration reference | Historical comparison |
-| `live_node.py` | Python migration reference | Move Python live wiring to Rust `LiveNode` |
-| `paper_node.py` | Python migration reference | Move paper wiring to Rust |
-| `dex_venue_input.py` | Python migration reference | Move DEX wiring to a Rust adapter factory |
-| `multi_venue_strategy.py` | Python migration reference | Move multi-venue wiring to Rust |
+| `legacy_migration/backtest_node.py` | Python migration reference | Historical comparison |
+| `legacy_migration/live_node.py` | Python migration reference | Move Python live wiring to Rust `LiveNode` |
+| `legacy_migration/paper_node.py` | Python migration reference | Move paper wiring to Rust |
+| `legacy_migration/dex_venue_input.py` | Python migration reference | Move DEX wiring to a Rust adapter factory |
+| `legacy_migration/multi_venue_strategy.py` | Python migration reference | Move multi-venue wiring to Rust |
 
 ## DECISION TREE
 
@@ -42,7 +42,7 @@ AI/advisory request → nt-evomap-integration (Python, non-authoritative)
 ## VENUE INPUTS
 
 1. **CeFi Adapters** — Built-in (Binance, Bybit, OKX, etc.)
-2. **DEX Adapter** — Built with nt-dex-adapter, wire via `dex_venue_input.py`
+2. **DEX Adapter** — Built with nt-dex-adapter, wire via `legacy_migration/dex_venue_input.py`
 3. **Catalog Data** — ParquetDataCatalog for backtests
 4. **Multi-Venue** — Multiple data_clients + exec_clients
 

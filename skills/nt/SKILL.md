@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -33,6 +33,22 @@ Upstream NT V2 supports Python strategies and documents them as a current extens
 Use this as the start point for NautilusTrader work. It does not replace the
 specialized `nt-*` skills; it chooses which ones to load and how to sequence
 them.
+
+## Rust production lane
+
+Route every new non-AI strategy, backtest, data, live, signal, and trading task to the Rust-first specialized skill. Keep execution authority, risk checks, adapter state, and runtime liveness in Rust, and require the specialized skill's Rust verification evidence before reporting readiness.
+
+## PyO3 control-plane lane
+
+Use PyO3 only as a bounded control plane for constructing configuration, registering Rust components, starting or stopping nodes, and inspecting results. The router must not turn that boundary into a Python execution path; order placement, market-data handlers, risk decisions, and production state transitions remain Rust-owned.
+
+## Migration/reference lane
+
+Legacy non-AI Python guidance is pointer-only and belongs under `migration_reference/`; load it only for an explicitly scoped migration or historical comparison. The only active Python lane is AI/advisory through `nt-evomap-integration`.
+
+## Source-pinned upstream lane
+
+Resolve API claims against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, then report any version-scoped drift separately.
 
 ## Source of truth
 
@@ -79,7 +95,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode in the ro
 | Strategy logic, order lifecycle, positions, portfolio, risk | `nt-trading` | `nt-model`, `nt-testing` |
 | Indicators, signals, order-book analytics, custom data signals | `nt-signals` | `nt-data`, `nt-model` |
 | Market data, catalogs, persistence, serialization | `nt-data` | `nt-model`, `nt-testing` |
-| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder`, `nt-testing` |
+| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder-rust`, `nt-testing` |
 | Wire an idea into backtest, paper, or live execution, including explicit Python requests | `nt-strategy-builder-rust` | `nt-backtest`, `nt-live`, `nt-adapters` |
 | Build a performance-critical / production strategy in Rust | `nt-strategy-builder-rust` | `nt-trading`, `nt-testing`, `nt-live` |
 | Live trading runtime, `LiveNode`/`TradingNode`, reconciliation | `nt-live` | `nt-adapters`, `nt-review` |
@@ -131,6 +147,6 @@ When this entry skill routes a task, state the selected primary/supporting
 skills briefly, then proceed with those skills. Example:
 
 ```text
-Using nt as entry point. Routing to nt-strategy-builder with nt-backtest and
+Using nt as entry point. Routing to nt-strategy-builder-rust with nt-backtest and
 nt-testing because the task is backtest wiring plus validation.
 ```

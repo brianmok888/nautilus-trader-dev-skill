@@ -11,6 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_skill_g2_harnesses as g2
+from tools import g2_owned_content as ownership
 
 EXPECTED_SKILLS = {
     "nt",
@@ -121,6 +122,21 @@ def test_all_upstream_steps_pin_the_authoritative_commit() -> None:
     assert g2.EXPECTED_UPSTREAM_COMMIT == g2.UPSTREAM_COMMIT
 
 
+def test_ffi_steps_preserve_the_pinned_high_precision_bindings() -> None:
+    ffi_steps = [
+        step
+        for harness in g2.HARNESSES.values()
+        for step in harness.steps
+        if step.cwd is g2.WorkingDirectory.UPSTREAM
+        and any("ffi" in argument.split(",") for argument in step.command)
+    ]
+
+    assert ffi_steps
+    for step in ffi_steps:
+        features = step.command[step.command.index("--features") + 1].split(",")
+        assert "high-precision" in features, step.command
+
+
 def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
     subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
     subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
@@ -134,6 +150,21 @@ def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
 
     actual = g2.upstream_commit(tmp_path)
     (tmp_path / "tracked").write_text("dirty\n")
+    with pytest.raises(RuntimeError, match="uncommitted changes"):
+        g2.assert_expected_upstream(tmp_path, expected_commit=actual)
+
+
+def test_untracked_upstream_content_fails_closed(tmp_path: Path) -> None:
+    subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "config", "user.name", "G2 Test"), cwd=tmp_path, check=True)
+    (tmp_path / "tracked").write_text("clean\n")
+    subprocess.run(("git", "add", "tracked"), cwd=tmp_path, check=True)
+    subprocess.run(("git", "commit", "-qm", "test"), cwd=tmp_path, check=True)
+    actual = g2.upstream_commit(tmp_path)
+    (tmp_path / "untracked.rs").write_text("pub const CONTAMINATION: bool = true;\n")
+
+    assert g2.upstream_is_clean(tmp_path) is False
     with pytest.raises(RuntimeError, match="uncommitted changes"):
         g2.assert_expected_upstream(tmp_path, expected_commit=actual)
 
@@ -262,10 +293,70 @@ def test_list_outputs_only_the_eighteen_harnesses(capsys: pytest.CaptureFixture[
 
 def test_each_harness_owns_its_skill_and_nonempty_content() -> None:
     root = g2.repo_root()
-    empty_hash = g2.owned_content_hash(root, ())
+    empty_hash = ownership.owned_content_hash(root, ())
     for skill, harness in g2.HARNESSES.items():
         assert Path("skills") / skill / "SKILL.md" in harness.owned_paths
-        assert g2.owned_content_hash(root, harness.owned_paths) != empty_hash
+        assert g2.harness_content_hash(root, harness) != empty_hash
+
+
+def test_validator_rejects_empty_owned_paths() -> None:
+    harness = replace(g2.HARNESSES["nt-data"], owned_paths=())
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}
+    )
+
+    assert "nt-data has no owned paths" in errors
+
+
+def test_validator_requires_the_skill_file_in_owned_paths(tmp_path: Path) -> None:
+    owned = tmp_path / "tests/test_data.py"
+    owned.parent.mkdir(parents=True)
+    owned.write_text("def test_placeholder():\n    pass\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("tests/test_data.py"),),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data owned paths omit skills/nt-data/SKILL.md" in errors
+
+
+def test_validator_rejects_missing_owned_paths(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"), Path("tests/missing.py")),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data owned path does not exist: tests/missing.py" in errors
+
+
+def test_validator_rejects_evidence_inside_owned_content(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    evidence_root = tmp_path / "references/g2-evidence"
+    evidence_root.mkdir(parents=True)
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"), Path("references/g2-evidence")),
+    )
+
+    errors = g2.validate_harnesses(
+        {"nt-data": harness}, expected_skills={"nt-data"}, root=tmp_path
+    )
+
+    assert "nt-data evidence artifact is included in owned content" in errors
 
 
 def test_missing_rust_first_harnesses_have_targeted_executable_checks() -> None:
@@ -293,6 +384,9 @@ def test_readiness_cards_do_not_report_stale_cutover_results() -> None:
 
         assert "passed 270 tests" not in text
         assert "passed 110 safety" not in text
+        assert "passed 308 tests" not in text
+        assert "passed 113 safety" not in text
+        assert "2026-07-28:" not in text
         assert "with residual Pending gates retained below" not in text
         assert "Cutover commits `9287019`" not in text
 
@@ -310,6 +404,26 @@ def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> 
     errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
 
     assert "nt-data has no durable evidence artifact configured" in errors
+
+
+def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(tmp_path: Path) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    skill_path.write_text(
+        "| G0 Upstream baseline | Validate. | Pass | "
+        "`uv run python tools/check_skill_g2_harnesses.py --check-cards` passed. |\n"
+        "| G2 V2 example validation | Validate. | Pass | "
+        f"`{g2.evidence_command('nt-data')}` passed; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+
+    errors = g2.validate_readiness_cards(
+        tmp_path,
+        {"nt-data": g2.HARNESSES["nt-data"]},
+        require_evidence=False,
+    )
+
+    assert any("G0 readiness row uses the card validator as evidence" in error for error in errors)
 
 
 def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path: Path) -> None:
@@ -333,7 +447,7 @@ def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path:
                 "schema_version": 1,
                 "skill": "nt-data",
                 "scope": g2.HARNESSES["nt-data"].scope,
-                "owned_content_sha256": g2.owned_content_hash(tmp_path, ()),
+                "owned_content_sha256": ownership.owned_content_hash(tmp_path, ()),
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
                 "steps": [{"returncode": 1}],
@@ -361,7 +475,7 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
                 "schema_version": 1,
                 "skill": "nt-data",
                 "scope": harness.scope,
-                "owned_content_sha256": g2.owned_content_hash(
+                "owned_content_sha256": ownership.owned_content_hash(
                     tmp_path, harness.owned_paths
                 ),
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
@@ -382,7 +496,7 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
     assert "nt-data durable evidence commands do not match its harness" in errors
 
 
-def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path) -> None:
+def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: Path) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
@@ -396,11 +510,10 @@ def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path
     evidence_path.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "skill": "nt-data",
                 "scope": harness.scope,
-                "repository_commit": "not-a-commit",
-                "owned_content_sha256": g2.owned_content_hash(tmp_path, harness.owned_paths),
+                "owned_content_sha256": "not-the-owned-content",
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
                 "steps": [
@@ -411,11 +524,34 @@ def test_card_validation_rejects_mismatched_repository_provenance(tmp_path: Path
         )
     )
 
-    errors = g2.validate_readiness_cards(
-        tmp_path, {"nt-data": harness}, expected_repository_commit="expected-commit"
-    )
+    errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
 
-    assert "nt-data durable evidence does not match the repository provenance" in errors
+    assert "nt-data durable evidence does not match owned skill content" in errors
+
+
+def test_evidence_schema_has_no_self_referential_repository_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# Data\n")
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"),),
+    )
+    monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+
+    g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+
+    assert harness.evidence_file is not None
+    payload = json.loads((tmp_path / harness.evidence_file).read_text())
+    assert payload["schema_version"] == 2
+    assert "repository_commit" not in payload
+    assert payload["owned_content_sha256"] == g2.harness_content_hash(
+        tmp_path, harness
+    )
 
 
 def test_router_harness_requires_subordinate_card_declarations() -> None:
@@ -455,6 +591,31 @@ def test_ai_advisory_contract_rejects_execution_authority(tmp_path: Path) -> Non
     assert any("forbidden execution authority" in error for error in errors)
 
 
+def test_ai_advisory_contract_rejects_market_handler_and_publication_capabilities(
+    tmp_path: Path,
+) -> None:
+    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "Nautilus remains the only execution authority\n"
+        "No external network I/O\n"
+        "timeout fallback approval gate\n"
+        "Every accepted or rejected suggestion must be traceable\n"
+    )
+    leak = skill.parent / "templates/leak.py"
+    leak.parent.mkdir()
+    leak.write_text(
+        "class UnsafeActor:\n"
+        "    def on_bar(self, bar):\n"
+        "        self.publish_signal(name='unsafe', value=bar)\n"
+    )
+
+    errors = g2.validate_ai_advisory_contract(tmp_path)
+
+    assert any("market handler" in error for error in errors)
+    assert any("publication capability" in error for error in errors)
+
+
 def test_ai_advisory_contract_scans_nested_owned_surfaces(tmp_path: Path) -> None:
     skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
     skill.parent.mkdir(parents=True)
@@ -473,6 +634,59 @@ def test_ai_advisory_contract_scans_nested_owned_surfaces(tmp_path: Path) -> Non
     assert any("templates/leak.py" in error for error in errors)
 
 
+def test_ai_advisory_contract_allows_networking_in_external_proxy_surface(
+    tmp_path: Path,
+) -> None:
+    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "Nautilus remains the only execution authority\n"
+        "No external network I/O\n"
+        "timeout fallback approval gate\n"
+        "Every accepted or rejected suggestion must be traceable\n"
+    )
+    proxy = skill.parent / "templates/external_proxy.py"
+    proxy.parent.mkdir()
+    proxy.write_text(
+        "import requests\n\n"
+        "class ExternalProxy:\n"
+        "    def send(self, payload):\n"
+        "        return requests.post('http://127.0.0.1', json=payload)\n"
+    )
+
+    errors = g2.validate_ai_advisory_contract(tmp_path)
+
+    assert errors == []
+
+
+def test_ai_advisory_contract_rejects_networking_outside_python_sidecar(
+    tmp_path: Path,
+) -> None:
+    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "Nautilus remains the only execution authority\n"
+        "No external network I/O\n"
+        "timeout fallback approval gate\n"
+        "Every accepted or rejected suggestion must be traceable\n"
+    )
+    leak = skill.parent / "templates/http_client.py"
+    leak.parent.mkdir()
+    leak.write_text("from urllib import request\nrequest.urlopen('http://127.0.0.1')\n")
+
+    errors = g2.validate_ai_advisory_contract(tmp_path)
+
+    assert any("network capability outside python_sidecar" in error for error in errors)
+
+
+def test_ai_advisory_harness_uses_pinned_v2_runner() -> None:
+    harness = g2.HARNESSES["nt-evomap-integration"]
+
+    assert any("tools/run_pinned_v2_pytest.py" in step.command for step in harness.steps)
+    assert Path("tools/run_pinned_v2_pytest.py") in harness.owned_paths
+    assert Path("tests/test_ai_advisory_boundary.py") in harness.owned_paths
+
+
 def test_ai_advisory_g2_owns_entire_skill_directory() -> None:
     harness = g2.HARNESSES["nt-evomap-integration"]
 
@@ -487,3 +701,21 @@ def test_ai_advisory_contract_accepts_canonical_advisory_template() -> None:
         g2.repo_root()
         / "skills/nt-evomap-integration/templates/advisory_actor.py"
     ).is_file()
+
+
+def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:
+    for skill in sorted(EXPECTED_SKILLS):
+        text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
+        for line in text.splitlines():
+            if not line.startswith("| G"):
+                continue
+            assert "passed 356 tests" not in line
+            assert "2026-07-29:" not in line
+
+
+def test_implement_g2_does_not_compile_migration_python_as_production() -> None:
+    harness = g2.HARNESSES["nt-implement"]
+    command_text = " ".join(argument for step in harness.steps for argument in step.command)
+
+    assert "compileall" not in command_text
+    assert all(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)

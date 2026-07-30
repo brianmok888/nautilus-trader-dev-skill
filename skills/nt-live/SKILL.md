@@ -30,20 +30,36 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile the Rust `LiveNode` surface against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` validates `nautilus-live` and the Rust live example; durable provenance is recorded in `references/g2-evidence/nt-live.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 NT v2 compatibility note: Python live TradingNode material in the live gates is migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
 
 Live gates: `LiveNode` is the default for Rust-backed production live work; Python `TradingNode` material is migration/reference-only. Before `Pass`, prove startup/shutdown/reconnect/reconciliation behavior with `cargo nextest`, `cargo clippy`, `cargo deny`, config validation, and live safety dry-run evidence.
+
+## Rust production lane
+
+Build live systems around Rust `LiveNode`, Rust adapters, and Rust-owned execution, risk, reconciliation, and lifecycle state. Startup, shutdown, reconnect, task tracking, and fail-closed behavior must remain deterministic and must be proven with targeted live-runtime tests and the required cargo gates.
+
+## PyO3 control-plane lane
+
+Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness.
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-live`.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 
@@ -74,152 +90,24 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ## Python Usage
 
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Usage migration reference](migration_reference/python/python-usage.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
+
 ## Live runtime contract
 
-Read `references/developer_guide/contracts/live_runtime_contract.md` before
-choosing a live runtime.
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-- Use `nautilus_trader.live.LiveNode` for Rust v2 / Rust-backed live-node work.
-- Python live connectivity examples may still use
-  `nautilus_trader.live.node.TradingNode`; label those examples as Python live
-  or integration-specific rather than universal defaults.
-- Keep reconciliation enabled for production execution clients unless a venue
-  limitation is documented and reviewed.
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-### TradingNode Configuration
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.live.node import TradingNode
-from nautilus_trader.config import TradingNodeConfig, LiveExecEngineConfig, LiveRiskEngineConfig
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    trader_id="TRADER-001",
-    log_level="INFO",
-    exec_engine=LiveExecEngineConfig(
-        reconciliation=True,
-        reconciliation_lookback_mins=1440,
-    ),
-    risk_engine=LiveRiskEngineConfig(
-        bypass=False,
-        max_order_submit_rate="100/00:00:01",
-    ),
-    data_clients={
-        "BINANCE": BinanceDataClientConfig(...),
-    },
-    exec_clients={
-        "BINANCE": BinanceExecClientConfig(...),
-    },
-)
-
-
-node = TradingNode(config=config)
-```
-
-### Node Lifecycle
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-```python
-# Build node
-node = TradingNode(config=config)
-
-# Add strategies
-node.trader.add_strategy(my_strategy)
-
-# Build (connects adapters, initializes components)
-node.build()
-
-# Run (starts event loop)
-node.run()
-
-# Stop (graceful shutdown)
-node.stop()
-
-# Dispose (cleanup resources)
-node.dispose()
-```
-
-### Logging Configuration
-
-```python
-from nautilus_trader.config import LoggingConfig
-
-logging_config = LoggingConfig(
-    log_level="INFO",
-    log_level_file="DEBUG",
-    log_directory="/var/log/nautilus/",
-    log_file_format="{trader_id}_{instance_id}",
-    log_colors=True,
-)
-```
-
-### Clock & Timers
-
-```python
-# In Strategy/Actor:
-self.clock.set_timer(
-    name="my_timer",
-    interval=timedelta(seconds=60),
-    callback=self.on_timer,
-)
-
-# Cancel timer
-self.clock.cancel_timer("my_timer")
-
-# Check active timers
-active = self.clock.timer_names
-```
-
-### Component Lifecycle
-
-All components follow: `INITIALIZED → RUNNING → STOPPED → DISPOSED`
-
-```python
-from nautilus_trader.common.component import Component
-
-# Component states
-component.state  # ComponentState enum
-component.is_initialized
-component.is_running
-component.is_stopped
-component.is_disposed
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Live runtime contract migration reference](migration_reference/python/live-runtime-contract.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Python Extension
 
-### Custom Component
-
-```python
-from nautilus_trader.common.component import Component
-
-class MyComponent(Component):
-    def __init__(self, ...):
-        super().__init__(...)
-
-    def _start(self):
-        # Called during component start
-        pass
-
-    def _stop(self):
-        # Called during component stop
-        pass
-
-    def _reset(self):
-        # Called during component reset
-        pass
-
-    def _dispose(self):
-        # Called during component disposal
-        pass
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Extension migration reference](migration_reference/python/python-extension.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Rust Usage
 
@@ -229,11 +117,11 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.61"
-nautilus-live = "0.61"
-nautilus-model = "0.61"
-nautilus-okx = "0.61"          # or any venue adapter
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-common = "0.61.0"
+nautilus-live = "0.61.0"
+nautilus-model = "0.61.0"
+nautilus-okx = "0.61.0"          # or any venue adapter
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"
@@ -351,6 +239,15 @@ The node runs until interrupted (Ctrl+C) or shut down programmatically.
 - Python and PyO3 configs support WebSocket transport backend selection.
 - The `event_store` format changed in v1.230.0; beta v1.227-v1.229 stores
   must be regenerated rather than migrated in-place.
+- Current develop commit
+  [`32bc6b680`](https://github.com/nautechsystems/nautilus_trader/commit/32bc6b680)
+  hardens the evolving/alpha event store beyond the pinned baseline: capture
+  avoids queue/execute duplication and preserves a message when encoding fails;
+  reads reject a table key whose embedded `seq` differs; the verifier records an
+  undecodable entry and continues; equal-start run listing and retention no
+  longer depend on filesystem order; and writer halt fires exactly once and
+  rejects post-halt submissions. Treat any backend, verifier, replay, or capture
+  failure as fail-stop evidence, not as an event that may be silently skipped.
 - Live reconciliation uses monotonic-time gates and `RecencyMap` tracking;
   review recency-sensitive checks for monotonic-clock use before deployment.
 

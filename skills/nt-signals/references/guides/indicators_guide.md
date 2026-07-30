@@ -200,7 +200,7 @@ def on_start(self):
     self.subscribe_bars(bar_type)
 ```
 
-See `templates/indicator.py` for a complete starter template.
+See `../../migration_reference/python/templates/indicator.py` for a complete starter template.
 
 ---
 

@@ -15,22 +15,67 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-adapters.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Adapter gates: Rust owns HTTP/WebSocket networking, request signing, parsing, normalization, subscription/order state, and reconnect logic; Python/PyO3 is only the control/config exposure. Before `Pass`, run adapter unit/spec tests, `cargo nextest`, `cargo clippy`, `cargo deny`, and `scripts/fuzz-adapter.sh`/fuzz targets for parsers or protocol changes.
 
+## Rust production lane
+
+Rust owns production adapter behavior: HTTP/WebSocket transport, authentication and signing, protocol parsing, normalization into Nautilus model types, rate and inflight limits, subscription and order state, reconnect/replay, and ambiguous-outcome reconciliation. Build adapter crates in dependency order, keep fixed-point and timestamp conversion at parser boundaries, and prove readiness with unit/spec tests plus parser fuzzing where inputs are untrusted.
+
+```rust
+use nautilus_live::node::LiveNode;
+
+let node = LiveNode::builder()
+    .add_adapter(adapter_config)
+    .add_strategy(strategy)
+    .build()?;
+node.run().await?;
+```
+
+## PyO3 control-plane lane
+
+PyO3 exposes Rust-owned adapter configuration, factory construction, status, and lifecycle controls. Bind in the owning adapter crate's `src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates that submodule. Keep networking, signing, parsing, subscriptions, order routing, risk decisions, and reconnect state in Rust; Python must not become an execution authority or liveness dependency.
+
+```rust
+use pyo3::prelude::*;
+
+#[pyclass(frozen)]
+struct AdapterConfigBinding {
+    inner: AdapterConfig,
+}
+
+#[pymethods]
+impl AdapterConfigBinding {
+    #[getter]
+    fn environment(&self) -> &str {
+        self.inner.environment.as_ref()
+    }
+}
+```
+
+## Migration/reference lane
+
+Quarantined Python examples and prior Python adapter guidance live under `migration_reference/python/` and `references/examples/migration_reference/`. They are migration/reference-only, never the production default.
+
+## Source-pinned upstream lane
+
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+
 ## What This Skill Covers
 
-NautilusTrader **adapter domain** — exchange/data provider integrations following a layered architecture with Rust core for networking and Python layer for platform integration.
+NautilusTrader **adapter domain** — exchange/data provider integrations with
+Rust-owned networking, parsing, state, and engine integration plus a bounded
+PyO3 configuration/inspection surface.
 
 **Python modules**: `adapters/*`, `adapters/_template/`, and PyO3 exports where an adapter is Rust/v2-only.
 **Rust crates**: adapter crates plus `nautilus_network` and `nautilus_cryptography`.
@@ -86,8 +131,8 @@ Current high-risk rules:
 
 Adapters follow a layered architecture:
 
-- **Rust core** — networking clients, parsing, rate limiting, request signing
-- **Python layer** — integration with platform's data and execution engines
+- **Rust core** — networking, parsing, rate limiting, signing, engine integration, and execution state
+- **PyO3 control plane** — validated configuration and read-only diagnostics
 
 ### Rust Core Structure
 
@@ -206,55 +251,6 @@ Wire everything into the platform via config types and factory patterns.
 ### Phase 7: Testing & Documentation
 
 Data testing (DataTesterConfig), execution testing (ExecTesterConfig), documentation.
-
-## Python Usage
-
-### Configure Existing Adapter
-
-```python
-from nautilus_trader.adapters.binance.config import BinanceDataClientConfig, BinanceExecClientConfig
-
-data_config = BinanceDataClientConfig(
-    api_key="...",
-    api_secret="...",
-    account_type=BinanceAccountType.USDT_FUTURE,
-)
-
-exec_config = BinanceExecClientConfig(
-    api_key="...",
-    api_secret="...",
-    account_type=BinanceAccountType.USDT_FUTURE,
-)
-```
-
-### Use InstrumentProvider
-
-```python
-# Instrument discovery happens automatically when adapter connects
-# Access instruments via cache:
-instruments = self.cache.instruments(venue=Venue("BINANCE"))
-instrument = self.cache.instrument(InstrumentId.from_str("ETHUSDT-PERP.BINANCE"))
-```
-
-### Adapter Configuration Pattern
-
-Each adapter follows the same config pattern:
-- `{Adapter}DataClientConfig` — data feed configuration
-- `{Adapter}ExecClientConfig` — execution configuration
-- `{Adapter}InstrumentProviderConfig` — instrument discovery settings
-
-## Python Extension
-
-### Customize Instrument Provider
-
-```python
-from nautilus_trader.adapters.binance.providers import BinanceInstrumentProvider
-
-class MyInstrumentProvider(BinanceInstrumentProvider):
-    async def load_all_async(self, filters=None):
-        await super().load_all_async(filters)
-        # Add custom instrument filtering/transformation
-```
 
 ## Rust Usage
 
@@ -488,11 +484,7 @@ follows Nautilus runtime expectations.
 
 ### Factory Pattern
 
-All adapters use factory registration:
-```python
-# Python factories
-config.adapters.live.add("BINANCE", BinanceLiveDataClientFactory, BinanceLiveExecClientFactory)
-```
+Register adapter factories through Rust-owned configuration and expose only the bounded construction surface through PyO3. Prior Python factory registration is documented in `migration_reference/python/guidance.md`.
 
 ### Channel Naming
 

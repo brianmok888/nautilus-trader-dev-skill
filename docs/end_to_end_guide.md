@@ -2,11 +2,11 @@
 
 This guide gives the default NautilusTrader Development Skills workflow for a new production-oriented system. The primary path is Rust-first: create a Cargo project, build a native Rust strategy, attach it to a Rust `LiveNode`, and run it on Tokio. It follows the upstream `docs/how_to/run_rust_live_trading.md` pattern: `LiveNode::builder(...)`, adapter client factories, `node.add_strategy(...)`, then `node.run().await`.
 
-Python is still supported, but it is not the default production live path in this guide. Use the appendix for supported Python V2 strategy/research work and keep AI/advisory code on the Python research lane, off execution-critical paths.
+All new strategy, research, prototyping, integration, and live work follows the Rust-first path in this guide. Only AI/advisory through `nt-evomap-integration` remains active Python, isolated from execution-critical paths; the appendix labels all other Python material migration/reference-only.
 
 **Prerequisites**:
 - Rust 1.97.1 toolchain and Cargo installed for the pinned `6e59fd7` develop baseline.
-- NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder`, `nt-live`, `nt-testing`, and `nt-review`.
+- NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
 ---
@@ -31,12 +31,12 @@ dotenvy = "0.15"
 log = "0.4"
 tokio = { version = "1", features = ["full"] }
 
-nautilus-common = "0.61"
-nautilus-backtest = { version = "0.61", features = ["streaming"] }
-nautilus-live = "0.61"
-nautilus-model = "0.61"
-nautilus-okx = "0.61"
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-common = "0.61.0"
+nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
+nautilus-live = "0.61.0"
+nautilus-model = "0.61.0"
+nautilus-okx = "0.61.0"
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 ```
 
 Use the relevant adapter crate for your venue; OKX is shown because the official upstream `docs/how_to/run_rust_live_trading.md` guide uses OKX.
@@ -196,18 +196,17 @@ If your venue requires a custom adapter, keep the same Rust-first live shape and
 
 ---
 
-## Appendix: Supported Python V2 Strategy and Research Lane
+## Appendix: Python Migration Reference and Active AI/Advisory Lane
 
-NT v2 compatibility note: legacy `TradingNode` material is migration/reference-only unless a guide explicitly labels it as current Python-only integration guidance; use `LiveNode` for new Rust-backed live work.
+NT v2 compatibility note: legacy `TradingNode` and non-AI Python integration material are migration/reference-only. Use Rust `LiveNode` for all new integration and live work; only EvoMap AI/advisory remains active Python.
 
-Python remains supported for V2 strategy research, notebooks, exploratory data analysis, and Python-authored strategy iteration. This appendix documents that supported lane; it is not the default production live path for this guide.
+Existing non-AI Python strategy, notebook, exploratory analysis, and prototyping material is migration/reference-only under this repository's stricter cutover policy. New strategy research and rapid prototyping route to `nt-strategy-builder-rust`; use existing Python material only to understand or migrate prior systems.
 
-Use Python when the work is explicitly labelled as one of these cases:
+The Python boundaries are:
 
-- V2 strategy research or rapid prototyping where Python ergonomics are useful.
-- Data analysis, visualization, and tearsheet-style review outside the execution hot path.
-- AI/advisory lane remains Python, asynchronous, approval-gate protected, and off execution-critical paths.
+- Existing Python strategy research, data analysis, visualization, and tearsheet workflows are migration/reference-only.
+- Only AI/advisory through `nt-evomap-integration` remains active Python; it stays asynchronous, approval-gate protected, and off execution-critical paths.
 
-Python research/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Promote only reviewed, tested, and explicitly approved logic into the Rust production path.
+Migration/reference Python and active AI/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Implement new reviewed and tested strategy logic directly in the Rust path.
 
 For new Rust-backed live work, use `LiveNode` and the primary Rust path above.

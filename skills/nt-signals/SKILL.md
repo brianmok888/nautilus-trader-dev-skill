@@ -15,18 +15,34 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-signals` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-signals.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-signals` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-signals.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Signal gates: Python may prototype indicators, research/config notebooks, and AI/advisory aggregation, but Rust production owns performance-heavy indicators, tick/bar pipelines, ordering, and fixed-point signal transforms. Require `cargo nextest`, `cargo clippy`, `cargo deny`, and deterministic signal tests before `Pass`.
+
+## Rust production lane
+
+Implement production indicators, aggregators, custom data, and signal state machines in Rust using deterministic updates and fixed-point-safe domain values where applicable. Keep per-event computation and state mutation off Python paths, and validate warm-up, reset, ordering, and numerical edge cases with Rust tests.
+
+## PyO3 control-plane lane
+
+Use PyO3 to construct and configure Rust indicators, register signal components, and inspect derived outputs. Python may orchestrate bounded analysis but must not own production market-data subscriptions, event handlers, mutable signal state, or trading decisions.
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-signals`.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 
@@ -53,128 +69,23 @@ NautilusTrader **signals and analysis domain** — indicators, custom data types
 
 ## Python Usage
 
-### Built-in Indicators
-
-```python
-from nautilus_trader.indicators.average.ema import ExponentialMovingAverage
-from nautilus_trader.indicators.rsi import RelativeStrengthIndex
-from nautilus_trader.indicators.bollinger_bands import BollingerBands
-
-# Create indicators
-ema_fast = ExponentialMovingAverage(period=10)
-ema_slow = ExponentialMovingAverage(period=20)
-rsi = RelativeStrengthIndex(period=14)
-
-# Register in strategy's on_start():
-self.register_indicator_for_bars(bar_type, ema_fast)
-self.register_indicator_for_bars(bar_type, ema_slow)
-```
-
-**Indicator categories:**
-- **Averages**: `ExponentialMovingAverage`, `SimpleMovingAverage`, `WeightedMovingAverage`, `AdaptiveMovingAverage`, `HullMovingAverage`, `DoubleExponentialMovingAverage`, `WilderMovingAverage`, `VariableIndexDynamic`
-- **Momentum**: `RelativeStrengthIndex`, `Stochastics`, `CommodityChannelIndex`, `RateOfChange`
-- **Volatility**: `BollingerBands`, `AverageTrueRange`, `KeltnerChannel`, `DonchianChannel`, `VolatilityRatio`
-- **Trend**: `AroonOscillator`, `DirectionalMovement`, `LinearRegression`, `ArcherMovingAveragesTrends`
-- **Volume**: `OnBalanceVolume`, `VolumeWeightedAveragePrice`
-
-### v1.227.0 signal/data deltas
-
-- `DataActor.subscribe_signal` accepts an optional `priority` for ordered subscriber dispatch; pass `None` / omit it when ordering is not required.
-- Continuous futures support adjusted aggregated bars via `ContinuousFutureAdjustmentType` and the `BarBuilder` price-adjustment pipeline.
-- `BarType` exposes native `is_externally_aggregated` and `is_internally_aggregated` helpers.
-
-### Bar Aggregation
-
-```python
-from nautilus_trader.model.data import BarType, BarSpecification
-from nautilus_trader.model.enums import BarAggregation, PriceType
-
-# Time bars
-bar_type = BarType.from_str("ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL")
-
-# Tick bars
-tick_bars = BarSpecification(step=100, aggregation=BarAggregation.TICK, price_type=PriceType.LAST)
-
-# Volume bars
-vol_bars = BarSpecification(step=1000, aggregation=BarAggregation.VOLUME, price_type=PriceType.LAST)
-```
-
-### Custom Data Types
-
-```python
-from nautilus_trader.model.custom import customdataclass
-
-@customdataclass
-class MySignalData:
-    signal_value: float
-    signal_strength: int
-    # ts_event and ts_init auto-provided by decorator
-```
-
-### Analysis & Tearsheets
-
-```python
-from nautilus_trader.analysis.analyzer import PortfolioAnalyzer
-from nautilus_trader.analysis.reporter import ReportProvider
-
-analyzer = PortfolioAnalyzer()
-# analyzer automatically registered in backtest/live node
-# Access via node.analyzer after run
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Usage migration reference](migration_reference/python/python-usage.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Python Extension
 
-### Custom Indicator
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Extension migration reference](migration_reference/python/python-extension.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
-Subclass `Indicator` and implement `handle_bar()`, `update_raw()`, `_reset()`:
+## V2 signal and continuous-futures invariants
 
-```python
-from nautilus_trader.indicators import Indicator
-
-class MyIndicator(Indicator):
-    def __init__(self, period: int):
-        super().__init__(params=[period])
-        self.period = period
-        self.value = 0.0
-        self.count = 0
-
-    def handle_bar(self, bar):
-        self.update_raw(bar.close.as_double())
-
-    def update_raw(self, value: float):
-        if not self.has_inputs:
-            self._set_has_inputs(True)
-        # TODO: Core calculation
-        self.count += 1
-        if not self.initialized and self.count >= self.period:
-            self._set_initialized(True)
-
-    def _reset(self):
-        self.value = 0.0
-        self.count = 0
-```
-
-See `templates/indicator.py` for full template.
-
-### Custom PortfolioStatistic
-
-```python
-from nautilus_trader.analysis.statistic import PortfolioStatistic
-
-class MyStatistic(PortfolioStatistic):
-    def calculate_from_returns(self, returns):
-        if not self._check_valid_returns(returns):
-            return None
-        return float(returns.mean())
-```
-
-Return values must be JSON-serializable (float, int, str, bool, None).
-
-See `templates/portfolio_statistic.py` for full template.
-
-### Custom Data Types
-
-Use `@customdataclass` decorator — it auto-generates serialization methods (dict, bytes, Arrow). See `templates/custom_data.py`.
+- Signal subscription dispatch supports explicit `priority` ordering.
+- Continuous futures use `ContinuousFutureAdjustmentType` in the adjusted bar
+  aggregation path.
 
 ## Rust Usage
 
@@ -293,5 +204,5 @@ Always register indicators via `self.register_indicator_for_bars()` or `self.reg
 - `references/api/` — indicators, analysis, data, book, portfolio
 - `references/python/` — analysis source reference (config, tearsheet, statistic, themes)
 - `references/rust/` — analysis Rust source reference
-- `references/examples/` — indicator usage, cascaded indicators, bar aggregation
+- `migration_reference/python/examples/` — quarantined Python indicator, cascaded-indicator, and bar-aggregation examples
 - `templates/` — indicator.py, custom_data.py, portfolio_statistic.py

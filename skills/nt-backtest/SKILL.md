@@ -15,18 +15,34 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-backtest.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Backtest gates: prefer Rust BacktestEngine/BacktestNode for production/performance simulation, keep Python research/config notebooks explicitly labelled, and require deterministic ordering, fill-model, account/position reconciliation, `cargo nextest`, `cargo clippy`, and `cargo deny` evidence before `Pass`.
+
+## Rust production lane
+
+Build production and performance simulations with Rust `BacktestEngine` or `BacktestNode`, Rust strategies, deterministic event ordering, and explicit venue, fill, fee, latency, account, and reconciliation models. Keep matching and execution-critical simulation behavior in Rust and validate it with targeted tests plus the required cargo gates.
+
+## PyO3 control-plane lane
+
+Use PyO3 only to assemble backtest configuration, register Rust components, initiate bounded runs, and inspect immutable results. Python must not own matching, fill decisions, order submission, risk checks, or event sequencing; those remain inside the Rust engine.
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-backtest`.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 
@@ -51,7 +67,24 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Live deployment** → use `nt-live`
 - **Indicator logic** → use `nt-signals`
 
+## Develop-only `BacktestResult` analysis
+Source: upstream NautilusTrader pin `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+
+Current `origin/develop` commit
+[`501ebe4a8`](https://github.com/nautechsystems/nautilus_trader/commit/501ebe4a8)
+adds `BacktestResult.returns_series`. Rust stores it as an ordered
+`BTreeMap<UnixNanos, f64>`; the PyO3 property is `dict[int, float]`, keyed by
+nanosecond timestamps. It supports a result-only tearsheet after the node or
+engine is no longer retained. A cache-backed chart still needs live node state,
+and multi-currency analysis should pass an explicit currency where the
+tearsheet API requires one.
+
+This property is not present at the pinned G2 baseline. Version-gate consumers
+or keep using the pinned result statistics (`stats_pnls`, `stats_returns`, and
+`stats_general`) until the baseline advances.
+
 ## v1.227.0 backtest/matching deltas
+Source: upstream NautilusTrader pin `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
@@ -62,133 +95,17 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 
 ## Python Usage
 
-### BacktestNode (Recommended)
-
-`BacktestNode` is the high-level API for running backtests with configuration:
-
-```python
-from nautilus_trader.backtest.node import BacktestNode
-from nautilus_trader.config import (
-    BacktestRunConfig,
-    BacktestDataConfig,
-    BacktestVenueConfig,
-    BacktestEngineConfig,
-)
-
-config = BacktestRunConfig(
-    engine=BacktestEngineConfig(
-        strategies=[
-            ImportableStrategyConfig(
-                strategy_path="my_module:MyStrategy",
-                config_path="my_module:MyStrategyConfig",
-                config={"instrument_id": "ETHUSDT-PERP.BINANCE", ...},
-            ),
-        ],
-    ),
-    data=[
-        BacktestDataConfig(
-            catalog_path="/path/to/data",
-            data_cls="nautilus_trader.model.data:Bar",
-            instrument_id="ETHUSDT-PERP.BINANCE",
-            bar_type="ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL",
-        ),
-    ],
-    venues=[
-        BacktestVenueConfig(
-            name="BINANCE",
-            oms_type="NETTING",
-            account_type="MARGIN",
-            base_currency=None,
-            starting_balances=["10_000 USDT"],
-        ),
-    ],
-)
-
-node = BacktestNode(configs=[config])
-results = node.run()
-```
-
-### BacktestEngine (Direct API)
-
-`BacktestEngine` provides lower-level control, useful for strategy testing:
-
-```python
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.config import BacktestEngineConfig
-
-engine = BacktestEngine(config=BacktestEngineConfig())
-
-# Add venue
-engine.add_venue(
-    venue=Venue("SIM"),
-    oms_type=OmsType.HEDGING,
-    account_type=AccountType.MARGIN,
-    base_currency=USD,
-    starting_balances=[Money(1_000_000, USD)],
-)
-
-# Add data
-engine.add_data(bars)
-engine.add_instrument(instrument)
-
-# Add strategy
-engine.add_strategy(strategy)
-
-# Run
-engine.run()
-
-# Get results
-engine.trader.generate_order_fills_report()
-engine.trader.generate_positions_report()
-```
-
-### Venue Configuration
-
-```python
-BacktestVenueConfig(
-    name="SIM",
-    oms_type="HEDGING",       # HEDGING or NETTING
-    account_type="MARGIN",     # CASH or MARGIN
-    base_currency="USD",
-    starting_balances=["1_000_000 USD"],
-    fill_model=FillModel(),    # Optional custom fill model
-    # latency_model=LatencyModel(), # Optional latency simulation
-)
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Usage migration reference](migration_reference/python/python-usage.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Python Extension
 
-### Custom FillModel
-
-```python
-from nautilus_trader.backtest.models import FillModel
-
-class MyFillModel(FillModel):
-    def __init__(self, ...):
-        super().__init__()
-        # TODO: Initialize model parameters
-
-    # Override fill probability/slippage methods as needed
-```
-
-See `templates/fill_model.py` for full template.
-
-### Custom Fee Models
-
-Configure fee structures per venue:
-
-```python
-from nautilus_trader.model.objects import Money
-
-# Via BacktestVenueConfig
-BacktestVenueConfig(
-    ...,
-    fee_model=MakerTakerFeeModel(
-        maker_fee=Decimal("0.0002"),
-        taker_fee=Decimal("0.0004"),
-    ),
-)
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Extension migration reference](migration_reference/python/python-extension.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Rust Usage
 
@@ -200,11 +117,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.61", features = ["streaming"] }
-nautilus-execution = "0.61"
-nautilus-model = { version = "0.61", features = ["stubs"] }
-nautilus-persistence = "0.61"
-nautilus-trading = { version = "0.61", features = ["examples"] }
+nautilus-backtest = { version = "0.61.0", features = ["streaming"] }
+nautilus-execution = "0.61.0"
+nautilus-model = { version = "0.61.0", features = ["stubs"] }
+nautilus-persistence = "0.61.0"
+nautilus-trading = { version = "0.61.0", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"
@@ -414,5 +331,6 @@ The matching engine core lives in `crates/execution/src/matching_core/`. Extend 
 - `references/concepts/` — backtesting, order book
 - `references/api/` — backtest API
 - `references/developer_guide/` — benchmarking practices, benchmarking review checklist, run_rust_backtest
-- `references/examples/` — clock timer, portfolio, cache usage, Rust backtests (engine_ema_cross, node_ema_cross), model configs
+- `references/examples/rust_backtest/` — Rust backtests (engine_ema_cross, node_ema_cross)
+- `migration_reference/python/examples/` — quarantined Python clock, portfolio, cache, and model-config examples
 - `templates/` — fill_model.py

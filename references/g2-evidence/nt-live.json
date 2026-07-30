@@ -1,7 +1,6 @@
 {
-  "owned_content_sha256": "02984214d35e92ac2f9879caedaa6916ab4de91d3c148955865a4c6c3bd2dd2d",
-  "repository_commit": "eef0563ea89ab35b9ad5625346d96c29cd3c3166",
-  "schema_version": 1,
+  "owned_content_sha256": "55509db897c2bf89aafd2e10257ab839ea72e9dbc72b10c07642cc88ae938d51",
+  "schema_version": 2,
   "scope": "upstream:live-node-and-rust-live-example",
   "skill": "nt-live",
   "steps": [
@@ -14,7 +13,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.603949,
+      "duration_seconds": 0.804094,
       "returncode": 0
     },
     {
@@ -29,11 +28,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.770297,
+      "duration_seconds": 3.610291,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T23:05:11.799441+00:00"
+  "verified_at": "2026-07-30T01:32:18.252217+00:00"
 }

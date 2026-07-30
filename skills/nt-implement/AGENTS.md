@@ -15,15 +15,15 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 | Stateless calculations | `indicator.py` | `handle_bar()`, pure computation |
 | Structured data between components | `custom_data.py` | `@customdataclass`, serialization |
 | Order execution logic | `exec_algorithm.py` | Child order spawning |
-| Exchange connectivity (data+exec) | `adapters/exchange.py` | LiveDataClient, LiveExecutionClient |
-| Data-only adapter | `adapters/data_provider.py` | Data streaming only |
+| Exchange connectivity migration reference | `legacy_migration/adapters/exchange.py` | Legacy Python LiveDataClient, LiveExecutionClient |
+| Data-only adapter | `legacy_migration/adapters/data_provider.py` | Data streaming only |
 | Internal (simulated) adapter | `adapters/internal.py` | Backtest venue adapter |
-| Exchange-specific config example | `adapters/kraken_config.py` | Venue configuration patterns |
+| Exchange-specific config example | `legacy_migration/adapters/kraken_config.py` | Venue configuration patterns |
 | Custom fill simulation | `fill_model.py` | `prob_fill_on_limit`, `prob_slippage` |
 | Custom margin calculation | `margin_model.py` | `calculate_margin_init/maint` |
 | Custom portfolio statistics | `portfolio_statistic.py` | `calculate_from_orders/positions` |
 | Risk configuration | `risk_config.py` | Risk check patterns |
-| Backtest visualization | `backtest_viz.py` | Plotly tearsheet config |
+| Backtest visualization | `legacy_migration/backtest_viz.py` | Plotly tearsheet config |
 | Cap'n Proto schema | `capnp_schema.capnp` | Zero-copy serialization schema |
 
 ## IMPLEMENTATION WORKFLOW

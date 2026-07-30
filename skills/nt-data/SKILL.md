@@ -15,20 +15,36 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-data` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-data.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-data` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-data.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Data production evidence includes `cargo nextest`, `cargo clippy`, and `cargo deny`; fixed-point validation and Arrow/serialization checks remain mandatory for affected changes.
 
 Data gates: Rust owns serialization, Arrow schemas, catalog/wrangler hot paths, ordering, and fixed-point validation. Mark `Pass` only after Rust tests cover raw fixed-point overflow, schema round-trips, cache/catalog invariants, and any Python exposure remains research/config or PyO3 boundary code.
+
+## Rust production lane
+
+Implement production ingestion, normalization, aggregation, caching, serialization, and catalog access in Rust with deterministic ordering and fixed-point-safe model types. Keep high-volume data handlers and persistence boundaries Rust-owned, and verify schema compatibility, replay behavior, and relevant cargo gates.
+
+## PyO3 control-plane lane
+
+Use PyO3 for bounded configuration, catalog queries, component registration, and result inspection around Rust data services. Do not move streaming handlers, cache mutation authority, aggregation state, or execution-facing data delivery into Python.
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-data`.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
 
 ## What This Skill Covers
 
@@ -56,122 +72,24 @@ NautilusTrader **data infrastructure domain** — data engines, persistence, ser
 
 ## Python Usage
 
-### ParquetDataCatalog
-
-```python
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
-
-# Initialize catalog
-catalog = ParquetDataCatalog("/path/to/data")
-
-# Query instruments
-instruments = catalog.instruments()
-
-# Query bars
-bars = catalog.bars(
-    instrument_ids=["ETHUSDT-PERP.BINANCE"],
-    bar_type="ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL",
-)
-
-# Query trade ticks
-trades = catalog.trade_ticks(instrument_ids=["ETHUSDT-PERP.BINANCE"])
-
-# Query quote ticks
-quotes = catalog.quote_ticks(instrument_ids=["ETHUSDT-PERP.BINANCE"])
-
-# Write data
-catalog.write_data(bars)
-catalog.write_data(trade_ticks)
-```
-
-### Data Engine Subscriptions
-
-```python
-# In Strategy/Actor on_start():
-self.subscribe_bars(bar_type)
-self.subscribe_quote_ticks(instrument_id)
-self.subscribe_trade_ticks(instrument_id)
-self.subscribe_order_book_deltas(instrument_id)
-self.subscribe_order_book_depth(instrument_id, depth=10)
-```
-
-### v1.227.0 data/cache notes
-
-- `DataEngineConfig` / `LiveDataEngineConfig` renamed `time_bars_origins` to `time_bars_origin_offset`.
-- `Cache.purge_instrument(...)` trims unused instrument records.
-- Rust cache accessors now use scoped borrow wrappers (`OrderRef`, `AccountRef`, `PositionRef`); use `order_owned`, `account_owned`, or `position_owned` when an owned snapshot must cross a boundary. Use `try_order` or `try_order_owned` when a missing order is an error, so callers receive `OrderLookupError` instead of inventing ad hoc not-found errors.
-- Custom Arrow storage supports `#[custom_data_field(json)]` for JSON-backed Serde fields with PyO3 dict conversion for `IndexMap` / `HashMap` values.
-
-### Cache Queries
-
-```python
-# Access via self.cache in Strategy/Actor:
-instrument = self.cache.instrument(instrument_id)
-instruments = self.cache.instruments(venue=venue)
-order = self.cache.order(client_order_id)
-orders = self.cache.orders(instrument_id=instrument_id)
-position = self.cache.position(position_id)
-positions = self.cache.positions(instrument_id=instrument_id)
-account = self.cache.account(account_id)
-bar = self.cache.bar(bar_type)
-quote = self.cache.quote_tick(instrument_id)
-trade = self.cache.trade_tick(instrument_id)
-```
-
-### Data Wranglers
-
-```python
-from nautilus_trader.persistence.wranglers import BarDataWrangler
-
-wrangler = BarDataWrangler(bar_type=bar_type, instrument=instrument)
-bars = wrangler.process(df)  # pandas DataFrame → NautilusTrader Bar objects
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Usage migration reference](migration_reference/python/python-usage.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Python Extension
 
-### Custom DataClient
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Python Extension migration reference](migration_reference/python/python-extension.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
-```python
-from nautilus_trader.data.client import MarketDataClient
+## V2 data-engine and cache invariants
 
-class MyDataClient(MarketDataClient):
-    def __init__(self, ...):
-        super().__init__(...)
-
-    async def _connect(self):
-        # Establish connection to data source
-        pass
-
-    async def _disconnect(self):
-        # Clean up connection
-        pass
-
-    async def _subscribe_trade_ticks(self, instrument_id):
-        # Subscribe to trade feed
-        pass
-
-    def _handle_trade_tick(self, tick):
-        # Forward tick to data engine
-        self._handle_data(tick)
-```
-
-### Custom Arrow Serializers
-
-Register custom Arrow schemas for custom data types:
-
-```python
-import pyarrow as pa
-from nautilus_trader.serialization.arrow.serializer import register_arrow
-
-# If using @customdataclass, serialization is auto-generated
-# For manual registration:
-register_arrow(
-    data_cls=MyCustomData,
-    schema=pa.schema([...]),
-    serializer=my_serializer_func,
-    deserializer=my_deserializer_func,
-)
-```
+- `DataEngineConfig` and `LiveDataEngineConfig` use `time_bars_origin_offset`.
+- Rust cache accessors use scoped borrow wrappers. Use `order_owned` when an
+  owned snapshot must cross a boundary, and `try_order` or `try_order_owned`
+  when missing order state is an error.
 
 ## Rust Usage
 
@@ -180,6 +98,15 @@ use nautilus_data::engine::DataEngine;
 use nautilus_persistence::catalog::ParquetDataCatalog;
 use nautilus_serialization::arrow::ArrowSerializer;
 ```
+
+## Develop-only cache accessor delta
+Source: upstream NautilusTrader commit `aabb824cb377d62ea7ff6a7ce9489a92c705580a`.
+
+This post-pin develop snapshot adds `mark_price_count`, `index_price_count`,
+`funding_rate_count`, `instrument_status_count`, `has_mark_prices`,
+`has_index_prices`, `has_funding_rates`, and `has_instrument_statuses`.
+Treat these accessors as develop-only until the reproducible upstream baseline
+advances.
 
 ## Rust Extension
 
@@ -239,18 +166,13 @@ For performance-critical serialization, implement Arrow schema conversion in Rus
 
 ### Cache Configuration
 
-```python
-from nautilus_trader.config import CacheConfig
-
-cache_config = CacheConfig(
-    tick_capacity=10_000,
-    bar_capacity=10_000,
-)
-```
+The Python `CacheConfig` example is migration/reference-only; see
+[Python Usage migration reference](migration_reference/python/python-usage.md).
+Keep production cache configuration and capacity-sensitive state Rust-owned.
 
 ## References
 
 - `references/concepts/` — data, cache
 - `references/api/` — data, persistence, serialization, cache
 - `references/developer_guide/` — test datasets, Databento integration, Tardis integration
-- `references/examples/` — data catalog usage
+- `migration_reference/python/examples/data_catalog/` — quarantined Python data-catalog usage

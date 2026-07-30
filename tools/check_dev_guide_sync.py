@@ -1,16 +1,32 @@
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 if __package__:
+    from .cutover_inventory import (
+        cutover_skill_paths,
+        validate_cutover_inventory,
+        validate_root_skill_python_fences,
+    )
+    from .markdown_lane_contract import validate_rust_skill_lanes
+    from .template_classification import classification_error
     from .upstream_baseline import UPSTREAM_COMMIT
 else:  # Direct script execution adds tools/ to sys.path.
-    from upstream_baseline import (  # pyright: ignore[reportImplicitRelativeImport]
-        UPSTREAM_COMMIT,
+    from tools.cutover_inventory import (
+        cutover_skill_paths,
+        validate_cutover_inventory,
+        validate_root_skill_python_fences,
     )
+    from tools.markdown_lane_contract import validate_rust_skill_lanes
+    from tools.template_classification import classification_error
+    from tools.upstream_baseline import UPSTREAM_COMMIT
 
 CURRENT_DEV_GUIDE_FILES = [
     "adapters.md",
@@ -625,7 +641,6 @@ LEGACY_GUIDANCE_ROOTS = ("skills", "references", "docs")
 LEGACY_GUIDANCE_ROOT_FILES = (Path("README.md"), Path("AGENTS.md"))
 LEGACY_GUIDANCE_SUFFIXES = {".capnp", ".md", ".py", ".pyi", ".rs", ".toml"}
 LEGACY_GUIDANCE_EXCLUDED_PARTS = {".git", ".omx", "__pycache__", "superpowers"}
-LEGACY_EXECUTABLE_EXAMPLE_PART = "legacy_migration"
 TRADING_NODE_TERM = "TradingNode"
 TRADING_NODE_LABEL_TERMS = [
     "Python live",
@@ -843,6 +858,8 @@ def _iter_checked_markdown_files(root: Path) -> list[Path]:
             continue
         if relative.parts and relative.parts[0] == ".omx":
             continue
+        if relative.parts[:2] == (".superpowers", "sdd"):
+            continue
         if relative.parts[:2] == ("docs", "superpowers"):
             continue
         if (
@@ -902,13 +919,6 @@ def _iter_legacy_guidance_files(root: Path) -> list[Path]:
     return files
 
 
-
-def _is_legacy_executable_example_path(path: Path, root: Path) -> bool:
-    relative = path.relative_to(root)
-    return (
-        relative.parts[:4] == ("skills", "nt-adapters", "references", "examples")
-        and LEGACY_EXECUTABLE_EXAMPLE_PART in relative.parts
-    )
 
 def _split_guidance_blocks(text: str) -> list[str]:
     blocks = re.split(r"\n\s*\n", text)
@@ -1054,8 +1064,10 @@ def _check_unlabelled_tradingnode_guidance(root: Path, errors: list[str]) -> Non
     for path in _iter_legacy_guidance_files(root):
         if _is_current_source_pinned_dev_guide_snapshot(path, root):
             continue
-        if _is_legacy_executable_example_path(path, root):
-            continue
+        if path.suffix in {".py", ".pyi"}:
+            error = classification_error(path, root)
+            if error is None and "legacy_migration" in path.relative_to(root).parts:
+                continue
         text = _read(path)
         text = _strip_labelled_python_fences(text)
         blocks = _split_guidance_blocks(text)
@@ -1403,6 +1415,15 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
                 )
             if (
                 status == "Pass"
+                and gate_id != "G2"
+                and "tools/check_skill_g2_harnesses.py --check-cards" in evidence
+            ):
+                errors.append(
+                    f"NT V2 readiness gate {gate_id} Pass uses the card validator "
+                    f"as evidence in {relative.as_posix()}"
+                )
+            if (
+                status == "Pass"
                 and gate_id == "G2"
                 and "check_rust_trading_reference_sync.py" in evidence
                 and relative not in SHARED_RUST_EXAMPLE_GATE_SKILLS
@@ -1552,6 +1573,13 @@ def run_checks(root: Path) -> CheckResult:
     _check_unlabelled_tradingnode_guidance(root, errors)
     _check_unlabelled_legacy_guidance(root, errors)
     _check_v2_cutover_language_routing(root, errors)
+    if root.resolve() == Path(__file__).resolve().parents[1]:
+        skill_paths = cutover_skill_paths(root)
+        errors.extend(validate_cutover_inventory(root))
+        errors.extend(validate_root_skill_python_fences(skill_paths, root))
+        for skill_path in skill_paths:
+            if skill_path.is_file():
+                errors.extend(validate_rust_skill_lanes(skill_path, root))
     _check_nt_v2_readiness_gates(root, errors)
 
     for markdown_file in _iter_checked_markdown_files(root):

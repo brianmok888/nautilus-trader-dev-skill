@@ -13,14 +13,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Validate the intentionally Python AI/advisory boundary after the pinned NT V2 upstream preflight. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-evomap-integration` passed the repository advisory-boundary policy check after verifying pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-evomap-integration.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-evomap-integration` passed the repository AI-advisory contract in its pinned V2 Python environment against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-evomap-integration.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -48,13 +48,41 @@ Do not use this skill for building venue adapters. Use `nt-dex-adapter` for adap
 
 ## Integration architecture
 
-Use five explicit components:
+Use two separated processes and one local contract:
 
-- `EvoMapProxyMailboxClient`: thin local gateway for Proxy mailbox and asset endpoints.
-- `CapsuleMapper`: transforms internal events and model outputs into bounded payloads.
-- `CapsulePolicy`: enforces allowlists, retry budgets, approval gate, and payload redaction.
-- `ProvenanceStore`: records `event_id`, asset id, suggestion hash, and decision reason.
-- `AdvisoryOrchestrator` (optional): LangChain/LangGraph workflow for offline analysis, never trading-loop execution.
+- External Python proxy: owns Proxy HTTP, model/graph work, redaction, retries, and durable provenance.
+- `python_sidecar/brainstorming_evomap`: the only shipped executable Python
+  network client in this skill; it may call the localhost Proxy and must not be
+  imported by the actor or any Rust execution path.
+- `AdvisoryBridgeActor`: NT V2 `DataActor` that drains only a bounded local mailbox on a short timer callback.
+- `AdvisoryMailboxPort`: non-blocking request/result queues plus two independent durable-transfer outboxes: one FIFO for non-terminal provenance and one FIFO for terminal checkpoints. The actor owns this local port; the proxy-facing integration may only transfer records into and out of it. It has no network client, message-bus, signal, data-publication, or execution capability.
+
+The actor stages immutable `AdvisoryRequest`, `AdvisoryResult`,
+`AdvisoryDecision`, and `AdvisoryAuditRecord` values. Approval must match the
+request ID, suggestion ID, and suggestion hash. Its maximum representable
+authority is `OFFLINE_CHANGE_REVIEW`; it cannot submit orders or change live
+trading behavior. Audit acceptance occurs before any approval state transition,
+so audit backpressure fails closed. Each terminal checkpoint ID is a SHA-256
+digest of the complete immutable record, including request and suggestion
+identity, outcome, reason, and timestamp; sequence/outcome pairs alone are not
+checkpoint identities.
+
+The proxy must persist before removal on both outboxes: peek the oldest record,
+durably persist it, then acknowledge that exact digest so the port removes that
+exact head record. No destructive `take` operation is exposed for proxy-facing
+audit or checkpoint transfer. Terminal persistence also atomically advances the
+durable `request_sequence_floor` before the proxy enqueues the matching local
+checkpoint acknowledgment. The actor removes the exact checkpoint before it
+mutates its sequence floor, authority, or request slot. Mismatched/stale
+acknowledgments fail closed, duplicate decisions cannot replace a pending
+terminal checkpoint, and lifecycle reset preserves a pending checkpoint and an
+already-enqueued acknowledgment for idempotent recovery. The sidecar's
+`AdvisoryCheckpointStore` is the reference durable adapter: one SQLite
+transaction inserts the immutable terminal record and advances the sequence
+floor, then returns the acknowledgment. Retrying after commit but before
+acknowledgment delivery is idempotent; injected failures before commit roll back
+both writes. This adapter is a reference implementation for the trusted local
+proxy boundary, not a network service and not an execution-authority component.
 
 ### Proxy mailbox contract
 
@@ -89,20 +117,25 @@ If advisory reasoning uses LangChain or LangGraph:
 
 ## Recommended flow
 
-1. Emit lightweight internal events from Strategy/Actor to a bounded queue.
-2. On timer events, map queue items into sanitized assets and call `asset/submit` through the local Proxy mailbox client.
-3. Poll for suggestions or asset review results on timer boundaries, validate through policy, and stage for review.
-4. Apply only approved local configuration changes outside hot handlers and persist outcome metadata.
-5. Report accepted/rejected outcomes through mailbox/asset events for EvoMap provenance.
+1. Build an offline review artifact outside NT market handlers.
+2. Enqueue an immutable request through the bounded local mailbox.
+3. Let the external proxy perform all network/model work outside the actor.
+4. On the actor timer, drain at most one already-local result, reject late or mismatched identity, write audit provenance, and stage it as non-actionable.
+5. Accept an exact human decision only after terminal-checkpoint capacity is available; keep the staging provenance FIFO independent from the terminal checkpoint outbox. The external proxy peeks and atomically persists the complete terminal record plus `request_sequence_floor`, then returns its record-bound digest as a local acknowledgment. Remove that exact checkpoint before granting offline review authority or releasing terminal request state.
+6. Continue Rust trading, adapter, risk, and live-node operation unchanged when the mailbox or proxy is unavailable.
 
 ## Implementation checklist
 
-- [ ] Create a Proxy mailbox sidecar client and keep endpoint semantics isolated from trading logic.
-- [ ] Add timer-driven sync loop and bounded queue.
-- [ ] Implement policy checks for field allowlist, approval gate, retry budgets, and payload redaction.
-- [ ] Add deterministic fallback when EvoMap, LangChain, or LangGraph orchestration is unavailable.
-- [ ] Add provenance logging for all suggestion decisions.
-- [ ] Cover behavior in tests for success, timeout, degraded mode, and approval-gated resume.
+- [ ] Keep Proxy HTTP and model/graph work in the external Python proxy, never the actor.
+- [ ] Use the bounded non-blocking `AdvisoryMailboxPort`; never wait or replace older work.
+- [ ] Match request sequence, request ID, suggestion ID, and suggestion hash before approval.
+- [ ] Assign strictly increasing request sequences from durable proxy state, restore `request_sequence_floor` from the durable audit checkpoint after restart, reject `now_ns >= deadline_ns` as late, and reject every replay deterministically.
+- [ ] Keep terminal requests pending until the external proxy acknowledges atomic persistence of the audit record and sequence floor.
+- [ ] Use separate provenance and terminal-checkpoint outboxes; persist-peek-ack-remove each exact record and expose no destructive proxy-facing transfer.
+- [ ] Bind each checkpoint digest to the complete immutable record, reject stale/mismatched acknowledgments, and preserve pending checkpoint acknowledgments across reset.
+- [ ] Require provenance or checkpoint acceptance before staged/approved state changes.
+- [ ] Release the request slot only after the durable checkpoint acknowledgment for an audited approval, operator rejection, or timeout.
+- [ ] Cover sequential success, rejection, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
 
 ## Safety review checklist
 
@@ -185,5 +218,5 @@ python examples/live_node.py
 
 - `nt-architect` for boundary definition and lifecycle placement.
 - `nt-implement` for component-level implementation patterns.
-- `nt-strategy-builder` for runtime wiring in backtest/paper/live nodes.
+- `nt-strategy-builder-rust` for Rust `LiveNode` or backtest runtime wiring; `nt-strategy-builder` is migration/reference-only.
 - `nt-review` for final safety and readiness checks.

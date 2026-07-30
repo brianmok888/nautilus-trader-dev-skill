@@ -3,17 +3,28 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 # DEX Adapter Compliance Checklist
 
 Every custom DEX adapter must clear this checklist before use in backtesting or live trading.
-Run the structural compliance test first:
+Run the current Rust production contract gate first:
 
 ```bash
 uv run pytest skills/nt-dex-adapter/tests/test_dex_compliance.py -v
 ```
 
+The quarantined Python files have a separate non-production migration smoke:
+
+```bash
+uv run pytest skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py -v
+```
+
+This migration smoke covers all retained Python config, provider, client, and
+factory templates. It does not gate production approval.
+
 Then complete the manual checklist below.
 
 ---
 
-## Python Layer
+## Quarantined Python Migration Layer
+
+Python-only live adapters are migration/reference-only and cannot receive APPROVED FOR USE. Current production approval requires the Rust core, Rust clients/factories, and `LiveNodeBuilder` wiring below.
 
 ### InstrumentProvider
 
@@ -73,7 +84,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ---
 
-## Rust Core (if applicable)
+## Rust Core (required for production approval)
 
 - [ ] Copyright header on every source file (`2015-2026 Nautech Systems Pty Ltd`)
 - [ ] Module-level `//!` documentation
@@ -104,7 +115,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 - [ ] **Unit: slippage model** — `amount_in` → `execution_price` follows AMM formula
 - [ ] **Unit: signing interface** — tx builder produces deterministic output (mock key)
 - [ ] **Integration: BacktestEngine** — adapter wired into engine with mock DEX data, runs without error
-- [ ] **Compliance structural test** — `test_dex_compliance.py` passes all method presence checks
+- [ ] **Rust production contract gate** — `test_dex_compliance.py` passes Rust client/factory, PyO3, and `LiveNodeBuilder` guidance checks
 - [ ] **No live RPC required** — all tests run offline with mocks/fixtures
 
 ---
@@ -124,10 +135,10 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 | Item | Status | Notes |
 |---|---|---|
-| Python layer complete | ☐ / ✓ | |
-| Rust core complete (if applicable) | ☐ / ✓ | N/A if Python-only |
+| Quarantined Python migration references reviewed | ☐ / ✓ | Not a production approval gate |
+| Rust core, clients, factories, and `LiveNodeBuilder` wiring complete | ☐ / ✓ | Required |
 | All tests pass offline | ☐ / ✓ | |
-| Compliance structural test passes | ☐ / ✓ | |
+| Rust production contract gate passes | ☐ / ✓ | `test_dex_compliance.py` |
 | Documentation complete | ☐ / ✓ | |
 | Reviewed with nt-review Rust/FFI checklist | ☐ / ✓ | |
 | **APPROVED FOR USE** | ☐ / ✓ | |

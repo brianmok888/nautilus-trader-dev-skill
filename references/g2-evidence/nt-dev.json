@@ -1,7 +1,6 @@
 {
-  "owned_content_sha256": "1555102d89b186135f3eca8a27313707db42c57c7ab9884bb13452f66ed0b00d",
-  "repository_commit": "eef0563ea89ab35b9ad5625346d96c29cd3c3166",
-  "schema_version": 1,
+  "owned_content_sha256": "40f677a31e675fef4f80d4070e6c0a17f5e71e73a7ca98ed8c3046101f9d8f28",
+  "schema_version": 2,
   "scope": "upstream:rust-format-core-ffi-pyo3",
   "skill": "nt-dev",
   "steps": [
@@ -14,7 +13,7 @@
         "--check"
       ],
       "cwd": "upstream",
-      "duration_seconds": 17.864057,
+      "duration_seconds": 30.174099,
       "returncode": 0
     },
     {
@@ -28,15 +27,15 @@
         "-p",
         "nautilus-pyo3",
         "--features",
-        "python,ffi",
+        "python,ffi,high-precision",
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.16258,
+      "duration_seconds": 1.646289,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T23:04:56.993020+00:00"
+  "verified_at": "2026-07-30T01:32:00.087643+00:00"
 }

@@ -1,255 +1,48 @@
-# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
-# references in this file are retained for migration/reference-only context.
-# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+"""Static contract gate for current Rust DEX production guidance."""
 
-"""
-DEX Adapter Tests: Structural Compliance
-
-Verifies that the DEX adapter template classes expose ALL methods required
-by the NautilusTrader adapter framework. This test suite acts as a gate
-before acceptance testing on a live or forked network.
-
-These checks mirror the compliance_checklist.md items that can be
-automatically validated.
-
-NOTE: These tests check method PRESENCE only. Functional correctness is
-tested in `test_instrument_parsing.py` and `test_order_book_events.py`.
-"""
-
-import importlib.util
-from inspect import iscoroutinefunction
-from inspect import signature
 from pathlib import Path
 
-import pytest
-
-pytest.importorskip("pydantic")
-
-_templates = Path(__file__).parent.parent / "templates"
+_SKILL = Path(__file__).parent.parent / "SKILL.md"
+_CHECKLIST = Path(__file__).parent.parent / "rules/compliance_checklist.md"
 
 
-def _load_module(name: str):
-    spec = importlib.util.spec_from_file_location(name, _templates / f"{name}.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+def test_canonical_skill_requires_rust_client_stack() -> None:
+    text = _SKILL.read_text(encoding="utf-8")
+    canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
 
-
-# Load all template modules
-_config_mod = _load_module("dex_config")
-_provider_mod = _load_module("dex_instrument_provider")
-_data_mod = _load_module("dex_data_client")
-_exec_mod = _load_module("dex_exec_client")
-_factory_mod = _load_module("dex_factory")
-
-MyDEXInstrumentProviderConfig = _config_mod.MyDEXInstrumentProviderConfig
-MyDEXDataClientConfig = _config_mod.MyDEXDataClientConfig
-MyDEXExecClientConfig = _config_mod.MyDEXExecClientConfig
-MyDEXInstrumentProvider = _provider_mod.MyDEXInstrumentProvider
-MyDEXDataClient = _data_mod.MyDEXDataClient
-MyDEXExecutionClient = _exec_mod.MyDEXExecutionClient
-MyDEXLiveDataClientFactory = _factory_mod.MyDEXLiveDataClientFactory
-MyDEXLiveExecClientFactory = _factory_mod.MyDEXLiveExecClientFactory
-
-
-class TestInstrumentProviderInterface:
-    """Checks all required InstrumentProvider methods are present and async."""
-
-    def test_load_all_async_exists(self):
-        assert hasattr(MyDEXInstrumentProvider, "load_all_async")
-
-    def test_load_all_async_is_coroutine(self):
-        assert iscoroutinefunction(MyDEXInstrumentProvider.load_all_async)
-
-    def test_load_ids_async_exists(self):
-        assert hasattr(MyDEXInstrumentProvider, "load_ids_async")
-
-    def test_load_ids_async_is_coroutine(self):
-        assert iscoroutinefunction(MyDEXInstrumentProvider.load_ids_async)
-
-    def test_get_all_exists(self):
-        assert hasattr(MyDEXInstrumentProvider, "get_all")
-
-    def test_find_exists(self):
-        assert hasattr(MyDEXInstrumentProvider, "find")
-
-    def test_parse_pool_to_instrument_exists(self):
-        assert hasattr(MyDEXInstrumentProvider, "_parse_pool_to_instrument")
-
-
-class TestDataClientInterface:
-    """Checks all required LiveMarketDataClient methods are present."""
-
-    REQUIRED_ASYNC_METHODS = [
-        "_connect",
-        "_disconnect",
-        "_subscribe_quote_ticks",
-        "_subscribe_trade_ticks",
-        "_subscribe_order_book_deltas",
-        "_unsubscribe_quote_ticks",
-        "_unsubscribe_trade_ticks",
-        "_unsubscribe_order_book_deltas",
-        "_request_bars",
-    ]
-
-    @pytest.mark.parametrize("method", REQUIRED_ASYNC_METHODS)
-    def test_method_exists_and_is_async(self, method):
-        assert hasattr(MyDEXDataClient, method), f"Missing: {method}"
-        assert iscoroutinefunction(getattr(MyDEXDataClient, method)), (
-            f"Not async: {method}"
-        )
-
-    def test_reserves_to_quote_tick_exists(self):
-        assert hasattr(MyDEXDataClient, "_reserves_to_quote_tick")
-
-    def test_swap_event_to_trade_tick_exists(self):
-        assert hasattr(MyDEXDataClient, "_swap_event_to_trade_tick")
-
-
-class TestExecutionClientInterface:
-    """Checks all required LiveExecutionClient methods are present."""
-
-    REQUIRED_ASYNC_METHODS = [
-        "_connect",
-        "_disconnect",
-        "_submit_order",
-        "_cancel_order",
-        "_cancel_all_orders",
-        "_modify_order",
-        "_query_order",
-        "generate_order_status_report",
-    ]
-
-    @pytest.mark.parametrize("method", REQUIRED_ASYNC_METHODS)
-    def test_method_exists_and_is_async(self, method):
-        assert hasattr(MyDEXExecutionClient, method), f"Missing: {method}"
-        assert iscoroutinefunction(getattr(MyDEXExecutionClient, method)), (
-            f"Not async: {method}"
-        )
-
-    def test_update_account_state_exists(self):
-        assert hasattr(MyDEXExecutionClient, "_update_account_state")
-        assert iscoroutinefunction(MyDEXExecutionClient._update_account_state)
-
-    def test_wait_for_receipt_exists(self):
-        assert hasattr(MyDEXExecutionClient, "_wait_for_receipt")
-        assert iscoroutinefunction(MyDEXExecutionClient._wait_for_receipt)
-
-
-class TestOfficialAdapterContractNames:
-    """Checks template signatures mention current command/request object names."""
-
-    DATA_COMMAND_METHODS = {
-        "_subscribe_quote_ticks": "command",
-        "_subscribe_trade_ticks": "command",
-        "_subscribe_order_book_deltas": "command",
-        "_unsubscribe_quote_ticks": "command",
-        "_unsubscribe_trade_ticks": "command",
-        "_unsubscribe_order_book_deltas": "command",
-        "_request_bars": "request",
-    }
-
-    EXEC_COMMAND_METHODS = {
-        "_submit_order": "command",
-        "_cancel_order": "command",
-        "_cancel_all_orders": "command",
-        "_modify_order": "command",
-        "_query_order": "command",
-    }
-
-    @pytest.mark.parametrize(("method", "expected_param"), DATA_COMMAND_METHODS.items())
-    def test_data_client_uses_command_or_request_parameter(self, method, expected_param):
-        params = signature(getattr(MyDEXDataClient, method)).parameters
-        assert expected_param in params, f"{method} should accept {expected_param}"
-
-    @pytest.mark.parametrize(("method", "expected_param"), EXEC_COMMAND_METHODS.items())
-    def test_exec_client_uses_command_parameter(self, method, expected_param):
-        params = signature(getattr(MyDEXExecutionClient, method)).parameters
-        assert expected_param in params, f"{method} should accept {expected_param}"
-
-    @pytest.mark.parametrize(
-        "method",
-        [
-            "generate_order_status_report",
-            "generate_order_status_reports",
-            "generate_fill_reports",
-            "generate_position_status_reports",
-            "generate_mass_status",
-        ],
+    required = (
+        "Phase 1: Rust Core Infrastructure",
+        "nautilus_network::http::HttpClient",
+        "nautilus_network::websocket::WebSocketClient",
+        "Rust data and execution client factories",
+        "LiveNodeBuilder",
     )
-    def test_full_execution_reconciliation_method_set_exists(self, method):
-        assert hasattr(MyDEXExecutionClient, method), f"Missing: {method}"
-        assert iscoroutinefunction(getattr(MyDEXExecutionClient, method)), f"Not async: {method}"
+    assert all(term in canonical for term in required)
 
 
-class TestConfigInterface:
-    """Checks that all config classes have required security-sensitive fields."""
+def test_canonical_skill_keeps_python_live_out_of_production_contract() -> None:
+    text = _SKILL.read_text(encoding="utf-8")
+    canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
 
-    @staticmethod
-    def _has_field(config_cls, name: str) -> bool:
-        model_fields = getattr(config_cls, "model_fields", None)
-        if model_fields is not None:
-            return name in model_fields
-        legacy_fields = getattr(config_cls, "__fields__", None)
-        if legacy_fields is not None:
-            return name in legacy_fields
-        return hasattr(config_cls, name)
-
-    def test_exec_config_has_secret_str_private_key(self):
-        """Private key must be SecretStr, not plain str."""
-        from pydantic import SecretStr
-
-        config = MyDEXExecClientConfig()
-        assert hasattr(config, "private_key"), (
-            "private_key field missing from ExecClientConfig"
-        )
-        assert isinstance(config.private_key, SecretStr), (
-            f"private_key must be SecretStr, got {type(config.private_key)}. "
-            "Plain str leaks keys in logs and repr()!"
-        )
-
-    def test_exec_config_has_sandbox_mode(self):
-        assert self._has_field(MyDEXExecClientConfig, "sandbox_mode")
-
-    def test_exec_config_has_max_slippage_bps(self):
-        assert self._has_field(MyDEXExecClientConfig, "max_slippage_bps")
-
-    def test_data_config_has_poll_interval(self):
-        assert self._has_field(MyDEXDataClientConfig, "poll_interval_secs")
-
-    def test_provider_config_has_sandbox_mode(self):
-        assert self._has_field(MyDEXInstrumentProviderConfig, "sandbox_mode")
-
-    def test_exec_config_defaults_to_sandbox_mode(self):
-        config = MyDEXExecClientConfig()
-
-        assert config.sandbox_mode is True
-
-    def test_exec_config_default_private_key_is_empty(self):
-        config = MyDEXExecClientConfig()
-
-        assert config.private_key.get_secret_value() == ""
-
-    def test_exec_config_default_chain_is_not_mainnet(self):
-        config = MyDEXExecClientConfig()
-
-        assert config.chain_id != 1
-
-    def test_exec_config_rejects_live_mode_without_private_key(self):
-        from pydantic import SecretStr
-
-        with pytest.raises(ValueError, match="private_key"):
-            MyDEXExecClientConfig(
-                private_key=SecretStr(""),
-                sandbox_mode=False,
-            )
+    forbidden = (
+        "Rust Core Infrastructure (if Rust-first)",
+        "registered with `Trading" + "Node`",
+        "nautilus_trader/adapters/my_dex/",
+        "LiveMarketDataClient",
+        "LiveExecutionClient",
+        "ClientFactory",
+    )
+    assert all(term not in canonical for term in forbidden)
 
 
-class TestFactoryInterface:
-    """Checks that factory classes expose static create() methods."""
+def test_production_checklist_requires_rust_factories_and_livenode_builder() -> None:
+    text = _CHECKLIST.read_text(encoding="utf-8")
 
-    def test_data_factory_has_create(self):
-        assert hasattr(MyDEXLiveDataClientFactory, "create")
-
-    def test_exec_factory_has_create(self):
-        assert hasattr(MyDEXLiveExecClientFactory, "create")
+    required = (
+        "Rust core, clients, factories, and `LiveNodeBuilder` wiring complete",
+        "Rust data and execution client factory implementations compile",
+        "Factories are registered through `LiveNode::builder(...)` / `LiveNodeBuilder`",
+        "PyO3 callbacks",
+        "Required",
+    )
+    assert all(term in text for term in required)

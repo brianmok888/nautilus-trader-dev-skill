@@ -155,8 +155,6 @@ Here's how different data operations map to their handlers:
 | `subscribe_funding_rates()`          | Real-time  | `on_funding_rate()`      | Live funding rate updates.                        |
 | `subscribe_instrument_status()`      | Real-time  | `on_instrument_status()` | Live instrument status updates.                   |
 | `subscribe_instrument_close()`       | Real-time  | `on_instrument_close()`  | Live instrument close updates.                    |
-| `subscribe_order_fills()`            | Real-time  | `on_order_filled()`      | Live order fill events for an instrument.         |
-| `subscribe_order_cancels()`          | Real-time  | `on_order_canceled()`    | Live order cancel events for an instrument.       |
 | `request_data()`                     | Historical | `on_historical_data()`   | Historical data processing.                       |
 | `request_order_book_deltas()`        | Historical | `on_historical_data()`   | Historical order book deltas.                     |
 | `request_order_book_depth()`         | Historical | `on_historical_data()`   | Historical order book depth.                      |
@@ -234,105 +232,11 @@ If you're not seeing data in `on_bar()` but see log messages about receiving bar
 as the data might be coming from a request rather than a subscription.
 :::
 
-## Order fill subscriptions
+## Order event handlers
 
-Actors can subscribe to order fill events for specific instruments using `subscribe_order_fills()`. This is useful
-for monitoring trading activity, implementing custom fill analysis, or tracking execution quality.
-
-When subscribed, all order fills for the specified instrument are forwarded to the `on_order_filled()` handler,
-regardless of which strategy or component generated the original order.
-
-### Example
-
-```python
-from nautilus_trader.common.actor import Actor
-from nautilus_trader.config import ActorConfig
-from nautilus_trader.model import InstrumentId
-from nautilus_trader.model.events import OrderFilled
-
-
-class MyActorConfig(ActorConfig):
-    instrument_id: InstrumentId  # example value: "ETHUSDT-PERP.BINANCE"
-
-
-class FillMonitorActor(Actor):
-    def __init__(self, config: MyActorConfig) -> None:
-        super().__init__(config)
-        self.fill_count = 0
-        self.total_volume = 0.0
-
-    def on_start(self) -> None:
-        # Subscribe to all fills for the instrument
-        self.subscribe_order_fills(self.config.instrument_id)
-
-    def on_order_filled(self, event: OrderFilled) -> None:
-        # Handle order fill events
-        self.fill_count += 1
-        self.total_volume += float(event.last_qty)
-
-        self.log.info(
-            f"Fill received: {event.order_side} {event.last_qty} @ {event.last_px}, "
-            f"Total fills: {self.fill_count}, Volume: {self.total_volume}"
-        )
-
-    def on_stop(self) -> None:
-        # Unsubscribe from fills
-        self.unsubscribe_order_fills(self.config.instrument_id)
-```
-
-:::note
-Order fill subscriptions are message bus-only subscriptions and do not involve the data engine.
-The `on_order_filled()` handler will only receive events while the actor is in a running state.
-:::
-
-## Order cancel subscriptions
-
-Actors can subscribe to order cancel events for specific instruments using `subscribe_order_cancels()`. This is useful
-for monitoring order cancellations, implementing custom cancel analysis, or tracking order lifecycle events.
-
-When subscribed, all order cancels for the specified instrument are forwarded to the `on_order_canceled()` handler,
-regardless of which strategy or component generated the original order.
-
-### Example
-
-```python
-from nautilus_trader.common.actor import Actor
-from nautilus_trader.config import ActorConfig
-from nautilus_trader.model import InstrumentId
-from nautilus_trader.model.events import OrderCanceled
-
-
-class MyActorConfig(ActorConfig):
-    instrument_id: InstrumentId  # example value: "ETHUSDT-PERP.BINANCE"
-
-
-class CancelMonitorActor(Actor):
-    def __init__(self, config: MyActorConfig) -> None:
-        super().__init__(config)
-        self.cancel_count = 0
-
-    def on_start(self) -> None:
-        # Subscribe to all cancels for the instrument
-        self.subscribe_order_cancels(self.config.instrument_id)
-
-    def on_order_canceled(self, event: OrderCanceled) -> None:
-        # Handle order cancel events
-        self.cancel_count += 1
-
-        self.log.info(
-            f"Cancel received: {event.client_order_id}, "
-            f"Total cancels: {self.cancel_count}"
-        )
-
-    def on_stop(self) -> None:
-        # Unsubscribe from cancels
-        self.unsubscribe_order_cancels(self.config.instrument_id)
-```
-
-:::note
-Order cancel subscriptions are message bus-only subscriptions and do not involve the data engine.
-The `on_order_canceled()` handler will only receive events while the actor is in a running state.
-:::
+Order lifecycle events flow through the message bus rather than data-engine subscriptions. Handle `OrderFilled` and
+`OrderCanceled` messages in `on_order_filled()` and `on_order_canceled()` while the actor is running. Use message-bus
+topics when a component must observe order events beyond its normal handler routing.
 
 ## Related guides
 

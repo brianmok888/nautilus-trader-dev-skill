@@ -15,26 +15,47 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | Snapshot recorded in `tools/check_dev_guide_sync.py` as 6e59fd74eaacacbb7410936f1766bd89fcce6f59. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed block-scoped legacy/Cython/v1 and TradingNode enforcement; `tests/test_dev_guide_sync.py` covers leakage and exemption boundaries. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | 2026-07-28: `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed against pinned upstream commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; machine-checked scope and execution provenance are recorded in `references/g2-evidence/nt-implement.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py` passed PyO3 registration, live-runner callback, Rust ownership, and V2 boundary regressions. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed the 34-template inventory and V2 API regressions; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | 2026-07-28: `uv run pytest -q --ignore=tests/test_quality_gates.py` passed 308 tests; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` passed 113 safety, runtime, FFI, legacy, and V2 boundary regressions. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | All 18 targeted G2 harnesses passed and `uv run python tools/check_skill_g2_harnesses.py --check-cards` validated their durable evidence; no readiness row is Pending or Blocked. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
+| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-implement.json`. |
+| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
+## Rust production lane
+
+Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings.
+
+For adapters, complete provider, data, execution, reconciliation, factory, and shutdown contracts. Rust owns order commands and state transitions; fail closed on invalid input, overflow, stale state, unknown execution outcomes, and unsupported venue capabilities.
+
+## PyO3 control-plane lane
+
+PyO3 is a narrow boundary for validated configuration, component registration, lifecycle control, and read-only inspection. Convert Python objects into owned Rust domain types immediately, return typed exceptions on validation failures, and keep `StrategyCore`, clients, runtime tasks, signing, risk checks, and order submission in Rust.
+
+Prefer `Py<T>`/`Py<PyAny>` for callback handles, document cleanup and cycle behavior, acquire the GIL only at Python call boundaries, and avoid `Arc<Py<T>>` unless an independent Rust shared-owner design requires it.
+
+## Migration/reference lane
+
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New non-AI work remains Rust-first; the only active Python lane is AI/advisory work in `nt-evomap-integration`, off execution-critical paths.
+
+## Source-pinned upstream lane
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
+
 ## Overview
 
-Implement nautilus_trader components using correct patterns and templates. This skill provides ready-to-use templates and common implementation patterns for all component types, including:
+Implement NautilusTrader components with Rust-first patterns and physically
+quarantined migration references. This skill covers:
 
-- **Python components**: Strategy, Actor, Indicator, Custom Data, Execution Algorithm, Adapters
-- **Simulation models**: Custom FillModel, MarginModel, PortfolioStatistic
-- **Rust+PyO3 bindings**: High-performance core implementations with Python interop
+- **Rust components**: Strategy, Actor, Indicator, custom data, execution algorithms, and adapters
+- **Rust simulation models**: FillModel, MarginModel, and portfolio statistics
+- **Rust+PyO3 bindings**: bounded configuration and inspection around Rust ownership
 
 ## Risk Engine
 
@@ -51,8 +72,8 @@ Implement nautilus_trader components using correct patterns and templates. This 
 ## Adapter Architecture (Rust-First)
 
 NautilusTrader adapters follow a **Rust-first** layered architecture:
-- **Rust core** (`crates/adapters/your_adapter/`): networking clients, performance-critical operations
-- **Python layer** (`nautilus_trader/adapters/your_adapter/`): integrates Rust clients into platform engines
+- **Rust core** (`crates/adapters/your_adapter/`): networking, parsing, state, and execution
+- **PyO3 control plane** (`src/python/`): validated configuration and read-only inspection
 
 Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
 
@@ -70,11 +91,10 @@ Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
 When implementing adapters, enforce these constraints across all templates and generated code:
 
 - **Do phases in order** and complete each milestone before progressing.
-- **Implement required Python interfaces completely**:
-  - `InstrumentProvider`: `load_all_async`, `load_ids_async`, `load_async`
-  - `LiveDataClient`: `_connect`, `_disconnect`, `_subscribe`, `_unsubscribe`, `_request`
-  - `LiveExecutionClient`: submit/modify/cancel methods and all reconciliation report generators
-- **Use official factory signature** for data/exec factories: `create(loop, name, config, msgbus, cache, clock)`.
+- **Implement current Rust provider, data, execution, and reconciliation traits completely**.
+- **Register Rust data/exec factories through `LiveNodeBuilder`**; prior Python
+  interfaces and factory signatures are migration/reference-only under
+  `migration_reference/python/`.
 - **Follow runtime and FFI safety rules**:
   - use `get_runtime().spawn()` for adapter Rust async tasks
   - store owned Python handles as `Py<T>` / `Py<PyAny>`; avoid redundant `Arc<Py<T>>` unless a separate Rust shared-owner design explicitly requires it
@@ -83,7 +103,7 @@ When implementing adapters, enforce these constraints across all templates and g
 - **Enforce modern testing doctrine**:
   - use real captured payload fixtures (docs/live API), not invented schemas
   - avoid arbitrary sleeps in async tests; use condition-based waiting
-  - cover Rust unit+integration and Python integration (`providers`, `data`, `execution`, `factories`)
+  - cover Rust unit, integration, provider, data, execution, and factory behavior
 
 ## When to Use
 
@@ -110,8 +130,8 @@ unless an official source explicitly documents a local mutable builder pattern.
 
 1. Start from architecture document
 2. Implement in dependency order, choosing the **language** for each component
-   using the V2 cutover map below (default for new V2 work is Rust for
-   performance/state paths; Python for user strategy/config/AI lane):
+   using the V2 cutover map below (default for every non-AI component is Rust;
+   the only active Python lane is AI/advisory):
    - Custom Data Types (if needed)
    - Custom Models (FillModel, MarginModel if backtesting)
    - Indicators
@@ -130,7 +150,7 @@ Rust-backed work use `LiveNode`.
 | Component | Default language for V2 cutover | Notes |
 |---|---|---|
 | Custom Data Types | **Rust** (`crates/model/`, PyO3-exposed when required) | Rust owns production data types; Python declarations are reserved for explicit AI/advisory payloads |
-| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Rust for new work, Python retained for prototyping |
+| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; non-AI Python prototypes are migration/reference-only |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
 | Actors (model hosting, regime detection, signal aggregation) | **Rust** | AI/advisory inference is the only Python-default exception and stays async, non-authoritative, and off the hot path |
 | Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI/advisory Python routes separately to `nt-evomap-integration` |
@@ -167,707 +187,30 @@ internally consistent and prevents hybrid strategies that fail both toolchains.
 
 ## EvoMap Sidecar Implementation Pattern (Optional)
 
-If your Nautilus system integrates with EvoMap, LangChain, or LangGraph, implement it as a sidecar module, not as trading-loop logic:
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [EvoMap Sidecar Implementation Pattern (Optional) migration reference](legacy_migration/evomap-sidecar-implementation-pattern-optional.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
-- Create a dedicated local Proxy mailbox gateway client (for example, `EvoMapProxyMailboxClient`) and keep protocol concerns outside Strategy/Actor signal math.
-- Map internal artifacts (feature deltas, design snapshots, decision outcomes) into explicit payload builders.
-- Run Proxy mailbox submit/poll/search and optional LangGraph `StateGraph` review work on timers or background workers; handlers should only enqueue lightweight events.
-- Enforce a policy layer: allowlisted payload fields, retry limits, and fail-closed behavior.
-- Persist provenance (`event_id`, asset id, suggestion hash, graph checkpoint id, accept/reject reason) for auditability.
+## Rust template dependency policy
 
-```python
-from collections import deque
-
-class RegimeActor(Actor):
-    def __init__(self, config: RegimeActorConfig) -> None:
-        super().__init__(config)
-        self._evomap_queue: deque[dict] = deque(maxlen=10_000)
-
-    def on_start(self) -> None:
-        self._evomap = EvoMapProxyMailboxClient(proxy_url=self.config.evomap_proxy_url)
-        self.set_timer("evomap-sync", interval=self.config.evomap_sync_interval_ns)
-
-    def on_bar(self, bar: Bar) -> None:
-        signal = self._compute_signal(bar)
-        self._evomap_queue.append({"ts": bar.ts_event, "signal": signal})
-
-    def on_timer(self, event: TimeEvent) -> None:
-        if event.name != "evomap-sync" or not self._evomap_queue:
-            return
-        batch = [self._evomap_queue.popleft() for _ in range(min(50, len(self._evomap_queue)))]
-        self._evomap.submit_assets([{"type": "EvolutionEvent", "events": batch}])
-```
+Read the target workspace version from its root `Cargo.toml` and use workspace
+or path dependencies for in-tree Rust examples. Do not copy historical crate
+versions into new code.
 
 ## Templates
 
-> **New in v1.227.0 (2026-05-18)** — Current baseline changes for new code:
-> - Read the target workspace version from its root `Cargo.toml` and use workspace/path dependencies for in-tree examples; do not copy a historical crate version into new code.
-> - Use adapter `environment` enums; Binance/Kraken live enum names are `Live` / `LIVE`.
-> - Use `time_bars_origin_offset`, not `time_bars_origins`.
-> - Use `DataActor.subscribe_signal(..., priority=None)` when ordered signal dispatch matters.
-> - Use `TryFrom<OrderInitialized>` / `try_into` for order initialization validation.
-> - Use the builder-style `OrderFactory::bracket()...call()` Rust API.
-
-> **New in v1.224.0 (2026-03-03)** — Breaking changes and new features:
-> - **InstrumentProvider simplification**: `load_ids_async()` and `load_async()` now have default implementations that Only `load_all_async()` is required in adapter subclasses.
-> - **`fill_limit_inside_spread`**: Renamed from `fill_limit_at_touch`. `BestPriceFillModel` now fills inside bid-ask spread by default.
-> - **Coinbase International adapter removed**: `COINBASE_INTX` package deleted (RFC #3555). Use a different venue.
-> - **`OrderBook.get_target_px_for_quantity()`**: New method for book impact analysis.
-> - **BitMEX dead man's switch**: New `deadmans_switch_timeout_secs` config field.
-> - **OKX trailing stop + algo amend support**.
-> - **Hyperliquid order modify support** (`builder_fee_refresh_mins` config removed).
-> - **Betfair batch operations**: `SubmitOrderList` and `BatchCancelOrders` now supported.
-> - **Binance Ed25519**: Spot/Margin raises `ValueError` for Ed25519 env vars. Futures soft-deprecated.
-> - **WS `connect()` now needs `loop_=self._loop` parameter in adapter code.
-
-> - **Rust `InstrumentProvider` trait**: New crate-level trait formalizes adapter patterns at `crates/common/src/providers.rs`.
-
-> **New in v1.223.0 (2026-02-21)** — Key API additions to use in new implementations:
-> - **`strategy.market_exit(instrument_id)`** — Convenience method to fully close a position with a market order. Hooks: `on_market_exit()`, `post_market_exit()`. Check: `is_exiting()`. Config: `market_exit_interval_ms` (100), `market_exit_max_attempts` (100), `market_exit_time_in_force`, `market_exit_reduce_only` (True).
-> - **`StrategyConfig.manage_stop = True`** — Automatically calls `market_exit()` when the strategy is stopped.
-> - **`PerpetualContract`** — New instrument type for asset-class-agnostic perpetual swaps. Prefer over `CryptoPerpetual` for new implementations.
-> - **`request_funding_rates()` / `FundingRateUpdate`** — New data request method and data type for funding rate streams.
-> - **`BacktestDataConfig.optimize_file_loading`** — Set `True` for faster Parquet loading in large backtests.
-> - **`trade_execution` default changed to `True`** — If you want bar-only matching, explicitly set `trade_execution=False` in `BacktestVenueConfig`.
-
-**Strategy Handler Reference (v1.223.0+):**
-
-| Handler | Trigger |
-|---------|----------|
-| `on_start` | Strategy start |
-| `on_stop` | Strategy stop |
-| `on_resume` | Resume from degraded state |
-| `on_reset` | Reset for reuse |
-| `on_dispose` | Cleanup before removal |
-| `on_degrade` | Enter degraded mode |
-| `on_fault` | Unrecoverable error |
-| `on_save` | Serialize state |
-| `on_load` | Deserialize state |
-| `on_bar` | Bar data received |
-| `on_quote_tick` | Quote tick received |
-| `on_trade_tick` | Trade tick received |
-| `on_order_book_deltas` | Order book delta received |
-| `on_order_book` | Order book snapshot received |
-| `on_instrument` | Instrument update received |
-| `on_instrument_status` | Instrument status change |
-| `on_instrument_close` | Instrument close received |
-| `on_historical_data` | Historical data response |
-| `on_data` | Custom data received |
-| `on_signal` | Signal received |
-| `on_event` | Catch-all event handler |
-| `on_order_initialized` | Order created |
-| `on_order_denied` | Order denied by risk engine |
-| `on_order_emulated` | Order entered emulator |
-| `on_order_released` | Order released from emulator |
-| `on_order_submitted` | Order submitted to venue |
-| `on_order_rejected` | Order rejected by venue |
-| `on_order_accepted` | Order accepted by venue |
-| `on_order_canceled` | Order canceled |
-| `on_order_expired` | Order expired |
-| `on_order_triggered` | Order triggered |
-| `on_order_updated` | Order modified |
-| `on_order_filled` | Order (partially) filled |
-| `on_position_opened` | Position opened |
-| `on_position_changed` | Position changed (partial fill) |
-| `on_position_closed` | Position closed |
-| `on_market_exit` | Market exit in progress hook |
-| `post_market_exit` | After market exit completes |
-
-During market exit, non-reduce-only orders are auto-denied; order lists with any non-reduce-only order denied entirely.
-
-> **New in v1.224.0 (2026-03-03)** — Breaking changes and new features:
-> - **InstrumentProvider simplification**: `load_ids_async()` and `load_async()` now have default implementations that delegate to `load_all_async()`. Only `load_all_async()` is required in adapter subclasses.
-> - **`fill_limit_inside_spread`**: Renamed from `fill_limit_at_touch`. `BestPriceFillModel` now fills inside bid-ask spread by default.
-> - **Coinbase International adapter removed**: `COINBASE_INTX` package deleted (RFC #3555). Use a different venue.
-> - **WS `connect()` requires `loop_=` param**: All custom adapter WebSocket connect calls now need `loop_=self._loop`.
-> - **`OrderBook.get_target_px_for_quantity()`**: New method for book impact analysis.
-> - **BitMEX dead man's switch**: New `deadmans_switch_timeout_secs` config field.
-> - **OKX**: Trailing stop market + algo amend support.
-> - **Hyperliquid**: Order modify support; `builder_fee_refresh_mins` config removed.
-> - **Betfair**: `SubmitOrderList` and `BatchCancelOrders` batch operations.
-> - **Binance Ed25519**: Spot/Margin `BINANCE_ED25519_*` env vars now raise `ValueError`.
-
-### Quick Reference: Which Template?
-
-Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
-Treat unclassified Python templates as invalid. Upstream NT V2 supports Python and
-Rust strategies, but this repository classifies non-AI Python executable templates as
-migration/reference-only. AI/advisory Python and bounded Rust/PyO3 control-plane wrappers
-stay explicit. Rust owns new strategy/config/backtest/live work plus adapter networking,
-parsing, normalization, risk/execution state, and other execution-critical infrastructure.
-
-| Need | Template / route | Lane classification |
-|------|------------------|---------------------|
-| Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
-| Existing Python strategy migration | `strategy.py` | migration/reference-only; new work uses Rust |
-| Model inference, advisory signals | `skills/nt-evomap-integration/templates/advisory_actor.py` | Sole active Python lane; non-production; off execution-critical paths |
-| Stateless calculations | Rust indicator path | Python `indicator.py` is migration/reference-only unless solely used by the AI advisory lane |
-| Structured data between components | Rust model/data path | Python `custom_data.py` is migration/reference-only unless solely used by the AI advisory lane |
-| Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `exec_algorithm.py` is reference-only |
-| Exchange/data connectivity | `adapters/` only as Rust/PyO3 control-plane wrappers | Rust core owns networking, parsing, normalization, and order entry |
-| Custom fill/margin/statistics simulation | `fill_model.py`, `margin_model.py`, `portfolio_statistic.py` | Python research/backtest only; production risk stays Rust-owned |
-
-### Template Files
-
-Templates are in `templates/` subdirectory:
-- `strategy.py` - migration/reference-only Python strategy example; use `nt-strategy-builder-rust` for new work
-- AI/advisory actor template - `skills/nt-evomap-integration/templates/advisory_actor.py`
-- `indicator.py` - research/config custom indicator
-- `custom_data.py` - research/config custom data types for message bus
-- `exec_algorithm.py` - migration/reference-only; route execution-critical algorithms to Rust
-- `fill_model.py` - research/backtest custom fill simulation model
-- `margin_model.py` - research/backtest custom margin calculation model
-- `portfolio_statistic.py` - research/backtest custom portfolio statistic
-- `adapters/exchange.py` - Rust/PyO3 control-plane wrapper; Rust owns data + execution
-- `adapters/data_provider.py` - Rust/PyO3 control-plane wrapper for data-only adapters
-
-### Model Loading (msgspec preferred)
-
-```python
-import msgspec
-from pathlib import Path
-
-class ModelState(msgspec.Struct):
-    """Serializable model state."""
-    weights: list[float]
-    threshold: float
-    version: str
-
-class RegimeActor(Actor):
-    def __init__(self, config: RegimeActorConfig) -> None:
-        super().__init__(config)
-        self.model: ModelState | None = None
-
-    def on_start(self) -> None:
-        # Load model using msgspec
-        model_path = Path(self.config.model_path)
-        with open(model_path, "rb") as f:
-            self.model = msgspec.msgpack.decode(f.read(), type=ModelState)
-
-        self.subscribe_bars(self.config.bar_type)
-```
-
-### Data Catalog Usage
-
-```python
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
-
-# Initialize catalog
-catalog = ParquetDataCatalog("/path/to/catalog")
-
-# Write data
-catalog.write_data([instrument])  # Instruments
-catalog.write_data(bars)          # Bars, ticks, etc.
-
-# Read data
-bars = catalog.bars(bar_types=[bar_type])
-trades = catalog.trade_ticks(instrument_ids=[instrument_id])
-
-# Use in backtest config
-from nautilus_trader.config import BacktestDataConfig
-
-data_config = BacktestDataConfig(
-    catalog_path=str(catalog.path),
-    data_cls="nautilus_trader.model.data:Bar",
-    instrument_id="BTCUSDT-PERP.BINANCE",
-)
-
-# Custom data in catalog
-data_config = BacktestDataConfig(
-    catalog_path=str(catalog.path),
-    data_cls=MyDataPoint,
-    metadata={"some_optional_category": 1},
-)
-```
-
-### ONNX Model Inference
-
-```python
-import onnxruntime as ort
-import numpy as np
-
-class MLActor(Actor):
-    def __init__(self, config: MLActorConfig) -> None:
-        super().__init__(config)
-        self.session: ort.InferenceSession | None = None
-
-    def on_start(self) -> None:
-        self.session = ort.InferenceSession(self.config.onnx_model_path)
-        self.input_name = self.session.get_inputs()[0].name
-        self.subscribe_bars(self.config.bar_type)
-
-    def on_bar(self, bar: Bar) -> None:
-        features = self._compute_features(bar)
-        inputs = {self.input_name: features.astype(np.float32).reshape(1, -1)}
-        outputs = self.session.run(None, inputs)
-        prediction = outputs[0][0]
-        self.publish_signal(name="prediction", value=float(prediction), ts_event=bar.ts_event)
-```
-
-### Feature Computation Pipeline
-
-```python
-class FeatureActor(Actor):
-    def __init__(self, config: FeatureActorConfig) -> None:
-        super().__init__(config)
-        self.ema_fast = ExponentialMovingAverage(config.fast_period)
-        self.ema_slow = ExponentialMovingAverage(config.slow_period)
-        self.rsi = RelativeStrengthIndex(config.rsi_period)
-        self.feature_buffer: deque[FeatureData] = deque(maxlen=config.lookback)
-
-    def on_start(self) -> None:
-        self.register_indicator_for_bars(self.config.bar_type, self.ema_fast)
-        self.register_indicator_for_bars(self.config.bar_type, self.ema_slow)
-        self.register_indicator_for_bars(self.config.bar_type, self.rsi)
-
-        self.request_bars(self.config.bar_type)
-        self.subscribe_bars(self.config.bar_type)
-
-    def on_bar(self, bar: Bar) -> None:
-        if not self.ema_fast.initialized or not self.rsi.initialized:
-            return
-
-        feature = FeatureData(
-            ema_diff=self.ema_fast.value - self.ema_slow.value,
-            rsi=self.rsi.value,
-            ts_event=bar.ts_event,
-            ts_init=self.clock.timestamp_ns(),
-        )
-        self.feature_buffer.append(feature)
-        self.publish_data(FeatureData, feature)
-```
-
-### Position Sizing
-
-```python
-def calculate_position_size(
-    self,
-    signal_strength: float,
-    volatility: float,
-) -> Quantity:
-    """Calculate position size based on signal and volatility."""
-    account = self.portfolio.account(self.instrument.venue)
-    equity = account.balance_total(self.instrument.quote_currency)
-
-    # Risk-based sizing: risk X% of equity per trade
-    risk_amount = float(equity) * self.config.risk_per_trade
-
-    # Adjust for volatility (ATR-based)
-    stop_distance = volatility * self.config.atr_multiplier
-    if stop_distance <= 0:
-        return self.instrument.make_qty(0)
-
-    raw_size = risk_amount / stop_distance
-
-    # Scale by signal strength
-    adjusted_size = raw_size * abs(signal_strength)
-
-    # Clamp to instrument limits
-    min_qty = float(self.instrument.min_quantity)
-    max_qty = float(self.instrument.max_quantity or 1e9)
-    final_size = max(min_qty, min(adjusted_size, max_qty))
-
-    return self.instrument.make_qty(final_size)
-```
-
-### Multi-Timeframe Data
-
-```python
-class MultiTimeframeStrategy(Strategy):
-    def __init__(self, config: MTFConfig) -> None:
-        super().__init__(config)
-        self.bar_1m: Bar | None = None
-        self.bar_5m: Bar | None = None
-        self.bar_1h: Bar | None = None
-
-    def on_start(self) -> None:
-        self.instrument = self.cache.instrument(self.config.instrument_id)
-
-        # Define bar types
-        self.bar_type_1m = BarType.from_str(f"{self.config.instrument_id}-1-MINUTE-LAST-EXTERNAL")
-        self.bar_type_5m = BarType.from_str(f"{self.config.instrument_id}-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL")
-        self.bar_type_1h = BarType.from_str(f"{self.config.instrument_id}-1-HOUR-LAST-INTERNAL@1-MINUTE-EXTERNAL")
-
-        # Request historical for warmup
-        self.request_bars(self.bar_type_1m)
-        self.request_bars(self.bar_type_5m)
-        self.request_bars(self.bar_type_1h)
-
-        # Subscribe to live
-        self.subscribe_bars(self.bar_type_1m)
-        self.subscribe_bars(self.bar_type_5m)
-        self.subscribe_bars(self.bar_type_1h)
-
-    def on_bar(self, bar: Bar) -> None:
-        if bar.bar_type == self.bar_type_1m:
-            self.bar_1m = bar
-        elif bar.bar_type == self.bar_type_5m:
-            self.bar_5m = bar
-        elif bar.bar_type == self.bar_type_1h:
-            self.bar_1h = bar
-            self._check_signals()  # Only trade on higher timeframe close
-
-    def _check_signals(self) -> None:
-        if self.bar_1m is None or self.bar_5m is None or self.bar_1h is None:
-            return
-        # Trading logic using all timeframes
-```
-
-### Risk Check Integration
-
-```python
-def _validate_order(self, order_side: OrderSide, quantity: Quantity) -> bool:
-    """Pre-submission risk validation."""
-    # Check position limits
-    net_position = self.portfolio.net_position(self.instrument.id)
-    if order_side == OrderSide.BUY:
-        new_position = net_position + float(quantity)
-    else:
-        new_position = net_position - float(quantity)
-
-    if abs(new_position) > self.config.max_position_size:
-        self.log.warning(f"Order rejected: would exceed max position {self.config.max_position_size}")
-        return False
-
-    # Check daily loss limit
-    realized_pnl = self.portfolio.realized_pnl(self.instrument.id)
-    if realized_pnl and float(realized_pnl) < -self.config.max_daily_loss:
-        self.log.warning("Order rejected: daily loss limit reached")
-        return False
-
-    return True
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Templates migration reference](legacy_migration/templates.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Custom Simulation Models
 
-### Custom FillModel
-
-Implement custom fill simulation for backtesting. Controls order queue position and execution probability.
-
-```python
-from decimal import Decimal
-from nautilus_trader.backtest.models import FillModel
-from nautilus_trader.model.orders import Order
-from nautilus_trader.model.instruments import Instrument
-
-class VolatilityAdjustedFillModel(FillModel):
-    """
-    Fill model that adjusts probabilities based on market volatility.
-
-    Parameters
-    ----------
-    base_prob_fill_on_limit : float
-        Base probability for limit order fills.
-    base_prob_slippage : float
-        Base probability for slippage on market orders.
-    volatility_multiplier : float
-        Multiplier applied based on volatility regime.
-    random_seed : int, optional
-        Seed for reproducible results.
-    """
-
-    def __init__(
-        self,
-        base_prob_fill_on_limit: float = 0.5,
-        base_prob_slippage: float = 0.3,
-        volatility_multiplier: float = 1.5,
-        random_seed: int | None = None,
-    ) -> None:
-        super().__init__(
-            prob_fill_on_limit=base_prob_fill_on_limit,
-            # prob_fill_on_stop is deprecated in v1.223.0; use prob_slippage
-            prob_slippage=base_prob_slippage,
-            random_seed=random_seed,
-        )
-        self._volatility_multiplier = volatility_multiplier
-        self._current_volatility = 1.0  # Updated externally
-
-    def set_volatility(self, volatility: float) -> None:
-        """Update current volatility regime."""
-        self._current_volatility = volatility
-
-    def is_limit_filled(self) -> bool:
-        """Check if limit order fills based on volatility-adjusted probability."""
-        # Higher volatility = more likely to get filled (more price movement)
-        adjusted_prob = min(1.0, self.prob_fill_on_limit * self._current_volatility)
-        return self._random.random() < adjusted_prob
-
-    def is_slipped(self) -> bool:
-        """Check if slippage occurs based on volatility-adjusted probability."""
-        # Higher volatility = more likely slippage
-        adjusted_prob = min(1.0, self.prob_slippage * self._current_volatility * self._volatility_multiplier)
-        return self._random.random() < adjusted_prob
-```
-
-**Usage in backtest:**
-
-```python
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.backtest.config import BacktestEngineConfig
-
-fill_model = VolatilityAdjustedFillModel(
-    base_prob_fill_on_limit=0.3,
-    base_prob_slippage=0.2,
-    volatility_multiplier=1.5,
-    random_seed=42,
-)
-
-engine = BacktestEngine(
-    config=BacktestEngineConfig(
-        trader_id="TESTER-001",
-        fill_model=fill_model,
-    )
-)
-```
-
-### Custom MarginModel
-
-Implement custom margin calculation for different venue types.
-
-```python
-from decimal import Decimal
-from nautilus_trader.backtest.models import MarginModel
-from nautilus_trader.backtest.config import MarginModelConfig
-from nautilus_trader.model.instruments import Instrument
-from nautilus_trader.model.objects import Money, Quantity, Price
-from nautilus_trader.model.enums import PositionSide
-
-class RiskAdjustedMarginModel(MarginModel):
-    """
-    Margin model that applies risk multipliers based on instrument characteristics.
-
-    Receives configuration through MarginModelConfig.config dict:
-    - risk_multiplier: float - Base risk multiplier (default 1.0)
-    - use_leverage: bool - Whether to divide by leverage (default False)
-    - volatility_buffer: float - Additional buffer for volatile instruments (default 0.0)
-    """
-
-    def __init__(self, config: MarginModelConfig) -> None:
-        """Initialize with configuration parameters."""
-        self.risk_multiplier = Decimal(str(config.config.get("risk_multiplier", 1.0)))
-        self.use_leverage = config.config.get("use_leverage", False)
-        self.volatility_buffer = Decimal(str(config.config.get("volatility_buffer", 0.0)))
-
-    def calculate_margin_init(
-        self,
-        instrument: Instrument,
-        quantity: Quantity,
-        price: Price,
-        leverage: Decimal,
-        use_quote_for_inverse: bool = False,
-    ) -> Money:
-        """
-        Calculate initial margin for order submission.
-
-        Parameters
-        ----------
-        instrument : Instrument
-            The instrument for the calculation.
-        quantity : Quantity
-            The order quantity.
-        price : Price
-            The order price.
-        leverage : Decimal
-            The account leverage.
-        use_quote_for_inverse : bool
-            Use quote currency for inverse instruments.
-
-        Returns
-        -------
-        Money
-            The initial margin requirement.
-        """
-        notional = instrument.notional_value(quantity, price, use_quote_for_inverse)
-
-        if self.use_leverage and leverage > 0:
-            adjusted_notional = notional.as_decimal() / leverage
-        else:
-            adjusted_notional = notional.as_decimal()
-
-        # Apply instrument margin requirement with risk adjustments
-        margin = adjusted_notional * instrument.margin_init * self.risk_multiplier
-        margin += adjusted_notional * self.volatility_buffer  # Add volatility buffer
-
-        return Money(margin, instrument.quote_currency)
-
-    def calculate_margin_maint(
-        self,
-        instrument: Instrument,
-        side: PositionSide,
-        quantity: Quantity,
-        price: Price,
-        leverage: Decimal,
-        use_quote_for_inverse: bool = False,
-    ) -> Money:
-        """Calculate maintenance margin for open positions."""
-        notional = instrument.notional_value(quantity, price, use_quote_for_inverse)
-
-        if self.use_leverage and leverage > 0:
-            adjusted_notional = notional.as_decimal() / leverage
-        else:
-            adjusted_notional = notional.as_decimal()
-
-        margin = adjusted_notional * instrument.margin_maint * self.risk_multiplier
-
-        return Money(margin, instrument.quote_currency)
-```
-
-**Usage in backtest config:**
-
-```python
-from nautilus_trader.backtest.config import BacktestVenueConfig, MarginModelConfig
-
-venue_config = BacktestVenueConfig(
-    name="SIM",
-    oms_type="NETTING",
-    account_type="MARGIN",
-    starting_balances=["1_000_000 USD"],
-    margin_model=MarginModelConfig(
-        model_type="my_package.my_module:RiskAdjustedMarginModel",
-        config={
-            "risk_multiplier": 1.5,
-            "use_leverage": False,
-            "volatility_buffer": 0.02,
-        },
-    ),
-)
-```
-
-### Custom PortfolioStatistic
-
-Implement custom portfolio statistics for analysis.
-
-```python
-from decimal import Decimal
-from nautilus_trader.analysis.statistic import PortfolioStatistic
-from nautilus_trader.model.position import Position
-from nautilus_trader.model.orders import Order
-
-class WinStreakStatistic(PortfolioStatistic):
-    """Calculate maximum winning and losing streaks."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._name = "Win Streak"
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def calculate_from_orders(self, orders: list[Order]) -> dict[str, int]:
-        """
-        Calculate win/loss streaks from filled orders.
-
-        Returns
-        -------
-        dict[str, int]
-            Dictionary with max_win_streak and max_loss_streak.
-        """
-        # Implementation for order-based calculation
-        return {"max_win_streak": 0, "max_loss_streak": 0}
-
-    def calculate_from_positions(self, positions: list[Position]) -> dict[str, int]:
-        """
-        Calculate win/loss streaks from closed positions.
-
-        Returns
-        -------
-        dict[str, int]
-            Dictionary with max_win_streak and max_loss_streak.
-        """
-        if not positions:
-            return {"max_win_streak": 0, "max_loss_streak": 0}
-
-        max_win_streak = 0
-        max_loss_streak = 0
-        current_win_streak = 0
-        current_loss_streak = 0
-
-        for position in positions:
-            if not position.is_closed:
-                continue
-
-            realized_pnl = position.realized_pnl
-            if realized_pnl is None:
-                continue
-
-            if float(realized_pnl) > 0:
-                current_win_streak += 1
-                current_loss_streak = 0
-                max_win_streak = max(max_win_streak, current_win_streak)
-            else:
-                current_loss_streak += 1
-                current_win_streak = 0
-                max_loss_streak = max(max_loss_streak, current_loss_streak)
-
-        return {
-            "max_win_streak": max_win_streak,
-            "max_loss_streak": max_loss_streak,
-        }
-
-
-class RiskAdjustedReturnStatistic(PortfolioStatistic):
-    """Calculate risk-adjusted return metrics."""
-
-    def __init__(self, risk_free_rate: float = 0.0) -> None:
-        super().__init__()
-        self._name = "Risk Adjusted Return"
-        self._risk_free_rate = risk_free_rate
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def calculate_from_positions(self, positions: list[Position]) -> dict[str, float]:
-        """
-        Calculate Sharpe-like ratio from positions.
-
-        Returns
-        -------
-        dict[str, float]
-            Dictionary with avg_return, volatility, and sharpe_ratio.
-        """
-        import numpy as np
-
-        returns = []
-        for position in positions:
-            if position.is_closed and position.realized_pnl is not None:
-                # Simplified: use PnL as return proxy
-                returns.append(float(position.realized_pnl))
-
-        if len(returns) < 2:
-            return {"avg_return": 0.0, "volatility": 0.0, "sharpe_ratio": 0.0}
-
-        avg_return = np.mean(returns)
-        volatility = np.std(returns)
-
-        if volatility == 0:
-            sharpe_ratio = 0.0
-        else:
-            sharpe_ratio = (avg_return - self._risk_free_rate) / volatility
-
-        return {
-            "avg_return": float(avg_return),
-            "volatility": float(volatility),
-            "sharpe_ratio": float(sharpe_ratio),
-        }
-```
-
-**Usage with PortfolioAnalyzer:**
-
-```python
-from nautilus_trader.analysis.analyzer import PortfolioAnalyzer
-
-analyzer = PortfolioAnalyzer()
-
-# Register custom statistics
-analyzer.register_statistic(WinStreakStatistic())
-analyzer.register_statistic(RiskAdjustedReturnStatistic(risk_free_rate=0.02))
-
-# Calculate after backtest
-results = engine.run()
-analyzer.calculate_statistics(positions=results.positions)
-```
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Custom Simulation Models migration reference](legacy_migration/custom-simulation-models.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Rust+PyO3 Implementation Patterns
 
@@ -1155,49 +498,10 @@ pub extern "C" fn custom_momentum_update(
 
 ## Coding Standards
 
-Follow these nautilus_trader conventions:
-
-### Type Hints
-
-All signatures must include comprehensive type annotations:
-```python
-def __init__(self, config: MyStrategyConfig) -> None:
-def on_bar(self, bar: Bar) -> None:
-def on_save(self) -> dict[str, bytes]:
-```
-
-### Docstrings
-
-Use NumPy docstring format, imperative mood for Python:
-```python
-def calculate_signal(self, bar: Bar) -> float:
-    """
-    Calculate trading signal from bar data.
-
-    Parameters
-    ----------
-    bar : Bar
-        The bar to analyze.
-
-    Returns
-    -------
-    float
-        Signal value between -1 and 1.
-    """
-```
-
-### Naming Conventions
-
-- Config classes: `{Component}Config` (e.g., `TrendStrategyConfig`)
-- Strategy IDs: `{StrategyClass}-{order_id_tag}` (e.g., `TrendStrategy-001`)
-- Instrument IDs: `{symbol}.{venue}` (e.g., `BTCUSDT-PERP.BINANCE`)
-- Bar types: `{instrument_id}-{step}-{aggregation}[{price_type}]-{source}` (price_type in square brackets)
-
-### Formatting
-
-- 100 character line limit
-- Trailing commas for multi-line arguments
-- Spaces only (no tabs)
+Non-AI Python guidance is physically quarantined as migration/reference-only.
+See [Coding Standards migration reference](legacy_migration/coding-standards.md).
+New production work follows the Rust or bounded PyO3 sections below; the sole
+active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Implementation Checklist
 

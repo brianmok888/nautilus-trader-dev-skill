@@ -171,6 +171,225 @@ def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
     assert present == []
 
 
+def test_public_strategy_routing_uses_rust_builder_for_new_work() -> None:
+    readme = read("README.md")
+    router = read("skills/nt/SKILL.md")
+    python_builder = read("skills/nt-strategy-builder/SKILL.md")
+    guide = read("docs/end_to_end_guide.md")
+
+    assert "nt-strategy-builder-rust ◄── nt-dex-adapter" in readme
+    assert (
+        "| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` "
+        "| `nt-strategy-builder-rust`, `nt-testing` |"
+    ) in router
+    assert (
+        "Routing to nt-strategy-builder-rust with nt-backtest and\n"
+        "nt-testing because the task is backtest wiring plus validation."
+    ) in router
+    assert "description: Use when migrating or referencing existing Python" in python_builder
+    assert "## Overview\n\nThis migration/reference-only skill" in python_builder
+    assert (
+        "especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, "
+        "`nt-live`, `nt-testing`, and `nt-review`"
+    ) in guide
+
+
+def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
+    guide = read("docs/end_to_end_guide.md")
+    dex_skill = read("skills/nt-dex-adapter/SKILL.md")
+    dex_agents = read("skills/nt-dex-adapter/AGENTS.md")
+    evomap = read("skills/nt-evomap-integration/SKILL.md")
+
+    assert "## Appendix: Python Migration Reference and Active AI/Advisory Lane" in guide
+    assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in guide
+    assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in guide
+    assert "Python remains supported for V2 strategy research" not in guide
+    contradictory_python_guidance = [
+        phrase
+        for phrase in [
+            "supported Python V2 strategy/research work",
+            "current Python-only integration guidance",
+        ]
+        if phrase in guide
+    ]
+    assert contradictory_python_guidance == []
+
+    combined_dex = dex_skill + dex_agents
+    assert "`nt-strategy-builder-rust`" in combined_dex
+    assert "Rust `LiveNode` or backtest wiring" in combined_dex
+    assert "nt-strategy-builder/dex_venue_input.py" not in combined_dex
+    assert "`nt-strategy-builder` skill's `dex_venue_input.py`" not in combined_dex
+
+    assert "`nt-strategy-builder-rust` for Rust `LiveNode` or backtest runtime wiring" in evomap
+    assert "`nt-strategy-builder` for runtime wiring" not in evomap
+
+
+def test_component_registration_uses_current_native_and_bundled_apis() -> None:
+    texts = [
+        read("skills/nt-trading/SKILL.md"),
+        read("skills/nt-live/references/concepts/rust.md"),
+    ]
+    combined = "\n".join(texts)
+
+    assert "node.add_strategy(strategy)?" in combined
+    assert "node.add_actor(actor)?" in combined
+    assert "add_builtin_strategy(type_name, config)" in combined
+    assert "add_builtin_actor(type_name, config)" in combined
+    assert "examples feature" in combined
+    assert "not a first-class extension API" in combined
+    assert "add_native_strategy" not in combined
+    assert "add_native_actor" not in combined
+
+
+def test_visualization_guidance_uses_current_tearsheet_api() -> None:
+    paths = [
+        "docs/visualization.md",
+        "references/README.md",
+        "skills/nt-implement/templates/legacy_migration/backtest_viz.py",
+        "skills/nt-strategy-builder/SKILL.md",
+        "skills/nt-strategy-builder/templates/legacy_migration/backtest_node.py",
+        "skills/nt-dex-adapter/SKILL.md",
+    ]
+    combined = "\n".join(read(path) for path in paths)
+
+    assert "BacktestVisualizer" not in combined
+    assert "from nautilus_trader.analysis import TearsheetConfig, create_tearsheet" in combined
+    assert 'create_tearsheet(engine, output_path="tearsheet.html", config=' in combined
+    assert "visualization" in combined
+    assert "migration/reference-only" in read("skills/nt-implement/templates/legacy_migration/backtest_viz.py")
+    assert "migration/reference-only" in read("skills/nt-strategy-builder/templates/legacy_migration/backtest_node.py")
+
+
+def test_backtest_template_uses_typed_logging_config() -> None:
+    text = read("skills/nt-strategy-builder/templates/legacy_migration/backtest_node.py")
+
+    assert "from nautilus_trader.common.config import LoggingConfig" in text
+    assert 'logging=LoggingConfig(log_level="WARNING")' in text
+    assert 'logging={"log_level": "WARNING"}' not in text
+
+
+def test_dex_python_live_templates_are_quarantined_and_not_approvable() -> None:
+    agents = read("skills/nt-dex-adapter/AGENTS.md")
+    checklist = read("skills/nt-dex-adapter/rules/compliance_checklist.md")
+
+    assert "legacy_migration/dex_data_client.py" in agents
+    assert "legacy_migration/dex_exec_client.py" in agents
+    assert "Rust `LiveNodeBuilder`" in agents
+    assert "Rust Core (if applicable)" not in checklist
+    assert "N/A if Python-only" not in checklist
+    assert "Python-only" in checklist
+    assert "cannot receive APPROVED FOR USE" in checklist
+
+
+def test_dex_canonical_skill_is_unconditionally_rust_first() -> None:
+    text = read("skills/nt-dex-adapter/SKILL.md")
+    canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
+
+    assert "Rust Core Infrastructure (if Rust-first)" not in canonical
+    assert "Phase 1: Rust Core Infrastructure" in canonical
+    assert "Rust data and execution client factories" in canonical
+    assert "LiveNodeBuilder" in canonical
+    assert "registered with `TradingNode`" not in canonical
+    assert "nautilus_trader/adapters/my_dex/" not in canonical
+
+
+def test_dex_current_compliance_does_not_import_migration_executables() -> None:
+    current = read("skills/nt-dex-adapter/tests/test_dex_compliance.py")
+    migration = read(
+        "skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py"
+    )
+    checklist = read("skills/nt-dex-adapter/rules/compliance_checklist.md")
+
+    assert "legacy_migration" not in current
+    assert "MyDEXLiveDataClientFactory" not in current
+    assert "MyDEXLiveExecClientFactory" not in current
+    assert "legacy_migration" in migration
+    assert "non-production migration smoke" in checklist
+    assert "does not gate production approval" in checklist
+
+
+def test_dex_current_compliance_loads_no_classified_python_templates() -> None:
+    current = read("skills/nt-dex-adapter/tests/test_dex_compliance.py")
+    migration = read(
+        "skills/nt-dex-adapter/tests/test_nonproduction_migration_templates.py"
+    )
+
+    classified_templates = {
+        path.name
+        for path in (REPO_ROOT / "skills/nt-dex-adapter/templates").rglob("*.py")
+        if path.read_text(encoding="utf-8").startswith("# TEMPLATE_CLASSIFICATION:")
+    }
+    loaded_by_current = {
+        template
+        for template in classified_templates
+        if template.removesuffix(".py") in current
+    }
+
+    assert loaded_by_current == set()
+    assert "dex_config" in migration
+    assert "dex_instrument_provider" in migration
+
+
+def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
+    text = read("skills/nt-model/SKILL.md")
+    expected = {
+        "BettingInstrument",
+        "BinaryOption",
+        "Cfd",
+        "Commodity",
+        "CryptoFuture",
+        "CryptoFuturesSpread",
+        "CryptoOption",
+        "CryptoOptionSpread",
+        "CryptoPerpetual",
+        "CurrencyPair",
+        "Equity",
+        "FuturesContract",
+        "FuturesSpread",
+        "IndexInstrument",
+        "OptionContract",
+        "OptionSpread",
+        "PerpetualContract",
+        "TokenizedAsset",
+    }
+    inventory = re.search(
+        r"\*\*18 `InstrumentAny` variants:\*\*\n(?P<body>(?:- `[^`]+`.*\n)+)",
+        text,
+    )
+    assert inventory is not None
+    documented = set(re.findall(r"^- `([^`]+)`", inventory.group("body"), re.MULTILINE))
+    assert documented == expected
+    assert "SyntheticInstrument is separate from `InstrumentAny`" in text
+    assert "**14 instrument types:**" not in text
+    assert "All 14 instrument types" not in text
+
+
+def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None:
+    paths = [
+        "skills/nt-backtest/references/guides/run_rust_backtest.md",
+        "skills/nt-live/references/guides/run_rust_live_trading.md",
+        "docs/end_to_end_guide.md",
+        "skills/nt-backtest/SKILL.md",
+        "skills/nt-live/SKILL.md",
+        "skills/nt-live/references/concepts/rust.md",
+    ]
+    dependency_pattern = re.compile(
+        r'^nautilus-[a-z-]+\s*=\s*(?:"(?P<plain>[^"]+)"|\{[^\n]*version\s*=\s*"(?P<table>[^"]+)")',
+        re.MULTILINE,
+    )
+    dependencies: list[tuple[str, str]] = []
+    for path in paths:
+        text = read(path)
+        for match in dependency_pattern.finditer(text):
+            version = match.group("plain") or match.group("table")
+            assert version is not None
+            dependencies.append((path, version))
+
+    assert dependencies
+    assert [(path, version) for path, version in dependencies if version != "0.61.0"] == []
+    assert "Rust 1.97.1" in read("docs/end_to_end_guide.md")
+
+
 def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
     expected = {
         path.parent.name
@@ -221,12 +440,85 @@ def test_current_v2_guidance_rejects_removed_order_subscriptions_and_brittle_ver
     architect = read("skills/nt-architect/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
     adapters = read("skills/nt-adapters/SKILL.md")
+    actor_guidance = "\n".join(
+        read(path)
+        for path in [
+            "skills/nt-architect/AGENTS.md",
+            "references/concepts/actors.md",
+            "skills/nt-trading/references/concepts/actors.md",
+        ]
+    )
 
-    assert "subscribe_order_fills" not in architect
-    assert "subscribe_order_cancels" not in architect
+    combined = architect + actor_guidance
+    assert "subscribe_order_fills" not in combined
+    assert "subscribe_order_cancels" not in combined
+    assert "unsubscribe_order_fills" not in combined
+    assert "unsubscribe_order_cancels" not in combined
     assert "on_order_filled(&OrderFilled)" in architect
     assert "on_order_canceled(&OrderCanceled)" in architect
+    assert "message bus" in actor_guidance.lower()
+    assert "on_order_filled" in actor_guidance
+    assert "on_order_canceled" in actor_guidance
     assert "Read the target workspace version" in implement
     assert "Use Rust crate version `0.57`" not in implement
     assert "All 16 adapters" not in adapters
     assert "Do not hard-code an adapter count" in adapters
+
+
+def test_post_pin_develop_features_are_version_scoped_and_source_backed() -> None:
+    data = read("skills/nt-data/SKILL.md")
+    model = read("skills/nt-model/SKILL.md")
+    backtest = read("skills/nt-backtest/SKILL.md")
+    live = read("skills/nt-live/SKILL.md")
+    testing = read("skills/nt-testing/SKILL.md")
+
+    assert "aabb824cb377d62ea7ff6a7ce9489a92c705580a" in data
+    for accessor in [
+        "mark_price_count",
+        "index_price_count",
+        "funding_rate_count",
+        "instrument_status_count",
+        "has_mark_prices",
+        "has_index_prices",
+        "has_funding_rates",
+        "has_instrument_statuses",
+    ]:
+        assert accessor in data
+
+    assert "d46f56505" in model
+    assert "OrderInitialized::new_checked" in model
+    assert "contingent order" in model
+    assert "execution spawn ID" in model
+
+    assert "501ebe4a8" in backtest
+    assert "BacktestResult.returns_series" in backtest
+    assert "dict[int, float]" in backtest
+    assert "result-only tearsheet" in backtest
+
+    assert "32bc6b680" in live
+    for invariant in [
+        "exactly once",
+        "post-halt",
+        "embedded `seq`",
+        "undecodable",
+        "filesystem order",
+    ]:
+        assert invariant in live
+
+    assert "spec_exec_testing.md" in testing
+    assert "groups 1–5" in testing
+    assert "unchanged between the pinned snapshot and current `origin/develop`" in testing
+
+
+def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
+    readme = read("README.md")
+    dev = read("skills/nt-dev/SKILL.md")
+
+    for text in [readme, dev]:
+        assert "Python 3.12-3.14" in text
+        assert "repository toolchain is pinned to Rust 1.97.1" in text
+        assert "not a permanent MSRV promise" in text
+
+    assert "Current release baseline: NautilusTrader v1.230.0 latest release" not in readme
+    assert "Pinned reproducible baseline" in readme
+    assert "Current develop observation" in readme

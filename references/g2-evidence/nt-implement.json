@@ -1,22 +1,9 @@
 {
-  "owned_content_sha256": "23578942098580064ac7e2896b25811897f45a81ed70bfb97a89cf729507d1f9",
-  "repository_commit": "109c50bc994594ec3e6b143b1504f0c4a404ea1b",
-  "schema_version": 1,
+  "owned_content_sha256": "dca517413c9be12aa47a11b5f27f11cc48ef9e6a9942fdf6d09bc6cc23c98fcd",
+  "schema_version": 2,
   "scope": "repository:implementation-templates-plus-upstream-owners",
   "skill": "nt-implement",
   "steps": [
-    {
-      "command": [
-        "/usr/bin/python3",
-        "-m",
-        "compileall",
-        "-q",
-        "skills/nt-implement/templates"
-      ],
-      "cwd": "repository",
-      "duration_seconds": 0.085858,
-      "returncode": 0
-    },
     {
       "command": [
         "cargo",
@@ -32,11 +19,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.725572,
+      "duration_seconds": 0.874178,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T23:13:30.343592+00:00"
+  "verified_at": "2026-07-30T01:32:09.000677+00:00"
 }

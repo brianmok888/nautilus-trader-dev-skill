@@ -55,7 +55,7 @@ ask_price = reserve_quote / reserve_base  # token0/token1 in quote units
 bid_price = ask_price * (1 - fee_rate)    # Effective bid includes fee
 ```
 
-See `templates/dex_order_book_builder.py` for a full implementation.
+See `migration_reference/python/templates/dex_order_book_builder.py` for a full implementation.
 
 **DO** drive chain polling from a dedicated polling Actor using `self.clock.set_timer()`, NOT from inside `on_bar` or `on_quote_tick`.
 ```python

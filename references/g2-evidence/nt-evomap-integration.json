@@ -1,10 +1,19 @@
 {
-  "owned_content_sha256": "a85f87f459cf2ab5ddbc8725766abb070af27faecff48e5e13c9c05f32e1d9ec",
-  "repository_commit": "109c50bc994594ec3e6b143b1504f0c4a404ea1b",
-  "schema_version": 1,
+  "owned_content_sha256": "3d55f23ea1bc45fa45514f67ffcd97a12ef5d54fd3afa40c083bcc00b242d694",
+  "schema_version": 2,
   "scope": "repository:python-ai-advisory-contract",
   "skill": "nt-evomap-integration",
   "steps": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "tools/run_pinned_v2_pytest.py",
+        "tests/test_ai_advisory_boundary.py"
+      ],
+      "cwd": "repository",
+      "duration_seconds": 1.123178,
+      "returncode": 0
+    },
     {
       "command": [
         "/usr/bin/python3",
@@ -16,11 +25,23 @@
         "ai_advisory"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.605509,
+      "duration_seconds": 1.400097,
+      "returncode": 0
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "pytest",
+        "-q",
+        "skills/nt-evomap-integration/python_sidecar/brainstorming_evomap/tests"
+      ],
+      "cwd": "repository",
+      "duration_seconds": 0.899491,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-28T23:13:29.488357+00:00"
+  "verified_at": "2026-07-30T03:57:11.601483+00:00"
 }

@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+# noqa: SIZE_OK - scenario fixtures intentionally exercise the complete sync contract.
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_dev_guide_sync as sync
@@ -106,6 +108,19 @@ def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) ->
         "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n"
         f"{ai_boundary}"
         f"{extra}"
+    )
+
+
+def rust_lane_text() -> str:
+    return (
+        "## Rust production lane\n"
+        "Rust owns production behavior.\n"
+        "## PyO3 control-plane lane\n"
+        "PyO3 is limited to control-plane integration.\n"
+        "## Migration/reference lane\n"
+        "See migration_reference/python for quarantined Python guidance.\n"
+        "## Source-pinned upstream lane\n"
+        f"See references/developer_guide/rust.md at {CURRENT_SYNC_COMMIT}.\n"
     )
 
 
@@ -224,6 +239,31 @@ def test_ignores_omx_runtime_context(tmp_path: Path) -> None:
 
     assert (
         "stale references/guides path in .omx/context/runtime.md" not in result.errors
+    )
+
+
+def test_ignores_hidden_superpowers_sdd_scratch(tmp_path: Path) -> None:
+    write(
+        tmp_path / ".superpowers/sdd/task-notes.md",
+        "Historical notes mention references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any(".superpowers/sdd/task-notes.md" in error for error in result.errors)
+
+
+def test_checks_non_sdd_superpowers_markdown(tmp_path: Path) -> None:
+    write(
+        tmp_path / ".superpowers/review/findings.md",
+        "Use references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "stale references/guides path in .superpowers/review/findings.md"
+        in result.errors
     )
 
 
@@ -1452,6 +1492,57 @@ def test_file_level_legacy_label_does_not_exempt_later_guidance(
     )
 
 
+def test_legacy_migration_path_does_not_exempt_unlabelled_guidance(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path / "skills/nt-example/legacy_migration/example.py",
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-example/legacy_migration/example.py" in result.errors
+    )
+
+
+def test_adapter_example_legacy_migration_path_needs_exact_header(
+    tmp_path: Path,
+) -> None:
+    write(
+        tmp_path
+        / "skills/nt-adapters/references/examples/legacy_migration/venue/node.py",
+        "from nautilus_trader.live.node import TradingNode\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled TradingNode guidance in "
+        "skills/nt-adapters/references/examples/legacy_migration/venue/node.py"
+        in result.errors
+    )
+
+
+def test_block_local_note_only_labels_adjacent_guidance(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-example/SKILL.md",
+        "NT v2 compatibility note: legacy Cython example; use PyO3 for new work.\n\n"
+        "Use cdef only while migrating this example.\n\n"
+        "Current setup.\n\n"
+        "Use cpdef for this later executable block.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in skills/nt-example/SKILL.md"
+        in result.errors
+    )
+
+
 def test_source_pinned_snapshot_policy_labels_upstream_legacy_content(
     tmp_path: Path,
 ) -> None:
@@ -1796,6 +1887,21 @@ def test_reports_self_referential_pass_readiness_evidence(tmp_path: Path) -> Non
 
     assert (
         "NT V2 readiness gate G0 Pass uses self-referential evidence in "
+        "skills/nt-data/SKILL.md" in errors
+    )
+
+
+def test_reports_card_validator_used_as_non_g2_evidence(tmp_path: Path) -> None:
+    card = readiness_gate_text().replace(
+        "`git rev-parse HEAD` recorded in `README.md`.",
+        "`uv run python tools/check_skill_g2_harnesses.py --check-cards` passed.",
+    )
+    write(tmp_path / "skills/nt-data/SKILL.md", card)
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "NT V2 readiness gate G0 Pass uses the card validator as evidence in "
         "skills/nt-data/SKILL.md" in errors
     )
 
@@ -2325,8 +2431,15 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     for relative in sync.NT_V2_READINESS_GATE_TARGETS:
         absolute = tmp_path / relative
         if absolute.exists():
+            lane_contract = (
+                rust_lane_text()
+                if relative.parent.name
+                in {"nt-trading", "nt-backtest", "nt-signals", "nt-live", "nt-data", "nt-implement"}
+                else ""
+            )
             absolute.write_text(
                 readiness_gate_text(readiness_extras.get(relative, ""))
+                + lane_contract
                 + absolute.read_text(),
                 encoding="utf-8",
             )

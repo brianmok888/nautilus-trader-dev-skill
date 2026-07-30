@@ -197,18 +197,16 @@ nautilus-trading = { path = "UPSTREAM/crates/trading" }
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_python_supported_v2_strategy_research_appendix_is_explicitly_labelled() -> None:
-    appendix = section(read(GUIDE), "Appendix: Supported Python V2 Strategy and Research Lane")
+def test_python_appendix_limits_active_python_to_ai_advisory() -> None:
+    appendix = section(read(GUIDE), "Appendix: Python Migration Reference and Active AI/Advisory Lane")
 
-    assert "Python remains supported for V2 strategy research" in appendix
-    assert "research" in appendix.lower()
-    assert "appendix" in appendix.lower()
-    assert "not the default production live path" in appendix
+    assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in appendix
+    assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in appendix
     assert "legacy `TradingNode`" in appendix
     assert "migration/reference-only" in appendix
-    assert "AI/advisory lane remains Python" in appendix
     assert "off execution-critical paths" in appendix
     assert "must not place orders" in appendix
+    assert "Python remains supported for V2 strategy research" not in appendix
 
 
 def test_readme_developer_guide_count_is_two() -> None:
@@ -226,6 +224,6 @@ def test_owned_skill_files_do_not_repeat_top_level_compatibility_notes() -> None
 
 
 def test_python_appendix_keeps_one_local_legacy_label() -> None:
-    appendix = section(read(GUIDE), "Appendix: Supported Python V2 Strategy and Research Lane")
+    appendix = section(read(GUIDE), "Appendix: Python Migration Reference and Active AI/Advisory Lane")
     assert appendix.count("NT v2 compatibility note:") == 1
-    assert "legacy `TradingNode` material is migration/reference-only" in appendix
+    assert "legacy `TradingNode` and non-AI Python integration material are migration/reference-only" in appendix

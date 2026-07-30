@@ -20,7 +20,7 @@ import importlib.util
 from pathlib import Path
 
 # Load template modules without installing as a package
-_templates = Path(__file__).parent.parent / "templates"
+_templates = Path(__file__).parent.parent / "migration_reference" / "python" / "templates"
 
 
 def _load_module(name: str):
