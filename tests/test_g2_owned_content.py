@@ -54,6 +54,28 @@ def test_owned_hash_binds_logical_path_and_entry_type(tmp_path: Path) -> None:
     assert ownership.harness_content_hash(tmp_path, _harness()) != file_hash
 
 
+def test_owned_hash_matches_clean_checkout_with_ambient_empty_directories(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    _write_skill(source)
+    subprocess.run(("git", "init", "-q"), cwd=source, check=True)
+    subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=source, check=True)
+    subprocess.run(("git", "config", "user.name", "G2 Test"), cwd=source, check=True)
+    subprocess.run(("git", "add", "."), cwd=source, check=True)
+    subprocess.run(("git", "commit", "-qm", "fixture"), cwd=source, check=True)
+
+    checkout = tmp_path / "checkout"
+    subprocess.run(("git", "clone", "-q", str(source), str(checkout)), check=True)
+    (source / "skills/nt-data/references/ambient-empty").mkdir(parents=True)
+
+    assert ownership.harness_content_hash(source, _harness()) == ownership.harness_content_hash(
+        checkout,
+        _harness(),
+    )
+
+
 def test_owned_hash_binds_symlink_target_text_and_target_content(tmp_path: Path) -> None:
     _write_skill(tmp_path)
     shared = tmp_path / "shared"

@@ -90,7 +90,7 @@ def _walk_owned(
         return [_Record(logical_path, "file", absolute.read_bytes())], sources
 
     if stat.S_ISDIR(metadata.st_mode):
-        records = [_Record(logical_path, "directory")]
+        records: list[_Record] = []
         for child in sorted(absolute.iterdir(), key=lambda candidate: candidate.name):
             child_records, child_sources = _walk_owned(
                 root,
