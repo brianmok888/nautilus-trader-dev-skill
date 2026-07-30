@@ -84,6 +84,32 @@ def _validate_review_artifact(
     return tuple(errors)
 
 
+def _validate_command_artifact(
+    repo_root: Path,
+    artifact: object,
+    field: str,
+    repo_sha: str,
+    command: str,
+    returncode: int,
+) -> tuple[str, ...]:
+    errors = list(_validate_artifact(repo_root, artifact, field))
+    if errors or not isinstance(artifact, dict):
+        return tuple(errors)
+    raw_path = artifact.get("path")
+    if not isinstance(raw_path, str):
+        return tuple(errors)
+    text = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8")
+    required_lines = (
+        (f"COMMAND: {command}", "exact command"),
+        (f"REPO_SHA: {repo_sha}", f"exact repository SHA {repo_sha}"),
+        (f"RETURN_CODE: {returncode}", f"return code {returncode}"),
+    )
+    for marker, description in required_lines:
+        if marker not in text:
+            errors.append(f"{field}: does not name {description}")
+    return tuple(errors)
+
+
 def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, ...]:
     try:
         payload = json.loads(attestation_path.read_text(encoding="utf-8"))
@@ -135,13 +161,19 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
                 recorded_commands.add(command["command"])
             if command.get("returncode") != 0:
                 errors.append(f"commands[{index}].returncode: expected 0")
-            errors.extend(
-                _validate_artifact(
-                    repo_root,
-                    command.get("output"),
-                    f"commands[{index}].output",
-                ),
-            )
+            command_text = command.get("command")
+            returncode = command.get("returncode")
+            if isinstance(command_text, str) and isinstance(returncode, int):
+                errors.extend(
+                    _validate_command_artifact(
+                        repo_root,
+                        command.get("output"),
+                        f"commands[{index}].output",
+                        exact_sha,
+                        command_text,
+                        returncode,
+                    ),
+                )
         missing_commands = sorted(set(REQUIRED_COMMANDS) - recorded_commands)
         if missing_commands:
             errors.append("commands: missing required commands: " + ", ".join(missing_commands))

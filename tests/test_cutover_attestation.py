@@ -32,9 +32,6 @@ def _repo_sha() -> str:
 
 
 def _write_attestation(path: Path, manifest: Path) -> None:
-    command_artifact = path.parent / "command.log"
-    command_artifact.write_text("verified command output\n", encoding="utf-8")
-    command_hash = hashlib.sha256(command_artifact.read_bytes()).hexdigest()
     code_review = path.parent / "code-review.txt"
     code_review.write_text(
         f"Repository SHA: {_repo_sha()}\nVERDICT: APPROVE\n",
@@ -58,10 +55,7 @@ def _write_attestation(path: Path, manifest: Path) -> None:
                     {
                         "command": command,
                         "returncode": 0,
-                        "output": {
-                            "path": str(command_artifact),
-                            "sha256": command_hash,
-                        },
+                        "output": _command_artifact(path.parent, command),
                     }
                     for command in REQUIRED_COMMANDS
                 ],
@@ -83,6 +77,18 @@ def _write_attestation(path: Path, manifest: Path) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def _command_artifact(root: Path, command: str) -> dict[str, str]:
+    artifact = root / f"command-{hashlib.sha256(command.encode()).hexdigest()[:12]}.log"
+    artifact.write_text(
+        f"COMMAND: {command}\nREPO_SHA: {_repo_sha()}\nRETURN_CODE: 0\n",
+        encoding="utf-8",
+    )
+    return {
+        "path": str(artifact),
+        "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+    }
 
 
 def _run(attestation: Path) -> subprocess.CompletedProcess[str]:
@@ -131,9 +137,6 @@ def test_external_attestation_rejects_changed_manifest(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}\n", encoding="utf-8")
     attestation = tmp_path / "attestation.json"
-    command_artifact = tmp_path / "command.log"
-    command_artifact.write_text("verified command output\n", encoding="utf-8")
-    command_hash = hashlib.sha256(command_artifact.read_bytes()).hexdigest()
     payload = {
         "schema_version": 1,
         "repo_sha": _repo_sha(),
@@ -145,17 +148,17 @@ def test_external_attestation_rejects_changed_manifest(tmp_path: Path) -> None:
             {
                 "command": command,
                 "returncode": 0,
-                "output": {"path": str(command_artifact), "sha256": command_hash},
+                "output": _command_artifact(tmp_path, command),
             }
             for command in REQUIRED_COMMANDS
         ],
         "code_reviewer": {
             "verdict": "APPROVE",
-            "artifact": {"path": str(command_artifact), "sha256": command_hash},
+            "artifact": {"path": str(manifest), "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()},
         },
         "architect": {
             "status": "CLEAR",
-            "artifact": {"path": str(command_artifact), "sha256": command_hash},
+            "artifact": {"path": str(manifest), "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()},
         },
     }
     attestation.write_text(json.dumps(payload), encoding="utf-8")
@@ -180,6 +183,22 @@ def test_external_attestation_rejects_fabricated_command_output_hash(
 
     assert result.returncode == 1
     assert "commands[0].output.sha256" in result.stderr
+
+
+def test_external_attestation_rejects_output_for_another_command(
+    tmp_path: Path,
+) -> None:
+    manifest = REPO_ROOT / "references" / "upstream-delta-review.json"
+    attestation = tmp_path / "attestation.json"
+    _write_attestation(attestation, manifest)
+    payload = json.loads(attestation.read_text(encoding="utf-8"))
+    payload["commands"][0]["output"] = payload["commands"][1]["output"]
+    attestation.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = _run(attestation)
+
+    assert result.returncode == 1
+    assert "commands[0].output: does not name exact command" in result.stderr
 
 
 def test_external_attestation_rejects_review_artifact_without_exact_sha_or_verdict(
