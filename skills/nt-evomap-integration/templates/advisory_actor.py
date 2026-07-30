@@ -43,6 +43,7 @@ class AdvisoryRequest:
     """Bounded request exported to the external advisory proxy."""
 
     request_id: str
+    request_sequence: int
     artifact_hash: str
     deadline_ns: int
 
@@ -52,6 +53,7 @@ class AdvisoryResult:
     """Non-actionable suggestion returned by the external advisory proxy."""
 
     request_id: str
+    request_sequence: int
     suggestion_id: str
     artifact_hash: str
     suggestion_hash: str
@@ -144,6 +146,7 @@ class AdvisoryBridgeActorConfig(DataActorConfig):
         cls,
         mailbox_capacity: int = 64,
         poll_interval_ms: int = 100,
+        request_sequence_floor: int = 0,
         actor_id: ActorId | None = None,
         log_events: bool = True,
         log_commands: bool = True,
@@ -154,6 +157,7 @@ class AdvisoryBridgeActorConfig(DataActorConfig):
         self,
         mailbox_capacity: int = 64,
         poll_interval_ms: int = 100,
+        request_sequence_floor: int = 0,
         actor_id: ActorId | None = None,
         log_events: bool = True,
         log_commands: bool = True,
@@ -164,6 +168,7 @@ class AdvisoryBridgeActorConfig(DataActorConfig):
         self.log_commands: bool = log_commands
         self.mailbox_capacity: int = mailbox_capacity
         self.poll_interval_ms: int = poll_interval_ms
+        self.request_sequence_floor: int = request_sequence_floor
 
 
 class AdvisoryBridgeActor(DataActor):
@@ -178,14 +183,14 @@ class AdvisoryBridgeActor(DataActor):
             raise ValueError("mailbox_capacity must be positive")
         if config.poll_interval_ms <= 0:
             raise ValueError("poll_interval_ms must be positive")
+        if config.request_sequence_floor < 0:
+            raise ValueError("request_sequence_floor must not be negative")
         self._config: AdvisoryBridgeActorConfig = config
         self._mailbox: AdvisoryMailboxPort = AdvisoryMailboxPort(config.mailbox_capacity)
         self._pending_request: AdvisoryRequest | None = None
         self._staged_result: AdvisoryResult | None = None
-        self._staged_identity: tuple[str, str, str] | None = None
-        self._completed_identities: deque[tuple[str, str, str]] = deque(
-            maxlen=config.mailbox_capacity,
-        )
+        self._staged_identity: tuple[int, str, str, str] | None = None
+        self._completed_request_sequence: int = config.request_sequence_floor
         self._decision_finalized: bool = False
         self._authority: AdvisoryAuthority = AdvisoryAuthority.NONE
 
@@ -198,6 +203,10 @@ class AdvisoryBridgeActor(DataActor):
     def authority(self) -> AdvisoryAuthority:
         """Return offline review authority; trading authority is unrepresentable."""
         return self._authority
+
+    @property
+    def request_sequence_floor(self) -> int:
+        return self._completed_request_sequence
 
     @override
     def on_start(self) -> None:
@@ -220,7 +229,6 @@ class AdvisoryBridgeActor(DataActor):
         self._pending_request = None
         self._staged_result = None
         self._staged_identity = None
-        self._completed_identities.clear()
         self._decision_finalized = False
         self._authority = AdvisoryAuthority.NONE
 
@@ -232,6 +240,8 @@ class AdvisoryBridgeActor(DataActor):
     def request_review(self, request: AdvisoryRequest) -> bool:
         """Queue one review request without blocking or replacing older work."""
         if self._pending_request is not None:
+            return False
+        if request.request_sequence <= self._completed_request_sequence:
             return False
         if not self._mailbox.try_put_request(request):
             return False
@@ -261,8 +271,16 @@ class AdvisoryBridgeActor(DataActor):
                 self._complete_request()
                 return AdvisoryResultStatus.TIMED_OUT
             return AdvisoryResultStatus.EMPTY
-        identity = (result.request_id, result.suggestion_id, result.suggestion_hash)
-        if identity == self._staged_identity or identity in self._completed_identities:
+        identity = (
+            result.request_sequence,
+            result.request_id,
+            result.suggestion_id,
+            result.suggestion_hash,
+        )
+        if (
+            result.request_sequence <= self._completed_request_sequence
+            or identity == self._staged_identity
+        ):
             return self._reject_result(result, "result_replay", now_ns)
         request = self._pending_request
         if request is None:
@@ -271,6 +289,8 @@ class AdvisoryBridgeActor(DataActor):
             return self._reject_result(result, "late_result", now_ns)
         if result.request_id != request.request_id:
             return self._reject_result(result, "request_id_mismatch", now_ns)
+        if result.request_sequence != request.request_sequence:
+            return self._reject_result(result, "request_sequence_mismatch", now_ns)
         if result.artifact_hash != request.artifact_hash:
             return self._reject_result(result, "artifact_hash_mismatch", now_ns)
         record = AdvisoryAuditRecord(
@@ -341,21 +361,19 @@ class AdvisoryBridgeActor(DataActor):
             return AdvisoryResultStatus.AUDIT_BLOCKED
         if reason == "late_result":
             self._decision_finalized = True
-            self._complete_request(
-                (result.request_id, result.suggestion_id, result.suggestion_hash),
-            )
+            self._complete_request()
             return AdvisoryResultStatus.LATE
         return AdvisoryResultStatus.REJECTED
 
-    def _complete_request(
-        self,
-        completed_identity: tuple[str, str, str] | None = None,
-    ) -> None:
+    def _complete_request(self) -> None:
+        request = self._pending_request
+        if request is not None:
+            self._completed_request_sequence = max(
+                self._completed_request_sequence,
+                request.request_sequence,
+            )
         self._pending_request = None
         self._staged_result = None
-        identity = completed_identity or self._staged_identity
-        if identity is not None:
-            self._completed_identities.append(identity)
 
     @staticmethod
     def _decision_rejection_reason(

@@ -80,6 +80,10 @@ class _Actor(Protocol):
     def approve(self, decision) -> bool: ...
 
 
+class _RequestRecord(Protocol):
+    request_id: str
+
+
 def _tree() -> ast.Module:
     return ast.parse(TEMPLATE.read_text(encoding="utf-8"), filename=str(TEMPLATE))
 
@@ -106,9 +110,14 @@ def _call_name(call: ast.Call) -> str:
     return ""
 
 
-def _request(module: ModuleType, request_id: str = "request-1"):
+def _request(
+    module: ModuleType,
+    request_id: str = "request-1",
+    request_sequence: int = 1,
+):
     return module.AdvisoryRequest(
         request_id=request_id,
+        request_sequence=request_sequence,
         artifact_hash="artifact-hash",
         deadline_ns=100,
     )
@@ -119,9 +128,11 @@ def _result(
     request_id: str = "request-1",
     suggestion_id: str = "suggestion-1",
     suggestion_hash: str = "suggestion-hash",
+    request_sequence: int = 1,
 ):
     return module.AdvisoryResult(
         request_id=request_id,
+        request_sequence=request_sequence,
         suggestion_id=suggestion_id,
         artifact_hash="artifact-hash",
         suggestion_hash=suggestion_hash,
@@ -217,6 +228,7 @@ def test_advisory_config_preserves_v2_base_fields() -> None:
     assert config.log_commands is False
     assert config.mailbox_capacity == 8
     assert config.poll_interval_ms == 250
+    assert config.request_sequence_floor == 0
 
 
 def test_advisory_records_are_frozen_and_slotted() -> None:
@@ -250,7 +262,7 @@ def test_advisory_mailbox_rejects_write_when_capacity_is_exhausted() -> None:
     first = _request(module)
 
     assert mailbox.try_put_request(first) is True
-    assert mailbox.try_put_request(_request(module, "request-2")) is False
+    assert mailbox.try_put_request(_request(module, "request-2", 2)) is False
     assert mailbox.try_take_request() == first
 
 
@@ -312,6 +324,7 @@ def test_approved_review_releases_actor_for_next_request() -> None:
     assert actor.staged_result is None
     next_request = module.AdvisoryRequest(
         request_id="request-2",
+        request_sequence=2,
         artifact_hash="artifact-hash",
         deadline_ns=300,
     )
@@ -328,7 +341,7 @@ def test_rejected_review_releases_actor_for_next_request() -> None:
 
     assert actor.approve(_decision(module, approved=False)) is False
     assert actor.staged_result is None
-    assert actor.request_review(_request(module, "request-2")) is True
+    assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
 def test_timed_out_review_releases_actor_for_next_request() -> None:
@@ -339,7 +352,7 @@ def test_timed_out_review_releases_actor_for_next_request() -> None:
 
     assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.TIMED_OUT
     assert mailbox.try_take_audit().reason == "request_timeout"
-    assert actor.request_review(_request(module, "request-2")) is True
+    assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
 def test_timeout_audit_backpressure_keeps_request_pending() -> None:
@@ -358,10 +371,10 @@ def test_timeout_audit_backpressure_keeps_request_pending() -> None:
     ) is True
 
     assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.AUDIT_BLOCKED
-    assert actor.request_review(_request(module, "request-2")) is False
+    assert actor.request_review(_request(module, "request-2", 2)) is False
     assert mailbox.try_take_audit().reason == "test_backpressure"
     assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.TIMED_OUT
-    assert actor.request_review(_request(module, "request-2")) is True
+    assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
 def test_advisory_audit_backpressure_prevents_state_transition() -> None:
@@ -424,6 +437,78 @@ def test_timely_result_replay_is_rejected() -> None:
     assert mailbox.try_take_audit().reason == "result_replay"
 
 
+def test_completed_result_replay_survives_capacity_and_lifecycle_reset() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=2)
+    actor = module.AdvisoryBridgeActor(
+        module.AdvisoryBridgeActorConfig(
+            mailbox_capacity=2,
+            request_sequence_floor=0,
+        ),
+    )
+    actor._mailbox = mailbox
+
+    first_result = None
+    for sequence in range(1, 4):
+        request_id = f"request-{sequence}"
+        request = module.AdvisoryRequest(
+            request_id=request_id,
+            request_sequence=sequence,
+            artifact_hash="artifact-hash",
+            deadline_ns=100,
+        )
+        result = module.AdvisoryResult(
+            request_id=request_id,
+            request_sequence=sequence,
+            suggestion_id=f"suggestion-{sequence}",
+            artifact_hash="artifact-hash",
+            suggestion_hash=f"suggestion-hash-{sequence}",
+            received_ns=50,
+        )
+        decision = _decision(
+            module,
+            request_id=request_id,
+            suggestion_id=f"suggestion-{sequence}",
+            suggestion_hash=f"suggestion-hash-{sequence}",
+        )
+        assert actor.request_review(request) is True
+        queued_request: _RequestRecord | None = mailbox.try_take_request()
+        assert queued_request is not None
+        assert queued_request.request_id == request_id
+        assert mailbox.try_put_result(result) is True
+        assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+        assert mailbox.try_take_audit().reason == "ready_for_review"
+        assert actor.approve(decision) is True
+        assert mailbox.try_take_audit().reason == "offline_change_review"
+        if sequence == 1:
+            first_result = result
+
+    actor.on_reset()
+    assert first_result is not None
+    assert actor.request_review(
+        module.AdvisoryRequest(
+            request_id="request-reused",
+            request_sequence=1,
+            artifact_hash="artifact-hash",
+            deadline_ns=200,
+        ),
+    ) is False
+    assert mailbox.try_put_result(first_result) is True
+    assert actor.poll_result(now_ns=70) == module.AdvisoryResultStatus.REJECTED
+    assert mailbox.try_take_audit().reason == "result_replay"
+
+    restarted = module.AdvisoryBridgeActor(
+        module.AdvisoryBridgeActorConfig(
+            mailbox_capacity=2,
+            request_sequence_floor=3,
+        ),
+    )
+    restarted._mailbox = mailbox
+    assert mailbox.try_put_result(first_result) is True
+    assert restarted.poll_result(now_ns=80) == module.AdvisoryResultStatus.REJECTED
+    assert mailbox.try_take_audit().reason == "result_replay"
+
+
 def test_late_approval_ends_request_and_releases_actor() -> None:
     module = _module()
     mailbox = module.AdvisoryMailboxPort(capacity=4)
@@ -444,7 +529,7 @@ def test_late_approval_ends_request_and_releases_actor() -> None:
     assert mailbox.try_take_audit().reason == "decision_late"
     assert actor.authority is module.AdvisoryAuthority.NONE
     assert actor.staged_result is None
-    assert actor.request_review(_request(module, "request-2")) is True
+    assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
 def test_rejected_advisory_decision_is_terminal_and_releases_actor() -> None:
@@ -467,7 +552,7 @@ def test_rejected_advisory_decision_is_terminal_and_releases_actor() -> None:
     assert mailbox.try_take_audit().reason == "operator_rejected"
     assert actor.authority is module.AdvisoryAuthority.NONE
     assert actor.staged_result is None
-    assert actor.request_review(_request(module, "request-2")) is True
+    assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
 def test_advisory_result_at_or_after_deadline_is_rejected_as_late() -> None:
@@ -494,6 +579,7 @@ def test_advisory_result_for_timed_out_request_remains_rejected_on_replay() -> N
     assert mailbox.try_take_audit().reason == "late_result"
     next_request = module.AdvisoryRequest(
         request_id="request-2",
+        request_sequence=2,
         artifact_hash="artifact-hash",
         deadline_ns=300,
     )
