@@ -19,17 +19,66 @@ Adapters follow a layered architecture:
 - **Rust core** — HTTP/WebSocket clients, parsing, rate limiting
 - **Python layer** — integration with NT data and execution engines
 
-### Implementation Sequence (7 Phases)
+### Adapter Implementation Sequence
 
 | Phase | Focus | Key Files |
 |-------|-------|-----------|
-| 1 | Rust core infrastructure | HTTP client, WebSocket client, error types, parsing |
-| 2 | Instrument definitions | Instrument parsing, provider, symbol mapping |
-| 3 | Market data | Subscriptions, historical data, order book management |
-| 4 | Order execution | Order submission, management, fill handling |
-| 5 | Advanced features | Account management, position tracking |
-| 6 | Configuration & factories | Config types, factory registration |
-| 7 | Testing & documentation | DataTesterConfig, ExecTesterConfig, docs |
+| 1 | Define scope | Capability matrix, environments, known gaps, test plan |
+| 2 | Build the protocol core | HTTP/WebSocket, credentials, signing, parsing, lifecycle |
+| 3 | Implement instruments | Instrument parsing, provider, symbol mapping, precision |
+| 4 | Implement market data | Requests, subscriptions, books, reconnect behavior |
+| 5 | Implement execution | Account state, commands, reports, reconciliation |
+| 6 | Add optional venue capabilities | Advanced orders and product-specific slices |
+| 7 | Complete factories and projection | Rust configs/factories, PyO3 registry when supported |
+| 8 | Prove conformance | Functional/integration specs plus controlled-venue acceptance |
+| 9 | Measure performance and robustness | Benchmarks, fuzzing, recovery invariants |
+| 10 | Finish documentation and operations | Capability matrix, limits, tester entry points, troubleshooting |
+
+### Phase 1: Define scope
+
+Record the capability matrix, environments, protocol boundaries, known gaps, and smallest
+end-to-end slice.
+
+### Phase 2: Build the protocol core
+
+Build deterministic HTTP/WebSocket protocol clients, credentials/signing, parsers, retry
+classification, and lifecycle behavior in Rust.
+
+### Phase 3: Implement instruments
+
+Implement complete instrument identity, precision, provider loading, caching, and updates.
+
+### Phase 4: Implement market data
+
+Add advertised requests and subscriptions with snapshot/delta, unsubscribe, malformed-input, and
+reconnect coverage.
+
+### Phase 5: Implement execution
+
+Establish account state, private streams, reconciliation, commands, ambiguous outcomes, and status
+reports.
+
+### Phase 6: Add optional venue capabilities
+
+Add advanced orders, batches, or product-specific data only after the base lifecycle is stable.
+
+### Phase 7: Complete factories and projection
+
+Finalize typed Rust configs/factories and bounded PyO3 registry projection when supported.
+
+### Phase 8: Prove conformance
+
+Run deterministic functional/integration scenarios and applicable tester specs on testnet or a
+controlled account, including failure and recovery paths.
+
+### Phase 9: Measure performance and robustness
+
+Benchmark proven hot paths and fuzz every untrusted parser, normalizer, signer, and encoder.
+
+### Phase 10: Finish documentation and operations
+
+Reconcile the capability matrix and document configuration, limits, reconciliation, environments,
+tester entry points, known gaps, and troubleshooting.
 
 ### Directory Structure
 
@@ -100,7 +149,7 @@ ExecTesterConfig(strategy_id, instrument_id, client_id, order_qty).with_test_rej
 ## Checkpoint
 
 You can:
-- Build a new adapter following the 7-phase implementation sequence
+- Build a new adapter following the official ten-phase implementation sequence
 - Structure Rust code following NT conventions
 - Wire adapter into LiveNode via factory pattern
 - Write DataTesterConfig and ExecTesterConfig validation

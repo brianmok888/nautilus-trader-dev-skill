@@ -8,8 +8,8 @@
 <!-- Write-target rule: only update this file if structural wiring changed. -->
 
 Review date: 2026-07-30
-Cutover implementation commit: ceb53702d5c493406fe8976232df8843088b625e
-Merged tracker reconciliation: f67e3dd05937057c20be5169812ef839e0640c10
+Cutover implementation baseline: `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`
+Current reconciliation: `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`; exact ship SHA is external-attested.
 
 ## Repo shape
 
@@ -18,7 +18,7 @@ Merged tracker reconciliation: f67e3dd05937057c20be5169812ef839e0640c10
 - **Package manager:** uv (Python); tests run via `uv run pytest`
 - **Lint:** ruff (`ruff.toml`)
 - **NT alignment:** GitHub `develop` developer-guide snapshot with version-sensitive migration notes
-- **Cutover gate shape:** 18 skills with G0-G7 cards; 144 Pass, 0 Pending, 0 Blocked
+- **Cutover gate shape:** 18 skills with G0-G7 cards; 143 Pass, 1 Pending, 0 Blocked (`nt-implement` G2 awaits real `capnp` generation/round trip)
 - **Validation surface:** `uv run pytest -q --ignore=tests/test_quality_gates.py` and `uv run pytest -q tests/test_quality_gates.py`
 
 ## Skill inventory

@@ -1,8 +1,9 @@
 {
-  "owned_content_sha256": "3d55f23ea1bc45fa45514f67ffcd97a12ef5d54fd3afa40c083bcc00b242d694",
+  "owned_content_sha256": "9d86ff921633780be71442be1169afb45721d74bbc517f22d6985bf7e2232611",
   "schema_version": 2,
   "scope": "repository:python-ai-advisory-contract",
   "skill": "nt-evomap-integration",
+  "status": "pass",
   "steps": [
     {
       "command": [
@@ -11,7 +12,7 @@
         "tests/test_ai_advisory_boundary.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.123178,
+      "duration_seconds": 1.030068,
       "returncode": 0
     },
     {
@@ -25,7 +26,7 @@
         "ai_advisory"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.400097,
+      "duration_seconds": 0.923536,
       "returncode": 0
     },
     {
@@ -37,11 +38,11 @@
         "skills/nt-evomap-integration/python_sidecar/brainstorming_evomap/tests"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.899491,
+      "duration_seconds": 0.950948,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T03:57:11.601483+00:00"
+  "verified_at": "2026-07-30T07:10:49.324738+00:00"
 }

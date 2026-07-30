@@ -11,10 +11,19 @@ def test_canonical_skill_requires_rust_client_stack() -> None:
     canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
 
     required = (
-        "Phase 1: Rust Core Infrastructure",
+        "Phase 1: Define scope",
+        "Phase 2: Build the protocol core",
+        "Phase 3: Implement instruments",
+        "Phase 4: Implement market data",
+        "Phase 5: Implement execution",
+        "Phase 6: Add optional venue capabilities",
+        "Phase 7: Complete factories and projection",
+        "Phase 8: Prove conformance",
+        "Phase 9: Measure performance and robustness",
+        "Phase 10: Finish documentation and operations",
         "nautilus_network::http::HttpClient",
         "nautilus_network::websocket::WebSocketClient",
-        "Rust data and execution client factories",
+        "Rust `InstrumentProvider`, data and execution client",
         "LiveNodeBuilder",
     )
     assert all(term in canonical for term in required)

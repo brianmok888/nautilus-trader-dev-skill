@@ -378,6 +378,27 @@ def test_readiness_cards_reference_the_targeted_harness_command() -> None:
     assert errors == []
 
 
+def test_readiness_card_requires_exactly_one_row_for_every_gate(tmp_path: Path) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    skill_path.write_text(
+        "| G2 V2 example validation | Validate. | Pending | "
+        f"`{g2.evidence_command('nt-data')}` ran; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+
+    errors = g2.validate_readiness_cards(
+        tmp_path,
+        {"nt-data": g2.HARNESSES["nt-data"]},
+        require_evidence=False,
+    )
+
+    assert (
+        "nt-data readiness card must declare exactly one row for each G0-G7 gate"
+        in errors
+    )
+
+
 def test_readiness_cards_do_not_report_stale_cutover_results() -> None:
     for skill in sorted(EXPECTED_SKILLS):
         text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
@@ -389,6 +410,18 @@ def test_readiness_cards_do_not_report_stale_cutover_results() -> None:
         assert "2026-07-28:" not in text
         assert "with residual Pending gates retained below" not in text
         assert "Cutover commits `9287019`" not in text
+
+
+def test_readiness_cards_use_bounded_shared_gate_claims() -> None:
+    for skill in sorted(EXPECTED_SKILLS):
+        text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
+
+        assert "passed 25 tests" not in text
+        assert "passed 24 tests" not in text
+        if "| G3 Rust bindings/PyO3 |" in text:
+            assert "selected Rust/PyO3 ownership" in text
+        if "| G6 Safety/compliance |" in text:
+            assert "selected repository policy checks" in text
 
 
 def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> None:
@@ -513,6 +546,7 @@ def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: P
                 "schema_version": 2,
                 "skill": "nt-data",
                 "scope": harness.scope,
+                "status": "pass",
                 "owned_content_sha256": "not-the-owned-content",
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
@@ -548,6 +582,7 @@ def test_evidence_schema_has_no_self_referential_repository_commit(
     assert harness.evidence_file is not None
     payload = json.loads((tmp_path / harness.evidence_file).read_text())
     assert payload["schema_version"] == 2
+    assert payload["status"] == "pass"
     assert "repository_commit" not in payload
     assert payload["owned_content_sha256"] == g2.harness_content_hash(
         tmp_path, harness
@@ -717,7 +752,19 @@ def test_implement_g2_validates_capnp_without_compiling_migration_python() -> No
     harness = g2.HARNESSES["nt-implement"]
     command_text = " ".join(argument for step in harness.steps for argument in step.command)
 
+    assert "fixed-point-schema" in harness.scope
     assert "compileall" not in command_text
     assert "tests/test_capnp_schema_precision.py" in command_text
     assert any(step.cwd is g2.WorkingDirectory.REPOSITORY for step in harness.steps)
     assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
+
+
+def test_implement_g2_remains_pending_when_capnp_round_trip_is_skipped() -> None:
+    evidence_path = g2.repo_root() / "references/g2-evidence/nt-implement.json"
+    payload = json.loads(evidence_path.read_text())
+    skill_text = (g2.repo_root() / "skills/nt-implement/SKILL.md").read_text()
+
+    assert payload["status"] == "pending"
+    assert payload["pending_reason"] == "capnp executable unavailable"
+    assert "| G2 V2 example validation |" in skill_text
+    assert "| Pending |" in skill_text

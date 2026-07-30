@@ -41,7 +41,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 │   nt-data         Market data types, subscriptions, catalogs                │
 │   nt-backtest     BacktestEngine, venues, actors, fill models               │
 │   nt-live         LiveNode/runtime boundary, adapters, reconciliation       │
-│   nt-adapters     CeFi adapter spec (Binance, OKX, Bybit…), 7-phase build   │
+│   nt-adapters     CeFi adapter spec (Binance, OKX, Bybit…), 10-phase build  │
 │   nt-model        Core domain objects, identifiers, instruments             │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -106,7 +106,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-data` | Market data types and pipelines | Subscriptions, catalogs, data model |
 | `nt-backtest` | Backtesting engine and config | BacktestEngine, actors, fill models |
 | `nt-live` | Live trading and production ops | Rust-backed `LiveNode` versus labelled Python-live runtime boundary, adapters, reconciliation |
-| `nt-adapters` | CeFi adapter specification | 7-phase implementation, 118KB official spec |
+| `nt-adapters` | CeFi adapter specification | Official 10-phase implementation and acceptance sequence |
 | `nt-model` | Core domain objects | Instruments, identifiers, value objects |
 
 ### Developer Guide Skills (2)

@@ -22,7 +22,9 @@ def test_adapter_guidance_uses_the_official_ten_phase_dependency_structure() -> 
     )
 
     for relative_path in (
+        "skills/nt-learn/curriculum/12-adapter-development.md",
         "skills/nt-adapters/SKILL.md",
+        "skills/nt-dex-adapter/SKILL.md",
         "skills/nt-implement/SKILL.md",
         "skills/nt-review/AGENTS.md",
     ):
@@ -31,6 +33,10 @@ def test_adapter_guidance_uses_the_official_ten_phase_dependency_structure() -> 
         assert positions == sorted(positions), relative_path
         assert "7-Phase" not in text
         assert "7-phase" not in text
+
+    readme = read("README.md")
+    assert "7-phase" not in readme
+    assert "7 Phases" not in readme
 
 
 def test_g2_guidance_limits_cargo_check_to_compilation_evidence() -> None:

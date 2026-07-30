@@ -15,7 +15,11 @@ from tools.check_upstream_freshness import (
     render_json_report,
     render_text_report,
 )
-from tools.upstream_baseline import default_upstream_root
+from tools.upstream_baseline import UPSTREAM_REMOTE_REFS, default_upstream_root
+
+
+def test_only_authoritative_develop_is_a_required_moving_ref() -> None:
+    assert UPSTREAM_REMOTE_REFS == ("origin/develop",)
 
 
 def test_upstream_root_is_portable_and_environment_overridable(

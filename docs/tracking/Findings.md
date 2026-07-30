@@ -12,7 +12,7 @@ Review date: 2026-07-30
 ## Open issues
 
 No P0/P1 NT V2 Rust cutover finding remains open. Maintenance follow-ups are
-tracked in `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md`.
+tracked in `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
 
 ## Closed issues
 
@@ -29,13 +29,13 @@ v1, and legacy audit terms; it does not authorize those paths for new work.
 **Severity:** high
 **Description:** Every skill SKILL.md has between 2 and 9 Cython mentions and 4–18 legacy mentions. Per Handguard invariant #3, all Cython/v1/legacy content must be explicitly labelled. A Phase 1 deep review is required to confirm every instance is labelled `legacy:` or carries a migration note. Unlabelled instances are charter violations.
 **Scope:** 18 skills × SKILL.md + reference files + templates.
-**Closure evidence:** `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` closes the post-fix audit; `uv run python tools/check_dev_guide_sync.py` passes.
+**Closure evidence:** `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` closes the post-fix audit; `uv run python tools/check_legacy_labelling.py` and `uv run python tools/check_dev_guide_sync.py` pass.
 
 ### NTDS-003 — G2 gate status unverified per skill
 **Status:** closed
 **Severity:** medium
 **Description:** Per Handguard invariant #7, each skill claiming V2 compliance must have passing G2 evidence (`tools/check_skill_g2_harnesses.py`). Current per-skill G2 status is not documented in a readiness card. Phase 3 of the mission prompt asks for a cutover readiness card per skill.
-**Closure evidence:** all 18 `skills/nt*/SKILL.md` cards contain G0-G7 Pass rows; `uv run python tools/check_skill_g2_harnesses.py --check-cards` passes and `references/g2-evidence/*.json` stores G2 evidence.
+**Closure evidence:** all 18 `skills/nt*/SKILL.md` cards contain exactly one G0-G7 row; `uv run python tools/check_skill_g2_harnesses.py --check-cards` passes and `references/g2-evidence/*.json` stores G2 evidence. The aggregate is 143 Pass, 1 Pending, 0 Blocked because real Cap'n Proto generation could not run without `capnp`.
 
 ## Delta log
 
@@ -63,3 +63,5 @@ Do not edit historical deltas.
 2026-07-30 — [C] — MODIFIED: NT v2 compatibility note: closed reference Python classification and lint exclusion bypasses and required file-level source-pinned legacy/reference-only policy metadata without changing snapshot bodies — files: tools/template_classification.py, tests/test_template_classification.py, tests/test_quality_gates.py, ruff.toml, references/api_reference/conf.py, tools/check_dev_guide_sync.py, tests/test_dev_guide_sync.py, docs/tracking/Findings.md
 2026-07-30 — [C] — MODIFIED: version-scoped current execution-spec drift for close_positions_qty_precision and constrained TC-E06/TC-E82 acceptance to the exact precision-derived residual with no open orders while preserving the immutable migration/reference snapshot — files: skills/nt-testing/SKILL.md, tests/test_exec_spec_current_overlay.py, docs/tracking/Findings.md
 2026-07-30 — [C] — ADDED: exact-commit upstream delta review manifests and external exact-SHA cutover attestations so reviewed drift, verification commands, and independent verdicts cannot be inferred from stale evidence — files: references/upstream-delta-review.json, tools/check_upstream_freshness.py, tests/test_upstream_freshness.py, tools/check_cutover_attestation.py, tests/test_cutover_attestation.py, docs/tracking/Findings.md
+2026-07-30 — [C] — MODIFIED: reconciled all 16 cutover findings, regenerated all 18 G0-G7 cards from fresh harness evidence, and retained real Cap'n Proto generation as one explicit Pending gate instead of overclaiming readiness — files: docs/plans/2026-07-30-nt-v2-cutover-audit-phase1.md, docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md, docs/tracking/Components.md, docs/tracking/Structure.md, skills/nt*/SKILL.md, references/g2-evidence/*.json, tools/check_skill_g2_harnesses.py, tests/test_skill_g2_harnesses.py, tests/test_v2_guidance_hardening.py, docs/tracking/Findings.md
+2026-07-30 — [C] — MODIFIED: extended the official ten-phase adapter workflow to the DEX skill, learner curriculum, and public inventory; bounded shared card evidence claims; encoded Cap'n Proto Pending provenance; and strengthened exact-SHA attestation inputs — files: README.md, skills/nt-dex-adapter/SKILL.md, skills/nt-dex-adapter/tests/test_dex_compliance.py, skills/nt-learn/curriculum/12-adapter-development.md, skills/nt*/SKILL.md, references/g2-evidence/*.json, tools/check_skill_g2_harnesses.py, tools/check_cutover_attestation.py, tools/upstream_baseline.py, tests/test_nt_v2_adapter_overlays.py, tests/test_skill_g2_harnesses.py, tests/test_cutover_attestation.py, tests/test_upstream_freshness.py, docs/tracking/Findings.md

@@ -1,6 +1,6 @@
 ---
 date: 2026-07-30
-status: draft
+status: implemented
 tier: C
 write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
 ---
@@ -115,3 +115,18 @@ migration/reference-only detector evidence; prefer Rust/PyO3 for new work.
 4. Add bounded nightly/develop improvements and strengthen evidence provenance.
 5. Regenerate cards only from fresh commands, reconcile this report, and obtain
    exact-current-SHA independent code-reviewer and architect verdicts.
+
+## Lifecycle
+
+- Phase 1 baseline review: complete at repository SHA
+  `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`.
+- Phase 2 segmented fixes: complete in the logical commits listed by
+  `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
+- Phase 3 progressive cards: regenerated as **143 Pass, 1 Pending, 0 Blocked**;
+  `nt-implement` G2 remains Pending because `capnp` is not installed, so actual
+  schema generation and round-trip validation could not run.
+- Phase 4 reconciliation: all 16 finding implementations closed; the Cap'n
+  Proto execution gate and pre-ship exact-SHA attestation remain explicitly
+  Pending until their required evidence exists.
+- Phase 5 ship evidence: exact repository SHA, commands, and independent review
+  verdicts are recorded in an external attestation and are not self-referential.

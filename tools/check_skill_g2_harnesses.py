@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Mapping
@@ -298,7 +299,7 @@ HARNESSES: dict[str, Harness] = {
     ),
     "nt-implement": Harness(
         skill="nt-implement",
-        scope="repository:implementation-templates-plus-upstream-owners",
+        scope="repository:fixed-point-schema-plus-upstream-owners",
         summary="Validate implementation templates and compile representative Rust component owners",
         allowed_tokens=(
             "test_capnp_schema_precision.py",
@@ -700,6 +701,18 @@ def evidence_command(skill: str) -> str:
     return f"uv run python tools/check_skill_g2_harnesses.py --execute --skill {skill}"
 
 
+def readiness_rows(text: str) -> dict[str, tuple[str, str]]:
+    rows: dict[str, tuple[str, str]] = {}
+    for line in text.splitlines():
+        if not line.startswith(tuple(f"| G{index} " for index in range(8))):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) != 4:
+            continue
+        rows[cells[0].split(maxsplit=1)[0]] = (cells[2], cells[3])
+    return rows
+
+
 def validate_readiness_cards(
     root: Path,
     harnesses: Mapping[str, Harness],
@@ -714,9 +727,18 @@ def validate_readiness_cards(
         if not path.is_file():
             errors.append(f"missing readiness card: {path}")
             continue
-        gate_rows = [line for line in path.read_text().splitlines() if line.startswith("| G")]
+        text = path.read_text()
+        gate_rows = [
+            line
+            for line in text.splitlines()
+            if line.startswith(tuple(f"| G{index} " for index in range(8)))
+        ]
+        parsed_rows = readiness_rows(text)
+        gate_ids: list[str] = []
         for row in gate_rows:
             cells = [cell.strip() for cell in row.strip("|").split("|")]
+            if cells:
+                gate_ids.append(cells[0].split(maxsplit=1)[0])
             if len(cells) != 4 or cells[2] != "Pass":
                 continue
             gate_id = cells[0].split(maxsplit=1)[0]
@@ -724,13 +746,25 @@ def validate_readiness_cards(
                 errors.append(
                     f"{skill} {gate_id} readiness row uses the card validator as evidence"
                 )
+        expected_gate_ids = {f"G{index}" for index in range(8)}
+        if set(gate_ids) != expected_gate_ids or len(gate_ids) != len(expected_gate_ids):
+            errors.append(
+                f"{skill} readiness card must declare exactly one row for each G0-G7 gate"
+            )
+        for gate_id, (gate_status, evidence) in parsed_rows.items():
+            if gate_status not in {"Pass", "Pending", "Blocked"}:
+                errors.append(f"{skill} {gate_id} readiness row has an invalid status")
+            if not evidence or evidence == "—":
+                errors.append(f"{skill} {gate_id} readiness row lacks evidence")
         g2_rows = [line for line in gate_rows if line.startswith("| G2 ")]
         if len(g2_rows) != 1:
             errors.append(f"{skill} must contain exactly one G2 readiness row")
             continue
         row = g2_rows[0]
-        if "| Pass |" not in row:
-            errors.append(f"{skill} G2 readiness row is not Pass")
+        cells = [cell.strip() for cell in row.strip("|").split("|")]
+        status = cells[2] if len(cells) == 4 else ""
+        if status not in {"Pass", "Pending", "Blocked"}:
+            errors.append(f"{skill} G2 readiness row has an invalid status")
         if f"`{evidence_command(skill)}`" not in row:
             errors.append(f"{skill} G2 readiness row lacks its targeted harness command")
         evidence_file = harnesses[skill].evidence_file
@@ -754,6 +788,15 @@ def validate_readiness_cards(
             errors.append(f"{skill} durable evidence has an unsupported schema")
         if payload.get("skill") != skill or payload.get("scope") != harnesses[skill].scope:
             errors.append(f"{skill} durable evidence does not match its harness")
+        evidence_status = payload.get("status")
+        if evidence_status not in {"pass", "pending"}:
+            errors.append(f"{skill} durable evidence has an invalid status")
+        if status == "Pass" and evidence_status != "pass":
+            errors.append(f"{skill} G2 readiness Pass lacks passing durable evidence")
+        if status == "Pending" and evidence_status != "pending":
+            errors.append(f"{skill} G2 readiness Pending lacks pending durable evidence")
+        if evidence_status == "pending" and not payload.get("pending_reason"):
+            errors.append(f"{skill} pending durable evidence lacks a reason")
         if payload.get("upstream_commit") != EXPECTED_UPSTREAM_COMMIT:
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
         if payload.get("upstream_clean") is not True:
@@ -898,6 +941,11 @@ def write_evidence(
         "verified_at": datetime.now(UTC).isoformat(),
         "steps": results,
     }
+    if harness.skill == "nt-implement" and shutil.which("capnp") is None:
+        payload["status"] = "pending"
+        payload["pending_reason"] = "capnp executable unavailable"
+    else:
+        payload["status"] = "pass"
     destination.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 

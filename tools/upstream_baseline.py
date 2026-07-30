@@ -12,6 +12,4 @@ def default_upstream_root() -> Path:
     cache_home = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
     return cache_home / "nautilus-trader-dev-skill" / "nautilus_trader"
 
-# Moving refs used only by tools/check_upstream_freshness.py; they do not change
-# the pinned reproducible baseline above.
-UPSTREAM_REMOTE_REFS = ("origin/develop", "origin/master", "origin/nightly")
+UPSTREAM_REMOTE_REFS = ("origin/develop",)

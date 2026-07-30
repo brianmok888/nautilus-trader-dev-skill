@@ -286,8 +286,9 @@ def test_dex_canonical_skill_is_unconditionally_rust_first() -> None:
     canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
 
     assert "Rust Core Infrastructure (if Rust-first)" not in canonical
-    assert "Phase 1: Rust Core Infrastructure" in canonical
-    assert "Rust data and execution client factories" in canonical
+    assert "Phase 1: Define scope" in canonical
+    assert "Phase 2: Build the protocol core" in canonical
+    assert "Rust `InstrumentProvider`, data and execution client" in canonical
     assert "LiveNodeBuilder" in canonical
     assert "registered with `TradingNode`" not in canonical
     assert "nautilus_trader/adapters/my_dex/" not in canonical
@@ -507,7 +508,10 @@ def test_post_pin_develop_features_are_version_scoped_and_source_backed() -> Non
 
     assert "spec_exec_testing.md" in testing
     assert "groups 1–5" in testing
-    assert "unchanged between the pinned snapshot and current `origin/develop`" in testing
+    assert "184e231f192ea7410aeb7730d6118fedfdf2c4d7" in testing
+    assert "close_positions_qty_precision" in testing
+    assert "exact sub-precision residual" in testing
+    assert "no open orders" in testing
 
 
 def test_version_guidance_distinguishes_pins_from_support_policy() -> None:

@@ -1,6 +1,6 @@
 ---
 name: nt-dex-adapter
-description: "Use when building a custom DEX adapter that fully complies with NautilusTrader's adapter standard. Covers DEX-specific instrument discovery, on-chain data normalisation, wallet-signed order execution, and the 7-phase implementation sequence. Includes DO/DON'Ts rules, a compliance checklist, and a test suite."
+description: "Use when building a custom DEX adapter that fully complies with NautilusTrader's adapter standard. Covers DEX-specific instrument discovery, on-chain data normalisation, wallet-signed order execution, and the official ten-phase implementation sequence. Includes DO/DON'Ts rules, a compliance checklist, and a test suite."
 ---
 
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
-| G1 Legacy label | No migration/reference-only Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
+| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G1 Legacy label | No migration/reference-only Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
-| G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
+| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
@@ -103,50 +103,69 @@ DEX adapter readiness requires:
 | Reconciliation | Order status REST | On-chain transaction history |
 | Fill price | Exchange-reported | Actual tx output amount |
 
-## 7-Phase Implementation Sequence
+## Adapter Implementation Sequence
 
 This maps directly to the canonical adapter implementation pattern. Complete each phase fully before moving to the next.
 
-### Phase 1: Rust Core Infrastructure
-- HTTP JSON-RPC client in `crates/adapters/my_dex/` using **`nautilus_network::http::HttpClient`** (not `reqwest` directly — this provides built-in rate limiting, retry logic, and consistent error handling matching the canonical adapters)
-- WebSocket event subscription client using `nautilus_network::websocket::WebSocketClient`
-- Wallet signing utilities (ECDSA for EVM, ed25519 for Solana) — implement in Rust core, never in Python layer
-- Types: config structs, RPC response models
+### Phase 1: Define scope
 
-### Phase 2: Instrument Discovery
-- `InstrumentProvider.load_all_async()` → fetch pool/market addresses from chain
-- Parse pool metadata → `CurrencyPair`, `CryptoPerpetual`, or current `PerpetualContract` for asset-class-agnostic perps
-- Map on-chain tokens to Nautilus `Currency` objects
-- Normalise instrument IDs to `{POOL_SYMBOL}.{VENUE}` format
+Record chains, products, environments, account modes, data/order/report capabilities, protocol
+boundaries, reorg/finality assumptions, unsupported operations, and the smallest end-to-end slice.
 
-### Phase 3: Market Data
-- AMM: synthesise `QuoteTick` from pool reserves (`x*y=k` price)
-- CLOB DEX: map order book events → `OrderBookDelta`
-- On-chain trades → `TradeTick`
-- Polling Actor pattern (if no event subscription available)
+### Phase 2: Build the protocol core
 
-### Phase 4: Order Execution
-- `_submit_order()` → build + sign tx → submit via RPC
-- `_cancel_order()` → on-chain cancel (if supported)
-- `_cancel_all_orders()` → batch cancel or position close
-- Handle tx inclusion + revert vs success → emit correct Nautilus events
+Add the Rust crate; implement RPC/WebSocket environments, credentials, wallet signing, shared
+types, deterministic parsers/serializers, retry classification, authentication, heartbeat, and
+transport lifecycle. Use `nautilus_network::http::HttpClient` and
+`nautilus_network::websocket::WebSocketClient`, not independent runtimes or direct production
+`reqwest` clients.
 
-### Phase 5: Account & Position Events
-- `generate_account_state()` after each balance-changing tx
-- On-chain wallet balance → `AccountBalance`
-- Position tracking (DEX perps: on-chain position query)
-- `generate_order_status_report()` for reconciliation
+### Phase 3: Implement instruments
 
-### Phase 6: Configuration & Factory
-- Rust `InstrumentProvider`, data client, and execution client configuration
-- Rust data and execution client factories registered through `LiveNodeBuilder`
-- `sandbox_mode: bool` flag for test networks / local fork
+Implement pool/market discovery, bidirectional symbol identity, every supported instrument family,
+token/currency mapping, complete precision and contract fields, cache boundaries, and definition
+updates.
 
-### Phase 7: Testing & Documentation
-- Unit tests: instrument parsing, quote synthesis, tx building
-- Integration test: BacktestEngine with mock DEX data
-- Compliance checklist: `rules/compliance_checklist.md`
-- README: RPC requirements, supported pool types, gas configuration
+### Phase 4: Implement market data
+
+Start with one public stream and instrument. Add AMM quote synthesis or CLOB deltas, trades,
+historical requests, unsubscribe, malformed-input, reorg, reconnect, and event-ordering behavior.
+
+### Phase 5: Implement execution
+
+Establish wallet/account identity, private state, receipt monitoring, and reconciliation before
+order flow. Then add submit/cancel/modify, unknown-transaction outcomes, fill deduplication, and
+order/fill/position/mass-status reports.
+
+### Phase 6: Add optional venue capabilities
+
+Add batch transactions, conditional orders, gas sponsorship, bridges, product-specific data, or
+split clients only after the base lifecycle is stable, with independent fixtures and limitations.
+
+### Phase 7: Complete factories and projection
+
+Finalize typed configs, secret redaction, Rust `InstrumentProvider`, data and execution client
+factories, `CacheView` and clock inputs, and registration through `LiveNodeBuilder`. Add bounded
+PyO3 projection only when supported.
+
+### Phase 8: Prove conformance
+
+Run deterministic functional/integration scenarios plus applicable DataTester and ExecTester
+acceptance on a local fork, testnet, or controlled account. Exercise connection failure,
+reconnect, shutdown, rate limits, reorgs, uncertain transactions, and recovery; document every
+skipped case.
+
+### Phase 9: Measure performance and robustness
+
+Benchmark confirmed hot paths, then signing, hashing, authentication, and codecs. Fuzz every
+untrusted parser, decoder, normalizer, signer, and encoder using realistic corpora and strong
+invariants.
+
+### Phase 10: Finish documentation and operations
+
+Reconcile the capability matrix and document RPC requirements, credentials, gas/nonce policy,
+limits, reconciliation, finality, environment differences, tester entry points, generated output,
+known gaps, troubleshooting, and safe operational recovery.
 
 ## Rust-First Architecture
 
@@ -199,7 +218,7 @@ uv run pytest skills/nt-dex-adapter/tests/test_dex_compliance.py -v
 
 Required checks before claiming adapter readiness:
 
-- [ ] 7 phases completed in order and each milestone satisfied
+- [ ] 10 phases completed in order and each milestone satisfied
 - [ ] Provider/data/exec method contracts implemented (no placeholder `pass`)
 - [ ] `get_runtime().spawn()` used for Rust async tasks
 - [ ] PyO3 callback bindings prefer direct `PyObject`/`Py<T>`; any `Arc<Py<T>>` exception is justified and cycle-audited

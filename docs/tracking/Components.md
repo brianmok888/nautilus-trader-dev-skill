@@ -8,8 +8,9 @@
 <!-- Write-target rule: only update this file if a skill changed. -->
 
 Review date: 2026-07-30
-Audit commit: ceb53702d5c493406fe8976232df8843088b625e
-Cutover gates: 18 skills × G0-G7 = 144 Pass, 0 Pending, 0 Blocked; the measurable cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`.
+Reviewed tree: post-fix reconciliation for the Phase 1 baseline at `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`; exact ship SHA is supplied by the external attestation.
+Cutover gates: 18 skills × G0-G7 = **143 Pass, 1 Pending, 0 Blocked**. `nt-implement` G2 is Pending because the environment lacks the `capnp` executable; structural fixed-point schema tests and owning Rust crate compilation passed, but actual schema generation and round-trip validation did not run. The measurable cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`.
+Evidence boundary: G2 Cargo checks prove compilation only. Adapter conformance, controlled-venue, resilience, fuzz, and operations acceptance remain change-specific delivery obligations and are not implied by the card summary.
 
 ## Rust-first tier (primary skills)
 
@@ -18,7 +19,7 @@ Cutover gates: 18 skills × G0-G7 = 144 Pass, 0 Pending, 0 Blocked; the measurab
 **Purpose:** Default production strategy and LiveNode wiring using Rust-first NT V2 patterns.
 **Readiness:** review-ready (flagship Rust skill).
 **Integration surfaces:** `nt` router dispatches here for production/live-node work; `nt-architect` feeds into it.
-**Known gaps:** Historical audit found 2 migration-reference binding-generator mentions; post-fix reconciliation is in `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md`.
+**Known gaps:** Historical audit found 2 migration-reference binding-generator mentions; post-fix reconciliation is in `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
 **Lane signal:** Rust-first; migration references remain quarantined and labelled.
 
 ### nt-architect
@@ -32,7 +33,7 @@ Cutover gates: 18 skills × G0-G7 = 144 Pass, 0 Pending, 0 Blocked; the measurab
 ### nt-implement
 
 **Purpose:** Strategy/Actor/Indicator implementation with templates + conventions.
-**Readiness:** review-ready.
+**Readiness:** pending (`nt-implement` G2 awaits real Cap'n Proto generation/round trip).
 **Integration surfaces:** Has `templates/`; receives from `nt-architect`; feeds `nt-strategy-builder-rust`.
 **Known gaps:** Historical audit found 7 migration-reference binding-generator mentions; post-fix reconciliation is recorded in the cutover report.
 **Lane signal:** Rust-first; migration references remain quarantined and labelled.

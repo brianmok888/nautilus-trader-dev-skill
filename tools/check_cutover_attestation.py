@@ -7,6 +7,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+REQUIRED_COMMANDS = (
+    "uv run pytest -q --ignore=tests/test_quality_gates.py",
+    "uv run pytest -q tests/test_quality_gates.py",
+    "uv run --with ruff ruff check .",
+    "uv run python tools/check_legacy_labelling.py",
+    "uv run python tools/check_dev_guide_sync.py",
+    "uv run python tools/check_dev_guide_snapshot_sync.py",
+    "uv run python tools/check_upstream_freshness.py",
+    "uv run python tools/check_skill_g2_harnesses.py --check-cards",
+    "python3 -m compileall -q tools tests skills/nt-evomap-integration/python_sidecar/brainstorming_evomap",
+    "git diff --check",
+)
+
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
@@ -65,21 +78,34 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
     if not isinstance(commands, list) or not commands:
         errors.append("commands: expected at least one command result")
     else:
+        recorded_commands: set[str] = set()
         for index, command in enumerate(commands):
             if not isinstance(command, dict):
                 errors.append(f"commands[{index}]: expected an object")
                 continue
             if not isinstance(command.get("command"), str) or not command["command"]:
                 errors.append(f"commands[{index}].command: expected a non-empty string")
+            else:
+                recorded_commands.add(command["command"])
             if command.get("returncode") != 0:
                 errors.append(f"commands[{index}].returncode: expected 0")
+            output_hash = command.get("output_sha256")
+            if not isinstance(output_hash, str) or len(output_hash) != 64:
+                errors.append(f"commands[{index}].output_sha256: expected a SHA-256 string")
+        missing_commands = sorted(set(REQUIRED_COMMANDS) - recorded_commands)
+        if missing_commands:
+            errors.append("commands: missing required commands: " + ", ".join(missing_commands))
 
     code_reviewer = payload.get("code_reviewer")
     if not isinstance(code_reviewer, dict) or code_reviewer.get("verdict") != "APPROVE":
         errors.append("code_reviewer.verdict: expected APPROVE")
+    elif not isinstance(code_reviewer.get("artifact"), str) or not code_reviewer["artifact"]:
+        errors.append("code_reviewer.artifact: expected a non-empty string")
     architect = payload.get("architect")
     if not isinstance(architect, dict) or architect.get("status") != "CLEAR":
         errors.append("architect.status: expected CLEAR")
+    elif not isinstance(architect.get("artifact"), str) or not architect["artifact"]:
+        errors.append("architect.artifact: expected a non-empty string")
     return tuple(errors)
 
 
