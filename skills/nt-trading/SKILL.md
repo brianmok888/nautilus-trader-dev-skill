@@ -45,6 +45,25 @@ Trading gates: Rust owns execution-critical order, risk, position, portfolio, an
 
 Keep strategy execution, order lifecycle, risk checks, positions, portfolio state, accounting, and execution algorithms in Rust. Enforce fail-closed decisions and terminal-event invariants, then verify order, fill, void, cancel, reconciliation, and precision behavior with targeted Rust tests and the required cargo gates.
 
+### Develop/nightly-only Rust component state lifecycle
+
+Source: upstream develop commit `9a9e5fe7b762410229b380d5af92d32c13169c3a`.
+This support is **develop/nightly only** and is not available in the pinned baseline or stable releases; gate configuration and deployments by the actual upstream revision.
+
+Across backtest and live, state-enabled kernels use
+`Cache::load_actor_state` and `Cache::load_strategy_state` to load before component startup, then call Rust `DataActor::on_load` and
+`Strategy::on_load`. On shutdown they call Rust `DataActor::on_save` and
+`Strategy::on_save`, persist those byte maps, and use
+`NautilusKernel::save_trader_state` to save once during shutdown.
+`NautilusKernel::finalize_stop` integrates that save with the live shutdown
+sequence; the backtest engine also saves after its residual processing and
+before engine/cache disposal.
+
+Treat `on_load` and `on_save` as Rust component lifecycle hooks, not an escape
+hatch for Python execution callbacks. Strategy, actor, order, risk, and
+reconciliation execution ownership remains in Rust, and callback or database
+failures must be surfaced without bypassing cleanup.
+
 ## PyO3 control-plane lane
 
 Use PyO3 only for typed configuration, Rust component registration, lifecycle control, and read-only inspection of trading results. Python must not submit, modify, or cancel orders, own risk decisions, mutate authoritative portfolio state, or process execution-critical callbacks.

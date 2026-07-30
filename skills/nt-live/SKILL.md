@@ -49,6 +49,27 @@ Live gates: `LiveNode` is the default for Rust-backed production live work; Pyth
 
 Build live systems around Rust `LiveNode`, Rust adapters, and Rust-owned execution, risk, reconciliation, and lifecycle state. Startup, shutdown, reconnect, task tracking, and fail-closed behavior must remain deterministic and must be proven with targeted live-runtime tests and the required cargo gates.
 
+### Develop/nightly-only actor and strategy state persistence
+
+Source: upstream develop commit `9a9e5fe7b762410229b380d5af92d32c13169c3a`.
+This lifecycle is **develop/nightly only** and is not available in the pinned baseline or stable releases; do not present it as a stable configuration contract.
+
+When `load_state` is enabled with a backing cache database, Rust loads actor
+and strategy byte maps through `Cache::load_actor_state` and
+`Cache::load_strategy_state`, then invokes the Rust `DataActor::on_load` and
+`Strategy::on_load` callbacks before component startup. Empty or unavailable
+state is skipped rather than synthesized.
+
+When `save_state` is enabled, Rust invokes `DataActor::on_save` and
+`Strategy::on_save`, persists the returned byte maps, and arms
+`NautilusKernel::save_trader_state` for at-most-once saving. The live stop path
+calls `NautilusKernel::finalize_stop` after residual event processing and saves
+before cache teardown while still completing cleanup and reporting callback or
+persistence errors.
+
+The persistence hooks preserve the existing boundary: execution ownership remains in Rust. Persist component state only; do not move order flow, risk,
+reconciliation, adapter liveness, or shutdown authority into Python callbacks.
+
 ## PyO3 control-plane lane
 
 Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness.

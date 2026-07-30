@@ -36,6 +36,21 @@ Build production and performance simulations with Rust `BacktestEngine` or `Back
 
 Use PyO3 only to assemble backtest configuration, register Rust components, initiate bounded runs, and inspect immutable results. Python must not own matching, fill decisions, order submission, risk checks, or event sequencing; those remain inside the Rust engine.
 
+### Develop/nightly-only PyO3 `CustomData` injection
+
+Source: upstream develop commit `998005124e298e9b0c2f6c60be21e581f3426da1`.
+This API is **develop/nightly only** and is not available in the pinned baseline or stable releases; version-gate it and re-check upstream before use.
+
+The PyO3 `BacktestEngine.add_data(...)` conversion now accepts model
+`CustomData` and forwards it as Rust `Data::Custom`. Use this as bounded control/data injection for timestamped inputs that Rust actors or strategies
+consume. Validation does not require an instrument for custom data, while the
+normal ordering and run boundaries still apply.
+
+This capability does not widen Python authority: Python may prepare and inject
+the custom payloads, but matching and execution remain Rust-owned. It is not a
+path for Python fill decisions, matching logic, risk checks, order execution,
+or authoritative event sequencing.
+
 ## Migration/reference lane
 
 Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-backtest`.
