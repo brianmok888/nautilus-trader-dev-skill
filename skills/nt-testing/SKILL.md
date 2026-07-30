@@ -14,9 +14,18 @@ as the baseline-compliant subset. Both upstream Python and Rust `ExecTester`
 surfaces are current; this skill repository still routes new production work to
 Rust and keeps Python execution examples migration/reference-only.
 
-The source file is unchanged between the pinned snapshot and current `origin/develop`
-as verified by
-`git -C "$NT_UPSTREAM_ROOT" diff 6e59fd74eaacacbb7410936f1766bd89fcce6f59..origin/develop -- docs/developer_guide/spec_exec_testing.md`.
+The pinned baseline differs from current upstream. At develop commit
+`45903fc8b925adae6323035fb0b4fb5b49b4f89b`, change commit
+`184e231f192ea7410aeb7730d6118fedfdf2c4d7` adds
+`close_positions_qty_precision` and revises the stop-time close contract. This is
+develop/nightly only; preserve the immutable snapshot at
+`6e59fd74eaacacbb7410936f1766bd89fcce6f59` until the repository pin advances.
+
+For current TC-E06 and TC-E82, a passing close leaves the position flat or leaves
+only the exact sub-precision residual determined by
+`close_positions_qty_precision`; the truncated close quantity must be the
+venue-fillable quantity, and no open orders may remain. Do not accept other
+residual quantities as passing behavior.
 Official mirrors: [latest](https://nautilustrader.io/docs/latest/developer_guide/spec_exec_testing/)
 and [nightly](https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/).
 
