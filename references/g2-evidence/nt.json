@@ -14,7 +14,7 @@
         "tests/test_v2_guidance_hardening.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 5.83211,
+      "duration_seconds": 3.175811,
       "returncode": 0
     },
     {
@@ -24,11 +24,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.729059,
+      "duration_seconds": 0.812198,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T03:43:53.704584+00:00"
+  "verified_at": "2026-07-30T03:57:16.747404+00:00"
 }

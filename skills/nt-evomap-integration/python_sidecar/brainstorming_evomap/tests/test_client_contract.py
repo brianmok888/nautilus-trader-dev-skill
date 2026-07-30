@@ -11,6 +11,38 @@ import pytest
 from brainstorming_evomap import evomap_capsule_client as _client_mod
 
 
+def _terminal_record(
+    *,
+    request_id: str = "request-1",
+    request_sequence: int = 7,
+    suggestion_id: str | None = "suggestion-1",
+    suggestion_hash: str | None = "suggestion-hash",
+    outcome: str = "approved",
+    reason: str = "offline_change_review",
+    recorded_ns: int = 50,
+):
+    provisional = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="",
+        request_id=request_id,
+        request_sequence=request_sequence,
+        suggestion_id=suggestion_id,
+        suggestion_hash=suggestion_hash,
+        outcome=outcome,
+        reason=reason,
+        recorded_ns=recorded_ns,
+    )
+    return _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id=_client_mod.terminal_checkpoint_id(provisional),
+        request_id=request_id,
+        request_sequence=request_sequence,
+        suggestion_id=suggestion_id,
+        suggestion_hash=suggestion_hash,
+        outcome=outcome,
+        reason=reason,
+        recorded_ns=recorded_ns,
+    )
+
+
 def test_client_exposes_proxy_mailbox_methods():
     """Client must expose local Proxy mailbox and asset methods."""
     client = _client_mod.EvoMapProxyMailboxClient(proxy_url="http://127.0.0.1:19820")
@@ -87,38 +119,22 @@ def test_submit_assets_uses_asset_submit_endpoint():
 def test_terminal_checkpoint_persists_record_and_floor_before_ack(tmp_path):
     database = tmp_path / "advisory.sqlite3"
     store = _client_mod.AdvisoryCheckpointStore(database)
-    record = _client_mod.AdvisoryTerminalRecord(
-        checkpoint_id="checkpoint-1",
-        request_id="request-1",
-        request_sequence=7,
-        suggestion_id="suggestion-1",
-        suggestion_hash="suggestion-hash",
-        outcome="approved",
-        reason="offline_change_review",
-        recorded_ns=50,
-    )
+    record = _terminal_record()
 
     ack = store.persist_terminal(record)
 
-    assert ack == _client_mod.AdvisoryCheckpointAck(checkpoint_id="checkpoint-1")
+    assert ack == _client_mod.AdvisoryCheckpointAck(
+        checkpoint_id=record.checkpoint_id,
+    )
     reopened = _client_mod.AdvisoryCheckpointStore(database)
     assert reopened.request_sequence_floor() == 7
-    assert reopened.terminal_record("checkpoint-1") == record
+    assert reopened.terminal_record(record.checkpoint_id) == record
 
 
 def test_terminal_checkpoint_rolls_back_precommit_failure(tmp_path):
     database = tmp_path / "advisory.sqlite3"
     store = _client_mod.AdvisoryCheckpointStore(database)
-    record = _client_mod.AdvisoryTerminalRecord(
-        checkpoint_id="checkpoint-1",
-        request_id="request-1",
-        request_sequence=7,
-        suggestion_id="suggestion-1",
-        suggestion_hash="suggestion-hash",
-        outcome="approved",
-        reason="offline_change_review",
-        recorded_ns=50,
-    )
+    record = _terminal_record()
 
     with sqlite3.connect(database) as connection:
         connection.execute(
@@ -131,25 +147,16 @@ def test_terminal_checkpoint_rolls_back_precommit_failure(tmp_path):
 
     reopened = _client_mod.AdvisoryCheckpointStore(database)
     assert reopened.request_sequence_floor() == 0
-    assert reopened.terminal_record("checkpoint-1") is None
+    assert reopened.terminal_record(record.checkpoint_id) is None
 
 
 def test_terminal_checkpoint_is_idempotent_after_commit_before_ack_delivery(tmp_path):
     database = tmp_path / "advisory.sqlite3"
     store = _client_mod.AdvisoryCheckpointStore(database)
-    record = _client_mod.AdvisoryTerminalRecord(
-        checkpoint_id="checkpoint-1",
-        request_id="request-1",
-        request_sequence=7,
-        suggestion_id="suggestion-1",
-        suggestion_hash="suggestion-hash",
-        outcome="approved",
-        reason="offline_change_review",
-        recorded_ns=50,
-    )
+    record = _terminal_record()
 
-    assert store.persist_terminal(record).checkpoint_id == "checkpoint-1"
-    assert store.persist_terminal(record).checkpoint_id == "checkpoint-1"
+    assert store.persist_terminal(record).checkpoint_id == record.checkpoint_id
+    assert store.persist_terminal(record).checkpoint_id == record.checkpoint_id
 
     with sqlite3.connect(database) as connection:
         row_count = connection.execute(
@@ -162,18 +169,9 @@ def test_terminal_checkpoint_is_idempotent_after_commit_before_ack_delivery(tmp_
 def test_terminal_checkpoint_rejects_digest_reuse_for_a_different_record(tmp_path):
     database = tmp_path / "advisory.sqlite3"
     store = _client_mod.AdvisoryCheckpointStore(database)
-    first = _client_mod.AdvisoryTerminalRecord(
-        checkpoint_id="checkpoint-1",
-        request_id="request-1",
-        request_sequence=7,
-        suggestion_id="suggestion-1",
-        suggestion_hash="suggestion-hash",
-        outcome="approved",
-        reason="offline_change_review",
-        recorded_ns=50,
-    )
+    first = _terminal_record()
     conflicting = _client_mod.AdvisoryTerminalRecord(
-        checkpoint_id="checkpoint-1",
+        checkpoint_id=first.checkpoint_id,
         request_id="request-2",
         request_sequence=8,
         suggestion_id="suggestion-2",
@@ -182,10 +180,33 @@ def test_terminal_checkpoint_rejects_digest_reuse_for_a_different_record(tmp_pat
         reason="offline_change_review",
         recorded_ns=60,
     )
-    assert store.persist_terminal(first).checkpoint_id == "checkpoint-1"
+    assert store.persist_terminal(first).checkpoint_id == first.checkpoint_id
 
     with pytest.raises(sqlite3.IntegrityError):
         store.persist_terminal(conflicting)
 
-    assert store.terminal_record("checkpoint-1") == first
+    assert store.terminal_record(first.checkpoint_id) == first
     assert store.request_sequence_floor() == 7
+
+
+def test_terminal_checkpoint_rejects_mismatched_digest_on_first_write(tmp_path):
+    database = tmp_path / "advisory.sqlite3"
+    store = _client_mod.AdvisoryCheckpointStore(database)
+    valid_checkpoint_id = _terminal_record().checkpoint_id
+    assert valid_checkpoint_id != "checkpoint-from-another-record"
+    record = _client_mod.AdvisoryTerminalRecord(
+        checkpoint_id="checkpoint-from-another-record",
+        request_id="request-1",
+        request_sequence=7,
+        suggestion_id="suggestion-1",
+        suggestion_hash="suggestion-hash",
+        outcome="approved",
+        reason="offline_change_review",
+        recorded_ns=50,
+    )
+
+    with pytest.raises(sqlite3.IntegrityError):
+        store.persist_terminal(record)
+
+    assert store.terminal_record("checkpoint-from-another-record") is None
+    assert store.request_sequence_floor() == 0

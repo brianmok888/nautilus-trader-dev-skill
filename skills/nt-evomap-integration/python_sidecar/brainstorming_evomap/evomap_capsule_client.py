@@ -9,6 +9,7 @@ The agent-side integration talks to the local Proxy. The Proxy owns Hub sync,
 retries, authentication, and low-level GEP/A2A protocol details.
 """
 
+import hashlib
 import json
 import sqlite3
 from collections.abc import Callable
@@ -37,6 +38,24 @@ class AdvisoryCheckpointAck:
     checkpoint_id: str
 
 
+def terminal_checkpoint_id(record: AdvisoryTerminalRecord) -> str:
+    identity = json.dumps(
+        {
+            "outcome": record.outcome,
+            "reason": record.reason,
+            "recorded_ns": record.recorded_ns,
+            "request_id": record.request_id,
+            "request_sequence": record.request_sequence,
+            "suggestion_hash": record.suggestion_hash,
+            "suggestion_id": record.suggestion_id,
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+    return hashlib.sha256(identity).hexdigest()
+
+
 class AdvisoryCheckpointStore:
     def __init__(self, database: Path) -> None:
         self._database = database
@@ -46,6 +65,10 @@ class AdvisoryCheckpointStore:
         self,
         record: AdvisoryTerminalRecord,
     ) -> AdvisoryCheckpointAck:
+        if terminal_checkpoint_id(record) != record.checkpoint_id:
+            raise sqlite3.IntegrityError(
+                "checkpoint_id does not bind the terminal record",
+            )
         payload = json.dumps(
             asdict(record),
             ensure_ascii=False,
