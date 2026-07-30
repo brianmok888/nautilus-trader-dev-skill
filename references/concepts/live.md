@@ -15,9 +15,10 @@ This guide provides an overview of the key aspects of live trading.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 :::note[Live runtime boundary]
-Python live-trading examples in this guide use `TradingNode`. Rust v2 /
-Rust-backed live-node work should use `LiveNode` where the official Rust live
-path applies.
+This source-pinned concept body describes upstream Python `TradingNode`
+semantics, but copyable Python live-node source has been removed from the active
+delivery surface. Use Rust `LiveNode` guidance for active work; Python migration
+material is under `skills/nt-live/migration_reference/python/`.
 :::
 
 :::danger[Jupyter notebooks not recommended for live trading]
@@ -73,31 +74,7 @@ which inherits from `NautilusKernelConfig` and provides live-specific config opt
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-from nautilus_trader.config import TradingNodeConfig
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    trader_id="MyTrader-001",
-
-    # Component configurations
-    cache=CacheConfig(),
-    message_bus=MessageBusConfig(),
-    data_engine=LiveDataEngineConfig(),
-    risk_engine=LiveRiskEngineConfig(),
-    exec_engine=LiveExecEngineConfig(),
-    portfolio=PortfolioConfig(),
-
-    # Client configurations
-    data_clients={
-        "BINANCE": BinanceDataClientConfig(),
-    },
-    exec_clients={
-        "BINANCE": BinanceExecClientConfig(),
-    },
-)
-```
+> Python live-node source is quarantined under `skills/nt-live/migration_reference/python/`. Use the active Rust `LiveNode` guidance in `skills/nt-live/SKILL.md` and `skills/nt-strategy-builder-rust/SKILL.md`.
 
 #### Core configuration parameters
 
@@ -159,35 +136,7 @@ Live trading systems often connect to multiple venues. Here's an example of conf
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-config = TradingNodeConfig(
-    trader_id="MultiVenue-001",
-
-    # Multiple data clients for different market types
-    data_clients={
-        "BINANCE_SPOT": BinanceDataClientConfig(
-            account_type=BinanceAccountType.SPOT,
-            testnet=False,
-        ),
-        "BINANCE_FUTURES": BinanceDataClientConfig(
-            account_type=BinanceAccountType.USDT_FUTURES,
-            testnet=False,
-        ),
-    },
-
-    # Corresponding execution clients
-    exec_clients={
-        "BINANCE_SPOT": BinanceExecClientConfig(
-            account_type=BinanceAccountType.SPOT,
-            testnet=False,
-        ),
-        "BINANCE_FUTURES": BinanceExecClientConfig(
-            account_type=BinanceAccountType.USDT_FUTURES,
-            testnet=False,
-        ),
-    },
-)
-```
+> Python live-node source is quarantined under `skills/nt-live/migration_reference/python/`. Use the active Rust `LiveNode` guidance in `skills/nt-live/SKILL.md` and `skills/nt-strategy-builder-rust/SKILL.md`.
 
 ### ExecutionEngine configuration
 
@@ -413,17 +362,7 @@ Python SIGINT bridge, so the runner stops and tasks are shut down cleanly.
 
 Example pattern for Windows:
 
-```python
-try:
-    node.run()
-except KeyboardInterrupt:
-    pass
-finally:
-    try:
-        node.stop()
-    finally:
-        node.dispose()
-```
+> Python live-node source is quarantined under `skills/nt-live/migration_reference/python/`. Use the active Rust `LiveNode` guidance in `skills/nt-live/SKILL.md` and `skills/nt-strategy-builder-rust/SKILL.md`.
 
 ## Execution reconciliation
 

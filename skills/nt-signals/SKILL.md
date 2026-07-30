@@ -26,7 +26,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Signal gates: Python may prototype indicators, research/config notebooks, and AI/advisory aggregation, but Rust production owns performance-heavy indicators, tick/bar pipelines, ordering, and fixed-point signal transforms. Require `cargo nextest`, `cargo clippy`, `cargo deny`, and deterministic signal tests before `Pass`.
+Signal gates: Rust owns indicator prototyping, research implementations, production indicators, tick/bar pipelines, ordering, and fixed-point signal transforms. The only active Python lane is AI/advisory aggregation through `nt-evomap-integration`. Require `cargo nextest`, `cargo clippy`, `cargo deny`, and deterministic signal tests before `Pass`.
 
 ## Rust production lane
 

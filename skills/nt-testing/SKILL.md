@@ -54,7 +54,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Testing gates: Rust tests are the default readiness evidence for production/performance/live paths. Require `cargo nextest`, `cargo clippy`, `cargo deny`, `ExecTesterConfig::builder()`, `DataTesterConfig::builder()`, adapter baseline matrices, reconciliation matrices, fuzz/property tests where parsing/execution outcomes vary, and Python tests only for research/config or AI/advisory lane code.
+Testing gates: Rust tests are the default readiness evidence for research, configuration, production, performance, and live paths. Require `cargo nextest`, `cargo clippy`, `cargo deny`, `ExecTesterConfig::builder()`, `DataTesterConfig::builder()`, adapter baseline matrices, reconciliation matrices, and fuzz/property tests where parsing/execution outcomes vary. The only active Python lane is AI/advisory through `nt-evomap-integration`; Python checks elsewhere are limited to bounded public PyO3 projections.
 
 ## Rust production lane
 
@@ -76,15 +76,8 @@ let config = ExecTesterConfig::builder()
 
 PyO3 tests verify binding registration, configuration round trips, error translation, ownership, and callback routing. They may exercise Python-visible configuration and observation surfaces, but production behavior must be asserted against Rust-owned state and Rust test harnesses. Isolate interpreter-terminating paths and never treat importability or method presence as execution readiness.
 
-```rust
-use pyo3::prelude::*;
-
-Python::attach(|py| -> PyResult<()> {
-    let module = PyModule::import(py, "nautilus_trader.core.nautilus_pyo3")?;
-    assert!(module.getattr("ExecTesterConfig")?.is_callable());
-    Ok(())
-})?;
-```
+The public V2 projection is `from nautilus_trader.testkit import ExecTesterConfig`;
+do not import the compatibility root `nautilus_trader.core.nautilus_pyo3`.
 
 ## Migration/reference lane
 

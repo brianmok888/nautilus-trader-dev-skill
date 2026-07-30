@@ -26,7 +26,10 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Backtest gates: prefer Rust BacktestEngine/BacktestNode for production/performance simulation, keep Python research/config notebooks explicitly labelled, and require deterministic ordering, fill-model, account/position reconciliation, `cargo nextest`, `cargo clippy`, and `cargo deny` evidence before `Pass`.
+Backtest gates: use Rust `BacktestEngine`/`BacktestNode` for research, configuration, production, and performance simulation. The only active Python lane is AI/advisory work through `nt-evomap-integration`; all non-AI Python backtest material is migration/reference-only. Require deterministic ordering, fill-model, account/position reconciliation, `cargo nextest`, `cargo clippy`, and `cargo deny` evidence before `Pass`.
+
+Compatibility note: the historical phrase `Python research/config` names only
+the quarantined migration material; the active path is Rust BacktestEngine.
 
 ## Rust production lane
 

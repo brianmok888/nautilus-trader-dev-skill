@@ -886,7 +886,11 @@ Interactive Brokers enforces pacing limits; excessive historical-data or order r
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-Live trading with Interactive Brokers requires setting up a `TradingNode` that incorporates both `InteractiveBrokersDataClient` and `InteractiveBrokersExecutionClient`. These clients depend on the `InteractiveBrokersInstrumentProvider` for instrument management.
+Active live trading with Interactive Brokers uses Rust `LiveNode` with the
+adapter data and execution clients shown in upstream
+`crates/adapters/interactive_brokers/examples/`. Python live-node wiring is
+migration/reference-only under
+`skills/nt-adapters/migration_reference/python/`.
 
 ### Architecture overview
 
@@ -1543,145 +1547,22 @@ Set `conditionsCancelOrder` to control what happens when conditions are met:
 - **Time conditions** use UTC format with dash separator (`YYYYMMDD-HH:MM:SS`) for reliable parsing
 - **Conjunction logic** allows complex condition combinations using "and"/"or" operators
 
-### Complete trading node configuration
+### Legacy Python trading-node configuration
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-Setting up a complete trading environment involves configuring a `TradingNodeConfig` with all necessary components. Here are examples for different scenarios.
+The former copyable Python node examples are quarantined behind the migration
+pointer below. Use the upstream Rust `LiveNode` examples for active work.
 
 #### Paper trading configuration
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-import os
-from nautilus_trader.adapters.interactive_brokers.common import IB
-from nautilus_trader.adapters.interactive_brokers.common import IB_VENUE
-from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersDataClientConfig
-from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecClientConfig
-from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersInstrumentProviderConfig
-from nautilus_trader.adapters.interactive_brokers.config import IBMarketDataTypeEnum
-from nautilus_trader.adapters.interactive_brokers.config import SymbologyMethod
-from nautilus_trader.adapters.interactive_brokers.factories import InteractiveBrokersLiveDataClientFactory
-from nautilus_trader.adapters.interactive_brokers.factories import InteractiveBrokersLiveExecClientFactory
-from nautilus_trader.config import LiveDataEngineConfig
-from nautilus_trader.config import LoggingConfig
-from nautilus_trader.config import RoutingConfig
-from nautilus_trader.config import TradingNodeConfig
-from nautilus_trader.live.node import TradingNode
-
-# Instrument provider configuration
-instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
-    symbology_method=SymbologyMethod.IB_SIMPLIFIED,
-    load_ids=frozenset([
-        "EUR/USD.IDEALPRO",
-        "GBP/USD.IDEALPRO",
-        "SPY.ARCA",
-        "QQQ.NASDAQ",
-        "AAPL.NASDAQ",
-        "MSFT.NASDAQ",
-    ]),
-)
-
-# Data client configuration
-data_client_config = InteractiveBrokersDataClientConfig(
-    ibg_host="127.0.0.1",
-    ibg_port=7497,  # TWS paper trading
-    ibg_client_id=1,
-    use_regular_trading_hours=True,
-    market_data_type=IBMarketDataTypeEnum.DELAYED_FROZEN,
-    instrument_provider=instrument_provider_config,
-)
-
-# Execution client configuration
-exec_client_config = InteractiveBrokersExecClientConfig(
-    ibg_host="127.0.0.1",
-    ibg_port=7497,  # TWS paper trading
-    ibg_client_id=1,
-    account_id="DU123456",  # Your paper trading account
-    instrument_provider=instrument_provider_config,
-    routing=RoutingConfig(default=True),
-)
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Trading node configuration
-config_node = TradingNodeConfig(
-    trader_id="PAPER-TRADER-001",
-    logging=LoggingConfig(log_level="INFO"),
-    data_clients={IB: data_client_config},
-    exec_clients={IB: exec_client_config},
-    data_engine=LiveDataEngineConfig(
-        time_bars_timestamp_on_close=False,  # IB standard: use bar open time
-        validate_data_sequence=True,         # Discard out-of-sequence bars
-    ),
-    timeout_connection=90.0,
-    timeout_reconciliation=5.0,
-    timeout_portfolio=5.0,
-    timeout_disconnection=5.0,
-    timeout_post_stop=2.0,
-)
-
-
-# Create and configure the trading node
-node = TradingNode(config=config_node)
-node.add_data_client_factory(IB, InteractiveBrokersLiveDataClientFactory)
-node.add_exec_client_factory(IB, InteractiveBrokersLiveExecClientFactory)
-node.build()
-
-if __name__ == "__main__":
-    try:
-        node.run()
-    finally:
-        node.dispose()
-```
+> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
 
 ## Live trading with Dockerized gateway
 
-```python
-from nautilus_trader.adapters.interactive_brokers.config import DockerizedIBGatewayConfig
-
-# Dockerized gateway configuration
-dockerized_gateway_config = DockerizedIBGatewayConfig(
-    username=os.environ.get("TWS_USERNAME"),
-    password=os.environ.get("TWS_PASSWORD"),
-    trading_mode="live",  # "paper" or "live"
-    read_only_api=False,  # Allow order execution
-    timeout=300,
-)
-
-# Data client with dockerized gateway
-data_client_config = InteractiveBrokersDataClientConfig(
-    ibg_client_id=1,
-    use_regular_trading_hours=False,  # Include extended hours
-    market_data_type=IBMarketDataTypeEnum.REALTIME,
-    instrument_provider=instrument_provider_config,
-    dockerized_gateway=dockerized_gateway_config,
-)
-
-# Execution client with dockerized gateway
-exec_client_config = InteractiveBrokersExecClientConfig(
-    ibg_client_id=1,
-    account_id=os.environ.get("TWS_ACCOUNT"),  # Live account ID
-    instrument_provider=instrument_provider_config,
-    dockerized_gateway=dockerized_gateway_config,
-    routing=RoutingConfig(default=True),
-)
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Live trading node configuration
-config_node = TradingNodeConfig(
-    trader_id="LIVE-TRADER-001",
-    logging=LoggingConfig(log_level="INFO"),
-    data_clients={IB: data_client_config},
-    exec_clients={IB: exec_client_config},
-    data_engine=LiveDataEngineConfig(
-        time_bars_timestamp_on_close=False,
-        validate_data_sequence=True,
-    ),
-)
-```
+> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
 
 ### Multi-client configuration
 
@@ -1719,77 +1600,7 @@ To configure multiple IB execution clients, provide multiple entries in the `exe
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-from nautilus_trader.adapters.interactive_brokers.config import (
-    InteractiveBrokersDataClientConfig,
-    InteractiveBrokersExecClientConfig,
-    InteractiveBrokersInstrumentProviderConfig,
-    SymbologyMethod,
-    IBMarketDataTypeEnum,
-)
-from nautilus_trader.live.config import TradingNodeConfig, RoutingConfig, LoggingConfig
-from nautilus_trader.model.identifiers import AccountId, Venue, ClientId
-
-# Shared instrument provider configuration
-instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
-    symbology_method=SymbologyMethod.IB_SIMPLIFIED,
-)
-
-# Data client (shared across all accounts)
-data_client_config = InteractiveBrokersDataClientConfig(
-    ibg_host="127.0.0.1",
-    ibg_port=7497,
-    ibg_client_id=1,
-    market_data_type=IBMarketDataTypeEnum.REALTIME,
-    instrument_provider=instrument_provider_config,
-)
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Configuration for multiple IB execution clients
-config_node = TradingNodeConfig(
-    trader_id="MULTI-ACCOUNT-001",
-    logging=LoggingConfig(log_level="INFO"),
-
-    # Single data client shared across accounts
-    data_clients={
-        "IB": data_client_config,
-    },
-
-    # Multiple execution clients, one per account
-    exec_clients={
-        # First account: Paper trading account
-        "IB-PAPER": InteractiveBrokersExecClientConfig(
-            ibg_host="127.0.0.1",
-            ibg_port=7497,
-            ibg_client_id=2,  # Unique IB API client ID
-            account_id="DU123456",  # Paper trading account ID
-            instrument_provider=instrument_provider_config,
-            routing=RoutingConfig(default=False),  # Not default
-        ),
-
-        # Second account: Live trading account
-        "IB-LIVE": InteractiveBrokersExecClientConfig(
-            ibg_host="127.0.0.1",
-            ibg_port=7497,
-            ibg_client_id=3,  # Unique IB API client ID
-            account_id="U987654",  # Live account ID
-            instrument_provider=instrument_provider_config,
-            routing=RoutingConfig(default=True),  # Set as default
-        ),
-
-        # Third account: Another managed account
-        "IB-ACCOUNT3": InteractiveBrokersExecClientConfig(
-            ibg_host="127.0.0.1",
-            ibg_port=7497,
-            ibg_client_id=4,  # Unique IB API client ID
-            account_id="U456789",  # Another account ID
-            instrument_provider=instrument_provider_config,
-            routing=RoutingConfig(default=False),
-        ),
-    },
-)
-```
+> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
 
 **Key points for multiple IB execution clients:**
 
@@ -1890,38 +1701,11 @@ paper_realized_pnl = portfolio.realized_pnl(
 all_ib_realized_pnl = portfolio.realized_pnls(venue=Venue("IB"))
 ```
 
-### Running the trading node
+### Legacy Python node runner
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-def run_trading_node():
-    """Run the trading node with proper error handling."""
-    node = None
-    try:
-        # Create and build node
-        node = TradingNode(config=config_node)
-        node.add_data_client_factory(IB, InteractiveBrokersLiveDataClientFactory)
-        node.add_exec_client_factory(IB, InteractiveBrokersLiveExecClientFactory)
-        node.build()
-
-        # Add your strategies here
-        # node.trader.add_strategy(YourStrategy())
-
-        # Run the node
-        node.run()
-
-    except KeyboardInterrupt:
-        print("Shutting down...")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        if node:
-            node.dispose()
-
-if __name__ == "__main__":
-    run_trading_node()
-```
+> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
 
 ### Additional configuration options
 

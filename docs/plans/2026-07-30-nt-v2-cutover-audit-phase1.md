@@ -7,7 +7,15 @@ write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
 
 # NT V2 Rust Cutover Audit: Phase 1 Findings
 
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode`
+references in this whole file are retained for migration/reference-only audit
+evidence. Prefer Rust v2/PyO3 and `LiveNode` for new Rust-backed work.
+
 ## Review basis
+
+NT v2 compatibility note: the Cython/v1 counts and classifications in this
+block are migration/reference-only audit evidence; prefer Rust/PyO3 for new
+work.
 
 - Repository SHA: `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`.
 - Pinned NautilusTrader baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`.
@@ -28,6 +36,7 @@ write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
   fix: Remove active non-AI Python lane permissions, route new work to Rust, and make retained Python material explicitly migration/reference-only.
 
 [P0] Rust conversion gap: the active learning and live-reference surface provides copyable Python `TradingNode` deployment outside physical migration quarantine.
+  NT v2 compatibility note: Python live `TradingNode` is migration/reference-only; use Rust `LiveNode` for active work.
   file: `skills/nt-learn/curriculum/07-live-trading.md:9`; `skills/nt-learn/curriculum/07-live-trading.md:41`; `skills/nt-learn/curriculum/07-live-trading.md:243`; `references/concepts/live.md:67`; `references/integrations/okx.md:946`; `skills/nt-adapters/references/integrations/ib.md:1606`
   fix: Replace the active curriculum with Rust `LiveNode` guidance, move copyable Python live examples under `migration_reference/`, and leave pointer-only migration notes in active files.
 
@@ -61,17 +70,22 @@ write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
   file: `tools/check_skill_g2_harnesses.py:870`; `tests/test_skill_g2_harnesses.py:532`; `docs/superpowers/reports/2026-07-29-nt-v2-rust-cutover-reconciliation.md:65`
   fix: Add an exact-SHA external review/CI attestation and a manifest covering every file and command used by G0-G7; do not require a committed artifact to self-reference its eventual commit.
 
-## Legacy or unlabelled v1/Cython content
+## Migration/reference-only legacy audit findings
+
+NT v2 compatibility note: legacy Cython/v1 terms in this section are
+migration/reference-only detector evidence; prefer Rust/PyO3 for new work.
 
 [P1] Legacy enforcement gap: the mandatory standalone legacy-labelling gate and focused pytest wrapper do not exist.
   file: `tools/check_dev_guide_sync.py:906`; `tests/test_dev_guide_sync.py:1`
   fix: Add `tools/check_legacy_labelling.py` as a thin entry point over the canonical scanner and `tests/test_legacy_labelling.py` with clean-tree and unlabelled-fixture red/green coverage.
 
 [P1] Legacy enforcement gap: Python source under `references/` bypasses template classification and the configured Ruff quality gate.
+  NT v2 compatibility note: this legacy audit finding is migration/reference-only; it does not authorize Python production paths.
   file: `tests/test_template_classification.py:250`; `ruff.toml:1`; `tests/test_quality_gates.py:12`; `references/api_reference/conf.py:1`
   fix: Classify reference Python explicitly and lint/compile it with `--no-force-exclude` so source-snapshot and migration/reference code cannot bypass enforcement.
 
 [P1] Legacy enforcement gap: source-pinned developer-guide files skip block-level Cython/v1 checking under a blanket snapshot exemption.
+  NT v2 compatibility note: legacy Cython/v1 terms here are migration/reference-only audit evidence.
   file: `tools/check_dev_guide_sync.py:954`; `tools/check_dev_guide_sync.py:1040`; `references/developer_guide/environment_setup.md:8`
   fix: Preserve immutable snapshot bodies while requiring an explicit file-level source-snapshot policy or adjacent migration label for active-looking legacy blocks.
 

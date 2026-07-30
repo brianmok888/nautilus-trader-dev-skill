@@ -26,7 +26,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Development gates: the minimum Rust compliance evidence for changed production code is `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and relevant PyO3/stub regeneration checks; add Python lint/tests only for Python research/config or AI/advisory lane changes.
+Development gates: the minimum Rust compliance evidence for changed production code is `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and relevant PyO3/stub regeneration checks. The only active Python lane is AI/advisory through `nt-evomap-integration`; Python checks elsewhere are limited to bounded public PyO3 projections, and non-AI Python material is migration/reference-only.
 
 ## Rust production lane
 
@@ -268,11 +268,14 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 - Officially supported Python versions are Python 3.12-3.14.
 - Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise;
   upstream policy generally follows the latest stable Rust release.
-- Python v2 controller subclassing and importable controller configs are
-  supported for backtest/live orchestration.
-- Python v2 subclassable execution algorithms are supported for routed orders.
-- Python v2 `FeeModel` and `FillModel` subclass support enables custom
-  backtest models without falling back to legacy Cython extension patterns.
+- Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
+  `FillModel` subclass capabilities are compatibility facts, not authorization
+  for active work in this repository. Keep their examples under
+  `migration_reference/`; implement new non-AI orchestration, routed-order,
+  fee, and fill behavior in Rust.
+- Compatibility inventory terms `Python v2 controller subclassing` and
+  `subclassable execution algorithms` describe those quarantined upstream
+  capabilities only; they do not create an active Python lane.
 
 ### Current Rust/PyO3 Deltas
 

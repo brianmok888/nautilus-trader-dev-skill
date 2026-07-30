@@ -24,7 +24,10 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Learning gates: the Rust-first curriculum is the default for production readiness, while Python labs are labelled Python research/config or AI/advisory and legacy/Python labelling is required before using older examples. Learners mark `Pending` until they can run the matching Rust build/test/check commands and explain each gate.
+Learning gates: the active curriculum uses Rust for research, configuration, backtests, strategies, adapters, and live runtime work. The only active Python lane is AI/advisory through `nt-evomap-integration`; older non-AI Python labs are migration/reference-only. Learners mark `Pending` until they can run the matching Rust build/test/check commands and explain each gate.
+
+This is the Rust-first curriculum. Its legacy/Python labelling points only to
+physically quarantined migration material, not an active implementation lane.
 
 ## Rust production lane
 

@@ -24,7 +24,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
 
-Rust strategy gates: production/performance strategies must own `StrategyCore`, `StrategyConfig`, `DataActor` handlers, `nautilus_strategy!` registration, order submission shape, and FFI exposure if needed. Before `Pass`, run `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, targeted strategy/backtest tests, and document any Python research/config or AI/advisory boundary separately.
+Rust strategy gates: research, configuration, production, and performance strategies must own `StrategyCore`, `StrategyConfig`, `DataActor` handlers, `nautilus_strategy!` registration, order submission shape, and FFI exposure if needed. Before `Pass`, run `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and targeted strategy/backtest tests. The only active Python lane is AI/advisory through `nt-evomap-integration`; document that boundary separately when used.
 
 ## Rust production lane
 

@@ -14,8 +14,10 @@ a static library and linked automatically during the build.
 
 ## Examples
 
-Live example scripts are available in
-[examples/live/okx](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/okx/).
+Active Rust `LiveNode` examples are available in
+[crates/adapters/okx/examples](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/okx/examples/).
+Python live-node wiring is migration/reference-only under
+`skills/nt-strategy-builder/migration_reference/python/`.
 
 ### Product support
 
@@ -650,24 +652,7 @@ Options require the `instrument_families` config parameter to scope which underl
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            instrument_types=(OKXInstrumentType.OPTION,),
-            instrument_families=("BTC-USD", "ETH-USD"),
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecClientConfig(
-            instrument_types=(OKXInstrumentType.OPTION,),
-            instrument_families=("BTC-USD", "ETH-USD"),
-            margin_mode=OKXMarginMode.CROSS,
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ## Event contracts
 
@@ -685,24 +670,7 @@ first, then requests instruments for each series.
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            instrument_types=(OKXInstrumentType.EVENTS,),
-            instrument_families=("BTC-ABOVE-DAILY",),
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecClientConfig(
-            instrument_types=(OKXInstrumentType.EVENTS,),
-            instrument_families=("BTC-ABOVE-DAILY",),
-            margin_mode=OKXMarginMode.CROSS,
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ### Event contract market data
 
@@ -793,26 +761,7 @@ export OKX_API_PASSPHRASE="your_demo_passphrase"
 
 Set `environment=OKXEnvironment.DEMO` in your client configuration:
 
-```python
-from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            environment=OKXEnvironment.DEMO,
-            # ... other config
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecClientConfig(
-            environment=OKXEnvironment.DEMO,
-            # ... other config
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 When demo mode is enabled:
 
@@ -943,56 +892,13 @@ The OKX execution client provides the following configuration options:
 `instrument_families` has the same meaning for execution clients as it does for data
 clients.
 
-Below is an example configuration for a live trading node using OKX data and execution clients:
+For active OKX data and execution wiring, use the upstream Rust `LiveNode`
+examples. The former copyable Python live-node configuration is quarantined by
+the migration-reference pointer below.
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-```python
-from nautilus_trader.adapters.okx import OKX
-from nautilus_trader.adapters.okx import OKXDataClientConfig, OKXExecClientConfig
-from nautilus_trader.adapters.okx.factories import OKXLiveDataClientFactory, OKXLiveExecClientFactory
-from nautilus_trader.config import InstrumentProviderConfig, TradingNodeConfig
-from nautilus_trader.core.nautilus_pyo3 import OKXContractType
-from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
-from nautilus_trader.core.nautilus_pyo3 import OKXInstrumentType
-from nautilus_trader.core.nautilus_pyo3 import OKXMarginMode
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    ...,
-    data_clients={
-        OKX: OKXDataClientConfig(
-            api_key=None,           # Will use OKX_API_KEY env var
-            api_secret=None,        # Will use OKX_API_SECRET env var
-            api_passphrase=None,    # Will use OKX_API_PASSPHRASE env var
-            base_url_http=None,
-            environment=OKXEnvironment.LIVE,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            instrument_types=(OKXInstrumentType.SWAP,),
-            contract_types=(OKXContractType.LINEAR,),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecClientConfig(
-            api_key=None,
-            api_secret=None,
-            api_passphrase=None,
-            base_url_http=None,
-            base_url_ws=None,
-            environment=OKXEnvironment.LIVE,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            instrument_types=(OKXInstrumentType.SWAP,),
-            contract_types=(OKXContractType.LINEAR,),
-        ),
-    },
-)
-node = TradingNode(config=config)
-node.add_data_client_factory(OKX, OKXLiveDataClientFactory)
-node.add_exec_client_factory(OKX, OKXLiveExecClientFactory)
-node.build()
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ## Contributing
 
