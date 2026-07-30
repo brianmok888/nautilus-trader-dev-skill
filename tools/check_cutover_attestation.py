@@ -98,14 +98,15 @@ def _validate_command_artifact(
     raw_path = artifact.get("path")
     if not isinstance(raw_path, str):
         return tuple(errors)
-    text = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8")
+    lines = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8").splitlines()
     required_lines = (
-        (f"COMMAND: {command}", "exact command"),
-        (f"REPO_SHA: {repo_sha}", f"exact repository SHA {repo_sha}"),
-        (f"RETURN_CODE: {returncode}", f"return code {returncode}"),
+        ("COMMAND:", f"COMMAND: {command}", "exact command"),
+        ("REPO_SHA:", f"REPO_SHA: {repo_sha}", f"exact repository SHA {repo_sha}"),
+        ("RETURN_CODE:", f"RETURN_CODE: {returncode}", f"return code {returncode}"),
     )
-    for marker, description in required_lines:
-        if marker not in text:
+    for prefix, expected, description in required_lines:
+        matching = [line for line in lines if line.startswith(prefix)]
+        if matching != [expected]:
             errors.append(f"{field}: does not name {description}")
     return tuple(errors)
 

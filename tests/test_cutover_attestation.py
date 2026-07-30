@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_COMMANDS = (
     "uv run pytest -q --ignore=tests/test_quality_gates.py",
@@ -199,6 +201,61 @@ def test_external_attestation_rejects_output_for_another_command(
 
     assert result.returncode == 1
     assert "commands[0].output: does not name exact command" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "forged_lines",
+    (
+        (
+            "XCOMMAND: {command}",
+            "REPO_SHA: {repo_sha}",
+            "RETURN_CODE: 0",
+        ),
+        (
+            "COMMAND: {command}",
+            "REPO_SHA: {repo_sha}-extra",
+            "RETURN_CODE: 0",
+        ),
+        (
+            "COMMAND: {command}",
+            "REPO_SHA: {repo_sha}",
+            "RETURN_CODE: 00",
+        ),
+        (
+            "COMMAND: {command}",
+            "COMMAND: {command}",
+            "REPO_SHA: {repo_sha}",
+            "RETURN_CODE: 0",
+        ),
+    ),
+)
+def test_external_attestation_rejects_forged_or_duplicate_command_markers(
+    tmp_path: Path,
+    forged_lines: tuple[str, ...],
+) -> None:
+    manifest = REPO_ROOT / "references" / "upstream-delta-review.json"
+    attestation = tmp_path / "attestation.json"
+    _write_attestation(attestation, manifest)
+    payload = json.loads(attestation.read_text(encoding="utf-8"))
+    command = payload["commands"][0]["command"]
+    artifact = Path(payload["commands"][0]["output"]["path"])
+    artifact.write_text(
+        "\n".join(
+            line.format(command=command, repo_sha=_repo_sha())
+            for line in forged_lines
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    payload["commands"][0]["output"]["sha256"] = hashlib.sha256(
+        artifact.read_bytes(),
+    ).hexdigest()
+    attestation.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = _run(attestation)
+
+    assert result.returncode == 1
+    assert "commands[0].output" in result.stderr
 
 
 def test_external_attestation_rejects_review_artifact_without_exact_sha_or_verdict(
