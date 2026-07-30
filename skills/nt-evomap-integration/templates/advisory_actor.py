@@ -76,10 +76,17 @@ class AdvisoryAuditRecord:
     """Immutable decision provenance accepted before state changes."""
 
     request_id: str
+    request_sequence: int
     suggestion_id: str | None
     outcome: str
     reason: str
     recorded_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AdvisoryCheckpointAck:
+    request_id: str
+    request_sequence: int
 
 
 class AdvisoryMailboxPort:
@@ -96,6 +103,7 @@ class AdvisoryMailboxPort:
         self._audits: deque[AdvisoryAuditRecord] = deque(
             maxlen=resolved_audit_capacity,
         )
+        self._checkpoint_acks: deque[AdvisoryCheckpointAck] = deque(maxlen=capacity)
 
     def try_put_request(self, request: AdvisoryRequest) -> bool:
         """Return immediately; never discard an older request to make room."""
@@ -133,10 +141,20 @@ class AdvisoryMailboxPort:
         """Return the oldest audit record without waiting."""
         return self._audits.popleft() if self._audits else None
 
+    def try_put_checkpoint_ack(self, ack: AdvisoryCheckpointAck) -> bool:
+        if len(self._checkpoint_acks) == self._checkpoint_acks.maxlen:
+            return False
+        self._checkpoint_acks.append(ack)
+        return True
+
+    def try_take_checkpoint_ack(self) -> AdvisoryCheckpointAck | None:
+        return self._checkpoint_acks.popleft() if self._checkpoint_acks else None
+
     def clear_runtime_queues(self) -> None:
         """Clear bridge-owned request and result queues during lifecycle reset."""
         self._requests.clear()
         self._results.clear()
+        self._checkpoint_acks.clear()
 
 
 class AdvisoryBridgeActorConfig(DataActorConfig):
@@ -191,6 +209,8 @@ class AdvisoryBridgeActor(DataActor):
         self._staged_result: AdvisoryResult | None = None
         self._staged_identity: tuple[int, str, str, str] | None = None
         self._completed_request_sequence: int = config.request_sequence_floor
+        self._pending_checkpoint: AdvisoryAuditRecord | None = None
+        self._pending_authority: AdvisoryAuthority = AdvisoryAuthority.NONE
         self._decision_finalized: bool = False
         self._authority: AdvisoryAuthority = AdvisoryAuthority.NONE
 
@@ -229,6 +249,8 @@ class AdvisoryBridgeActor(DataActor):
         self._pending_request = None
         self._staged_result = None
         self._staged_identity = None
+        self._pending_checkpoint = None
+        self._pending_authority = AdvisoryAuthority.NONE
         self._decision_finalized = False
         self._authority = AdvisoryAuthority.NONE
 
@@ -260,6 +282,7 @@ class AdvisoryBridgeActor(DataActor):
             if request is not None and now_ns >= request.deadline_ns:
                 record = AdvisoryAuditRecord(
                     request_id=request.request_id,
+                    request_sequence=request.request_sequence,
                     suggestion_id=None,
                     outcome="rejected",
                     reason="request_timeout",
@@ -268,7 +291,7 @@ class AdvisoryBridgeActor(DataActor):
                 if not self._mailbox.try_append_audit(record):
                     return AdvisoryResultStatus.AUDIT_BLOCKED
                 self._decision_finalized = True
-                self._complete_request()
+                self._pending_checkpoint = record
                 return AdvisoryResultStatus.TIMED_OUT
             return AdvisoryResultStatus.EMPTY
         identity = (
@@ -295,6 +318,7 @@ class AdvisoryBridgeActor(DataActor):
             return self._reject_result(result, "artifact_hash_mismatch", now_ns)
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
+            request_sequence=result.request_sequence,
             suggestion_id=result.suggestion_id,
             outcome="staged",
             reason="ready_for_review",
@@ -319,6 +343,7 @@ class AdvisoryBridgeActor(DataActor):
         outcome = "approved" if reason is None and decision.approved else "rejected"
         record = AdvisoryAuditRecord(
             request_id=decision.request_id,
+            request_sequence=result.request_sequence if result is not None else 0,
             suggestion_id=decision.suggestion_id,
             outcome=outcome,
             reason=reason or (
@@ -330,18 +355,42 @@ class AdvisoryBridgeActor(DataActor):
             return False
         if reason is None:
             self._decision_finalized = True
-            if decision.approved:
-                self._authority = AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
-            self._complete_request()
+            self._pending_checkpoint = record
+            self._pending_authority = (
+                AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
+                if decision.approved
+                else AdvisoryAuthority.NONE
+            )
             return decision.approved
         if reason == "decision_late":
             self._decision_finalized = True
-            self._complete_request()
+            self._pending_checkpoint = record
         return False
+
+    def poll_checkpoint_ack(self) -> bool:
+        ack = self._mailbox.try_take_checkpoint_ack()
+        pending = self._pending_checkpoint
+        if ack is None or pending is None:
+            return False
+        if (
+            ack.request_id != pending.request_id
+            or ack.request_sequence != pending.request_sequence
+        ):
+            return False
+        self._completed_request_sequence = max(
+            self._completed_request_sequence,
+            ack.request_sequence,
+        )
+        self._authority = self._pending_authority
+        self._pending_checkpoint = None
+        self._pending_authority = AdvisoryAuthority.NONE
+        self._complete_request()
+        return True
 
     def _on_mailbox_tick(self, event: TimeEvent) -> None:
         """Drain at most one already-local result in the event-loop callback."""
-        _ = self.poll_result(now_ns=event.ts_event)
+        if not self.poll_checkpoint_ack():
+            _ = self.poll_result(now_ns=event.ts_event)
 
     def _reject_result(
         self,
@@ -351,6 +400,7 @@ class AdvisoryBridgeActor(DataActor):
     ) -> AdvisoryResultStatus:
         record = AdvisoryAuditRecord(
             request_id=result.request_id,
+            request_sequence=result.request_sequence,
             suggestion_id=result.suggestion_id,
             outcome="rejected",
             reason=reason,
@@ -361,17 +411,11 @@ class AdvisoryBridgeActor(DataActor):
             return AdvisoryResultStatus.AUDIT_BLOCKED
         if reason == "late_result":
             self._decision_finalized = True
-            self._complete_request()
+            self._pending_checkpoint = record
             return AdvisoryResultStatus.LATE
         return AdvisoryResultStatus.REJECTED
 
     def _complete_request(self) -> None:
-        request = self._pending_request
-        if request is not None:
-            self._completed_request_sequence = max(
-                self._completed_request_sequence,
-                request.request_sequence,
-            )
         self._pending_request = None
         self._staged_result = None
 

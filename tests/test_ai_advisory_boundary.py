@@ -53,6 +53,7 @@ FORBIDDEN_IMPORT_ROOTS = {
 REQUIRED_TYPES = {
     "AdvisoryAuditRecord",
     "AdvisoryBridgeActor",
+    "AdvisoryCheckpointAck",
     "AdvisoryDecision",
     "AdvisoryMailboxPort",
     "AdvisoryRequest",
@@ -62,6 +63,10 @@ REQUIRED_TYPES = {
 
 class _MailboxPort(Protocol):
     def try_put_result(self, result) -> bool: ...
+
+    def try_put_checkpoint_ack(self, ack) -> bool: ...
+
+    def try_take_audit(self): ...
 
 
 class _Actor(Protocol):
@@ -79,9 +84,42 @@ class _Actor(Protocol):
 
     def approve(self, decision) -> bool: ...
 
+    def poll_checkpoint_ack(self) -> bool: ...
+
 
 class _RequestRecord(Protocol):
     request_id: str
+
+
+class _CheckpointStore:
+    def __init__(self) -> None:
+        self.request_sequence_floor = 0
+
+    def persist_terminal(self, module: ModuleType, mailbox: _MailboxPort) -> str:
+        record = mailbox.try_take_audit()
+        assert record is not None
+        self.request_sequence_floor = max(
+            self.request_sequence_floor,
+            record.request_sequence,
+        )
+        ack = module.AdvisoryCheckpointAck(
+            request_id=record.request_id,
+            request_sequence=record.request_sequence,
+        )
+        assert mailbox.try_put_checkpoint_ack(ack) is True
+        return record.reason
+
+
+def _persist_terminal(
+    module: ModuleType,
+    mailbox: _MailboxPort,
+    actor: _Actor,
+    store: _CheckpointStore | None = None,
+) -> str:
+    checkpoint_store = _CheckpointStore() if store is None else store
+    reason = checkpoint_store.persist_terminal(module, mailbox)
+    assert actor.poll_checkpoint_ack() is True
+    return reason
 
 
 def _tree() -> ast.Module:
@@ -237,9 +275,10 @@ def test_advisory_records_are_frozen_and_slotted() -> None:
         _request(module),
         _result(module),
         _decision(module),
-        module.AdvisoryAuditRecord(
-            request_id="request-1",
-            suggestion_id="suggestion-1",
+            module.AdvisoryAuditRecord(
+                request_id="request-1",
+                request_sequence=1,
+                suggestion_id="suggestion-1",
             outcome="staged",
             reason="ready_for_review",
             recorded_ns=50,
@@ -307,8 +346,10 @@ def test_advisory_approval_grants_only_offline_change_review_authority() -> None
     assert actor.request_review(_request(module)) is True
     assert mailbox.try_put_result(_result(module)) is True
     assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
 
     assert actor.approve(_decision(module)) is True
+    assert _persist_terminal(module, mailbox, actor) == "offline_change_review"
     assert actor.authority is module.AdvisoryAuthority.OFFLINE_CHANGE_REVIEW
 
 
@@ -319,8 +360,10 @@ def test_approved_review_releases_actor_for_next_request() -> None:
     assert actor.request_review(_request(module)) is True
     assert mailbox.try_put_result(_result(module)) is True
     assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
 
     assert actor.approve(_decision(module)) is True
+    assert _persist_terminal(module, mailbox, actor) == "offline_change_review"
     assert actor.staged_result is None
     next_request = module.AdvisoryRequest(
         request_id="request-2",
@@ -338,8 +381,10 @@ def test_rejected_review_releases_actor_for_next_request() -> None:
     assert actor.request_review(_request(module)) is True
     assert mailbox.try_put_result(_result(module)) is True
     assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
 
     assert actor.approve(_decision(module, approved=False)) is False
+    assert _persist_terminal(module, mailbox, actor) == "operator_rejected"
     assert actor.staged_result is None
     assert actor.request_review(_request(module, "request-2", 2)) is True
 
@@ -351,7 +396,7 @@ def test_timed_out_review_releases_actor_for_next_request() -> None:
     assert actor.request_review(_request(module)) is True
 
     assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.TIMED_OUT
-    assert mailbox.try_take_audit().reason == "request_timeout"
+    assert _persist_terminal(module, mailbox, actor) == "request_timeout"
     assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
@@ -361,9 +406,10 @@ def test_timeout_audit_backpressure_keeps_request_pending() -> None:
     actor = _actor_with_mailbox(module, mailbox)
     assert actor.request_review(_request(module)) is True
     assert mailbox.try_append_audit(
-        module.AdvisoryAuditRecord(
-            request_id="occupied",
-            suggestion_id=None,
+            module.AdvisoryAuditRecord(
+                request_id="occupied",
+                request_sequence=0,
+                suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
             recorded_ns=90,
@@ -374,6 +420,7 @@ def test_timeout_audit_backpressure_keeps_request_pending() -> None:
     assert actor.request_review(_request(module, "request-2", 2)) is False
     assert mailbox.try_take_audit().reason == "test_backpressure"
     assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.TIMED_OUT
+    assert _persist_terminal(module, mailbox, actor) == "request_timeout"
     assert actor.request_review(_request(module, "request-2", 2)) is True
 
 
@@ -386,9 +433,10 @@ def test_advisory_audit_backpressure_prevents_state_transition() -> None:
     assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
     assert mailbox.try_take_audit().reason == "ready_for_review"
     assert mailbox.try_append_audit(
-        module.AdvisoryAuditRecord(
-            request_id="occupied",
-            suggestion_id=None,
+            module.AdvisoryAuditRecord(
+                request_id="occupied",
+                request_sequence=0,
+                suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
             recorded_ns=55,
@@ -406,9 +454,10 @@ def test_advisory_poll_backpressure_retains_result_until_audit_accepts() -> None
     result = _result(module)
     assert actor.request_review(_request(module)) is True
     assert mailbox.try_append_audit(
-        module.AdvisoryAuditRecord(
-            request_id="occupied",
-            suggestion_id=None,
+            module.AdvisoryAuditRecord(
+                request_id="occupied",
+                request_sequence=0,
+                suggestion_id=None,
             outcome="occupied",
             reason="test_backpressure",
             recorded_ns=45,
@@ -439,6 +488,7 @@ def test_timely_result_replay_is_rejected() -> None:
 
 def test_completed_result_replay_survives_capacity_and_lifecycle_reset() -> None:
     module = _module()
+    checkpoint_store = _CheckpointStore()
     mailbox = module.AdvisoryMailboxPort(capacity=2)
     actor = module.AdvisoryBridgeActor(
         module.AdvisoryBridgeActorConfig(
@@ -479,7 +529,11 @@ def test_completed_result_replay_survives_capacity_and_lifecycle_reset() -> None
         assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
         assert mailbox.try_take_audit().reason == "ready_for_review"
         assert actor.approve(decision) is True
-        assert mailbox.try_take_audit().reason == "offline_change_review"
+        assert actor.authority is module.AdvisoryAuthority.NONE
+        assert actor.request_review(
+            _request(module, f"blocked-{sequence}", sequence + 10),
+        ) is False
+        assert _persist_terminal(module, mailbox, actor, checkpoint_store) == "offline_change_review"
         if sequence == 1:
             first_result = result
 
@@ -500,13 +554,36 @@ def test_completed_result_replay_survives_capacity_and_lifecycle_reset() -> None
     restarted = module.AdvisoryBridgeActor(
         module.AdvisoryBridgeActorConfig(
             mailbox_capacity=2,
-            request_sequence_floor=3,
+            request_sequence_floor=checkpoint_store.request_sequence_floor,
         ),
     )
     restarted._mailbox = mailbox
     assert mailbox.try_put_result(first_result) is True
     assert restarted.poll_result(now_ns=80) == module.AdvisoryResultStatus.REJECTED
     assert mailbox.try_take_audit().reason == "result_replay"
+
+
+def test_crash_before_checkpoint_ack_restores_only_durable_floor() -> None:
+    module = _module()
+    mailbox = module.AdvisoryMailboxPort(capacity=2)
+    actor = module.AdvisoryBridgeActor(
+        module.AdvisoryBridgeActorConfig(request_sequence_floor=4),
+    )
+    actor._mailbox = mailbox
+    request = _request(module, "request-5", 5)
+    result = _result(module, request_id="request-5", request_sequence=5)
+
+    assert actor.request_review(request) is True
+    assert mailbox.try_put_result(result) is True
+    assert actor.poll_result(now_ns=50) == module.AdvisoryResultStatus.STAGED
+    assert mailbox.try_take_audit().reason == "ready_for_review"
+    assert actor.approve(_decision(module, request_id="request-5")) is True
+    assert actor.request_sequence_floor == 4
+
+    restarted = module.AdvisoryBridgeActor(
+        module.AdvisoryBridgeActorConfig(request_sequence_floor=4),
+    )
+    assert restarted.request_review(request) is True
 
 
 def test_late_approval_ends_request_and_releases_actor() -> None:
@@ -526,7 +603,7 @@ def test_late_approval_ends_request_and_releases_actor() -> None:
         decided_ns=100,
     )
     assert actor.approve(late) is False
-    assert mailbox.try_take_audit().reason == "decision_late"
+    assert _persist_terminal(module, mailbox, actor) == "decision_late"
     assert actor.authority is module.AdvisoryAuthority.NONE
     assert actor.staged_result is None
     assert actor.request_review(_request(module, "request-2", 2)) is True
@@ -549,7 +626,7 @@ def test_rejected_advisory_decision_is_terminal_and_releases_actor() -> None:
         decided_ns=60,
     )
     assert actor.approve(rejected) is False
-    assert mailbox.try_take_audit().reason == "operator_rejected"
+    assert _persist_terminal(module, mailbox, actor) == "operator_rejected"
     assert actor.authority is module.AdvisoryAuthority.NONE
     assert actor.staged_result is None
     assert actor.request_review(_request(module, "request-2", 2)) is True
@@ -563,8 +640,8 @@ def test_advisory_result_at_or_after_deadline_is_rejected_as_late() -> None:
     assert mailbox.try_put_result(_result(module)) is True
 
     assert actor.poll_result(now_ns=100) == module.AdvisoryResultStatus.LATE
+    assert _persist_terminal(module, mailbox, actor) == "late_result"
     assert actor.staged_result is None
-    assert mailbox.try_take_audit().reason == "late_result"
 
 
 def test_advisory_result_for_timed_out_request_remains_rejected_on_replay() -> None:
@@ -576,7 +653,7 @@ def test_advisory_result_for_timed_out_request_remains_rejected_on_replay() -> N
 
     assert mailbox.try_put_result(result) is True
     assert actor.poll_result(now_ns=101) == module.AdvisoryResultStatus.LATE
-    assert mailbox.try_take_audit().reason == "late_result"
+    assert _persist_terminal(module, mailbox, actor) == "late_result"
     next_request = module.AdvisoryRequest(
         request_id="request-2",
         request_sequence=2,

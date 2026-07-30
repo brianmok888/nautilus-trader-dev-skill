@@ -101,7 +101,7 @@ If advisory reasoning uses LangChain or LangGraph:
 2. Enqueue an immutable request through the bounded local mailbox.
 3. Let the external proxy perform all network/model work outside the actor.
 4. On the actor timer, drain at most one already-local result, reject late or mismatched identity, write audit provenance, and stage it as non-actionable.
-5. Accept an exact human decision only after audit capacity is available; use approval solely for offline configuration/change review, then persist `request_sequence_floor` with the audit checkpoint before restart and release terminal request state so later reviews can proceed.
+5. Accept an exact human decision only after audit capacity is available; the external proxy atomically persists the terminal audit record and `request_sequence_floor`, then returns a local checkpoint acknowledgment. Grant offline review authority and release terminal request state only after the actor consumes that acknowledgment.
 6. Continue Rust trading, adapter, risk, and live-node operation unchanged when the mailbox or proxy is unavailable.
 
 ## Implementation checklist
@@ -110,8 +110,9 @@ If advisory reasoning uses LangChain or LangGraph:
 - [ ] Use the bounded non-blocking `AdvisoryMailboxPort`; never wait or replace older work.
 - [ ] Match request sequence, request ID, suggestion ID, and suggestion hash before approval.
 - [ ] Assign strictly increasing request sequences from durable proxy state, restore `request_sequence_floor` from the durable audit checkpoint after restart, reject `now_ns >= deadline_ns` as late, and reject every replay deterministically.
+- [ ] Keep terminal requests pending until the external proxy acknowledges atomic persistence of the audit record and sequence floor.
 - [ ] Require audit acceptance before staged/approved state changes.
-- [ ] Release the request slot only after audited approval, operator rejection, or timeout.
+- [ ] Release the request slot only after the durable checkpoint acknowledgment for an audited approval, operator rejection, or timeout.
 - [ ] Cover sequential success, rejection, timeout, replay, identity mismatch, audit backpressure, and degraded mode.
 
 ## Safety review checklist
