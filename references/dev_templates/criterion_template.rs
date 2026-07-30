@@ -9,11 +9,9 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
-// -----------------------------------------------------------------------------
 // Replace `my_function` and set-up code with your real workload.
-// -----------------------------------------------------------------------------
 
 fn my_function(input: &[u8]) -> usize {
     input.iter().map(|b| *b as usize).sum()

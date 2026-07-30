@@ -5,9 +5,7 @@
 
 use std::hint::black_box;
 
-// -----------------------------------------------------------------------------
 // Replace `fast_add` with the real function you want to measure.
-// -----------------------------------------------------------------------------
 
 fn fast_add() -> i32 {
     let a = black_box(1);
