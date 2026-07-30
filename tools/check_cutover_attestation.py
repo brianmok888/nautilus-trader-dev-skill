@@ -40,6 +40,50 @@ def _manifest_path(repo_root: Path, raw_path: str) -> Path:
     return path if path.is_absolute() else repo_root / path
 
 
+def _validate_artifact(
+    repo_root: Path,
+    artifact: object,
+    field: str,
+) -> tuple[str, ...]:
+    if not isinstance(artifact, dict):
+        return (f"{field}: expected an object",)
+    raw_path = artifact.get("path")
+    expected_hash = artifact.get("sha256")
+    if not isinstance(raw_path, str) or not raw_path:
+        return (f"{field}.path: expected a non-empty string",)
+    if not isinstance(expected_hash, str):
+        return (f"{field}.sha256: expected a string",)
+    path = _manifest_path(repo_root, raw_path)
+    try:
+        actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError as exc:
+        return (f"{field}.path: cannot read {path}: {exc}",)
+    if actual_hash != expected_hash:
+        return (f"{field}.sha256: does not match artifact content",)
+    return ()
+
+
+def _validate_review_artifact(
+    repo_root: Path,
+    artifact: object,
+    field: str,
+    repo_sha: str,
+    decision: str,
+) -> tuple[str, ...]:
+    errors = list(_validate_artifact(repo_root, artifact, field))
+    if errors or not isinstance(artifact, dict):
+        return tuple(errors)
+    raw_path = artifact.get("path")
+    if not isinstance(raw_path, str):
+        return tuple(errors)
+    text = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8")
+    if repo_sha not in text:
+        errors.append(f"{field}: does not name exact repository SHA {repo_sha}")
+    if decision not in text:
+        errors.append(f"{field}: does not contain required decision {decision}")
+    return tuple(errors)
+
+
 def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, ...]:
     try:
         payload = json.loads(attestation_path.read_text(encoding="utf-8"))
@@ -51,8 +95,10 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
     errors: list[str] = []
     if payload.get("schema_version") != 1:
         errors.append("schema_version: expected 1")
-    if payload.get("repo_sha") != _current_sha(repo_root):
+    repo_sha = payload.get("repo_sha")
+    if repo_sha != _current_sha(repo_root):
         errors.append("repo_sha: does not match current repository HEAD")
+    exact_sha = repo_sha if isinstance(repo_sha, str) else "<invalid>"
 
     manifest = payload.get("manifest")
     if not isinstance(manifest, dict):
@@ -89,9 +135,13 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
                 recorded_commands.add(command["command"])
             if command.get("returncode") != 0:
                 errors.append(f"commands[{index}].returncode: expected 0")
-            output_hash = command.get("output_sha256")
-            if not isinstance(output_hash, str) or len(output_hash) != 64:
-                errors.append(f"commands[{index}].output_sha256: expected a SHA-256 string")
+            errors.extend(
+                _validate_artifact(
+                    repo_root,
+                    command.get("output"),
+                    f"commands[{index}].output",
+                ),
+            )
         missing_commands = sorted(set(REQUIRED_COMMANDS) - recorded_commands)
         if missing_commands:
             errors.append("commands: missing required commands: " + ", ".join(missing_commands))
@@ -99,13 +149,29 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
     code_reviewer = payload.get("code_reviewer")
     if not isinstance(code_reviewer, dict) or code_reviewer.get("verdict") != "APPROVE":
         errors.append("code_reviewer.verdict: expected APPROVE")
-    elif not isinstance(code_reviewer.get("artifact"), str) or not code_reviewer["artifact"]:
-        errors.append("code_reviewer.artifact: expected a non-empty string")
+    else:
+        errors.extend(
+            _validate_review_artifact(
+                repo_root,
+                code_reviewer.get("artifact"),
+                "code_reviewer.artifact",
+                exact_sha,
+                "VERDICT: APPROVE",
+            ),
+        )
     architect = payload.get("architect")
     if not isinstance(architect, dict) or architect.get("status") != "CLEAR":
         errors.append("architect.status: expected CLEAR")
-    elif not isinstance(architect.get("artifact"), str) or not architect["artifact"]:
-        errors.append("architect.artifact: expected a non-empty string")
+    else:
+        errors.extend(
+            _validate_review_artifact(
+                repo_root,
+                architect.get("artifact"),
+                "architect.artifact",
+                exact_sha,
+                "ARCHITECTURE: CLEAR",
+            ),
+        )
     return tuple(errors)
 
 

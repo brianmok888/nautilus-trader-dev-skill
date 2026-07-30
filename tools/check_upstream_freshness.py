@@ -52,6 +52,7 @@ class FreshnessReport:
     manifest_path: Path
     manifest_reviewed: bool
     manifest_error: str | None
+    nightly_contained: bool
 
     @property
     def ok(self) -> bool:
@@ -64,6 +65,7 @@ class FreshnessReport:
             and develop is not None
             and develop.status in {FreshnessStatus.CURRENT, FreshnessStatus.DRIFTED}
             and all(ref.status is not FreshnessStatus.MISSING for ref in self.refs)
+            and self.nightly_contained
         )
 
 
@@ -142,6 +144,23 @@ def _changed_paths(
     return tuple(line for line in result.stdout.splitlines() if line)
 
 
+def _commit_subject(upstream_root: Path, commit: str) -> str:
+    return _git(upstream_root, "show", "-s", "--format=%s", commit).stdout.strip()
+
+
+def _commit_paths(upstream_root: Path, commit: str) -> tuple[str, ...]:
+    result = _git(
+        upstream_root,
+        "diff-tree",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        "--root",
+        commit,
+    )
+    return tuple(line for line in result.stdout.splitlines() if line)
+
+
 def check_ref(upstream_root: Path, pinned_commit: str, ref: str) -> RefFreshness:
     try:
         current_commit = _resolve_ref(upstream_root, ref)
@@ -186,6 +205,7 @@ def _manifest_error(
     manifest_path: Path,
     pinned_commit: str,
     refs: tuple[RefFreshness, ...],
+    upstream_root: Path,
 ) -> str | None:
     try:
         payload = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -217,11 +237,23 @@ def _manifest_error(
         commit = delta.get("commit")
         if not isinstance(commit, str):
             return f"review manifest deltas[{index}].commit must be a string"
+        subject = delta.get("subject")
+        if not isinstance(subject, str) or not subject:
+            return f"review manifest deltas[{index}].subject must be a non-empty string"
         paths = delta.get("upstream_paths")
         if not isinstance(paths, list) or not paths or not all(
             isinstance(path, str) and path for path in paths
         ):
             return f"review manifest deltas[{index}].upstream_paths must be non-empty strings"
+        try:
+            actual_subject = _commit_subject(upstream_root, commit)
+            actual_paths = set(_commit_paths(upstream_root, commit))
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return f"review manifest deltas[{index}].commit is not resolvable upstream"
+        if subject != actual_subject:
+            return f"review manifest deltas[{index}].subject does not match upstream commit"
+        if set(paths) != actual_paths:
+            return f"review manifest deltas[{index}].upstream_paths do not match upstream commit"
         affected = delta.get("affected_files")
         rationale = delta.get("no_impact_rationale")
         has_affected = isinstance(affected, list) and bool(affected) and all(
@@ -252,7 +284,31 @@ def build_freshness_report(
     manifest_path: Path = DEFAULT_MANIFEST,
 ) -> FreshnessReport:
     checked_refs = tuple(check_ref(upstream_root, pinned_commit, ref) for ref in refs)
-    manifest_error = _manifest_error(manifest_path, pinned_commit, checked_refs)
+    manifest_error = _manifest_error(
+        manifest_path,
+        pinned_commit,
+        checked_refs,
+        upstream_root,
+    )
+    try:
+        nightly_commit = _resolve_ref(upstream_root, "origin/nightly")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        try:
+            nightly_commit = _resolve_ref(upstream_root, "nightly")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            nightly_commit = None
+    develop = next(
+        (ref for ref in checked_refs if ref.name.rsplit("/", 1)[-1] == "develop"),
+        None,
+    )
+    if nightly_commit is None or develop is None or develop.current_commit is None:
+        nightly_contained = False
+    else:
+        nightly_contained = _is_ancestor(
+            upstream_root,
+            nightly_commit,
+            develop.current_commit,
+        )
     return FreshnessReport(
         upstream_root=upstream_root,
         pinned_commit=pinned_commit,
@@ -260,6 +316,7 @@ def build_freshness_report(
         manifest_path=manifest_path,
         manifest_reviewed=manifest_error is None,
         manifest_error=manifest_error,
+        nightly_contained=nightly_contained,
     )
 
 
@@ -300,6 +357,10 @@ def render_text_report(report: FreshnessReport) -> str:
             lines.append(f"  path: {path}")
     manifest_status = "reviewed" if report.manifest_reviewed else "invalid"
     lines.append(f"Delta review manifest: {manifest_status} ({report.manifest_path})")
+    lines.append(
+        "Nightly history containment: "
+        + ("covered by origin/develop" if report.nightly_contained else "not covered")
+    )
     if report.manifest_error:
         lines.append(f"Manifest error: {report.manifest_error}")
     lines.append("This command is read-only and does not update tools/upstream_baseline.py.")

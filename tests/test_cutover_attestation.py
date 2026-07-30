@@ -32,6 +32,19 @@ def _repo_sha() -> str:
 
 
 def _write_attestation(path: Path, manifest: Path) -> None:
+    command_artifact = path.parent / "command.log"
+    command_artifact.write_text("verified command output\n", encoding="utf-8")
+    command_hash = hashlib.sha256(command_artifact.read_bytes()).hexdigest()
+    code_review = path.parent / "code-review.txt"
+    code_review.write_text(
+        f"Repository SHA: {_repo_sha()}\nVERDICT: APPROVE\n",
+        encoding="utf-8",
+    )
+    architecture_review = path.parent / "architecture-review.txt"
+    architecture_review.write_text(
+        f"Repository SHA: {_repo_sha()}\nARCHITECTURE: CLEAR\n",
+        encoding="utf-8",
+    )
     path.write_text(
         json.dumps(
             {
@@ -42,11 +55,30 @@ def _write_attestation(path: Path, manifest: Path) -> None:
                     "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
                 },
                 "commands": [
-                    {"command": command, "returncode": 0, "output_sha256": "1" * 64}
+                    {
+                        "command": command,
+                        "returncode": 0,
+                        "output": {
+                            "path": str(command_artifact),
+                            "sha256": command_hash,
+                        },
+                    }
                     for command in REQUIRED_COMMANDS
                 ],
-                "code_reviewer": {"verdict": "APPROVE", "artifact": "/tmp/reviewer.txt"},
-                "architect": {"status": "CLEAR", "artifact": "/tmp/architect.txt"},
+                "code_reviewer": {
+                    "verdict": "APPROVE",
+                    "artifact": {
+                        "path": str(code_review),
+                        "sha256": hashlib.sha256(code_review.read_bytes()).hexdigest(),
+                    },
+                },
+                "architect": {
+                    "status": "CLEAR",
+                    "artifact": {
+                        "path": str(architecture_review),
+                        "sha256": hashlib.sha256(architecture_review.read_bytes()).hexdigest(),
+                    },
+                },
             },
         ),
         encoding="utf-8",
@@ -99,6 +131,9 @@ def test_external_attestation_rejects_changed_manifest(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}\n", encoding="utf-8")
     attestation = tmp_path / "attestation.json"
+    command_artifact = tmp_path / "command.log"
+    command_artifact.write_text("verified command output\n", encoding="utf-8")
+    command_hash = hashlib.sha256(command_artifact.read_bytes()).hexdigest()
     payload = {
         "schema_version": 1,
         "repo_sha": _repo_sha(),
@@ -107,11 +142,21 @@ def test_external_attestation_rejects_changed_manifest(tmp_path: Path) -> None:
             "sha256": "0" * 64,
         },
         "commands": [
-            {"command": command, "returncode": 0, "output_sha256": "1" * 64}
+            {
+                "command": command,
+                "returncode": 0,
+                "output": {"path": str(command_artifact), "sha256": command_hash},
+            }
             for command in REQUIRED_COMMANDS
         ],
-        "code_reviewer": {"verdict": "APPROVE", "artifact": "/tmp/reviewer.txt"},
-        "architect": {"status": "CLEAR", "artifact": "/tmp/architect.txt"},
+        "code_reviewer": {
+            "verdict": "APPROVE",
+            "artifact": {"path": str(command_artifact), "sha256": command_hash},
+        },
+        "architect": {
+            "status": "CLEAR",
+            "artifact": {"path": str(command_artifact), "sha256": command_hash},
+        },
     }
     attestation.write_text(json.dumps(payload), encoding="utf-8")
 
@@ -119,6 +164,41 @@ def test_external_attestation_rejects_changed_manifest(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "manifest.sha256" in result.stderr
+
+
+def test_external_attestation_rejects_fabricated_command_output_hash(
+    tmp_path: Path,
+) -> None:
+    manifest = REPO_ROOT / "references" / "upstream-delta-review.json"
+    attestation = tmp_path / "attestation.json"
+    _write_attestation(attestation, manifest)
+    payload = json.loads(attestation.read_text(encoding="utf-8"))
+    payload["commands"][0]["output"]["sha256"] = "0" * 64
+    attestation.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = _run(attestation)
+
+    assert result.returncode == 1
+    assert "commands[0].output.sha256" in result.stderr
+
+
+def test_external_attestation_rejects_review_artifact_without_exact_sha_or_verdict(
+    tmp_path: Path,
+) -> None:
+    manifest = REPO_ROOT / "references" / "upstream-delta-review.json"
+    attestation = tmp_path / "attestation.json"
+    _write_attestation(attestation, manifest)
+    payload = json.loads(attestation.read_text(encoding="utf-8"))
+    payload["code_reviewer"]["artifact"] = {
+        "path": str(manifest),
+        "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+    }
+    attestation.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = _run(attestation)
+
+    assert result.returncode == 1
+    assert "code_reviewer.artifact" in result.stderr
 
 
 def test_external_attestation_rejects_failed_command_or_review(tmp_path: Path) -> None:

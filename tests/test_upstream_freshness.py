@@ -22,6 +22,13 @@ def test_only_authoritative_develop_is_a_required_moving_ref() -> None:
     assert UPSTREAM_REMOTE_REFS == ("origin/develop",)
 
 
+def test_required_develop_ref_contains_current_nightly_history() -> None:
+    report = build_freshness_report(default_upstream_root())
+
+    assert report.nightly_contained is True
+    assert report.ok is True
+
+
 def test_upstream_root_is_portable_and_environment_overridable(
     tmp_path: Path, monkeypatch,
 ) -> None:
@@ -73,6 +80,7 @@ def _write_manifest(
                 "deltas": [
                     {
                         "commit": delta_commit,
+                        "subject": "current",
                         "upstream_paths": [upstream_path],
                         "affected_files": ["references/developer_guide/index.md"],
                     },
@@ -92,6 +100,7 @@ def _make_repo(tmp_path: Path) -> tuple[Path, str, str]:
     _git(repo, "config", "user.name", "Test User")
     baseline = _commit(repo, "guide.md", "baseline\n", "baseline")
     current = _commit(repo, "guide.md", "current\n", "current")
+    _git(repo, "branch", "nightly", current)
     return repo, baseline, current
 
 
@@ -161,6 +170,9 @@ def test_review_manifest_rejects_unmapped_delta_commit(tmp_path: Path) -> None:
         current=current,
         delta_commit=baseline,
     )
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["deltas"][0]["subject"] = "baseline"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
 
     report = build_freshness_report(
         upstream_root=upstream,
@@ -185,9 +197,10 @@ def test_review_manifest_requires_impact_or_explicit_no_impact(tmp_path: Path) -
                 "pinned_commit": baseline,
                 "reviewed_commit": current,
                 "deltas": [
-                    {
-                        "commit": current,
-                        "upstream_paths": ["guide.md"],
+                        {
+                            "commit": current,
+                            "subject": "current",
+                            "upstream_paths": ["guide.md"],
                     },
                 ],
             },
@@ -205,6 +218,58 @@ def test_review_manifest_requires_impact_or_explicit_no_impact(tmp_path: Path) -
     assert report.manifest_reviewed is False
     assert report.manifest_error is not None
     assert "affected_files or no_impact_rationale" in report.manifest_error
+
+
+def test_review_manifest_rejects_subject_that_does_not_match_upstream_commit(
+    tmp_path: Path,
+) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+    manifest = tmp_path / "upstream-delta-review.json"
+    _write_manifest(
+        manifest,
+        baseline=baseline,
+        current=current,
+        delta_commit=current,
+    )
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["deltas"][0]["subject"] = "fabricated subject"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+        manifest_path=manifest,
+    )
+
+    assert report.manifest_reviewed is False
+    assert report.manifest_error is not None
+    assert "subject does not match upstream commit" in report.manifest_error
+
+
+def test_review_manifest_rejects_paths_that_do_not_match_upstream_commit(
+    tmp_path: Path,
+) -> None:
+    upstream, baseline, current = _make_repo(tmp_path)
+    manifest = tmp_path / "upstream-delta-review.json"
+    _write_manifest(
+        manifest,
+        baseline=baseline,
+        current=current,
+        delta_commit=current,
+        upstream_path="fabricated.md",
+    )
+
+    report = build_freshness_report(
+        upstream_root=upstream,
+        pinned_commit=baseline,
+        refs=("develop",),
+        manifest_path=manifest,
+    )
+
+    assert report.manifest_reviewed is False
+    assert report.manifest_error is not None
+    assert "upstream_paths do not match upstream commit" in report.manifest_error
 
 
 
