@@ -5,6 +5,23 @@
 
 ---
 
+## Methodology skills (invoke these during execution)
+
+The executing agent MUST load and apply these skills at the right phase. Do not skip — they encode the workflow discipline this mission requires.
+
+| Skill                                  | When to invoke                                           | What it enforces                                                         |
+| -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `$superpowers:code-review`               | **Phase 1** — deep review                                | Adversarial review pass; findings must cite file:line, not vibes         |
+| `$oh-my-codex:best-practice-research`    | **Phase 1** — V2 compliance baseline                     | Pull current NT V2 docs/source as ground truth; no training-data guesses |
+| `$superpowers:brainstorming`             | **Phase 2** — when fix approach is ambiguous             | Explore approach before coding; pick deliberately, not by default        |
+| `$superpowers:test-driven-development`   | **Phase 2** — every fix segment                          | Test first → watch fail → implement → verify pass                        |
+| `$superpowers:verification-before-completion` | **Phase 3 / Phase 5** — before claiming any gate `Pass` | Run the actual command; cite real output; "should pass" is not Pass      |
+| `$superpowers:requesting-code-review`    | **Phase 4** — reconciliation                             | Independent review of post-fix tree before ship                          |
+
+**Rule:** If a phase's skill is not available in the runtime, STOP and report — do not substitute unstructured work for a missing methodology skill.
+
+---
+
 ## Authoritative sources (when findings conflict)
 
 Resolve by priority:
@@ -44,6 +61,8 @@ and audit controls for Cython/v1 references, not implementation guidance.
 ---
 
 ## Phase 1 — Deep Code Review (READ-ONLY, no edits)
+
+**Invoke:** `$superpowers:code-review` + `$oh-my-codex:best-practice-research`.
 
 Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
 
@@ -85,6 +104,8 @@ write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
 
 ## Phase 2 — Fix Implementation (segment-by-segment, TDD)
 
+**Invoke:** `$superpowers:brainstorming` (when ambiguous) + `$superpowers:test-driven-development` (every segment).
+
 Work findings in priority order (P0 → P1 → P2). For each segment:
 
 1. **When approach is ambiguous:** brainstorm the approach before coding.
@@ -117,6 +138,8 @@ work.
 
 ## Phase 3 — Progressive Gate Checklist (PRIMARY DELIVERABLE)
 
+**Invoke:** `$superpowers:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
+
 For each NT-related skill, produce a cutover readiness card. Append each card to `docs/tracking/Components.md` under the skill's existing entry (or create the entry).
 
 ### Gate card template
@@ -147,6 +170,8 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 ---
 
 ## Phase 4 — Reconciliation
+
+**Invoke:** `$superpowers:requesting-code-review` for independent post-fix review.
 
 1. Re-run Phase 1 audit against the post-fix tree.
 2. Confirm each Phase 1 finding is closed; carry residuals into a follow-up TODO list in `docs/tracking/Findings.md`.
