@@ -8,7 +8,8 @@
 <!-- Write-target rule: only update this file if structural wiring changed. -->
 
 Review date: 2026-07-30
-Audit commit: 6260468 (HEAD of main)
+Cutover implementation commit: ceb53702d5c493406fe8976232df8843088b625e
+Merged tracker reconciliation: f67e3dd05937057c20be5169812ef839e0640c10
 
 ## Repo shape
 
@@ -17,7 +18,8 @@ Audit commit: 6260468 (HEAD of main)
 - **Package manager:** uv (Python); tests run via `uv run pytest`
 - **Lint:** ruff (`ruff.toml`)
 - **NT alignment:** GitHub `develop` developer-guide snapshot with version-sensitive migration notes
-- **File counts at audit:** 18 skills, 5 checker tools, 320 passing tests, 5 developer-guide contracts
+- **Cutover gate shape:** 18 skills with G0-G7 cards; 144 Pass, 0 Pending, 0 Blocked
+- **Validation surface:** `uv run pytest -q --ignore=tests/test_quality_gates.py` and `uv run pytest -q tests/test_quality_gates.py`
 
 ## Skill inventory
 
@@ -54,7 +56,7 @@ Audit commit: 6260468 (HEAD of main)
 | `references/concepts/`                         | Conceptual guides                                     | Reference |
 | `references/integrations/`                     | Integration examples                                  | Reference |
 | `references/dev_templates/`                    | Development templates                                 | Reference |
-| `references/g2-evidence/`                      | G2 (compile-against-NT-master) evidence               | Audit trail |
+| `references/g2-evidence/`                      | G2 evidence against the immutable pinned NT V2 baseline | Audit trail |
 
 ### Developer-guide contracts (canonical rules)
 
@@ -73,15 +75,21 @@ Audit commit: 6260468 (HEAD of main)
 | `tools/check_dev_guide_sync.py`             | Verify local references match NT developer guide         |
 | `tools/check_dev_guide_snapshot_sync.py`    | Verify developer guide snapshot is current               |
 | `tools/check_rust_trading_reference_sync.py` | Verify Rust trading references are in sync              |
-| `tools/check_skill_g2_harnesses.py`         | G2 evidence harness — skills compile against NT master   |
+| `tools/check_skill_g2_harnesses.py`         | G2 evidence harness — skills validate against the immutable pinned NT V2 baseline |
 | `tools/check_upstream_freshness.py`         | Check NT upstream for newer commits since last snapshot |
 | `tools/upstream_baseline.py`                | Baseline config for upstream checks                     |
+| `tools/cutover_inventory.py`                | Enumerate the 18 cutover skills and lane ownership      |
+| `tools/g2_owned_content.py`                 | Bind G2 evidence to complete tracked skill trees        |
+| `tools/markdown_lane_contract.py`           | Enforce Rust, PyO3, migration, and source-pinned lanes  |
+| `tools/run_pinned_v2_pytest.py`             | Run V2-only Python contracts in the pinned upstream env |
+| `tools/template_classification.py`          | Classify Python guidance as advisory or migration-only  |
 
 ## Test surface
 
-- **320 tests passing** at audit commit (0 failures)
-- Test files: `test_dev_guide_sync`, `test_dev_guide_snapshot_sync`, `test_quality_gates`, `test_rust_first_end_to_end`, `test_rust_trading_reference_sync`, `test_skill_g2_harnesses`, `test_upstream_freshness`
-- **Known lint debt:** 2 ruff E402 errors in `tests/test_upstream_freshness.py:17`
+- **Repository suites:** 396 non-quality tests and 5 quality-gate tests passed at the merged cutover reconciliation.
+- **Core sync/gate tests:** `test_dev_guide_sync`, `test_dev_guide_snapshot_sync`, `test_quality_gates`, `test_rust_first_end_to_end`, `test_rust_trading_reference_sync`, `test_skill_g2_harnesses`, `test_upstream_freshness`.
+- **Cutover boundary tests:** `test_ai_advisory_boundary`, `test_dex_g2_harness`, `test_g2_owned_content`, `test_markdown_lane_contract`, `test_pytest_environment_split`, `test_template_classification`, `test_v2_guidance_hardening`.
+- **Lint:** `uv run --with ruff ruff check .` passes.
 
 ## External authority hierarchy
 

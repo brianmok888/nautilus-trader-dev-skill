@@ -9,6 +9,10 @@
 
 Resolve by priority:
 
+NT v2 compatibility note: Cython, v1, and legacy terms in this mission are
+audit targets or migration/reference-only history. They never authorize a
+production path; new non-AI work remains Rust-first and PyO3-oriented.
+
 1. **Rust conversion correctness** — highest. Python/Cython where Rust now exists in NT = P0.
 2. **NT V2 compliance** — drift from current docs/API = P1.
 3. **Gaps vs nightly/master** — newer NT features not covered = P2.
@@ -29,6 +33,9 @@ Resolve by priority:
 
 ## Deliverables (produced in order)
 
+NT v2 compatibility note: legacy-labelling deliverables below are migration
+and audit controls for Cython/v1 references, not implementation guidance.
+
 1. **Phase 1 findings report** — `docs/plans/<date>-nt-v2-cutover-audit-phase1.md`
 2. **Legacy lint gate** — `tools/check_legacy_labelling.py` (fails on unlabelled Cython/v1 content)
 3. **Per-skill gate checklist** — cutover readiness cards appended to `docs/tracking/Components.md`
@@ -41,6 +48,10 @@ Resolve by priority:
 Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
 
 ### Finding categories
+
+NT v2 compatibility note: Cython/v1 entries in the audit taxonomy below are
+migration/reference-only findings and must be replaced by current Rust/PyO3
+guidance for new work.
 
 | Category | What to flag | Default severity |
 |---|---|---|
@@ -86,7 +97,14 @@ Work findings in priority order (P0 → P1 → P2). For each segment:
 
 ### Mandatory: legacy lint gate
 
+NT v2 compatibility note: the Cython/v1 syntax below is detection-only input
+for the migration/reference gate; it is not executable or production guidance.
+
 Before Phase 2 closes, ship `tools/check_legacy_labelling.py`:
+
+NT v2 compatibility note: the following Cython/v1 tokens are
+migration/reference-only detector inputs; prefer current Rust/PyO3 APIs for new
+work.
 
 - Scans all `skills/**/SKILL.md`, `references/**/*.md`, `templates/**/*.md`.
 - Fails (exit 1) if any of these appear WITHOUT an explicit `legacy:` label or migration note within 5 lines:
@@ -103,8 +121,14 @@ For each NT-related skill, produce a cutover readiness card. Append each card to
 
 ### Gate card template
 
+NT v2 compatibility note: G1 below measures migration/reference-only Cython/v1
+labelling; it does not make those paths current production guidance.
+
 ```markdown
 ### Cutover readiness — <skill-name>
+
+NT v2 compatibility note: G1 measures migration/reference-only Cython/v1
+labelling; current implementation guidance remains Rust/PyO3-oriented.
 
 | Gate | Description | Status | Evidence |
 |------|-------------|--------|----------|

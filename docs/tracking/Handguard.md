@@ -17,6 +17,10 @@ Purpose: non-negotiable rules for NT V2 Rust cutover skill work.
 
 ## 2. Legacy labelling
 
+NT v2 compatibility note: Cython, v1, and legacy terms in this section describe
+migration/reference-only controls. They are prohibited as production defaults;
+new non-AI guidance remains Rust-first and PyO3-oriented.
+
 3. **All Cython, v1, or legacy content MUST be explicitly labelled.** Every instance of Cython syntax (`cdef`, `cpdef`, `.pyx`), v1-only API, or migration-history references MUST carry an explicit `legacy:` label or migration note. Unlabelled legacy content is a charter violation.
 4. **Legacy content MUST NOT be promoted as current guidance.** Content labelled `legacy:` is reference/migration-history only and MUST NOT appear in "how to do X" sections without an active V2/Rust alternative alongside it.
 
@@ -27,8 +31,8 @@ Purpose: non-negotiable rules for NT V2 Rust cutover skill work.
 
 ## 4. G2 gate discipline
 
-7. **Skill examples MUST compile against NT V2 master.** The G2 evidence harness (`tools/check_skill_g2_harnesses.py`) is the gate. A skill claiming V2 compliance MUST have passing G2 evidence; status is `Pending` until evidence exists.
-8. **Sync checkers MUST stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, and `check_upstream_freshness.py` are the drift detectors. Breaking them to merge content is a charter violation.
+7. **Skill examples MUST validate against the immutable pinned NT V2 baseline.** The G2 evidence harness (`tools/check_skill_g2_harnesses.py`) is the gate. A skill claiming V2 compliance MUST have passing G2 evidence; status is `Pending` until evidence exists.
+8. **Deterministic sync checkers MUST stay green, and freshness drift MUST be reviewed.** `check_dev_guide_sync.py` and `check_rust_trading_reference_sync.py` are deterministic gates. `check_upstream_freshness.py` is a moving-ref detector whose non-zero drift result requires deliberate review and baseline reconciliation, not suppression.
 
 ## 5. Upstream alignment
 

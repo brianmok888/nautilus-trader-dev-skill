@@ -172,7 +172,7 @@ Tracker files in `docs/tracking/` are scoped to non-overlapping charters. Each f
 | ----------------------------- | ---------------------------------------------------------------- |
 | `docs/tracking/Handguard.md`  | Non-negotiable invariants ("must never" / "must always").        |
 | `docs/tracking/Structure.md`  | Structural wiring: skill inventory, reference layers, tools/tests, authority hierarchy. |
-| `docs/tracking/Components.md` | Per-skill detail: behavior, readiness, Rust/Cython signal, known gaps.  |
+| `docs/tracking/Components.md` | Per-skill detail: behavior, readiness, Rust and migration-reference signals, known gaps.  |
 | `docs/tracking/Findings.md`   | Issues with IDs, closure evidence, and the append-only delta log. |
 
 **Write-target routing rule:**
