@@ -1,8 +1,6 @@
 import sys
 from pathlib import Path
 
-# noqa: SIZE_OK - scenario fixtures intentionally exercise the complete sync contract.
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools import check_dev_guide_sync as sync
@@ -1558,6 +1556,57 @@ def test_source_pinned_snapshot_policy_labels_upstream_legacy_content(
         error
         == "unlabelled legacy/Cython/v1 guidance in references/developer_guide/testing.md"
         for error in errors
+    )
+
+
+def test_source_pinned_snapshot_missing_file_level_legacy_policy_fails(
+    tmp_path: Path,
+) -> None:
+    metadata = current_metadata("testing.md").replace(
+        f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}\n",
+        "",
+    )
+    write(
+        tmp_path / "references/developer_guide/testing.md",
+        metadata + "# Testing\n\nUpstream still documents a Cython v1 example.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "missing pinned snapshot legacy policy in references/developer_guide/testing.md"
+        in errors
+    )
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in references/developer_guide/testing.md"
+        in errors
+    )
+
+
+def test_source_pinned_snapshot_body_legacy_policy_is_not_file_metadata(
+    tmp_path: Path,
+) -> None:
+    metadata = current_metadata("testing.md").replace(
+        f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}\n",
+        "",
+    )
+    write(
+        tmp_path / "references/developer_guide/testing.md",
+        metadata
+        + "# Testing\n\n"
+        + f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}\n\n"
+        + "Upstream still documents a Cython v1 example.\n",
+    )
+
+    errors = run_checks(tmp_path).errors
+
+    assert (
+        "missing pinned snapshot legacy policy in references/developer_guide/testing.md"
+        in errors
+    )
+    assert (
+        "unlabelled legacy/Cython/v1 guidance in references/developer_guide/testing.md"
+        in errors
     )
 
 

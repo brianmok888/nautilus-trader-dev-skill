@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.template_classification import classification_error
+from tools.template_classification import classification_error, shipped_python_files
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
@@ -14,10 +14,14 @@ MIGRATION_CLASSIFICATION = "migration/reference-only; not a production default"
 LEGACY_CLASSIFICATION = (
     "legacy executable; migration/reference-only; not a production default"
 )
+SOURCE_SNAPSHOT_CLASSIFICATION = (
+    "source snapshot; migration/reference-only; not a production default"
+)
 ALLOWED_CLASSIFICATIONS = {
     AI_CLASSIFICATION,
     MIGRATION_CLASSIFICATION,
     LEGACY_CLASSIFICATION,
+    SOURCE_SNAPSHOT_CLASSIFICATION,
 }
 PYTHON_SUFFIXES = {".py", ".pyi", ".pyx", ".pxd", ".pxi"}
 AI_SKILL = Path("skills/nt-evomap-integration")
@@ -26,7 +30,7 @@ AI_SKILL = Path("skills/nt-evomap-integration")
 def test_every_shipped_python_guidance_file_has_one_exact_classification() -> None:
     errors = {
         path.relative_to(REPO_ROOT).as_posix(): error
-        for path in _shipped_python_files(REPO_ROOT)
+        for path in shipped_python_files(REPO_ROOT)
         if (error := classification_error(path, REPO_ROOT)) is not None
     }
 
@@ -99,7 +103,29 @@ def test_shipped_python_discovery_includes_executable_docs_prototypes(tmp_path: 
     path = tmp_path / "docs/prototypes/sidecar/client.py"
     _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
 
-    assert path in _shipped_python_files(tmp_path)
+    assert path in shipped_python_files(tmp_path)
+
+
+def test_shipped_python_discovery_includes_reference_python(tmp_path: Path) -> None:
+    path = tmp_path / "references/api_reference/conf.py"
+    _write(path, f"{CLASSIFICATION_PREFIX}{SOURCE_SNAPSHOT_CLASSIFICATION}\n")
+
+    assert path in shipped_python_files(tmp_path)
+
+
+def test_source_snapshot_classification_is_allowed_only_under_references(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "references/api_reference/conf.py"
+    template = tmp_path / "skills/nt-example/templates/conf.py"
+    text = f"{CLASSIFICATION_PREFIX}{SOURCE_SNAPSHOT_CLASSIFICATION}\n"
+    _write(reference, text)
+    _write(template, text)
+
+    assert classification_error(reference, tmp_path) is None
+    assert classification_error(template, tmp_path) == (
+        "source snapshot classification is only allowed under references"
+    )
 
 
 def test_migration_classification_does_not_bless_trading_node(tmp_path: Path) -> None:
@@ -245,24 +271,6 @@ def test_aliased_legacy_imports_require_legacy_quarantine(tmp_path: Path) -> Non
         assert classification_error(path, tmp_path) == (
             "legacy executable requires the exact legacy classification"
         )
-
-
-def _shipped_python_files(root: Path) -> list[Path]:
-    files: list[Path] = []
-    for path in sorted(root.rglob("*")):
-        if not path.is_file() or path.suffix not in PYTHON_SUFFIXES:
-            continue
-        relative = path.relative_to(root)
-        if (
-            "tests" in relative.parts
-            or "__pycache__" in relative.parts
-            or relative.parts[0]
-            in {".git", ".omx", ".worktrees", "references", "tools"}
-            or relative.name == "conftest.py"
-        ):
-            continue
-        files.append(path)
-    return files
 
 
 def _write(path: Path, text: str) -> None:

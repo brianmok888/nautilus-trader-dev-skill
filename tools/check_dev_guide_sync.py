@@ -73,6 +73,15 @@ PINNED_SNAPSHOT_LEGACY_POLICY = (
 )
 
 
+def _frontmatter(text: str) -> str:
+    if not text.startswith("---\n"):
+        return ""
+    closing_index = text.find("\n---\n", 4)
+    if closing_index == -1:
+        return ""
+    return text[4:closing_index]
+
+
 ENTRY_SKILL = Path("skills/nt/SKILL.md")
 ENTRY_SKILL_ROUTING_TARGETS = [
     "nt-adapters",
@@ -1041,12 +1050,12 @@ def _is_current_source_pinned_dev_guide_snapshot(path: Path, root: Path) -> bool
     relative = path.relative_to(root)
     if relative.parts[:2] != ("references", "developer_guide"):
         return False
-    text = _read(path)
+    metadata = _frontmatter(_read(path))
     return (
-        f"source_commit: {CURRENT_SYNC_COMMIT}" in text
-        and f"sync_date: {CURRENT_SYNC_DATE}" in text
-        and f"target: {CURRENT_TARGET}" in text
-        and f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" in text
+        f"source_commit: {CURRENT_SYNC_COMMIT}" in metadata
+        and f"sync_date: {CURRENT_SYNC_DATE}" in metadata
+        and f"target: {CURRENT_TARGET}" in metadata
+        and f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" in metadata
     )
 
 
@@ -1208,6 +1217,7 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             errors.append(f"missing required guide file: {relative.as_posix()}")
             continue
         text = _read(absolute)
+        metadata = _frontmatter(text)
         missing_keys = [key for key in METADATA_KEYS if not _contains_term(text, key)]
         if missing_keys:
             errors.append(
@@ -1219,7 +1229,7 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
             errors.append(f"stale source commit in {relative.as_posix()}")
         if f"target: {CURRENT_TARGET}" not in text:
             errors.append(f"stale target in {relative.as_posix()}")
-        if f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" not in text:
+        if f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" not in metadata:
             errors.append(f"missing pinned snapshot legacy policy in {relative.as_posix()}")
 
 

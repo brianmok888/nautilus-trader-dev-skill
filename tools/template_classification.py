@@ -19,10 +19,14 @@ MIGRATION_CLASSIFICATION: Final = "migration/reference-only; not a production de
 LEGACY_CLASSIFICATION: Final = (
     "legacy executable; migration/reference-only; not a production default"
 )
+SOURCE_SNAPSHOT_CLASSIFICATION: Final = (
+    "source snapshot; migration/reference-only; not a production default"
+)
 ALLOWED_CLASSIFICATIONS: Final = {
     AI_CLASSIFICATION,
     MIGRATION_CLASSIFICATION,
     LEGACY_CLASSIFICATION,
+    SOURCE_SNAPSHOT_CLASSIFICATION,
 }
 AI_SKILL: Final = Path("skills") / ACTIVE_PYTHON_SKILL
 LEGACY_EXACT_NAMES: Final = {
@@ -43,6 +47,7 @@ TEXTUAL_LEGACY_RE: Final = re.compile(
     + r"LiveExecClientFactory|LiveExecutionClientFactory|LiveDataClient|LiveMarketDataClient|"
     + r"LiveExecutionClient|[A-Za-z_][A-Za-z0-9_]*Live(?:Data|Exec|Execution)ClientFactory)\b"
 )
+PYTHON_SUFFIXES: Final = {".py", ".pyi", ".pyx", ".pxd", ".pxi"}
 
 
 def classification_error(path: Path, root: Path) -> str | None:
@@ -69,6 +74,11 @@ def classification_error(path: Path, root: Path) -> str | None:
     if classification == AI_CLASSIFICATION and not relative.is_relative_to(AI_SKILL):
         return "AI classification is only allowed under skills/nt-evomap-integration"
     if (
+        classification == SOURCE_SNAPSHOT_CLASSIFICATION
+        and relative.parts[0] != "references"
+    ):
+        return "source snapshot classification is only allowed under references"
+    if (
         classification == AI_CLASSIFICATION
         and "python_sidecar" not in relative.parts
         and "templates" not in relative.parts
@@ -90,6 +100,23 @@ def classification_error(path: Path, root: Path) -> str | None:
     return None
 
 
+def shipped_python_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.suffix not in PYTHON_SUFFIXES:
+            continue
+        relative = path.relative_to(root)
+        if (
+            "tests" in relative.parts
+            or "__pycache__" in relative.parts
+            or relative.parts[0] in {".git", ".omx", ".worktrees", "tools"}
+            or relative.name == "conftest.py"
+        ):
+            continue
+        files.append(path)
+    return files
+
+
 def has_legacy_executable_signal(path: Path) -> bool:
     text = path.read_text(encoding="utf-8")
     try:
@@ -105,9 +132,9 @@ def has_legacy_executable_signal(path: Path) -> bool:
 
 
 def _is_legacy_node(node: ast.AST) -> bool:
-    if isinstance(node, ast.Name):  # noqa: IF_VARIANT_OK
+    if isinstance(node, ast.Name):
         names = (node.id,)
-    elif isinstance(node, ast.Attribute):  # noqa: IF_VARIANT_OK
+    elif isinstance(node, ast.Attribute):
         names = (node.attr,)
     elif isinstance(node, ast.alias):
         names = (node.name.rsplit(".", 1)[-1], node.asname or "")

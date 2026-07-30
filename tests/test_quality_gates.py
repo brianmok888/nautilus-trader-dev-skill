@@ -13,7 +13,16 @@ def test_full_repo_passes_ruff_quality_gate() -> None:
     # Given: the repository contains Python templates, examples, tools, and tests.
     # When: Ruff checks the complete tree rather than only recently changed files.
     result = subprocess.run(
-        ["uv", "run", "--with", "ruff", "ruff", "check", "."],
+        [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "--no-force-exclude",
+            ".",
+        ],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -46,10 +55,43 @@ def test_active_ai_and_dex_migration_lanes_pass_ruff_quality_gate() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_reference_python_compiles() -> None:
+    result = subprocess.run(
+        ["uv", "run", "python", "-m", "compileall", "-q", "references"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_reference_python_passes_ruff_without_force_exclusion() -> None:
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "--no-force-exclude",
+            "references",
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_ruff_quality_gate_has_explicit_snapshot_and_template_policy() -> None:
     config = (REPO_ROOT / "ruff.toml").read_text(encoding="utf-8")
 
-    assert '"references/**/*.py"' in config
+    assert '"references/**/*.py"' not in config
     assert '"skills/*/references/**/*.py"' in config
     assert '"skills/*/templates/**/*.py"' not in config
     assert '"skills/nt-adapters/templates/**/*.py"' in config
@@ -97,6 +139,7 @@ def test_pinned_upstream_snapshot_detection_is_narrow(tmp_path: Path) -> None:
         "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md\n"
         "source_commit: " + "a" * 40 + "\n"
         "target: NautilusTrader develop developer guide source snapshot\n"
+        "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only\n"
         "---\n",
         encoding="utf-8",
     )
@@ -105,6 +148,16 @@ def test_pinned_upstream_snapshot_detection_is_narrow(tmp_path: Path) -> None:
 
     assert _is_pinned_upstream_snapshot(snapshot, snapshot.read_text())
     assert not _is_pinned_upstream_snapshot(ordinary, ordinary.read_text())
+
+    missing_policy = tmp_path / "references/developer_guide/missing-policy.md"
+    missing_policy.write_text(
+        snapshot.read_text().replace(
+            "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only\n",
+            "",
+        ),
+        encoding="utf-8",
+    )
+    assert not _is_pinned_upstream_snapshot(missing_policy, missing_policy.read_text())
 
 
 def _is_external_or_anchor(target: str) -> bool:
@@ -117,4 +170,6 @@ def _is_pinned_upstream_snapshot(path: Path, text: str) -> bool:
         and "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/" in text
         and re.search(r"^source_commit: [0-9a-f]{40}$", text, re.MULTILINE) is not None
         and "target: NautilusTrader develop developer guide source snapshot" in text
+        and "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only"
+        in text
     )

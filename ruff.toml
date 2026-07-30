@@ -1,5 +1,4 @@
 extend-exclude = [
-    "references/**/*.py",
     "skills/*/references/**/*.py",
     "skills/nt-adapters/templates/**/*.py",
     "skills/nt-implement/templates/**/*.py",
