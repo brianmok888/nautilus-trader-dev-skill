@@ -1,0 +1,106 @@
+# Structure — nautilus-trader-dev-skill
+
+<!-- CHARTER -->
+<!-- Role: Structural wiring — skill inventory, capability matrix, reference layers, tool/test surfaces, external authority hierarchy. -->
+<!-- Read when: answering "how is X connected?", "what capability does Y have?", "where does code/skill content belong?". -->
+<!-- Updated when: structural wiring changed (new skill, new reference dir, new tool, new test surface, boundary shift). -->
+<!-- Does NOT contain: invariants, closure evidence, per-skill behavior detail, plans. -->
+<!-- Write-target rule: only update this file if structural wiring changed. -->
+
+Review date: 2026-07-30
+Audit commit: 6260468 (HEAD of main)
+
+## Repo shape
+
+- **Stack:** AI Agent Skills (Claude Code, Gemini CLI, Codex) for NautilusTrader development
+- **Languages:** Markdown (skill/reference content), Python (tools, tests), Rust (skill examples/contracts)
+- **Package manager:** uv (Python); tests run via `uv run pytest`
+- **Lint:** ruff (`ruff.toml`)
+- **NT alignment:** GitHub `develop` developer-guide snapshot with version-sensitive migration notes
+- **File counts at audit:** 18 skills, 5 checker tools, 320 passing tests, 5 developer-guide contracts
+
+## Skill inventory
+
+| Skill                            | Purpose                                                    | Rust-first | Notes |
+| -------------------------------- | ---------------------------------------------------------- | ---------- | ----- |
+| `nt`                               | Entry-point router for all NautilusTrader tasks            | —          | Classifies intent, dispatches to `nt-*` skills |
+| `nt-architect`                     | Architecture decomposition (Actor/Indicator/Strategy)     | yes        | Start here for new projects |
+| `nt-implement`                     | Strategy/Actor/Indicator implementation                    | yes        | Templates + conventions |
+| `nt-strategy-builder-rust`         | **Flagship** — production Rust strategy + LiveNode wiring  | yes        | Default for production/live-node work |
+| `nt-strategy-builder`              | Python strategy workflows                                  | no         | **Migration/reference-only** — not for new work |
+| `nt-evomap-integration`            | EvoMap advisory sidecar integration                        | no         | **Sole active Python lane** — advisory only, never execution authority |
+| `nt-adapters`                      | Adapter development (CEX/venue)                            | yes        | Spec exec testing contract |
+| `nt-dex-adapter`                   | Custom DEX adapter development                             | yes        | Has rules/ + tests/ |
+| `nt-live`                          | Live trading runtime                                       | yes        | LiveNode, execution, adapters |
+| `nt-backtest`                      | Backtesting                                                | yes        | Has templates/ + references/ |
+| `nt-data`                          | Data handling and serialization                            | yes        | |
+| `nt-model`                         | Model definitions                                          | yes        | |
+| `nt-signals`                       | Signal generation                                          | yes        | Has templates/ + references/ |
+| `nt-trading`                       | Trading workflows                                          | yes        | Has templates/ + references/ |
+| `nt-testing`                       | Testing policies                                           | yes        | |
+| `nt-review`                        | Pre-deployment code review                                 | yes        | |
+| `nt-dev`                           | Development environment setup                              | yes        | |
+| `nt-learn`                         | Learning curriculum                                        | yes        | Has curriculum/ |
+| `brainstorming_evomap`             | EvoMap brainstorming prototypes                            | no         | Has tests/ |
+
+## Reference layers
+
+| Directory                                    | Contents                                              | Authority |
+| -------------------------------------------- | ----------------------------------------------------- | --------- |
+| `references/developer_guide/`                  | Snapshot of NT official developer guide               | Source of truth for NT API/behavior |
+| `references/developer_guide/contracts/`        | Agent-actionable rules extracted from dev guide       | **Canonical** — skills must follow these |
+| `references/api_reference/adapters/`           | Adapter API docs                                      | Reference |
+| `references/api_reference/model/`              | Model API docs                                        | Reference |
+| `references/concepts/`                         | Conceptual guides                                     | Reference |
+| `references/integrations/`                     | Integration examples                                  | Reference |
+| `references/dev_templates/`                    | Development templates                                 | Reference |
+| `references/g2-evidence/`                      | G2 (compile-against-NT-master) evidence               | Audit trail |
+
+### Developer-guide contracts (canonical rules)
+
+| Contract                       | Owns                                                |
+| ------------------------------ | --------------------------------------------------- |
+| `adapter_contract.md`            | Adapter development rules                           |
+| `design_principles.md`           | Core design principles                              |
+| `environment_tooling.md`         | Environment and tooling setup                       |
+| `live_runtime_contract.md`       | Live runtime rules                                  |
+| `testing_policy.md`              | Testing requirements                                |
+
+## Tool surface
+
+| Tool                                      | Purpose                                                 |
+| ----------------------------------------- | ------------------------------------------------------- |
+| `tools/check_dev_guide_sync.py`             | Verify local references match NT developer guide         |
+| `tools/check_dev_guide_snapshot_sync.py`    | Verify developer guide snapshot is current               |
+| `tools/check_rust_trading_reference_sync.py` | Verify Rust trading references are in sync              |
+| `tools/check_skill_g2_harnesses.py`         | G2 evidence harness — skills compile against NT master   |
+| `tools/check_upstream_freshness.py`         | Check NT upstream for newer commits since last snapshot |
+| `tools/upstream_baseline.py`                | Baseline config for upstream checks                     |
+
+## Test surface
+
+- **320 tests passing** at audit commit (0 failures)
+- Test files: `test_dev_guide_sync`, `test_dev_guide_snapshot_sync`, `test_quality_gates`, `test_rust_first_end_to_end`, `test_rust_trading_reference_sync`, `test_skill_g2_harnesses`, `test_upstream_freshness`
+- **Known lint debt:** 2 ruff E402 errors in `tests/test_upstream_freshness.py:17`
+
+## External authority hierarchy
+
+When sources disagree, prefer this order:
+
+1. NautilusTrader source code (`nautilus_core` Rust, `nautilus_trader` Python on GitHub `develop`)
+2. NT official docs (nautilustrader.io/docs/latest/developer_guide)
+3. `references/developer_guide/contracts/` — extracted agent-actionable rules
+4. Skill SKILL.md files
+5. Other reference directories
+
+## Where content belongs
+
+| Type of work                          | Target                              |
+| ------------------------------------- | ----------------------------------- |
+| New skill                             | `skills/<skill-name>/SKILL.md`       |
+| Skill templates/rules                 | `skills/<skill-name>/templates/` or `rules/` |
+| NT dev guide contract                 | `references/developer_guide/contracts/` |
+| Sync checker                          | `tools/check_*.py`                    |
+| Tests                                 | `tests/` or `skills/<skill>/tests/`   |
+| Plans                                 | `docs/plans/`                         |
+| Session handoffs                      | `docs/handoffs/`                      |

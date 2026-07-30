@@ -163,3 +163,46 @@ uv run pytest skills/nt-dex-adapter/tests/ -v
 - Skills are consumed by AI agents (Claude Code, Gemini CLI, Codex, etc.) via SKILL.md files
 - Templates use `asyncio.run(main())` pattern (no CLI framework)
 - Copyright headers: 2015-2026
+
+## DOCUMENTATION CHARTERS AND WRITE-TARGET ROUTING
+
+Tracker files in `docs/tracking/` are scoped to non-overlapping charters. Each file's charter is declared in an HTML comment header at the top of the file. **Never duplicate content across multiple tracking files.** Each change routes to exactly one write-target.
+
+| File                          | Charter (owns ONLY)                                              |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `docs/tracking/Handguard.md`  | Non-negotiable invariants ("must never" / "must always").        |
+| `docs/tracking/Structure.md`  | Structural wiring: skill inventory, reference layers, tools/tests, authority hierarchy. |
+| `docs/tracking/Components.md` | Per-skill detail: behavior, readiness, Rust/Cython signal, known gaps.  |
+| `docs/tracking/Findings.md`   | Issues with IDs, closure evidence, and the append-only delta log. |
+
+**Write-target routing rule:**
+
+- `docs/tracking/Findings.md`: ALWAYS updated on closure (one-line delta entry under `## Delta log`).
+- `docs/tracking/Handguard.md`: ONLY IF a new invariant is introduced or an existing one changes.
+- `docs/tracking/Structure.md`: ONLY IF structural wiring changed (new skill, new reference dir, new tool, boundary shift).
+- `docs/tracking/Components.md`: ONLY IF a skill changed (new skill, readiness shift, review update).
+
+If a change touches more than one charter, generate one todo per write-target. Do NOT paste the same closure text into multiple files.
+
+### Workflow tiers
+
+Classify every task before starting. Pick the lowest tier that fits; when unsure, pick the higher tier.
+
+- **Tier A — Trivial:** single-file fix, typo, obvious bug. Skip research/validation/todos. Edit -> verify -> one-line delta in `docs/tracking/Findings.md`.
+- **Tier B — Standard:** known change, 2-3 files, clear scope, no new skills. Todos -> code -> verify -> `docs/tracking/Findings.md` delta.
+- **Tier C — Uncertain:** unfamiliar skill, multi-skill change, new integration. Todos -> code -> verify -> `docs/tracking/Findings.md` delta + at most ONE scoped update to `docs/tracking/Structure.md` OR `docs/tracking/Components.md` if scope changed.
+- **Tier D — Architectural:** new skill, boundary change, capability shift, anything touching `docs/tracking/Handguard.md` invariants. Full pipeline: research -> validate -> todos -> code -> verify -> all relevant files per charter.
+
+### Plan files
+
+- New plans live in `docs/plans/`. Filename format: `YYYY-MM-DD-kebab-case-name.md`.
+- Each plan starts with YAML frontmatter: `date`, `status: draft|approved|implemented|superseded|closed`, `tier: A|B|C|D`, `write-targets` (list).
+- Lifecycle: `draft` -> `approved` -> `implemented` -> `closed`. Supersession: an `implemented` or `closed` plan may be marked `superseded` by a newer plan that references it.
+- When a plan closes: move it to `docs/plans/archive/`, append a delta entry to `docs/tracking/Findings.md`, and update other charter files ONLY IF their scope changed.
+- Do not promote historical plans to current runtime truth.
+
+### Handoff files
+
+- New session handoffs live in `docs/handoffs/`. Filename format: `YYYY-MM-DD-<topic>-handoff.md`.
+- One handoff per work session or work segment. Content: what was done, what's in progress, what's next, blockers, repo state.
+- Handoffs are historical once superseded. Do not edit historical handoffs to look current; do not promote them to current runtime truth.
