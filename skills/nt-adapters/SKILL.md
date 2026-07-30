@@ -17,7 +17,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | --- | --- | --- | --- |
 | G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -187,14 +187,20 @@ nautilus_trader/adapters/your_adapter/
 
 ## Adapter Implementation Sequence
 
-Follow this dependency-driven order. Each phase builds on the previous one. **Implement the Rust core before any Python layer.**
+Follow the official dependency structure below. The phases organize work; they are not release
+gates. A market-data-only adapter can omit execution, and a product can complete the sequence before
+another product begins. Keep the capability matrix current throughout.
 
-### Phase 1: Rust Core Infrastructure
+### Phase 1: Define scope
 
-| Step | Component | Description |
-|------|-----------|-------------|
-| 1.1 | HTTP error types | Define HTTP-specific error enum with retryable/non-retryable variants |
-| 1.2 | HTTP client | Implement credentials, request signing, rate limiting, retry logic |
+Record products, environments, account modes, data types, order/report capabilities, venue
+restrictions, protocol boundaries, known gaps, and the smallest end-to-end slice and test plan.
+
+### Phase 2: Build the protocol core
+
+Add the Rust crate and implement environments, URLs, credentials, signing, shared types, HTTP and
+WebSocket models, deterministic parsers/serializers, retry classification, authentication,
+heartbeats, and transport lifecycle.
 
 ### Rate-limit and unknown-outcome policy
 
@@ -206,51 +212,50 @@ Follow this dependency-driven order. Each phase builds on the previous one. **Im
   command is idempotent or the venue proves it was not processed; leave order
   state open for reconciliation instead of emitting a terminal rejection.
 
-| 1.3 | HTTP API models | Define request/response structs for REST endpoints |
-| 1.4 | HTTP parsing | Convert venue responses to Nautilus domain models |
-| 1.5 | WebSocket error types | Define WebSocket-specific error enum |
-| 1.6 | WebSocket client | Connection lifecycle, authentication, heartbeat, reconnection |
-| 1.7 | WebSocket messages | Define streaming payload types |
-| 1.8 | WebSocket parsing | Convert stream messages to Nautilus domain models |
-| 1.9 | Python bindings | Expose Rust functionality via PyO3 |
+### Phase 3: Implement instruments
 
-**Milestone**: Rust crate compiles, unit tests pass, HTTP/WebSocket clients can authenticate and stream/request raw data.
+Implement bidirectional symbol identity, every supported instrument family, definition loading and
+caching, fresh requests, and supported definition updates with complete precision and contract data.
 
-### Phase 2: Instrument Definitions
+### Phase 4: Implement market data
 
-| Step | Component | Description |
-|------|-----------|-------------|
-| 2.1 | Instrument parsing | Parse venue instrument definitions into Nautilus types |
-| 2.2 | Instrument provider | Implement `InstrumentProvider` to load, filter, and cache instruments |
-| 2.3 | Symbol mapping | Handle venue-specific symbol formats and Nautilus `InstrumentId` conversion |
+Build one public stream and instrument first, then add advertised requests/subscriptions while
+preserving venue time, correlation, order-book boundaries, unsubscribe, malformed-input, and
+reconnect behavior.
 
-### Phase 3: Market Data
+### Phase 5: Implement execution
 
-| Step | Component | Description |
-|------|-----------|-------------|
-| 3.1 | Data subscriptions | Subscribe to trade ticks, quote ticks, bars, order book updates |
-| 3.2 | Historical data | Request historical bars, trades, quotes via REST |
-| 3.3 | Order book management | Maintain L2/L3 order book from delta stream |
+Establish account identity, initial state, private streams, and reconciliation before order flow;
+then add submit, cancel, modify, report generation, deduplication, event ordering, and ambiguous
+outcome handling.
 
-### Phase 4: Order Execution
+### Phase 6: Add optional venue capabilities
 
-| Step | Component | Description |
-|------|-----------|-------------|
-| 4.1 | Order submission | Submit market, limit, stop orders via REST/WebSocket |
-| 4.2 | Order management | Cancel, modify, track order state |
-| 4.3 | Fill handling | Process trade reports, update positions |
+Add advanced orders, batches, product-specific data, or split clients only after the base lifecycle
+is stable, and give each capability independent fixtures, acceptance cases, and limitations.
 
-### Phase 5: Advanced Features
+### Phase 7: Complete factories and projection
 
-Account management, position tracking, funding rate handling, etc.
+Finalize typed configs, defaults, secret redaction, Rust factories, `CacheView` and clock inputs,
+PyO3 registry projection, public package exposure, generated stubs, and boundary tests as applicable.
 
-### Phase 6: Configuration & Factories
+### Phase 8: Prove conformance
 
-Wire everything into the platform via config types and factory patterns.
+Run deterministic functional/integration scenarios plus applicable data and execution acceptance
+tests on testnet or a controlled account. Exercise connection failure, reconnect, shutdown, rate
+limits, and recovery, and document every skipped specification case.
 
-### Phase 7: Testing & Documentation
+### Phase 9: Measure performance and robustness
 
-Data testing (DataTesterConfig), execution testing (ExecTesterConfig), documentation.
+Benchmark confirmed end-to-end hot paths, then applicable signing/authentication/codecs. Fuzz every
+untrusted parser, decoder, normalizer, signer, and encoder with realistic corpora and strong
+invariants.
+
+### Phase 10: Finish documentation and operations
+
+Reconcile the capability matrix and document credentials, configuration, limits, reconciliation,
+environment differences, tester entry points, generated output, examples, known gaps, and
+troubleshooting.
 
 ## Rust Usage
 

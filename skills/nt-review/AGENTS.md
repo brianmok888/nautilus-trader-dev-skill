@@ -45,11 +45,24 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 ## ADAPTER REVIEW GATE
 
 Fail review if missing:
-- Phase compliance (7-phase dependency order with milestone evidence)
+- Phase compliance with the official dependency structure:
+  1. Phase 1: Define scope
+  2. Phase 2: Build the protocol core
+  3. Phase 3: Implement instruments
+  4. Phase 4: Implement market data
+  5. Phase 5: Implement execution
+  6. Phase 6: Add optional venue capabilities
+  7. Phase 7: Complete factories and projection
+  8. Phase 8: Prove conformance
+  9. Phase 9: Measure performance and robustness
+  10. Phase 10: Finish documentation and operations
 - Required interfaces: InstrumentProvider async loaders, LiveDataClient contract, LiveExecutionClient reconciliation
 - Factory/config contract: `create(loop, name, config, msgbus, cache, clock)` with safe credential handling
 - Runtime/FFI safety: no `tokio::spawn()` in adapters, direct `PyObject`/`Py<T>` for ordinary callbacks, justified/cycle-audited `Arc<Py<T>>` exceptions only, no blocking hot handlers
 - Testing doctrine: real payload fixtures, no sleep-based timing, cover providers/data/execution/factories
+
+G2 `cargo check` is compilation only. Never treat it as spec, testnet, resilience, fuzz, or
+operations acceptance evidence; require separate Phase 8-10 evidence for those claims.
 
 ## EVOMAP REVIEW GATE (Optional)
 

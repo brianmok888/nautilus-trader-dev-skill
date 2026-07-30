@@ -482,23 +482,16 @@ trade ID across replays, keeping downstream dedup intact.
 
 ## Fees
 
-Polymarket uses the formula `fee = C * feeRate * p * (1 - p)` where C is shares
-traded and p is the share price. Fees peak at p = 0.50 and decrease symmetrically
-toward the extremes. Only takers pay fees; makers pay zero.
+The adapter reads `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` and applies:
 
-| Category        | Taker `feeRate` | Maker `feeRate` | Maker rebate |
-|-----------------|-----------------|-----------------|--------------|
-| Crypto          | 0.072           | 0               | 20%          |
-| Sports          | 0.03            | 0               | 25%          |
-| Finance         | 0.04            | 0               | 25%          |
-| Politics        | 0.04            | 0               | 25%          |
-| Economics       | 0.05            | 0               | 25%          |
-| Culture         | 0.05            | 0               | 25%          |
-| Weather         | 0.05            | 0               | 25%          |
-| Other / General | 0.05            | 0               | 25%          |
-| Mentions        | 0.04            | 0               | 25%          |
-| Tech            | 0.04            | 0               | 25%          |
-| Geopolitics     | 0               | 0               | -            |
+```text
+platform fee = shares * rate * (price * (1 - price)) ^ exponent
+```
+
+The current public schedule uses exponent `1`. Crypto markets use rate `0.07`, Sports markets use
+rate `0.05`, and the instrument carries the authoritative schedule for each market. Fees peak at
+`p = 0.50`, decrease symmetrically toward the extremes, and apply only to taker fills. Do not assume
+support for other exponents, unpublished schedules, or rebate behavior.
 
 Fees are calculated in USDC, rounded to 5 decimal places, and applied at match time
 by the protocol. The smallest fee charged is 0.00001 USDC; smaller fees round to zero.
@@ -509,29 +502,14 @@ For the latest rates, see Polymarket's [Fees](https://docs.polymarket.com/tradin
 
 ### Backtest fee model
 
-For backtests, the adapter ships `PolymarketFeeModel` (a
-`nautilus_trader.backtest.models.FeeModel` subclass) which applies the taker
-fee formula above and credits passive maker fills with a rebate inferred from
-the market category. Polymarket pays a 20% maker rebate on Crypto markets and
-25% on other fee-enabled categories (Sports, Finance, Politics, Economics,
-Culture, Weather, Tech, Mentions, Other), distributed daily from each market's
-rebate pool. Geopolitics markets are fee-free with no rebates and the model
-returns zero for them.
+Use `ProbabilityPriceFeeModel` for backtests under the current exponent `1` schedule. It reads maker
+and taker rates from the binary option instrument and applies the same probability-price curve.
 
 ```python
-from nautilus_trader.adapters.polymarket.fee_model import PolymarketFeeModel
+from nautilus_trader.execution import ProbabilityPriceFeeModel
 
-# Default: maker rebates enabled
-fee_model = PolymarketFeeModel()
-
-# Or for taker-only strategies
-fee_model = PolymarketFeeModel(maker_rebates_enabled=False)
+fee_model = ProbabilityPriceFeeModel()
 ```
-
-The model can also be configured through `BacktestVenueConfig.fee_model` via
-`ImportableFeeModelConfig` and `PolymarketFeeModelConfig`. Maker rebate share
-inference uses the instrument's category labels first, then falls back to the
-documented per-category fee rate when labels are absent.
 
 ## Reconciliation
 

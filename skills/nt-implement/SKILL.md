@@ -17,7 +17,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | --- | --- | --- | --- |
 | G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-implement.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-implement.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -77,14 +77,20 @@ NautilusTrader adapters follow a **Rust-first** layered architecture:
 
 Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
 
-**7-Phase Implementation Sequence:**
-1. Rust core infrastructure (HTTP/WebSocket clients, types, config)
-2. Instrument definitions (parsing, normalization)
-3. Market data (quotes, trades, order books)
-4. Order execution (submit, modify, cancel)
-5. Advanced features (account events, position tracking)
-6. Configuration and factories
-7. Testing and documentation
+**Official ten-phase dependency structure:**
+1. Phase 1: Define scope
+2. Phase 2: Build the protocol core
+3. Phase 3: Implement instruments
+4. Phase 4: Implement market data
+5. Phase 5: Implement execution
+6. Phase 6: Add optional venue capabilities
+7. Phase 7: Complete factories and projection
+8. Phase 8: Prove conformance
+9. Phase 9: Measure performance and robustness
+10. Phase 10: Finish documentation and operations
+
+These phases describe dependencies, not release gates. Keep the capability matrix current, allow a
+market-data-only adapter to omit execution, and prove one product end to end before expanding.
 
 ## Adapter Canonical Contract (2026 Guide Alignment)
 
