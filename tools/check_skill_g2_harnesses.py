@@ -299,9 +299,22 @@ HARNESSES: dict[str, Harness] = {
     "nt-implement": Harness(
         skill="nt-implement",
         scope="repository:implementation-templates-plus-upstream-owners",
-        summary="Compile representative Rust component owners for implementation guidance",
-        allowed_tokens=("nautilus-common", "nautilus-indicators", "nautilus-trading", "nautilus-backtest"),
+        summary="Validate implementation templates and compile representative Rust component owners",
+        allowed_tokens=(
+            "test_capnp_schema_precision.py",
+            "nautilus-common",
+            "nautilus-indicators",
+            "nautilus-trading",
+            "nautilus-backtest",
+        ),
         steps=(
+            repository_step(
+                PYTHON,
+                "-m",
+                "pytest",
+                "-q",
+                "tests/test_capnp_schema_precision.py",
+            ),
             upstream_step(
                 "cargo",
                 "check",
@@ -319,6 +332,7 @@ HARNESSES: dict[str, Harness] = {
         owned_paths=(
             Path("skills/nt-implement/SKILL.md"),
             Path("skills/nt-implement/templates"),
+            Path("tests/test_capnp_schema_precision.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-implement.json"),
     ),

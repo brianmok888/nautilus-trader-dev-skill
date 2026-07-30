@@ -713,9 +713,11 @@ def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:
             assert "2026-07-29:" not in line
 
 
-def test_implement_g2_does_not_compile_migration_python_as_production() -> None:
+def test_implement_g2_validates_capnp_without_compiling_migration_python() -> None:
     harness = g2.HARNESSES["nt-implement"]
     command_text = " ".join(argument for step in harness.steps for argument in step.command)
 
     assert "compileall" not in command_text
-    assert all(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
+    assert "tests/test_capnp_schema_precision.py" in command_text
+    assert any(step.cwd is g2.WorkingDirectory.REPOSITORY for step in harness.steps)
+    assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
