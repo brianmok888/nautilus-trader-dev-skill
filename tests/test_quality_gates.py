@@ -35,7 +35,7 @@ def test_active_ai_and_dex_migration_lanes_pass_ruff_quality_gate() -> None:
             "check",
             "--no-force-exclude",
             "skills/nt-evomap-integration/python_sidecar",
-            "skills/nt-dex-adapter/migration_reference",
+            "skills/nt-evomap-integration/templates/advisory_actor.py",
         ],
         cwd=REPO_ROOT,
         check=False,
@@ -51,9 +51,13 @@ def test_ruff_quality_gate_has_explicit_snapshot_and_template_policy() -> None:
 
     assert '"references/**/*.py"' in config
     assert '"skills/*/references/**/*.py"' in config
-    assert '"skills/*/templates/**/*.py"' in config
+    assert '"skills/*/templates/**/*.py"' not in config
+    assert '"skills/nt-adapters/templates/**/*.py"' in config
+    assert '"skills/nt-implement/templates/**/*.py"' in config
+    assert '"skills/nt-strategy-builder/templates/**/*.py"' in config
+    assert '"skills/nt-evomap-integration/templates/**/*.py"' not in config
     assert '"skills/*/migration_reference/**/*.py"' not in config
-    assert '"skills/nt-dex-adapter/migration_reference/**/*.py"' not in config
+    assert '"skills/nt-dex-adapter/migration_reference/**/*.py"' in config
     assert '"skills/nt-strategy-builder/tests/**/*.py"' in config
 
 

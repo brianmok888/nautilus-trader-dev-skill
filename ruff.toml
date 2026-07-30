@@ -1,9 +1,12 @@
 extend-exclude = [
     "references/**/*.py",
     "skills/*/references/**/*.py",
-    "skills/*/templates/**/*.py",
+    "skills/nt-adapters/templates/**/*.py",
+    "skills/nt-implement/templates/**/*.py",
+    "skills/nt-strategy-builder/templates/**/*.py",
     "skills/nt-backtest/migration_reference/**/*.py",
     "skills/nt-data/migration_reference/**/*.py",
+    "skills/nt-dex-adapter/migration_reference/**/*.py",
     "skills/nt-implement/migration_reference/**/*.py",
     "skills/nt-signals/migration_reference/**/*.py",
     "skills/nt-trading/migration_reference/**/*.py",
