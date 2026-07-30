@@ -267,6 +267,49 @@ def test_runner_stops_on_first_failed_step(tmp_path: Path) -> None:
     assert calls == [("false",)]
 
 
+def test_nt_implement_run_reports_pending_without_capnp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    harness = replace(g2.HARNESSES["nt-implement"], evidence_file=None)
+
+    def passing_runner(
+        command: tuple[str, ...], *, cwd: Path, check: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(g2.shutil, "which", lambda _name: None)
+
+    result = g2.run_harness(
+        harness,
+        repo_root=tmp_path,
+        upstream_root=tmp_path,
+        runner=passing_runner,
+    )
+
+    assert result.status is g2.RunStatus.PENDING
+    assert result.ok is False
+
+
+def test_execute_prints_pending_for_nt_implement_without_capnp(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(g2, "assert_expected_upstream", lambda _root: None)
+    monkeypatch.setattr(g2, "assert_owned_content_tracked", lambda _root, _harness: None)
+    monkeypatch.setattr(
+        g2,
+        "run_harness",
+        lambda *_args, **_kwargs: g2.RunResult(
+            skill="nt-implement",
+            status=g2.RunStatus.PENDING,
+        ),
+    )
+
+    exit_code = g2.main(["--execute", "--skill", "nt-implement"])
+
+    assert exit_code == 0
+    assert "PENDING nt-implement" in capsys.readouterr().out
+
+
 def test_dry_run_prints_commands_without_executing(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

@@ -16,11 +16,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.459173,
+      "duration_seconds": 1.274399,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:10:16.090699+00:00"
+  "verified_at": "2026-07-30T07:43:57.744586+00:00"
 }

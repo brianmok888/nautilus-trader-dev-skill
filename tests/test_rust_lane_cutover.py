@@ -20,6 +20,16 @@ ACTIVE_LIVE_GUIDES = (
     "references/integrations/okx.md",
     "skills/nt-adapters/references/integrations/ib.md",
 )
+ACTIVE_CURRICULUM = tuple(
+    path.relative_to(REPO_ROOT).as_posix()
+    for path in sorted((REPO_ROOT / "skills/nt-learn/curriculum").glob("*.md"))
+)
+MIGRATION_CURRICULUM = tuple(
+    path.relative_to(REPO_ROOT).as_posix()
+    for path in sorted(
+        (REPO_ROOT / "skills/nt-learn/migration_reference/python/curriculum").glob("*.md")
+    )
+)
 NON_AI_PYTHON_AUTHORIZATIONS = (
     "Python may prototype",
     "keep Python research/config",
@@ -68,6 +78,29 @@ def test_live_curriculum_teaches_rust_livenode() -> None:
     assert [term for term in required if term not in text] == []
     assert "TradingNode" not in text
     assert PYTHON_FENCE.findall(text) == []
+
+
+@pytest.mark.parametrize("relative_path", ACTIVE_CURRICULUM)
+def test_active_curriculum_has_no_non_ai_python_examples(relative_path: str) -> None:
+    text = read(relative_path)
+
+    assert PYTHON_FENCE.findall(text) == []
+    assert "**Python layer**" not in text
+    assert "DataTesterConfig(" not in text
+    assert "ExecTesterConfig(" not in text
+    assert "uv pip install nautilus_trader" not in text
+    assert 'python -c "import nautilus_trader' not in text
+    assert "make pytest" not in text
+    assert "```cython" not in text
+    assert "cdef extern" not in text
+
+
+@pytest.mark.parametrize("relative_path", MIGRATION_CURRICULUM)
+def test_migration_curriculum_is_explicitly_reference_only(relative_path: str) -> None:
+    header = "\n".join(read(relative_path).splitlines()[:5]).lower()
+
+    assert "migration/reference-only" in header
+    assert "rust-first" in header or "current binding guidance" in header
 
 
 @pytest.mark.parametrize("relative_path", ACTIVE_LIVE_GUIDES)

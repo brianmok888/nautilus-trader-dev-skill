@@ -14,7 +14,7 @@
         "skills/nt-strategy-builder/tests"
       ],
       "cwd": "repository",
-      "duration_seconds": 20.254315,
+      "duration_seconds": 23.367808,
       "returncode": 0
     },
     {
@@ -27,11 +27,11 @@
         "python/tests/unit/live/test_live_configs.py"
       ],
       "cwd": "upstream",
-      "duration_seconds": 147.157141,
+      "duration_seconds": 141.75552,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:13:52.080288+00:00"
+  "verified_at": "2026-07-30T07:47:27.442021+00:00"
 }

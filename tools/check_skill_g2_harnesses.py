@@ -39,6 +39,12 @@ class WorkingDirectory(Enum):
     UPSTREAM = "upstream"
 
 
+class RunStatus(Enum):
+    PASS = "pass"
+    PENDING = "pending"
+    BLOCKED = "blocked"
+
+
 @dataclass(frozen=True)
 class Step:
     command: tuple[str, ...]
@@ -59,8 +65,12 @@ class Harness:
 @dataclass(frozen=True)
 class RunResult:
     skill: str
-    ok: bool
+    status: RunStatus
     failed_step: Step | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.status is RunStatus.PASS
 
 
 def upstream_step(*command: str) -> Step:
@@ -364,8 +374,11 @@ HARNESSES: dict[str, Harness] = {
         ),
         owned_paths=(
             Path("skills/nt-learn/SKILL.md"),
+            Path("skills/nt-learn/curriculum"),
+            Path("skills/nt-learn/migration_reference"),
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_template_classification.py"),
+            Path("tests/test_rust_lane_cutover.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-learn.json"),
     ),
@@ -692,9 +705,18 @@ def run_harness(
             }
         )
         if result.returncode != 0:
-            return RunResult(skill=harness.skill, ok=False, failed_step=step)
+            return RunResult(
+                skill=harness.skill,
+                status=RunStatus.BLOCKED,
+                failed_step=step,
+            )
     write_evidence(harness, root=repo_root, upstream_root=upstream_root, results=evidence_steps)
-    return RunResult(skill=harness.skill, ok=True)
+    status = (
+        RunStatus.PENDING
+        if harness.skill == "nt-implement" and shutil.which("capnp") is None
+        else RunStatus.PASS
+    )
+    return RunResult(skill=harness.skill, status=status)
 
 
 def evidence_command(skill: str) -> str:
@@ -1023,14 +1045,14 @@ def main(argv: list[str] | None = None) -> int:
             repo_root=repo_root(),
             upstream_root=args.upstream_root,
         )
-        if not result.ok:
+        if result.status is RunStatus.BLOCKED:
             assert result.failed_step is not None
             print(
                 f"{harness.skill} failed: {format_step(result.failed_step)}",
                 file=sys.stderr,
             )
             return 1
-        print(f"PASS {harness.skill}", flush=True)
+        print(f"{result.status.value.upper()} {harness.skill}", flush=True)
     return 0
 
 

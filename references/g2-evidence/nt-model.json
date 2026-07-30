@@ -14,11 +14,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.81418,
+      "duration_seconds": 0.95715,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:10:58.218624+00:00"
+  "verified_at": "2026-07-30T07:44:35.005126+00:00"
 }

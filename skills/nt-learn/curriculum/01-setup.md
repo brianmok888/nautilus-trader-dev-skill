@@ -1,193 +1,101 @@
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
-# Stage 01: Setup & Installation
+# Stage 01: Rust-first setup and installation
 
 ## Goal
 
-Install NautilusTrader and verify it works. Two paths: install from PyPI (quickest) or build from source (needed for development).
+Prepare a NautilusTrader `develop` checkout for Rust V2 development, then prove
+that the Rust workspace and representative Rust examples build.
 
 ## Prerequisites
 
-- Python 3.12–3.14 (vanilla CPython recommended; Conda not officially supported)
 - Git
-- A terminal you're comfortable with
+- Rust stable and nightly toolchains
+- Clang/LLVM for binding generation
+- `uv`, because the upstream build uses an embedded Python runtime for PyO3
 
-## Concepts
+The Python runtime is a build dependency at the PyO3 boundary. It is not a
+non-AI strategy, adapter, backtest, or live-execution lane.
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-NautilusTrader is a **Rust core + Python API** platform. The Python package wraps high-performance Rust code via PyO3/Cython bindings. Pre-built wheels are available on PyPI for most platforms, but building from source requires a Rust toolchain.
-
-The project recommends **`uv`** (not pip) as its package manager.
-
-### Supported Platforms
-
-| Operating System | Versions | CPU Architecture |
-|-----------------|----------|------------------|
-| Linux (Ubuntu) | 22.04+ | x86_64, ARM64 |
-| macOS | 15.0+ | ARM64 |
-| Windows Server | 2022+ | x86_64 |
-
-## Path A: Install from PyPI (Quickest)
-
-### 1. Install uv
-
-**Linux / macOS:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Windows (PowerShell):**
-```powershell
-irm https://astral.sh/uv/install.ps1 | iex
-```
-
-### 2. Install NautilusTrader
+## Clone the current development source
 
 ```bash
-uv pip install nautilus_trader
-```
-
-With optional extras (e.g., Interactive Brokers adapter, visualization):
-```bash
-uv pip install "nautilus_trader[ib,visualization]"
-```
-
-### 3. Verify
-
-```bash
-python -c "import nautilus_trader; print(nautilus_trader.__version__)"
-```
-
----
-
-## Path B: Build from Source (For Development)
-
-### 1. Install Rust Toolchain
-
-**Linux / macOS:**
-```bash
-curl https://sh.rustup.rs -sSf | sh
-source $HOME/.cargo/env
-```
-
-**Windows:**
-- Download and install [`rustup-init.exe`](https://win.rustup.rs/x86_64)
-- Install "Desktop development with C++" via [Build Tools for Visual Studio 2022](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-- Start a new PowerShell session
-
-Verify: `rustc --version`
-
-### 2. Install Clang
-
-**Linux:**
-```bash
-sudo apt-get install clang
-```
-
-**macOS:**
-```bash
-xcode-select --install
-```
-(This provides clang via Xcode Command Line Tools)
-
-**Windows:**
-1. Open Visual Studio Installer → Modify → check "C++ Clang tools for Windows" → Modify
-2. Add clang to PATH:
-   ```powershell
-   [System.Environment]::SetEnvironmentVariable('path', "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin\;" + $env:Path,"User")
-   ```
-
-Verify: `clang --version`
-
-### 3. Install uv
-
-(Same as Path A — see above)
-
-### 4. Clone and Build
-
-```bash
-git clone --branch develop --depth 1 https://github.com/nautechsystems/nautilus_trader
+git clone --branch develop https://github.com/nautechsystems/nautilus_trader
 cd nautilus_trader
+```
+
+Do not copy examples from an unrelated release into this checkout. The skill's
+reproducible G2 harness compiles against its pinned upstream commit; the
+freshness checker separately reviews changes on current `origin/develop` and
+proves that reviewed `origin/develop` contains `origin/nightly`.
+
+## Install toolchains
+
+Install Rust with `rustup`, then enable formatting and linting components:
+
+```bash
+rustup toolchain install stable --component clippy,rustfmt
+rustup toolchain install nightly --component clippy,rustfmt
+rustc --version
+cargo --version
+```
+
+Install Clang/LLVM using the official package for your operating system and
+verify it:
+
+```bash
+clang --version
+```
+
+## Prepare the PyO3 build boundary
+
+The upstream workspace uses an `uv`-managed environment for binding and mixed
+workspace builds:
+
+```bash
 uv sync --all-extras
-```
-
-Or use `make` targets for development builds:
-
-```bash
-# Full debug install (unoptimized but fast compile)
-make install-debug
-
-# Full release install (slow compile, fast runtime)
-make install
-```
-
-### 5. Set Environment Variables (Linux/macOS only)
-
-```bash
-# Set Python executable path for PyO3
 export PYO3_PYTHON="$PWD/.venv/bin/python"
+```
 
-# Linux only: set library path for the uv-managed Python runtime
+On Linux, point the linker and embedded runtime at that environment:
+
+```bash
 PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
 export LD_LIBRARY_PATH="$PYTHON_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
-# Required for Rust tests when using uv-installed Python
 export PYTHONHOME="$("$PYO3_PYTHON" -c 'import sys; print(sys.base_prefix)')"
 ```
 
-(On macOS, skip the `LD_LIBRARY_PATH` line — it's Linux-specific.)
+These variables support compilation and PyO3 boundary tests. They do not move
+execution authority out of Rust.
 
-### 6. Verify
+## Build the Rust workspace
 
-```bash
-# Activate the venv
-source .venv/bin/activate  # Linux/macOS
-# or: .venv\Scripts\activate  # Windows
-
-# Smoke test
-python -c "import nautilus_trader; print(nautilus_trader.__version__)"
-
-# Run tests
-make pytest       # Python test suite
-make cargo-test   # Rust test suite
-```
-
-## Key `make` Targets
-
-| Target | Purpose |
-|--------|---------|
-| `make install-debug` | Full install, debug mode (fastest compile) |
-| `make install` | Full install, release mode (fastest runtime) |
-| `make build-debug` | Build Rust only, debug mode |
-| `make build` | Build Rust only, release mode |
-| `make pytest` | Run Python tests |
-| `make cargo-test` | Run Rust tests |
-| `make clean` | Clean build artifacts |
-
-## Optional: Redis
-
-Redis is optional — only needed if you configure it as a cache database or message bus backend. For a quick setup:
+Start with focused crates, then expand to workspace checks:
 
 ```bash
-docker run -d --name redis -p 6379:6379 redis:latest
+cargo check -p nautilus-core -p nautilus-model --features high-precision
+cargo check -p nautilus-trading --features examples,high-precision --lib
+cargo check -p nautilus-backtest --example engine-ema-cross --features examples
 ```
+
+For a broader source-development gate:
+
+```bash
+make cargo-test
+```
+
+High precision is the expected Linux/macOS development path. When targeting a
+platform without 128-bit support, verify the upstream platform policy rather
+than silently changing numeric assumptions.
 
 ## Checkpoint
 
-You're ready for Stage 02 when:
-- [ ] `python -c "import nautilus_trader"` succeeds
-- [ ] You understand that NT is Rust core + Python API
-- [ ] (If building from source) `make pytest` runs without import errors
+Continue to Stage 02 when:
 
-## Common Issues
+- [ ] `rustc`, `cargo`, and `clang` are available
+- [ ] the `uv` environment exists for PyO3 compilation
+- [ ] the focused Rust crate checks pass
+- [ ] the Rust EMA-cross backtest example compiles
+- [ ] you can explain why Python is only a PyO3 build boundary here
 
-**"clang not found"**: Install via your system package manager (see step 2).
-
-**"rustup not found"**: Ensure `~/.cargo/bin` is in your `PATH`. Restart your terminal after installing rustup.
-
-**Windows build errors**: Make sure both "Desktop development with C++" and "C++ Clang tools for Windows" are installed via Visual Studio Build Tools.
-
-**Slow first build**: The initial Rust compilation takes several minutes. Subsequent incremental rebuilds are much faster.
-
-**Precision mode**: By default, Linux/macOS wheels use 128-bit high-precision. Windows uses 64-bit standard-precision (MSVC doesn't support `__int128`). For source builds, control via `HIGH_PRECISION=true|false` environment variable.
+For historical package-install and Python API onboarding, use the explicitly
+labelled migration snapshot under
+`skills/nt-learn/migration_reference/python/curriculum/01-setup.md`.

@@ -15,7 +15,7 @@
         "tests/test_capnp_schema_precision.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.825104,
+      "duration_seconds": 0.609174,
       "returncode": 0
     },
     {
@@ -33,11 +33,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.127737,
+      "duration_seconds": 1.08042,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:10:51.503469+00:00"
+  "verified_at": "2026-07-30T07:44:28.232633+00:00"
 }
