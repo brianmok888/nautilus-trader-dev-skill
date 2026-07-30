@@ -52,7 +52,7 @@ Reconcile capabilities and document limits, reconciliation, environments, tester
 ## Rust Tester References
 
 Use the source-pinned Rust nodes under
-`references/nt-adapters/references/examples/rust_adapters/<venue>/node_data_tester.rs` and
+`skills/nt-adapters/references/examples/rust_adapters/<venue>/node_data_tester.rs` and
 `node_exec_tester.rs`. Run the owning testkit crate and the adapter's targeted Cargo commands; do
 not infer testnet, resilience, fuzz, or operations readiness from `cargo check`.
 

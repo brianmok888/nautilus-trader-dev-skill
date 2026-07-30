@@ -68,6 +68,7 @@ def _validate_review_artifact(
     artifact: object,
     field: str,
     repo_sha: str,
+    decision_prefix: str,
     decision: str,
 ) -> tuple[str, ...]:
     errors = list(_validate_artifact(repo_root, artifact, field))
@@ -76,10 +77,12 @@ def _validate_review_artifact(
     raw_path = artifact.get("path")
     if not isinstance(raw_path, str):
         return tuple(errors)
-    text = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8")
-    if repo_sha not in text:
+    lines = _manifest_path(repo_root, raw_path).read_text(encoding="utf-8").splitlines()
+    sha_lines = [line for line in lines if line.startswith("REPO_SHA:")]
+    if sha_lines != [f"REPO_SHA: {repo_sha}"]:
         errors.append(f"{field}: does not name exact repository SHA {repo_sha}")
-    if decision not in text:
+    decision_lines = [line for line in lines if line.startswith(decision_prefix)]
+    if decision_lines != [decision]:
         errors.append(f"{field}: does not contain required decision {decision}")
     return tuple(errors)
 
@@ -189,6 +192,7 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
                 code_reviewer.get("artifact"),
                 "code_reviewer.artifact",
                 exact_sha,
+                "VERDICT:",
                 "VERDICT: APPROVE",
             ),
         )
@@ -202,6 +206,7 @@ def validate_attestation(attestation_path: Path, repo_root: Path) -> tuple[str, 
                 architect.get("artifact"),
                 "architect.artifact",
                 exact_sha,
+                "ARCHITECTURE:",
                 "ARCHITECTURE: CLEAR",
             ),
         )

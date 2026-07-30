@@ -26,10 +26,10 @@ cargo check -p nautilus-backtest --example engine-ema-cross --features examples
 ```
 
 2. Inspect the mirrored source at
-   `references/nt-backtest/references/examples/rust_backtest/engine_ema_cross.rs`.
+   `skills/nt-backtest/references/examples/rust_backtest/engine_ema_cross.rs`.
 3. Compare the engine example with the node example in the same reference directory.
 4. Trace strategy lifecycle and event ownership through
-   `references/nt-trading/references/examples/rust_trading/examples/strategies/ema_cross/`.
+   `skills/nt-trading/references/examples/rust_trading/examples/strategies/ema_cross/`.
 5. Record the crate, feature flag, input data, lifecycle entry point, and observable output.
 
 ## Checkpoint

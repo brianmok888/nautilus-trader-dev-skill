@@ -41,6 +41,7 @@ NON_AI_PYTHON_AUTHORIZATIONS = (
     "document any Python research/config",
 )
 PYTHON_FENCE = re.compile(r"^```python\n(?P<body>.*?)^```", re.MULTILINE | re.DOTALL)
+LOCAL_PATH = re.compile(r"`((?:references|skills|tests|tools)/[^`<>]+)`")
 
 
 def read(relative_path: str) -> str:
@@ -93,6 +94,15 @@ def test_active_curriculum_has_no_non_ai_python_examples(relative_path: str) -> 
     assert "make pytest" not in text
     assert "```cython" not in text
     assert "cdef extern" not in text
+
+
+@pytest.mark.parametrize("relative_path", ACTIVE_CURRICULUM)
+def test_active_curriculum_repository_paths_resolve(relative_path: str) -> None:
+    paths = LOCAL_PATH.findall(read(relative_path))
+
+    missing = [path for path in paths if not (REPO_ROOT / path.rstrip("/.,;:")).exists()]
+
+    assert missing == []
 
 
 @pytest.mark.parametrize("relative_path", MIGRATION_CURRICULUM)

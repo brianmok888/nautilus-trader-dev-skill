@@ -23,7 +23,7 @@ Implement a minimal Rust strategy through NautilusTrader's supported extension s
 
 ## Source-Pinned References
 
-- `references/nt-trading/references/examples/rust_trading/examples/strategies/ema_cross/`
+- `skills/nt-trading/references/examples/rust_trading/examples/strategies/ema_cross/`
 - `skills/nt-strategy-builder-rust/SKILL.md`
 
 Built-in strategies are architecture evidence, not automatically public extension APIs. Follow the

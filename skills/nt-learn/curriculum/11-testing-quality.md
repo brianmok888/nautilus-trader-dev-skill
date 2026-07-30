@@ -24,9 +24,9 @@ gates that match a NautilusTrader change.
 
 Use the source-pinned Rust node tester examples instead of copying Python tester configuration:
 
-- `references/nt-adapters/references/examples/rust_adapters/bitmex/node_data_tester.rs`
-- `references/nt-adapters/references/examples/rust_adapters/bitmex/node_exec_tester.rs`
-- corresponding venue directories under `references/nt-adapters/references/examples/rust_adapters/`
+- `skills/nt-adapters/references/examples/rust_adapters/bitmex/node_data_tester.rs`
+- `skills/nt-adapters/references/examples/rust_adapters/bitmex/node_exec_tester.rs`
+- corresponding venue directories under `skills/nt-adapters/references/examples/rust_adapters/`
 
 The owning testkit crate remains the executable authority:
 

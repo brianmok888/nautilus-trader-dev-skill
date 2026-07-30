@@ -36,12 +36,12 @@ def _repo_sha() -> str:
 def _write_attestation(path: Path, manifest: Path) -> None:
     code_review = path.parent / "code-review.txt"
     code_review.write_text(
-        f"Repository SHA: {_repo_sha()}\nVERDICT: APPROVE\n",
+        f"REPO_SHA: {_repo_sha()}\nVERDICT: APPROVE\n",
         encoding="utf-8",
     )
     architecture_review = path.parent / "architecture-review.txt"
     architecture_review.write_text(
-        f"Repository SHA: {_repo_sha()}\nARCHITECTURE: CLEAR\n",
+        f"REPO_SHA: {_repo_sha()}\nARCHITECTURE: CLEAR\n",
         encoding="utf-8",
     )
     path.write_text(
@@ -275,6 +275,58 @@ def test_external_attestation_rejects_review_artifact_without_exact_sha_or_verdi
 
     assert result.returncode == 1
     assert "code_reviewer.artifact" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("role", "forged_lines"),
+    (
+        (
+            "code_reviewer",
+            ("REPO_SHA: {repo_sha}-extra", "VERDICT: APPROVE"),
+        ),
+        (
+            "code_reviewer",
+            ("REPO_SHA: {repo_sha}", "VERDICT: REQUEST CHANGES", "VERDICT: APPROVE"),
+        ),
+        (
+            "code_reviewer",
+            ("REPO_SHA: {repo_sha}", "REPO_SHA: {repo_sha}", "VERDICT: APPROVE"),
+        ),
+        (
+            "architect",
+            ("XREPO_SHA: {repo_sha}", "ARCHITECTURE: CLEAR"),
+        ),
+        (
+            "architect",
+            ("REPO_SHA: {repo_sha}", "ARCHITECTURE: BLOCK", "ARCHITECTURE: CLEAR"),
+        ),
+        (
+            "architect",
+            ("REPO_SHA: {repo_sha}", "ARCHITECTURE: CLEAR", "ARCHITECTURE: CLEAR"),
+        ),
+    ),
+)
+def test_external_attestation_rejects_forged_or_duplicate_review_markers(
+    tmp_path: Path,
+    role: str,
+    forged_lines: tuple[str, ...],
+) -> None:
+    manifest = REPO_ROOT / "references" / "upstream-delta-review.json"
+    attestation = tmp_path / "attestation.json"
+    _write_attestation(attestation, manifest)
+    payload = json.loads(attestation.read_text(encoding="utf-8"))
+    artifact = Path(payload[role]["artifact"]["path"])
+    artifact.write_text(
+        "\n".join(line.format(repo_sha=_repo_sha()) for line in forged_lines) + "\n",
+        encoding="utf-8",
+    )
+    payload[role]["artifact"]["sha256"] = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    attestation.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = _run(attestation)
+
+    assert result.returncode == 1
+    assert f"{role}.artifact" in result.stderr
 
 
 def test_external_attestation_rejects_failed_command_or_review(tmp_path: Path) -> None:

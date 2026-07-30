@@ -32,7 +32,7 @@ execution-authoritative messages.
 
 ## Source-Pinned Reference
 
-Study `references/nt-trading/references/examples/rust_trading/examples/actors/imbalance/` for actor
+Study `skills/nt-trading/references/examples/rust_trading/examples/actors/imbalance/` for actor
 structure and tests. Treat its owning crate and version as part of the example contract.
 
 ## Exercises
