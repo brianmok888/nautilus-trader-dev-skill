@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import configparser
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
 from tools import run_pinned_v2_pytest
+
+ROOT = Path(__file__).resolve().parents[1]
 
 PINNED_V2_TEST = "tests/test_ai_advisory_boundary.py"
 

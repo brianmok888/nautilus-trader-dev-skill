@@ -7,12 +7,14 @@
 <!-- Does NOT contain: architecture descriptions, invariants, component reviews. -->
 <!-- Write-target rule: this file is the default write-target. Other files are write-targets only when their scope changed. -->
 
-Review date: 2026-07-30
+Review date: 2026-08-05
 
 ## Open issues
 
-No P0/P1 NT V2 Rust cutover finding remains open. Maintenance follow-ups are
-tracked in `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
+No P0/P1 NT V2 Rust cutover finding remains open. The 2026-08-05 audit's
+freshness and lint findings were closed in this session. Cap'n Proto execution
+and exact-SHA external attestation remain pending as documented in
+`docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
 
 ## Closed issues
 
@@ -68,3 +70,4 @@ Do not edit historical deltas.
 2026-07-30 — [C] — MODIFIED: completed the active Rust-first learning curriculum, moved historical Python/Cython lessons into labelled migration references, made Cap'n Proto G2 output explicitly Pending, bound command and review artifacts by content hash, and validated upstream delta subjects and paths against Git — files: skills/nt-learn/curriculum/*.md, skills/nt-learn/migration_reference/python/curriculum/*.md, tools/check_skill_g2_harnesses.py, tools/check_cutover_attestation.py, tools/check_upstream_freshness.py, tests/test_rust_lane_cutover.py, tests/test_skill_g2_harnesses.py, tests/test_cutover_attestation.py, tests/test_upstream_freshness.py, docs/tracking/Findings.md
 2026-07-30 — [C] — MODIFIED: required exact unique SHA and decision lines in cutover review artifacts — files: tools/check_cutover_attestation.py, tests/test_cutover_attestation.py, docs/tracking/Findings.md
 2026-07-30 — [C] — MODIFIED: bound final cutover verification to a clean detached exact tree, complete committed-file inventory, and command artifact hashes — files: tools/check_cutover_attestation.py, tests/test_cutover_attestation.py, docs/tracking/Findings.md
+2026-08-05 — [C] — MODIFIED: reconciled 140 upstream develop commits through 8742607995df and removed Ruff E402 test bootstrap debt — files: references/upstream-delta-review.json, tests/test_pytest_environment_split.py, tests/test_upstream_freshness.py, docs/plans/2026-08-05-nt-v2-cutover-audit-phase1.md, docs/tracking/Findings.md

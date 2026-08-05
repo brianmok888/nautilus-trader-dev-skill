@@ -5,10 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 from tools.check_upstream_freshness import (
     FreshnessStatus,
     build_freshness_report,
@@ -16,6 +12,8 @@ from tools.check_upstream_freshness import (
     render_text_report,
 )
 from tools.upstream_baseline import UPSTREAM_REMOTE_REFS, default_upstream_root
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_only_authoritative_develop_is_a_required_moving_ref() -> None:

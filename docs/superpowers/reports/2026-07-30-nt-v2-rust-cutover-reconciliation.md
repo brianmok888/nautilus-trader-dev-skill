@@ -7,6 +7,10 @@ Phase 1 baseline is repository commit
 `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`. Reproducible G2 evidence uses
 NautilusTrader commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`;
 the reviewed current-develop overlay is
+`45903fc8b925adae6323035fb0b4fb5b49b4f89b`. A 2026-08-05 follow-up also
+reconciled the 140-commit `origin/develop` range through
+`8742607995df2bd0650a04cd690353353b1206da` and repaired three durable G2
+content hashes.
 `45903fc8b925adae6323035fb0b4fb5b49b4f89b`. The exact final repository SHA and
 independent review verdicts are external-attested after the final commit to
 avoid self-referential evidence.

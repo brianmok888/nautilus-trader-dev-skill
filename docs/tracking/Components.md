@@ -7,8 +7,8 @@
 <!-- Does NOT contain: invariants, structural inventory, issue tracking, plans. -->
 <!-- Write-target rule: only update this file if a skill changed. -->
 
-Review date: 2026-07-30
-Reviewed tree: post-fix reconciliation for the Phase 1 baseline at `c2f1a5f84980a9e8b554f2e7e4559cd17436d02a`; exact ship SHA is supplied by the external attestation.
+Review date: 2026-08-05
+Reviewed tree: current reconciliation at `8b7ca069de6799a29ab6a4cb002aaa2754e98a21`; exact ship SHA is supplied by the external attestation.
 Cutover gates: 18 skills × G0-G7 = **143 Pass, 1 Pending, 0 Blocked**. `nt-implement` G2 is Pending because the environment lacks the `capnp` executable; structural fixed-point schema tests and owning Rust crate compilation passed, but actual schema generation and round-trip validation did not run. The measurable cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`.
 Evidence boundary: G2 Cargo checks prove compilation only. Adapter conformance, controlled-venue, resilience, fuzz, and operations acceptance remain change-specific delivery obligations and are not implied by the card summary.
 

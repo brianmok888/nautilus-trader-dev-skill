@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "71d01b9a53e044f40da2211c96350eecf32e51ec8710da3cab75dae2303cbe80",
+  "owned_content_sha256": "4f1a094f6ff9fc3bad40de3afef1081434ce21e5fa7e5c8d8c01cca5effead6e",
   "schema_version": 2,
   "scope": "repository:review-policy-plus-upstream-safety-owners",
   "skill": "nt-review",

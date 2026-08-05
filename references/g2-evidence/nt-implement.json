@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "b7faf87fb58ed067f03e476644b3f1c2df9e076db035a75013317f16def116bf",
+  "owned_content_sha256": "fa9df0b7da9fbf1dc5025af714619650339cb57b3847857b4a460ef1fc4aff60",
   "pending_reason": "capnp executable unavailable",
   "schema_version": 2,
   "scope": "repository:fixed-point-schema-plus-upstream-owners",
