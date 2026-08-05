@@ -8,7 +8,7 @@
 <!-- Write-target rule: only update this file if a skill changed. -->
 
 Review date: 2026-08-05
-Reviewed tree: exact attested ship commit `f15fef28eaaf7cb15a8d112b201c8827e23418fe` (tree `258e250651d82337c10b9275408e6e591d865900`); attestation: `/tmp/nt-v2-cutover-attestation-20260805/attestation.json`.
+Reviewed tree: final committed tree; exact-SHA attestation is generated externally after the final commit and reported with its SHA and evidence path.
 Cutover gates: 18 skills × G0-G7 = **143 Pass, 1 Pending, 0 Blocked**. `nt-implement` G2 is Pending because the environment lacks the `capnp` executable; structural fixed-point schema tests and owning Rust crate compilation passed, but actual schema generation and round-trip validation did not run. The measurable cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`.
 Evidence boundary: G2 Cargo checks prove compilation only. Adapter conformance, controlled-venue, resilience, fuzz, and operations acceptance remain change-specific delivery obligations and are not implied by the card summary.
 
