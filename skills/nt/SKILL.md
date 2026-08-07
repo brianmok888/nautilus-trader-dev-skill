@@ -1,11 +1,13 @@
 ---
 name: nt
-description: "Entry-point/router skill for any NautilusTrader or nautilus_trader task. Use when the user asks for NautilusTrader help, says nt, asks which Nautilus skill to use, or gives a trading-system, strategy, adapter, data, backtest, live, testing, or core-contribution task without naming a more specific nt-* skill. Routes to and loads the relevant NautilusTrader skills instead of answering from memory alone."
+description: "Entry-point/router skill for generic NautilusTrader development. Use when the user asks for NautilusTrader help, says nt, asks which Nautilus skill to use, or gives a trading-system, strategy, adapter, data, backtest, live, testing, or core-contribution task without naming a more specific nt-* skill. Routes to and loads only the relevant generic NautilusTrader skills instead of answering from memory alone."
 ---
 
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
-# NautilusTrader Entry Skill
+# Generic NautilusTrader Entry Skill
+
+This repository is the generic NT skill layer. It is intentionally independent of any consuming application or project-specific companion skill repository. Do not reference, load, or route to downstream project-specific skills. A consuming project may compose this skill layer from its own router; this router never composes downstream consumers.
 
 ## NT V2 Rust readiness gates
 

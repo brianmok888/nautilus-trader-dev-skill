@@ -1,9 +1,11 @@
 ---
 name: nt-evomap-integration
-description: Use when integrating evomap.ai advisory workflows into NautilusTrader systems with non-blocking execution, explicit approval gates, and auditable decision provenance.
+description: Use when integrating evomap.ai advisory workflows into generic NautilusTrader systems with non-blocking execution, explicit approval gates, and auditable decision provenance.
 ---
 
 # nt-evomap-integration
+
+This skill documents a generic NautilusTrader advisory-sidecar integration. It does not define or depend on any consuming application's authority, runtime, persistence, UI, or promotion contracts. Keep application-specific composition in the consuming project's own skill layer.
 
 ## NT V2 Rust readiness gates
 
@@ -15,7 +17,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | --- | --- | --- | --- |
 | G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-evomap-integration` passed the repository AI-advisory contract in its pinned V2 Python environment against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-evomap-integration.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-evomap-integration` passed the repository's pinned V2 Python advisory contract against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-evomap-integration.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
