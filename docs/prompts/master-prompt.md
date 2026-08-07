@@ -11,8 +11,8 @@ The executing agent MUST load and apply these skills at the right phase. Do not 
 
 | Skill                                  | When to invoke                                           | What it enforces                                                         |
 | -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `$superpowers:code-review`               | **Phase 1** — deep review                                | Adversarial review pass; findings must cite file:line, not vibes         |
-| `$oh-my-codex:best-practice-research`    | **Phase 1** — V2 compliance baseline                     | Pull current NT V2 docs/source as ground truth; no training-data guesses |
+| `$superpowers:requesting-code-review`               | **Phase 1** — deep review                                | Adversarial review pass; findings must cite file:line, not vibes         |
+| best-practice-research                   | **Phase 1** — V2 compliance baseline                     | Pull current NT V2 docs/source as ground truth; no training-data guesses |
 | `$superpowers:brainstorming`             | **Phase 2** — when fix approach is ambiguous             | Explore approach before coding; pick deliberately, not by default        |
 | `$superpowers:test-driven-development`   | **Phase 2** — every fix segment                          | Test first → watch fail → implement → verify pass                        |
 | `$superpowers:verification-before-completion` | **Phase 3 / Phase 5** — before claiming any gate `Pass` | Run the actual command; cite real output; "should pass" is not Pass      |
@@ -62,7 +62,7 @@ and audit controls for Cython/v1 references, not implementation guidance.
 
 ## Phase 1 — Deep Code Review (READ-ONLY, no edits)
 
-**Invoke:** `$superpowers:code-review` + `$oh-my-codex:best-practice-research`.
+**Invoke:** `$superpowers:requesting-code-review` + `best-practice-research` (use `web_search`/`webfetch` against the Source URLs below).
 
 Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
 

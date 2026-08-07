@@ -18,6 +18,7 @@ REQUIRED_COMMANDS = (
     "uv run python tools/check_legacy_labelling.py",
     "uv run python tools/check_dev_guide_sync.py",
     "uv run python tools/check_dev_guide_snapshot_sync.py",
+    "uv run python tools/check_rust_trading_reference_sync.py",
     "uv run python tools/check_upstream_freshness.py",
     "uv run python tools/check_skill_g2_harnesses.py --check-cards",
     "python3 -m compileall -q tools tests skills/nt-evomap-integration/python_sidecar/brainstorming_evomap",

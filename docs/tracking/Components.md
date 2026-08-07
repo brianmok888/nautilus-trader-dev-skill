@@ -7,10 +7,40 @@
 <!-- Does NOT contain: invariants, structural inventory, issue tracking, plans. -->
 <!-- Write-target rule: only update this file if a skill changed. -->
 
-Review date: 2026-08-05
-Reviewed tree: final committed tree; exact-SHA attestation is generated externally after the final commit and reported with its SHA and evidence path.
-Cutover gates: 18 skills × G0-G7 = **143 Pass, 1 Pending, 0 Blocked**. `nt-implement` G2 is Pending because the environment lacks the `capnp` executable; structural fixed-point schema tests and owning Rust crate compilation passed, but actual schema generation and round-trip validation did not run. The measurable cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`.
+Review date: 2026-08-07
+Reviewed tree: current audited working tree; exact-SHA attestation remains pending until these changes are committed and an independent reviewer supplies artifacts for that final commit and reports its SHA and evidence path.
+Cutover gates: 18 skills × G0-G7 = **144 Pass, 0 Pending, 0 Blocked** in a clean standard environment. The measurable per-skill G0-G7 cards remain in each `skills/nt*/SKILL.md` and are validated by `uv run python tools/check_skill_g2_harnesses.py --check-cards`. `nt-implement` G2 now passes with Cap'n Proto `capnp 1.0.1` available in the standard verification environment; durable evidence is recorded in `references/g2-evidence/nt-implement.json` (`status: pass`).
 Evidence boundary: G2 Cargo checks prove compilation only. Adapter conformance, controlled-venue, resilience, fuzz, and operations acceptance remain change-specific delivery obligations and are not implied by the card summary.
+
+## Per-skill readiness card index
+
+The full measurable G0-G7 checklist for each NT skill is linked below from its
+existing component entry. The linked `SKILL.md` table is the single authority;
+this tracker intentionally indexes rather than duplicates the evidence rows.
+The `#nt-v2-rust-readiness-gates` links resolve to the shared readiness heading
+(the heading is positioned after skill-specific introductory sections where
+needed).
+
+| Skill | Authoritative readiness card | Current summary |
+| --- | --- | --- |
+| nt | [`skills/nt/SKILL.md`](../../skills/nt/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-adapters | [`skills/nt-adapters/SKILL.md`](../../skills/nt-adapters/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-architect | [`skills/nt-architect/SKILL.md`](../../skills/nt-architect/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-backtest | [`skills/nt-backtest/SKILL.md`](../../skills/nt-backtest/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-data | [`skills/nt-data/SKILL.md`](../../skills/nt-data/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-dev | [`skills/nt-dev/SKILL.md`](../../skills/nt-dev/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-dex-adapter | [`skills/nt-dex-adapter/SKILL.md`](../../skills/nt-dex-adapter/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-evomap-integration | [`skills/nt-evomap-integration/SKILL.md`](../../skills/nt-evomap-integration/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-implement | [`skills/nt-implement/SKILL.md`](../../skills/nt-implement/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-learn | [`skills/nt-learn/SKILL.md`](../../skills/nt-learn/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-live | [`skills/nt-live/SKILL.md`](../../skills/nt-live/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-model | [`skills/nt-model/SKILL.md`](../../skills/nt-model/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-review | [`skills/nt-review/SKILL.md`](../../skills/nt-review/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-signals | [`skills/nt-signals/SKILL.md`](../../skills/nt-signals/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-strategy-builder | [`skills/nt-strategy-builder/SKILL.md`](../../skills/nt-strategy-builder/SKILL.md#nt-v2-rust-readiness-gates) | reference-only |
+| nt-strategy-builder-rust | [`skills/nt-strategy-builder-rust/SKILL.md`](../../skills/nt-strategy-builder-rust/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-testing | [`skills/nt-testing/SKILL.md`](../../skills/nt-testing/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
+| nt-trading | [`skills/nt-trading/SKILL.md`](../../skills/nt-trading/SKILL.md#nt-v2-rust-readiness-gates) | review-ready |
 
 ## Rust-first tier (primary skills)
 
@@ -33,7 +63,7 @@ Evidence boundary: G2 Cargo checks prove compilation only. Adapter conformance, 
 ### nt-implement
 
 **Purpose:** Strategy/Actor/Indicator implementation with templates + conventions.
-**Readiness:** pending (`nt-implement` G2 awaits real Cap'n Proto generation/round trip).
+**Readiness:** review-ready (`nt-implement` G2 passes with Cap'n Proto `capnp 1.0.1` in the standard verification environment on 2026-08-07).
 **Integration surfaces:** Has `templates/`; receives from `nt-architect`; feeds `nt-strategy-builder-rust`.
 **Known gaps:** Historical audit found 7 migration-reference binding-generator mentions; post-fix reconciliation is recorded in the cutover report.
 **Lane signal:** Rust-first; migration references remain quarantined and labelled.

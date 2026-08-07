@@ -802,12 +802,17 @@ def test_implement_g2_validates_capnp_without_compiling_migration_python() -> No
     assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
 
 
-def test_implement_g2_remains_pending_when_capnp_round_trip_is_skipped() -> None:
+def test_implement_g2_passes_with_standard_capnp() -> None:
     evidence_path = g2.repo_root() / "references/g2-evidence/nt-implement.json"
     payload = json.loads(evidence_path.read_text())
     skill_text = (g2.repo_root() / "skills/nt-implement/SKILL.md").read_text()
 
-    assert payload["status"] == "pending"
-    assert payload["pending_reason"] == "capnp executable unavailable"
+    assert payload["status"] == "pass"
+    assert "pending_reason" not in payload
+    assert payload["steps"]
+    assert any("test_capnp_schema_precision.py" in " ".join(step["command"]) for step in payload["steps"])
     assert "| G2 V2 example validation |" in skill_text
-    assert "| Pending |" in skill_text
+    assert "| Pass |" in skill_text
+
+    if g2.shutil.which("capnp") is None:
+        pytest.skip("capnp unavailable in this environment")

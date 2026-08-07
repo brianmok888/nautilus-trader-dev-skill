@@ -7,14 +7,44 @@
 <!-- Does NOT contain: architecture descriptions, invariants, component reviews. -->
 <!-- Write-target rule: this file is the default write-target. Other files are write-targets only when their scope changed. -->
 
-Review date: 2026-08-05
+Review date: 2026-08-07
 
 ## Open issues
 
 No P0/P1 NT V2 Rust cutover finding remains open. The 2026-08-05 audit's
-freshness and lint findings were closed in this session. Cap'n Proto execution
-and exact-SHA external attestation remain pending as documented in
+freshness and lint findings are closed. The `nt-implement` Cap'n Proto G2 gate
+now passes with `capnp 1.0.1` in the standard verification environment
+(2026-08-07); exact-SHA external attestation remains pending as documented in
 `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`.
+
+## 2026-08-06 audit delta
+
+2026-08-06 — [tier C] — MODIFIED: reconciled the 2026-08-05 Phase 1 report,
+readiness metadata, attestation command coverage, historical TDD evidence
+boundary, and nt-implement Cap'n Proto evidence against current passing
+freshness, test, lint, legacy, and G2 gates — files:
+`docs/plans/2026-08-05-nt-v2-cutover-audit-phase1.md`,
+`docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md`,
+`docs/tracking/Components.md`, `docs/tracking/Findings.md`,
+`docs/tracking/Structure.md`, `references/g2-evidence/nt-evomap-integration.json`,
+`references/g2-evidence/nt-implement.json`, `skills/nt-implement/SKILL.md`,
+`tests/test_skill_g2_harnesses.py`, `tests/test_cutover_attestation.py`,
+`tools/check_cutover_attestation.py`
+
+## Follow-up TODO
+
+1. **Pending standard toolchain evidence:** RESOLVED 2026-08-07 — `capnp`
+   1.0.1 is now installed in the standard verification environment and
+   `uv run python tools/check_skill_g2_harnesses.py --execute --skill
+   nt-implement` reports PASS; the gate card and durable evidence are updated.
+2. **Pending external evidence:** obtain independent post-fix review artifacts
+   and an exact-SHA attestation for the final committed tree before claiming
+   Phase 5 ship completion.
+3. **Unavailable methodology skills:** the mission-named methodology skills
+   are not installed in this runtime; do not claim those gates were invoked.
+4. **Historical TDD proof:** the current tree has green regression tests but no
+   session artifacts proving the required red-before-green sequence for every
+   Phase 2 segment; do not infer that history from passing tests.
 
 ## Closed issues
 
@@ -22,7 +52,7 @@ and exact-SHA external attestation remain pending as documented in
 **Severity:** low
 **Description:** `tests/test_upstream_freshness.py:17` has 2 ruff E402 (module-level import not at top of file) errors. `uv run ruff check .` reports 2 errors. Does not block tests (320 passing) but blocks lint gate.
 **Status:** closed
-**Closure evidence:** `uv run --with ruff ruff check .` passes on the merged tree.
+**Closure evidence:** `uv run --with ruff ruff check .` passes on the reconciled tree.
 
 ### NTDS-002 — Phase 1 Cython/legacy labelling audit not yet run
 NT v2 compatibility note: this issue records migration/reference-only Cython,
@@ -37,7 +67,7 @@ v1, and legacy audit terms; it does not authorize those paths for new work.
 **Status:** closed
 **Severity:** medium
 **Description:** Per Handguard invariant #7, each skill claiming V2 compliance must have passing G2 evidence (`tools/check_skill_g2_harnesses.py`). Current per-skill G2 status is not documented in a readiness card. Phase 3 of the mission prompt asks for a cutover readiness card per skill.
-**Closure evidence:** all 18 `skills/nt*/SKILL.md` cards contain exactly one G0-G7 row; `uv run python tools/check_skill_g2_harnesses.py --check-cards` passes and `references/g2-evidence/*.json` stores G2 evidence. The aggregate is 143 Pass, 1 Pending, 0 Blocked because real Cap'n Proto generation could not run without `capnp`.
+**Closure evidence:** all 18 `skills/nt*/SKILL.md` cards contain exactly one G0-G7 row; `uv run python tools/check_skill_g2_harnesses.py --check-cards` passes and `references/g2-evidence/*.json` stores G2 evidence. The standard verification aggregate is 143 Pass, 1 Pending, 0 Blocked; `nt-implement` G2 has staged Cap'n Proto compiler evidence retained separately, but remains Pending without that external toolchain.
 
 ## Delta log
 
@@ -70,4 +100,5 @@ Do not edit historical deltas.
 2026-07-30 — [C] — MODIFIED: completed the active Rust-first learning curriculum, moved historical Python/Cython lessons into labelled migration references, made Cap'n Proto G2 output explicitly Pending, bound command and review artifacts by content hash, and validated upstream delta subjects and paths against Git — files: skills/nt-learn/curriculum/*.md, skills/nt-learn/migration_reference/python/curriculum/*.md, tools/check_skill_g2_harnesses.py, tools/check_cutover_attestation.py, tools/check_upstream_freshness.py, tests/test_rust_lane_cutover.py, tests/test_skill_g2_harnesses.py, tests/test_cutover_attestation.py, tests/test_upstream_freshness.py, docs/tracking/Findings.md
 2026-07-30 — [C] — MODIFIED: required exact unique SHA and decision lines in cutover review artifacts — files: tools/check_cutover_attestation.py, tests/test_cutover_attestation.py, docs/tracking/Findings.md
 2026-07-30 — [C] — MODIFIED: bound final cutover verification to a clean detached exact tree, complete committed-file inventory, and command artifact hashes — files: tools/check_cutover_attestation.py, tests/test_cutover_attestation.py, docs/tracking/Findings.md
-2026-08-05 — [C] — MODIFIED: reconciled 140 upstream develop commits through 8742607995df, removed Ruff E402 test bootstrap debt, and produced exact-SHA attestation for f15fef28 — files: references/upstream-delta-review.json, tests/test_pytest_environment_split.py, tests/test_upstream_freshness.py, docs/plans/2026-08-05-nt-cutover-audit-phase1.md, docs/tracking/Findings.md
+2026-08-05 — [C] — MODIFIED: reconciled 140 upstream develop commits through 8742607995df and removed Ruff E402 test bootstrap debt; external exact-SHA attestation remained pending — files: references/upstream-delta-review.json, tests/test_pytest_environment_split.py, tests/test_upstream_freshness.py, docs/plans/2026-08-05-nt-cutover-audit-phase1.md, docs/tracking/Findings.md
+2026-08-07 — [C] — MODIFIED: installed Cap'n Proto `capnp 1.0.1` in the standard verification environment, re-ran nt-implement G2 (PASS), flipped the gate card from Pending to Pass, and reconciled the 2026-08-06 uncommitted tree (gate count 143 Pass/1 Pending → 144 Pass/0 Pending); external exact-SHA attestation still pending — files: references/g2-evidence/nt-implement.json, skills/nt-implement/SKILL.md, docs/tracking/Components.md, docs/tracking/Findings.md, docs/tracking/Structure.md, docs/plans/2026-08-05-nt-v2-cutover-audit-phase1.md, docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md, tests/test_skill_g2_harnesses.py, tests/test_cutover_attestation.py, tools/check_cutover_attestation.py, docs/prompts/master-prompt.md, references/g2-evidence/nt-evomap-integration.json

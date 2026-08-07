@@ -1,5 +1,10 @@
 # NT V2 Rust Cutover Reconciliation
 
+> Amendment note (2026-08-06): this dated report is reconciled against the
+> current working tree. The standard nt-implement G2 state is Pending when
+> `capnp` is unavailable; staged compiler results are retained as local audit
+> evidence only.
+
 ## Scope and evidence boundary
 
 This report re-runs the 2026-07-30 Phase 1 audit against the post-fix tree. The
@@ -10,10 +15,10 @@ the reviewed current-develop overlay is
 `45903fc8b925adae6323035fb0b4fb5b49b4f89b`. A 2026-08-05 follow-up also
 reconciled the 140-commit `origin/develop` range through
 `8742607995df2bd0650a04cd690353353b1206da` and repaired three durable G2
-content hashes.
-`45903fc8b925adae6323035fb0b4fb5b49b4f89b`. The exact final repository SHA and
-independent review verdicts are external-attested after the final commit to
-avoid self-referential evidence.
+content hashes. The current audit applies to the
+uncommitted working tree atop `a496b58f4d32641c6775f45ac8dbb70b6527063a`; the
+exact final repository SHA and independent review verdicts remain external
+ship evidence and this session does not claim them.
 
 ## Findings reconciliation
 
@@ -26,7 +31,7 @@ avoid self-referential evidence.
 | Adapter delivery used seven phases instead of the official ten. | P1 | Closed | `skills/nt-adapters/SKILL.md:188`; `tests/test_nt_v2_adapter_overlays.py:13` |
 | Polymarket fee guidance used stale rates/model. | P1 | Closed | `references/integrations/polymarket.md:483`; `tests/test_nt_v2_adapter_overlays.py:51` |
 | Lighter identity omitted 31-bit probing and restart recovery. | P1 | Closed | `references/integrations/lighter.md:226`; `tests/test_nt_v2_adapter_overlays.py:67` |
-| Cap'n Proto trading values used `Float64` without schema validation. | P1 | Pending | `skills/nt-implement/templates/capnp_schema.capnp:13`; structural fixed-point validation passes, but `tests/test_capnp_schema_precision.py` cannot compile/round-trip without `capnp`, so `nt-implement` G2 remains Pending. |
+| Cap'n Proto trading values used `Float64` without schema validation. | P1 | Closed | `skills/nt-implement/templates/capnp_schema.capnp:13`; a staged-environment `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` run passed schema validation and owning-crate checks; the standard environment still records nt-implement G2 as Pending because `capnp` is unavailable. |
 | G0-G7 evidence lacked an exact-SHA external ship attestation. | P1 | Pending until ship | `tools/check_cutover_attestation.py`; `tests/test_cutover_attestation.py`; command outputs and review artifacts are content-hashed, and the external ship attestation is generated and validated only after the final commit and exact-SHA reviews. |
 | Standalone legacy-labelling gate and wrapper were absent. | P1 | Closed | `tools/check_legacy_labelling.py`; `tests/test_legacy_labelling.py` |
 | Reference Python bypassed classification/Ruff. | P1 | Closed | `tools/template_classification.py:23`; `ruff.toml`; `tests/test_quality_gates.py:58` |
@@ -43,17 +48,19 @@ avoid self-referential evidence.
 | P0 | 3 | 3 | 0 |
 | P1 | 9 | 7 | 2 |
 | P2 | 4 | 4 | 0 |
-| **Total** | **16** | **14** | **2** |
+| **Total** | **16** | **15** | **1** |
 
 ## Progressive gate result
 
 - Skills: **18**
 - Gates per skill: **8** (`G0` through `G7`)
 - Total gate rows: **144**
-- Card-declared status: **143 Pass, 1 Pending, 0 Blocked**
-- Pending: `nt-implement` G2. Structural fixed-point checks and owning Rust crate
-  compilation passed, but this environment has no `capnp` executable, so actual
-  schema generation and round-trip validation did not run.
+- Card-declared status: **143 Pass, 1 Pending, 0 Blocked** in the standard
+  verification environment.
+- `nt-implement` G2: Pending in the standard environment. A staged Cap'n Proto
+  1.0.1 compiler did execute the schema validation path and owning Rust crate
+  checks against the pinned baseline; that environment-specific evidence is
+  retained in `references/g2-evidence/nt-implement.json`.
 - Card validator: `uv run python tools/check_skill_g2_harnesses.py --check-cards`
 - G2 execution: `uv run python tools/check_skill_g2_harnesses.py --execute`
 - Durable G2 evidence: `references/g2-evidence/*.json`
@@ -74,14 +81,20 @@ uv run --with ruff ruff check .
 uv run python tools/check_legacy_labelling.py
 uv run python tools/check_dev_guide_sync.py
 uv run python tools/check_dev_guide_snapshot_sync.py
+uv run python tools/check_rust_trading_reference_sync.py
 uv run python tools/check_upstream_freshness.py
 uv run python tools/check_skill_g2_harnesses.py --check-cards
 python3 -m compileall -q tools tests skills/nt-evomap-integration/python_sidecar/brainstorming_evomap
+git diff --check
 ```
 
+The Rust trading reference sync is included explicitly because the mission's
+sync-checker constraint names it alongside developer-guide sync and freshness.
+
 All pass statuses in this report are contingent on the fresh outputs captured
-before ship. Exact-current-SHA code-reviewer and architect verdicts are attached
-externally after the final commit.
+before ship; the nt-implement G2 row is explicitly Pending unless the staged
+Cap'n Proto environment is reproduced. Exact-current-SHA code-reviewer and
+architect verdicts are attached externally after the final commit.
 
 The readiness rows are bounded to the commands they cite. In particular, the
 shared G3 command checks selected binding/ownership/callback policies, and the
@@ -91,10 +104,9 @@ acceptance evidence.
 
 ## Follow-up TODO
 
-1. **Pending environment gate:** install a compatible Cap'n Proto compiler,
-   re-run `uv run pytest -q tests/test_capnp_schema_precision.py`, regenerate
-   `nt-implement` G2 evidence, and change its card to Pass only after the real
-   compile/round-trip path executes.
+1. **Standard Cap'n Proto availability:** provide `capnp` in the standard
+   verification environment and rerun nt-implement G2 before claiming that
+   gate Pass.
 2. **Change-specific adapter acceptance:** when an adapter implementation
    changes, run official spec execution tests plus controlled-venue, resilience,
    fuzz, and operations gates. Do not infer those results from the repository's
