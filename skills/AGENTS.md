@@ -1,6 +1,6 @@
 # SKILLS OVERVIEW
 
-18 skills for NautilusTrader development. Use workflow skills for
+17 skills for NautilusTrader development. Use workflow skills for
 architecture, implementation, wiring, and review; use domain skills for focused
 NautilusTrader concepts; use developer-guide skills for setup and testing.
 
@@ -11,7 +11,7 @@ Start with `nt` for task classification and routing.
 ```
 nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
                     ↓                    ↓
-      nt-evomap-integration (if EvoMap)  nt-dex-adapter (if DEX)
+              domain skills       nt-dex-adapter (if DEX)
 ```
 
 ## SKILL INDEX
@@ -25,7 +25,6 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 | **nt-strategy-builder** | Migration/reference-only Python backtest, paper, and live examples | `nt-strategy-builder/SKILL.md` |
 | **nt-strategy-builder-rust** | Default production strategy, Rust backtest, and LiveNode path | `nt-strategy-builder-rust/SKILL.md` |
 | **nt-dex-adapter** | Build custom DEX adapters | `nt-dex-adapter/SKILL.md` |
-| **nt-evomap-integration** | Integrate EvoMap advisory sidecars safely | `nt-evomap-integration/SKILL.md` |
 | **nt-trading** | Orders, events, positions, and portfolio concepts | `nt-trading/SKILL.md` |
 | **nt-signals** | Indicators, order books, and signal analysis | `nt-signals/SKILL.md` |
 | **nt-data** | Market data types, subscriptions, and catalogs | `nt-data/SKILL.md` |
@@ -46,7 +45,7 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 - `rules/` — DO/DON'T rulesets (some skills)
 
 ### Template Pattern
-Upstream NT V2 supports Python strategies, but this repository's stricter cutover policy classifies non-AI Python strategy templates as migration/reference-only. New strategy, config, backtest, paper, and live work routes to Rust. AI/advisory Python stays async, approval-gated, and off execution-critical paths through `nt-evomap-integration`.
+Upstream NT V2 supports Python strategies, but this repository's stricter cutover policy classifies Python strategy templates as migration/reference-only. New strategy, config, backtest, paper, and live work routes to Rust. AI and advisory work are outside this repository.
 
 ## ANTI-PATTERNS
 

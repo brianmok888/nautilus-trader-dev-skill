@@ -337,70 +337,6 @@ def test_reports_copied_current_nautilus_version_guidance(tmp_path: Path) -> Non
     )
 
 
-def test_reports_stale_evomap_direct_a2a_guidance(tmp_path: Path) -> None:
-    write(
-        tmp_path / "skills/nt-evomap-integration/SKILL.md",
-        "Use EvoMapCapsuleClient to call hello, publish, fetch, report on evomap.ai.\n",
-    )
-
-    result = run_checks(tmp_path)
-
-    assert result.ok is False
-    assert (
-        "stale direct EvoMap A2A guidance in skills/nt-evomap-integration/SKILL.md"
-        in result.errors
-    )
-
-
-def test_reports_stale_evomap_direct_a2a_guidance_in_current_docs(
-    tmp_path: Path,
-) -> None:
-    write(
-        tmp_path / "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md",
-        "Build a gateway that calls EvoMap A2A endpoints directly.\n",
-    )
-
-    result = run_checks(tmp_path)
-
-    assert result.ok is False
-    assert (
-        "stale direct EvoMap A2A guidance in "
-        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md" in result.errors
-    )
-
-
-def test_reports_stale_evomap_a2a_routes_in_current_docs(
-    tmp_path: Path,
-) -> None:
-    write(
-        tmp_path / "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md",
-        "Call POST /a2a/publish and then run hello -> publish -> fetch -> report.\n",
-    )
-
-    result = run_checks(tmp_path)
-
-    assert result.ok is False
-    assert (
-        "stale direct EvoMap A2A guidance in "
-        "docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md" in result.errors
-    )
-
-
-def test_reports_missing_evomap_proxy_boundary_terms(tmp_path: Path) -> None:
-    write(
-        tmp_path / "skills/nt-evomap-integration/SKILL.md",
-        "EvoMap remains advisory-only with fallback and provenance.\n",
-    )
-
-    result = run_checks(tmp_path)
-
-    assert result.ok is False
-    assert (
-        "missing EvoMap proxy boundary in skills/nt-evomap-integration/SKILL.md"
-        in result.errors
-    )
-
-
 def test_reports_stale_nt_testing_commands(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-testing/SKILL.md",
@@ -876,12 +812,6 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
     )
-    write(
-        tmp_path / "skills/nt-evomap-integration/SKILL.md",
-        "Use local Proxy mailbox endpoints mailbox/send, mailbox/poll, asset/submit, "
-        "and asset/fetch. LangChain model/tool wrappers and LangGraph StateGraph "
-        "or human-in-the-loop checkpoints stay advisory-only and off hot handlers.\n",
-    )
 
     result = run_checks(tmp_path)
 
@@ -904,10 +834,6 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     assert (
         "missing current skill delta 'Python v2 live callback routing' "
         "in skills/nt-dev/SKILL.md" in result.errors
-    )
-    assert (
-        "missing current skill delta '~/.evolver/settings.json' "
-        "in skills/nt-evomap-integration/SKILL.md" in result.errors
     )
 
 
@@ -1232,7 +1158,7 @@ def test_ignores_superpowers_meta_docs(tmp_path: Path) -> None:
     result = run_checks(tmp_path)
 
     assert not any(
-        "unlabelled TradingNode guidance in docs/superpowers" in e
+        "unlabelled TradingNode guidance" in e
         for e in result.errors
     )
 
@@ -1791,11 +1717,11 @@ def test_reports_missing_rust_oriented_v2_readiness_boundary(tmp_path: Path) -> 
     assert result.ok is False
     assert (
         "missing Rust-oriented v2 readiness term 'Rust-oriented v2.0 readiness' "
-        "in README.md" in result.errors
+        "in skills/nt-dev/SKILL.md" in result.errors
     )
     assert (
-        "missing Rust-oriented v2 readiness term 'AI/advisory lane remains Python' "
-        "in skills/nt-architect/SKILL.md" in result.errors
+        "missing Rust-oriented v2 readiness term 'Rust-oriented v2.0 readiness' "
+        "in skills/nt-review/SKILL.md" in result.errors
     )
 
 
@@ -2038,27 +1964,6 @@ def test_reports_missing_nt_v2_rust_checker_gate_terms(tmp_path: Path) -> None:
     )
 
 
-def test_reports_missing_ai_advisory_python_boundary_gate_terms(
-    tmp_path: Path,
-) -> None:
-    write(
-        tmp_path / "skills/nt-evomap-integration/SKILL.md",
-        readiness_gate_text(
-            "Integrate advisory workflows through a sidecar.\n",
-            include_ai_boundary=False,
-        ),
-    )
-
-    result = run_checks(tmp_path)
-
-    assert result.ok is False
-    assert (
-        "missing AI/advisory Python boundary gate term "
-        "'AI/advisory lane remains Python and off execution-critical paths' "
-        "in skills/nt-evomap-integration/SKILL.md" in result.errors
-    )
-
-
 def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
@@ -2298,15 +2203,6 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Use PortfolioSnapshot and TryFrom<OrderInitialized>.\n",
     )
     write(
-        tmp_path / "skills/nt-evomap-integration/SKILL.md",
-        "Use local Proxy mailbox endpoints mailbox/send, mailbox/poll, asset/submit, "
-        "and asset/fetch. LangChain model/tool wrappers and LangGraph StateGraph "
-        "or human-in-the-loop checkpoints stay advisory-only and off hot handlers.\n"
-        "Discover Proxy via ~/.evolver/settings.json, support EVOMAP_PROXY_PORT, "
-        "mailbox/ack, mailbox/status, mailbox/list, task/subscribe, task/list, "
-        "task/claim, task/complete, and task/unsubscribe.\n",
-    )
-    write(
         tmp_path / "skills/nt-dev/SKILL.md",
         "NT v2 compatibility note: legacy Cython/v1 reference-only; "
         "prefer Rust v2/PyO3 for new work.\n"
@@ -2445,9 +2341,6 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         ),
         Path("skills/nt-dex-adapter/SKILL.md"): (
             "Rust-first default for on-chain adapters requires cargo nextest, cargo clippy, cargo deny, and fuzz.\n"
-        ),
-        Path("skills/nt-evomap-integration/SKILL.md"): (
-            "AI/advisory lane remains Python, asynchronous, approval gate protected, and isolated from trading authority.\n"
         ),
         Path("skills/nt-implement/SKILL.md"): (
             "AI/advisory lane remains Python; require status gate before coding plus cargo nextest, cargo clippy, and cargo deny for Rust.\n"

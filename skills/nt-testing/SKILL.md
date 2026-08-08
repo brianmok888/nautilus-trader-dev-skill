@@ -16,16 +16,29 @@ Rust and keeps Python execution examples migration/reference-only.
 
 The pinned baseline differs from current upstream. At develop commit
 `45903fc8b925adae6323035fb0b4fb5b49b4f89b`, change commit
-`184e231f192ea7410aeb7730d6118fedfdf2c4d7` adds
-`close_positions_qty_precision` and revises the stop-time close contract. This is
-develop/nightly only; preserve the immutable snapshot at
-`6e59fd74eaacacbb7410936f1766bd89fcce6f59` until the repository pin advances.
+`184e231f192ea7410aeb7730d6118fedfdf2c4d7` introduced the precision-close
+contract. The reviewed `origin/develop` head is
+`9ca072e2d98ae623f14ecaa5b336398f5d25de34`; keep the immutable snapshot at
+`6e59fd74eaacacbb7410936f1766bd89fcce6f59` and apply these version-scoped
+overlays until the repository pin advances:
 
-For current TC-E06 and TC-E82, a passing close leaves the position flat or leaves
-only the exact sub-precision residual determined by
-`close_positions_qty_precision`; the truncated close quantity must be the
-venue-fillable quantity, and no open orders may remain. Do not accept other
-residual quantities as passing behavior.
+- `spec_exec_testing.md` retains `TC-E74` through `TC-E78` and exposes the Rust
+  tester to Python as the built-in strategy `nautilus_trader.testkit.ExecTesterConfig`.
+  New Rust work continues to use
+  `nautilus_testkit::testers::ExecTesterConfig::builder()`.
+- Current TC-E06 and TC-E82 include `close_positions_qty_precision`: a passing
+  close leaves the position flat or only the exact sub-precision residual determined by
+`close_positions_qty_precision`; the truncated close quantity must be venue-fillable,
+  and no open orders may remain.
+- `spec_data_testing.md` documents Rust `subscribe_book_depth(true)` support and
+  the current request toggles (`request_book_snapshot`, `request_quotes`,
+  `request_trades`, and `request_bars`). Do not repeat the pinned snapshot's
+  obsolete claim that Rust book-depth subscription is unsupported.
+- Repository-only static contract tests that do not import `nautilus_trader` may
+  run with the invoking repository Python when the pinned upstream
+  `python/.venv` is absent. Any test importing `nautilus_trader` still requires
+  the pinned upstream interpreter; never substitute a host or stale environment
+  for runtime API evidence.
 Official mirrors: [latest](https://nautilustrader.io/docs/latest/developer_guide/spec_exec_testing/)
 and [nightly](https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/).
 
@@ -59,11 +72,11 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-testing.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
+AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
-Testing gates: Rust tests are the default readiness evidence for research, configuration, production, performance, and live paths. Require `cargo nextest`, `cargo clippy`, `cargo deny`, `ExecTesterConfig::builder()`, `DataTesterConfig::builder()`, adapter baseline matrices, reconciliation matrices, and fuzz/property tests where parsing/execution outcomes vary. The only active Python lane is AI/advisory through `nt-evomap-integration`; Python checks elsewhere are limited to bounded public PyO3 projections.
+Testing gates: Rust tests are the default readiness evidence for research, configuration, production, performance, and live paths. Require `cargo nextest`, `cargo clippy`, `cargo deny`, `ExecTesterConfig::builder()`, `DataTesterConfig::builder()`, adapter baseline matrices, reconciliation matrices, and fuzz/property tests where parsing/execution outcomes vary. Python checks are limited to bounded public PyO3 projections; retained Python material is migration/reference-only.
 
 ## Rust production lane
 
@@ -265,7 +278,7 @@ The DataTesterConfig API validates adapter data flows end-to-end. Each adapter h
 
 ### DataTesterConfig API
 
-Use the Rust `DataTesterConfig::builder()` API documented in `references/api/data_tester_config.md`. Legacy Python constructor examples moved to `migration_reference/python/data_tester_config.md`.
+Use the Rust `DataTesterConfig::builder()` API and verify current fields against the reviewed upstream `crates/testkit/src/testers/data/config.rs`. Legacy Python constructor examples moved to `migration_reference/python/data_tester_config.md`.
 
 
 ### Data Validation Flow
@@ -288,7 +301,7 @@ The ExecTesterConfig API validates order lifecycle per venue. Each adapter has s
 
 ### ExecTesterConfig API
 
-Use the Rust `ExecTesterConfig::builder()` API below and in `references/api/exec_tester_config.md`. Legacy Python constructor examples moved to `migration_reference/python/exec_tester_config.md`.
+Use the Rust `ExecTesterConfig::builder()` API below and verify current fields against the reviewed upstream `crates/testkit/src/testers/exec/config.rs`. Legacy Python constructor examples moved to `migration_reference/python/exec_tester_config.md`.
 
 
 

@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "06069d31dc19ef5772285f20ef6feba6cd1cbf7e622cef13d2026a443be56ad6",
+  "owned_content_sha256": "c38f1b25c68095e57197055b86ead05b7a6b603bce4edcbab7ad545ffa3c0bec",
   "schema_version": 2,
   "scope": "repository:python-v2-strategy-templates",
   "skill": "nt-strategy-builder",

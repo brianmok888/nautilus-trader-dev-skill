@@ -11,7 +11,7 @@ These skills encode NautilusTrader best practices, correct patterns, and structu
 
 **Pinned reproducible baseline (verified 2026-07-28):** commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, workspace crates `0.61.0`, source label `v1.231.0`, and Python package `2.0.0rc2`; the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.230.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
 
-**Current develop observation (2026-07-29):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `uv run python tools/check_upstream_freshness.py` for the current delta. Rust-oriented v2.0 readiness is the default direction; the AI/advisory lane remains Python, asynchronous, and off execution-critical paths.
+**Current develop observation (reviewed 2026-08-08):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `python3 tools/check_upstream_freshness.py --format json` for the current delta. Upstream is read-only ground truth for improving this skill repository; AI and advisory work are outside this repository's scope.
 
 ## Skills Map
 
@@ -59,10 +59,9 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 └──────────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                        LEARNING & INTEGRATION                                │
+│                             LEARNING                                         │
 │                                                                              │
 │   nt-learn            12-stage structured curriculum                         │
-│   nt-evomap-integ.    EvoMap.ai advisory sidecar integration                 │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -80,7 +79,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | Learn NautilusTrader | `nt` → `nt-learn` (12-stage curriculum) |
 | Contribute to NautilusTrader core | `nt` → `nt-dev` + `nt-testing` |
 
-## Skill Inventory (18 skills)
+## Skill Inventory (17 skills)
 
 ### Entry Point (1)
 | Skill | Description | Key Content |
@@ -96,7 +95,6 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | `nt-strategy-builder` | Migration/reference-only Python systems | Historical multi-venue wiring and migration examples |
 | `nt-strategy-builder-rust` | Default production strategy path | Rust `Strategy`, backtest, and `LiveNode` wiring |
 | `nt-dex-adapter` | Custom DEX adapter development | RPC nodes, wallet signing, pool discovery, test suite |
-| `nt-evomap-integration` | EvoMap.ai advisory sidecar | Non-blocking execution, approval gates |
 
 ### Domain Knowledge (7)
 | Skill | Description | Key Content |

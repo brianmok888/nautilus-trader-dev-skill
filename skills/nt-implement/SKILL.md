@@ -22,9 +22,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-implement.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
+AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
@@ -42,7 +42,7 @@ Prefer `Py<T>`/`Py<PyAny>` for callback handles, document cleanup and cycle beha
 
 ## Migration/reference lane
 
-Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New non-AI work remains Rust-first; the only active Python lane is AI/advisory work in `nt-evomap-integration`, off execution-critical paths.
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New non-AI work remains Rust-first; the only AI and advisory work are outside this repository., off execution-critical paths.
 
 ## Source-pinned upstream lane
 
@@ -156,10 +156,10 @@ Rust-backed work use `LiveNode`.
 | Component | Default language for V2 cutover | Notes |
 |---|---|---|
 | Custom Data Types | **Rust** (`crates/model/`, PyO3-exposed when required) | Rust owns production data types; Python declarations are reserved for explicit AI/advisory payloads |
-| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; non-AI Python prototypes are migration/reference-only |
+| Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Python prototypes are migration/reference-only |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
 | Actors (model hosting, regime detection, signal aggregation) | **Rust** | AI/advisory inference is the only Python-default exception and stays async, non-authoritative, and off the hot path |
-| Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI/advisory Python routes separately to `nt-evomap-integration` |
+| Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI/advisory work is out of scope |
 | Execution Algorithms | **Rust** (`crates/exec-algo/`, PyO3-exposed) | Execution-critical path stays in Rust |
 | Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
@@ -184,19 +184,11 @@ no cross-contamination boundary:
 - User asked for / scoped a **Rust** strategy (HFT, perf-critical, ships with a
   Rust adapter) -> `nt-strategy-builder-rust` only.
 - Ambiguous ("build a strategy" with no language stated) ->
-  `nt-strategy-builder-rust` only. Select Python only for the isolated AI/advisory lane
-  via `nt-evomap-integration`. Never silently emit one language under the other skill's
-  patterns.
+  `nt-strategy-builder-rust` only. AI and advisory work are outside this repository;
+  never silently mix them into NautilusTrader component patterns.
 
 This keeps each skill's templates, conventions, and node-registration paths
 internally consistent and prevents hybrid strategies that fail both toolchains.
-
-## EvoMap Sidecar Implementation Pattern (Optional)
-
-Non-AI Python guidance is physically quarantined as migration/reference-only.
-See [EvoMap Sidecar Implementation Pattern (Optional) migration reference](legacy_migration/evomap-sidecar-implementation-pattern-optional.md).
-New production work follows the Rust or bounded PyO3 sections below; the sole
-active Python lane is AI/advisory work in `nt-evomap-integration`.
 
 ## Rust template dependency policy
 
@@ -209,14 +201,14 @@ versions into new code.
 Non-AI Python guidance is physically quarantined as migration/reference-only.
 See [Templates migration reference](legacy_migration/templates.md).
 New production work follows the Rust or bounded PyO3 sections below; the sole
-active Python lane is AI/advisory work in `nt-evomap-integration`.
+AI and advisory work are outside this repository.
 
 ## Custom Simulation Models
 
 Non-AI Python guidance is physically quarantined as migration/reference-only.
 See [Custom Simulation Models migration reference](legacy_migration/custom-simulation-models.md).
 New production work follows the Rust or bounded PyO3 sections below; the sole
-active Python lane is AI/advisory work in `nt-evomap-integration`.
+AI and advisory work are outside this repository.
 
 ## Rust+PyO3 Implementation Patterns
 
@@ -507,7 +499,7 @@ pub extern "C" fn custom_momentum_update(
 Non-AI Python guidance is physically quarantined as migration/reference-only.
 See [Coding Standards migration reference](legacy_migration/coding-standards.md).
 New production work follows the Rust or bounded PyO3 sections below; the sole
-active Python lane is AI/advisory work in `nt-evomap-integration`.
+AI and advisory work are outside this repository.
 
 ## Implementation Checklist
 

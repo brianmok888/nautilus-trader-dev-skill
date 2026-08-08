@@ -21,7 +21,6 @@ EXPECTED_SKILLS = {
     "nt-data",
     "nt-dev",
     "nt-dex-adapter",
-    "nt-evomap-integration",
     "nt-implement",
     "nt-learn",
     "nt-live",
@@ -35,9 +34,9 @@ EXPECTED_SKILLS = {
 }
 
 
-def test_manifest_covers_exactly_all_eighteen_nt_skills() -> None:
+def test_manifest_covers_exactly_all_seventeen_nt_skills() -> None:
     assert set(g2.HARNESSES) == EXPECTED_SKILLS
-    assert len(g2.HARNESSES) == 18
+    assert len(g2.HARNESSES) == 17
 
 
 def test_each_harness_has_a_unique_domain_scope_and_nonempty_steps() -> None:
@@ -636,149 +635,6 @@ def test_router_harness_requires_subordinate_card_declarations() -> None:
     command = g2.HARNESSES["nt"].steps[1].command
 
     assert command[-1] == "--check-card-declarations"
-
-
-def test_ai_advisory_skill_stays_python_and_off_execution_paths() -> None:
-    text = (g2.repo_root() / "skills/nt-evomap-integration/SKILL.md").read_text()
-
-    assert "AI/advisory lane remains Python" in text
-    assert "Nautilus remains the only execution authority" in text
-    assert "No external network I/O" in text
-    assert "Every accepted or rejected suggestion must be traceable" in text
-
-
-def test_ai_advisory_contract_forbids_order_authority_and_hot_handler_io() -> None:
-    errors = g2.validate_ai_advisory_contract(g2.repo_root())
-
-    assert errors == []
-
-
-def test_ai_advisory_contract_rejects_execution_authority(tmp_path: Path) -> None:
-    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text(
-        "Nautilus remains the only execution authority\n"
-        "No external network I/O\n"
-        "timeout fallback approval gate\n"
-        "Every accepted or rejected suggestion must be traceable\n"
-        "self.submit_order(order)\n"
-    )
-
-    errors = g2.validate_ai_advisory_contract(tmp_path)
-
-    assert any("forbidden execution authority" in error for error in errors)
-
-
-def test_ai_advisory_contract_rejects_market_handler_and_publication_capabilities(
-    tmp_path: Path,
-) -> None:
-    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text(
-        "Nautilus remains the only execution authority\n"
-        "No external network I/O\n"
-        "timeout fallback approval gate\n"
-        "Every accepted or rejected suggestion must be traceable\n"
-    )
-    leak = skill.parent / "templates/leak.py"
-    leak.parent.mkdir()
-    leak.write_text(
-        "class UnsafeActor:\n"
-        "    def on_bar(self, bar):\n"
-        "        self.publish_signal(name='unsafe', value=bar)\n"
-    )
-
-    errors = g2.validate_ai_advisory_contract(tmp_path)
-
-    assert any("market handler" in error for error in errors)
-    assert any("publication capability" in error for error in errors)
-
-
-def test_ai_advisory_contract_scans_nested_owned_surfaces(tmp_path: Path) -> None:
-    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text(
-        "Nautilus remains the only execution authority\n"
-        "No external network I/O\n"
-        "timeout fallback approval gate\n"
-        "Every accepted or rejected suggestion must be traceable\n"
-    )
-    leak = skill.parent / "templates/leak.py"
-    leak.parent.mkdir()
-    leak.write_text("self.submit_order(order)\n")
-
-    errors = g2.validate_ai_advisory_contract(tmp_path)
-
-    assert any("templates/leak.py" in error for error in errors)
-
-
-def test_ai_advisory_contract_allows_networking_in_external_proxy_surface(
-    tmp_path: Path,
-) -> None:
-    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text(
-        "Nautilus remains the only execution authority\n"
-        "No external network I/O\n"
-        "timeout fallback approval gate\n"
-        "Every accepted or rejected suggestion must be traceable\n"
-    )
-    proxy = skill.parent / "templates/external_proxy.py"
-    proxy.parent.mkdir()
-    proxy.write_text(
-        "import requests\n\n"
-        "class ExternalProxy:\n"
-        "    def send(self, payload):\n"
-        "        return requests.post('http://127.0.0.1', json=payload)\n"
-    )
-
-    errors = g2.validate_ai_advisory_contract(tmp_path)
-
-    assert errors == []
-
-
-def test_ai_advisory_contract_rejects_networking_outside_python_sidecar(
-    tmp_path: Path,
-) -> None:
-    skill = tmp_path / "skills/nt-evomap-integration/SKILL.md"
-    skill.parent.mkdir(parents=True)
-    skill.write_text(
-        "Nautilus remains the only execution authority\n"
-        "No external network I/O\n"
-        "timeout fallback approval gate\n"
-        "Every accepted or rejected suggestion must be traceable\n"
-    )
-    leak = skill.parent / "templates/http_client.py"
-    leak.parent.mkdir()
-    leak.write_text("from urllib import request\nrequest.urlopen('http://127.0.0.1')\n")
-
-    errors = g2.validate_ai_advisory_contract(tmp_path)
-
-    assert any("network capability outside python_sidecar" in error for error in errors)
-
-
-def test_ai_advisory_harness_uses_pinned_v2_runner() -> None:
-    harness = g2.HARNESSES["nt-evomap-integration"]
-
-    assert any("tools/run_pinned_v2_pytest.py" in step.command for step in harness.steps)
-    assert Path("tools/run_pinned_v2_pytest.py") in harness.owned_paths
-    assert Path("tests/test_ai_advisory_boundary.py") in harness.owned_paths
-
-
-def test_ai_advisory_g2_owns_entire_skill_directory() -> None:
-    harness = g2.HARNESSES["nt-evomap-integration"]
-
-    assert Path("skills/nt-evomap-integration") in harness.owned_paths
-
-
-def test_ai_advisory_contract_accepts_canonical_advisory_template() -> None:
-    errors = g2.validate_ai_advisory_contract(g2.repo_root())
-
-    assert errors == []
-    assert (
-        g2.repo_root()
-        / "skills/nt-evomap-integration/templates/advisory_actor.py"
-    ).is_file()
 
 
 def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:

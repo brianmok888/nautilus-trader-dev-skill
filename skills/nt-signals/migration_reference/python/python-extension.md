@@ -1,9 +1,9 @@
 # Python Extension
 
-> **Migration/reference-only.** This non-AI Python material is not a
+> **Migration/reference-only.** This Python material is not a
 > production default. New production work uses the Rust guidance in the
 > root `nt-signals` skill. The only active Python lane is AI/advisory work
-> routed through `nt-evomap-integration`.
+> outside this repository.
 
 
 ### Custom Indicator

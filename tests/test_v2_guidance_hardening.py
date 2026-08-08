@@ -106,45 +106,18 @@ def test_rust_strategy_builder_does_not_present_builtin_examples_as_extension_ap
     assert "nautilus_strategy!(MyStrategy)" in text
 
 
-def test_repository_cutover_restricts_python_to_ai_advisory_and_migration() -> None:
+def test_repository_scope_routes_python_only_as_nt_migration_reference() -> None:
     upstream_python = read("references/developer_guide/python.md")
     router = read("skills/nt/SKILL.md")
     python_builder = read("skills/nt-strategy-builder/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
-    architect = read("skills/nt-architect/SKILL.md")
-    trading = read("skills/nt-trading/SKILL.md")
 
     assert "ideal for strategy development" in upstream_python
-    assert "Upstream NT V2 supports Python strategies" in router
-    assert "this repository applies a stricter cutover policy" in router
+    assert "migration/reference-only" in router
     assert "migration/reference-only" in python_builder
-    assert "AI/advisory lane stays Python through `nt-evomap-integration`" in python_builder
     assert "Explicit Python strategy requests still route to Rust" in implement
-
-    misleading_claims = [
-        "Python and Rust strategies are both supported NT V2 extension surfaces",
-        "supported NT V2 Python strategy",
-        "Explicit Python strategy or AI/advisory lane -> `nt-strategy-builder`",
-        "Python strategy (\"build a strategy in Python\") -> `nt-strategy-builder` ONLY",
-    ]
-    combined = router + python_builder + implement + architect + trading
-    for claim in misleading_claims:
-        assert claim not in combined
-
-    assert (
-        "Python strategy (\"build a strategy in Python\") -> `nt-strategy-builder-rust` ONLY"
-        in router
-    )
-    assert "AI/advisory request -> `nt-evomap-integration` ONLY" in router
-
-    forbidden_active_python = [
-        "Treat Python as the user strategy/configuration surface",
-        "User orchestration, config, research strategy, AI lane | **Python**",
-        "user-facing strategy/config or the AI lane it stays in Python",
-        "Python is limited to research/config and AI/advisory sidecars",
-    ]
-    for claim in forbidden_active_python:
-        assert claim not in combined
+    assert "AI work is out of scope" in router
+    assert "AI work is out of scope" in router
 
 
 def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
@@ -198,30 +171,17 @@ def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
     guide = read("docs/end_to_end_guide.md")
     dex_skill = read("skills/nt-dex-adapter/SKILL.md")
     dex_agents = read("skills/nt-dex-adapter/AGENTS.md")
-    evomap = read("skills/nt-evomap-integration/SKILL.md")
 
-    assert "## Appendix: Python Migration Reference and Active AI/Advisory Lane" in guide
+    assert "## Appendix: Python Migration Reference" in guide
     assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in guide
-    assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in guide
+    assert "AI and advisory work are outside this repository" in guide
     assert "Python remains supported for V2 strategy research" not in guide
-    contradictory_python_guidance = [
-        phrase
-        for phrase in [
-            "supported Python V2 strategy/research work",
-            "current Python-only integration guidance",
-        ]
-        if phrase in guide
-    ]
-    assert contradictory_python_guidance == []
 
     combined_dex = dex_skill + dex_agents
     assert "`nt-strategy-builder-rust`" in combined_dex
     assert "Rust `LiveNode` or backtest wiring" in combined_dex
     assert "nt-strategy-builder/dex_venue_input.py" not in combined_dex
     assert "`nt-strategy-builder` skill's `dex_venue_input.py`" not in combined_dex
-
-    assert "`nt-strategy-builder-rust` for Rust `LiveNode` or backtest runtime wiring" in evomap
-    assert "`nt-strategy-builder` for runtime wiring" not in evomap
 
 
 def test_component_registration_uses_current_native_and_bundled_apis() -> None:
@@ -391,19 +351,19 @@ def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None
     assert "Rust 1.97.1" in read("docs/end_to_end_guide.md")
 
 
-def test_documented_inventory_lists_all_eighteen_nt_skills() -> None:
+def test_documented_inventory_lists_all_seventeen_nt_skills() -> None:
     expected = {
         path.parent.name
         for path in (REPO_ROOT / "skills").glob("nt*/SKILL.md")
     }
-    assert len(expected) == 18
+    assert len(expected) == 17
 
     for path in ["README.md", "skills/AGENTS.md"]:
         text = read(path)
         documented = set(re.findall(r"\| \*\*(nt(?:-[a-z0-9]+)*)\*\* \|", text))
         if path == "README.md":
             documented = set(re.findall(r"\| `(nt(?:-[a-z0-9]+)*)` \|", text))
-        assert "18 skills" in text
+        assert "17 skills" in text
         assert documented == expected
 
 

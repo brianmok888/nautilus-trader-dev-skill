@@ -90,7 +90,6 @@ ENTRY_SKILL_ROUTING_TARGETS = [
     "nt-data",
     "nt-dev",
     "nt-dex-adapter",
-    "nt-evomap-integration",
     "nt-implement",
     "nt-learn",
     "nt-live",
@@ -204,35 +203,6 @@ LIVE_RUNTIME_BOUNDARY_TARGETS = {
     ],
     Path("skills/nt-review/SKILL.md"): ["LiveNode", "TradingNode", "Python live"],
 }
-
-EVOMAP_DIRECT_A2A_TARGETS = [
-    Path("docs/plans/2026-02-28-brainstorming-evomap-capsule-design.md"),
-    Path("docs/plans/2026-02-28-brainstorming-evomap-capsule-implementation.md"),
-    Path("skills/nt-evomap-integration/SKILL.md"),
-    Path("skills/nt-implement/SKILL.md"),
-]
-
-EVOMAP_DIRECT_A2A_TERMS = [
-    "/a2a/",
-    "EvoMap A2A endpoints",
-    "EvoMapCapsuleClient",
-    "hello -> publish -> fetch -> report",
-    "`hello`, `publish`, `fetch`, `report`",
-    "hello, publish, fetch, report",
-]
-
-EVOMAP_PROXY_BOUNDARY_TARGET = Path("skills/nt-evomap-integration/SKILL.md")
-EVOMAP_PROXY_BOUNDARY_TERMS = [
-    "Proxy mailbox",
-    "mailbox/send",
-    "mailbox/poll",
-    "asset/submit",
-    "asset/fetch",
-    "LangChain",
-    "LangGraph",
-    "StateGraph",
-    "human-in-the-loop",
-]
 
 POLYMARKET_ALLOWANCE_TARGETS = [
     Path("references/integrations/polymarket.md"),
@@ -412,15 +382,6 @@ NT_V2_RUST_TARGETS = {
 }
 
 RUST_ORIENTED_V2_READINESS_TARGETS = {
-    Path("README.md"): [
-        "Rust-oriented v2.0 readiness",
-        "AI/advisory lane remains Python",
-        "2.0.0rc1",
-    ],
-    Path("skills/nt/SKILL.md"): [
-        "Rust-oriented v2.0 readiness",
-        "AI/advisory lane remains Python",
-    ],
     Path("skills/nt-dev/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
         "1.231.0",
@@ -428,11 +389,6 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
         "2.0.0rcN",
         "rust-toolchain.toml",
         "1.97.1",
-    ],
-    Path("skills/nt-architect/SKILL.md"): [
-        "Rust-oriented v2.0 readiness",
-        "AI/advisory lane remains Python",
-        "Rust owns strategy/configuration",
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
@@ -448,7 +404,6 @@ NT_V2_READINESS_GATE_TARGETS = [
     Path("skills/nt-data/SKILL.md"),
     Path("skills/nt-dev/SKILL.md"),
     Path("skills/nt-dex-adapter/SKILL.md"),
-    Path("skills/nt-evomap-integration/SKILL.md"),
     Path("skills/nt-implement/SKILL.md"),
     Path("skills/nt-learn/SKILL.md"),
     Path("skills/nt-live/SKILL.md"),
@@ -557,38 +512,6 @@ NT_V2_RUST_CHECKER_GATE_TARGETS = {
         "cargo clippy",
         "cargo deny",
         "order",
-    ],
-}
-
-AI_ADVISORY_PYTHON_BOUNDARY_GATE_TARGETS = {
-    Path("skills/nt/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-architect/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-evomap-integration/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-        "asynchronous",
-        "approval gate",
-    ],
-    Path("skills/nt-implement/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-review/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-signals/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-strategy-builder/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-strategy-builder-rust/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
-    ],
-    Path("skills/nt-trading/SKILL.md"): [
-        "AI/advisory lane remains Python and off execution-critical paths",
     ],
 }
 
@@ -837,18 +760,6 @@ CURRENT_SKILL_DELTA_TARGETS = {
         "Generated FFI bindings and precision mode",
         "Python v2 live callback routing",
         "Typed CVec wrappers and Send",
-    ],
-    Path("skills/nt-evomap-integration/SKILL.md"): [
-        "~/.evolver/settings.json",
-        "EVOMAP_PROXY_PORT",
-        "mailbox/ack",
-        "mailbox/status",
-        "mailbox/list",
-        "task/subscribe",
-        "task/list",
-        "task/claim",
-        "task/complete",
-        "task/unsubscribe",
     ],
 }
 
@@ -1459,12 +1370,6 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
     _check_required_terms(
         root,
         errors,
-        AI_ADVISORY_PYTHON_BOUNDARY_GATE_TARGETS,
-        "AI/advisory Python boundary gate",
-    )
-    _check_required_terms(
-        root,
-        errors,
         NT_V2_READINESS_DOMAIN_GATE_TARGETS,
         "NT V2 readiness domain gate",
     )
@@ -1691,22 +1596,6 @@ def run_checks(root: Path) -> CheckResult:
         text = _read(absolute)
         if not all(_contains_term(text, term) for term in required_terms):
             errors.append(f"missing live runtime boundary in {relative.as_posix()}")
-
-    for relative in EVOMAP_DIRECT_A2A_TARGETS:
-        absolute = root / relative
-        if not absolute.exists():
-            continue
-        text = _read(absolute)
-        if any(term in text for term in EVOMAP_DIRECT_A2A_TERMS):
-            errors.append(f"stale direct EvoMap A2A guidance in {relative.as_posix()}")
-
-    evomap = root / EVOMAP_PROXY_BOUNDARY_TARGET
-    if evomap.exists():
-        text = _read(evomap)
-        if not all(term in text for term in EVOMAP_PROXY_BOUNDARY_TERMS):
-            errors.append(
-                f"missing EvoMap proxy boundary in {EVOMAP_PROXY_BOUNDARY_TARGET.as_posix()}"
-            )
 
     return CheckResult(ok=not errors, errors=errors)
 

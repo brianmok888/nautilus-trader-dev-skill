@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_ref": "origin/develop",
   "pinned_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "reviewed_commit": "8742607995df2bd0650a04cd690353353b1206da",
-  "reviewed_on": "2026-08-05",
+  "reviewed_commit": "9ca072e2d98ae623f14ecaa5b336398f5d25de34",
+  "reviewed_on": "2026-08-08",
   "deltas": [
     {
       "commit": "d46f56505a8675ae49025bc6abaa851d33f60c56",
@@ -4952,6 +4952,1510 @@
         "references/developer_guide/python.md",
         "skills/nt-dev/SKILL.md"
       ]
+    },
+    {
+      "commit": "56209a9ef1b99fad1de12896d61c7aa9f99e3c93",
+      "subject": "Improve network crate test coverage",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/network/src/http/client.rs",
+        "crates/network/src/retry.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/tls.rs",
+        "crates/network/src/transport/message.rs",
+        "crates/network/src/transport/mod.rs",
+        "crates/network/src/websocket/subscription.rs",
+        "crates/network/tests/property_backoff.rs",
+        "crates/network/tests/property_ratelimiter.rs",
+        "crates/network/tests/turmoil_socket.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "457bd66b2b8645f08b24e9155ac576c9499aa8fe",
+      "subject": "Harden macOS PyO3 symbol exports",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/pyo3/build.rs",
+        "python/tests/unit/test_macos_extension.py",
+        "scripts/ci/test-wheel.bash"
+      ],
+      "affected_files": [
+        "skills/nt-dev/SKILL.md"
+      ]
+    },
+    {
+      "commit": "2235d4918b2cd374937840674d318eb0bffb29ce",
+      "subject": "Fix nightly docs and Windows CLI failures",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build-docs.yml",
+        ".github/workflows/cli-binaries.yml",
+        "docs/api_reference/accounting.md",
+        "docs/api_reference/model/book.md",
+        "docs/api_reference/model/data.md",
+        "docs/api_reference/model/events.md",
+        "docs/api_reference/model/identifiers.md",
+        "docs/api_reference/model/instruments.md",
+        "docs/api_reference/model/objects.md",
+        "docs/api_reference/model/orders.md",
+        "docs/api_reference/model/position.md",
+        "docs/api_reference/model/reports.md",
+        "python/pyproject.toml",
+        "python/uv.lock"
+      ],
+      "affected_files": [
+        "references/api_reference/accounting.md",
+        "references/api_reference/model/book.md",
+        "references/api_reference/model/data.md",
+        "references/api_reference/model/events.md",
+        "references/api_reference/model/identifiers.md",
+        "references/api_reference/model/instruments.md",
+        "references/api_reference/model/objects.md",
+        "references/api_reference/model/orders.md",
+        "references/api_reference/model/position.md"
+      ]
+    },
+    {
+      "commit": "0a5ce77a6ddc19c4e84a9f15503f054a8404c520",
+      "subject": "Expand pre-commit hook coverage",
+      "upstream_paths": [
+        ".github/workflows/build.yml",
+        ".pre-commit-config.yaml",
+        ".pre-commit-hooks/cargo_machete.sh",
+        ".pre-commit-hooks/check_copyright_year.sh",
+        ".pre-commit-hooks/test_check_logging_conventions.sh",
+        "scripts/ci/release-verification-retry.bash",
+        "scripts/ci/test-verify-published-registries-crates.bash",
+        "scripts/ci/verify-published-registries.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "01da78bfa756fbef96dbdc34d64df14c31370e22",
+      "subject": "Simplify network client internals",
+      "upstream_paths": [
+        "Cargo.lock",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/network/Cargo.toml",
+        "crates/network/benches/test_client.rs",
+        "crates/network/proptest-regressions/ratelimiter.txt",
+        "crates/network/src/backoff.rs",
+        "crates/network/src/http/client.rs",
+        "crates/network/src/ratelimiter/clock.rs",
+        "crates/network/src/ratelimiter/gcra.rs",
+        "crates/network/src/ratelimiter/mod.rs",
+        "crates/network/src/ratelimiter/nanos.rs",
+        "crates/network/src/ratelimiter/quota.rs",
+        "crates/network/src/retry.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/tls.rs",
+        "crates/network/src/transport/sockudo.rs",
+        "crates/network/src/transport/stream.rs",
+        "crates/network/src/transport/tungstenite.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "2600cabd7712785f180c0ed040e29785d6e6f0b2",
+      "subject": "Add full Rust config parity to Python ExecTesterConfig",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/testkit/src/python/testers.rs",
+        "python/nautilus_trader/testkit/__init__.pyi"
+      ],
+      "affected_files": [
+        "skills/nt-testing/SKILL.md"
+      ]
+    },
+    {
+      "commit": "031ea4989561038a922cb30458f7d00219f2eb5e",
+      "subject": "Correct DataTester book depth note in data testing spec",
+      "upstream_paths": [
+        "RELEASES.md",
+        "docs/developer_guide/spec_data_testing.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/spec_data_testing.md",
+        "skills/nt-testing/SKILL.md"
+      ]
+    },
+    {
+      "commit": "e7eae87ef3de36eee1598bb84f5f3cfe2414fbb0",
+      "subject": "Document Lighter startup position-check race",
+      "upstream_paths": [
+        "RELEASES.md",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "4e1cb5e3dcdb63194ed7079661faef8c0ae5b9cc",
+      "subject": "Fix Derive order replacement reconciliation",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/client.rs",
+        "crates/adapters/derive/src/http/models.rs",
+        "crates/adapters/derive/src/websocket/client.rs",
+        "crates/adapters/derive/tests/exec_client.rs"
+      ],
+      "affected_files": [
+        "skills/nt-testing/SKILL.md",
+        "skills/nt-trading/SKILL.md"
+      ]
+    },
+    {
+      "commit": "31ad43a3705d43d32ce6611b706095bd1aa2f1e7",
+      "subject": "Fix README links on PyPI",
+      "upstream_paths": [
+        "README.md",
+        "RELEASES.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "a00e311c14e42a421978ae31873bae766846841a",
+      "subject": "Restore ARM Docker swap space",
+      "upstream_paths": [
+        ".github/actions/common-setup/action.yml",
+        ".github/workflows/docker.yml",
+        "scripts/ci/configure-linux-swap.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "1a5851146747fc8baeec783a591ae84fcd61250c",
+      "subject": "Restore security audit path filtering",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build.yml",
+        ".github/workflows/security-audit.yml"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "21b242323ffbcb7a65dac4a79161509f1a7aebbf",
+      "subject": "Remove Python PyCapsule bridge",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/python/websocket.rs",
+        "crates/adapters/bitmex/src/python/websocket.rs",
+        "crates/adapters/bybit/src/python/websocket.rs",
+        "crates/adapters/databento/src/python/live.rs",
+        "crates/adapters/deribit/src/python/websocket.rs",
+        "crates/adapters/dydx/src/python/websocket.rs",
+        "crates/adapters/hyperliquid/src/python/websocket.rs",
+        "crates/adapters/interactive_brokers/src/python/historical.rs",
+        "crates/adapters/kraken/src/python/websocket_futures.rs",
+        "crates/adapters/kraken/src/python/websocket_spot.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/tardis/src/csv/stream.rs",
+        "crates/adapters/tardis/src/python/machine.rs",
+        "crates/core/src/python/mod.rs",
+        "crates/model/src/python/data/bar.rs",
+        "crates/model/src/python/data/delta.rs",
+        "crates/model/src/python/data/deltas.rs",
+        "crates/model/src/python/data/depth.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/model/src/python/data/quote.rs",
+        "crates/model/src/python/data/trade.rs",
+        "crates/persistence/src/python/backend/session.rs",
+        "crates/persistence/src/python/catalog.rs",
+        "python/nautilus_trader/core/__init__.pyi",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/unit/core/test_utils.py"
+      ],
+      "affected_files": [
+        "skills/nt-dev/SKILL.md"
+      ]
+    },
+    {
+      "commit": "0f6f44c8c178d79c04630d40406753e8134f308f",
+      "subject": "Fix order book tutorial conversion",
+      "upstream_paths": [
+        "docs/tutorials/orderbook_data.py",
+        "docs/tutorials/orderbook_imbalance.py"
+      ],
+      "affected_files": [
+        "skills/nt-data/SKILL.md"
+      ]
+    },
+    {
+      "commit": "b4c22ed7885d5e33d0c47cf3b3d8c10eb5e0063e",
+      "subject": "Refine network crate documentation",
+      "upstream_paths": [
+        "crates/network/src/backoff.rs",
+        "crates/network/src/dst.rs",
+        "crates/network/src/http/client.rs",
+        "crates/network/src/http/mod.rs",
+        "crates/network/src/http/types.rs",
+        "crates/network/src/lib.rs",
+        "crates/network/src/mode.rs",
+        "crates/network/src/net.rs",
+        "crates/network/src/ratelimiter/clock.rs",
+        "crates/network/src/ratelimiter/gcra.rs",
+        "crates/network/src/ratelimiter/nanos.rs",
+        "crates/network/src/ratelimiter/quota.rs",
+        "crates/network/src/retry.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/socket/config.rs",
+        "crates/network/src/socket/mod.rs",
+        "crates/network/src/socket/types.rs",
+        "crates/network/src/tls.rs",
+        "crates/network/src/transport/message.rs",
+        "crates/network/src/transport/sockudo.rs",
+        "crates/network/src/transport/tungstenite.rs",
+        "crates/network/src/websocket/auth.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/config.rs",
+        "crates/network/src/websocket/proxy.rs",
+        "crates/network/src/websocket/subscription.rs",
+        "crates/network/src/websocket/types.rs",
+        "crates/network/tests/websocket_proxy.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "6df2e43e9fa198469e225d9dbf768a7320e20416",
+      "subject": "Remove gitlint",
+      "upstream_paths": [
+        ".github/CODEOWNERS",
+        ".gitlint",
+        ".pre-commit-config.yaml",
+        "docs/developer_guide/coding_standards.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/coding_standards.md"
+      ]
+    },
+    {
+      "commit": "5aebf3b0e6e7e26ecf745b266d1571edd394d78b",
+      "subject": "Fix RiskEngine market order price checks",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/risk/src/engine/mod.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "python/tests/acceptance/test_backtest.py",
+        "python/tests/unit/backtest/test_backtest_engine_surface.py"
+      ],
+      "affected_files": [
+        "skills/nt-trading/SKILL.md"
+      ]
+    },
+    {
+      "commit": "3f693128ac6edcb28e31a0dc614378366e72b7b5",
+      "subject": "Fix Bybit order SMP group decoding",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/bybit/src/common/parse.rs",
+        "crates/adapters/bybit/src/http/models.rs",
+        "crates/adapters/bybit/src/websocket/messages.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "988950c0576fd7ee5d4c27d69fb3db07900bb439",
+      "subject": "Fix Cache exchange rate pair construction",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs"
+      ],
+      "affected_files": [
+        "skills/nt-trading/SKILL.md"
+      ]
+    },
+    {
+      "commit": "eb89f9d63c659ff44dd04a662317e87084a7c0fa",
+      "subject": "Fix Windows CLI and ARM Docker builds",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/cli-binaries.yml",
+        ".github/workflows/docker.yml",
+        "scripts/ci/configure-linux-swap.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "909f1f3ed657590826eac1340b5456af87e415f7",
+      "subject": "Add Polymarket effective snapshot deltas",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/Cargo.toml",
+        "crates/adapters/polymarket/benches/BENCHMARKS.md",
+        "crates/adapters/polymarket/benches/effective_deltas.rs",
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/effective_deltas.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/mod.rs",
+        "crates/adapters/polymarket/src/data/requests.rs",
+        "crates/adapters/polymarket/src/python/config.rs",
+        "crates/adapters/polymarket/src/python/mod.rs",
+        "docs/integrations/polymarket.md",
+        "python/nautilus_trader/adapters/polymarket/__init__.pyi"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "cb20fbefa3052f33984444e243d707618cfd7d38",
+      "subject": "Reorder Polymarket data client configuration",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/requests.rs",
+        "crates/adapters/polymarket/src/python/config.rs",
+        "crates/adapters/polymarket/src/python/mod.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "50ce205d3dd122f826c81d4948c2dfbe66662b64",
+      "subject": "Fix DataActor custom response batching",
+      "upstream_paths": [
+        "MIGRATION_V2.md",
+        "RELEASES.md",
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/tests.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/trading/src/python/strategy.rs",
+        "docs/concepts/actors.md",
+        "docs/concepts/strategies.md",
+        "docs/integrations/deribit.md"
+      ],
+      "affected_files": [
+        "references/concepts/actors.md",
+        "references/concepts/strategies.md",
+        "skills/nt-data/SKILL.md"
+      ]
+    },
+    {
+      "commit": "41678abf6304bac15067aa072ab337f5166721de",
+      "subject": "Fix Position exact close handling",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/position.rs"
+      ],
+      "affected_files": [
+        "skills/nt-trading/SKILL.md"
+      ]
+    },
+    {
+      "commit": "965f6aed118696f0209b2382d4a8c881ac9ad0c8",
+      "subject": "Log connection lifecycle transitions at Info in network clients (#4621)",
+      "upstream_paths": [
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "4f9a9627a3d3fdbd5cd04629dc0f05d6a3175280",
+      "subject": "Add LiveNode coordinated external-order-claim lifecycle API (#4620)",
+      "upstream_paths": [
+        "crates/execution/src/engine/mod.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/python/node.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "39486407cc809ece717427d6a851d9cce6d61609",
+      "subject": "Fix Polymarket maker fill ownership and count dropped trades (#4662)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/common/models.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "0ba1292c42a0139eac5b56aeeeeb9ec19909d50e",
+      "subject": "Restore Python v2 test coverage",
+      "upstream_paths": [
+        "Makefile",
+        "python/tests/type_checking/supported.py",
+        "python/tests/unit/adapters/databento/test_databento_types.py",
+        "python/tests/unit/adapters/hyperliquid/test_hyperliquid_factories.py",
+        "python/tests/unit/adapters/interactive_brokers/test_interactive_brokers_factories.py",
+        "python/tests/unit/backtest/test_backtest_engine_custom_data.py",
+        "python/tests/unit/model/test_data.py",
+        "python/tests/unit/model/test_events.py",
+        "python/tests/unit/model/test_funding.py",
+        "python/tests/unit/model/test_instruments.py",
+        "python/tests/unit/model/test_position.py",
+        "python/tests/unit/model/test_pricing.py",
+        "python/tests/unit/persistence/test_custom_data.py",
+        "python/tests/unit/persistence/test_persistence.py",
+        "scripts/ci/test-python-types.bash",
+        "scripts/ci/test-wheel.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "14207bcb0b005882e33fcb50f02540a1203551bb",
+      "subject": "Restore CI release workflow",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build.yml",
+        ".pre-commit-config.yaml",
+        "docs/developer_guide/release_security.md",
+        "docs/developer_guide/releases.md",
+        "scripts/ci/build-sdist-release-asset.bash",
+        "scripts/ci/publish-wheels-r2-remove-old-wheels.sh",
+        "scripts/ci/release-version-policy.bash",
+        "scripts/ci/test-publish-wheels.bash",
+        "scripts/ci/validate-wheel-artifacts.bash"
+      ],
+      "affected_files": [
+        "references/developer_guide/release_security.md",
+        "references/developer_guide/releases.md"
+      ]
+    },
+    {
+      "commit": "b816a8bdcf4469dc751217b387ea8ba0fbaf95b4",
+      "subject": "Fix order list initialization metadata",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/factories/order.rs",
+        "crates/model/src/orders/any.rs",
+        "crates/trading/src/strategy/mod.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "30d22851eebbe164268bd8590fcef9d7cd86a631",
+      "subject": "Harden GitHub Action provenance",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/actions/attest-build-provenance-retry/action.yml",
+        ".github/actions/attest-sbom-retry/action.yml",
+        ".github/actions/cargo-tool-install/action.yml",
+        ".github/actions/common-setup/action.yml",
+        ".github/actions/generate-sbom-retry/action.yml",
+        ".github/actions/install-capnp/action.yml",
+        ".github/actions/upload-artifact-wheel/action.yml",
+        ".github/workflows/build-docs.yml",
+        ".github/workflows/build.yml",
+        ".github/workflows/cli-binaries.yml",
+        ".github/workflows/codeql-analysis.yml",
+        ".github/workflows/docker.yml",
+        ".github/workflows/dst.yml",
+        ".github/workflows/nightly-docs-features-check.yml",
+        ".github/workflows/security-audit.yml",
+        ".pre-commit-config.yaml",
+        "scripts/ci/check-github-action-shas.sh",
+        "scripts/ci/test-github-action-shas.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "86c5873a488bd42076c517543a05aed0a4609f1c",
+      "subject": "Restore Python CI PyArrow dependency",
+      "upstream_paths": [
+        "scripts/ci/test-wheel.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "083b7614bcfc239c2523a50ef29da5b5db51e719",
+      "subject": "Fix macOS PyO3 allocator compatibility",
+      "upstream_paths": [
+        "README.md",
+        "RELEASES.md",
+        "crates/pyo3/build.rs",
+        "crates/pyo3/src/lib.rs",
+        "docs/concepts/architecture.md",
+        "docs/concepts/rust.md",
+        "python/tests/unit/test_macos_extension.py"
+      ],
+      "affected_files": [
+        "references/concepts/architecture.md",
+        "skills/nt-dev/SKILL.md"
+      ]
+    },
+    {
+      "commit": "fed67c9a574416c987f2e08229be2c51bb7bab41",
+      "subject": "Refresh developer guide for V2",
+      "upstream_paths": [
+        "README.md",
+        "SECURITY.md",
+        "docs/developer_guide/coding_standards.md",
+        "docs/developer_guide/environment_setup.md",
+        "docs/developer_guide/index.md",
+        "docs/developer_guide/python.md",
+        "docs/developer_guide/release_security.md",
+        "docs/developer_guide/releases.md",
+        "docs/developer_guide/security.md",
+        "docs/developer_guide/spec_data_testing.md",
+        "docs/developer_guide/spec_exec_testing.md",
+        "docs/developer_guide/test_datasets.md",
+        "docs/developer_guide/testing.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/coding_standards.md",
+        "references/developer_guide/environment_setup.md",
+        "references/developer_guide/index.md",
+        "references/developer_guide/python.md",
+        "references/developer_guide/release_security.md",
+        "references/developer_guide/releases.md",
+        "references/developer_guide/spec_data_testing.md",
+        "references/developer_guide/spec_exec_testing.md",
+        "references/developer_guide/test_datasets.md",
+        "references/developer_guide/testing.md"
+      ]
+    },
+    {
+      "commit": "68ea5169c5257b91acbb248e55fb66c2d9167574",
+      "subject": "Harden network and WebSocket payload logging",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/websocket/data/handler.rs",
+        "crates/adapters/architect_ax/src/websocket/orders/handler.rs",
+        "crates/adapters/architect_ax/tests/websocket.rs",
+        "crates/adapters/hyperliquid/src/websocket/handler.rs",
+        "crates/adapters/kraken/src/websocket/spot_v2/client.rs",
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/network/src/http/client.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "9d7ae86bcb3d68ad8a881b50303b3a6f8cd241f3",
+      "subject": "Harden external message bus ingress",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/msgbus/api.rs",
+        "crates/common/src/msgbus/external/mod.rs",
+        "crates/live/src/node/mod.rs",
+        "docs/concepts/message_bus.md",
+        "docs/developer_guide/python.md",
+        "docs/how_to/configure_live_trading.md"
+      ],
+      "affected_files": [
+        "references/concepts/message_bus.md",
+        "references/developer_guide/python.md"
+      ]
+    },
+    {
+      "commit": "6e302e54ba89f88b36bafc9e0cf110f888bcd39a",
+      "subject": "Remove dead scripts",
+      "upstream_paths": [
+        ".gitignore",
+        ".pre-commit-hooks/cargo_vet.sh",
+        "scripts/ci/validate-wheel-count.sh",
+        "scripts/python-version.sh",
+        "scripts/test-examples.sh"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "86cc3d58e6eeee8e8cefff24ea58f291de77348f",
+      "subject": "Fix Polymarket WebSocket subscription replay",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/websocket/client.rs",
+        "crates/adapters/polymarket/src/websocket/handler.rs",
+        "crates/adapters/polymarket/tests/websocket.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "61ccd3d90ec0ad388108aec1aac510cf612116c5",
+      "subject": "Refine Polymarket maker fill ownership coverage",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/common/models.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "5a270dd6c3137075241bbca6f19a240efb84edea",
+      "subject": "Add shell script development policy",
+      "upstream_paths": [
+        "docs/developer_guide/coding_standards.md",
+        "docs/developer_guide/environment_setup.md",
+        "docs/developer_guide/index.md",
+        "docs/developer_guide/shell.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/coding_standards.md",
+        "references/developer_guide/environment_setup.md",
+        "references/developer_guide/index.md"
+      ]
+    },
+    {
+      "commit": "9db9a9abb315e56f5caa635b398fe2e117b69e36",
+      "subject": "Skip stale development wheel uploads",
+      "upstream_paths": [
+        "scripts/ci/publish-wheels-r2-upload-new-wheels.sh",
+        "scripts/ci/publish-wheels-r2.bash",
+        "scripts/ci/test-publish-wheels.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "2291c24f54dd0f7eb7c657cdfe3b54225b190862",
+      "subject": "Remove model FFI wrapper types",
+      "upstream_paths": [
+        "crates/adapters/architect_ax/src/data.rs",
+        "crates/adapters/architect_ax/src/python/websocket.rs",
+        "crates/adapters/betfair/examples/betfair_backtest.rs",
+        "crates/adapters/betfair/src/data.rs",
+        "crates/adapters/binance/src/futures/data.rs",
+        "crates/adapters/binance/src/spot/data.rs",
+        "crates/adapters/binance/tests/futures/data_client.rs",
+        "crates/adapters/binance/tests/spot/data_client.rs",
+        "crates/adapters/bybit/src/data.rs",
+        "crates/adapters/bybit/src/python/websocket.rs",
+        "crates/adapters/coinbase/src/data/mod.rs",
+        "crates/adapters/databento/src/live.rs",
+        "crates/adapters/deribit/src/data.rs",
+        "crates/adapters/deribit/src/python/websocket.rs",
+        "crates/adapters/derive/src/data.rs",
+        "crates/adapters/dydx/src/data.rs",
+        "crates/adapters/dydx/src/python/websocket.rs",
+        "crates/adapters/hyperliquid/src/data.rs",
+        "crates/adapters/hyperliquid/src/python/websocket.rs",
+        "crates/adapters/kraken/src/data/futures.rs",
+        "crates/adapters/kraken/src/data/spot.rs",
+        "crates/adapters/kraken/src/python/websocket_futures.rs",
+        "crates/adapters/kraken/src/python/websocket_spot.rs",
+        "crates/adapters/kraken/src/websocket/spot_v2/level_3/runtime.rs",
+        "crates/adapters/lighter/src/data/mod.rs",
+        "crates/adapters/lighter/tests/data_client.rs",
+        "crates/adapters/okx/src/data.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/tardis/src/csv/stream.rs",
+        "crates/adapters/tardis/src/machine/parse.rs",
+        "crates/adapters/tardis/src/replay.rs",
+        "crates/backtest/benches/engine.rs",
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/tests/book_imbalance.rs",
+        "crates/data/src/engine/mod.rs",
+        "crates/data/tests/engine.rs",
+        "crates/model/src/data/deltas.rs",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/ffi/data/deltas.rs",
+        "crates/model/src/ffi/instruments/synthetic.rs",
+        "crates/model/src/ffi/orderbook/book.rs",
+        "crates/model/src/ffi/orderbook/level.rs",
+        "crates/model/src/identifiers/mod.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/model/src/types/price.rs",
+        "crates/persistence/src/backend/feather.rs",
+        "crates/persistence/tests/test_feather.rs",
+        "docs/developer_guide/ffi.md",
+        "docs/tutorials/backtest_book_imbalance_betfair.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/ffi.md"
+      ]
+    },
+    {
+      "commit": "eb2e65ebc9fbff75f23caae3e68450a481d5df65",
+      "subject": "Restore Python testkit and refresh getting started guides",
+      "upstream_paths": [
+        "docs/getting_started/backtest_high_level.py",
+        "docs/getting_started/backtest_low_level.py",
+        "docs/getting_started/installation.md",
+        "python/nautilus_trader/persistence/loaders.py",
+        "python/nautilus_trader/test_kit/__init__.py",
+        "python/nautilus_trader/test_kit/providers.py",
+        "python/tests/providers.py"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "22efad1c807de31cd4d1d0aabe956ba766c37643",
+      "subject": "Clean adapter fuzz build directories",
+      "upstream_paths": [
+        "Makefile"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "941f83564d78cd4dc8daf69662d76971beb785ba",
+      "subject": "Restore pull request CI triggers",
+      "upstream_paths": [
+        ".github/workflows/build.yml"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "05b709b36edbe9a6a0d26a1bb77677dcb5051856",
+      "subject": "Fix Python testkit provider paths",
+      "upstream_paths": [
+        "docs/concepts/data/index.md",
+        "docs/concepts/instruments/index.md",
+        "docs/getting_started/backtest_high_level.py",
+        "docs/getting_started/backtest_low_level.py",
+        "docs/how_to/loading_external_data.py",
+        "docs/tutorials/assets/backtest_fx_bars/render_panels.py",
+        "docs/tutorials/backtest_fx_bars.py",
+        "examples/backtest/crypto_ema_cross_ethusdt_trade_ticks.py",
+        "examples/backtest/crypto_ema_cross_ethusdt_trailing_stop.py",
+        "examples/backtest/crypto_ema_cross_with_binance_provider.py",
+        "examples/backtest/crypto_orderbook_imbalance.py",
+        "examples/backtest/databento_cme_quoter.py",
+        "examples/backtest/databento_ema_cross_long_only_aapl_bars.py",
+        "examples/backtest/databento_ema_cross_long_only_spy_trades.py",
+        "examples/backtest/databento_ema_cross_long_only_tsla_trades.py",
+        "examples/backtest/example_01_load_bars_from_custom_csv/run_example.py",
+        "examples/backtest/fx_ema_cross_audusd_bars_from_ticks.py",
+        "examples/backtest/fx_ema_cross_audusd_ticks.py",
+        "examples/backtest/fx_ema_cross_bracket_gbpusd_bars_external.py",
+        "examples/backtest/fx_ema_cross_bracket_gbpusd_bars_internal.py",
+        "examples/backtest/fx_market_maker_gbpusd_bars.py",
+        "examples/backtest/liquidation_demo.py",
+        "examples/other/minimal_reproducible_example/run_example.py",
+        "examples/utils/data_provider.py",
+        "python/nautilus_trader/test_kit/__init__.py",
+        "python/nautilus_trader/test_kit/providers.py",
+        "python/nautilus_trader/testkit/providers.py",
+        "python/tests/providers.py",
+        "scripts/ci/test-wheel.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "1fdd03d9aa4884bef34c97b0779ac0dcfee35031",
+      "subject": "Fix docs and ARM Docker workflows",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build-docs.yml",
+        ".github/workflows/docker.yml"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "bef71368d2abdc63ed9b978d6fb4c96492e11049",
+      "subject": "Document adapter execution dispatch contract",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/adapters.md"
+      ]
+    },
+    {
+      "commit": "cc90029b28dbaf337ee6f5f8073ed2e5d9664652",
+      "subject": "Standardize adapter FIFO deduplication",
+      "upstream_paths": [
+        "crates/adapters/hyperliquid/src/websocket/dispatch.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/common/src/cache/fifo.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "7f94139d81e535d3d57a0d43586a06a707d27365",
+      "subject": "Harden Tardis Machine Docker launches",
+      "upstream_paths": [
+        "crates/adapters/tardis/bin/example_replay.rs",
+        "crates/adapters/tardis/examples/node_data_tester.rs",
+        "docs/integrations/tardis.md",
+        "examples/live/tardis/tardis_data_tester.py"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "1b836408a930af1bfa91bb24ae7be65cff50270b",
+      "subject": "Fix version reporting for pure Rust builds",
+      "upstream_paths": [
+        "crates/common/src/logging/headers.rs",
+        "crates/core/src/consts.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "5b6eb31ee380851a2f59d0e8cc907510d3ced014",
+      "subject": "Remove DataFFI tagged union and Python.h FFI includes",
+      "upstream_paths": [
+        "crates/core/cbindgen.toml",
+        "crates/model/cbindgen.toml",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/data/status.rs",
+        "crates/model/src/ffi/data/mod.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "56223727f43a4c29c013c21e621945cf5ae9f685",
+      "subject": "Rename Data variants for mark, index, and funding prices",
+      "upstream_paths": [
+        "crates/adapters/architect_ax/src/data.rs",
+        "crates/adapters/architect_ax/src/python/websocket.rs",
+        "crates/adapters/binance/src/futures/data.rs",
+        "crates/adapters/bitmex/src/websocket/parse.rs",
+        "crates/adapters/bybit/src/data.rs",
+        "crates/adapters/coinbase/src/data/poll.rs",
+        "crates/adapters/coinbase/tests/data_client.rs",
+        "crates/adapters/deribit/src/websocket/handler.rs",
+        "crates/adapters/derive/src/data.rs",
+        "crates/adapters/dydx/src/data.rs",
+        "crates/adapters/hyperliquid/src/data.rs",
+        "crates/adapters/hyperliquid/src/python/websocket.rs",
+        "crates/adapters/interactive_brokers/src/data/core_streams.rs",
+        "crates/adapters/kraken/src/data/futures.rs",
+        "crates/adapters/kraken/src/python/websocket_futures.rs",
+        "crates/adapters/lighter/src/data/market_stats.rs",
+        "crates/adapters/lighter/src/data/mod.rs",
+        "crates/adapters/lighter/tests/data_client.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/tardis/src/data.rs",
+        "crates/adapters/tardis/src/replay.rs",
+        "crates/backtest/benches/engine.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/tests/backtest_engine.rs",
+        "crates/data/src/engine/mod.rs",
+        "crates/data/tests/engine.rs",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/persistence/src/backend/catalog.rs",
+        "crates/persistence/src/backend/feather.rs",
+        "crates/persistence/src/python/feather.rs",
+        "crates/persistence/tests/test_catalog.rs",
+        "crates/persistence/tests/test_feather.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "52fd80e7c1509004c5b5cdb7d31086541a273740",
+      "subject": "Add MarketStatus Halted variant",
+      "upstream_paths": [
+        "crates/model/cbindgen.toml",
+        "crates/model/src/enums.rs",
+        "python/nautilus_trader/model/__init__.pyi"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "7200de3cc37f5668e92f467f6fb761789199388d",
+      "subject": "Remove legacy options map from OrderInitialized.to_dict",
+      "upstream_paths": [
+        "crates/model/src/python/events/order/initialized.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "9304b6c6e36d8500e8e7a4e2521d70f6ff7a5e11",
+      "subject": "Add shared live execution order context",
+      "upstream_paths": [
+        "crates/live/src/execution/context.rs",
+        "crates/live/src/execution/mod.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "9d89383585299774e1cbd16169a465431b233f50",
+      "subject": "Standardize OKX execution shared order context",
+      "upstream_paths": [
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "c3321e637b99eb499da4b8a3e61d88aca840ddcb",
+      "subject": "Refine OKX integration guide",
+      "upstream_paths": [
+        "docs/integrations/okx.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "fa8f01f95ac0e6e28dc7a7359aecc1024428c6d4",
+      "subject": "Add Polymarket instrument provider series_ids scoping (#4650)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/providers.rs",
+        "crates/adapters/polymarket/src/python/config.rs",
+        "crates/adapters/polymarket/src/python/mod.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md",
+        "python/nautilus_trader/adapters/polymarket/__init__.pyi"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "c7f0221a03a95736c27431506dece7faf3f2fc48",
+      "subject": "Refine Architect AX integration guide",
+      "upstream_paths": [
+        "docs/integrations/architect_ax.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "2f331b7c7ac6fc8b58a09a53cc6d90febf3463cf",
+      "subject": "Skip pong frames during reconnect and cap their payload (#4613)",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/network/src/error.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "780c50826e3ffb28d6d197ca5830eb6dc5e69530",
+      "subject": "Remove Cython compatibility from the Python v2 boundary",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/bybit/src/python/mod.rs",
+        "crates/adapters/hyperliquid/src/python/websocket.rs",
+        "crates/analysis/src/python/statistics/alpha.rs",
+        "crates/analysis/src/python/statistics/beta_ratio.rs",
+        "crates/analysis/src/python/statistics/cagr.rs",
+        "crates/analysis/src/python/statistics/calmar_ratio.rs",
+        "crates/analysis/src/python/statistics/down_capture_ratio.rs",
+        "crates/analysis/src/python/statistics/expectancy.rs",
+        "crates/analysis/src/python/statistics/expected_shortfall.rs",
+        "crates/analysis/src/python/statistics/information_ratio.rs",
+        "crates/analysis/src/python/statistics/long_ratio.rs",
+        "crates/analysis/src/python/statistics/loser_avg.rs",
+        "crates/analysis/src/python/statistics/loser_max.rs",
+        "crates/analysis/src/python/statistics/loser_min.rs",
+        "crates/analysis/src/python/statistics/max_drawdown.rs",
+        "crates/analysis/src/python/statistics/omega_ratio.rs",
+        "crates/analysis/src/python/statistics/profit_factor.rs",
+        "crates/analysis/src/python/statistics/returns_avg.rs",
+        "crates/analysis/src/python/statistics/returns_avg_loss.rs",
+        "crates/analysis/src/python/statistics/returns_avg_win.rs",
+        "crates/analysis/src/python/statistics/returns_kurtosis.rs",
+        "crates/analysis/src/python/statistics/returns_skewness.rs",
+        "crates/analysis/src/python/statistics/returns_volatility.rs",
+        "crates/analysis/src/python/statistics/risk_return_ratio.rs",
+        "crates/analysis/src/python/statistics/sharpe_ratio.rs",
+        "crates/analysis/src/python/statistics/sortino_ratio.rs",
+        "crates/analysis/src/python/statistics/tail_ratio.rs",
+        "crates/analysis/src/python/statistics/tracking_error.rs",
+        "crates/analysis/src/python/statistics/treynor_ratio.rs",
+        "crates/analysis/src/python/statistics/ulcer_index.rs",
+        "crates/analysis/src/python/statistics/up_capture_ratio.rs",
+        "crates/analysis/src/python/statistics/value_at_risk.rs",
+        "crates/analysis/src/python/statistics/win_rate.rs",
+        "crates/analysis/src/python/statistics/winner_avg.rs",
+        "crates/analysis/src/python/statistics/winner_max.rs",
+        "crates/analysis/src/python/statistics/winner_min.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/common/src/messages/mod.rs",
+        "crates/common/src/python/msgbus.rs",
+        "crates/data/src/python/mod.rs",
+        "crates/data/src/python/option_chain_manager.rs",
+        "crates/model/src/data/trade.rs",
+        "crates/model/src/python/data/bar.rs",
+        "crates/model/src/python/data/close.rs",
+        "crates/model/src/python/data/delta.rs",
+        "crates/model/src/python/data/funding.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/model/src/python/data/option_chain.rs",
+        "crates/model/src/python/data/prices.rs",
+        "crates/model/src/python/data/quote.rs",
+        "crates/model/src/python/data/status.rs",
+        "crates/model/src/python/data/trade.rs",
+        "docs/concepts/options.md",
+        "examples/backtest/liquidation_demo.py",
+        "examples/live/okx/okx_data_tester.py",
+        "python/nautilus_trader/adapters/bybit/__init__.pyi",
+        "python/nautilus_trader/adapters/hyperliquid/__init__.pyi",
+        "python/nautilus_trader/analysis/__init__.pyi",
+        "python/nautilus_trader/data/__init__.pyi",
+        "python/nautilus_trader/testkit/providers.py",
+        "python/tests/unit/adapters/bybit/test_bybit_parsing.py",
+        "python/tests/unit/analysis/test_analysis.py",
+        "python/tests/unit/testkit/test_providers.py"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "3a61ca72a2081bde7e6ff7eb912e96d22e0ea899",
+      "subject": "Distinguish aborted reconnects from completed reconnections (#4623)",
+      "upstream_paths": [
+        "crates/network/src/mode.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "074d54db7acb3f49f90b965f8f9f14a2d2dc4066",
+      "subject": "Use ActorId for Cache actor APIs",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/tests.rs",
+        "crates/common/src/cache/database.rs",
+        "crates/common/src/cache/index.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/python/cache.rs",
+        "crates/event_store/tests/lifecycle.rs",
+        "crates/infrastructure/src/redis/cache.rs",
+        "crates/infrastructure/src/sql/cache.rs",
+        "crates/infrastructure/tests/test_cache_postgres.rs",
+        "crates/infrastructure/tests/test_cache_redis.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/python/node.rs",
+        "crates/model/src/identifiers/actor_id.rs",
+        "crates/model/src/identifiers/component_id.rs",
+        "crates/model/src/identifiers/macros.rs",
+        "crates/system/src/builder.rs",
+        "crates/system/src/kernel.rs",
+        "crates/system/src/trader.rs",
+        "crates/testkit/src/cache.rs",
+        "python/nautilus_trader/common/__init__.pyi"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "570d4d796dee347dd5d6445c16780847b883757a",
+      "subject": "Remove Cache actor ID index and accessors",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/actor/tests.rs",
+        "crates/common/src/cache/index.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/python/cache.rs",
+        "examples/backtest/example_06_using_cache/strategy.py",
+        "python/nautilus_trader/common/__init__.pyi",
+        "python/tests/unit/common/test_cache.py"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "fb063edce9ff4db7d64d0e004cf2c9123e2b918a",
+      "subject": "Standardize Hyperliquid execution shared order context",
+      "upstream_paths": [
+        "crates/adapters/hyperliquid/benches/BENCHMARKS.md",
+        "crates/adapters/hyperliquid/benches/exec.rs",
+        "crates/adapters/hyperliquid/benches/micros.rs",
+        "crates/adapters/hyperliquid/src/execution.rs",
+        "crates/adapters/hyperliquid/src/websocket/dispatch.rs",
+        "crates/adapters/hyperliquid/tests/dispatch.rs",
+        "crates/adapters/hyperliquid/tests/exec_client.rs",
+        "docs/integrations/hyperliquid.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "a86c7ad74ef6ac629d31cf532d0c5d81b2a4ecb7",
+      "subject": "Remove Cython residuals and guard against new deferrals",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        ".pre-commit-hooks/check_no_legacy_paths.sh",
+        "RELEASES.md",
+        "crates/adapters/hyperliquid/src/http/parse.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/data/src/aggregation.rs",
+        "crates/data/src/engine/mod.rs",
+        "crates/data/tests/engine.rs",
+        "crates/execution/src/matching_engine/engine.rs",
+        "crates/execution/tests/matching_engine.rs",
+        "crates/indicators/src/momentum/obv.rs",
+        "crates/indicators/src/momentum/rsi.rs",
+        "crates/indicators/src/ratio/efficiency_ratio.rs",
+        "crates/indicators/src/ratio/spread_analyzer.rs",
+        "crates/indicators/src/volatility/fuzzy.rs",
+        "crates/indicators/src/volatility/rvi.rs",
+        "crates/model/src/enums.rs",
+        "crates/model/src/events/order/snapshot.rs",
+        "crates/model/src/python/instruments/mod.rs",
+        "crates/serialization/src/arrow/instrument/mod.rs",
+        "docs/concepts/accounting.md",
+        "docs/concepts/continuous_futures.md",
+        "docs/concepts/custom_data.md",
+        "docs/concepts/greeks.md",
+        "docs/concepts/message_bus.md",
+        "docs/concepts/strategies.md",
+        "docs/tutorials/backtest_book_imbalance_betfair.md",
+        "examples/backtest/example_10_messaging_with_actor_data/strategy.py"
+      ],
+      "affected_files": [
+        "references/concepts/message_bus.md",
+        "references/concepts/strategies.md"
+      ]
+    },
+    {
+      "commit": "a7fd9a5429f2c628ec0553bbd4fff8a73fef8498",
+      "subject": "Add Polymarket filter-scoped instrument bootstrap",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/data/instruments.rs",
+        "crates/adapters/polymarket/src/providers.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "7a77056113c35b9cf427c878f44fea803d8bacec",
+      "subject": "Keep ChandeMomentumOscillator inside its bounds (#4667)",
+      "upstream_paths": [
+        "crates/indicators/src/average/vidya.rs",
+        "crates/indicators/src/momentum/cmo.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "95aac5cf42ff1a0acd4268e6c4c374d3b2204413",
+      "subject": "Fix Polymarket buffered fill ordering on terminal status",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "c90f2c9efda491401bb0a78b279b34ac40df2810",
+      "subject": "Update dependencies, tools, and release notes",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "python/uv.lock",
+        "tools.toml"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "69537788b2a7f8d80bcaab196cdfb970833c0413",
+      "subject": "Refine Betfair integration guide",
+      "upstream_paths": [
+        "docs/integrations/betfair.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "e276fb963be531d07b44069eb83a27b98d8cf181",
+      "subject": "Fix Portfolio PnL and exposure output currency",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/portfolio/src/portfolio.rs",
+        "crates/portfolio/tests/portfolio.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "8c1dba98ecba10d7b5cdd82a0509d244ba28a4e7",
+      "subject": "Restore ARM Docker build configuration",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/docker.yml",
+        "scripts/ci/configure-linux-swap.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "031318184d9dc3b476a7c864d3a12fbf46f601d3",
+      "subject": "Cover Polymarket order response tradeIDs and batch legs",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/http/query.rs",
+        "crates/adapters/polymarket/test_data/http_batch_order_response.json",
+        "crates/adapters/polymarket/test_data/http_order_response_trade_ids_only.json"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "73fe511aab13faa967dc5674eada8fd7e088eed1",
+      "subject": "Refine supply chain config and release notes",
+      "upstream_paths": [
+        ".supply-chain/audits.toml",
+        ".supply-chain/config.toml",
+        ".supply-chain/imports.lock",
+        "RELEASES.md",
+        "osv-scanner.toml"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "0752e3e88ff123995aacfcb5c79930a3ccfd3f30",
+      "subject": "Harden wheel publication security",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build.yml",
+        ".github/workflows/security-audit.yml",
+        ".pre-commit-config.yaml",
+        "scripts/ci/check-security-audit-result.sh",
+        "scripts/ci/check-security-gate-result.bash",
+        "scripts/ci/security-audit-gate.sh",
+        "scripts/ci/test-publish-wheels.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "4129b68962397e20d7f78303f79352db0a976288",
+      "subject": "Compose the report generators in the default generate_mass_status (#4669)",
+      "upstream_paths": [
+        "crates/common/src/clients/execution.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "667e0b6e4effd226cda266350a3cd923b2d23ea8",
+      "subject": "Refine Binance integration guide",
+      "upstream_paths": [
+        "crates/adapters/binance/src/data_types.rs",
+        "docs/integrations/binance.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "f0d26363ce329a9c5751b6be5ea612766c8d8db6",
+      "subject": "Fix Portfolio snapshot PnL exchange rate source",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/portfolio/src/portfolio.rs",
+        "crates/portfolio/tests/portfolio.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "15281e786b94e2e4daaf6b731c65c9609d24adf0",
+      "subject": "Support BinaryView custom data decoding (#4670)",
+      "upstream_paths": [
+        "crates/persistence/macros/src/custom.rs",
+        "crates/persistence/src/test_data.rs",
+        "crates/persistence/tests/test_catalog.rs",
+        "crates/serialization/src/arrow/mod.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "13dd9dee0743f061a973833151f8fbe9f9af401e",
+      "subject": "Fix persistence queries reporting failures as exhaustion",
+      "upstream_paths": [
+        "Cargo.lock",
+        "RELEASES.md",
+        "crates/backtest/src/node.rs",
+        "crates/persistence/Cargo.toml",
+        "crates/persistence/benches/persistence.rs",
+        "crates/persistence/bin/to_json.rs",
+        "crates/persistence/src/backend/catalog.rs",
+        "crates/persistence/src/backend/session.rs",
+        "crates/persistence/src/python/backend/session.rs",
+        "crates/persistence/tests/test_catalog.rs",
+        "crates/persistence/tests/test_pinned_data_direct_session.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "c1500823d9b775b2f1b10a4af11f81015851f992",
+      "subject": "Fix Polymarket rejection reasons carrying raw error bodies",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/http/error.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "1c50ccaf36a6e25d1fcc4905c5fcec14f1801c8c",
+      "subject": "Document command failure evidence classes in adapter guide",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/adapters.md"
+      ]
+    },
+    {
+      "commit": "a6cc182f6673eea0552cbc7fdf83d1e03226a2a3",
+      "subject": "Standardize live execution command failure type",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/execution.rs",
+        "crates/adapters/bybit/src/execution.rs",
+        "crates/adapters/kraken/src/execution/futures.rs",
+        "crates/adapters/kraken/src/execution/mod.rs",
+        "crates/adapters/kraken/src/execution/spot.rs",
+        "crates/live/src/execution/failure.rs",
+        "crates/live/src/execution/mod.rs",
+        "docs/developer_guide/adapters.md"
+      ],
+      "affected_files": [
+        "references/developer_guide/adapters.md"
+      ]
+    },
+    {
+      "commit": "6624f9bf078b54b0a6df5590bc7aa513a3c81bbd",
+      "subject": "Improve external message bus custom data",
+      "upstream_paths": [
+        "crates/live/src/node/mod.rs",
+        "crates/model/src/python/data/mod.rs",
+        "docs/concepts/custom_data.md",
+        "docs/concepts/data/index.md",
+        "docs/concepts/message_bus.md",
+        "python/generate_stubs.py",
+        "python/tests/unit/model/test_data.py"
+      ],
+      "affected_files": [
+        "references/concepts/message_bus.md"
+      ]
+    },
+    {
+      "commit": "c148ef1e34b033c9020f313887d6137d64ad43cb",
+      "subject": "Refine Bybit integration guide",
+      "upstream_paths": [
+        "docs/integrations/bybit.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "cbf9e010c8d4ae3b65de4f2353298b83c700a269",
+      "subject": "Add warning for state persistence without cache backing",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/system/src/kernel.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "44e3ec2c6d8af7281c76722d55dfd7d646e1efd5",
+      "subject": "Replace RunnerMetricChannel with public SystemChannel",
+      "upstream_paths": [
+        "crates/common/src/runner.rs",
+        "crates/live/src/node/metrics.rs",
+        "crates/live/src/node/mod.rs"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md",
+        "skills/nt-strategy-builder-rust/SKILL.md"
+      ]
+    },
+    {
+      "commit": "dfc6a1eb8d16c967e6bc638c1b47a4112d5b30f3",
+      "subject": "Refine Coinbase integration guide",
+      "upstream_paths": [
+        "docs/integrations/coinbase.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "1069c2bc042d1f6099e2351281cedbbabf94298f",
+      "subject": "Bind pong frames to the connection that received the ping (#4683)",
+      "upstream_paths": [
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/mod.rs",
+        "crates/network/src/websocket/types.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "87359e47343ef9af5d49b127e137746ee4448aec",
+      "subject": "Fix Binance Futures algo order ID promotion",
+      "upstream_paths": [
+        "crates/adapters/binance/src/common/dispatch.rs",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/dispatch.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "54428e375ce242184c735ec8280dd5541cec46e7",
+      "subject": "Fix IB continuous futures historical bar requests (#4664)",
+      "upstream_paths": [
+        "crates/adapters/interactive_brokers/src/data/convert.rs",
+        "crates/adapters/interactive_brokers/src/data/core.rs",
+        "crates/adapters/interactive_brokers/src/historical/client.rs",
+        "crates/adapters/interactive_brokers/src/python/historical.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "18da5b2930b84444fc9d6bcb30a4c3c312ba1bb5",
+      "subject": "Refine Databento integration guide",
+      "upstream_paths": [
+        "docs/integrations/databento.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "4798320351b0d99870a9bf6d59a24e685e5076c0",
+      "subject": "Fix Polymarket WebSocket market BUY order quantities",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/execution/order_fill_tracker.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/test_data/ws_user_order_fok_buy_pusd_size.json",
+        "docs/integrations/polymarket.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "e2af06df2dc81cfe21dfd1ed5f1fad0698f29c44",
+      "subject": "Deduplicate Redis cache adapter delete and custom data paths",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/infrastructure/src/redis/cache.rs",
+        "crates/infrastructure/tests/test_cache_redis.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "1a9cf0975acec14e5f15dcc3d65994d0cf3477fe",
+      "subject": "Fix Databento MBO snapshot sequence handling (#4686)",
+      "upstream_paths": [
+        "crates/adapters/databento/src/decode/market_data.rs",
+        "crates/adapters/databento/src/decode/tests.rs"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "9ca072e2d98ae623f14ecaa5b336398f5d25de34",
+      "subject": "Refine Deribit integration guide",
+      "upstream_paths": [
+        "docs/integrations/deribit.md"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
     }
   ]
 }

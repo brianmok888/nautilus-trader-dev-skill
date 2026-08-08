@@ -9,12 +9,9 @@ from typing import Final
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.cutover_inventory import ACTIVE_PYTHON_SKILL, CUTOVER_SKILL_NAMES
+from tools.cutover_inventory import CUTOVER_SKILL_NAMES
 
 CLASSIFICATION_PREFIX: Final = "# TEMPLATE_CLASSIFICATION: "
-AI_CLASSIFICATION: Final = (
-    "AI/advisory Python; non-production; off execution-critical paths"
-)
 MIGRATION_CLASSIFICATION: Final = "migration/reference-only; not a production default"
 LEGACY_CLASSIFICATION: Final = (
     "legacy executable; migration/reference-only; not a production default"
@@ -23,12 +20,10 @@ SOURCE_SNAPSHOT_CLASSIFICATION: Final = (
     "source snapshot; migration/reference-only; not a production default"
 )
 ALLOWED_CLASSIFICATIONS: Final = {
-    AI_CLASSIFICATION,
     MIGRATION_CLASSIFICATION,
     LEGACY_CLASSIFICATION,
     SOURCE_SNAPSHOT_CLASSIFICATION,
 }
-AI_SKILL: Final = Path("skills") / ACTIVE_PYTHON_SKILL
 LEGACY_EXACT_NAMES: Final = {
     "TradingNode",
     "TradingNodeConfig",
@@ -71,19 +66,11 @@ def classification_error(path: Path, root: Path) -> str | None:
         return "classification is not in header"
 
     relative = path.relative_to(root)
-    if classification == AI_CLASSIFICATION and not relative.is_relative_to(AI_SKILL):
-        return "AI classification is only allowed under skills/nt-evomap-integration"
     if (
         classification == SOURCE_SNAPSHOT_CLASSIFICATION
         and relative.parts[0] != "references"
     ):
         return "source snapshot classification is only allowed under references"
-    if (
-        classification == AI_CLASSIFICATION
-        and "python_sidecar" not in relative.parts
-        and "templates" not in relative.parts
-    ):
-        return "AI classification requires the python_sidecar path component"
     if classification == LEGACY_CLASSIFICATION and "legacy_migration" not in relative.parts:
         return "legacy classification requires a legacy_migration path component"
     if has_legacy_executable_signal(path) and classification != LEGACY_CLASSIFICATION:
@@ -93,10 +80,9 @@ def classification_error(path: Path, root: Path) -> str | None:
         and len(relative.parts) > 2
         and relative.parts[0] == "skills"
         and relative.parts[1] in CUTOVER_SKILL_NAMES
-        and relative.parts[1] != ACTIVE_PYTHON_SKILL
         and "migration_reference" not in relative.parts
     ):
-        return "non-AI migration Python requires a migration_reference path component"
+        return "migration Python requires a migration_reference path component"
     return None
 
 

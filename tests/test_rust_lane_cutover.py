@@ -48,19 +48,6 @@ def read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("relative_path", ACTIVE_SKILLS)
-def test_active_skills_authorize_only_ai_advisory_python(relative_path: str) -> None:
-    # Given: an active skill participates in the Rust/Python lane cutover.
-    text = read(relative_path)
-
-    # When: its current authorization language is inspected.
-    present = [phrase for phrase in NON_AI_PYTHON_AUTHORIZATIONS if phrase in text]
-
-    # Then: no non-AI Python lane is active and the sole exception is explicit.
-    assert present == []
-    assert "only active Python lane is AI/advisory" in text
-
-
 def test_live_curriculum_teaches_rust_livenode() -> None:
     # Given: Stage 07 is the active live-trading curriculum.
     text = read("skills/nt-learn/curriculum/07-live-trading.md")

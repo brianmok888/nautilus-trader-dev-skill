@@ -118,21 +118,21 @@ def test_python_fences_are_rejected_outside_the_pyo3_lane(tmp_path: Path) -> Non
     assert any("Source-pinned upstream lane contains a Python fence" in error for error in errors)
 
 
-def test_non_ai_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -> None:
+def test_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -> None:
     path = tmp_path / "skills/nt-data/SKILL.md"
     _write(path, "# Data\n\n```python\nprint('outside every lane')\n```\n")
 
     assert validate_root_skill_python_fences((path,), tmp_path) == [
-        "skills/nt-data/SKILL.md:3: non-AI root skill contains a Python fence"
+        "skills/nt-data/SKILL.md:3: root skill contains a Python fence"
     ]
 
 
-def test_indented_non_ai_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -> None:
+def test_indented_root_skill_python_fences_are_rejected_globally(tmp_path: Path) -> None:
     path = tmp_path / "skills/nt-data/SKILL.md"
     _write(path, "# Data\n\n   ```python\n   print('outside every lane')\n   ```\n")
 
     assert validate_root_skill_python_fences((path,), tmp_path) == [
-        "skills/nt-data/SKILL.md:3: non-AI root skill contains a Python fence"
+        "skills/nt-data/SKILL.md:3: root skill contains a Python fence"
     ]
 
 

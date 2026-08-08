@@ -324,10 +324,6 @@ def test_archival_headers_present_on_prominent_legacy_guides() -> None:
     targets = [
         REPO_ROOT / "skills/nt-signals/references/guides/indicators_guide.md",
         REPO_ROOT / "skills/nt-data/references/guides/databento.md",
-        REPO_ROOT / "docs/superpowers/specs/2026-04-29-nautilus-dev-guide-full-sync-design.md",
-        REPO_ROOT / "docs/superpowers/specs/2026-05-03-nautilus-dev-skill-latest-sync-design.md",
-        REPO_ROOT / "docs/superpowers/plans/2026-04-29-nautilus-dev-guide-full-sync.md",
-        REPO_ROOT / "docs/superpowers/plans/2026-05-03-nautilus-dev-skill-latest-sync.md",
     ]
 
     for target in targets:

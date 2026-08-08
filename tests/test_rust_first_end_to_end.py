@@ -197,18 +197,6 @@ nautilus-trading = { path = "UPSTREAM/crates/trading" }
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_python_appendix_limits_active_python_to_ai_advisory() -> None:
-    appendix = section(read(GUIDE), "Appendix: Python Migration Reference and Active AI/Advisory Lane")
-
-    assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in appendix
-    assert "Only AI/advisory through `nt-evomap-integration` remains active Python" in appendix
-    assert "legacy `TradingNode`" in appendix
-    assert "migration/reference-only" in appendix
-    assert "off execution-critical paths" in appendix
-    assert "must not place orders" in appendix
-    assert "Python remains supported for V2 strategy research" not in appendix
-
-
 def test_readme_developer_guide_count_is_two() -> None:
     text = read(README)
     assert "### Developer Guide Skills (2)" in text
@@ -224,6 +212,6 @@ def test_owned_skill_files_do_not_repeat_top_level_compatibility_notes() -> None
 
 
 def test_python_appendix_keeps_one_local_legacy_label() -> None:
-    appendix = section(read(GUIDE), "Appendix: Python Migration Reference and Active AI/Advisory Lane")
+    appendix = section(read(GUIDE), "Appendix: Python Migration Reference")
     assert appendix.count("NT v2 compatibility note:") == 1
-    assert "legacy `TradingNode` and non-AI Python integration material are migration/reference-only" in appendix
+    assert "legacy `TradingNode` and Python integration material are migration/reference-only" in appendix

@@ -9,7 +9,7 @@
 - **This prompt hardens and improves `nautilus-trader-dev-skill`.** It does not develop NautilusTrader itself. Do not implement features in, modify, commit to, or prepare changes for the upstream `nautilus_trader` repository.
 - **Upstream NautilusTrader is read-only ground truth.** Inspect its source, documentation, examples, tests, schemas, and toolchain standards only to correct and strengthen this repository's skill sets.
 - **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components.
-- **AI/EvoMap work is out of scope.** Do not audit, modify, test, gate, or make readiness claims for `skills/nt-evomap-integration/`, its sidecars, templates, tests, evidence, or other AI-lane artifacts. That responsibility belongs to `nautilus-daedalus-dev-skill`.
+- **AI/EvoMap work is out of scope.** Do not add, audit, modify, test, gate, or make readiness claims for AI/EvoMap skills, sidecars, templates, tests, evidence, or other AI-lane artifacts. That responsibility belongs to `nautilus-daedalus-dev-skill`; such artifacts must not exist in this repository.
 - If an in-scope NT skill links to the excluded AI lane, preserve the boundary but do not follow the link into AI-lane review or changes. Record any unavoidable cross-repository dependency as `Pending` rather than expanding scope.
 
 ---
@@ -59,15 +59,16 @@ production path; new in-scope guidance remains Rust-first and PyO3-oriented.
 
 ## Deliverables (produced in order)
 
-NT v2 compatibility note: legacy-labelling deliverables below are migration
-and audit controls for Cython/v1 references, not implementation guidance.
+NT v2 compatibility note: legacy-labelling below is a migration audit control,
+not implementation guidance.
 
-1. **Phase 1 findings report** — `docs/plans/<date>-nt-v2-cutover-audit-phase1.md`
-2. **Legacy lint gate** — `tools/check_legacy_labelling.py` (fails on unlabelled Cython/v1 content)
-3. **Per-skill gate checklist** — G0-G7 cutover readiness cards for in-scope NT skills, indexed by `docs/tracking/Components.md`
-4. **Closure deltas** — one delta entry per segment in `docs/tracking/Findings.md`
+1. **Current findings update** — evidence-backed changes in `docs/tracking/Findings.md`, without session plans or historical reports.
+2. **Legacy lint gate** — `tools/check_legacy_labelling.py` remains green for retained Cython/v1 migration references.
+3. **Per-skill gate checklist** — G0-G7 readiness cards for all retained NT-development skills, indexed by `docs/tracking/Components.md`.
+4. **Skill repository corrections** — source-backed changes to current skills, references, templates, tests, and validators only.
+5. **Closure summary** — verification evidence, residual NT-development risks, and confirmation that upstream was not modified.
 
-The AI/EvoMap lane and its artifacts are excluded from all four deliverables.
+Do not create tracked session plans, handoffs, generated agent state, historical reconciliation reports, or external attestations. AI/EvoMap artifacts are outside every deliverable and must remain absent.
 
 ---
 
@@ -78,7 +79,7 @@ Treat upstream NautilusTrader source and official docs as read-only evidence;
 do not treat the upstream repository as an implementation target.
 
 Before reviewing, build an explicit in-scope inventory of NT-development skill
-artifacts and an exclusion inventory for AI/EvoMap artifacts. Do not report
+artifacts and a proof that AI/EvoMap artifacts are absent. Do not report
 findings against excluded files.
 
 Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
@@ -104,18 +105,11 @@ guidance for new work.
   fix: <one-line proposal>
 ```
 
-### Write the report to
+### Record current findings
 
-`docs/plans/<date>-nt-v2-cutover-audit-phase1.md` with YAML frontmatter:
+Record source-backed findings in `docs/tracking/Findings.md` using the format above. Do not create a dated audit plan or session artifact.
 
-```yaml
-date: YYYY-MM-DD
-status: draft
-tier: C
-write-targets: [docs/tracking/Findings.md, docs/tracking/Components.md]
-```
-
-**Do not edit skill content in this phase.** Phase 1 produces only the report.
+**Do not edit skill content in this phase.** Phase 1 produces only the current findings update.
 
 ---
 
@@ -144,7 +138,7 @@ NT v2 compatibility note: the following Cython/v1 tokens are
 migration/reference-only detector inputs; prefer current Rust/PyO3 APIs for new
 work.
 
-- Scans in-scope NT-development `skills/**/SKILL.md`, `references/**/*.md`, and `templates/**/*.md`, excluding the AI/EvoMap lane and its owned artifacts.
+- Scans in-scope NT-development `skills/**/SKILL.md`, `references/**/*.md`, and `templates/**/*.md`; AI/EvoMap artifacts must be absent from the repository.
 - Fails (exit 1) if any of these appear WITHOUT an explicit `legacy:` label or migration note within 5 lines:
   - Cython keywords: `cdef`, `cpdef`, `cimport`, `.pyx`
   - v1-only API markers: version-pinned removed symbols
@@ -157,7 +151,7 @@ work.
 
 **Invoke:** `$superpowers:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
 
-For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index. Exclude `nt-evomap-integration` and every AI-lane artifact from the checklist and summary counts.
+For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index. AI-lane artifacts must remain absent from the checklist, summary counts, and repository tree.
 
 ### Gate card contract
 
@@ -234,7 +228,7 @@ Do NOT duplicate content across trackers. One change → one write-target.
 - **Skill repository only.** Modify `/home/mok/projects/nautilus-trader-dev-skill`; never modify or prepare upstream NautilusTrader changes.
 - **Upstream is evidence, not a deliverable.** Source, docs, examples, tests, and standards from `nautilus_trader` are read-only inputs used to improve this repository's skill artifacts.
 - **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader-related components.
-- **AI/EvoMap excluded.** Do not inspect beyond boundary identification, modify, validate, gate, or claim readiness for `nt-evomap-integration` or any AI-lane artifact; route that work to `nautilus-daedalus-dev-skill`.
+- **AI/EvoMap excluded.** Do not add, inspect beyond boundary identification, modify, validate, gate, or claim readiness for AI-lane artifacts; route that work to `nautilus-daedalus-dev-skill` and keep those artifacts absent here.
 - **Rust-first default.** All new in-scope guidance routes through `skills/nt-strategy-builder-rust/`. Python `skills/nt-strategy-builder/` is reference-only.
 - **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #3.
 - **Applicable sync checkers must stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, `check_upstream_freshness.py`.

@@ -4,7 +4,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Final
 
-ACTIVE_PYTHON_SKILL: Final = "nt-evomap-integration"
 CUTOVER_SKILL_NAMES: Final = (
     "nt",
     "nt-adapters",
@@ -32,11 +31,7 @@ def cutover_skill_paths(root: Path) -> tuple[Path, ...]:
 
 def discovered_cutover_skill_names(root: Path) -> tuple[str, ...]:
     return tuple(
-        sorted(
-            path.parent.name
-            for path in (root / "skills").glob("nt*/SKILL.md")
-            if path.parent.name != ACTIVE_PYTHON_SKILL
-        )
+        sorted(path.parent.name for path in (root / "skills").glob("nt*/SKILL.md"))
     )
 
 
@@ -56,8 +51,6 @@ def validate_root_skill_python_fences(paths: Iterable[Path], root: Path) -> list
             continue
         for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             if line.lstrip() == "```python":
-                errors.append(
-                    f"{path.relative_to(root).as_posix()}:{line_number}: "
-                    "non-AI root skill contains a Python fence"
-                )
+                relative = path.relative_to(root).as_posix()
+                errors.append(f"{relative}:{line_number}: root skill contains a Python fence")
     return errors

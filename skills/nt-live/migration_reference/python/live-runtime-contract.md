@@ -1,9 +1,9 @@
 # Live runtime contract
 
-> **Migration/reference-only.** This non-AI Python material is not a
+> **Migration/reference-only.** This Python material is not a
 > production default. New production work uses the Rust guidance in the
 > root `nt-live` skill. The only active Python lane is AI/advisory work
-> routed through `nt-evomap-integration`.
+> outside this repository.
 
 
 Read `references/developer_guide/contracts/live_runtime_contract.md` before

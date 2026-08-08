@@ -1,154 +1,100 @@
 ---
 name: nt
-description: "Entry-point/router skill for generic NautilusTrader development. Use when the user asks for NautilusTrader help, says nt, asks which Nautilus skill to use, or gives a trading-system, strategy, adapter, data, backtest, live, testing, or core-contribution task without naming a more specific nt-* skill. Routes to and loads only the relevant generic NautilusTrader skills instead of answering from memory alone."
+description: "Entry-point router for NautilusTrader development only. Use for NautilusTrader architecture, implementation, adapters, data, backtests, live systems, testing, trading models, or core contributions; load the smallest relevant nt-* skill set instead of answering from memory."
 ---
 
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+# NautilusTrader Development Router
 
-# Generic NautilusTrader Entry Skill
+Entry-point/router skill for NautilusTrader development. Source of truth: pinned and reviewed upstream evidence from `https://github.com/nautechsystems/nautilus_trader` plus local canonical contracts.
 
-This repository is the generic NT skill layer. It is intentionally independent of any consuming application or project-specific companion skill repository. Do not reference, load, or route to downstream project-specific skills. A consuming project may compose this skill layer from its own router; this router never composes downstream consumers.
+NT v2 compatibility note: legacy, Cython/v1, Python `TradingNode`, and migration material in this file is reference-only and never a production default.
+
+This repository is the generic NT skill layer and covers **NautilusTrader development only**. It teaches agents to architect, implement, test, integrate, operate, and review NautilusTrader components. It is independent of downstream project-specific skills and companion repositories; this router never composes downstream consumers.
+
+Upstream NautilusTrader source, developer guides, examples, and tests are **read-only ground truth**. Inspect them to verify APIs and standards. Do not modify the upstream repository, implement upstream features, prepare upstream commits, or treat upstream evidence as this repository's output.
+
+AI work is out of scope. The stricter cutover policy here is to route all non-AI strategy work to Rust-first skills. Do not route to AI, advisory, model-training, research-orchestration, or external evolution-system skills from this router. Those concerns belong in a separate skill repository.
+
+## Default direction
+
+- Prefer Rust V2, PyO3, and `LiveNode` for new Rust-backed work; this is the repository's Rust-oriented v2.0 readiness path.
+- NT v2 compatibility note: treat legacy Cython/v1 and Python `TradingNode` material as migration/reference-only guidance, never a production default.
+- Verify version-sensitive guidance against the pinned baseline and the reviewed current-develop delta before copying an API.
+- Never compose downstream consumer skills from this generic NT router.
 
 ## NT V2 Rust readiness gates
 
-This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
+This card records current router readiness. Re-run cited evidence and use `Pending` or `Blocked` when proof is unavailable.
 
-NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Python live TradingNode are migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
+NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode references in this table are migration/reference-only; prefer Rust V2/PyO3 and LiveNode for new work.
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt.json`. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
+| G0 Upstream baseline | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
+| G1 Legacy label | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
+| G2 V2 example validation | Execute the router-owned repository harness. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed; evidence is recorded in `references/g2-evidence/nt.json`. |
+| G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
+| G4 Lane and API shape | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
+| G5 Test evidence | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
+| G6 Safety/compliance | Execute selected repository policy checks. | Pass | `nt-testing` and `nt-review` are required for production-facing, live, adapter, and cross-component work. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current evidence is recorded in `references/g2-evidence/nt.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
+## Routing
 
-Router-specific gates: route all non-AI strategy, configuration, backtest, paper, live, production, and performance work to Rust skills first (`nt-strategy-builder-rust`, `nt-adapters`, `nt-live`, `nt-trading`, `nt-dev`). Keep `nt-strategy-builder` migration/reference-only, route AI advisory work to `nt-evomap-integration`, and require the final router answer to include the gate status table before calling new NT work ready.
+`nt-strategy-builder-rust` is the default for new Rust strategy implementation and `LiveNode` wiring. Ambiguous strategy requests default to Rust.
 
-Upstream NT V2 supports Python strategies and documents them as a current extension surface; this repository applies a stricter cutover policy. New strategy, configuration, backtest, paper, live, and production guidance is Rust-oriented. The only active Python lane is AI/advisory through `nt-evomap-integration`, which remains non-authoritative and off execution-critical paths; existing Python strategy material is migration/reference-only.
+Production strategy or live-node work | `skills/nt-strategy-builder-rust/` Load only the skills required by the task.
 
-Use this as the start point for NautilusTrader work. It does not replace the
-specialized `nt-*` skills; it chooses which ones to load and how to sequence
-them.
+Ambiguous ("build a strategy", no language stated) -> `nt-strategy-builder-rust`.
+Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONLY under this repository's Rust-first policy.
+
+| User intent | Load |
+| --- | --- |
+| Design component boundaries or data flow | `nt-architect` plus relevant domain skills |
+| Implement strategies, actors, indicators, or components | `nt-implement`; add `nt-strategy-builder-rust` for production strategy work |
+| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder-rust`, `nt-testing` |
+| Build live runtime configuration or reconciliation | `nt-live`, `nt-testing`, `nt-review` |
+| Work with market data, catalogs, or subscriptions | `nt-data` |
+| Work with orders, positions, portfolio, or execution models | `nt-trading`, `nt-model` |
+| Build CeFi adapter integration | `nt-adapters`, `nt-live`, `nt-testing` |
+| Build custom DEX adapter integration | `nt-dex-adapter`, `nt-data`, `nt-testing` |
+| Build indicators, order-book signals, or signal pipelines | `nt-signals`, `nt-data` |
+| Contribute to NautilusTrader core | `nt-dev`, `nt-testing`, and the owning domain skill |
+| Learn NautilusTrader systematically | `nt-learn` |
+| Review NT code or architecture | `nt-review` plus the owning implementation/domain skill |
+| Maintain this skill repository | follow `docs/prompts/master-prompt.md`; upstream remains read-only |
+
+## Operating sequence
+
+1. Classify the request by NT subsystem and lifecycle stage.
+2. Load the smallest matching skill set from the table.
+3. Confirm version-sensitive APIs from pinned and reviewed upstream evidence.
+4. Implement in the user's target repository, never in the read-only upstream checkout unless the user explicitly changes the task to upstream contribution work outside this skill-maintenance mission.
+5. Run the selected skill's G2 harness and task-level tests.
+
+Routing to nt-strategy-builder-rust with nt-backtest and
+nt-testing because the task is backtest wiring plus validation.
+6. Finish with `nt-review` for production-facing, live, adapter, or cross-component changes.
 
 ## Rust production lane
 
-Route every new non-AI strategy, backtest, data, live, signal, and trading task to the Rust-first specialized skill. Keep execution authority, risk checks, adapter state, and runtime liveness in Rust, and require the specialized skill's Rust verification evidence before reporting readiness.
+New production strategies, components, live wiring, adapters, and execution logic route to the owning Rust-first skills above.
 
 ## PyO3 control-plane lane
 
-Use PyO3 only as a bounded control plane for constructing configuration, registering Rust components, starting or stopping nodes, and inspecting results. The router must not turn that boundary into a Python execution path; order placement, market-data handlers, risk decisions, and production state transitions remain Rust-owned.
+Use bounded public PyO3 projections only when a current upstream binding contract requires them; Python does not own execution authority.
 
 ## Migration/reference lane
 
-Legacy non-AI Python guidance is pointer-only and belongs under `migration_reference/`; load it only for an explicitly scoped migration or historical comparison. The only active Python lane is AI/advisory through `nt-evomap-integration`.
+Migration/reference-only legacy material is physically quarantined under each skill's `migration_reference/` or `legacy_migration/` directory and is not a production default.
 
 ## Source-pinned upstream lane
 
-Resolve API claims against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, then report any version-scoped drift separately.
+The authoritative pinned upstream commit is `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
-## Source of truth
+## Boundaries
 
-Prioritize current NautilusTrader sources over downstream skill repos:
-
-1. Local references in this repo that mirror or summarize official docs.
-2. Official docs: <https://nautilustrader.io/docs/latest/>
-3. Official repo: <https://github.com/nautechsystems/nautilus_trader>
-
-If local guidance conflicts with official docs or the official repo, treat the
-official source as authoritative and update/report the local drift.
-
-## Routing protocol
-
-1. Classify the user's goal.
-2. Pick one **primary** skill and zero to three **supporting** skills from the
-   table below.
-3. Read the primary skill's `SKILL.md`. Read supporting `SKILL.md` files only
-   when their scope affects the task.
-4. Follow the loaded specialized skill instructions; do not duplicate all
-   Nautilus guidance in this entry skill.
-5. For implementation or review work, verify with the repo's relevant tests and
-   `tools/check_dev_guide_sync.py` when docs/skill guidance changed.
-
-## Skill router
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-**Strategy routing is language-gated (no cross-contamination):**
-- Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONLY. Explain this repository's stricter Rust cutover policy; use `nt-strategy-builder` only as explicitly labelled migration/reference material.
-- Rust strategy ("build a strategy in Rust", HFT/perf/ships with a Rust adapter) -> `nt-strategy-builder-rust` ONLY.
-- Ambiguous ("build a strategy", no language stated) -> `nt-strategy-builder-rust` ONLY. Rust is this repository's default; do not load `nt-strategy-builder` for new implementation work.
-- AI/advisory request -> `nt-evomap-integration` ONLY. The AI lane stays Python but cannot own execution or block trading handlers.
-
-
-NT v2 compatibility note: Python live/integration-specific TradingNode in the routing table is migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
-
-| User goal | Primary skill | Supporting skills |
-|---|---|---|
-| Unsure where to start / general NautilusTrader task | `nt` then route | Load only after classifying |
-| Learn NautilusTrader from scratch | `nt-learn` | `nt-dev`, `nt-testing` |
-| Design a trading system from research or requirements | `nt-architect` | `nt-model`, `nt-data`, `nt-trading` |
-| Implement Strategy, Actor, Indicator, or component code | `nt-implement` | `nt-trading`, `nt-signals`, `nt-model` |
-| Strategy logic, order lifecycle, positions, portfolio, risk | `nt-trading` | `nt-model`, `nt-testing` |
-| Indicators, signals, order-book analytics, custom data signals | `nt-signals` | `nt-data`, `nt-model` |
-| Market data, catalogs, persistence, serialization | `nt-data` | `nt-model`, `nt-testing` |
-| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder-rust`, `nt-testing` |
-| Wire an idea into backtest, paper, or live execution, including explicit Python requests | `nt-strategy-builder-rust` | `nt-backtest`, `nt-live`, `nt-adapters` |
-| Build a performance-critical / production strategy in Rust | `nt-strategy-builder-rust` | `nt-trading`, `nt-testing`, `nt-live` |
-| Live trading runtime, `LiveNode`/`TradingNode`, reconciliation | `nt-live` | `nt-adapters`, `nt-review` |
-| Exchange/data-provider adapter work | `nt-adapters` | `nt-dev`, `nt-testing`, `nt-live` |
-| Custom on-chain/DEX adapter | `nt-dex-adapter` | `nt-adapters`, `nt-implement`, `nt-testing` |
-| Domain objects: instruments, identifiers, prices, quantities | `nt-model` | `nt-trading`, `nt-data` |
-| Contributing to NautilusTrader core or aligning with dev guide | `nt-dev` | `nt-testing`, `nt-review` |
-| Test strategy, adapter, data client, or core contribution | `nt-testing` | Domain skill for code under test |
-| Review NautilusTrader code before merge/live use | `nt-review` | `nt-testing`, relevant domain skill |
-| EvoMap advisory sidecar integration | `nt-evomap-integration` | `nt-architect`, `nt-review` |
-
-## Rust-oriented v2.0 readiness
-
-Default new work is Rust-first/PyO3/`LiveNode` oriented. Treat non-AI Python strategy/configuration material as migration/reference-only. The AI/advisory lane remains the sole active Python surface, asynchronous, and off execution-critical paths.
-
-## Default workflows
-
-### New trading system
-
-Load in order:
-
-1. `nt-architect` for component and data-flow design.
-2. `nt-implement` for Strategy/Actor/Indicator templates.
-3. Select the builder without cross-contamination:
-   - Explicit Python, ambiguous, production, performance, backtest, paper, live, or explicit Rust strategy -> `nt-strategy-builder-rust`.
-   - AI/advisory lane -> `nt-evomap-integration`; Python remains isolated from execution authority.
-4. `nt-review` + `nt-testing` before live deployment or merge.
-
-### Existing code review or bug investigation
-
-Load in order:
-
-1. Domain skill for the code area (`nt-trading`, `nt-data`, `nt-adapters`, etc.).
-2. `nt-testing` for evidence requirements.
-3. `nt-review` for pre-merge/live-readiness checks.
-
-### Adapter development
-
-Load in order:
-
-1. `nt-adapters` for the official adapter contract and implementation phases.
-2. `nt-dev` for Rust/Python/FFI/dev-guide rules.
-3. `nt-testing` for DataTester/ExecTester/spec evidence.
-4. `nt-live` if the adapter must run under a live runtime.
-
-## Output expectations
-
-When this entry skill routes a task, state the selected primary/supporting
-skills briefly, then proceed with those skills. Example:
-
-```text
-Using nt as entry point. Routing to nt-strategy-builder-rust with nt-backtest and
-nt-testing because the task is backtest wiring plus validation.
-```
+- Do not invent upstream APIs or cite paths that were not inspected.
+- Do not treat migration/reference-only examples as production defaults.
+- Enforce no cross-contamination: do not expand a NautilusTrader task into AI or non-NT work.
+- Do not develop NautilusTrader itself while executing this repository's master prompt; improve the skill artifacts instead.

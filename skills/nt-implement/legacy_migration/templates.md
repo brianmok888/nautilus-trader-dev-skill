@@ -1,9 +1,9 @@
 # Templates
 
-> **Migration/reference-only.** This non-AI Python material is not a
+> **Migration/reference-only.** This Python material is not a
 > production default. New production work uses the Rust guidance in the
 > root `nt-implement` skill. The only active Python lane is AI/advisory work
-> routed through `nt-evomap-integration`.
+> outside this repository.
 
 
 > **New in v1.227.0 (2026-05-18)** — Current baseline changes for new code:
@@ -97,7 +97,7 @@ During market exit, non-reduce-only orders are auto-denied; order lists with any
 
 Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
 Treat unclassified Python templates as invalid. Upstream NT V2 supports Python and
-Rust strategies, but this repository classifies non-AI Python executable templates as
+Rust strategies, but this repository classifies Python executable templates as
 migration/reference-only. AI/advisory Python and bounded Rust/PyO3 control-plane wrappers
 stay explicit. Rust owns new strategy/config/backtest/live work plus adapter networking,
 parsing, normalization, risk/execution state, and other execution-critical infrastructure.
@@ -106,7 +106,6 @@ parsing, normalization, risk/execution state, and other execution-critical infra
 |------|------------------|---------------------|
 | Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
 | Existing Python strategy migration | `legacy_migration/strategy.py` | migration/reference-only; new work uses Rust |
-| Model inference, advisory signals | `skills/nt-evomap-integration/templates/advisory_actor.py` | Sole active Python lane; non-production; off execution-critical paths |
 | Stateless calculations | Rust indicator path | Python `legacy_migration/indicator.py` is migration/reference-only unless solely used by the AI advisory lane |
 | Structured data between components | Rust model/data path | Python `legacy_migration/custom_data.py` is migration/reference-only unless solely used by the AI advisory lane |
 | Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `legacy_migration/exec_algorithm.py` is reference-only |
@@ -117,7 +116,6 @@ parsing, normalization, risk/execution state, and other execution-critical infra
 
 Migration templates are physically quarantined in `templates/legacy_migration/`:
 - `legacy_migration/strategy.py` - migration/reference-only Python strategy example; use `nt-strategy-builder-rust` for new work
-- AI/advisory actor template - `skills/nt-evomap-integration/templates/advisory_actor.py`
 - `legacy_migration/indicator.py` - research/config custom indicator
 - `legacy_migration/custom_data.py` - research/config custom data types for message bus
 - `legacy_migration/exec_algorithm.py` - migration/reference-only; route execution-critical algorithms to Rust

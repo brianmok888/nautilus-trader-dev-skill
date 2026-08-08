@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 import shutil
 import subprocess
@@ -264,49 +263,6 @@ HARNESSES: dict[str, Harness] = {
         ),
         evidence_file=Path("references/g2-evidence/nt-dex-adapter.json"),
     ),
-    "nt-evomap-integration": Harness(
-        skill="nt-evomap-integration",
-        scope="repository:python-ai-advisory-contract",
-        summary="Validate the intentionally Python advisory lane and its safety invariants",
-        allowed_tokens=(
-            "run_pinned_v2_pytest.py",
-            "test_ai_advisory_boundary.py",
-            "ai_advisory",
-            "brainstorming_evomap/tests",
-        ),
-        steps=(
-            repository_step(
-                PYTHON,
-                "tools/run_pinned_v2_pytest.py",
-                "tests/test_ai_advisory_boundary.py",
-            ),
-            repository_step(
-                PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "tests/test_skill_g2_harnesses.py",
-                "-k",
-                "ai_advisory",
-            ),
-            repository_step(
-                PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "skills/nt-evomap-integration/python_sidecar/"
-                "brainstorming_evomap/tests",
-            ),
-        ),
-        owned_paths=(
-            Path("skills/nt-evomap-integration/SKILL.md"),
-            Path("skills/nt-evomap-integration"),
-            Path("tests/test_ai_advisory_boundary.py"),
-            Path("tests/test_skill_g2_harnesses.py"),
-            Path("tools/run_pinned_v2_pytest.py"),
-        ),
-        evidence_file=Path("references/g2-evidence/nt-evomap-integration.json"),
-    ),
     "nt-implement": Harness(
         skill="nt-implement",
         scope="repository:fixed-point-schema-plus-upstream-owners",
@@ -344,6 +300,7 @@ HARNESSES: dict[str, Harness] = {
             Path("skills/nt-implement/SKILL.md"),
             Path("skills/nt-implement/templates"),
             Path("tests/test_capnp_schema_precision.py"),
+            Path("tests/test_skill_g2_harnesses.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-implement.json"),
     ),
@@ -848,104 +805,6 @@ def validate_readiness_cards(
     return errors
 
 
-def validate_ai_advisory_contract(root: Path) -> list[str]:
-    skill_root = root / "skills/nt-evomap-integration"
-    path = skill_root / "SKILL.md"
-    text = path.read_text(encoding="utf-8")
-    errors: list[str] = []
-    forbidden_text = (
-        "self.submit_order(",
-        ".submit_order(",
-        "ExecutionClient",
-        "ExecClient",
-        "execution_client",
-    )
-    forbidden_handlers = {
-        "on_bar",
-        "on_book",
-        "on_book_deltas",
-        "on_data",
-        "on_historical_bars",
-        "on_historical_data",
-        "on_quote",
-        "on_signal",
-        "on_trade",
-    }
-    forbidden_calls = {
-        "cancel_order",
-        "close_position",
-        "modify_order",
-        "open",
-        "publish_data",
-        "publish_signal",
-        "queue_for_executor",
-        "request_bars",
-        "run_in_executor",
-        "shutdown_system",
-        "submit_order",
-        "subscribe_bars",
-    }
-    publication_calls = {"publish", "publish_data", "publish_signal", "send"}
-    network_calls = {"urlopen"}
-    textual_suffixes = {".md", ".py", ".pyi", ".rs", ".toml", ".json", ".yaml", ".yml"}
-    for owned_path in sorted(skill_root.rglob("*")):
-        if not owned_path.is_file() or owned_path.suffix.lower() not in textual_suffixes:
-            continue
-        owned_text = owned_path.read_text(encoding="utf-8")
-        relative = owned_path.relative_to(skill_root).as_posix()
-        for token in forbidden_text:
-            if token in owned_text:
-                errors.append(
-                    "AI advisory contract exposes forbidden execution authority "
-                    f"in {relative}: {token}"
-                )
-        if owned_path.suffix not in {".py", ".pyi"}:
-            continue
-        try:
-            tree = ast.parse(owned_text, filename=relative)
-        except SyntaxError as exc:
-            errors.append(f"AI advisory Python surface does not parse in {relative}: {exc.msg}")
-            continue
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in forbidden_handlers:
-                errors.append(
-                    f"AI advisory contract exposes market handler in {relative}: {node.name}"
-                )
-            if isinstance(node, ast.Call):
-                name = (
-                    node.func.attr
-                    if isinstance(node.func, ast.Attribute)
-                    else node.func.id
-                    if isinstance(node.func, ast.Name)
-                    else ""
-                )
-                if name in forbidden_calls:
-                    errors.append(
-                        f"AI advisory contract exposes forbidden capability in {relative}: {name}"
-                    )
-                if name in publication_calls:
-                    errors.append(
-                        f"AI advisory contract exposes publication capability in {relative}: {name}"
-                    )
-                if name in network_calls and "python_sidecar" not in owned_path.parts:
-                    errors.append(
-                        "AI advisory contract exposes network capability outside "
-                        f"python_sidecar in {relative}: {name}"
-                    )
-    required = (
-        "Nautilus remains the only execution authority",
-        "No external network I/O",
-        "timeout",
-        "fallback",
-        "approval gate",
-        "Every accepted or rejected suggestion must be traceable",
-    )
-    for token in required:
-        if token not in text:
-            errors.append(f"AI advisory contract lacks required invariant: {token}")
-    return errors
-
-
 def write_evidence(
     harness: Harness, *, root: Path, upstream_root: Path, results: list[dict[str, object]]
 ) -> None:
@@ -994,7 +853,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     errors = validate_harnesses(HARNESSES)
-    errors.extend(validate_ai_advisory_contract(repo_root()))
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1

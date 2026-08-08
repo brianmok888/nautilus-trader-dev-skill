@@ -2,7 +2,7 @@
 
 This guide gives the default NautilusTrader Development Skills workflow for a new production-oriented system. The primary path is Rust-first: create a Cargo project, build a native Rust strategy, attach it to a Rust `LiveNode`, and run it on Tokio. It follows the upstream `docs/how_to/run_rust_live_trading.md` pattern: `LiveNode::builder(...)`, adapter client factories, `node.add_strategy(...)`, then `node.run().await`.
 
-All new strategy, research, prototyping, integration, and live work follows the Rust-first path in this guide. Only AI/advisory through `nt-evomap-integration` remains active Python, isolated from execution-critical paths; the appendix labels all other Python material migration/reference-only.
+All new strategy, integration, and live work follows the Rust-first path in this guide. Python NT material is migration/reference-only unless an upstream contract explicitly requires Python bindings. AI and advisory work are outside this repository.
 
 **Prerequisites**:
 - Rust 1.97.1 toolchain and Cargo installed for the pinned `6e59fd7` develop baseline.
@@ -196,17 +196,16 @@ If your venue requires a custom adapter, keep the same Rust-first live shape and
 
 ---
 
-## Appendix: Python Migration Reference and Active AI/Advisory Lane
+## Appendix: Python Migration Reference
 
-NT v2 compatibility note: legacy `TradingNode` and non-AI Python integration material are migration/reference-only. Use Rust `LiveNode` for all new integration and live work; only EvoMap AI/advisory remains active Python.
+NT v2 compatibility note: legacy `TradingNode` and Python integration material are migration/reference-only. Use Rust `LiveNode` for all new integration and live work.
 
 Existing non-AI Python strategy, notebook, exploratory analysis, and prototyping material is migration/reference-only under this repository's stricter cutover policy. New strategy research and rapid prototyping route to `nt-strategy-builder-rust`; use existing Python material only to understand or migrate prior systems.
 
 The Python boundaries are:
 
 - Existing Python strategy research, data analysis, visualization, and tearsheet workflows are migration/reference-only.
-- Only AI/advisory through `nt-evomap-integration` remains active Python; it stays asynchronous, approval-gate protected, and off execution-critical paths.
 
-Migration/reference Python and active AI/advisory code must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Implement new reviewed and tested strategy logic directly in the Rust path.
+Migration/reference Python must not place orders, own risk checks, block adapter liveness, or become authoritative for production order state. Implement new reviewed and tested strategy logic directly in the Rust path.
 
 For new Rust-backed live work, use `LiveNode` and the primary Rust path above.

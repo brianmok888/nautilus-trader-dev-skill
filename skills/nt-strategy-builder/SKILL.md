@@ -27,9 +27,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and any Pending or Blocked readiness gates. | Pass | `docs/superpowers/reports/2026-07-30-nt-v2-rust-cutover-reconciliation.md` records the post-fix findings, validation commands, gate results, and residual risk. |
+| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-strategy-builder.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI/advisory lane remains Python and off execution-critical paths; it stays asynchronous, approval gate protected, and non-authoritative for Rust production paths. Rust production paths must not depend on it for order placement, risk checks, adapter state, or live-node liveness.
+AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
 Migration gate: upstream NT V2 still supports Python strategies, but this repository applies a stricter Rust cutover policy. This skill and its executable templates are migration/reference-only; route all new strategy, research/config, backtest, paper, live, production, and performance implementation to `nt-strategy-builder-rust`. The AI/advisory lane stays Python through `nt-evomap-integration`, remains non-authoritative, and stays off execution-critical paths.
 
@@ -47,7 +47,7 @@ The Python API may select a registered Rust strategy, provide serializable param
 
 ## Migration/reference lane
 
-Historical non-AI Python prose and examples are pointer-only from this root. Read `migration_reference/python/venue-and-simulation-examples.md` and `templates/legacy_migration/` only when translating an existing Python system. New non-AI implementation still routes to `nt-strategy-builder-rust`; active Python is limited to `nt-evomap-integration` AI/advisory work.
+Historical Python prose and examples are pointer-only from this root. Read `migration_reference/python/venue-and-simulation-examples.md` and `templates/legacy_migration/` only when translating an existing Python system. New non-AI implementation still routes to `nt-strategy-builder-rust`; active Python is limited to `nt-evomap-integration` AI/advisory work.
 
 ## Source-pinned upstream lane
 

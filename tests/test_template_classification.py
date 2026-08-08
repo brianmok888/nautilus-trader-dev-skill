@@ -9,7 +9,6 @@ from tools.template_classification import classification_error, shipped_python_f
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLASSIFICATION_PREFIX = "# TEMPLATE_CLASSIFICATION: "
-AI_CLASSIFICATION = "AI/advisory Python; non-production; off execution-critical paths"
 MIGRATION_CLASSIFICATION = "migration/reference-only; not a production default"
 LEGACY_CLASSIFICATION = (
     "legacy executable; migration/reference-only; not a production default"
@@ -18,13 +17,11 @@ SOURCE_SNAPSHOT_CLASSIFICATION = (
     "source snapshot; migration/reference-only; not a production default"
 )
 ALLOWED_CLASSIFICATIONS = {
-    AI_CLASSIFICATION,
     MIGRATION_CLASSIFICATION,
     LEGACY_CLASSIFICATION,
     SOURCE_SNAPSHOT_CLASSIFICATION,
 }
 PYTHON_SUFFIXES = {".py", ".pyi", ".pyx", ".pxd", ".pxi"}
-AI_SKILL = Path("skills/nt-evomap-integration")
 
 
 def test_every_shipped_python_guidance_file_has_one_exact_classification() -> None:
@@ -79,31 +76,6 @@ def test_classification_must_be_first_line_or_follow_shebang(tmp_path: Path) -> 
 
     assert classification_error(late, tmp_path) == "classification is not in header"
     assert classification_error(shebang, tmp_path) is None
-
-
-def test_ai_classification_is_rejected_outside_evomap_skill(tmp_path: Path) -> None:
-    path = tmp_path / "skills/nt-example/example.py"
-    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
-
-    assert classification_error(path, tmp_path) == (
-        "AI classification is only allowed under skills/nt-evomap-integration"
-    )
-
-
-def test_ai_classification_requires_python_sidecar_namespace(tmp_path: Path) -> None:
-    path = tmp_path / "skills/nt-evomap-integration/proxy_client.py"
-    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
-
-    assert classification_error(path, tmp_path) == (
-        "AI classification requires the python_sidecar path component"
-    )
-
-
-def test_shipped_python_discovery_includes_executable_docs_prototypes(tmp_path: Path) -> None:
-    path = tmp_path / "docs/prototypes/sidecar/client.py"
-    _write(path, f"{CLASSIFICATION_PREFIX}{AI_CLASSIFICATION}\n")
-
-    assert path in shipped_python_files(tmp_path)
 
 
 def test_shipped_python_discovery_includes_reference_python(tmp_path: Path) -> None:
@@ -278,12 +250,12 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def test_non_ai_migration_python_is_physically_quarantined(tmp_path: Path) -> None:
+def test_migration_python_is_physically_quarantined(tmp_path: Path) -> None:
     path = tmp_path / "skills/nt-trading/templates/strategy.py"
     _write(path, f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n")
 
     assert classification_error(path, tmp_path) == (
-        "non-AI migration Python requires a migration_reference path component"
+        "migration Python requires a migration_reference path component"
     )
 
 
@@ -292,5 +264,5 @@ def test_dex_migration_python_is_physically_quarantined(tmp_path: Path) -> None:
     _write(path, f"{CLASSIFICATION_PREFIX}{MIGRATION_CLASSIFICATION}\n")
 
     assert classification_error(path, tmp_path) == (
-        "non-AI migration Python requires a migration_reference path component"
+        "migration Python requires a migration_reference path component"
     )

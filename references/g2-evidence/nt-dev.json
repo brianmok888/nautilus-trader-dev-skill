@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "4fc166289f2f5133ded7699d3491c140277a007e633d48c688f3cb9004b9e8ae",
+  "owned_content_sha256": "b87b778ea361772480b21b4f1e2329afd594ca68bf5b7f908f47c6337ff4ab6b",
   "schema_version": 2,
   "scope": "upstream:rust-format-core-ffi-pyo3",
   "skill": "nt-dev",
@@ -14,7 +14,7 @@
         "--check"
       ],
       "cwd": "upstream",
-      "duration_seconds": 19.452437,
+      "duration_seconds": 20.811659,
       "returncode": 0
     },
     {
@@ -32,11 +32,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.371673,
+      "duration_seconds": 1.336059,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:44:19.715018+00:00"
+  "verified_at": "2026-08-08T19:47:56.232181+00:00"
 }
