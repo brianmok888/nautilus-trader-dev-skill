@@ -72,17 +72,9 @@ Actors monitor trading activity through current message-bus order-event handlers
 - Record runtime rules: `get_runtime().spawn()`, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>`
 - Map phases to concrete test artifacts per milestone
 
-## EVOMAP BOUNDARY (optional)
-
-Model EvoMap as **external advisory sidecar**, never execution authority:
-- Advisory-only contract (suggestions, never auto-applied)
-- Non-blocking architecture (off hot trading path)
-- Deterministic fallback when unavailable
-- Provenance: link internal decisions to external suggestion snapshots
-
 ## OUTPUT FORMAT
 
-Design doc must include: Research Summary → Component Breakdown → Data Flow Diagram → Implementation Sequence → Warmup Requirements → (Optional) EvoMap Integration Plan
+Design doc must include: Research Summary → Component Breakdown → Data Flow Diagram → Implementation Sequence → Warmup Requirements
 
 ## REFERENCES (symlinked)
 

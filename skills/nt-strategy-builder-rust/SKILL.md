@@ -17,14 +17,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder-rust` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G4 Lane and API shape | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
 | G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
-Rust strategy gates: research, configuration, production, and performance strategies must own `StrategyCore`, `StrategyConfig`, `DataActor` handlers, `nautilus_strategy!` registration, order submission shape, and FFI exposure if needed. Before `Pass`, run `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and targeted strategy/backtest tests. The only active Python lane is AI/advisory through `nt-evomap-integration`; document that boundary separately when used.
+Rust strategy gates: research, configuration, production, and performance strategies must own `StrategyCore`, `StrategyConfig`, `DataActor` handlers, `nautilus_strategy!` registration, order submission shape, and FFI exposure if needed. Before `Pass`, run `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and targeted strategy/backtest tests. Non-NautilusTrader development lanes are outside this repository.
 
 ## Rust production lane
 
@@ -36,7 +36,7 @@ Use PyO3 only to expose typed strategy configuration, instantiate and register t
 
 ## Migration/reference lane
 
-Existing Python strategy material belongs under `migration_reference/` and is used only to map behavior during an explicit Rust migration. The only active Python lane is asynchronous, approval-gated AI/advisory work in `nt-evomap-integration`.
+Existing Python strategy material belongs under `migration_reference/` and is used only to map behavior during an explicit Rust migration.
 
 ## Source-pinned upstream lane
 
@@ -51,10 +51,9 @@ performance-critical (HFT, heavy per-tick computation, tight loops) or when you
 are shipping a production strategy as part of a Rust adapter/workspace.
 
 For explicit Python strategy requests, explain this repository's stricter cutover
-policy and use this skill. The AI/advisory lane routes to
-`nt-evomap-integration`; `nt-strategy-builder` is migration/reference-only.
+policy and use this skill; `nt-strategy-builder` is migration/reference-only.
 Upstream NT V2 supports both languages, but repository guidance intentionally
-standardizes new non-AI work on Rust.
+standardizes new work on Rust.
 
 **Rust crate**: `nautilus-trading` → `crates/trading/src/strategy/`
 **Trait**: `pub trait Strategy: DataActor`
@@ -229,12 +228,10 @@ NT v2 compatibility note: this whole file is Rust-native; the legacy Python-live
 | Heavy per-tick math (order-book features, multi-TF) | **Rust** | Indicators/actors also Rust by default |
 | Strategy shipped inside a Rust adapter crate | **Rust** | Co-locate with adapter networking/parsing |
 | Research/experimentation, config-heavy, rapid iteration | **Rust** (`nt-strategy-builder-rust`) | One production-oriented implementation path under the cutover policy |
-| AI/advisory lane (model inference, signal aggregation) | **Python**, async, off hot path | Never execution-critical |
-| Needs a Python-only library not available in Rust | **Rust with a bounded PyO3 boundary** | Keep Python outside trading authority; route AI advisory integration separately |
+| Needs a Python-only library not available in Rust | **Rust with a bounded PyO3 boundary** | Keep Python outside trading authority |
 
 Rule of thumb: stay in Rust. Use `nt-strategy-builder` only when migrating an
-existing Python strategy. Use `nt-evomap-integration` for the non-authoritative
-AI/advisory lane.
+existing Python strategy.
 
 ## Key Conventions
 

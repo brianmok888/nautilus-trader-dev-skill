@@ -24,7 +24,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
-Learning gates: the active curriculum uses Rust for research, configuration, backtests, strategies, adapters, and live runtime work. The only active Python lane is AI/advisory through `nt-evomap-integration`; older Python labs are migration/reference-only. Learners mark `Pending` until they can run the matching Rust build/test/check commands and explain each gate.
+Learning gates: the active curriculum uses Rust for research, configuration, backtests, strategies, adapters, and live runtime work. Older Python labs are migration/reference-only; non-NautilusTrader development lanes are outside this repository. Learners mark `Pending` until they can run the matching Rust build/test/check commands and explain each gate.
 
 This is the Rust-first curriculum. Its legacy/Python labelling points only to
 physically quarantined migration material, not an active implementation lane.

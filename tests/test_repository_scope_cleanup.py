@@ -23,6 +23,7 @@ CURRENT_SCOPE_FILES = (
     "AGENTS.md",
     "skills/AGENTS.md",
     "skills/nt/SKILL.md",
+    "skills/nt-strategy-builder/SKILL.md",
     "docs/end_to_end_guide.md",
     "docs/tracking/Handguard.md",
     "docs/tracking/Structure.md",

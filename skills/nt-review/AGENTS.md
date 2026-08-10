@@ -64,15 +64,6 @@ Fail review if missing:
 G2 `cargo check` is compilation only. Never treat it as spec, testnet, resilience, fuzz, or
 operations acceptance evidence; require separate Phase 8-10 evidence for those claims.
 
-## EVOMAP REVIEW GATE (Optional)
-
-Fail review if present:
-- Execution coupling (EvoMap blocks/alters order execution in hot handlers)
-- Auto-apply behavior (suggestions merged without explicit approval)
-- No degraded-mode plan (missing fallback when EvoMap is down)
-- No provenance (missing traceability for payloads and decisions)
-- Unsafe payload scope (credentials or account-sensitive fields exported)
-
 ## QUICK CHECK (<5 min)
 
 - [ ] All lifecycle methods call `super()`
@@ -85,7 +76,7 @@ Fail review if present:
 
 ## FULL REVIEW (15-30 min)
 
-Quick check + Conventions + Trading Correctness + Performance + Testability + (if adapter) Adapter Gate + (if EvoMap) EvoMap Gate + (if Rust) Rust/FFI Checklist.
+Quick check + Conventions + Trading Correctness + Performance + Testability + (if adapter) Adapter Gate + (if Rust) Rust/FFI Checklist.
 
 ## COMMON ISSUES BY COMPONENT
 

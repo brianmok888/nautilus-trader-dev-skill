@@ -8,8 +8,8 @@ NT v2 compatibility note: the legacy Python `TradingNode` templates named below
 are migration/reference-only; use Rust `LiveNode` for new production work.
 
 Python strategy and live-node migration references for NautilusTrader. All new
-non-AI work, including explicit Python requests, routes to `nt-strategy-builder-rust`.
-AI/advisory work routes to `nt-evomap-integration`.
+implementation, including explicit Python requests, routes to
+`nt-strategy-builder-rust`; non-NautilusTrader development is outside this repository.
 
 ## OVERVIEW
 
@@ -35,8 +35,6 @@ Existing Python system being migrated?
 └─ NO  → nt-strategy-builder-rust
          ├─ Backtest → Rust backtest engine example
          └─ Live     → Rust LiveNode example
-
-AI/advisory request → nt-evomap-integration (Python, non-authoritative)
 ```
 
 ## VENUE INPUTS
