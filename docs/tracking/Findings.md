@@ -8,11 +8,11 @@ Review date: 2026-08-10
 
 ## Open findings
 
-[P2] Follow-up TODO: pinned Python V2 environment is absent for the migration-only strategy harness
-  file: skills/nt-strategy-builder/SKILL.md:25
-  fix: Install the exact `uv` version required by pinned upstream `python/pyproject.toml`, run `make sync-v2` in the pinned checkout, rerun `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder`, and replace Blocked only with fresh passing evidence.
+None.
 
 ## Closed in current working tree
+
+2026-08-10 — P2 — MODIFIED: built the exact pinned Python V2 environment and closed the final strategy-builder G2 blocker with fresh passing evidence — files: skills/nt-strategy-builder/SKILL.md, references/g2-evidence/nt-strategy-builder.json, tests/test_skill_g2_harnesses.py, docs/tracking/Components.md, docs/tracking/Findings.md
 
 ### Current-develop review through 2026-08-10
 

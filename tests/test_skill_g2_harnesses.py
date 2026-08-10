@@ -448,6 +448,17 @@ def test_readiness_cards_reference_the_targeted_harness_command() -> None:
     assert errors == []
 
 
+def test_current_strategy_builder_evidence_is_passing() -> None:
+    evidence_path = (
+        g2.repo_root() / "references/g2-evidence/nt-strategy-builder.json"
+    )
+    evidence = json.loads(evidence_path.read_text())
+
+    assert evidence["status"] == "pass"
+    assert evidence["upstream_clean"] is True
+    assert all(step["returncode"] == 0 for step in evidence["steps"])
+
+
 def test_readiness_card_requires_exactly_one_row_for_every_gate(tmp_path: Path) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)

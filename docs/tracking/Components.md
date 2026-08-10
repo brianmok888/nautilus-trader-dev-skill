@@ -10,7 +10,7 @@ Review date: 2026-08-10
 Reviewed upstream develop: `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`
 Pinned G2 baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`
 
-The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only and is currently Blocked because the pinned upstream Python environment is absent; the recorded prior pass is historical evidence, not a current run. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
+The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its pinned V2 Python harness now passes after building the exact upstream environment. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
 | Skill | User-facing responsibility | Status |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 | `nt-review` | Correctness, safety, performance, and testability review | Pass |
 | `nt-signals` | Indicators, order books, signals | Pass |
 | `nt-strategy-builder-rust` | Production Rust strategies and LiveNode wiring | Pass |
-| `nt-strategy-builder` | Python strategy migration/reference | Blocked |
+| `nt-strategy-builder` | Python strategy migration/reference | Pass |
 | `nt-testing` | Testkit, execution specs, environment policy | Pass |
 | `nt-trading` | Orders, positions, portfolio, execution | Pass |
 
@@ -36,10 +36,10 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 
 - Upstream delta: Pass — reviewed exactly through `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`.
 - Repository scope: Pass — 17 retained NautilusTrader-development skills; active removed-lane routes absent.
-- Readiness cards: 135 Pass, 1 Blocked, 0 Pending across 136 G0-G7 gates.
-- G2 execution: 16 skill harnesses pass in the current environment; `nt-strategy-builder` is Blocked by the missing pinned `python/.venv/bin/python` prerequisite after its repository-local tests pass.
+- Readiness cards: 136 Pass, 0 Blocked, 0 Pending across 136 G0-G7 gates.
+- G2 execution: all 17 skill harnesses pass in the current environment; `nt-strategy-builder` passed 32 repository migration tests and 69 pinned-upstream V2 tests with 6 explicit post-cutover skips.
 - Legacy labelling, guide snapshots, and Rust trading references: Pass.
-- Release readiness: Blocked only on the recorded migration-only Python G2 prerequisite; Rust-first production lanes are green.
+- Release readiness: all 17 NT-development skill cards are green; AI/EvoMap remains excluded rather than assessed.
 
 ## Shared boundaries
 

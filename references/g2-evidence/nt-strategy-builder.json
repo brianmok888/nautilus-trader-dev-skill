@@ -1,10 +1,9 @@
 {
-  "owned_content_sha256": "a1b180a9ac780e48b9c5bcfd8271e836fca7f00b941c0968958d37fa145ca574",
+  "owned_content_sha256": "16a7ed61e5259d012a01130b63e8d482767dd85fdf2c93016ef3dcc9aaa12e87",
   "schema_version": 2,
   "scope": "repository:python-v2-strategy-templates",
   "skill": "nt-strategy-builder",
-  "blocked_reason": "Pinned upstream python/.venv/bin/python is unavailable; run make sync-v2 at the pinned baseline and rerun the G2 harness.",
-  "status": "blocked",
+  "status": "pass",
   "steps": [
     {
       "command": [
@@ -15,7 +14,7 @@
         "skills/nt-strategy-builder/tests"
       ],
       "cwd": "repository",
-      "duration_seconds": 23.367808,
+      "duration_seconds": 16.050223,
       "returncode": 0
     },
     {
@@ -28,11 +27,11 @@
         "python/tests/unit/live/test_live_configs.py"
       ],
       "cwd": "upstream",
-      "duration_seconds": 141.75552,
+      "duration_seconds": 122.995625,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-07-30T07:47:27.442021+00:00"
+  "verified_at": "2026-08-10T16:41:17.077018+00:00"
 }
