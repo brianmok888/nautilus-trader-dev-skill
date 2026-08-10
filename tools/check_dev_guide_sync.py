@@ -419,14 +419,14 @@ NT_V2_READINESS_GATE_TARGETS = [
 NT_V2_READINESS_SECTION = "## NT V2 Rust readiness gates"
 NT_V2_READINESS_STATUSES = {"Pass", "Pending", "Blocked"}
 NT_V2_READINESS_GATES = [
-    "G0 Upstream baseline",
-    "G1 Legacy label",
-    "G2 V2 example validation",
+    "G0 Scope and ownership",
+    "G1 Legacy labelling",
+    "G2 Pinned V2 examples",
     "G3 Rust bindings/PyO3",
-    "G4 Lane and API shape",
-    "G5 Test evidence",
-    "G6 Safety/compliance",
-    "G7 Completion report",
+    "G4 Functional gates",
+    "G5 References and templates",
+    "G6 Operational and migration boundaries",
+    "G7 Durable evidence",
 ]
 
 SHARED_RUST_EXAMPLE_GATE_SKILLS = {
@@ -854,7 +854,7 @@ def _block_with_previous_context(blocks: list[str], index: int) -> str:
 def _is_readiness_gate_section_block(block: str) -> bool:
     return "| Gate | Description | Status | Evidence |" in block and (
         _contains_term(block, NT_V2_READINESS_SECTION)
-        or "| G0 Upstream baseline |" in block
+        or "| G0 Scope and ownership |" in block
     )
 
 

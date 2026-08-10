@@ -96,14 +96,14 @@ def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) ->
         "\n"
         "| Gate | Description | Status | Evidence |\n"
         "|---|---|---|---|\n"
-        "| G0 Upstream baseline | Verify latest docs and upstream commit. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
-        "| G1 Legacy label | Mark Cython, v1, and TradingNode guidance reference-only. | Pending | Awaiting `uv run python tools/check_dev_guide_sync.py`. |\n"
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending | Awaiting upstream-backed example validation. |\n"
+        "| G0 Scope and ownership | Verify latest docs and upstream commit. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
+        "| G1 Legacy labelling | Mark Cython, v1, and TradingNode guidance reference-only. | Pending | Awaiting `uv run python tools/check_dev_guide_sync.py`. |\n"
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending | Awaiting upstream-backed example validation. |\n"
         "| G3 Rust bindings/PyO3 | Verify Rust bindings, PyO3 registration, callback routing, and crate paths. | Pending | Awaiting PyO3 boundary audit. |\n"
-        "| G4 Lane and API shape | Classify Rust/Python/AI lanes and use current LiveNode, builder, and message-bus APIs. | Pending | Awaiting lane and API audit. |\n"
-        "| G5 Test evidence | Record command evidence before readiness is Pass. | Pending | Awaiting targeted tests. |\n"
-        "| G6 Safety/compliance | Enforce fail-closed risk, secrets, precision, and runtime boundaries. | Pending | Awaiting review. |\n"
-        "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n"
+        "| G4 Functional gates | Classify Rust/Python/AI lanes and use current LiveNode, builder, and message-bus APIs. | Pending | Awaiting lane and API audit. |\n"
+        "| G5 References and templates | Record command evidence before readiness is Pass. | Pending | Awaiting targeted tests. |\n"
+        "| G6 Operational and migration boundaries | Enforce fail-closed risk, secrets, precision, and runtime boundaries. | Pending | Awaiting review. |\n"
+        "| G7 Durable evidence | Report every gate. | Pending | Awaiting reconciliation. |\n"
         f"{ai_boundary}"
         f"{extra}"
     )
@@ -1747,14 +1747,14 @@ def test_reports_incomplete_nt_v2_rust_readiness_gate_vocabulary(
         tmp_path / "skills/nt-data/SKILL.md",
         "## NT V2 Rust readiness gates\n"
         "Statuses: Pass, Pending.\n"
-        "- G0 Upstream baseline: latest docs.\n"
-        "- G1 Legacy label: label legacy.\n"
-        "- G2 V2 example validation: validate examples.\n"
+        "- G0 Scope and ownership: latest docs.\n"
+        "- G1 Legacy labelling: label legacy.\n"
+        "- G2 Pinned V2 examples: validate examples.\n"
         "- G3 Rust bindings/PyO3: verify bindings.\n"
-        "- G4 Lane and API shape: current APIs.\n"
-        "- G5 Test evidence: command evidence.\n"
-        "- G6 Safety/compliance: safety review.\n"
-        "- G7 Completion report: report gates.\n",
+        "- G4 Functional gates: current APIs.\n"
+        "- G5 References and templates: command evidence.\n"
+        "- G6 Operational and migration boundaries: safety review.\n"
+        "- G7 Durable evidence: report gates.\n",
     )
 
     result = run_checks(tmp_path)
@@ -1771,14 +1771,14 @@ def test_reports_readiness_table_without_status_and_evidence_columns(
         "## NT V2 Rust readiness gates\n"
         "| Gate | Required check |\n"
         "|---|---|\n"
-        "| G0 Upstream baseline | Pass after docs review. |\n"
-        "| G1 Legacy label | Pending. |\n"
-        "| G2 V2 example validation | Blocked. |\n"
+        "| G0 Scope and ownership | Pass after docs review. |\n"
+        "| G1 Legacy labelling | Pending. |\n"
+        "| G2 Pinned V2 examples | Blocked. |\n"
         "| G3 Rust bindings/PyO3 | Pending. |\n"
-        "| G4 Lane and API shape | Pending. |\n"
-        "| G5 Test evidence | Pending. |\n"
-        "| G6 Safety/compliance | Pending. |\n"
-        "| G7 Completion report | Pending. |\n",
+        "| G4 Functional gates | Pending. |\n"
+        "| G5 References and templates | Pending. |\n"
+        "| G6 Operational and migration boundaries | Pending. |\n"
+        "| G7 Durable evidence | Pending. |\n",
     )
 
     errors = run_checks(tmp_path).errors
@@ -1803,14 +1803,14 @@ def test_readiness_intro_with_legacy_terms_does_not_need_separate_label(
         "`Pass` requires explicit docs, diff, or command evidence.\n"
         "| Gate | Description | Status | Evidence |\n"
         "| --- | --- | --- | --- |\n"
-        "| G0 Upstream baseline | Confirm upstream docs. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
-        "| G1 Legacy label | Label legacy Cython/v1 and TradingNode guidance. | Pass | Compatibility note above labels legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |\n"
-        "| G2 V2 example validation | Validate examples against the pinned baseline. | Pending | Awaiting example validation. |\n"
+        "| G0 Scope and ownership | Confirm upstream docs. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
+        "| G1 Legacy labelling | Label legacy Cython/v1 and TradingNode guidance. | Pass | Compatibility note above labels legacy Cython/v1 and Python live `TradingNode` as migration/reference-only. |\n"
+        "| G2 Pinned V2 examples | Validate examples against the pinned baseline. | Pending | Awaiting example validation. |\n"
         "| G3 Rust bindings/PyO3 | Verify current binding paths. | Pending | Awaiting PyO3 reconciliation. |\n"
-        "| G4 Lane and API shape | Classify Rust or Python and use current APIs. | Pending | Awaiting lane and API audit. |\n"
-        "| G5 Test evidence | Record command evidence. | Pending | Awaiting targeted tests. |\n"
-        "| G6 Safety/compliance | Enforce safety boundaries. | Pending | Awaiting review. |\n"
-        "| G7 Completion report | Report every gate. | Pending | Awaiting reconciliation. |\n",
+        "| G4 Functional gates | Classify Rust or Python and use current APIs. | Pending | Awaiting lane and API audit. |\n"
+        "| G5 References and templates | Record command evidence. | Pending | Awaiting targeted tests. |\n"
+        "| G6 Operational and migration boundaries | Enforce safety boundaries. | Pending | Awaiting review. |\n"
+        "| G7 Durable evidence | Report every gate. | Pending | Awaiting reconciliation. |\n",
     )
 
     errors = run_checks(tmp_path).errors
@@ -1838,8 +1838,8 @@ def test_reports_pass_readiness_gate_without_measurable_evidence(
 
 def test_reports_readiness_status_outside_mission_contract(tmp_path: Path) -> None:
     card = readiness_gate_text().replace(
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | N/A |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | N/A |",
     )
     write(tmp_path / "skills/nt-data/SKILL.md", card)
 
@@ -1886,8 +1886,8 @@ def test_reports_pass_gate_with_unscoped_shared_example_evidence(tmp_path: Path)
         "Awaiting upstream-backed example validation.",
         "`python3 tools/check_rust_trading_reference_sync.py --compile` passed.",
     ).replace(
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
     )
     write(tmp_path / "skills/nt-data/SKILL.md", card)
 
@@ -1904,8 +1904,8 @@ def test_allows_shared_example_evidence_for_rust_strategy_skill(tmp_path: Path) 
         "Awaiting upstream-backed example validation.",
         "`python3 tools/check_rust_trading_reference_sync.py --compile` passed.",
     ).replace(
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
-        "| G2 V2 example validation | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending |",
+        "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pass |",
     )
     write(tmp_path / "skills/nt-strategy-builder-rust/SKILL.md", card)
 
@@ -1921,20 +1921,20 @@ def test_reports_incomplete_nt_v2_rust_readiness_gate_labels(
         tmp_path / "skills/nt-data/SKILL.md",
         "## NT V2 Rust readiness gates\n"
         "Statuses: Pass, Pending, Blocked.\n"
-        "- G0 Upstream baseline: latest docs.\n"
-        "- G1 Legacy label: label legacy.\n"
-        "- G2 V2 example validation: validate examples.\n"
+        "- G0 Scope and ownership: latest docs.\n"
+        "- G1 Legacy labelling: label legacy.\n"
+        "- G2 Pinned V2 examples: validate examples.\n"
         "- G3 Rust bindings/PyO3: verify bindings.\n"
-        "- G4 Lane and API shape: current APIs.\n"
-        "- G5 Test evidence: command evidence.\n"
-        "- G7 Completion report: report gates.\n",
+        "- G4 Functional gates: current APIs.\n"
+        "- G5 References and templates: command evidence.\n"
+        "- G7 Durable evidence: report gates.\n",
     )
 
     result = run_checks(tmp_path)
 
     assert result.ok is False
     assert (
-        "missing NT V2 readiness gate 'G6 Safety/compliance' "
+        "missing NT V2 readiness gate 'G6 Operational and migration boundaries' "
         "in skills/nt-data/SKILL.md" in result.errors
     )
 

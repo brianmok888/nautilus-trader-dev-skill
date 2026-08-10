@@ -440,6 +440,28 @@ def test_missing_rust_first_harnesses_have_targeted_executable_checks() -> None:
         assert any(token in argument for argument in commands), (skill, commands)
 
 
+def test_readiness_cards_use_the_master_prompt_gate_contract() -> None:
+    labels = {
+        "G0 Scope and ownership",
+        "G1 Legacy labelling",
+        "G2 Pinned V2 examples",
+        "G3 Rust bindings/PyO3",
+        "G4 Functional gates",
+        "G5 References and templates",
+        "G6 Operational and migration boundaries",
+        "G7 Durable evidence",
+    }
+
+    for skill in sorted(EXPECTED_SKILLS):
+        text = (g2.repo_root() / "skills" / skill / "SKILL.md").read_text()
+        actual = {
+            line.strip("|").split("|", maxsplit=1)[0].strip()
+            for line in text.splitlines()
+            if line.startswith(tuple(f"| G{index} " for index in range(8)))
+        }
+        assert actual == labels, skill
+
+
 def test_readiness_cards_reference_the_targeted_harness_command() -> None:
     errors = g2.validate_readiness_cards(
         g2.repo_root(), g2.HARNESSES, require_evidence=False
@@ -463,7 +485,7 @@ def test_readiness_card_requires_exactly_one_row_for_every_gate(tmp_path: Path) 
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Pending | "
+        "| G2 Pinned V2 examples | Validate. | Pending | "
         f"`{g2.evidence_command('nt-data')}` ran; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -501,7 +523,7 @@ def test_readiness_cards_use_bounded_shared_gate_claims() -> None:
         assert "passed 24 tests" not in text
         if "| G3 Rust bindings/PyO3 |" in text:
             assert "selected Rust/PyO3 ownership" in text
-        if "| G6 Safety/compliance |" in text:
+        if "| G6 Operational and migration boundaries |" in text:
             assert "selected repository policy checks" in text
 
 
@@ -509,7 +531,7 @@ def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> 
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Pass | "
+        "| G2 Pinned V2 examples | Validate. | Pass | "
         f"`{g2.evidence_command('nt-data')}` passed; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -524,9 +546,9 @@ def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(tmp_path: Path
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G0 Upstream baseline | Validate. | Pass | "
+        "| G0 Scope and ownership | Validate. | Pass | "
         "`uv run python tools/check_skill_g2_harnesses.py --check-cards` passed. |\n"
-        "| G2 V2 example validation | Validate. | Pass | "
+        "| G2 Pinned V2 examples | Validate. | Pass | "
         f"`{g2.evidence_command('nt-data')}` passed; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -546,7 +568,7 @@ def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path:
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
     evidence_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Pass | "
+        "| G2 Pinned V2 examples | Validate. | Pass | "
         f"`{g2.evidence_command('nt-data')}` passed; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -579,7 +601,7 @@ def test_card_validation_accepts_blocked_status_with_a_reason(tmp_path: Path) ->
     evidence_path.parent.mkdir(parents=True)
     harness = g2.HARNESSES["nt-data"]
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Blocked | "
+        "| G2 Pinned V2 examples | Validate. | Blocked | "
         f"`{g2.evidence_command('nt-data')}` blocked; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -618,7 +640,7 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
     evidence_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Pass | "
+        "| G2 Pinned V2 examples | Validate. | Pass | "
         f"`{g2.evidence_command('nt-data')}` passed; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -656,7 +678,7 @@ def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: P
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
     evidence_path.parent.mkdir(parents=True)
     skill_path.write_text(
-        "| G2 V2 example validation | Validate. | Pass | "
+        "| G2 Pinned V2 examples | Validate. | Pass | "
         f"`{g2.evidence_command('nt-data')}` passed; evidence "
         "`references/g2-evidence/nt-data.json`. |\n"
     )
@@ -746,7 +768,7 @@ def test_implement_g2_passes_with_standard_capnp() -> None:
     assert "pending_reason" not in payload
     assert payload["steps"]
     assert any("test_capnp_schema_precision.py" in " ".join(step["command"]) for step in payload["steps"])
-    assert "| G2 V2 example validation |" in skill_text
+    assert "| G2 Pinned V2 examples |" in skill_text
     assert "| Pass |" in skill_text
 
     if g2.shutil.which("capnp") is None:

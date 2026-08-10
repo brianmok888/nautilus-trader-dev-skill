@@ -49,7 +49,7 @@ def legacy_labelling_errors(root: Path) -> list[str]:
         if (
             path.name == "SKILL.md"
             and "## NT V2 Rust readiness gates" in text
-            and "G1 Legacy label" in text
+            and "G1 Legacy labelling" in text
         ):
             continue
         if canonical._has_file_level_label(text, canonical.LEGACY_LABEL_TERMS):

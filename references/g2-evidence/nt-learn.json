@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "c8eea087065948fb33edc2af5eb02c28c38e084547a5903e594f4b6c063da8cb",
+  "owned_content_sha256": "b1cfeb55ca16ee62685ef6ae9be567f57f302d7018fea828643937ca9aa23c30",
   "schema_version": 2,
   "scope": "repository:curriculum-commands-and-rust-examples",
   "skill": "nt-learn",
@@ -15,7 +15,7 @@
         "tests/test_template_classification.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.421062,
+      "duration_seconds": 2.139889,
       "returncode": 0
     },
     {
@@ -30,11 +30,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.048051,
+      "duration_seconds": 0.96058,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-10T03:31:59.255820+00:00"
+  "verified_at": "2026-08-10T18:03:42.848948+00:00"
 }
