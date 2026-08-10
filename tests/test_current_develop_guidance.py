@@ -1,0 +1,58 @@
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(path: str) -> str:
+    return (REPO_ROOT / path).read_text(encoding="utf-8")
+
+
+def test_live_guidance_covers_current_cache_and_queue_observability() -> None:
+    # Given current-develop live guidance
+    text = read("skills/nt-live/SKILL.md")
+
+    # When an agent looks for persistent cache and runner-pressure contracts
+    # Then the exact public contracts and their version boundary are present
+    assert "with_cache_database_factory" in text
+    assert "QueueStateChanged" in text
+    assert "dispatch_busy_ns" in text
+    assert "0caf26d216c4196d60cc35991492337b07568c22" in text
+    assert "42ff42b346ec42eeba4486f618f24e5cc15b2d02" in text
+
+
+def test_adapter_guidance_covers_current_retry_and_venue_safety_contracts() -> None:
+    # Given current-develop adapter guidance
+    text = read("skills/nt-adapters/SKILL.md")
+
+    # When an agent implements retry and venue lifecycle behavior
+    # Then typed retry evidence and current venue safety facts are visible
+    assert "RetryError" in text
+    assert "ElapsedBudgetExceeded" in text
+    assert "replacement ID" in text
+    assert "five seconds" in text
+    assert "27 February 2026" in text
+
+
+def test_backtest_guidance_covers_current_window_boundary_semantics() -> None:
+    # Given current-develop Rust backtest guidance
+    text = read("skills/nt-backtest/SKILL.md")
+
+    # When an agent reasons about a bounded run window with streamed data
+    # Then post-window retention and the no-data horizon are explicit
+    assert "requested_end" in text
+    assert "first item past" in text
+    assert "10 seconds" in text
+    assert "4175a5f09a4e3563a00423f43625f9a187823f4a" in text
+
+
+def test_model_and_signal_guidance_cover_current_correctness_fixes() -> None:
+    # Given current-develop model and indicator guidance
+    model_text = read("skills/nt-model/SKILL.md")
+    signal_text = read("skills/nt-signals/SKILL.md")
+
+    # When an agent reviews stateful calculations
+    # Then both current correctness invariants are named and source-pinned
+    assert "stake-weighted" in model_text
+    assert "fa507199deb34430a983144e4af028046f2af926" in model_text
+    assert "`reset` must preserve configuration" in signal_text
+    assert "8003bed6ef75d3cea8271dc368aba2630d7f9db6" in signal_text

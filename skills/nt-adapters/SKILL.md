@@ -129,6 +129,28 @@ Current high-risk rules:
   ambiguous outcome failures unless the venue returns an explicit per-order
   rejection.
 
+Current-develop retry contract (upstream commits
+`77868193d234f7022cac1e14e1c72a419a958665` and
+`6e7f5e28a735e564114830bdbbd3083124c52c4f`): use the shared
+`RetryManager` only when its cancellation and backoff model fits. Map its typed
+`RetryError` variants without losing cause: `Canceled`, `OperationTimeout`,
+`ElapsedBudgetExceeded`, `InvalidBackoff`, and `RetryExhausted`. Keep venue
+error classification in `should_retry`; do not silently turn terminal venue
+errors into retryable transport failures.
+
+Current venue safety overlays:
+
+- Polymarket heartbeat mode sends immediately after execution readiness and
+  every five seconds. Each heartbeat response returns a replacement ID; store
+  it for the next request, stop only on an explicit stop flag, fail startup if
+  the first heartbeat fails, and treat a later failure as execution-channel
+  loss. Source: upstream develop commit
+  `276e5410115edb40baac9270876c970550c086ee`.
+- BitMEX is scheduled to decommission trading on 27 February 2026. Treat the
+  adapter as migration-only for new deployments and verify the current venue
+  status before planning production use. Source: upstream develop commit
+  `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`.
+
 Adapters follow a layered architecture:
 
 - **Rust core** — networking, parsing, rate limiting, signing, engine integration, and execution state

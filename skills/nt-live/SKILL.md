@@ -70,6 +70,25 @@ persistence errors.
 The persistence hooks preserve the existing boundary: execution ownership remains in Rust. Persist component state only; do not move order flow, risk,
 reconciliation, adapter liveness, or shutdown authority into Python callbacks.
 
+### Current-develop cache backing and runner pressure
+
+Sources: upstream develop commits `0caf26d216c4196d60cc35991492337b07568c22`,
+`8181fee66fed42daeb9701b1b5b6eec5928aa1cf`,
+`6c3c61c570eaf937ec6efe9b807f5501f77f1d91`, and
+`42ff42b346ec42eeba4486f618f24e5cc15b2d02`.
+
+For Python v2 live construction, register a typed cache database extractor and
+pass its factory through `LiveNodeBuilder.with_cache_database_factory`. The
+PyO3 method is `with_cache_database_factory`; unsupported Python factory types
+fail with `NotImplementedError`. Keep persistence ownership in the Rust cache
+backend rather than adding Python callbacks to the data path.
+
+Monitor each runner channel by queue depth and `dispatch_busy_ns`.
+`QueueStateChanged` publishes condition/state transitions together with
+`queue_depth` and `mean_dispatch_ns`; treat critical pressure as a live safety
+signal and prove its asserted/cleared transitions under load. Per-channel busy
+time replaces a single aggregate dispatch-time assumption.
+
 ## PyO3 control-plane lane
 
 Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness.

@@ -26,7 +26,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
-Signal gates: Rust owns indicator prototyping, research implementations, production indicators, tick/bar pipelines, ordering, and fixed-point signal transforms. The only active Python lane is AI/advisory aggregation through `nt-evomap-integration`. Require `cargo nextest`, `cargo clippy`, `cargo deny`, and deterministic signal tests before `Pass`.
+Signal gates: Rust owns indicator prototyping, research implementations, production indicators, tick/bar pipelines, ordering, and fixed-point signal transforms. Non-NautilusTrader development lanes are outside this repository. Require `cargo nextest`, `cargo clippy`, `cargo deny`, and deterministic signal tests before `Pass`.
 
 ## Rust production lane
 
@@ -88,6 +88,13 @@ AI and advisory work are outside this repository.
   aggregation path.
 
 ## Rust Usage
+
+Current-develop reset invariant: `reset` must preserve configuration while
+clearing runtime observations. Do not overwrite constructor parameters such as
+adaptive-average bounds or fuzzy-candlestick thresholds with defaults. Re-run
+post-reset input sequences and assert configured behavior, not only an empty
+buffer. Source: upstream develop commit
+`8003bed6ef75d3cea8271dc368aba2630d7f9db6`.
 
 ```rust
 use nautilus_indicators::average::ema::ExponentialMovingAverage;

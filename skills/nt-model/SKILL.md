@@ -81,6 +81,12 @@ Prior Python model examples and extension guidance are quarantined under `migrat
 
 Use `references/developer_guide/rust.md` and the model snapshots under `references/api/model/` as source-pinned upstream material at commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`. Version-scope post-pin APIs such as `OrderInitialized::new_checked` until the baseline advances.
 
+Current-develop betting invariant: increasing a same-side `BetPosition` uses a
+stake-weighted average price, not an unweighted mean. Preserve constituent
+stake in the numerator and total stake in the denominator, and cover both back
+and lay increases. Source: upstream develop commit
+`fa507199deb34430a983144e4af028046f2af926`.
+
 ## What This Skill Covers
 
 NautilusTrader **domain model** — instruments, identifiers, value types, enums, and currencies.

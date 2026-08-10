@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_ref": "origin/develop",
   "pinned_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "reviewed_commit": "9ca072e2d98ae623f14ecaa5b336398f5d25de34",
-  "reviewed_on": "2026-08-08",
+  "reviewed_commit": "90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1",
+  "reviewed_on": "2026-08-10",
   "deltas": [
     {
       "commit": "d46f56505a8675ae49025bc6abaa851d33f60c56",
@@ -6456,6 +6456,422 @@
         "docs/integrations/deribit.md"
       ],
       "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "8181fee66fed42daeb9701b1b5b6eec5928aa1cf",
+      "subject": "Track LiveNode dispatch busy time per channel",
+      "upstream_paths": [
+        "crates/live/src/node/metrics.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/tests/stress.rs"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md"
+      ]
+    },
+    {
+      "commit": "324a05596d72cc59b7854d1b982c62c52acd16df",
+      "subject": "Run Docker amd64 builds on self-hosted runners",
+      "upstream_paths": [
+        ".github/workflows/docker.yml"
+      ],
+      "no_impact_rationale": "Docker runner placement does not change NautilusTrader development APIs or skill guidance."
+    },
+    {
+      "commit": "276e5410115edb40baac9270876c970550c086ee",
+      "subject": "Improve Polymarket order-safety heartbeats",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/execution/lifecycle.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "61dbddf7bca4e3e7080934e59f9168f815f91343",
+      "subject": "Refine Derive integration guide",
+      "upstream_paths": [
+        "docs/integrations/derive.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "0caf26d216c4196d60cc35991492337b07568c22",
+      "subject": "Add Python v2 cache database backing",
+      "upstream_paths": [
+        ".github/workflows/build.yml",
+        "MIGRATION_V2.md",
+        "RELEASES.md",
+        "crates/common/src/python/cache.rs",
+        "crates/common/src/python/factory.rs",
+        "crates/common/src/python/mod.rs",
+        "crates/common/src/python/msgbus.rs",
+        "crates/infrastructure/src/python/mod.rs",
+        "crates/infrastructure/src/python/redis/cache.rs",
+        "crates/infrastructure/src/python/redis/msgbus.rs",
+        "crates/infrastructure/src/python/sql/cache.rs",
+        "crates/infrastructure/src/redis/cache.rs",
+        "crates/infrastructure/src/redis/msgbus.rs",
+        "crates/infrastructure/src/sql/cache.rs",
+        "crates/live/src/node/builder.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/python/node.rs",
+        "docs/concepts/cache.md",
+        "docs/concepts/message_bus.md",
+        "docs/how_to/configure_live_trading.md",
+        "python/nautilus_trader/infrastructure/__init__.pyi",
+        "python/nautilus_trader/live/__init__.pyi",
+        "python/tests/integration/test_live_node_cache.py",
+        "python/tests/unit/infrastructure/__init__.py",
+        "python/tests/unit/infrastructure/test_configs.py",
+        "python/tests/unit/test_generate_stubs.py",
+        "python/tests/unit/test_live_node.py"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md"
+      ]
+    },
+    {
+      "commit": "77868193d234f7022cac1e14e1c72a419a958665",
+      "subject": "Document adapter retry contract",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "6e7f5e28a735e564114830bdbbd3083124c52c4f",
+      "subject": "Add typed RetryManager failure reasons",
+      "upstream_paths": [
+        "crates/adapters/architect_ax/src/http/client.rs",
+        "crates/adapters/betfair/src/http/client.rs",
+        "crates/adapters/bitmex/src/http/client.rs",
+        "crates/adapters/bitmex/src/websocket/handler.rs",
+        "crates/adapters/bybit/src/http/client.rs",
+        "crates/adapters/bybit/src/websocket/handler.rs",
+        "crates/adapters/coinbase/src/http/client.rs",
+        "crates/adapters/deribit/src/http/client.rs",
+        "crates/adapters/deribit/src/websocket/handler.rs",
+        "crates/adapters/derive/src/http/client.rs",
+        "crates/adapters/dydx/src/execution/broadcaster.rs",
+        "crates/adapters/dydx/src/http/client.rs",
+        "crates/adapters/dydx/src/websocket/handler.rs",
+        "crates/adapters/hyperliquid/src/websocket/handler.rs",
+        "crates/adapters/kraken/src/http/futures/client.rs",
+        "crates/adapters/kraken/src/http/spot/client.rs",
+        "crates/adapters/lighter/src/http/client.rs",
+        "crates/adapters/lighter/src/http/error.rs",
+        "crates/adapters/lighter/src/websocket/handler.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/websocket/handler.rs",
+        "crates/adapters/polymarket/src/execution/submitter.rs",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/network/src/retry.rs",
+        "docs/developer_guide/adapters.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "26d2dd6d0ecf864b44b12014dc820e0721c5cfc6",
+      "subject": "Add test branch workflow",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/test.yml"
+      ],
+      "no_impact_rationale": "The test-branch workflow does not change NautilusTrader development APIs or skill guidance."
+    },
+    {
+      "commit": "087b1b2ca63bd342674d33041e22144573885b80",
+      "subject": "Update contribution policy",
+      "upstream_paths": [
+        ".github/pull_request_template.md",
+        ".gitignore",
+        "AGENTS.md",
+        "AI_POLICY.md",
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        "README.md"
+      ],
+      "affected_files": [
+        "skills/nt-dev/SKILL.md"
+      ]
+    },
+    {
+      "commit": "d46e773adf868f3655641812a2733480c97e1e22",
+      "subject": "Refine dYdX integration guide",
+      "upstream_paths": [
+        "docs/integrations/dydx.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "726212db3ab8ea1338f34796a0dcc659653e4e7b",
+      "subject": "Refine Hyperliquid integration guide",
+      "upstream_paths": [
+        "docs/integrations/hyperliquid.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "4175a5f09a4e3563a00423f43625f9a187823f4a",
+      "subject": "Retain backtest data past the window end and bound the no-data horizon (#4685)",
+      "upstream_paths": [
+        "crates/backtest/src/data_iterator.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/tests/backtest_engine.rs"
+      ],
+      "affected_files": [
+        "skills/nt-backtest/SKILL.md"
+      ]
+    },
+    {
+      "commit": "fa507199deb34430a983144e4af028046f2af926",
+      "subject": "Average bet position price by stake on increase (#4684)",
+      "upstream_paths": [
+        "crates/model/src/data/bet.rs"
+      ],
+      "affected_files": [
+        "skills/nt-model/SKILL.md"
+      ]
+    },
+    {
+      "commit": "d2ef777cf98a127b0d6262769d1ee8d4b80ea734",
+      "subject": "Make option expiry settlement transactional in the matching engine (#4618)",
+      "upstream_paths": [
+        "Cargo.lock",
+        "crates/execution/Cargo.toml",
+        "crates/execution/src/matching_engine/engine.rs",
+        "crates/execution/tests/matching_engine.rs",
+        "crates/execution/tests/matching_engine/cache_database.rs"
+      ],
+      "affected_files": [
+        "skills/nt-backtest/SKILL.md"
+      ]
+    },
+    {
+      "commit": "8e6dadbf7af55bf0f3c62b7fa162f558efa9e85c",
+      "subject": "Extract option settlement from matching engine",
+      "upstream_paths": [
+        "crates/execution/src/matching_engine/engine.rs",
+        "crates/execution/src/matching_engine/settlement.rs"
+      ],
+      "no_impact_rationale": "The option-settlement extraction preserves public matching behavior; the transactional contract is mapped by the preceding commit."
+    },
+    {
+      "commit": "0e0e11185be0ca87561eee5b8644124351001323",
+      "subject": "Refactor execution matching module layout",
+      "upstream_paths": [
+        ".pre-commit-hooks/check_dst_conventions.sh",
+        "RELEASES.md",
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/src/modules/mod.rs",
+        "crates/execution/benches/matching_engine.rs",
+        "crates/execution/src/matching_core.rs",
+        "crates/execution/src/matching_core/mod.rs",
+        "crates/execution/src/matching_engine/adapter.rs",
+        "crates/execution/src/matching_engine/engine.rs",
+        "crates/execution/src/matching_engine/mod.rs",
+        "crates/execution/tests/matching_engine.rs",
+        "docs/concepts/dst.md"
+      ],
+      "no_impact_rationale": "Execution matching module relocation does not change the public development contract taught by the retained skills."
+    },
+    {
+      "commit": "6c3c61c570eaf937ec6efe9b807f5501f77f1d91",
+      "subject": "Add queue state system messages",
+      "upstream_paths": [
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/tests.rs",
+        "crates/common/src/messages/system/mod.rs",
+        "crates/common/src/messages/system/queue.rs",
+        "crates/common/src/msgbus/switchboard.rs"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md"
+      ]
+    },
+    {
+      "commit": "42ff42b346ec42eeba4486f618f24e5cc15b2d02",
+      "subject": "Add live queue state event publishing",
+      "upstream_paths": [
+        "crates/live/Cargo.toml",
+        "crates/live/benches/queue_monitor.rs",
+        "crates/live/src/node/config.rs",
+        "crates/live/src/node/metrics.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/node/queue.rs",
+        "crates/live/src/python/config.rs",
+        "crates/live/tests/node.rs",
+        "docs/concepts/live.md"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md"
+      ]
+    },
+    {
+      "commit": "647eda7abab1d76aada18192b34cc5561e609631",
+      "subject": "Consolidate Interactive Brokers guide and examples",
+      "upstream_paths": [
+        "README.md",
+        "crates/adapters/interactive_brokers/README.md",
+        "docs/concepts/instruments/cfd.md",
+        "docs/concepts/instruments/commodity.md",
+        "docs/concepts/instruments/currency_pair.md",
+        "docs/concepts/instruments/equity.md",
+        "docs/concepts/instruments/futures_contract.md",
+        "docs/concepts/instruments/futures_spread.md",
+        "docs/concepts/instruments/index_instrument.md",
+        "docs/concepts/instruments/option_contract.md",
+        "docs/concepts/instruments/option_spread.md",
+        "docs/integrations/ib.md",
+        "docs/integrations/index.md",
+        "docs/integrations/interactive_brokers.md",
+        "examples/live/interactive_brokers/_common.py",
+        "examples/live/interactive_brokers/connect_with_dockerized_gateway.py",
+        "examples/live/interactive_brokers/connect_with_tws.py",
+        "examples/live/interactive_brokers/contract_download.py",
+        "examples/live/interactive_brokers/data_tester.py",
+        "examples/live/interactive_brokers/exec_tester.py",
+        "examples/live/interactive_brokers/historical_download.py",
+        "examples/live/interactive_brokers/ib_v2_order_strategies.py",
+        "examples/live/interactive_brokers/notebooks/bracket_order_example.py",
+        "examples/live/interactive_brokers/notebooks/market_order_example.py",
+        "examples/live/interactive_brokers/notebooks/oca_group_example.py",
+        "examples/live/interactive_brokers/notebooks/order_example_driver.py",
+        "examples/live/interactive_brokers/notebooks/reconciliation_example.py",
+        "examples/live/interactive_brokers/notebooks/simple_conditions_example.py",
+        "examples/live/interactive_brokers/notebooks/spread_example.py",
+        "examples/live/interactive_brokers/notebooks/with_databento_instrument_id_example.py",
+        "examples/live/interactive_brokers/option_greeks.py",
+        "examples/live/interactive_brokers/with_databento_client.py",
+        "examples/live/interactive_brokers_v2/_common.py",
+        "examples/live/interactive_brokers_v2/connect_with_dockerized_gateway.py",
+        "examples/live/interactive_brokers_v2/connect_with_tws.py",
+        "examples/live/interactive_brokers_v2/contract_download.py",
+        "examples/live/interactive_brokers_v2/historical_download.py",
+        "examples/live/interactive_brokers_v2/ib_v2_order_strategies.py",
+        "examples/live/interactive_brokers_v2/notebooks/bracket_order_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/market_order_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/oca_group_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/order_example_driver.py",
+        "examples/live/interactive_brokers_v2/notebooks/reconciliation_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/simple_conditions_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/spread_example.py",
+        "examples/live/interactive_brokers_v2/notebooks/with_databento_instrument_id_example.py",
+        "examples/live/interactive_brokers_v2/option_greeks.py",
+        "examples/live/interactive_brokers_v2/with_databento_client.py"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "c7b7f6c4236b6e8bb0bebc20999e4c93db64e56b",
+      "subject": "Remove redundant matching engine adapter",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/sandbox/src/execution.rs",
+        "crates/execution/src/matching_engine/adapter.rs",
+        "crates/execution/src/matching_engine/mod.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "e8be4522cd12a4a65a4d1350f791d414ad246439",
+      "subject": "Bound Polymarket CLOB pagination",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/query.rs",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "bde551ed098d3e11f1bf34e588898d38b7d50c5b",
+      "subject": "Refine AI contribution policy",
+      "upstream_paths": [
+        "AGENTS.md",
+        "AI_POLICY.md",
+        "CONTRIBUTING.md"
+      ],
+      "no_impact_rationale": "AI contribution policy is outside this NautilusTrader-development-only repository scope."
+    },
+    {
+      "commit": "bd68256adaea4203c06eea351935aac908fddeec",
+      "subject": "Refine Kraken integration guide",
+      "upstream_paths": [
+        "docs/integrations/kraken.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "ebde1b1da2a2f40711ee97b1b8bde39518b96120",
+      "subject": "Fix Databento historical MBO boundaries",
+      "upstream_paths": [
+        "crates/adapters/databento/benches/data.rs",
+        "crates/adapters/databento/src/decode/market_data.rs",
+        "crates/adapters/databento/src/decode/mod.rs",
+        "crates/adapters/databento/src/decode/tests.rs",
+        "crates/adapters/databento/src/historical.rs",
+        "crates/adapters/databento/src/loader.rs"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "8003bed6ef75d3cea8271dc368aba2630d7f9db6",
+      "subject": "Fix indicator reset state retention",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/indicators/src/average/ama.rs",
+        "crates/indicators/src/python/average/ama.rs",
+        "crates/indicators/src/volatility/fuzzy.rs"
+      ],
+      "affected_files": [
+        "skills/nt-signals/SKILL.md"
+      ]
+    },
+    {
+      "commit": "524b45f0db7bdfff3a59b0301cb5582194671935",
+      "subject": "Refine Lighter integration guide",
+      "upstream_paths": [
+        "docs/integrations/lighter.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
+    },
+    {
+      "commit": "90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1",
+      "subject": "Add BitMEX decommissioning warning",
+      "upstream_paths": [
+        "docs/integrations/bitmex.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/SKILL.md"
+      ]
     }
   ]
 }

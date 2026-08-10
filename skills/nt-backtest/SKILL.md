@@ -231,6 +231,14 @@ Run the example: `cargo run -p nautilus-backtest --features examples --example e
 
 Loads data from `ParquetDataCatalog` and streams in configurable chunks. Requires `streaming` feature.
 
+Current-develop window contract (upstream commit
+`4175a5f09a4e3563a00423f43625f9a187823f4a`): a bounded run peeks before
+consuming. The first item past `requested_end` remains available to a later
+run instead of being discarded. When no data has arrived, inferred clock
+advancement is capped at 10 seconds; an explicit end still controls the run
+boundary. Regression tests must prove both post-window retention and bounded
+no-data advancement.
+
 ```rust
 use nautilus_backtest::{
     config::{BacktestDataConfig, BacktestEngineConfig, BacktestRunConfig, BacktestVenueConfig, NautilusDataType},
