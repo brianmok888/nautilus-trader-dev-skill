@@ -5,7 +5,7 @@
 <!-- Updated when: skill inventory, repository boundaries, or validation wiring changes. -->
 <!-- Does NOT contain: plans, historical attestations, or session state. -->
 
-Review date: 2026-08-08
+Review date: 2026-08-10
 
 ## Repository shape
 
