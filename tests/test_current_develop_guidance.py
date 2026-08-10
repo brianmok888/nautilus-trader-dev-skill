@@ -30,7 +30,7 @@ def test_adapter_guidance_covers_current_retry_and_venue_safety_contracts() -> N
     assert "ElapsedBudgetExceeded" in text
     assert "replacement ID" in text
     assert "five seconds" in text
-    assert "27 February 2026" in text
+    assert "23 September 2026 at 04:00 UTC" in text
 
 
 def test_backtest_guidance_covers_current_window_boundary_semantics() -> None:

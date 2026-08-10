@@ -15,6 +15,8 @@ REMOVED_PATHS = (
     "docs/plans",
     "docs/superpowers",
     "docs/handoffs",
+    "docs/cleanup-plan.md",
+    "docs/cleanup-design.md",
     "docs/tracking/AGENTS.md.scaffold",
 )
 
@@ -42,6 +44,12 @@ EXCLUDED_LANE_MARKERS = (
 def test_non_nt_and_historical_artifacts_are_removed() -> None:
     for relative_path in REMOVED_PATHS:
         assert not (ROOT / relative_path).exists(), relative_path
+
+
+def test_pytest_config_has_no_removed_test_ignores() -> None:
+    config = (ROOT / "pytest.ini").read_text(encoding="utf-8")
+
+    assert "test_ai_advisory_boundary.py" not in config
 
 
 def test_current_repository_surface_has_no_excluded_lane_route() -> None:

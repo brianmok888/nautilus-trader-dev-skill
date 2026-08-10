@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import subprocess
 import sys
 from pathlib import Path
@@ -11,20 +10,10 @@ from tools import run_pinned_v2_pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-PINNED_V2_TEST = "tests/test_ai_advisory_boundary.py"
+PINNED_V2_TEST = "skills/nt-dex-adapter/tests/test_instrument_parsing.py"
 
 
-def test_default_pytest_excludes_the_pinned_v2_only_module() -> None:
-    config = configparser.ConfigParser()
-    parsed = config.read(ROOT / "pytest.ini", encoding="utf-8")
-
-    assert parsed == [str(ROOT / "pytest.ini")]
-    addopts = config["pytest"]["addopts"].split()
-
-    assert f"--ignore={PINNED_V2_TEST}" in addopts
-
-
-def test_pinned_v2_runner_clears_the_default_pytest_exclusion(
+def test_pinned_v2_runner_clears_repository_pytest_options(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:

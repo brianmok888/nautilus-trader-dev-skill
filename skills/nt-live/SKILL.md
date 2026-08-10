@@ -30,14 +30,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-live.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-live.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
@@ -374,17 +374,17 @@ Components follow strict state machine: `INITIALIZED → RUNNING → STOPPED →
 
 ### Logging Patterns
 
-- Use `self.log.info()`, `self.log.warning()`, `self.log.error()`, `self.log.debug()`
-- Log state transitions and significant events
-- Use structured messages: `f"Order submitted: {order.client_order_id}"`
-- Set appropriate log levels per component
+- Rust production components use the project `tracing`/`log` integration and structured fields.
+- Migration/reference-only Python components may use `self.log.info()`,
+  `self.log.warning()`, `self.log.error()`, and `self.log.debug()`.
+- Log state transitions and significant events at appropriate levels.
 
 ### Config Validation
 
-- All config classes use `frozen=True` (immutable after creation)
-- Validate config before node creation
-- Use type hints for config fields
-- Secrets should be passed via environment variables, not config files
+- Rust production configs use typed structs and builders; propagate `build()` validation errors.
+- Migration/reference-only Python config classes use `frozen=True` and typed fields.
+- Validate config before node creation.
+- Secrets should be passed via environment variables, not config files.
 
 ### Production Readiness
 
@@ -400,9 +400,9 @@ See `references/developer_guide/coding_standards.md` for project-wide convention
 
 ### Production Readiness Checklist
 
-- [ ] Config validated in `__init__`
-- [ ] State saved via `on_save` and restored via `on_load`
-- [ ] Timers cleaned up in `on_stop`
+- [ ] Rust configs pass typed builder validation; migration-only Python config validates in `__init__`
+- [ ] Rust state hooks or migration-only Python `on_save`/`on_load` preserve required state
+- [ ] Rust stop/finalization or migration-only Python `on_stop` cleans up timers
 - [ ] Error handling covers all event handlers
 - [ ] Logging configured for debugging and monitoring
 - [ ] Adapter credentials via environment variables, not hardcoded

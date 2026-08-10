@@ -10,6 +10,31 @@ def read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def test_copy_paste_rust_guidance_uses_current_v2_api_shapes() -> None:
+    backtest = read("skills/nt-backtest/SKILL.md")
+    adapters = read("skills/nt-adapters/SKILL.md")
+    data = read("skills/nt-data/SKILL.md")
+    implement = read("skills/nt-implement/SKILL.md")
+    model = read("skills/nt-model/SKILL.md")
+    signals = read("skills/nt-signals/SKILL.md")
+    trading = read("skills/nt-trading/SKILL.md")
+
+    assert "SimulatedVenueConfig::builder()" in backtest
+    assert "31 args" not in backtest
+    assert ".add_adapter(" not in adapters
+    assert "trait AdapterFactory" not in adapters
+    assert "InvalidBackoff" not in adapters
+    assert "RetryExhausted" not in adapters
+    assert "nautilus_persistence::backend::catalog::ParquetDataCatalog" in data
+    assert "ArrowSerializer" not in data
+    assert "use nautilus_core::ffi::abort_on_panic;" in implement
+    assert "use ustr::Ustr;" in model
+    assert "nautilus_indicators::momentum::rsi::RelativeStrengthIndex" in signals
+    assert "self.order().market(" in trading
+    assert "self.submit_order(order, None, None, None)?;" in trading
+    assert "Deref<Target = DataActorCore>" not in trading
+
+
 def test_exec_tester_guidance_uses_current_python_keywords_and_rust_builder() -> None:
     text = read("skills/nt-testing/references/guides/spec_exec_testing.md")
     api_text = read("skills/nt-testing/references/api/exec_tester_config.md")
@@ -152,12 +177,12 @@ def test_public_strategy_routing_uses_rust_builder_for_new_work() -> None:
 
     assert "nt-strategy-builder-rust ◄── nt-dex-adapter" in readme
     assert (
-        "| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` "
-        "| `nt-strategy-builder-rust`, `nt-testing` |"
+        "| Backtests, fill models, simulated venues, backtest configs | "
+        "`nt-backtest`, `nt-strategy-builder-rust`, `nt-testing` |"
     ) in router
     assert (
-        "Routing to nt-strategy-builder-rust with nt-backtest and\n"
-        "nt-testing because the task is backtest wiring plus validation."
+        "Example: route backtest wiring plus validation to `nt-strategy-builder-rust`,\n"
+        "`nt-backtest`, and `nt-testing` together."
     ) in router
     assert "description: Use when migrating or referencing existing Python" in python_builder
     assert "## Overview\n\nThis migration/reference-only skill" in python_builder

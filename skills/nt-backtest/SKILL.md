@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-backtest.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-backtest.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
@@ -163,9 +163,10 @@ Drop `streaming`, `nautilus-persistence`, `tempfile`, `ustr` if only using the l
 Direct control: build engine, add venues/instruments, load data in memory, register strategies, run.
 
 ```rust
-use ahash::AHashMap;
-use nautilus_backtest::{config::BacktestEngineConfig, engine::BacktestEngine};
-use nautilus_execution::models::{fee::FeeModelAny, fill::FillModelAny};
+use nautilus_backtest::{
+    config::{BacktestEngineConfig, SimulatedVenueConfig},
+    engine::BacktestEngine,
+};
 use nautilus_model::{
     enums::{AccountType, BookType, OmsType},
     identifiers::Venue,
@@ -177,39 +178,15 @@ use nautilus_trading::examples::strategies::EmaCross;
 // 1. Create engine
 let mut engine = BacktestEngine::new(BacktestEngineConfig::default())?;
 
-// 2. Add venue (31 args — most are Option with None defaults)
+// 2. Add venue through the current typed configuration builder.
 engine.add_venue(
-    Venue::from("SIM"),
-    OmsType::Hedging,
-    AccountType::Margin,
-    BookType::L1_MBP,
-    vec![Money::from("1_000_000 USD")],
-    None,            // base_currency
-    None,            // default_leverage
-    AHashMap::new(), // per-instrument leverages
-    None,            // margin_model
-    vec![],          // simulation modules
-    FillModelAny::default(),
-    FeeModelAny::default(),
-    None, // latency_model
-    None, // routing
-    None, // reject_stop_orders
-    None, // support_gtd_orders
-    None, // support_contingent_orders
-    None, // use_position_ids
-    None, // use_random_ids
-    None, // use_reduce_only
-    None, // use_message_queue
-    None, // use_market_order_acks
-    None, // bar_execution
-    None, // bar_adaptive_high_low_ordering
-    None, // trade_execution
-    None, // liquidity_consumption
-    None, // allow_cash_borrowing
-    None, // frozen_account
-    None, // queue_position
-    None, // oto_full_trigger
-    None, // price_protection_points
+    SimulatedVenueConfig::builder()
+        .venue(Venue::from("SIM"))
+        .oms_type(OmsType::Hedging)
+        .account_type(AccountType::Margin)
+        .book_type(BookType::L1_MBP)
+        .starting_balances(vec![Money::from("1_000_000 USD")])
+        .build()?,
 )?;
 
 // 3. Add instrument and data

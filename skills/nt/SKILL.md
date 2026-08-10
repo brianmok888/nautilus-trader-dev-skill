@@ -30,14 +30,14 @@ NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode reference
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
-| G1 Legacy label | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 V2 example validation | Execute the router-owned repository harness. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed; evidence is recorded in `references/g2-evidence/nt.json`. |
+| G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
+| G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
+| G2 Pinned V2 examples | Execute the router-owned repository harness. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed; evidence is recorded in `references/g2-evidence/nt.json`. |
 | G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
-| G4 Lane and API shape | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
-| G5 Test evidence | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
-| G6 Safety/compliance | Execute selected repository policy checks. | Pass | `nt-testing` and `nt-review` are required for production-facing, live, adapter, and cross-component work. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current evidence is recorded in `references/g2-evidence/nt.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
+| G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
+| G6 Operational and migration boundaries | Execute selected repository policy checks. | Pass | `nt-testing` and `nt-review` are required for production-facing, live, adapter, and cross-component work. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current evidence is recorded in `references/g2-evidence/nt.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 ## Routing
 
@@ -52,7 +52,7 @@ Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONL
 | --- | --- |
 | Design component boundaries or data flow | `nt-architect` plus relevant domain skills |
 | Implement strategies, actors, indicators, or components | `nt-implement`; add `nt-strategy-builder-rust` for production strategy work |
-| Backtests, fill models, simulated venues, backtest configs | `nt-backtest` | `nt-strategy-builder-rust`, `nt-testing` |
+| Backtests, fill models, simulated venues, backtest configs | `nt-backtest`, `nt-strategy-builder-rust`, `nt-testing` |
 | Build live runtime configuration or reconciliation | `nt-live`, `nt-testing`, `nt-review` |
 | Work with market data, catalogs, or subscriptions | `nt-data` |
 | Work with orders, positions, portfolio, or execution models | `nt-trading`, `nt-model` |
@@ -71,10 +71,10 @@ Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONL
 3. Confirm version-sensitive APIs from pinned and reviewed upstream evidence.
 4. Implement in the user's target repository, never in the read-only upstream checkout unless the user explicitly changes the task to upstream contribution work outside this skill-maintenance mission.
 5. Run the selected skill's G2 harness and task-level tests.
-
-Routing to nt-strategy-builder-rust with nt-backtest and
-nt-testing because the task is backtest wiring plus validation.
 6. Finish with `nt-review` for production-facing, live, adapter, or cross-component changes.
+
+Example: route backtest wiring plus validation to `nt-strategy-builder-rust`,
+`nt-backtest`, and `nt-testing` together.
 
 ## Rust production lane
 

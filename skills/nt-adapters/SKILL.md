@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-adapters.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-adapters.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
@@ -33,12 +33,14 @@ Adapter gates: Rust owns HTTP/WebSocket networking, request signing, parsing, no
 Rust owns production adapter behavior: HTTP/WebSocket transport, authentication and signing, protocol parsing, normalization into Nautilus model types, rate and inflight limits, subscription and order state, reconnect/replay, and ambiguous-outcome reconciliation. Build adapter crates in dependency order, keep fixed-point and timestamp conversion at parser boundaries, and prove readiness with unit/spec tests plus parser fuzzing where inputs are untrusted.
 
 ```rust
+use nautilus_common::enums::Environment;
 use nautilus_live::node::LiveNode;
 
-let node = LiveNode::builder()
-    .add_adapter(adapter_config)
-    .add_strategy(strategy)
+let mut node = LiveNode::builder(trader_id, Environment::Live)?
+    .add_data_client(None, Box::new(data_factory), Box::new(data_config))?
+    .add_exec_client(None, Box::new(exec_factory), Box::new(exec_config))?
     .build()?;
+node.add_strategy(strategy)?;
 node.run().await?;
 ```
 
@@ -134,7 +136,7 @@ Current-develop retry contract (upstream commits
 `6e7f5e28a735e564114830bdbbd3083124c52c4f`): use the shared
 `RetryManager` only when its cancellation and backoff model fits. Map its typed
 `RetryError` variants without losing cause: `Canceled`, `OperationTimeout`,
-`ElapsedBudgetExceeded`, `InvalidBackoff`, and `RetryExhausted`. Keep venue
+`ElapsedBudgetExceeded`, and `InvalidConfiguration`. Keep venue
 error classification in `should_retry`; do not silently turn terminal venue
 errors into retryable transport failures.
 
@@ -146,7 +148,7 @@ Current venue safety overlays:
   the first heartbeat fails, and treat a later failure as execution-channel
   loss. Source: upstream develop commit
   `276e5410115edb40baac9270876c970550c086ee`.
-- BitMEX is scheduled to decommission trading on 27 February 2026. Treat the
+- BitMEX is scheduled to close on 23 September 2026 at 04:00 UTC. Treat the
   adapter as migration-only for new deployments and verify the current venue
   status before planning production use. Source: upstream develop commit
   `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`.
@@ -284,27 +286,25 @@ troubleshooting.
 ### Using Adapters with Rust LiveNode
 
 ```rust
+use nautilus_common::enums::Environment;
 use nautilus_live::node::LiveNode;
-use nautilus_model::identifiers::Venue;
 
-let node = LiveNode::builder()
-    .add_adapter(MyAdapterConfig::default())
-    .add_strategy(MyStrategy::new(config))
+let mut node = LiveNode::builder(trader_id, Environment::Live)?
+    .add_data_client(None, Box::new(data_factory), Box::new(data_config))?
+    .add_exec_client(None, Box::new(exec_factory), Box::new(exec_config))?
     .build()?;
 
+node.add_strategy(MyStrategy::new(config))?;
 node.run().await?;
 ```
 
 ### Adapter Factory Pattern (Rust)
 
-Each adapter implements a factory trait that creates data and execution clients:
-
-```rust
-pub trait AdapterFactory {
-    fn create_data_client(&self, config: &AdapterConfig) -> Result<Box<dyn DataClient>>;
-    fn create_exec_client(&self, config: &AdapterConfig) -> Result<Box<dyn ExecClient>>;
-}
-```
+Each adapter implements `DataClientFactory`, `ExecutionClientFactory`, or both.
+The factories receive typed configuration through `ClientConfig`; data-client
+construction also receives a read-only `CacheView` and clock. Register the
+concrete venue factories with `LiveNode::builder(...).add_data_client(...)` and
+`.add_exec_client(...)` as shown above; do not invent a combined factory trait.
 
 ### Available Rust Adapters
 

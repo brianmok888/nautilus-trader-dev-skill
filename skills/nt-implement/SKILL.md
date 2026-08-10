@@ -15,14 +15,14 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` reports PASS nt-implement with Cap'n Proto `capnp 1.0.1` available in the standard verification environment; both harness steps (pytest `tests/test_capnp_schema_precision.py` and the owning-crate `cargo check`) returned 0 on `2026-08-07T01:06:05Z`. Durable evidence: `references/g2-evidence/nt-implement.json` (`status: pass`, no `pending_reason`). A G2 `cargo check` result is compilation only; this is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` reports PASS nt-implement with Cap'n Proto `capnp 1.0.1` available in the standard verification environment; both harness steps (pytest `tests/test_capnp_schema_precision.py` and the owning-crate `cargo check`) returned 0 on `2026-08-07T01:06:05Z`. Durable evidence: `references/g2-evidence/nt-implement.json` (`status: pass`, no `pending_reason`). A G2 `cargo check` result is compilation only; this is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-implement.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-implement.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
@@ -229,6 +229,7 @@ For performance-critical components, NautilusTrader uses Rust with PyO3 bindings
 //! Custom indicator implementation in Rust.
 
 use nautilus_core::correctness::FAILED;
+use nautilus_indicators::indicator::Indicator;
 use nautilus_model::data::Bar;
 
 /// Custom momentum indicator.
@@ -294,8 +295,26 @@ impl CustomMomentum {
         }
     }
 
-    /// Resets the indicator state.
-    pub fn reset(&mut self) {
+}
+
+impl Indicator for CustomMomentum {
+    fn name(&self) -> String {
+        stringify!(CustomMomentum).to_string()
+    }
+
+    fn has_inputs(&self) -> bool {
+        !self.prices.is_empty()
+    }
+
+    fn initialized(&self) -> bool {
+        self.initialized
+    }
+
+    fn handle_bar(&mut self, bar: &Bar) {
+        self.update_raw(bar.close.as_f64());
+    }
+
+    fn reset(&mut self) {
         self.prices.clear();
         self.value = 0.0;
         self.initialized = false;
@@ -365,7 +384,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 When exposing Rust types to Cython via C FFI, follow the memory contract:
 
 ```rust
-use crate::ffi::abort_on_panic;
+use nautilus_core::ffi::abort_on_panic;
 
 /// Box-backed API wrapper for FFI.
 #[repr(C)]
