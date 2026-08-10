@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1126.303236,
+      "duration_seconds": 1.284415,
       "returncode": 0
     },
     {
@@ -28,11 +28,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 90.700617,
+      "duration_seconds": 0.96304,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-08T19:47:28.960541+00:00"
+  "verified_at": "2026-08-10T03:48:28.535913+00:00"
 }

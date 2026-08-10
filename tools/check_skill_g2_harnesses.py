@@ -652,7 +652,14 @@ def run_harness(
     for step in harness.steps:
         cwd = upstream_root if step.cwd is WorkingDirectory.UPSTREAM else repo_root
         started = datetime.now(UTC)
-        result = runner(step.command, cwd=cwd, check=False, text=True)
+        try:
+            result = runner(step.command, cwd=cwd, check=False, text=True)
+        except FileNotFoundError:
+            return RunResult(
+                skill=harness.skill,
+                status=RunStatus.BLOCKED,
+                failed_step=step,
+            )
         evidence_steps.append(
             {
                 "command": list(step.command),
@@ -768,14 +775,18 @@ def validate_readiness_cards(
         if payload.get("skill") != skill or payload.get("scope") != harnesses[skill].scope:
             errors.append(f"{skill} durable evidence does not match its harness")
         evidence_status = payload.get("status")
-        if evidence_status not in {"pass", "pending"}:
+        if evidence_status not in {"pass", "pending", "blocked"}:
             errors.append(f"{skill} durable evidence has an invalid status")
         if status == "Pass" and evidence_status != "pass":
             errors.append(f"{skill} G2 readiness Pass lacks passing durable evidence")
         if status == "Pending" and evidence_status != "pending":
             errors.append(f"{skill} G2 readiness Pending lacks pending durable evidence")
+        if status == "Blocked" and evidence_status != "blocked":
+            errors.append(f"{skill} G2 readiness Blocked lacks blocked durable evidence")
         if evidence_status == "pending" and not payload.get("pending_reason"):
             errors.append(f"{skill} pending durable evidence lacks a reason")
+        if evidence_status == "blocked" and not payload.get("blocked_reason"):
+            errors.append(f"{skill} blocked durable evidence lacks a reason")
         if payload.get("upstream_commit") != EXPECTED_UPSTREAM_COMMIT:
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
         if payload.get("upstream_clean") is not True:

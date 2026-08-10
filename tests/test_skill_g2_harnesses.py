@@ -266,6 +266,34 @@ def test_runner_stops_on_first_failed_step(tmp_path: Path) -> None:
     assert calls == [("false",)]
 
 
+def test_runner_returns_blocked_when_step_executable_is_missing(tmp_path: Path) -> None:
+    # Given a harness whose required executable is unavailable
+    harness = g2.Harness(
+        skill="nt-data",
+        scope="repository:missing-prerequisite",
+        summary="Missing prerequisite",
+        allowed_tokens=("missing-tool",),
+        steps=(g2.Step(("missing-tool", "--version")),),
+    )
+
+    def missing_runner(
+        command: tuple[str, ...], *, cwd: Path, check: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        # When the harness attempts to launch that executable
+        raise FileNotFoundError(command[0])
+
+    result = g2.run_harness(
+        replace(harness, evidence_file=None),
+        repo_root=tmp_path / "repo",
+        upstream_root=tmp_path / "upstream",
+        runner=missing_runner,
+    )
+
+    # Then the result is blocked instead of crashing the full readiness run
+    assert result.status is g2.RunStatus.BLOCKED
+    assert result.failed_step == harness.steps[0]
+
+
 def test_nt_implement_run_reports_pending_without_capnp(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -531,6 +559,46 @@ def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path:
     )
     invalid_errors = g2.validate_readiness_cards(tmp_path, harnesses)
     assert "nt-data durable evidence contains a failed step" in invalid_errors
+
+
+def test_card_validation_accepts_blocked_status_with_a_reason(tmp_path: Path) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
+    evidence_path.parent.mkdir(parents=True)
+    harness = g2.HARNESSES["nt-data"]
+    skill_path.write_text(
+        "| G2 V2 example validation | Validate. | Blocked | "
+        f"`{g2.evidence_command('nt-data')}` blocked; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "skill": "nt-data",
+                "scope": harness.scope,
+                "status": "blocked",
+                "blocked_reason": "required executable unavailable",
+                "owned_content_sha256": ownership.owned_content_hash(
+                    tmp_path, harness.owned_paths
+                ),
+                "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
+                "upstream_clean": True,
+                "steps": [
+                    {
+                        "command": list(harness.steps[0].command),
+                        "cwd": harness.steps[0].cwd.value,
+                        "returncode": 0,
+                    }
+                ],
+            }
+        )
+    )
+
+    errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
+
+    assert not [error for error in errors if "durable evidence" in error]
 
 
 def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path) -> None:

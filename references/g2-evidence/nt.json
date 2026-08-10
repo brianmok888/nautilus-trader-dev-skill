@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "89276a83e75491af396eecd050fff78c2ee49941f2644ff6ce2ee215493daaa4",
+  "owned_content_sha256": "b65dc6b2cf0b6b793147eb787bbee737bdee3ba2d1e283f9672349ef134f41b2",
   "schema_version": 2,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
@@ -15,7 +15,7 @@
         "tests/test_v2_guidance_hardening.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.946076,
+      "duration_seconds": 2.033625,
       "returncode": 0
     },
     {
@@ -25,11 +25,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.63607,
+      "duration_seconds": 0.630269,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-08T19:29:21.735995+00:00"
+  "verified_at": "2026-08-10T03:28:27.271236+00:00"
 }

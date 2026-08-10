@@ -1,9 +1,10 @@
 {
-  "owned_content_sha256": "c38f1b25c68095e57197055b86ead05b7a6b603bce4edcbab7ad545ffa3c0bec",
+  "owned_content_sha256": "a1b180a9ac780e48b9c5bcfd8271e836fca7f00b941c0968958d37fa145ca574",
   "schema_version": 2,
   "scope": "repository:python-v2-strategy-templates",
   "skill": "nt-strategy-builder",
-  "status": "pass",
+  "blocked_reason": "Pinned upstream python/.venv/bin/python is unavailable; run make sync-v2 at the pinned baseline and rerun the G2 harness.",
+  "status": "blocked",
   "steps": [
     {
       "command": [
