@@ -31,7 +31,28 @@ The executing agent MUST load and apply these skills at the right phase. Do not 
 | `$superpowers:verification-before-completion` | **Phase 3 / Phase 5** — before claiming any gate `Pass` | Run the actual command; cite real output; "should pass" is not Pass      |
 | `$superpowers:requesting-code-review`    | **Phase 4** — reconciliation                             | Independent review of post-fix tree before ship                          |
 
-**Rule:** If a phase's skill is not available in the runtime, STOP and report — do not substitute unstructured work for a missing methodology skill.
+**Rule:** If a phase's skill is not available in the runtime, stop that phase and mark the mission `Blocked` — do not substitute unstructured work for a missing methodology skill, do not claim readiness, and do not ship.
+
+---
+
+## Execution contract
+
+### Preflight and ownership
+
+Before Phase 0:
+
+1. Record the target repository `HEAD`, local `main`, `origin/main`, active branch/worktree, and `git status --short`.
+2. Record the pinned upstream commit, the reviewed upstream commit/ref, upstream `HEAD`, and upstream `git status --short`.
+3. Fetch `origin/main` without modifying a working tree. Local `main` and `origin/main` must match at preflight; otherwise mark shipping `Blocked` and report both SHAs.
+4. Run mission changes on a clean dedicated mission branch, preferably in a linked worktree. The primary `main` worktree is used only for its cleanliness check and the final fast-forward integration.
+5. Capture any pre-existing changes in every involved worktree. They are unrelated unless the user explicitly assigns them to this mission: never stash them, never reset them, never overwrite them, and never include them in mission commits. If safe isolation is impossible, stop `Blocked` before editing.
+
+### States and stop conditions
+
+- A finding is `OPEN` until its required correction and closure proof both pass; then it becomes `CLOSED`.
+- A gate is `Pass`, `Pending`, or `Blocked`. Only measured evidence can produce `Pass`.
+- The mission may ship only when every in-scope finding is `CLOSED`, all 136 gate cells are `Pass`, all mandatory validation succeeds, independent review has no unresolved P0/P1 findings, and both target and upstream ownership checks remain clean.
+- Missing methodology, unavailable or unpinned evidence, validation failure, unresolved review findings, primary-worktree changes, branch divergence, authentication failure, or push rejection must block shipping. A dirty primary `main` worktree always blocks shipping, even when its changes are unrelated and the mission worktree is clean. Report the exact failed command and recovery state; do not broaden scope or weaken a gate.
 
 ---
 
@@ -84,7 +105,9 @@ do not treat the upstream repository as an implementation target.
 
 Before reviewing, build an explicit in-scope inventory of NT-development skill
 artifacts and a proof that AI/EvoMap artifacts are absent. Do not report
-findings against excluded files.
+findings against excluded files. Keep the mission-owned diff distinct from the
+preflight snapshot; never treat pre-existing user changes as stale artifacts or
+cleanup candidates.
 
 Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
 
@@ -103,11 +126,15 @@ guidance for new work.
 
 ### Finding format (every finding)
 
-```
-[P0/P1/P2] <category>: <one-line description>
+```text
+[NT-###] [P0|P1|P2] [OPEN] <category>: <one-line description>
   file: <path>:<line>
-  fix: <one-line proposal>
+  evidence: <upstream source, pinned revision, test result, or docs URL>
+  fix: <specific change required>
+  closure: <command, file:line, or URL required to mark CLOSED>
 ```
+
+Assign each finding a unique, stable Finding ID. Preserve that ID through correction and reconciliation; update `[OPEN]` to `[CLOSED]` only after the recorded closure proof passes. If the audit finds nothing, record an explicit zero-finding result rather than inventing work.
 
 ### Record current findings
 
@@ -124,9 +151,10 @@ Record source-backed findings in `docs/tracking/Findings.md` using the format ab
 Work findings in priority order (P0 → P1 → P2). For each segment:
 
 1. **When approach is ambiguous:** brainstorm the approach before coding.
-2. **Write the test first.** Watch it fail. Then implement. Verify it passes.
-3. **One commit per logical segment.** Do not batch unrelated fixes.
-4. **Append a delta entry** to `docs/tracking/Findings.md` on each segment close:
+2. Define the acceptance check before editing. Behavioral and tooling corrections require a failing regression test first: watch it fail, apply the minimal root-cause fix, then run the focused and broader suites until green.
+3. Prose-only guidance corrections must cite a pinned upstream commit, versioned official documentation, or another recorded primary-source revision, then run applicable existing validators and pressure scenarios. Tests must not pin prose wording.
+4. **One commit per logical segment.** Do not batch unrelated fixes.
+5. Record the closure proof, update the affected skill's gate card, and change the stable finding state from `OPEN` to `CLOSED` in `docs/tracking/Findings.md`. Append the segment delta:
    ```
    YYYY-MM-DD — [tier] — MODIFIED: <what changed> — files: a, b, c
    ```
@@ -172,7 +200,7 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 |------|-------------|--------|----------|
 | G0   | Scope and ownership are explicit | Pass/Pending/Blocked | file:line |
 | G1   | No Cython/v1 references remain unlabelled | Pass/Pending/Blocked | command or file:line |
-| G2   | Examples compile against the pinned NT V2 baseline | Pass/Pending/Blocked | `python tools/check_skill_g2_harnesses.py --execute --skill <skill>` output |
+| G2   | Examples compile against the pinned NT V2 baseline | Pass/Pending/Blocked | `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` plus card/evidence checks |
 | G3   | Rust bindings / PyO3 paths match current upstream contracts | Pass/Pending/Blocked | file:line or upstream URL |
 | G4   | Skill-specific functional gates pass | Pass/Pending/Blocked | command or URL |
 | G5   | References and templates are synchronized | Pass/Pending/Blocked | command or file:line |
@@ -183,6 +211,7 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 **Rules:**
 - Status values: `Pass` / `Pending` / `Blocked` (+ reason on next line).
 - Every `Pass` MUST cite a measurable command, file, or URL that proves it.
+- G2 is `Pass` only after every in-scope `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` run passes, `python3 tools/check_skill_g2_harnesses.py --check-cards` passes, `python3 tools/check_skill_g2_harnesses.py --check-card-declarations` passes, and each durable evidence file's owned-content hash matches current skill-owned content and the pinned baseline.
 - A skill is "cutover-ready" only when ALL gates are `Pass`.
 - `Pending` gates carry into a follow-up TODO list at the end of Phase 4.
 
@@ -192,23 +221,44 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 
 **Invoke:** `$superpowers:requesting-code-review` for independent post-fix review.
 
-1. Re-run Phase 1 audit against the post-fix tree.
-2. Confirm each Phase 1 finding is closed; carry residuals into a follow-up TODO list in `docs/tracking/Findings.md`.
-3. Regenerate the gate checklist with updated statuses.
+1. Audit the post-fix tree against the same Phase 1 scope and authoritative sources without recursively restarting Phase 1. Do not recursively restart Phase 1.
+2. Reconcile the post-fix tree against the original findings ledger by stable Finding ID. Confirm every original finding is `CLOSED`; keep residuals `OPEN` and carry them into a follow-up TODO list in `docs/tracking/Findings.md`.
+3. Regenerate the gate checklist with updated statuses and run all three G2 execution/evidence checks.
 4. Verify the legacy lint gate passes on the full tree.
+5. Invoke independent post-fix review. Resolve all P0/P1 review findings before shipping; if mandatory independent review cannot run, record the infrastructure failure and keep shipping `Blocked`.
 
 ---
 
-## Phase 5 — Ship
+## Phase 5 — Ship automatically
 
-1. One commit per logical segment (conventional commits: `fix:`, `feat:`, `docs:`, `chore:`).
-2. Merge to `main`.
-3. Push to `origin/main`.
-4. **Final report** (in chat, not committed):
-   - Phase 1 findings count by severity (P0/P1/P2) and how many closed.
-   - Gate checklist summary table (skill × gate → status).
-   - Commit SHAs.
-   - Anything still `Pending` or `Blocked`.
+Shipping is automatic after every mandatory closure condition passes; proceed without asking for another approval.
+
+### Mission-owned changes exist
+
+Treat the mission change set as the commits reachable from the mission branch but not from the recorded preflight baseline; it may be non-empty even after those commits leave the worktree clean.
+
+1. Confirm the mission-owned change set contains no pre-existing or unrelated paths.
+2. Create one verified commit per logical segment using the repository's conventional style (`fix:`, `feat:`, `docs:`, `chore:`). Do not create a commit until that segment's tests and gates pass.
+3. Re-run the full mandatory validation suite on the committed mission branch and require a clean mission worktree.
+4. Fetch `origin/main` immediately before integration. Require the primary `main` worktree to be clean and local `main` and `origin/main` both to equal the baseline recorded at preflight.
+5. In the primary worktree, run `git merge --ff-only <mission-branch>`. Do not rebase, do not reset, do not stash, do not amend, and do not resolve divergence by rewriting history.
+6. Run `git push origin main`, fetch `origin/main`, and prove local `main` and `origin/main` resolve to the same final SHA.
+7. If local or remote `main` moved after preflight, the primary worktree is dirty for any reason, authentication fails, or the push is rejected, block shipping before merge/push and report local, remote, baseline, and mission SHAs. Never treat unrelated primary-worktree changes as permission to continue. Do not force-push and do not silently retry.
+
+### No mission-owned changes
+
+When the audit and validation succeed and the mission branch contains no commits or worktree changes beyond the recorded preflight baseline, create no empty commit, perform no merge, and perform no push. Fetch once, verify local `main` still equals `origin/main`, and report that no shipping action was necessary.
+
+### Final report
+
+Report in chat, not in a new committed artifact:
+
+- Phase 1 findings count by severity and how many are `CLOSED`.
+- Gate checklist summary table (skill × gate → status).
+- Exact validation commands and results.
+- Commit SHAs and the local and remote final SHA.
+- Upstream checkout cleanliness and pinned/reviewed upstream SHAs.
+- Anything still `Pending` or `Blocked`, including failed review or shipping infrastructure.
 
 ---
 
@@ -237,3 +287,4 @@ Do NOT duplicate content across trackers. One change → one write-target.
 - **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #3.
 - **Applicable sync checkers must stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, `check_upstream_freshness.py`.
 - **No fabricated content.** If a finding can't cite a real file:line, it's not a finding.
+- **No destructive or unrelated Git operations.** The agent must not rebase, reset, stash, amend, discard, force-push, or silently retry around divergence, dirty user state, or failed authentication. Do not recommend those operations as mission recovery steps; report the blocked state and leave user-owned state untouched. Automatic shipping is fail-closed.
