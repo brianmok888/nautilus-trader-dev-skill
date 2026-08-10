@@ -1,5 +1,76 @@
 # PROJECT KNOWLEDGE BASE
 
+## Agent Workflow
+
+This workflow applies only within `nautilus-trader-dev-skill`. Repository-specific mission, scope, and commands elsewhere in this file remain authoritative.
+
+### Communication
+
+- Be concise, direct, and candid.
+- Distinguish verified facts, uncertainty, and recommendations. Challenge assumptions that conflict with repository evidence.
+- When explaining complex behavior, invoke the `Visualize` skill. If it is unavailable, use a compact Mermaid or ASCII diagram and disclose the fallback.
+
+### Sources and Research
+
+- Ground version-sensitive claims in current authoritative sources: this repository, the read-only upstream NautilusTrader checkout, official documentation, specifications, release notes, or primary maintainer statements.
+- Link important external evidence and cite repository evidence as `path/to/file.ext:line`.
+- Never present memory or inference as verified fact.
+
+### Execution
+
+For authorized implementation work:
+
+1. Read every applicable `AGENTS.md`; deeper files override broader files.
+2. Preserve the user's original goal, the NT-only scope, the read-only upstream boundary, and all stated constraints.
+3. Inspect the relevant implementation, callers, tests, and repository status.
+4. Load relevant skills before acting.
+5. Plan the smallest complete change.
+6. Add a failing behavioral regression test for a bug or behavior change.
+7. Implement the minimal correction in this skill repository only.
+8. Run diagnostics, related tests, and the repository validation commands documented below.
+9. Exercise the changed behavior through its real user-facing interface when one exists.
+10. Review substantial changes before reporting completion.
+
+Do not stop at a proposal when implementation was authorized.
+
+### Decisions and Questions
+
+- Make ordinary, reversible implementation decisions independently.
+- Ask one focused question only when different answers materially change the result, the action is destructive or externally visible, or credentials, approval, or unavailable information are required.
+- State the blocked decision and its consequences.
+
+### Skills and Delegation
+
+- Use a skill when it materially applies to the task.
+- Spawn subagents only for genuinely independent work that can run concurrently.
+- Give each subagent one bounded deliverable and required evidence.
+- Independently verify and synthesize subagent findings; do not forward reports uncritically.
+
+### Change Discipline
+
+- Keep changes focused on the requested NT-skill outcome and preserve the separation from Daedalus, AI, and other downstream application work.
+- Avoid unrelated cleanup, speculative abstractions, compatibility shims, and low-signal tests.
+- Match existing repository conventions and preserve unrelated working-tree changes.
+- Never use destructive Git operations or modify upstream, production, downstream, or external systems without explicit authorization.
+
+### Verification
+
+A change is complete only when:
+
+- the requested observable behavior works;
+- relevant diagnostics and tests pass;
+- the real interface has been exercised when one exists;
+- failures caused by the change are fixed; and
+- pre-existing failures are identified rather than hidden.
+
+Do not claim that something passes unless the proving command was executed and its output inspected.
+
+### Reporting
+
+- During work, report only meaningful phase changes, decisions, and blockers.
+- Final responses should state the outcome, evidence, concise changes with file references, and residual blockers or uncertainty.
+- Avoid routine progress narration and unsupported assurances.
+
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in this file is migration/reference-only; prefer Rust V2/PyO3 and `LiveNode` for current work.
 
 ## Mission
