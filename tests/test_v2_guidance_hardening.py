@@ -10,6 +10,60 @@ def read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def test_current_guidance_rejects_verified_obsolete_paths_and_defaults() -> None:
+    combined = "\n".join(
+        read(path)
+        for path in (
+            "skills/nt-dex-adapter/SKILL.md",
+            "skills/nt-implement/SKILL.md",
+            "skills/nt-backtest/SKILL.md",
+            "skills/nt-adapters/references/guides/rust.md",
+            "skills/nt-dev/references/guides/rust_conventions.md",
+            "skills/nt-model/references/concepts/instruments.md",
+            "skills/nt-architect/references/concepts/instruments.md",
+            "skills/nt-implement/references/concepts/instruments.md",
+            "skills/nt-review/references/concepts/instruments.md",
+            "skills/nt-signals/references/guides/custom_data_patterns.md",
+        )
+    )
+
+    for obsolete in (
+        "nautilus_trader/adapters/_template/",
+        "crates/exec-algo/",
+        "crates/execution/src/matching_core/",
+        "crates/live/src/manager.rs",
+        "nautilus_trader/accounting/accounts/margin.pyx",
+        "Custom data types are a **Python-only** feature",
+        "prefer Python `@customdataclass`",
+    ):
+        assert obsolete not in combined
+
+    for current in (
+        "crates/trading/src/algorithm/",
+        "crates/execution/src/matching_core.rs",
+        "crates/model/src/accounts/margin.rs",
+        "crates/model/src/python/account/margin.rs",
+        "CustomDataTrait",
+        "register_custom_data_class",
+    ):
+        assert current in combined
+
+
+def test_root_skills_exclude_active_ai_advisory_lanes() -> None:
+    active_lane_patterns = (
+        re.compile(r"active AI/advisory", re.IGNORECASE),
+        re.compile(r"AI/advisory (?:strategy )?work.*(?:Python|lane)", re.IGNORECASE),
+        re.compile(r"AI/advisory.*(?:sole|only).*Python", re.IGNORECASE),
+        re.compile(r"(?:sole|only) active Python", re.IGNORECASE),
+        re.compile(r"non-AI", re.IGNORECASE),
+    )
+
+    for path in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
+        text = path.read_text(encoding="utf-8")
+        for pattern in active_lane_patterns:
+            assert pattern.search(text) is None, (path.relative_to(REPO_ROOT), pattern.pattern)
+
+
 def test_copy_paste_rust_guidance_uses_current_v2_api_shapes() -> None:
     backtest = read("skills/nt-backtest/SKILL.md")
     adapters = read("skills/nt-adapters/SKILL.md")
@@ -141,8 +195,7 @@ def test_repository_scope_routes_python_only_as_nt_migration_reference() -> None
     assert "migration/reference-only" in router
     assert "migration/reference-only" in python_builder
     assert "Explicit Python strategy requests still route to Rust" in implement
-    assert "AI work is out of scope" in router
-    assert "AI work is out of scope" in router
+    assert "AI and advisory work are outside this repository" in router
 
 
 def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:

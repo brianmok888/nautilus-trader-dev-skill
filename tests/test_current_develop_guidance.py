@@ -7,6 +7,40 @@ def read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
+def test_current_develop_contract_overlays_cover_registration_reconnect_and_blockchain() -> None:
+    testing = read("skills/nt-testing/SKILL.md")
+    adapters = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
+    dex = read("skills/nt-dex-adapter/SKILL.md")
+    benchmark = read("skills/nt-dev/SKILL.md")
+
+    for marker in ("ensure_registered", "before actor registration", "PyResult"):
+        assert marker in testing
+    for marker in (
+        "SocketReconnectRegistry",
+        "ReconnectSocket",
+        "AlreadyPending",
+        "Unavailable",
+        "endpoint",
+    ):
+        assert marker in adapters
+    for marker in (
+        "WalletAccount",
+        "chain ID",
+        "nonce",
+        "local signing",
+        "reservation",
+        "transaction lifecycle",
+    ):
+        assert marker in dex
+    for marker in (
+        "canonical.rs",
+        "workload identifier",
+        "release profile",
+        "baseline comparison",
+    ):
+        assert marker in benchmark
+
+
 def test_live_guidance_covers_current_cache_and_queue_observability() -> None:
     # Given current-develop live guidance
     text = read("skills/nt-live/SKILL.md")

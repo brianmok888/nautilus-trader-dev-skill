@@ -929,6 +929,17 @@ flowchart LR
 - **Message buffering**: Handler uses `VecDeque<{Venue}WsMessage>` for frames that produce multiple output messages. The `next()` method drains the queue before polling channels.
 - **Python constraint**: Client uses `Arc<DashMap>` only for state Python might query; handler uses `AHashMap` for internal matching.
 
+### Endpoint-scoped reconnect control
+
+Current-develop overlay (`03062cce6372d3c7e9044b39b181a50cc07a067e`): clients with multiple
+logical socket endpoints expose a `SocketReconnectRegistry`. Register each endpoint's reconnect
+handle for exactly the connection lifetime and remove it on teardown. Route the `ReconnectSocket`
+system command to the selected endpoint only; never restart every socket as a side effect.
+
+The command outcome is explicit: `Accepted` means a reconnect was scheduled, `AlreadyPending`
+means that endpoint already has one in flight, and `Unavailable` means no live registration exists.
+Test two registered endpoints, selection isolation, duplicate commands, and removal on disconnect.
+
 ### Authentication
 
 Authentication state is managed through events:

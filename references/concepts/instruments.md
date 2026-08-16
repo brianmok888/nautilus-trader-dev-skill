@@ -305,8 +305,9 @@ For those interested in exploring the technical implementation:
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
-- [nautilus_trader/accounting/accounts/margin.pyx](https://github.com/nautechsystems/nautilus_trader/blob/develop/nautilus_trader/accounting/accounts/margin.pyx)
-- Key methods: `calculate_margin_init(self, ...)` and `calculate_margin_maint(self, ...)`
+- Rust implementation: [`crates/model/src/accounts/margin.rs`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/model/src/accounts/margin.rs)
+- PyO3 binding: [`crates/model/src/python/account/margin.rs`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/model/src/python/account/margin.rs)
+- Key methods: `calculate_margin_init(...)` and `calculate_margin_maint(...)`
 
 ## Commissions
 

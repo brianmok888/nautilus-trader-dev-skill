@@ -12,15 +12,15 @@ Use these gates as the architecture acceptance card. A gate is `Pass` only when 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin the developer-guide snapshot and APIs before design. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
-| G1 Legacy labelling | Keep migration/reference labels on legacy/Cython/v1 guidance outside production design. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
+| G1 Legacy labelling | legacy: Keep migration/reference labels on legacy/Cython/v1 guidance outside production design. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
 | G2 Pinned V2 examples | Compile representative Rust API shapes against the pinned baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; evidence: `references/g2-evidence/nt-architect.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Quarantine Python and keep execution authority in Rust. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Map each component to unit, integration, and lifecycle evidence. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-architect.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-Rust-oriented v2.0 readiness means producing a component ownership matrix before implementation. Rust owns strategy/configuration, adapters, networking, parsing, normalization, risk, execution-critical state, and live-node plumbing. Preserve message immutability across actor, strategy, adapter, cache, and message bus boundaries. AI/advisory lane remains Python and off execution-critical paths; all other Python content is migration/reference-only.
+Rust-oriented v2.0 readiness means producing a component ownership matrix before implementation. Rust owns strategy/configuration, adapters, networking, parsing, normalization, risk, execution-critical state, and live-node plumbing. Preserve message immutability across actor, strategy, adapter, cache, and message bus boundaries. AI and advisory work is outside this repository; Python content is limited to bounded PyO3 control-plane and migration/reference material.
 
 ## Rust production lane
 
@@ -64,7 +64,7 @@ PyO3 is a bounded control plane over Rust-owned behavior, not an alternate imple
 
 There are no active Python examples in this root skill. Specify the Rust `#[pyclass]`/`#[pymethods]` owner, module registration path, conversion/error contract, GIL boundary, and cleanup behavior. Prefer owned `Py<T>` handles; justify shared ownership, use weak references for back-references, and provide traversal/clear hooks where Python cycles are possible. Route callbacks from Tokio work through the supported live-runner/channel boundary rather than attaching Python on worker tasks.
 
-AI/advisory integration is the sole active Python lane. It must be asynchronous, approval-gated, auditable, non-authoritative, and equipped with a deterministic Rust-owned fallback.
+AI and advisory integration is outside this repository. Do not design or route that lane from this skill.
 
 ## Migration/reference lane
 

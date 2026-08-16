@@ -540,8 +540,8 @@ let mut subscribed: IndexSet<InstrumentId> = IndexSet::new();
 ```
 
 The pre-commit hook `check-dst-conventions` enforces `IndexMap` / `IndexSet`
-in `crates/live/src/manager.rs` and
-`crates/execution/src/matching_engine/engine.rs` because both files were
+in `crates/live/src/execution/manager.rs` and
+`crates/execution/src/matching_engine/mod.rs` because both files were
 audited as load-bearing for fill ordering and reconciliation. Other call
 sites are reviewed individually; the closed sites and remaining allowed
 patterns are listed under "Implementation notes" in

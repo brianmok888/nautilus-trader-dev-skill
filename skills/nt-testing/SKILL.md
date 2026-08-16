@@ -69,9 +69,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-testing.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
@@ -101,9 +101,14 @@ PyO3 tests verify binding registration, configuration round trips, error transla
 The public V2 projection is `from nautilus_trader.testkit import ExecTesterConfig`;
 do not import the compatibility root `nautilus_trader.core.nautilus_pyo3`.
 
+Current-develop overlay (`949207b053b040feaff273dff9ad36b796a0e2a9ea`): every public PyO3
+actor `subscribe_*` and `unsubscribe_*` entry point calls `ensure_registered()` before mutating
+subscription state and returns `PyResult`. Test that a call fails before actor registration, leaves
+no retained subscription, and succeeds after registration.
+
 ## Migration/reference lane
 
-The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quarantined under `migration_reference/python/`. Use them only to migrate or compare legacy integrations; Python is not an active production testing lane outside AI/advisory work.
+The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quarantined under `migration_reference/python/`. Use them only to migrate or compare legacy integrations; Python is not an active production testing lane; AI and advisory work is outside this repository.
 
 ## Source-pinned upstream lane
 
@@ -146,7 +151,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 
 - Treat upstream **Python v2 controller subclassing**, **subclassable execution
   algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
-  migration/reference evidence. This repository's active non-AI behavior tests
+  migration/reference evidence. This repository's active behavior tests
   target Rust ownership and bounded PyO3 configuration/error boundaries.
 
 Required testing rules:

@@ -19,9 +19,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the AI advisory boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-dev.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
 AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
@@ -30,7 +30,7 @@ Development gates: the minimum Rust compliance evidence for changed production c
 
 ## Rust production lane
 
-Use the Rust workspace as the default development surface for non-AI production code, including formatting, tests, linting, dependency policy, benchmarks, unsafe-code review, and FFI ownership checks. Preserve crate boundaries and require fresh cargo evidence for every changed production path.
+Use the Rust workspace as the default production development surface, including formatting, tests, linting, dependency policy, benchmarks, unsafe-code review, and FFI ownership checks. Preserve crate boundaries and require fresh cargo evidence for every changed production path.
 
 ## PyO3 control-plane lane
 
@@ -260,8 +260,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   `2.0.0rc2`; upstream release notes identify 2.0.0rc1 as the first public
   candidate and describe the rolling `2.0.0rcN` line before final 2.0.0.
 - Rust-oriented v2.0 readiness is the default: Rust core first and bounded PyO3
-  configuration/inspection second. The only active Python lane in this
-  repository is AI/advisory; Python remains migration/reference-only.
+  configuration/inspection second. Python production guidance remains migration/reference-only; bounded PyO3 control-plane bindings are allowed. AI and advisory work is outside this repository.
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
@@ -271,7 +270,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 - Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
-  `migration_reference/`; implement new non-AI orchestration, routed-order,
+  `migration_reference/`; implement new orchestration, routed-order,
   fee, and fill behavior in Rust.
 - Compatibility inventory terms `Python v2 controller subclassing` and
   `subclassable execution algorithms` describe those quarantined upstream
@@ -399,6 +398,11 @@ make cargo-ci-benches                                  # CI benches
 ```
 
 **Flamegraph**: `cargo flamegraph --bench <name> -p <crate> --profile bench`
+
+Current-develop overlay (`f3a0bed303bc8a6d9f83138742d085966ffd47d0`): backtest performance
+claims must use a workload from `crates/backtest/benches/engine/canonical.rs`. Record the canonical
+workload identifier and parameters, the release profile and target CPU, the baseline comparison,
+and the exact command. A one-off benchmark without this matrix is exploratory evidence only.
 
 ### Data Type Testing
 

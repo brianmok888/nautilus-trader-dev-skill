@@ -299,18 +299,16 @@ class CustomSerialized(Data):
 
 ## Rust Custom Data Types
 
-Custom data types are a **Python-only** feature. The `@customdataclass` decorator relies on
-Python's `dataclass` machinery and PyArrow for schema generation, which have no Rust equivalent.
+Current V2 production custom data is Rust-defined. Implement `CustomDataTrait` for the payload,
+wrap it in `CustomData` through `CustomData::from_arc` or `CustomData::new`, and register the
+required JSON/Arrow serializers in the Rust registry. Add PyO3 bindings only when Python consumers
+need the type; Rust remains the source of truth.
 
-However, Rust code can work with custom data through the FFI boundary:
-
-- **Consuming in Rust**: Custom data objects arriving via the message bus are `Data` trait objects.
-  Rust components receive them as opaque `PyObject` references and must call back into Python
-  to access fields.
-- **Defining data types in Rust**: For performance-critical data types, define a Rust struct with
-  `#[pyclass]` and implement the `Data` trait manually. You must also manually implement
-  `to_dict`/`from_dict` and register Arrow schemas via `register_arrow()` on the Python side.
-  This is advanced — prefer Python `@customdataclass` unless profiling shows a bottleneck.
+Python-defined custom classes are an explicit control-plane boundary, not the production default.
+Call `register_custom_data_class` before a Python class enters the Rust message bus or catalog path.
+The class must provide `from_json`, `ts_event`, `ts_init`, and the record-batch encode/decode
+methods required by its persistence use. Message-bus-only classes may reject Arrow operations,
+but catalog-backed classes must implement them.
 
 ---
 

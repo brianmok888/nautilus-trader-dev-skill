@@ -13,7 +13,7 @@ This repository is the generic NT skill layer and covers **NautilusTrader develo
 
 Upstream NautilusTrader source, developer guides, examples, and tests are **read-only ground truth**. Inspect them to verify APIs and standards. Do not modify the upstream repository, implement upstream features, prepare upstream commits, or treat upstream evidence as this repository's output.
 
-AI work is out of scope. The stricter cutover policy here is to route all non-AI strategy work to Rust-first skills. Do not route to AI, advisory, model-training, research-orchestration, or external evolution-system skills from this router. Those concerns belong in a separate skill repository.
+AI and advisory work are outside this repository. Route all strategy implementation in this repository to Rust-first skills. Do not route to AI, advisory, model-training, research-orchestration, or external evolution-system skills from this router; those concerns belong in a separate skill repository.
 
 ## Default direction
 

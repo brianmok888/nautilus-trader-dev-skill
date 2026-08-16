@@ -102,7 +102,7 @@ This shape matches the current `crates/model/src/python/types/price.rs`
 projection: PyO3 methods are implemented on the owning Rust `Price`, and stub
 generation is explicit. Confirm the current owning type and generated stub path
 before implementation; do not infer the public projection from a historical
-Cython declaration.
+migration/reference-only Cython declaration.
 
 ## Build and test
 
