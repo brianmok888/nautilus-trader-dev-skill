@@ -65,4 +65,4 @@ def test_main_router_states_master_prompt_boundaries() -> None:
     assert "NautilusTrader development only" in router
     assert "read-only ground truth" in router
     assert "Do not modify the upstream" in router
-    assert "AI work is out of scope" in router
+    assert "AI and advisory work are outside this repository" in router

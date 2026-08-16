@@ -4,7 +4,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATH = REPO_ROOT / "skills/nt-testing/SKILL.md"
 PINNED_SPEC_PATH = REPO_ROOT / "references/developer_guide/spec_exec_testing.md"
-PINNED_SPEC_SHA256 = "c16ce539fbb3e38f551a5a8bca0b6717b89c3cd1642540a1ac9589cbd3b7334e"
+PINNED_SPEC_SHA256 = "6ea11bc82bccaf34960756adaf9f4d2ed375d821922c962f514cec78a17f79bf"
 
 
 def read(path: Path) -> str:
