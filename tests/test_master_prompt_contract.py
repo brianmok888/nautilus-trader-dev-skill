@@ -16,6 +16,7 @@ def test_master_prompt_preserves_required_execution_sections() -> None:
     required_sections = (
         "## Execution contract",
         "### Preflight and ownership",
+        "### Upstream currency prerequisite",
         "### States and stop conditions",
         "### Finding format (every finding)",
         "## Phase 4 — Reconciliation",
@@ -36,6 +37,7 @@ def test_master_prompt_declares_machine_consumed_commands() -> None:
         "python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>",
         "python3 tools/check_skill_g2_harnesses.py --check-cards",
         "python3 tools/check_skill_g2_harnesses.py --check-card-declarations",
+        "python3 tools/check_upstream_freshness.py --format json",
         "git merge --ff-only <mission-branch>",
         "git push origin main",
     )
@@ -58,6 +60,17 @@ def test_master_prompt_defines_complete_finding_record() -> None:
     for field in finding_template:
         assert field in prompt
 
+
+def test_master_prompt_requires_upstream_currency_prerequisite() -> None:
+    prompt = read_master_prompt()
+
+    assert "references/upstream-delta-review.json" in prompt
+    assert "tools/upstream_baseline.py" in prompt
+    assert "must exit 0 before the mission may ship" in prompt
+    assert "Deferring the pin move requires an OPEN P2 finding" in prompt
+    assert prompt.index("### Upstream currency prerequisite") < prompt.index(
+        "### States and stop conditions"
+    )
 
 def test_master_prompt_exposes_both_shipping_outcomes() -> None:
     prompt = read_master_prompt()

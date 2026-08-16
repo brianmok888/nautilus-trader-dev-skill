@@ -46,6 +46,16 @@ Before Phase 0:
 3. Fetch `origin/main` without modifying a working tree. Local `main` and `origin/main` must match at preflight; otherwise mark shipping `Blocked` and report both SHAs.
 4. Run mission changes on a clean dedicated mission branch, preferably in a linked worktree. The primary `main` worktree is used only for its cleanliness check and the final fast-forward integration.
 5. Capture any pre-existing changes in every involved worktree. They are unrelated unless the user explicitly assigns them to this mission: never stash them, never reset them, never overwrite them, and never include them in mission commits. If safe isolation is impossible, stop `Blocked` before editing.
+6. Complete the upstream currency prerequisite below before Phase 1. It is part of preflight, not optional context.
+
+### Upstream currency prerequisite
+
+Missions validate guidance against the **current** upstream `origin/develop`, not the historical pin alone. Both layers below are prerequisites: complete them before Phase 1 and re-verify step 3 before shipping.
+
+1. **Refresh the read-only develop cache.** Fetch `origin/develop` inside the upstream cache. The pinned checkout stays source-read-only: never build into or commit to it; perform builds in a disposable writable worktree of the pinned commit.
+2. **Measure drift.** Run `python3 tools/check_upstream_freshness.py --format json` and record `pinned_commit`, the resolved develop tip, and the ahead count.
+3. **Refresh the delta review whenever `reviewed_commit` differs from the resolved tip.** Review every commit in `pinned_commit..tip` that touches paths this repository teaches about, and update `references/upstream-delta-review.json` (`reviewed_commit`, `reviewed_on`, per-commit deltas). Open P1 findings for any delta that invalidates current guidance. `python3 tools/check_upstream_freshness.py --format json` must exit 0 before the mission may ship.
+4. **Move the pin when develop has moved.** Update `UPSTREAM_COMMIT` in `tools/upstream_baseline.py` to the reviewed tip, then refresh every pin-citing layer: the README pinned-baseline line, `skills/nt-learn/curriculum/` pin references, and each affected `references/g2-evidence/*.json` re-executed via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree. `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` must pass afterwards. Deferring the pin move requires an OPEN P2 finding recording the drift count and a re-run date; deferral blocks any `Pass` claim whose evidence depends on behavior newer than the pin.
 
 ### States and stop conditions
 
