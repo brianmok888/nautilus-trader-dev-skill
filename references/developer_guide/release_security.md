@@ -2,7 +2,7 @@
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/release_security/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/release_security.md
 source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
-sync_date: 2026-07-28
+sync_date: 2026-08-16
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only

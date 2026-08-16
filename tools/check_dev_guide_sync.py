@@ -62,7 +62,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-07-28"
+CURRENT_SYNC_DATE = "2026-08-16"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.230.0"
 CURRENT_RELEASE_DATE = "2026-06-29"
@@ -517,13 +517,13 @@ NT_V2_RUST_CHECKER_GATE_TARGETS = {
 
 NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
     Path("skills/nt/SKILL.md"): [
-        "route all non-AI strategy",
-        "stricter cutover policy",
+        "Route all strategy implementation",
+        "AI and advisory work are outside this repository",
     ],
     Path("skills/nt-architect/SKILL.md"): [
         "component ownership matrix",
         "Rust owns strategy",
-        "migration/reference-only",
+        "migration/reference material",
     ],
     Path("skills/nt-backtest/SKILL.md"): [
         "Rust BacktestEngine",

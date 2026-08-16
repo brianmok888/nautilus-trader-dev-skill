@@ -10,6 +10,6 @@ def default_upstream_root() -> Path:
     if configured:
         return Path(configured).expanduser()
     cache_home = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
-    return cache_home / "nautilus-trader-dev-skill" / "nautilus_trader"
+    return cache_home / "nautilus-trader-dev-skill" / "nautilus_trader-pinned"
 
 UPSTREAM_REMOTE_REFS = ("origin/develop",)

@@ -2322,13 +2322,14 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
 
     readiness_extras = {
         Path("skills/nt/SKILL.md"): (
-            "route all non-AI strategy work to Rust under the stricter cutover policy.\n"
+            "Route all strategy implementation to Rust-first skills. "
+            "AI and advisory work are outside this repository.\n"
         ),
         Path("skills/nt-adapters/SKILL.md"): (
             "Adapter evidence includes cargo nextest, cargo clippy, cargo deny, and fuzz-adapter.\n"
         ),
         Path("skills/nt-architect/SKILL.md"): (
-            "Architecture includes a component ownership matrix: Rust owns strategy/configuration and production paths; non-AI Python is migration/reference-only, and AI/advisory lane remains Python.\n"
+            "Architecture includes a component ownership matrix: Rust owns strategy/configuration and production paths; Python is migration/reference material, and AI and advisory work are outside this repository.\n"
         ),
         Path("skills/nt-backtest/SKILL.md"): (
             "Rust BacktestEngine evidence includes cargo nextest, cargo clippy, cargo deny, and Python research/config is labelled.\n"

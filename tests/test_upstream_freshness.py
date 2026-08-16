@@ -36,7 +36,7 @@ def test_upstream_root_is_portable_and_environment_overridable(
 
     monkeypatch.delenv("NT_UPSTREAM_ROOT")
     resolved = default_upstream_root()
-    assert resolved.name == "nautilus_trader"
+    assert resolved.name == "nautilus_trader-pinned"
     assert ".cache" in resolved.parts
     assert "nautilus_trader_upstream_audit_20260728" not in str(resolved)
 
