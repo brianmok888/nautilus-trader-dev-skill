@@ -420,9 +420,9 @@ config_node = TradingNodeConfig(
 Alternatively, call `init_tracing()` directly:
 
 ```python
-from nautilus_trader.core import nautilus_pyo3
+from nautilus_trader.common import init_tracing
 
-nautilus_pyo3.init_tracing()
+init_tracing()
 ```
 
 ### Filtering with RUST_LOG

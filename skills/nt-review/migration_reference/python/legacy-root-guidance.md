@@ -84,23 +84,6 @@ Adapter-specific review severity:
 - `Major`: incomplete method contracts, missing integration test categories.
 - `Minor`: naming drift, doc/reference gaps with otherwise correct behavior.
 
-## EvoMap Integration Review Gate (Optional)
-
-If the system integrates with EvoMap, LangChain, or LangGraph, fail the review if any of the following are present:
-
-- **Execution coupling**: EvoMap, LangChain, or LangGraph availability can directly block or alter order execution in hot handlers.
-- **Auto-apply behavior**: suggestions are merged into live strategy rules without explicit approval.
-- **No degraded-mode plan**: missing deterministic fallback behavior when EvoMap is down.
-- **No provenance**: missing traceability for exported payloads, graph checkpoints, and accept/reject decisions.
-- **Unsafe payload scope**: credentials or unnecessary account-sensitive fields are exported.
-- **Direct Hub coupling**: agent-side code bypasses the local Proxy mailbox boundary.
-
-EvoMap-specific review severity:
-
-- `Blocker`: execution coupling, auto-apply behavior, secret leakage, direct Hub coupling.
-- `Major`: missing fallback/provenance controls or missing human-in-the-loop graph checkpoints for advisory changes.
-- `Minor`: naming/documentation drift with otherwise safe behavior.
-
 ## Review Dimensions
 
 ### NT v2 cutover review gates
@@ -635,7 +618,6 @@ NT v2 compatibility note: v1.x live checklist items below are migration/referenc
 - [ ] External order claims configured if resuming
 - [ ] All order lifecycle events handled
 - [ ] Reconnection logic in adapters
-- [ ] EvoMap (if enabled) has explicit fallback, approval gate, and provenance logging
 - [ ] **v1.223.0**: `trade_execution` default is now `True`; if using bar-only execution set `trade_execution=False` explicitly in `BacktestVenueConfig`
 - [ ] **v1.223.0**: `Quantity - Quantity` returns `Quantity` (not `Decimal`); `ValueError` raised if result < 0 — update any code expecting `Decimal`
 - [ ] **v1.223.0**: dYdX v3 adapter removed; ensure imports use `nautilus_trader.adapters.dydx` with `Dydx*` class prefix

@@ -15,8 +15,9 @@ NautilusTrader's v2 Rust path provides:
 - **Native performance** — no Python GIL, no FFI overhead
 - **No Python runtime** — deploy as standalone binaries
 - **Same domain model** — shared types across all paths
-- **Readiness-scoped coverage** — use the Rust path where the required engine,
-  adapter, and tests exist; do not assume complete v1-equivalent coverage
+- **Readiness-scoped coverage** — legacy: this migration/reference-only comparison
+  is not a production default; use the Rust path where the required engine, adapter,
+  and tests exist; do not assume complete v1-equivalent coverage
 
 ## Project Setup
 

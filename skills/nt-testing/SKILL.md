@@ -200,7 +200,7 @@ NautilusTrader's test suite covers seven categories:
 ### Primary commands
 
 ```bash
-# v1 legacy Python tests
+# NT v2 compatibility note: v1 legacy Python tests
 make pytest
 # or
 uv run --active --no-sync pytest --new-first --failed-first

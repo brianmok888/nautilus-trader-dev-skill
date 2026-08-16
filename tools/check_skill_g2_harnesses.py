@@ -36,12 +36,17 @@ SHARED_TRADING_COMMAND = (
 class WorkingDirectory(Enum):
     REPOSITORY = "repository"
     UPSTREAM = "upstream"
+    UPSTREAM_PYTHON = "upstream-python"
 
 
 class RunStatus(Enum):
     PASS = "pass"
     PENDING = "pending"
     BLOCKED = "blocked"
+
+
+class PythonV2RuntimeError(RuntimeError):
+    """Raised when a pinned upstream checkout lacks its required PyO3 runtime."""
 
 
 @dataclass(frozen=True)
@@ -66,6 +71,7 @@ class RunResult:
     skill: str
     status: RunStatus
     failed_step: Step | None = None
+    error: str | None = None
 
     @property
     def ok(self) -> bool:
@@ -74,6 +80,10 @@ class RunResult:
 
 def upstream_step(*command: str) -> Step:
     return Step(command=command, cwd=WorkingDirectory.UPSTREAM)
+
+
+def upstream_python_step(*command: str) -> Step:
+    return Step(command=command, cwd=WorkingDirectory.UPSTREAM_PYTHON)
 
 
 def repository_step(*command: str) -> Step:
@@ -447,13 +457,13 @@ HARNESSES: dict[str, Harness] = {
                 "-q",
                 "skills/nt-strategy-builder/tests",
             ),
-            upstream_step(
-                "python/.venv/bin/python",
+            upstream_python_step(
+                ".venv/bin/python",
                 "-m",
                 "pytest",
                 "-q",
-                "python/tests/acceptance/test_backtest.py",
-                "python/tests/unit/live/test_live_configs.py",
+                "tests/acceptance/test_backtest.py",
+                "tests/unit/live/test_live_configs.py",
             ),
         ),
         owned_paths=(
@@ -641,6 +651,35 @@ def plan_harnesses(skills: set[str] | None = None) -> list[Harness]:
 Runner = Callable[..., subprocess.CompletedProcess[str]]
 
 
+def assert_python_v2_runtime(upstream_root: Path, *, runner: Runner = subprocess.run) -> None:
+    python_root = upstream_root / "python"
+    interpreter = python_root / ".venv/bin/python"
+    try:
+        result = runner(
+            (str(interpreter), "-c", "import nautilus_trader._libnautilus.common"),
+            cwd=python_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as exc:
+        raise PythonV2RuntimeError(
+            "nt-strategy-builder G2 is blocked: the pinned upstream Python v2 runtime is "
+            "not prepared; missing nautilus_trader._libnautilus.common. Prepare a separate "
+            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make build-debug-v2`, "
+            "then pass it with `--upstream-root`. Do not build or install into the source-read-only "
+            "pinned cache."
+        ) from exc
+    if result.returncode != 0:
+        raise PythonV2RuntimeError(
+            "nt-strategy-builder G2 is blocked: the pinned upstream Python v2 runtime is "
+            "not prepared; missing nautilus_trader._libnautilus.common. Prepare a separate "
+            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make build-debug-v2`, "
+            "then pass it with `--upstream-root`. Do not build or install into the source-read-only "
+            "pinned cache."
+        )
+
+
 def run_harness(
     harness: Harness,
     *,
@@ -649,8 +688,19 @@ def run_harness(
     runner: Runner = subprocess.run,
 ) -> RunResult:
     evidence_steps: list[dict[str, object]] = []
+    if harness.skill == "nt-strategy-builder":
+        try:
+            assert_python_v2_runtime(upstream_root, runner=runner)
+        except PythonV2RuntimeError as exc:
+            return RunResult(skill=harness.skill, status=RunStatus.BLOCKED, error=str(exc))
     for step in harness.steps:
-        cwd = upstream_root if step.cwd is WorkingDirectory.UPSTREAM else repo_root
+        cwd = (
+            repo_root
+            if step.cwd is WorkingDirectory.REPOSITORY
+            else upstream_root / "python"
+            if step.cwd is WorkingDirectory.UPSTREAM_PYTHON
+            else upstream_root
+        )
         started = datetime.now(UTC)
         try:
             result = runner(step.command, cwd=cwd, check=False, text=True)
@@ -915,11 +965,14 @@ def main(argv: list[str] | None = None) -> int:
             upstream_root=args.upstream_root,
         )
         if result.status is RunStatus.BLOCKED:
-            assert result.failed_step is not None
-            print(
-                f"{harness.skill} failed: {format_step(result.failed_step)}",
-                file=sys.stderr,
-            )
+            if result.error is not None:
+                print(result.error, file=sys.stderr)
+            else:
+                assert result.failed_step is not None
+                print(
+                    f"{harness.skill} failed: {format_step(result.failed_step)}",
+                    file=sys.stderr,
+                )
             return 1
         print(f"{result.status.value.upper()} {harness.skill}", flush=True)
     return 0

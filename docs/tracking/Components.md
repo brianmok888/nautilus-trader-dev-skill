@@ -6,11 +6,11 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Current per-skill behavior, ownership, and executable readiness. -->
 <!-- Does NOT contain: plans, historical attestations, or removed lanes. -->
 
-Review date: 2026-08-10
-Reviewed upstream develop: `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`
+Review date: 2026-08-16
+Reviewed upstream develop: `03062cce6372d3c7e9044b39b181a50cc07a067e`
 Pinned G2 baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`
 
-The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its pinned V2 Python harness now passes after building the exact upstream environment. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
+The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its G2 harness requires a separately prepared writable checkout with the pinned Python V2 PyO3 runtime. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
 | Skill | User-facing responsibility | Status |
 | --- | --- | --- |

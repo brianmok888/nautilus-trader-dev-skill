@@ -10,7 +10,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 
 ```
 references/
-├── api_reference/     # Per-module API docs (19 files)
+├── api_reference/     # Per-module API docs (38 files)
 │   ├── adapters/      # Adapter APIs
 │   ├── model/         # Model types
 │   └── *.md           # Core module APIs

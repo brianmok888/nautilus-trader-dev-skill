@@ -39,7 +39,7 @@ Teach PyO3 as the bounded interface for typed configuration, Rust component regi
 
 ## Migration/reference lane
 
-Older Python and v1 curriculum material belongs under `migration_reference/` and is used only to understand or migrate an existing system. AI and advisory work is outside this repository.
+NT v2 compatibility note: older Python and v1 curriculum material belongs under `migration_reference/` and is used only to understand or migrate an existing system. AI and advisory work is outside this repository.
 
 ## Source-pinned upstream lane
 

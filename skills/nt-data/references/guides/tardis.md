@@ -288,12 +288,12 @@ To run a replay in Python, create a script similar to the following:
 ```python
 import asyncio
 
-from nautilus_trader.core import nautilus_pyo3
+from nautilus_trader.adapters.tardis import run_tardis_machine_replay
 
 
 async def run():
     config_filepath = Path("YOUR_CONFIG_FILEPATH")
-    await nautilus_pyo3.run_tardis_machine_replay(str(config_filepath.resolve()))
+    await run_tardis_machine_replay(str(config_filepath.resolve()))
 
 
 if __name__ == "__main__":
@@ -307,7 +307,7 @@ To run a replay in Rust, create a binary similar to the following:
 ```rust
 use std::path::PathBuf;
 
-use nautilus_adapters::tardis::replay::run_tardis_machine_replay_from_config;
+use nautilus_tardis::replay::run_tardis_machine_replay_from_config;
 
 #[tokio::main]
 async fn main() {
@@ -383,7 +383,7 @@ To load the data, you can use code similar to the following:
 ```rust
 use std::path::Path;
 
-use nautilus_adapters::tardis;
+use nautilus_tardis;
 use nautilus_model::identifiers::InstrumentId;
 
 #[tokio::main]
@@ -494,7 +494,7 @@ The underlying streaming functionality is implemented in Rust and can be used di
 
 ```rust
 use std::path::Path;
-use nautilus_adapters::tardis::csv::{stream_trades, stream_deltas};
+use nautilus_tardis::csv::{stream_deltas, stream_trades};
 use nautilus_model::identifiers::InstrumentId;
 
 #[tokio::main]
@@ -550,16 +550,13 @@ To request instrument definitions in Python, create a script similar to the foll
 ```python
 import asyncio
 
-from nautilus_trader.core import nautilus_pyo3
+from nautilus_trader.adapters.tardis import TardisHttpClient
 
 
 async def run():
-    http_client = nautilus_pyo3.TardisHttpClient()
+    http_client = TardisHttpClient()
 
-    instrument = await http_client.instrument("bitmex", "xbtusd")
-    print(f"Received: {instrument}")
-
-    instruments = await http_client.instruments("bitmex")
+    instruments = await http_client.instruments("bitmex", "xbtusd")
     print(f"Received: {len(instruments)} instruments")
 
 

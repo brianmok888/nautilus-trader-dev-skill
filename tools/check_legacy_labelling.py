@@ -17,12 +17,12 @@ SCOPED_PATTERNS: Final = (
     "templates/**/*.md",
 )
 LEGACY_PATTERNS: Final = (
-    re.compile(r"(?<![A-Za-z0-9_])(?:Cython|cdef|cpdef|cimport)(?![A-Za-z0-9_])"),
-    re.compile(r"(?<![A-Za-z0-9_])\.pyx(?![A-Za-z0-9_])"),
     re.compile(
-        r"(?<!/api/)\bv1\b(?:[^\n]{0,80})\b(runtime|adapter|template|example|core|TradingNode|LegacyApi)\b",
+        r"(?<![A-Za-z0-9_])(?:Cython|cdef|cpdef|cimport)(?![A-Za-z0-9_])",
         re.IGNORECASE,
     ),
+    re.compile(r"(?<![A-Za-z0-9_])\.pyx(?![A-Za-z0-9_])", re.IGNORECASE),
+    re.compile(r"(?<!/api/)(?<![A-Za-z0-9_])v1(?![A-Za-z0-9_.])", re.IGNORECASE),
 )
 LABEL_PATTERNS: Final = (
     re.compile(r"\blegacy\s*:", re.IGNORECASE),
@@ -95,7 +95,12 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     args = parser.parse_args()
 
-    errors = legacy_labelling_errors(args.root.resolve())
+    root = args.root.resolve()
+    if not root.is_dir():
+        print(f"Legacy labelling check failed: scan root does not exist: {root}")
+        return 1
+
+    errors = legacy_labelling_errors(root)
     if errors:
         print("Legacy labelling check failed:")
         for error in errors:

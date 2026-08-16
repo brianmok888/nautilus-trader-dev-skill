@@ -171,8 +171,8 @@ def test_untracked_upstream_content_fails_closed(tmp_path: Path) -> None:
 def test_supported_python_v2_harness_uses_the_pinned_upstream_runtime() -> None:
     harness = g2.HARNESSES["nt-strategy-builder"]
 
-    assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
-    assert any("python/.venv/bin/python" in step.command for step in harness.steps)
+    assert any(step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON for step in harness.steps)
+    assert any(".venv/bin/python" in step.command for step in harness.steps)
 
 
 def test_learning_example_command_has_no_stray_positional_package() -> None:
@@ -465,6 +465,14 @@ def test_readiness_cards_use_the_master_prompt_gate_contract() -> None:
 def test_readiness_cards_reference_the_targeted_harness_command() -> None:
     errors = g2.validate_readiness_cards(
         g2.repo_root(), g2.HARNESSES, require_evidence=False
+    )
+
+    assert errors == []
+
+
+def test_current_readiness_evidence_matches_owned_content() -> None:
+    errors = g2.validate_readiness_cards(
+        g2.repo_root(), g2.HARNESSES, require_evidence=True
     )
 
     assert errors == []
@@ -773,3 +781,45 @@ def test_implement_g2_passes_with_standard_capnp() -> None:
 
     if g2.shutil.which("capnp") is None:
         pytest.skip("capnp unavailable in this environment")
+
+
+def test_strategy_builder_uses_documented_python_v2_working_directory() -> None:
+    harness = g2.HARNESSES["nt-strategy-builder"]
+    upstream_step = harness.steps[1]
+
+    assert upstream_step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON
+    assert upstream_step.command == (
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/acceptance/test_backtest.py",
+        "tests/unit/live/test_live_configs.py",
+    )
+
+
+def test_strategy_builder_preflight_fails_closed_for_missing_pyo3_runtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    upstream = tmp_path / "upstream"
+    python_root = upstream / "python"
+    interpreter = python_root / ".venv/bin/python"
+    interpreter.parent.mkdir(parents=True)
+    interpreter.write_text("", encoding="utf-8")
+
+    calls: list[tuple[tuple[str, ...], Path]] = []
+
+    def fake_run(
+        command: tuple[str, ...], *, cwd: Path, check: bool, capture_output: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append((command, cwd))
+        return subprocess.CompletedProcess(command, 1, "", "missing extension")
+
+    with pytest.raises(g2.PythonV2RuntimeError, match="make build-debug-v2") as exc_info:
+        g2.assert_python_v2_runtime(upstream, runner=fake_run)
+
+    assert "nautilus_trader._libnautilus.common" in str(exc_info.value)
+    assert "--upstream-root" in str(exc_info.value)
+    assert calls == [
+        ((str(interpreter), "-c", "import nautilus_trader._libnautilus.common"), python_root)
+    ]

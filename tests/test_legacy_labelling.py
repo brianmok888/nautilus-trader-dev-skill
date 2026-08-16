@@ -132,3 +132,57 @@ def test_migration_note_within_five_lines_passes(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "guidance",
+    (
+        "Use cython for the current adapter.\n",
+        "Use the runtime v1 for current work.\n",
+        "Use v1-equivalent coverage for current work.\n",
+    ),
+)
+def test_case_and_grammar_variants_of_unlabelled_v1_guidance_fail(
+    tmp_path: Path, guidance: str
+) -> None:
+    path = tmp_path / "skills/nt-example/SKILL.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(guidance, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(tmp_path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+
+
+def test_api_v1_path_does_not_require_a_legacy_label(tmp_path: Path) -> None:
+    path = tmp_path / "references/example.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("See /api/v1/orders for the HTTP endpoint.\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(tmp_path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_missing_scan_root_fails_closed(tmp_path: Path) -> None:
+    missing_root = tmp_path / "missing"
+
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(missing_root)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "scan root does not exist" in result.stdout

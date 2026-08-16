@@ -213,7 +213,7 @@ Always register indicators via `self.register_indicator_for_bars()` or `self.reg
 
 - `references/concepts/` — reports, visualization, portfolio, data
 - `references/api/` — indicators, analysis, data, book, portfolio
-- `references/python/` — analysis source reference (config, tearsheet, statistic, themes)
+- `migration_reference/python/python/analysis/` — quarantined Python analysis source reference (config, tearsheet, statistic, themes)
 - `references/rust/` — analysis Rust source reference
 - `migration_reference/python/examples/` — quarantined Python indicator, cascaded-indicator, and bar-aggregation examples
-- `templates/` — indicator.py, custom_data.py, portfolio_statistic.py
+- `migration_reference/python/templates/` — quarantined indicator.py, custom_data.py, portfolio_statistic.py templates

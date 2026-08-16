@@ -86,7 +86,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 |---|---|---|
 | `nt` | Start point/router for NautilusTrader tasks | Classifies intent, loads relevant `nt-*` skills |
 
-### Workflow Pipeline (7)
+### Workflow Pipeline (6)
 | Skill | Description | Key Content |
 |---|---|---|
 | `nt-architect` | Research → component architecture decomposition | Design patterns, data flow planning |

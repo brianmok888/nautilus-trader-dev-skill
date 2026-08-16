@@ -14,24 +14,24 @@
         "skills/nt-strategy-builder/tests"
       ],
       "cwd": "repository",
-      "duration_seconds": 16.489422,
+      "duration_seconds": 15.616094,
       "returncode": 0
     },
     {
       "command": [
-        "python/.venv/bin/python",
+        ".venv/bin/python",
         "-m",
         "pytest",
         "-q",
-        "python/tests/acceptance/test_backtest.py",
-        "python/tests/unit/live/test_live_configs.py"
+        "tests/acceptance/test_backtest.py",
+        "tests/unit/live/test_live_configs.py"
       ],
-      "cwd": "upstream",
-      "duration_seconds": 121.613493,
+      "cwd": "upstream-python",
+      "duration_seconds": 120.715656,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-10T18:06:30.089829+00:00"
+  "verified_at": "2026-08-16T08:12:09.175316+00:00"
 }

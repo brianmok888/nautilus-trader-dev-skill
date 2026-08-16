@@ -1500,7 +1500,7 @@ def run_checks(root: Path) -> CheckResult:
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
         relative = _relative(markdown_file, root)
-        if "references/guides/" in text:
+        if relative != "docs/tracking/Findings.md" and "references/guides/" in text:
             errors.append(f"stale references/guides path in {relative}")
         if "pre-commit install" in text and "prek install" not in text:
             errors.append(f"unqualified pre-commit install in {relative}")

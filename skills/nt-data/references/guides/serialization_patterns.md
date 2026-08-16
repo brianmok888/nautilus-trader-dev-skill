@@ -4,284 +4,219 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Overview
 
-NautilusTrader uses Apache Arrow as its primary serialization format for market data and events.
-This enables zero-copy reads, columnar storage in Parquet files, and efficient IPC between Python
-and Rust. The serialization layer lives in `nautilus_trader.serialization.arrow` and works closely
-with the persistence wranglers in `nautilus_trader.persistence`.
+NautilusTrader v2 exposes Arrow serialization from the flat PyO3 module
+`nautilus_trader.serialization`. The public API produces Arrow IPC stream bytes for core market-data
+and event types. Matching wranglers in `nautilus_trader.persistence` consume those bytes and return
+native NautilusTrader objects.
 
-The system has two serialization paths:
-1. **Rust-native** -- Core data types (ticks, bars, book deltas) are serialized/deserialized
-   entirely in Rust via pyo3 bindings for maximum performance.
-2. **Python dict-based** -- Order events, account state, position events, and other complex types
-   use a Python `to_dict`/`from_dict` pattern with Arrow RecordBatches.
+Use the public module owners directly:
+
+```python
+from nautilus_trader.persistence import QuoteTickDataWrangler
+from nautilus_trader.serialization import (
+    get_arrow_schema_map,
+    quotes_to_arrow_record_batch_bytes,
+)
+```
+
+There is no public `nautilus_trader.serialization.arrow` package, `ArrowSerializer` class, or
+`register_arrow()` registry in the pinned v2 Python API.
 
 ---
 
 ## Built-in Arrow Schemas
 
-**Module**: `nautilus_trader.serialization.arrow.schema`
+**Module**: `nautilus_trader.serialization`
 
-The `NAUTILUS_ARROW_SCHEMA` dictionary maps data types to their `pyarrow.Schema` definitions.
-Schemas for Rust-native types are derived from each type's `get_fields()` classmethod, while
-Python-side types have schemas defined explicitly.
+Call `get_arrow_schema_map(data_cls)` to inspect the schema metadata exported for a supported
+NautilusTrader data type:
 
-### Rust-Native Data Types (via `get_fields()`)
+```python
+from nautilus_trader.model import PRECISION_BYTES, QuoteTick
+from nautilus_trader.serialization import get_arrow_schema_map
+
+schema_map = get_arrow_schema_map(QuoteTick)
+assert PRECISION_BYTES > 0
+```
+
+Treat the returned mapping as the source of truth for the pinned runtime. Core market-data schemas
+include the following fields:
 
 | Type | Key Fields |
 |------|-----------|
-| `OrderBookDelta` | action, side, price (fixed binary), size (fixed binary), order_id, flags, sequence, ts_event, ts_init |
-| `OrderBookDepth10` | bid_price_0..9, ask_price_0..9, bid_size_0..9, ask_size_0..9, bid_count_0..9, ask_count_0..9, flags, sequence, ts_event, ts_init |
-| `QuoteTick` | bid_price, ask_price, bid_size, ask_size (all fixed binary), ts_event, ts_init |
-| `TradeTick` | price, size (fixed binary), aggressor_side, trade_id, ts_event, ts_init |
-| `Bar` | open, high, low, close, volume (all fixed binary), ts_event, ts_init |
-| `MarkPriceUpdate` | derived from `get_fields()` |
-| `IndexPriceUpdate` | derived from `get_fields()` |
+| `OrderBookDelta` | action, side, price, size, order_id, flags, sequence, ts_event, ts_init |
+| `OrderBookDepth10` | bid/ask prices, sizes and counts for levels 0..9, flags, sequence, ts_event, ts_init |
+| `QuoteTick` | bid_price, ask_price, bid_size, ask_size, ts_event, ts_init |
+| `TradeTick` | price, size, aggressor_side, trade_id, ts_event, ts_init |
+| `Bar` | open, high, low, close, volume, ts_event, ts_init |
+| `MarkPriceUpdate` | instrument_id, value, ts_event, ts_init |
+| `IndexPriceUpdate` | instrument_id, value, ts_event, ts_init |
 
-Prices and sizes use a fixed-precision binary representation (`pa.binary(PRECISION_BYTES)`) to
-avoid floating-point errors. The constant `PRECISION_BYTES` comes from `nautilus_pyo3.PRECISION_BYTES`.
-
-### Python-Defined Schemas (explicit)
-
-| Type | Notable Fields |
-|------|---------------|
-| `FundingRateUpdate` | rate (binary), next_funding_ns (uint64, nullable), ts_event, ts_init |
-| `InstrumentClose` | instrument_id (dict), close_type (dict), close_price (string), ts_event, ts_init |
-| `InstrumentStatus` | instrument_id (dict), action (dict), reason, trading_event, is_trading, is_quoting, ts_event, ts_init |
-| `OrderInitialized` | Full order spec: trader_id, strategy_id, instrument_id, client_order_id, order_side, order_type, quantity, time_in_force, plus optional price/trigger fields |
-| `OrderFilled` | trade_id, position_id, last_qty, last_px, currency, commission, liquidity_side, info (binary) |
-| Other `Order*` events | `OrderDenied`, `OrderSubmitted`, `OrderAccepted`, `OrderRejected`, `OrderCanceled`, `OrderExpired`, `OrderTriggered`, `OrderUpdated`, `OrderPendingCancel`, `OrderPendingUpdate`, `OrderReleased`, `OrderEmulated`, `OrderCancelRejected`, `OrderModifyRejected` |
-| `ComponentStateChanged` | trader_id, component_id, component_type, state, config (binary), event_id, ts_event, ts_init |
-| `TradingStateChanged` | trader_id, state, config (binary), event_id, ts_event, ts_init |
-| `ShutdownSystem` | trader_id, component_id, reason, command_id, ts_init |
-
-Many identifier fields use dictionary encoding (`pa.dictionary(pa.int16(), pa.string())`) for
-compression efficiency, since values like trader_id and strategy_id repeat across many rows.
+Prices and quantities use the model's fixed-precision representation. When constructing an Arrow
+table outside NautilusTrader, match the schema returned by `get_arrow_schema_map()` exactly instead
+of inventing a parallel schema.
 
 ---
 
 ## Serialization API
 
-**Module**: `nautilus_trader.serialization.arrow.serializer`
+### Rust serializer functions
 
-### ArrowSerializer
-
-```python
-from nautilus_trader.serialization.arrow.serializer import ArrowSerializer
-
-# Single object -> RecordBatch
-batch = ArrowSerializer.serialize(data_object, data_cls=type(data_object))
-
-# List of objects -> Table
-table = ArrowSerializer.serialize_batch(data_list, data_cls=QuoteTick)
-
-# RecordBatch or Table -> list of objects
-objects = ArrowSerializer.deserialize(data_cls=QuoteTick, batch=table)
-```
-
-For Rust-native types, `serialize_batch` calls functions like
-`nautilus_pyo3.quotes_to_arrow_record_batch_bytes()` and reads the result back with
-`pa.ipc.open_stream()`. For Python types, it delegates to registered encoder/decoder callables.
-
-### Rust Serializer Functions
-
-These pyo3 functions handle the high-performance path:
+The flat `nautilus_trader.serialization` module exports these Arrow IPC writers:
 
 | Function | Data Type |
 |----------|-----------|
-| `nautilus_pyo3.book_deltas_to_arrow_record_batch_bytes()` | OrderBookDelta |
-| `nautilus_pyo3.book_depth10_to_arrow_record_batch_bytes()` | OrderBookDepth10 |
-| `nautilus_pyo3.quotes_to_arrow_record_batch_bytes()` | QuoteTick |
-| `nautilus_pyo3.trades_to_arrow_record_batch_bytes()` | TradeTick |
-| `nautilus_pyo3.bars_to_arrow_record_batch_bytes()` | Bar |
-| `nautilus_pyo3.mark_prices_to_arrow_record_batch_bytes()` | MarkPriceUpdate |
-| `nautilus_pyo3.index_prices_to_arrow_record_batch_bytes()` | IndexPriceUpdate |
+| `bars_to_arrow_record_batch_bytes()` | `Bar` |
+| `book_deltas_to_arrow_record_batch_bytes()` | `OrderBookDelta` |
+| `book_depth10_to_arrow_record_batch_bytes()` | `OrderBookDepth10` |
+| `index_prices_to_arrow_record_batch_bytes()` | `IndexPriceUpdate` |
+| `instrument_closes_to_arrow_record_batch_bytes()` | `InstrumentClose` |
+| `instrument_status_to_arrow_record_batch_bytes()` | `InstrumentStatus` |
+| `mark_prices_to_arrow_record_batch_bytes()` | `MarkPriceUpdate` |
+| `option_greeks_to_arrow_record_batch_bytes()` | `OptionGreeks` |
+| `pyobjects_to_arrow_record_batch_bytes()` | supported generic PyO3 objects |
+| `quotes_to_arrow_record_batch_bytes()` | `QuoteTick` |
+| `trades_to_arrow_record_batch_bytes()` | `TradeTick` |
 
----
+The module also exports `instrument_status_from_arrow_record_batch_bytes()` and
+`option_greeks_from_arrow_record_batch_bytes()` for those corresponding Rust-backed types.
 
-## Registering Custom Arrow Schemas
-
-Use `register_arrow()` to add serialization support for custom data types:
+### Reading IPC bytes with PyArrow
 
 ```python
-from nautilus_trader.serialization.arrow.serializer import register_arrow
 import pyarrow as pa
 
-# Define schema
-my_schema = pa.schema({
-    "instrument_id": pa.dictionary(pa.int64(), pa.string()),
-    "value": pa.float64(),
-    "ts_event": pa.uint64(),
-    "ts_init": pa.uint64(),
-})
+from nautilus_trader.serialization import quotes_to_arrow_record_batch_bytes
 
-# Define encoder: object -> pa.RecordBatch
-def my_encoder(data):
-    if not isinstance(data, list):
-        data = [data]
-    dicts = [d.to_dict(d) for d in data]
-    return pa.RecordBatch.from_pylist(dicts, schema=my_schema)
-
-# Define decoder: pa.Table -> list[MyType]
-def my_decoder(table):
-    return [MyType.from_dict(d) for d in table.to_pylist()]
-
-# Register
-register_arrow(
-    data_cls=MyType,
-    schema=my_schema,
-    encoder=my_encoder,
-    decoder=my_decoder,
-)
+ipc_bytes = quotes_to_arrow_record_batch_bytes(ticks)
+with pa.ipc.open_stream(ipc_bytes) as reader:
+    table = reader.read_all()
 ```
 
-After registration, `ArrowSerializer.serialize()` and `ArrowSerializer.deserialize()` will handle
-your custom type. The data catalog and Parquet writer will also use the registered schema.
-
-Helper factories are available for types that implement `to_dict`/`from_dict`:
+### Round-tripping through a PyO3 wrangler
 
 ```python
-from nautilus_trader.serialization.arrow.serializer import (
-    make_dict_serializer,
-    make_dict_deserializer,
-)
+from nautilus_trader.persistence import QuoteTickDataWrangler
+from nautilus_trader.serialization import quotes_to_arrow_record_batch_bytes
 
-register_arrow(
-    data_cls=MyType,
-    schema=my_schema,
-    encoder=make_dict_serializer(my_schema),
-    decoder=make_dict_deserializer(MyType),
-)
-```
-
-### Auto-Registration at Import Time
-
-When `nautilus_trader.serialization.arrow.serializer` is imported, it automatically registers:
-- All types in `NAUTILUS_ARROW_SCHEMA` (Rust types get schema only; Python types get dict-based encoder/decoder)
-- All `Instrument` subclasses (via `instruments.serialize`/`instruments.deserialize`)
-- `AccountState`, `OrderInitialized`, `OrderFilled` (custom implementations)
-- `ComponentStateChanged`, `TradingStateChanged`, `ShutdownSystem`
-- All `PositionEvent` subclasses
-- `FundingRateUpdate`
-
----
-
-## Data Wranglers
-
-Wranglers convert external data (pandas DataFrames, Arrow tables) into NautilusTrader domain
-objects. There are two generations:
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-### Legacy Wranglers (Cython)
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-**Module**: `nautilus_trader.persistence.wranglers` (`.pyx`)
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-These produce Cython-based objects and accept an `Instrument` instance directly.
-
-| Wrangler | Output Type | Input |
-|----------|------------|-------|
-| `OrderBookDeltaDataWrangler(instrument)` | `list[OrderBookDelta]` | DataFrame with action, side, price, size, order_id, flags, sequence |
-| `QuoteTickDataWrangler(instrument)` | `list[QuoteTick]` | DataFrame with bid_price, ask_price (bid_size/ask_size optional) |
-| `TradeTickDataWrangler(instrument)` | `list[TradeTick]` | DataFrame with price, quantity, trade_id (side optional) |
-| `BarDataWrangler(bar_type, instrument)` | `list[Bar]` | DataFrame with open, high, low, close (volume optional) |
-
-All legacy wranglers have a `.process(df, ts_init_delta=0, is_raw=False)` method. The quote tick
-and trade tick wranglers also provide `.process_bar_data(...)` for generating tick-level data from
-bar OHLCV data, with configurable timestamp offsets and random high/low ordering.
-
-### V2 Wranglers (PyO3)
-
-**Module**: `nautilus_trader.persistence.wranglers_v2`
-
-These produce PyO3 (Rust) objects and are parameterized by raw precision values instead of
-instrument objects. They work through Arrow IPC internally.
-
-| Wrangler | Output Type | Constructor Args |
-|----------|------------|-----------------|
-| `OrderBookDeltaDataWranglerV2` | `list[pyo3.OrderBookDelta]` | instrument_id, price_precision, size_precision |
-| `OrderBookDepth10DataWranglerV2` | `list[pyo3.OrderBookDepth10]` | instrument_id, price_precision, size_precision |
-| `QuoteTickDataWranglerV2` | `list[pyo3.QuoteTick]` | instrument_id, price_precision, size_precision |
-| `TradeTickDataWranglerV2` | `list[pyo3.TradeTick]` | instrument_id, price_precision, size_precision |
-| `BarDataWranglerV2` | `list[pyo3.Bar]` | bar_type, price_precision, size_precision |
-
-All V2 wranglers support:
-- `from_instrument(instrument)` -- class method that extracts precision from an Instrument
-- `from_schema(schema)` -- class method that extracts parameters from Arrow schema metadata
-- `from_pandas(df, ts_init_delta=0)` -- convert DataFrame to NT objects
-- `from_arrow(table)` -- convert Arrow Table to NT objects
-
-### V2 Wrangler Pipeline
-
-The `from_pandas` flow:
-1. Rename columns to expected names (e.g. "timestamp" -> "ts_event", "ts_recv" -> "ts_init")
-2. Parse timestamps to uint64 nanoseconds
-3. Convert prices/sizes to fixed-precision binary representation
-4. Build a `pyarrow.Table` with the correct schema
-5. Serialize to Arrow IPC bytes via `pa.ipc.new_stream()`
-6. Pass bytes to Rust `process_record_batch_bytes()` which returns native objects
-
-### DataFrame Column Conventions
-
-| Wrangler | Required Columns | Optional Columns |
-|----------|-----------------|-----------------|
-| OrderBookDeltaV2 | ts_event, price, size, order_id, aggressor_side | action, flags, ts_init |
-| OrderBookDepth10V2 | ts_event, bid_price_0..9, ask_price_0..9, bid_size_0..9, ask_size_0..9 | bid_count_0..9, ask_count_0..9, flags, sequence, ts_init |
-| QuoteTickV2 | ts_event (or timestamp), bid_price (or bid), ask_price (or ask) | bid_size, ask_size, ts_init |
-| TradeTickV2 | ts_event (or timestamp), price, size (or quantity), trade_id, aggressor_side | ts_init |
-| BarV2 | ts_event (or timestamp), open, high, low, close | volume, ts_init |
-
----
-
-## Common Patterns
-
-### Loading External CSV Data
-
-```python
-import pandas as pd
-from nautilus_trader.persistence.wranglers_v2 import QuoteTickDataWranglerV2
-
-wrangler = QuoteTickDataWranglerV2(
+wrangler = QuoteTickDataWrangler(
     instrument_id="EUR/USD.SIM",
     price_precision=5,
     size_precision=0,
 )
 
-df = pd.read_csv("quotes.csv")
-# Expects columns: timestamp (or ts_event), bid_price, ask_price
-ticks = wrangler.from_pandas(df)
+ipc_bytes = quotes_to_arrow_record_batch_bytes(ticks)
+restored_ticks = wrangler.process_record_batch_bytes(ipc_bytes)
 ```
 
-### Reading from Parquet via Arrow
+---
+
+## Data Wranglers
+
+### V2 wranglers (PyO3)
+
+**Module**: `nautilus_trader.persistence`
+
+The v2 wranglers accept Arrow IPC stream bytes and return native PyO3 model objects. Their public
+constructors take raw IDs and precision values; `BarDataWrangler` takes a bar-type string instead of
+an instrument ID.
+
+| Wrangler | Output Type | Constructor Args |
+|----------|-------------|------------------|
+| `OrderBookDeltaDataWrangler` | `list[OrderBookDelta]` | instrument_id, price_precision, size_precision |
+| `OrderBookDepth10DataWrangler` | `list[OrderBookDepth10]` | instrument_id, price_precision, size_precision |
+| `QuoteTickDataWrangler` | `list[QuoteTick]` | instrument_id, price_precision, size_precision |
+| `TradeTickDataWrangler` | `list[TradeTick]` | instrument_id, price_precision, size_precision |
+| `BarDataWrangler` | `list[Bar]` | bar_type, price_precision, size_precision |
+
+Each class exposes `process_record_batch_bytes(data: bytes)`. The pinned API does not expose
+`from_instrument()`, `from_schema()`, `from_pandas()`, `from_arrow()`, or `ts_init_delta` helpers.
+
+### V2 wrangler pipeline
+
+For external data:
+
+1. Normalize IDs, timestamps and numeric precision at the ingestion boundary.
+2. Build a PyArrow table whose schema matches `get_arrow_schema_map(data_cls)`.
+3. Write the table as an Arrow IPC stream with `pa.ipc.new_stream()`.
+4. Pass the resulting bytes to `process_record_batch_bytes()`.
 
 ```python
-import pyarrow.parquet as pq
-from nautilus_trader.persistence.wranglers_v2 import BarDataWranglerV2
+import pyarrow as pa
 
+from nautilus_trader.persistence import QuoteTickDataWrangler
+
+# `table` must already match the QuoteTick Arrow schema.
+sink = pa.BufferOutputStream()
+with pa.ipc.new_stream(sink, table.schema) as writer:
+    writer.write_table(table)
+
+wrangler = QuoteTickDataWrangler("EUR/USD.SIM", 5, 0)
+ticks = wrangler.process_record_batch_bytes(sink.getvalue().to_pybytes())
+```
+
+If you need simulated ingestion latency, set or transform `ts_init` before writing the Arrow table;
+the v2 wranglers do not add a `ts_init_delta` themselves.
+
+---
+
+## Common Patterns
+
+### Reading Nautilus Arrow data from Parquet
+
+```python
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+from nautilus_trader.persistence import BarDataWrangler
+
+# The Parquet schema must match the Bar Arrow schema.
 table = pq.read_table("bars.parquet")
-wrangler = BarDataWranglerV2.from_schema(table.schema)
-bars = wrangler.from_arrow(table)
+sink = pa.BufferOutputStream()
+with pa.ipc.new_stream(sink, table.schema) as writer:
+    writer.write_table(table)
+
+wrangler = BarDataWrangler(
+    bar_type="EUR/USD.SIM-1-MINUTE-BID-EXTERNAL",
+    price_precision=5,
+    size_precision=0,
+)
+bars = wrangler.process_record_batch_bytes(sink.getvalue().to_pybytes())
 ```
 
-### Writing Data to Parquet
+### Writing serialized data to Parquet
 
 ```python
-from nautilus_trader.serialization.arrow.serializer import ArrowSerializer
+import pyarrow as pa
 import pyarrow.parquet as pq
 
-table = ArrowSerializer.serialize_batch(ticks, data_cls=type(ticks[0]))
-pq.write_table(table, "output.parquet")
+from nautilus_trader.serialization import quotes_to_arrow_record_batch_bytes
+
+ipc_bytes = quotes_to_arrow_record_batch_bytes(ticks)
+with pa.ipc.open_stream(ipc_bytes) as reader:
+    table = reader.read_all()
+
+pq.write_table(table, "quotes.parquet")
 ```
 
-### Simulating Latency with ts_init_delta
+---
 
-All wranglers accept `ts_init_delta` (nanoseconds) to offset `ts_init` from `ts_event`. This
-simulates network latency between the data source and the trading system:
+## NT v2 compatibility note: removed Cython wranglers (migration)
 
-```python
-# 50ms simulated latency
-ticks = wrangler.from_pandas(df, ts_init_delta=50_000_000)
-```
+NT v2 compatibility note: the following Cython/v1 API is retained only as migration material for
+older integrations. Do not use it for new v2 work.
+
+**Legacy module (removed from the pinned v2 package)**: `nautilus_trader.persistence.wranglers`
+
+NT v2 compatibility note: for migration, the former Cython wranglers accepted an `Instrument` and pandas DataFrames directly:
+
+| Legacy Wrangler | Output Type | Legacy Input |
+|-----------------|-------------|--------------|
+| `OrderBookDeltaDataWrangler(instrument)` | `list[OrderBookDelta]` | DataFrame with action, side, price, size, order_id, flags, sequence |
+| `QuoteTickDataWrangler(instrument)` | `list[QuoteTick]` | DataFrame with bid/ask prices and optional sizes |
+| `TradeTickDataWrangler(instrument)` | `list[TradeTick]` | DataFrame with price, quantity, trade_id and optional side |
+| `BarDataWrangler(bar_type, instrument)` | `list[Bar]` | DataFrame with OHLC and optional volume |
+
+These legacy classes used methods such as `.process(df, ts_init_delta=0, is_raw=False)` and
+`.process_bar_data(...)`. For v2, normalize the input yourself, write Arrow IPC bytes, and call the
+flat `nautilus_trader.persistence` wrangler described above.

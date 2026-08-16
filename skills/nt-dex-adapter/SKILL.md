@@ -216,9 +216,11 @@ See `rules/dos_and_donts.md` for the full ruleset.
 - ❌ Never poll chain in `on_bar`/`on_quote_tick` handlers — use a polling Actor or timer
 - ❌ Never store private keys as plain `str` — use `SecretStr` or env-var injection
 - ❌ Never skip `generate_order_status_report()` — needed for reconciliation
-- ❌ Never use `tokio::spawn()` in adapter Rust code — use `get_runtime().spawn()`
+- ❌ Never use `tokio::spawn()` for adapter production tasks — use `get_runtime().spawn()`; deterministic tests may use `tokio::spawn()` on their own runtime
 - ❌ Do not use `Arc<PyObject>` for ordinary callbacks — prefer direct `PyObject`/`Py<T>` with `clone_py_object()`; justify any exception and audit cycles, weakrefs, cleanup, and PyO3 GC hooks when applicable
 - ❌ Don't treat AMM spot price as fill price without modelling slippage
+
+Runtime-spawn rule source (upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
 
 ## Compliance Checklist
 
@@ -232,7 +234,7 @@ Required checks before claiming adapter readiness:
 
 - [ ] 10 phases completed in order and each milestone satisfied
 - [ ] Provider/data/exec method contracts implemented (no placeholder `pass`)
-- [ ] `get_runtime().spawn()` used for Rust async tasks
+- [ ] `get_runtime().spawn()` used for production Rust async tasks (deterministic tests may use `tokio::spawn()` on their own runtime)
 - [ ] PyO3 callback bindings prefer direct `PyObject`/`Py<T>`; any `Arc<Py<T>>` exception is justified and cycle-audited
 - [ ] Credentials resolved via config/env without plain-text key leakage
 - [ ] Fixture payloads sourced from real upstream docs/live captures

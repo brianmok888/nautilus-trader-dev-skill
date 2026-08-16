@@ -2390,3 +2390,16 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     result = run_checks(tmp_path)
 
     assert result == CheckResult(ok=True, errors=[])
+
+
+def test_findings_tracker_can_record_real_historical_source_paths(tmp_path: Path) -> None:
+    (tmp_path / "docs/tracking").mkdir(parents=True)
+    (tmp_path / "docs/tracking/Findings.md").write_text(
+        "[NT-1] [P1] [CLOSED] Historical path drift.\n"
+        "  file: skills/nt-example/references/guides/example.md:1\n",
+        encoding="utf-8",
+    )
+
+    result = sync.run_checks(tmp_path)
+
+    assert "stale references/guides path in docs/tracking/Findings.md" not in result.errors

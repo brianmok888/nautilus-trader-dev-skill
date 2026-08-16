@@ -52,18 +52,6 @@ If the architecture includes a custom or modified adapter, enforce these constra
 - **Runtime and safety assumptions**: record async/runtime rules (`get_runtime().spawn()` in adapter Rust paths, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>` binding).
 - **Validation plan by phase**: each architecture output should map phases to concrete milestone checks and test artifacts (fixtures, integration tests, reconciliation checks).
 
-## EvoMap Integration Boundary (Optional)
-
-If the system integrates with EvoMap, LangChain, or LangGraph, model it as an **external advisory sidecar** and keep Nautilus as the sole execution authority:
-
-- **Execution authority stays local**: only Strategy/Actor logic inside Nautilus can affect orders.
-- **Advisory-only contract**: EvoMap outputs are suggestions, never auto-applied trading rule changes.
-- **Non-blocking architecture**: Proxy mailbox, LangChain, and LangGraph flows must run off the hot trading path.
-- **Rust-oriented v2.0 readiness**: Rust owns strategy/configuration, networking, parsing, normalization, execution-critical state, and live-node plumbing. Only the AI/advisory lane remains Python, asynchronous, auditable, and never execution-critical.
-- **Deterministic fallback**: define behavior when EvoMap is unavailable (continue local strategy, log degraded mode).
-- **Provenance**: include IDs linking internal decisions to external suggestion snapshots.
-- **Graph boundary**: LangGraph `StateGraph` checkpoints and human-in-the-loop interrupts are review artifacts, not executable trading state.
-
 ## Architecture Design Process
 
 ### Design principles invariant
@@ -147,7 +135,6 @@ NT v2 compatibility note: this whole file references the legacy Python-live `Tra
 | Live node plumbing, execution engine | **Rust** (`LiveNode`, Rust-backed) | Prefer `LiveNode` for new production; legacy Python-live `TradingNode` is reference-only |
 | User orchestration, config, and research strategy | **Rust** | Repository cutover policy; Python examples are migration/reference-only |
 | Production/performance strategy logic | **Rust** (`crates/trading/`, `nautilus_strategy!`) | HFT, tight loops, or strategies shipped with Rust adapters |
-| AI / advisory lane (model inference, signal aggregation, EvoMap) | **Python**, async, off the hot path | Never execution-critical |
 
 Official Rust adapter crate layout (from the developer guide) to target when an
 element belongs in Rust:
@@ -380,14 +367,6 @@ After completing the design, produce a document with:
 - FeatureIndicator: 50 bars
 - HMM RegimeActor: 100 bars historical inference
 
-## EvoMap Integration Plan (optional)
-- Capsule/session identity mapping: [internal run id -> external capsule id]
-- Publish triggers: [which events are exported and why]
-- Fetch cadence: [on_timer / phase boundary, never hot handler blocking]
-- Approval gate: [human/operator review requirements before behavior change]
-- Fallback mode: [exact degraded behavior when EvoMap is down]
-```
-
 ## Key Principles
 
 1. **Actors for ML, Strategies for Orders** - Never put model inference in Strategy
@@ -397,7 +376,6 @@ After completing the design, produce a document with:
 5. **Single Thread Model** - Nautilus runs on single thread; no async model inference in hot path
 6. **Strategy Order Events** - Rust strategies handle fills and cancels through `on_order_filled(&OrderFilled)` and `on_order_canceled(&OrderCanceled)`; use `on_order_event(OrderEventAny)` for all lifecycle events
 7. **@customdataclass for Quick Custom Data** - Use `@customdataclass` decorator for auto-generated constructors; use manual `Data` subclass for full control
-8. **External Advisory Isolation** - Keep EvoMap or any external intelligence path advisory and asynchronous, never execution-critical
 
 ## References
 
