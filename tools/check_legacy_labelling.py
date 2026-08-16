@@ -12,7 +12,7 @@ if __package__ in {None, ""}:
 from tools import check_dev_guide_sync as canonical
 
 SCOPED_PATTERNS: Final = (
-    "skills/**/SKILL.md",
+    "skills/**/*.md",
     "references/**/*.md",
     "templates/**/*.md",
 )
@@ -46,12 +46,6 @@ def legacy_labelling_errors(root: Path) -> list[str]:
             continue
         lines = path.read_text(encoding="utf-8").splitlines()
         text = "\n".join(lines)
-        if (
-            path.name == "SKILL.md"
-            and "## NT V2 Rust readiness gates" in text
-            and "G1 Legacy labelling" in text
-        ):
-            continue
         if canonical._has_file_level_label(text, canonical.LEGACY_LABEL_TERMS):
             continue
         for index, line in enumerate(lines):
