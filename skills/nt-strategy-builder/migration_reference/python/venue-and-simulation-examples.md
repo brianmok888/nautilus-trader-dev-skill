@@ -4,7 +4,7 @@ NT v2 compatibility note: every `TradingNode` and Python live example in this
 file is legacy migration/reference-only; new production wiring uses Rust
 `LiveNode`.
 
-These examples document historical Python wiring only. They are not production defaults. New non-AI work routes to `nt-strategy-builder-rust`; the only AI and advisory work are outside this repository., off execution-critical paths.
+These examples document historical Python wiring only. They are not production defaults. New work routes to `nt-strategy-builder-rust`; these examples stay off execution-critical paths.
 
 ## Legacy Python live configuration for CeFi migration
 

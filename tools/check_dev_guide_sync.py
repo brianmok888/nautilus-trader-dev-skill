@@ -518,7 +518,6 @@ NT_V2_RUST_CHECKER_GATE_TARGETS = {
 NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
     Path("skills/nt/SKILL.md"): [
         "Route all strategy implementation",
-        "AI and advisory work are outside this repository",
     ],
     Path("skills/nt-architect/SKILL.md"): [
         "component ownership matrix",

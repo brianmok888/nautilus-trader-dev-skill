@@ -2,8 +2,7 @@
 
 > **Migration/reference-only.** This Python material is not a
 > production default. New production work uses the Rust guidance in the
-> root `nt-implement` skill. The only active Python lane is AI/advisory work
-> outside this repository.
+> root `nt-implement` skill.
 
 
 Follow these nautilus_trader conventions:

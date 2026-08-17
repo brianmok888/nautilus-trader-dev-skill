@@ -21,10 +21,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-implement.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
@@ -42,7 +41,7 @@ Prefer `Py<T>`/`Py<PyAny>` for callback handles, document cleanup and cycle beha
 
 ## Migration/reference lane
 
-Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New work remains Rust-first. AI and advisory work are outside this repository.
+Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New work remains Rust-first.
 
 ## Source-pinned upstream lane
 
@@ -136,7 +135,7 @@ unless an official source explicitly documents a local mutable builder pattern.
 
 1. Start from architecture document
 2. Implement in dependency order, choosing the **language** for each component
-   using the V2 cutover map below (the default for every production component is Rust; AI and advisory work is outside this repository):
+   using the V2 cutover map below (the default for every production component is Rust):
    - Custom Data Types (if needed)
    - Custom Models (FillModel, MarginModel if backtesting)
    - Indicators
@@ -157,15 +156,15 @@ Rust-backed work use `LiveNode`.
 | Custom Data Types | **Rust** (`crates/model/`, PyO3-exposed when required) | Rust owns production data types; bounded PyO3 control-plane bindings are allowed |
 | Custom Simulation Models (FillModel, MarginModel) | **Rust** (`crates/backtest/`, PyO3-exposed) | Hot backtest path; Python prototypes are migration/reference-only |
 | Indicators | **Rust** (`crates/indicators/`, `Indicator` trait) | Compute-heavy; Rust is the performance default |
-| Actors (signal aggregation and stateful processing) | **Rust** | AI and advisory inference is outside this repository |
-| Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy; AI and advisory work is outside this repository |
+| Actors (signal aggregation and stateful processing) | **Rust** | Signal aggregation stays in Rust; Python is migration/reference-only |
+| Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy |
 | Execution Algorithms | **Rust** (`crates/trading/src/algorithm/`, integrated by `crates/live/src/node/`) | Execution-critical path stays in Rust; add PyO3 exposure only at the owning crate boundary |
 | Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
 | Live node plumbing | **Rust** (`LiveNode`) | Prefer `LiveNode` for new production; `TradingNode` is legacy Python-live |
 
 Rule of thumb: if the component sits on the networking/parse/perf/state/execution
-path it is a Rust cutover target. AI and advisory work is outside this repository. Ambiguous strategy requests default to Rust. Explicit Python strategy requests still route to Rust,
+path it is a Rust cutover target. Ambiguous strategy requests default to Rust. Explicit Python strategy requests still route to Rust,
 remain a supported V2 surface but do not change this repository's routing default.
 
 
@@ -182,7 +181,7 @@ no cross-contamination boundary:
 - User asked for / scoped a **Rust** strategy (HFT, perf-critical, ships with a
   Rust adapter) -> `nt-strategy-builder-rust` only.
 - Ambiguous ("build a strategy" with no language stated) ->
-  `nt-strategy-builder-rust` only. AI and advisory work are outside this repository;
+  `nt-strategy-builder-rust` only;
   never silently mix them into NautilusTrader component patterns.
 
 This keeps each skill's templates, conventions, and node-registration paths
@@ -198,13 +197,13 @@ versions into new code.
 
 Python production guidance is physically quarantined as migration/reference-only.
 See [Templates migration reference](legacy_migration/templates.md).
-New production work follows the Rust or bounded PyO3 sections below. AI and advisory work is outside this repository.
+New production work follows the Rust or bounded PyO3 sections below.
 
 ## Custom Simulation Models
 
 Python production guidance is physically quarantined as migration/reference-only.
 See [Custom Simulation Models migration reference](legacy_migration/custom-simulation-models.md).
-New production work follows the Rust or bounded PyO3 sections below. AI and advisory work is outside this repository.
+New production work follows the Rust or bounded PyO3 sections below.
 
 ## Rust+PyO3 Implementation Patterns
 
@@ -513,7 +512,7 @@ pub extern "C" fn custom_momentum_update(
 
 Python production guidance is physically quarantined as migration/reference-only.
 See [Coding Standards migration reference](legacy_migration/coding-standards.md).
-New production work follows the Rust or bounded PyO3 sections below. AI and advisory work is outside this repository.
+New production work follows the Rust or bounded PyO3 sections below.
 
 ## Implementation Checklist
 

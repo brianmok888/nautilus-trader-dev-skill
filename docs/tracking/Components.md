@@ -39,7 +39,7 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 - Readiness cards: 136 Pass, 0 Blocked, 0 Pending across 136 G0-G7 gates.
 - G2 execution: all 17 skill harnesses pass in the current environment; `nt-strategy-builder` passed 32 repository migration tests and 69 pinned-upstream V2 tests with 6 explicit post-cutover skips.
 - Legacy labelling, guide snapshots, and Rust trading references: Pass.
-- Release readiness: all 17 NT-development skill cards are green; AI/EvoMap remains excluded rather than assessed.
+- Release readiness: all 17 NT-development skill cards are green.
 
 ## Shared boundaries
 
@@ -47,6 +47,5 @@ NT v2 compatibility note: legacy Python/Cython terms below describe migration/re
 
 - The `nt` router exposes only NT-development routes.
 - Upstream is read-only evidence during skill-repository hardening.
-- AI/advisory and downstream application work are out of scope.
 - Rust V2/PyO3 is the production default; legacy Python/Cython is labelled migration/reference-only.
 - G2 evidence must match the hash of each harness's declared owned content.

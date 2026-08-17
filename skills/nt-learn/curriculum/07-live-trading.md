@@ -67,8 +67,6 @@ upstream baseline `6e59fd74eaacacbb7410936f1766bd89fcce6f59` includes runnable n
    different supported topology.
 2. Keep callbacks non-blocking; move heavy work behind bounded async channels.
 3. Keep order placement, risk, adapter state, and liveness in Rust.
-4. Keep the AI/advisory Python lane asynchronous, approval-gated, and off the
-   execution-critical path.
 
 ## Adapters
 
@@ -125,5 +123,5 @@ You're ready for Stage 08 when:
 - [ ] You can build a `LiveNode` with typed data and execution clients
 - [ ] You can register a Rust strategy and run the async node
 - [ ] You can explain startup and continuous reconciliation
-- [ ] You can explain why Python has no non-AI live execution authority here
+- [ ] You can explain why Python has no live execution authority here
 - [ ] You can demonstrate sandbox evidence without claiming production readiness

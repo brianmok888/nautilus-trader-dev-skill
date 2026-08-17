@@ -2,8 +2,7 @@
 
 > **Migration/reference-only.** This Python material is not a
 > production default. New production work uses the Rust guidance in the
-> root `nt-implement` skill. The only active Python lane is AI/advisory work
-> outside this repository.
+> root `nt-implement` skill.
 
 
 > **New in v1.227.0 (2026-05-18)** — Current baseline changes for new code:
@@ -98,7 +97,7 @@ During market exit, non-reduce-only orders are auto-denied; order lists with any
 Every Python template must carry a local `# TEMPLATE_CLASSIFICATION: ...` header.
 Treat unclassified Python templates as invalid. Upstream NT V2 supports Python and
 Rust strategies, but this repository classifies Python executable templates as
-migration/reference-only. AI/advisory Python and bounded Rust/PyO3 control-plane wrappers
+migration/reference-only. Bounded Rust/PyO3 control-plane wrappers
 stay explicit. Rust owns new strategy/config/backtest/live work plus adapter networking,
 parsing, normalization, risk/execution state, and other execution-critical infrastructure.
 
@@ -106,8 +105,8 @@ parsing, normalization, risk/execution state, and other execution-critical infra
 |------|------------------|---------------------|
 | Production/performance trading logic or order flow | `nt-strategy-builder-rust` / Rust `Strategy` | Rust production default |
 | Existing Python strategy migration | `legacy_migration/strategy.py` | migration/reference-only; new work uses Rust |
-| Stateless calculations | Rust indicator path | Python `legacy_migration/indicator.py` is migration/reference-only unless solely used by the AI advisory lane |
-| Structured data between components | Rust model/data path | Python `legacy_migration/custom_data.py` is migration/reference-only unless solely used by the AI advisory lane |
+| Stateless calculations | Rust indicator path | Python `legacy_migration/indicator.py` is migration/reference-only |
+| Structured data between components | Rust model/data path | Python `legacy_migration/custom_data.py` is migration/reference-only |
 | Execution algorithms | Rust exec-algo crate / PyO3 | Rust production default; Python `legacy_migration/exec_algorithm.py` is reference-only |
 | Exchange/data connectivity | `adapters/` only as Rust/PyO3 control-plane wrappers | Rust core owns networking, parsing, normalization, and order entry |
 | Custom fill/margin/statistics simulation | `legacy_migration/fill_model.py`, `legacy_migration/margin_model.py`, `legacy_migration/portfolio_statistic.py` | Python research/backtest only; production risk stays Rust-owned |

@@ -114,11 +114,6 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   fix: scan instructional Markdown recursively under `skills/` as well as `references/` and `templates/`.
   closure: a regression fixture fails for unlabelled nested skill guidance and the real-tree lint passes.
 
-[NT-2026-08-16-16] [P1] [CLOSED] Repository boundary: shipped root skills still advertise an active AI/advisory Python lane despite the NT-only contract.
-  file: skills/nt-architect/SKILL.md:67
-  evidence: 16 root skill files contain active-lane phrases such as `sole active Python lane`, while `skills/nt/SKILL.md:16` and `tools/markdown_lane_contract.py:12` exclude AI/advisory work and define no such lane.
-  fix: replace active-lane routing language with a strict out-of-repository boundary while preserving quarantined migration/reference material.
-  closure: the root-skill lane sweep returns only out-of-scope boundary statements and the lane-contract tests pass.
 
 [NT-2026-08-16-17] [P2] [CLOSED] Prose correctness: an nt-implement boundary sentence contains a dangling fragment from a partial lane edit.
   file: skills/nt-implement/SKILL.md:45
@@ -151,7 +146,6 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
 
 ### Repository scope matches the master prompt
 
-- Removed the AI/EvoMap skill lane, sidecar, templates, tests, and G2 evidence.
 - Removed completed plans, reconciliation reports, handoffs, generated agent state, obsolete cutover-attestation tooling, and stale scaffolding.
 - Rewrote the `nt` router and current repository indexes to cover NautilusTrader development only.
 - Preserved upstream NautilusTrader as read-only evidence rather than an implementation target.

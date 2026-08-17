@@ -48,7 +48,7 @@ Do not stop at a proposal when implementation was authorized.
 
 ### Change Discipline
 
-- Keep changes focused on the requested NT-skill outcome and preserve the separation from Daedalus, AI, and other downstream application work.
+- Keep changes focused on the requested NT-skill outcome.
 - Avoid unrelated cleanup, speculative abstractions, compatibility shims, and low-signal tests.
 - Match existing repository conventions and preserve unrelated working-tree changes.
 - Never use destructive Git operations or modify upstream, production, downstream, or external systems without explicit authorization.
@@ -77,7 +77,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 
 This repository contains reusable AI-agent skills for **NautilusTrader development only**. It guides architecture, implementation, testing, integration, operation, and review of NautilusTrader components. `docs/prompts/master-prompt.md` is the maintenance mission and scope authority.
 
-Upstream NautilusTrader is read-only ground truth. Inspect its source, developer guides, examples, tests, schemas, and toolchain standards to improve this repository, but never implement or prepare upstream changes while executing the master prompt. AI, advisory, evolution-system, and downstream application work belong in separate repositories.
+Upstream NautilusTrader is read-only ground truth. Inspect its source, developer guides, examples, tests, schemas, and toolchain standards to improve this repository, but never implement or prepare upstream changes while executing the master prompt.
 
 ## Repository shape
 
@@ -136,7 +136,6 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material bel
 - Use test-first development for behavioral changes.
 - Keep files focused and avoid speculative abstractions.
 - Update G2 owned-content hashes when owned skill/test/tool content changes.
-- Do not modify AI or downstream-project artifacts; they are outside this repository and should not exist here.
 
 ## Validation
 

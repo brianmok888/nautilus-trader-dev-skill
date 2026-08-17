@@ -11,7 +11,7 @@ These skills encode NautilusTrader best practices, correct patterns, and structu
 
 **Pinned reproducible baseline (verified 2026-07-28):** commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`, workspace crates `0.61.0`, source label `v1.231.0`, and Python package `2.0.0rc2`; the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.230.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
 
-**Current develop observation (reviewed 2026-08-08):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `python3 tools/check_upstream_freshness.py --format json` for the current delta. Upstream is read-only ground truth for improving this skill repository; AI and advisory work are outside this repository's scope.
+**Current develop observation (reviewed 2026-08-08):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `python3 tools/check_upstream_freshness.py --format json` for the current delta. Upstream is read-only ground truth for improving this skill repository.
 
 ## Skills Map
 

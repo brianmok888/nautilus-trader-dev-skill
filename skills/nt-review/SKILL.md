@@ -17,10 +17,10 @@ A review is not complete without command evidence. Mark a gate `Pass` only after
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
 | G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-review.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-NT v2 compatibility note: Rust-oriented v2.0 readiness rejects unlabelled legacy/Cython/v1 guidance as migration/reference-only and requires Rust-owned production paths. AI and advisory work is outside this repository. Python live `TradingNode` material is reference-only; current Rust-backed live work uses `LiveNode`.
+NT v2 compatibility note: Rust-oriented v2.0 readiness rejects unlabelled legacy/Cython/v1 guidance as migration/reference-only and requires Rust-owned production paths. Python live `TradingNode` material is reference-only; current Rust-backed live work uses `LiveNode`.
 
 ## Rust production lane
 
@@ -60,7 +60,6 @@ Review PyO3 as a thin control plane over Rust-owned state. There are no active P
 
 Require subclassable PyO3 stubs to match actual Rust virtual/dispatch behavior. Prefer direct owned `Py<T>` handles; require rationale for `Arc<Py<T>>`, weak references for back-references, and traversal/clear support for traceable cycles. Reject Python callback attachment from Tokio worker tasks; use the supported live-runner/channel route. No binding may expose independent order, risk, reconciliation, or adapter-liveness authority.
 
-AI and advisory integration is outside this repository and must not be reviewed as a supported lane here.
 
 ## Migration/reference lane
 

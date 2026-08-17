@@ -13,8 +13,6 @@ Before executing any part of this mission, read and apply the target repository'
 - **This prompt hardens and improves `nautilus-trader-dev-skill`.** It does not develop NautilusTrader itself. Do not implement features in, modify, commit to, or prepare changes for the upstream `nautilus_trader` repository.
 - **Upstream NautilusTrader is read-only ground truth.** Inspect its source, documentation, examples, tests, schemas, and toolchain standards only to correct and strengthen this repository's skill sets.
 - **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components.
-- **AI/EvoMap work is out of scope.** Do not add, audit, modify, test, gate, or make readiness claims for AI/EvoMap skills, sidecars, templates, tests, evidence, or other AI-lane artifacts. That responsibility belongs to `nautilus-daedalus-dev-skill`; such artifacts must not exist in this repository.
-- If an in-scope NT skill links to the excluded AI lane, preserve the boundary but do not follow the link into AI-lane review or changes. Record any unavoidable cross-repository dependency as `Pending` rather than expanding scope.
 
 ---
 
@@ -83,7 +81,7 @@ production path; new in-scope guidance remains Rust-first and PyO3-oriented.
 1. **Rust conversion correctness** — highest. Python/Cython where Rust now exists in NT = P0.
 2. **NT V2 compliance** — drift from current docs/API = P1.
 3. **Gaps vs nightly/master** — newer NT features not covered = P2.
-4. **Cython / v1 / legacy cleanup** — unlabelled legacy content = P1 (charter violation per `docs/tracking/Handguard.md` invariant #3).
+4. **Cython / v1 / legacy cleanup** — unlabelled legacy content = P1 (charter violation per `docs/tracking/Handguard.md` invariant #5).
 5. **Cosmetic / docs polish** — lowest.
 
 **Truth hierarchy:** NT source code (`nautilus_core` Rust, `nautilus_trader` Python on `develop`) > nautilustrader.io docs > `references/developer_guide/contracts/` > skill SKILL.md files > other references.
@@ -109,7 +107,7 @@ not implementation guidance.
 4. **Skill repository corrections** — source-backed changes to current skills, references, templates, tests, and validators only.
 5. **Closure summary** — verification evidence, residual NT-development risks, and confirmation that upstream was not modified.
 
-Do not create tracked session plans, handoffs, generated agent state, historical reconciliation reports, or external attestations. AI/EvoMap artifacts are outside every deliverable and must remain absent.
+Do not create tracked session plans, handoffs, generated agent state, historical reconciliation reports, or external attestations.
 
 ---
 
@@ -120,8 +118,7 @@ Treat upstream NautilusTrader source and official docs as read-only evidence;
 do not treat the upstream repository as an implementation target.
 
 Before reviewing, build an explicit in-scope inventory of NT-development skill
-artifacts and a proof that AI/EvoMap artifacts are absent. Do not report
-findings against excluded files. Keep the mission-owned diff distinct from the
+artifacts. Keep the mission-owned diff distinct from the
 preflight snapshot; never treat pre-existing user changes as stale artifacts or
 cleanup candidates.
 
@@ -186,7 +183,7 @@ NT v2 compatibility note: the following Cython/v1 tokens are
 migration/reference-only detector inputs; prefer current Rust/PyO3 APIs for new
 work.
 
-- Scans in-scope NT-development `skills/**/SKILL.md`, `references/**/*.md`, and `templates/**/*.md`; AI/EvoMap artifacts must be absent from the repository.
+- Scans in-scope NT-development `skills/**/SKILL.md`, `references/**/*.md`, and `templates/**/*.md`.
 - Fails (exit 1) if any of these appear WITHOUT an explicit `legacy:` label or migration note within 5 lines:
   - Cython keywords: `cdef`, `cpdef`, `cimport`, `.pyx`
   - v1-only API markers: version-pinned removed symbols
@@ -199,7 +196,7 @@ work.
 
 **Invoke:** `/skill:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
 
-For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index. AI-lane artifacts must remain absent from the checklist, summary counts, and repository tree.
+For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index.
 
 ### Gate card contract
 
@@ -298,9 +295,8 @@ Do NOT duplicate content across trackers. One change → one write-target.
 - **Skill repository only.** Modify `/home/mok/projects/nautilus-trader-dev-skill`; never modify or prepare upstream NautilusTrader changes.
 - **Upstream is evidence, not a deliverable.** Source, docs, examples, tests, and standards from `nautilus_trader` are read-only inputs used to improve this repository's skill artifacts.
 - **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader-related components.
-- **AI/EvoMap excluded.** Do not add, inspect beyond boundary identification, modify, validate, gate, or claim readiness for AI-lane artifacts; route that work to `nautilus-daedalus-dev-skill` and keep those artifacts absent here.
 - **Rust-first default.** All new in-scope guidance routes through `skills/nt-strategy-builder-rust/`. Python `skills/nt-strategy-builder/` is reference-only.
-- **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #3.
+- **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #5.
 - **Applicable sync checkers must stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, `check_upstream_freshness.py`.
 - **No fabricated content.** If a finding can't cite a real file:line, it's not a finding.
 - **No destructive or unrelated Git operations.** The agent must not rebase, reset, stash, amend, discard, force-push, or silently retry around divergence, dirty user state, or failed authentication. Do not recommend those operations as mission recovery steps; report the blocked state and leave user-owned state untouched. Automatic shipping is fail-closed.

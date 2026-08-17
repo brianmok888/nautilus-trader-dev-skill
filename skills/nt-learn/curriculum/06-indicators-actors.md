@@ -27,7 +27,7 @@ publishing, timers, or request/subscription coordination but does not own order 
 - Message-bus publication for immutable domain events.
 - Request/response for bounded queries with explicit correlation.
 
-Never block hot handlers, create an isolated async runtime, or allow advisory Python to publish
+Never block hot handlers, create an isolated async runtime, or allow Python to publish
 execution-authoritative messages.
 
 ## Source-Pinned Reference

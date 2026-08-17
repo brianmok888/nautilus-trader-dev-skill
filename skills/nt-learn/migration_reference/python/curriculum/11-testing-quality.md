@@ -1,4 +1,4 @@
-NT v2 compatibility note: this file is a migration/reference-only Python curriculum snapshot. Do not use it for new non-AI work; the active curriculum is Rust-first, and the only active Python lane is AI/advisory.
+NT v2 compatibility note: this file is a migration/reference-only Python curriculum snapshot. Do not use it for new work; the active curriculum is Rust-first.
 
 # Stage 11: Testing & Quality
 

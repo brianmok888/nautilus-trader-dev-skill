@@ -45,7 +45,7 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 - `rules/` — DO/DON'T rulesets (some skills)
 
 ### Template Pattern
-Upstream NT V2 supports Python strategies, but this repository's stricter cutover policy classifies Python strategy templates as migration/reference-only. New strategy, config, backtest, paper, and live work routes to Rust. AI and advisory work are outside this repository.
+Upstream NT V2 supports Python strategies, but this repository's stricter cutover policy classifies Python strategy templates as migration/reference-only. New strategy, config, backtest, paper, and live work routes to Rust.
 
 ## ANTI-PATTERNS
 

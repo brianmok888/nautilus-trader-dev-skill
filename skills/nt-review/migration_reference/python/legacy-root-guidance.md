@@ -1,6 +1,6 @@
 # Legacy Python Root Guidance
 
-> **Migration/reference-only.** This is the pre-cutover root guidance preserved for Python migration and historical review. It is not an active production lane. AI and advisory work are outside this repository.
+> **Migration/reference-only.** This is the pre-cutover root guidance preserved for Python migration and historical review. It is not an active production lane.
 
 ---
 name: nt-review
@@ -41,14 +41,13 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
 | G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-review.json`. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
-| G4 Lane and API shape | Classify migration-only Python, active AI/advisory Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
+| G4 Lane and API shape | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1 or advisory'` passed 24 tests. |
+| G6 Safety/compliance | Enforce fail-closed risk, deterministic ordering, fixed-point precision/overflow, secrets, async runtime, FFI, and audit boundaries. | Pass | `uv run pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 24 tests. |
 | G7 Completion report | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current evidence is recorded in `references/g2-evidence/nt-review.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
 
-AI and advisory work are outside this repository and must not be introduced into NautilusTrader production paths.
 
-Review gates: do not approve without command evidence for each relevant gate. Rust/NT compliance findings outrank style: missing `cargo nextest`, `cargo clippy`, `cargo deny`, PyO3/FFI proof, legacy labels, or AI lane isolation is at least `Pending` and often `Blocked` for production/live work.
+Review gates: do not approve without command evidence for each relevant gate. Rust/NT compliance findings outrank style: missing `cargo nextest`, `cargo clippy`, `cargo deny`, PyO3/FFI proof, legacy labels is at least `Pending` and often `Blocked` for production/live work.
 
 ## Overview
 

@@ -13,7 +13,7 @@ that the Rust workspace and representative Rust examples build.
 - `uv`, because the upstream build uses an embedded Python runtime for PyO3
 
 The Python runtime is a build dependency at the PyO3 boundary. It is not a
-non-AI strategy, adapter, backtest, or live-execution lane.
+strategy, adapter, backtest, or live-execution lane.
 
 ## Clone the current development source
 

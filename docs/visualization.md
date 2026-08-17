@@ -1,6 +1,6 @@
 # Visualization in NautilusTrader
 
-NautilusTrader provides Plotly-based, browser-viewable tearsheets. This Python workflow is migration/reference-only for non-AI systems; new strategy and research work follows the Rust-first path.
+NautilusTrader provides Plotly-based, browser-viewable tearsheets. This Python workflow is migration/reference-only; new strategy and research work follows the Rust-first path.
 
 ## Requirements
 

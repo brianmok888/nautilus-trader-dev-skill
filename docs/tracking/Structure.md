@@ -14,7 +14,7 @@ Review date: 2026-08-10
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
 - **Upstream:** pinned reproducible checkout plus reviewed current-develop delta; read-only evidence
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, and per-skill G2 harness cards
-- **Excluded:** AI/advisory work, downstream application skills, session state, handoffs, completed plans, and external attestations
+- **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 
 ## Skill inventory
 
