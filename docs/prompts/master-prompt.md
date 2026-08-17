@@ -20,16 +20,20 @@ Before executing any part of this mission, read and apply the target repository'
 
 ## Methodology skills (invoke these during execution)
 
-The executing agent MUST load and apply these skills at the right phase. Do not skip — they encode the workflow discipline this mission requires.
+The executing agent MUST load and apply these skills at the right phase. Invoke each as `/skill:<name>`; the names below match the currently available skill set. Do not skip — they encode the workflow discipline this mission requires.
 
-| Skill                                  | When to invoke                                           | What it enforces                                                         |
-| -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `$superpowers:requesting-code-review`               | **Phase 1** — deep review                                | Adversarial review pass; findings must cite file:line, not vibes         |
-| best-practice-research                   | **Phase 1** — V2 compliance baseline                     | Pull current NT V2 docs/source as ground truth; no training-data guesses |
-| `$superpowers:brainstorming`             | **Phase 2** — when fix approach is ambiguous             | Explore approach before coding; pick deliberately, not by default        |
-| `$superpowers:test-driven-development`   | **Phase 2** — every fix segment                          | Test first → watch fail → implement → verify pass                        |
-| `$superpowers:verification-before-completion` | **Phase 3 / Phase 5** — before claiming any gate `Pass` | Run the actual command; cite real output; "should pass" is not Pass      |
-| `$superpowers:requesting-code-review`    | **Phase 4** — reconciliation                             | Independent review of post-fix tree before ship                          |
+| Skill | When to invoke | What it enforces |
+| --- | --- | --- |
+| `/skill:using-git-worktrees` | **Preflight** — creating the mission branch | Isolated worktree off a clean `main`; baseline recorded before any edit |
+| `/skill:requesting-code-review` | **Phase 1** — deep review | Adversarial review pass; findings must cite `file:line`, not vibes |
+| `/skill:ulw-research` | **Phase 1** — V2 compliance baseline, when exhaustive research is demanded | Maximum-saturation research pass over current NT V2 docs/source; activates only on explicit user demand |
+| `/skill:brainstorming` | **Phase 2** — when fix approach is ambiguous | Explore approach before coding; pick deliberately, not by default |
+| `/skill:test-driven-development` | **Phase 2** — every fix segment | Test first → watch fail → implement → verify pass |
+| `/skill:systematic-debugging` | **Phase 2** — when a failing regression test's cause is unclear | Root-cause the failure before patching; no shotgun fixes |
+| `/skill:verification-before-completion` | **Phase 3 / Phase 5** — before claiming any gate `Pass` | Run the actual command; cite real output; "should pass" is not Pass |
+| `/skill:requesting-code-review` | **Phase 4** — reconciliation | Independent review of post-fix tree before ship |
+
+**V2 ground-truth baseline:** the former `best-practice-research` skill is not available in the current skill set; `/skill:ulw-research` is its designated replacement. It activates only on an explicit user demand for exhaustive research — when so authorized, run it against the Phase 1 Source URLs. For routine currency work, rely on this prompt's **Upstream currency prerequisite** — `tools/check_upstream_freshness.py` and `references/upstream-delta-review.json` — plus `web_search`/`webfetch`. Training-data recall is never compliance evidence.
 
 **Rule:** If a phase's skill is not available in the runtime, stop that phase and mark the mission `Blocked` — do not substitute unstructured work for a missing methodology skill, do not claim readiness, and do not ship.
 
@@ -40,6 +44,8 @@ The executing agent MUST load and apply these skills at the right phase. Do not 
 ### Preflight and ownership
 
 Before Phase 0:
+
+**Invoke:** `/skill:using-git-worktrees` when creating the mission branch (step 4).
 
 1. Record the target repository `HEAD`, local `main`, `origin/main`, active branch/worktree, and `git status --short`.
 2. Record the pinned upstream commit, the reviewed upstream commit/ref, upstream `HEAD`, and upstream `git status --short`.
@@ -109,7 +115,7 @@ Do not create tracked session plans, handoffs, generated agent state, historical
 
 ## Phase 1 — Deep Skill-Set Review (READ-ONLY, no edits)
 
-**Invoke:** `$superpowers:requesting-code-review` + `best-practice-research` (use `web_search`/`webfetch` against the Source URLs below).
+**Invoke:** `/skill:requesting-code-review` + `/skill:ulw-research` for the V2 compliance baseline (only when the user explicitly demands exhaustive research; otherwise `web_search`/`webfetch` against the Source URLs below plus the upstream currency prerequisite — no skill substitutes for primary-source evidence).
 Treat upstream NautilusTrader source and official docs as read-only evidence;
 do not treat the upstream repository as an implementation target.
 
@@ -156,7 +162,7 @@ Record source-backed findings in `docs/tracking/Findings.md` using the format ab
 
 ## Phase 2 — Skill-Set Fix Implementation (segment-by-segment, TDD)
 
-**Invoke:** `$superpowers:brainstorming` (when ambiguous) + `$superpowers:test-driven-development` (every segment).
+**Invoke:** `/skill:brainstorming` (when ambiguous) + `/skill:test-driven-development` (every segment).
 
 Work findings in priority order (P0 → P1 → P2). For each segment:
 
@@ -191,7 +197,7 @@ work.
 
 ## Phase 3 — Progressive Gate Checklist (PRIMARY DELIVERABLE)
 
-**Invoke:** `$superpowers:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
+**Invoke:** `/skill:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
 
 For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index. AI-lane artifacts must remain absent from the checklist, summary counts, and repository tree.
 
@@ -229,7 +235,7 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 
 ## Phase 4 — Reconciliation
 
-**Invoke:** `$superpowers:requesting-code-review` for independent post-fix review.
+**Invoke:** `/skill:requesting-code-review` for independent post-fix review.
 
 1. Audit the post-fix tree against the same Phase 1 scope and authoritative sources without recursively restarting Phase 1. Do not recursively restart Phase 1.
 2. Reconcile the post-fix tree against the original findings ledger by stable Finding ID. Confirm every original finding is `CLOSED`; keep residuals `OPEN` and carry them into a follow-up TODO list in `docs/tracking/Findings.md`.
