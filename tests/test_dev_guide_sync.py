@@ -69,7 +69,6 @@ def write_entry_skill(root: Path) -> None:
         "Use nautechsystems/nautilus_trader as source.\n"
         "## Rust-oriented v2.0 readiness\n"
         "Default new work is Rust-first/PyO3/LiveNode oriented. "
-        "AI/advisory lane remains Python and off execution-critical paths.\n"
         "Strategy routing is language-gated: no cross-contamination between the Python and Rust strategy builders.\n"
         f"{routes}\n",
     )
@@ -80,14 +79,7 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) -> str:
-    ai_boundary = (
-        "AI/advisory lane remains Python and off execution-critical paths; it stays "
-        "asynchronous, approval gate protected, and non-authoritative for Rust "
-        "production paths.\n"
-        if include_ai_boundary
-        else ""
-    )
+def readiness_gate_text(extra: str = "") -> str:
     return (
         "NT v2 compatibility note: legacy Cython/v1/TradingNode guidance in this "
         "file is retained only for migration/reference-only labelling; prefer "
@@ -100,11 +92,10 @@ def readiness_gate_text(extra: str = "", *, include_ai_boundary: bool = True) ->
         "| G1 Legacy labelling | Mark Cython, v1, and TradingNode guidance reference-only. | Pending | Awaiting `uv run python tools/check_dev_guide_sync.py`. |\n"
         "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending | Awaiting upstream-backed example validation. |\n"
         "| G3 Rust bindings/PyO3 | Verify Rust bindings, PyO3 registration, callback routing, and crate paths. | Pending | Awaiting PyO3 boundary audit. |\n"
-        "| G4 Functional gates | Classify Rust/Python/AI lanes and use current LiveNode, builder, and message-bus APIs. | Pending | Awaiting lane and API audit. |\n"
+        "| G4 Functional gates | Classify Rust/Python lanes and use current LiveNode, builder, and message-bus APIs. | Pending | Awaiting lane and API audit. |\n"
         "| G5 References and templates | Record command evidence before readiness is Pass. | Pending | Awaiting targeted tests. |\n"
         "| G6 Operational and migration boundaries | Enforce fail-closed risk, secrets, precision, and runtime boundaries. | Pending | Awaiting review. |\n"
         "| G7 Durable evidence | Report every gate. | Pending | Awaiting reconciliation. |\n"
-        f"{ai_boundary}"
         f"{extra}"
     )
 
@@ -1710,7 +1701,7 @@ def test_reports_missing_rust_oriented_v2_readiness_boundary(tmp_path: Path) -> 
     write(tmp_path / "skills/nt/SKILL.md", "Route NautilusTrader skills.\n")
     write(tmp_path / "skills/nt-dev/SKILL.md", "Rust v2 development.\n")
     write(tmp_path / "skills/nt-review/SKILL.md", "Review Rust code.\n")
-    write(tmp_path / "skills/nt-architect/SKILL.md", "Keep advisory workflows isolated.\n")
+    write(tmp_path / "skills/nt-architect/SKILL.md", "Keep research workflows isolated.\n")
 
     result = run_checks(tmp_path)
 
@@ -2187,8 +2178,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     write(
         tmp_path / "skills/nt-architect/SKILL.md",
         "Preserve message immutability in designs. Layout Rust adapters under crates/adapters/.\n"
-        "Rust-oriented v2.0 readiness means Rust core owns networking and execution-critical state. "
-        "The AI/advisory lane remains Python.\n",
+        "Rust-oriented v2.0 readiness means Rust core owns networking and execution-critical state. ",
     )
     write(
         tmp_path / "skills/nt-data/SKILL.md",
@@ -2322,14 +2312,13 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
 
     readiness_extras = {
         Path("skills/nt/SKILL.md"): (
-            "Route all strategy implementation to Rust-first skills. "
-            "AI and advisory work are outside this repository.\n"
+            "Route all strategy implementation to Rust-first skills.\n"
         ),
         Path("skills/nt-adapters/SKILL.md"): (
             "Adapter evidence includes cargo nextest, cargo clippy, cargo deny, and fuzz-adapter.\n"
         ),
         Path("skills/nt-architect/SKILL.md"): (
-            "Architecture includes a component ownership matrix: Rust owns strategy/configuration and production paths; Python is migration/reference material, and AI and advisory work are outside this repository.\n"
+            "Architecture includes a component ownership matrix: Rust owns strategy/configuration and production paths; Python is migration/reference material.\n"
         ),
         Path("skills/nt-backtest/SKILL.md"): (
             "Rust BacktestEngine evidence includes cargo nextest, cargo clippy, cargo deny, and Python research/config is labelled.\n"
@@ -2344,7 +2333,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "Rust-first default for on-chain adapters requires cargo nextest, cargo clippy, cargo deny, and fuzz.\n"
         ),
         Path("skills/nt-implement/SKILL.md"): (
-            "AI/advisory lane remains Python; require status gate before coding plus cargo nextest, cargo clippy, and cargo deny for Rust.\n"
+            "require status gate before coding plus cargo nextest, cargo clippy, and cargo deny for Rust.\n"
         ),
         Path("skills/nt-live/SKILL.md"): (
             "LiveNode readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
@@ -2353,22 +2342,22 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "PyO3 model readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
         ),
         Path("skills/nt-review/SKILL.md"): (
-            "AI/advisory lane remains Python; approval requires command evidence for cargo nextest, cargo clippy, and cargo deny.\n"
+            "approval requires command evidence for cargo nextest, cargo clippy, and cargo deny.\n"
         ),
         Path("skills/nt-signals/SKILL.md"): (
-            "AI/advisory lane remains Python; Rust production signals require cargo nextest, cargo clippy, and cargo deny.\n"
+            "Rust production signals require cargo nextest, cargo clippy, and cargo deny.\n"
         ),
         Path("skills/nt-strategy-builder/SKILL.md"): (
-            "AI/advisory lane remains Python; migration/reference-only Python material. route all new strategy work to nt-strategy-builder-rust.\n"
+            "migration/reference-only Python material. route all new strategy work to nt-strategy-builder-rust.\n"
         ),
         Path("skills/nt-strategy-builder-rust/SKILL.md"): (
-            "AI/advisory lane remains Python; StrategyCore evidence includes cargo nextest, cargo clippy, and cargo deny.\n"
+            "StrategyCore evidence includes cargo nextest, cargo clippy, and cargo deny.\n"
         ),
         Path("skills/nt-testing/SKILL.md"): (
             "Testing evidence includes cargo nextest, cargo clippy, cargo deny, ExecTesterConfig::builder(), and DataTesterConfig::builder().\n"
         ),
         Path("skills/nt-trading/SKILL.md"): (
-            "AI/advisory lane remains Python; Rust order readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
+            "Rust order readiness includes cargo nextest, cargo clippy, and cargo deny.\n"
         ),
     }
     for relative in sync.NT_V2_READINESS_GATE_TARGETS:

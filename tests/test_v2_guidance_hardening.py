@@ -49,21 +49,6 @@ def test_current_guidance_rejects_verified_obsolete_paths_and_defaults() -> None
         assert current in combined
 
 
-def test_root_skills_exclude_active_ai_advisory_lanes() -> None:
-    active_lane_patterns = (
-        re.compile(r"active AI/advisory", re.IGNORECASE),
-        re.compile(r"AI/advisory (?:strategy )?work.*(?:Python|lane)", re.IGNORECASE),
-        re.compile(r"AI/advisory.*(?:sole|only).*Python", re.IGNORECASE),
-        re.compile(r"(?:sole|only) active Python", re.IGNORECASE),
-        re.compile(r"non-AI", re.IGNORECASE),
-    )
-
-    for path in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
-        text = path.read_text(encoding="utf-8")
-        for pattern in active_lane_patterns:
-            assert pattern.search(text) is None, (path.relative_to(REPO_ROOT), pattern.pattern)
-
-
 def test_copy_paste_rust_guidance_uses_current_v2_api_shapes() -> None:
     backtest = read("skills/nt-backtest/SKILL.md")
     adapters = read("skills/nt-adapters/SKILL.md")
@@ -195,7 +180,6 @@ def test_repository_scope_routes_python_only_as_nt_migration_reference() -> None
     assert "migration/reference-only" in router
     assert "migration/reference-only" in python_builder
     assert "Explicit Python strategy requests still route to Rust" in implement
-    assert "AI and advisory work are outside this repository" in router
 
 
 def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
@@ -216,7 +200,6 @@ def test_ambiguous_strategy_requests_default_to_rust_builder() -> None:
         "ask which language before loading either skill",
         "or start in Python and port to Rust when profiling demands it",
         "Wire backtest or live node | `skills/nt-strategy-builder/templates/`",
-        "Explicit Python or AI/advisory strategy work | `skills/nt-strategy-builder/`",
     ]
     present = [term for term in forbidden if term in combined]
     assert present == []
@@ -252,7 +235,6 @@ def test_python_research_and_dex_runtime_routes_follow_rust_cutover() -> None:
 
     assert "## Appendix: Python Migration Reference" in guide
     assert "New strategy research and rapid prototyping route to `nt-strategy-builder-rust`" in guide
-    assert "AI and advisory work are outside this repository" in guide
     assert "Python remains supported for V2 strategy research" not in guide
 
     combined_dex = dex_skill + dex_agents

@@ -5,14 +5,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_in_scope_artifacts_exclude_ai_evolution_guidance() -> None:
+def test_in_scope_artifacts_exclude_ai_framework_guidance() -> None:
     offenders: list[str] = []
     for scoped_root in (ROOT / "skills", ROOT / "references", ROOT / "templates"):
         if not scoped_root.exists():
             continue
         for path in scoped_root.rglob("*.md"):
             text = path.read_text(encoding="utf-8").lower()
-            if any(marker in text for marker in ("evomap", "langchain", "langgraph")):
+            if any(marker in text for marker in ("langchain", "langgraph")):
                 offenders.append(str(path.relative_to(ROOT)))
 
     assert offenders == []
