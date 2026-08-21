@@ -546,3 +546,24 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
     assert "Current release baseline: NautilusTrader v1.230.0 latest release" not in readme
     assert "Pinned reproducible baseline" in readme
     assert "Current develop observation" in readme
+
+def test_lighter_guides_teach_current_tester_startup_convention() -> None:
+    for path in (
+        "skills/nt-adapters/references/integrations/lighter.md",
+        "references/integrations/lighter.md",
+    ):
+        guide = read(path)
+
+        for obsolete in (
+            "--run",
+            "--live-orders",
+            "default to a dry build",
+        ):
+            assert obsolete not in guide, f"{path} teaches removed tester opt-in {obsolete}"
+
+        for current in (
+            "module-level constants",
+            "dry_run=False",
+            "LIGHTER_ENVIRONMENT",
+        ):
+            assert current in guide, f"{path} lacks current tester convention marker {current}"

@@ -30,37 +30,32 @@ consumed through the Rust trait surface.
 ## Examples
 
 The adapter includes Python v2 and Rust live-node examples. The Python examples live in
-[`python/examples/lighter/`](https://github.com/nautechsystems/nautilus_trader/tree/develop/python/examples/lighter/)
-and default to a dry build: they build the node, register the tester, and exit unless `--run` is
-passed.
+[`examples/live/lighter/`](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/lighter/)
+and run out of the box: settings live in module-level constants at the top of each file, and
+running a script connects and starts immediately without CLI flags. The default environment is
+testnet; edit the `LIGHTER_ENVIRONMENT` constant to use mainnet. The execution tester places real
+orders by default (`dry_run=False`), stated in a warning at the top of the module — set
+`dry_run=True` in the `ExecTesterConfig` for a dry run.
 
 ```fish
-cd python
-.venv/bin/python examples/lighter/data_tester.py --lighter-environment testnet
-.venv/bin/python examples/lighter/exec_tester.py --lighter-environment testnet
+.venv/bin/python examples/live/lighter/data_tester.py
+.venv/bin/python examples/live/lighter/exec_tester.py
 ```
 
-Pass `--run` to connect to Lighter. The execution tester remains in `dry_run` mode unless
-`--live-orders` is also passed.
-
-```fish
-cd python
-.venv/bin/python examples/lighter/data_tester.py \
-    --lighter-environment mainnet \
-    --instrument BTC-PERP.LIGHTER \
-    --run
-.venv/bin/python examples/lighter/exec_tester.py \
-    --lighter-environment mainnet \
-    --instrument DOGE-PERP.LIGHTER \
-    --run
-```
-
-Rust examples live under `crates/adapters/lighter/examples/` and run immediately:
+Rust examples live under `crates/adapters/lighter/examples/` (source `node_data_tester.rs` and
+`node_exec_tester.rs`; cargo targets keep the `lighter-data-tester`/`lighter-exec-tester` names).
+Both testers connect when run and both set `LIGHTER_ENVIRONMENT` to mainnet. The execution tester
+has `DRY_RUN = false` in its source, so the commands below submit live mainnet orders as-is:
 
 ```fish
 cargo run --example lighter-data-tester --package nautilus-lighter --features examples
 cargo run --example lighter-exec-tester --package nautilus-lighter --features examples
 ```
+
+NT v2 compatibility note: current-develop overlay. The immediate-startup tester convention above
+reflects upstream commits `e8daa045ab` and `7214db4239` (reviewed develop tip `2114cf6f76`); the
+reproducible pinned baseline `6e59fd74ea` still uses the historical CLI opt-in convention.
+Treat the immediate-startup convention as current guidance.
 
 :::warning
 Examples can connect to live venues. Execution examples with live order flow enabled can submit
