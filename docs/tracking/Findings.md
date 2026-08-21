@@ -4,15 +4,55 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-16
-Reviewed upstream develop: `03062cce6372d3c7e9044b39b181a50cc07a067e`
+Review date: 2026-08-21
+Reviewed upstream develop: `2114cf6f761429e0adb5ca9596fcd7b895b16011`
 Pinned G2 baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`
 
 NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance.
 
 ## Open findings
 
-None.
+[NT-2026-08-21-01] [P1] [OPEN] V2 compliance: Lighter integration guides teach the removed `--run`/`--live-orders` tester opt-in convention that current develop replaced with immediate startup.
+  file: skills/nt-adapters/references/integrations/lighter.md:34
+  evidence: upstream commits `e8daa045ab` and `7214db4239` standardized Python testers for immediate startup; develop tip `docs/integrations/lighter.md:36-50` documents module-level constants with the execution tester placing real orders by default (`dry_run=False`) and a top-of-module warning.
+  fix: update both guide copies to the current tester convention (module-level constants, immediate connect on run, explicit `dry_run=False` warning) with a develop-only boundary note.
+  closure: `grep -n '--run\|--live-orders' skills/nt-adapters/references/integrations/lighter.md references/integrations/lighter.md` returns no active-convention teaching and `python3 tools/check_legacy_labelling.py` passes.
+
+[NT-2026-08-21-02] [P1] [OPEN] V2 compliance: adapter spec names removed `WebSocketConfig.heartbeat_msg`; current develop renamed it `heartbeat_payload` (with `heartbeat` → `heartbeat_interval_secs`).
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1074
+  evidence: upstream commits `74d57e7e05` and `70ce722a4e`; RELEASES notes "Changed `WebSocketConfig.heartbeat` to `heartbeat_interval_secs` and `heartbeat_msg` to `heartbeat_payload`".
+  fix: rename the field in the text-ping guidance and add a develop-only boundary note (pinned baseline retains the old spelling).
+  closure: `grep -n 'heartbeat_msg' skills/nt-adapters/references/guides/official_adapter_spec.md` returns no uncorrected hit.
+
+[NT-2026-08-21-03] [P1] [OPEN] V2 compliance: Betfair integration references teach removed `stream_idle_timeout_ms`; current develop renamed the pair to `stream_heartbeat_secs`/`stream_heartbeat_timeout_secs`.
+  file: skills/nt-adapters/references/integrations/betfair_v2.md:279
+  evidence: upstream commit `74d57e7e05` renamed `crates/adapters/betfair/src/config.rs:85-86` to `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs`; the same stale table is mirrored at `references/integrations/betfair_v2.md:279` and `:306`.
+  fix: update both config tables with the current field names and a develop-only boundary note.
+  closure: `grep -rn 'stream_idle_timeout_ms' skills/ references/` returns no uncorrected hit.
+
+[NT-2026-08-21-04] [P1] [OPEN] Validation: durable G2 evidence hashes are stale for nt-architect, nt-implement, and nt-review, leaving the repository red on main.
+  evidence: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 1 naming those three skills at baseline `bd8118a8`; `python3 -m pytest -q` fails `tests/test_skill_g2_harnesses.py::test_current_readiness_evidence_matches_owned_content` (1 failed, 470 passed).
+  fix: re-execute the three harnesses via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` against the pinned upstream to regenerate evidence with current owned-content hashes.
+  closure: `--check-cards` exits 0 and the pytest evidence test passes.
+
+[NT-2026-08-21-05] [P2] [OPEN] Improvement: current-develop `LiveNode` Python hosted async execution (`run_async` owned/hosted run modes) is not covered by live-operation guidance.
+  evidence: upstream commit `e166a5e57c` adds `LiveNode.run_async` and replaces Python `start`/`poll` with owned and hosted run modes (docs/concepts/python.md, docs/concepts/live.md).
+  fix: add a develop-only overlay note to the live-operation skill describing hosted async execution and its blocking-cache restriction.
+  closure: the overlay section exists citing commit `e166a5e57c` and `python3 tools/check_legacy_labelling.py` passes.
+
+[NT-2026-08-21-06] [P2] [OPEN] Improvement: the fallible `ExecutionClient::calculate_commission` contract (fail-closed on `Err`) is not covered by adapter guidance.
+  evidence: upstream commit `68975d9347` changed the hook to `anyhow::Result<Option<Money>>` and documented fail-closed commission semantics in `docs/developer_guide/adapters.md`.
+  fix: add a develop-only overlay note to the adapter spec commission guidance describing the three outcomes and the fail-closed rule.
+  closure: the overlay section exists citing commit `68975d9347`.
+
+[NT-2026-08-21-07] [P2] [OPEN] Pin deferral: the reproducible G2 pin `6e59fd74` is 560 commits behind reviewed develop tip `2114cf6f`.
+  evidence: `python3 tools/check_upstream_freshness.py --format json` reports develop `drifted`, `commits_ahead` 560, `pinned_is_ancestor` true, manifest reviewed through `2114cf6f`.
+  fix: move `UPSTREAM_COMMIT` to the reviewed tip and refresh every pin-citing layer when a full G2 re-execution window is available; until then no gate `Pass` claim may depend on behavior newer than the pin.
+  closure: pin equals the reviewed tip with all 17 G2 evidence files re-executed, or a dated re-run decision supersedes this record.
+
+## Follow-up TODO
+
+- [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).
 
 ## Closed findings
 
