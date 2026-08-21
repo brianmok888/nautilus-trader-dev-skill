@@ -495,6 +495,12 @@ Current Rust differences:
 - Rust uses a fixed 36,000 second keep-alive interval.
 - Rust currently requires `stream_heartbeat_ms`; it does not accept `None` to omit the heartbeat.
 
+NT v2 compatibility note: the differences above describe the pinned baseline `6e59fd74ea`.
+Upstream commit `74d57e7e05` (reviewed develop tip `2114cf6f76`) renamed the stream heartbeat
+pair to `stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and
+Python surfaces, so the heartbeat requirement above is historical for current develop. See the
+v2 integration guide for current guidance.
+
 :::
 
 ### Execution client configuration options
@@ -533,6 +539,12 @@ Current Rust differences:
   for startup reconciliation when `reconcile_market_ids` is unset.
 - Rust currently applies `ignore_external_orders` only to OCM updates with no `rfo`.
 - Rust currently requires `stream_heartbeat_ms`; it does not accept `None` to omit the heartbeat.
+
+NT v2 compatibility note: the differences above describe the pinned baseline `6e59fd74ea`.
+Upstream commit `74d57e7e05` (reviewed develop tip `2114cf6f76`) renamed the stream heartbeat
+pair to `stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and
+Python surfaces, so the heartbeat requirement above is historical for current develop. See the
+v2 integration guide for current guidance.
 
 :::
 

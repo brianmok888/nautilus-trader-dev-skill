@@ -613,3 +613,13 @@ def test_live_guide_covers_hosted_async_run_modes() -> None:
         "e166a5e57c",
     ):
         assert marker in live, f"live guide lacks run-mode marker {marker}"
+
+def test_v1_betfair_guides_scope_heartbeat_claims_to_pinned_baseline() -> None:
+    for path in (
+        "skills/nt-adapters/references/integrations/betfair.md",
+        "references/integrations/betfair.md",
+    ):
+        guide = read(path)
+
+        assert guide.count("74d57e7e05") >= 2, f"{path} lacks pinned-baseline scoping notes"
+        assert "pinned baseline" in guide, f"{path} lacks pinned-baseline scoping language"

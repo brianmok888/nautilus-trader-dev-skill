@@ -55,16 +55,15 @@ NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and ob
   fix: move `UPSTREAM_COMMIT` to the reviewed tip and refresh every pin-citing layer when a full G2 re-execution window is available; until then no gate `Pass` claim may depend on behavior newer than the pin.
   closure: pin equals the reviewed tip with all 17 G2 evidence files re-executed, or a dated re-run decision supersedes this record.
 
-[NT-2026-08-21-08] [P2] [OPEN] Residual: the migration/reference-labelled v1 Betfair guide states current-tense Rust differences contradicted by the reviewed develop tip rename.
+[NT-2026-08-21-08] [P2] [CLOSED] Residual: the migration/reference-labelled v1 Betfair guide states current-tense Rust differences contradicted by the reviewed develop tip rename.
   file: references/integrations/betfair.md:496
   evidence: `references/integrations/betfair.md:482,496,518,535` teach `stream_heartbeat_ms` as what "Rust currently requires"; upstream commit `74d57e7e05` renamed the pair at the reviewed tip `2114cf6f76`. The file is v1 migration/reference-labelled and outside NT-2026-08-21-03's declared scope (the v2 guide copies).
-  fix: scope the v1 guide's "Current Rust differences" block to the pinned baseline or align its stream-heartbeat claims with the v2 guide's boundary note.
-  closure: the current-tense heartbeat claims carry a pinned-baseline scope note and `python3 tools/check_legacy_labelling.py` passes.
+  fix: scope the v1 guide's "Current Rust differences" blocks to the pinned baseline; upstream commit `74d57e7e05` renamed the pair on both the Rust and Python surfaces (tip `2114cf6f76` `python/nautilus_trader/adapters/betfair/__init__.pyi:58-95` uses `stream_heartbeat_secs=5`), so the requirement above is historical for current develop.
+  closure: `python3 -m pytest -q tests/test_v2_guidance_hardening.py::test_v1_betfair_guides_scope_heartbeat_claims_to_pinned_baseline` passes; both v1 copies carry pinned-baseline scoping notes citing `74d57e7e05`; `python3 tools/check_legacy_labelling.py` passes.
 
 ## Follow-up TODO
 
 - [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).
-- [ ] [NT-2026-08-21-08] Scope the v1 Betfair guide's current-tense stream-heartbeat claims to the pinned baseline.
 
 ## Closed findings
 
@@ -174,6 +173,8 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
+2026-08-21 — P2 — MODIFIED: scoped the v1 Betfair guides' current-tense stream-heartbeat claims to the pinned baseline (NT-2026-08-21-08) — files: references/integrations/betfair.md, skills/nt-adapters/references/integrations/betfair.md, tests/test_v2_guidance_hardening.py
+
 
 2026-08-21 — P1 — MODIFIED: aligned Lighter tester guidance with the immediate-startup convention (e8daa045ab, 7214db4239) — files: skills/nt-adapters/references/integrations/lighter.md, references/integrations/lighter.md, tests/test_v2_guidance_hardening.py
 
