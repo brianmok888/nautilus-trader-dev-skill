@@ -567,3 +567,25 @@ def test_lighter_guides_teach_current_tester_startup_convention() -> None:
             "LIGHTER_ENVIRONMENT",
         ):
             assert current in guide, f"{path} lacks current tester convention marker {current}"
+
+def test_network_config_guides_use_current_field_names() -> None:
+    spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
+
+    assert "heartbeat_msg" not in spec
+    assert "heartbeat_payload: Some(TEXT_PING.to_string())" in spec
+    assert "heartbeat_interval_secs" in spec
+
+    for path in (
+        "skills/nt-adapters/references/integrations/betfair_v2.md",
+        "references/integrations/betfair_v2.md",
+    ):
+        guide = read(path)
+
+        for obsolete in (
+            "stream_heartbeat_ms",
+            "stream_idle_timeout_ms",
+        ):
+            assert obsolete not in guide, f"{path} teaches removed field {obsolete}"
+
+        assert "| `stream_heartbeat_secs` " in guide
+        assert "| `stream_heartbeat_timeout_secs` " in guide

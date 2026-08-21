@@ -1071,7 +1071,11 @@ requested.
 Support both WebSocket control frame pings and application-level text pings:
 
 - **Control frame pings**: Handled automatically by `WebSocketClient` via the `PingHandler` callback.
-- **Text pings**: Some venues (e.g., OKX) use `"ping"`/`"pong"` text messages. Configure `heartbeat_msg: Some(TEXT_PING.to_string())` in `WebSocketConfig` and respond to incoming `TEXT_PING` with `TEXT_PONG` in the handler.
+- **Text pings**: Some venues (e.g., OKX) use `"ping"`/`"pong"` text messages. Configure `heartbeat_interval_secs` and `heartbeat_payload: Some(TEXT_PING.to_string())` in `WebSocketConfig` and respond to incoming `TEXT_PING` with `TEXT_PONG` in the handler. When `heartbeat_payload` is `None` the heartbeat is an empty Ping control frame instead — a venue that counts only application-level keepalives needs the text form.
+
+NT v2 compatibility note: current-develop overlay. The field names above reflect upstream commits
+`70ce722a4e` and `74d57e7e05` (reviewed develop tip `2114cf6f76`); the reproducible pinned baseline
+`6e59fd74ea` uses the pre-rename spellings. Treat the `_secs`/`_payload` names as current.
 
 The handler should check for ping messages early in the message processing loop and respond immediately to maintain connection health.
 

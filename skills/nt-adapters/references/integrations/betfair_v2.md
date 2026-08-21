@@ -275,8 +275,8 @@ When multiple trading nodes share a single Betfair account across different mark
 | `max_market_start_time`             | `None`   | Optional navigation filter.                   |
 | `stream_host`                       | `None`   | Optional stream host override.                |
 | `stream_port`                       | `None`   | Optional stream port override.                |
-| `stream_heartbeat_ms`               | `5,000`  | Required in Rust today.                       |
-| `stream_idle_timeout_ms`            | `60,000` | Idle timeout before reconnect.                |
+| `stream_heartbeat_secs`             | `5`      | Keepalive cadence (default `BETFAIR_STREAM_HEARTBEAT_SECS`). |
+| `stream_heartbeat_timeout_secs`     | `60`     | Dead-peer timeout; reconnects when no bytes arrive. |
 | `stream_reconnect_delay_initial_ms` | `2,000`  | Initial reconnect delay.                      |
 | `stream_reconnect_delay_max_ms`     | `30,000` | Maximum reconnect delay.                      |
 | `stream_use_tls`                    | `True`   | Use TLS for the stream connection.            |
@@ -302,8 +302,8 @@ keep-alive interval.
 | `order_request_rate_per_second`     | `20`          | Order endpoint rate limit.                             |
 | `stream_host`                       | `None`        | Optional stream host override.                         |
 | `stream_port`                       | `None`        | Optional stream port override.                         |
-| `stream_heartbeat_ms`               | `5,000`       | Required in Rust today.                                |
-| `stream_idle_timeout_ms`            | `60,000`      | Idle timeout before reconnect.                         |
+| `stream_heartbeat_secs`             | `5`           | Keepalive cadence (default `BETFAIR_STREAM_HEARTBEAT_SECS`). |
+| `stream_heartbeat_timeout_secs`     | `60`          | Dead-peer timeout; reconnects when no bytes arrive.    |
 | `stream_reconnect_delay_initial_ms` | `2,000`       | Initial reconnect delay.                               |
 | `stream_reconnect_delay_max_ms`     | `30,000`      | Maximum reconnect delay.                               |
 | `stream_use_tls`                    | `True`        | Use TLS for the stream connection.                     |
@@ -316,6 +316,10 @@ keep-alive interval.
 | `use_market_version`                | `False`       | Attach market version to place and replace requests.   |
 | `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post‑reconnect mass‑status reconciliation. |
 
+NT v2 compatibility note: current-develop overlay. The `stream_heartbeat_secs` and
+`stream_heartbeat_timeout_secs` names (seconds) reflect upstream commit `74d57e7e05` (reviewed
+develop tip `2114cf6f76`); the reproducible pinned baseline `6e59fd74ea` uses the pre-rename
+millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
 
 ## Cutover plan

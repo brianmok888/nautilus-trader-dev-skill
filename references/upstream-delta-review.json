@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_ref": "origin/develop",
   "pinned_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "reviewed_commit": "03062cce6372d3c7e9044b39b181a50cc07a067e",
-  "reviewed_on": "2026-08-16",
+  "reviewed_commit": "2114cf6f761429e0adb5ca9596fcd7b895b16011",
+  "reviewed_on": "2026-08-21",
   "deltas": [
     {
       "commit": "d46f56505a8675ae49025bc6abaa851d33f60c56",
@@ -8127,6 +8127,3047 @@
       "affected_files": [
         "skills/nt-adapters/references/guides/official_adapter_spec.md"
       ]
+    },
+    {
+      "commit": "8fa769d4eb6d8f9e5c24af0fa3db601fe415e3a6",
+      "subject": "Correct the f32 exp approximation outside its normal exponent range (#4709)",
+      "upstream_paths": [
+        "crates/model/src/data/black_scholes.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b71cfbe28f2e6d60ffe6548996d1df2e45069187",
+      "subject": "Request Polymarket book snapshots on subscribe",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/websocket/handler.rs",
+        "crates/adapters/polymarket/src/websocket/messages.rs",
+        "crates/adapters/polymarket/tests/websocket.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3d08adde192caa1d463f465f46ca660519d9580a",
+      "subject": "Fix Hyperliquid historical candle timestamps (#4727)",
+      "upstream_paths": [
+        "crates/adapters/hyperliquid/src/data.rs",
+        "crates/adapters/hyperliquid/src/http/models.rs",
+        "crates/adapters/hyperliquid/src/websocket/parse.rs",
+        "crates/adapters/hyperliquid/tests/data_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e2628fa0e64565427f2d7bb0889666dcfe1b82b7",
+      "subject": "Refine options concept guide",
+      "upstream_paths": [
+        "docs/concepts/options.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "25e66ebfce2e86c4fe445ea072521296d8f51b74",
+      "subject": "Refine order book concept guide",
+      "upstream_paths": [
+        "docs/concepts/order_book.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "aa7feb6eb51003a738bc3489b3407e51cf3f9827",
+      "subject": "Scale indicator test tolerance with magnitude (#4718)",
+      "upstream_paths": [
+        "crates/indicators/src/average/ama.rs",
+        "crates/indicators/src/average/dema.rs",
+        "crates/indicators/src/average/ema.rs",
+        "crates/indicators/src/average/hma.rs",
+        "crates/indicators/src/average/vidya.rs",
+        "crates/indicators/src/average/vwap.rs",
+        "crates/indicators/src/average/wma.rs",
+        "crates/indicators/src/momentum/bb.rs",
+        "crates/indicators/src/momentum/cci.rs",
+        "crates/indicators/src/momentum/cmo.rs",
+        "crates/indicators/src/momentum/macd.rs",
+        "crates/indicators/src/momentum/pressure.rs",
+        "crates/indicators/src/momentum/psl.rs",
+        "crates/indicators/src/momentum/roc.rs",
+        "crates/indicators/src/momentum/rsi.rs",
+        "crates/indicators/src/momentum/stochastics.rs",
+        "crates/indicators/src/ratio/efficiency_ratio.rs",
+        "crates/indicators/src/ratio/spread_analyzer.rs",
+        "crates/indicators/src/testing.rs",
+        "crates/indicators/src/volatility/atr.rs",
+        "crates/indicators/src/volatility/kc.rs",
+        "crates/indicators/src/volatility/kp.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c99ab2028c6a38bc5db9dd75374b3e8974e9fa36",
+      "subject": "Add exec_client tests to nextest retry override",
+      "upstream_paths": [
+        ".config/nextest.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "7f0e93dfa3f09ca165a5f3292a45fafbb5681561",
+      "subject": "Add AccountState venue metadata",
+      "upstream_paths": [
+        "crates/adapters/architect_ax/src/execution.rs",
+        "crates/adapters/betfair/src/common/parse.rs",
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/src/spot/execution.rs",
+        "crates/adapters/bitmex/src/execution.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/bybit/src/execution.rs",
+        "crates/adapters/coinbase/src/execution.rs",
+        "crates/adapters/deribit/src/execution.rs",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/dydx/src/execution/mod.rs",
+        "crates/adapters/hyperliquid/src/execution.rs",
+        "crates/adapters/interactive_brokers/src/execution/account.rs",
+        "crates/adapters/interactive_brokers/src/execution/core.rs",
+        "crates/adapters/kraken/src/execution/futures.rs",
+        "crates/adapters/kraken/src/execution/spot.rs",
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/polymarket/src/execution/mod.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/sandbox/src/execution.rs",
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/src/execution_client.rs",
+        "crates/common/src/clients/execution.rs",
+        "crates/common/src/factories/event.rs",
+        "crates/execution/src/engine/stubs.rs",
+        "crates/live/src/execution/client.rs",
+        "crates/live/src/execution/emitter.rs",
+        "crates/live/tests/manager.rs",
+        "crates/live/tests/node.rs",
+        "crates/model/src/events/account/state.rs",
+        "crates/model/src/python/events/account/state.rs",
+        "crates/persistence/tests/test_catalog.rs",
+        "crates/portfolio/src/portfolio.rs",
+        "crates/serialization/src/arrow/account_state.rs",
+        "crates/serialization/src/arrow/display/account_state.rs",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/unit/model/test_events.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0d350f2b2fc2ed459f38e21483e2c5689abba7ed",
+      "subject": "Standardize formatting",
+      "upstream_paths": [
+        "crates/indicators/src/average/vwap.rs",
+        "crates/indicators/src/momentum/bb.rs",
+        "crates/indicators/src/momentum/pressure.rs",
+        "crates/indicators/src/momentum/roc.rs",
+        "crates/indicators/src/ratio/efficiency_ratio.rs",
+        "crates/indicators/src/volatility/kc.rs",
+        "crates/indicators/src/volatility/kp.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4aaea423236663af0579e2487a6aa439c7f7b8f7",
+      "subject": "Guard PyO3 data operations before registration",
+      "upstream_paths": [
+        "crates/common/src/python/actor.rs",
+        "crates/trading/src/python/algorithm.rs",
+        "crates/trading/src/python/strategy.rs",
+        "python/tests/unit/backtest/test_backtest_engine_exec_algorithms.py",
+        "python/tests/unit/common/test_actor.py",
+        "python/tests/unit/trading/test_trading.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4b315aa1aeba8dd4639b8db5131b8abf87be4d60",
+      "subject": "Fix Lighter acknowledged create outcomes",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/common/enums.rs",
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/http/client.rs",
+        "crates/adapters/lighter/src/http/models.rs",
+        "crates/adapters/lighter/src/http/query.rs",
+        "crates/adapters/lighter/src/websocket/client.rs",
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e92e14e121d4fd614cfaf4c41a55658286649954",
+      "subject": "Refine order concept guides",
+      "upstream_paths": [
+        "docs/concepts/orders/advanced.md",
+        "docs/concepts/orders/emulated.md",
+        "docs/concepts/orders/index.md",
+        "docs/concepts/orders/limit.md",
+        "docs/concepts/orders/limit_if_touched.md",
+        "docs/concepts/orders/market.md",
+        "docs/concepts/orders/market_if_touched.md",
+        "docs/concepts/orders/market_to_limit.md",
+        "docs/concepts/orders/stop_limit.md",
+        "docs/concepts/orders/stop_market.md",
+        "docs/concepts/orders/trailing_stop_limit.md",
+        "docs/concepts/orders/trailing_stop_market.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "39eced2470d6efe4d46fcee4a5ebff7886d01026",
+      "subject": "Verify Polymarket book snapshot hashes",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/instruments.rs",
+        "crates/adapters/polymarket/src/data/runtime.rs",
+        "crates/adapters/polymarket/src/http/models.rs",
+        "crates/adapters/polymarket/src/http/parse.rs",
+        "crates/adapters/polymarket/src/websocket/messages.rs",
+        "crates/adapters/polymarket/src/websocket/parse.rs",
+        "crates/adapters/polymarket/test_data/ws_book_snapshot.json",
+        "crates/adapters/polymarket/test_data/ws_book_snapshot_captured.json",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "52b4576647c790c2d0342279c32205adca069976",
+      "subject": "Reserve nothing for a buy at a negative price (#4725)",
+      "upstream_paths": [
+        "crates/model/src/accounts/base.rs",
+        "crates/model/src/accounts/cash.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1158ab32b88e6c78a03a80d6e8fb6930f1433e7d",
+      "subject": "Add PositionOpened realized PnL",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/resolve/watchlist.rs",
+        "crates/common/src/msgbus/api.rs",
+        "crates/event_store/src/capture/builtins.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/model/src/events/position/mod.rs",
+        "crates/model/src/events/position/opened.rs",
+        "crates/model/src/python/events/position/opened.rs",
+        "crates/portfolio/benches/portfolio.rs",
+        "crates/portfolio/tests/portfolio.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "crates/serialization/generated/capnp/events/position_capnp.rs",
+        "crates/serialization/schemas/capnp/events/position.capnp",
+        "crates/serialization/src/arrow/position_event.rs",
+        "crates/serialization/src/capnp/conversions.rs",
+        "crates/trading/src/python/strategy.rs",
+        "crates/trading/src/strategy/mod.rs",
+        "docs/concepts/events/index.md",
+        "docs/concepts/events/position_opened.md",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/unit/model/test_reports.py",
+        "python/tests/unit/trading/test_trading.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3e34ddb79ea2961ea6ce230cf4e80ef2fb292a32",
+      "subject": "Restore Lighter filled orders on startup",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c6bb45e0a76fd398d31d3aeae5f09ec1751d699d",
+      "subject": "Fix OKX margin reconciliation routing (#4743)",
+      "upstream_paths": [
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "59128d66b7aed0ad7b73f42e45582ed93da9d915",
+      "subject": "Optimize Polymarket price change dispatch",
+      "upstream_paths": [
+        "crates/adapters/polymarket/benches/common/mod.rs",
+        "crates/adapters/polymarket/benches/data.rs",
+        "crates/adapters/polymarket/benches/micros.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/websocket/parse.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0ea286ec6d579b1e978673ba5ec775e4637d9161",
+      "subject": "Repair Polymarket compact snapshot hashes",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/websocket/parse.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "61074930c8858753d52b095007526b0e5d5ac915",
+      "subject": "Improve Lighter test fixtures",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/common/credential.rs",
+        "crates/adapters/lighter/src/config.rs",
+        "crates/adapters/lighter/src/data/mod.rs",
+        "crates/adapters/lighter/src/factories.rs",
+        "crates/adapters/lighter/src/lib.rs",
+        "crates/adapters/lighter/src/tests.rs",
+        "crates/adapters/lighter/tests/data_client.rs",
+        "crates/adapters/lighter/tests/exec_client.rs",
+        "crates/adapters/lighter/tests/python.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3dd76bcb2111f5440ff2ba546298b58cd9805e25",
+      "subject": "Validate child instrument IDs in OrderBookDeltas (#4710)",
+      "upstream_paths": [
+        "crates/data/src/engine/mod.rs",
+        "crates/data/tests/engine.rs",
+        "crates/model/src/data/deltas.rs",
+        "crates/model/src/orderbook/tests.rs",
+        "crates/serialization/tests/test_market_data_sbe.rs",
+        "docs/concepts/data/order_book_deltas.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b37e3a355fb83314ca6de05ccf2ebf1038a7fac9",
+      "subject": "Refine portfolio concept guide",
+      "upstream_paths": [
+        "docs/concepts/portfolio.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3c57f7662837dd71d620975e5c462801d1ec09d2",
+      "subject": "Refine position concept guide",
+      "upstream_paths": [
+        "docs/concepts/positions.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "036c5905485bb3c29298470d9312d2d017b5e2ca",
+      "subject": "Update dependencies and release notes",
+      "upstream_paths": [
+        ".github/workflows/build.yml",
+        ".github/workflows/security-audit.yml",
+        ".pre-commit-config.yaml",
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "osv-scanner.toml",
+        "python/pyproject.toml",
+        "python/uv.lock",
+        "tools.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8ecbd4b5785b15389c9e2d626a99723dcde5a0ee",
+      "subject": "Split Databento parent book delta responses",
+      "upstream_paths": [
+        "crates/adapters/databento/src/data.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1fc3ff6aad6e9254450661b45d68ae2c03068fa0",
+      "subject": "Refresh Polymarket performance benchmarks",
+      "upstream_paths": [
+        "crates/adapters/polymarket/benches/BENCHMARKS.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0250be15806229558bdd5694ff237a43896f9ada",
+      "subject": "Improve Python fixed-point arithmetic errors",
+      "upstream_paths": [
+        "crates/model/src/python/types/fixed.rs",
+        "crates/model/src/python/types/mod.rs",
+        "crates/model/src/python/types/money.rs",
+        "crates/model/src/python/types/price.rs",
+        "crates/model/src/python/types/quantity.rs",
+        "python/tests/unit/model/test_fixed_arithmetic.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "97a41dab8907a6d8b353dd0c140f04ce212e7647",
+      "subject": "Bound nesting depth in the synthetic formula parser (#4723)",
+      "upstream_paths": [
+        "crates/model/src/expressions/error.rs",
+        "crates/model/src/expressions/parser.rs",
+        "crates/model/src/instruments/synthetic.rs",
+        "docs/concepts/synthetics.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "cc68c71ced181b749ba7b541b6b621e821d392c2",
+      "subject": "Fix Lighter startup reconciliation history",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "7776864ea7e79add2c568cc6982b3be95b1bb948",
+      "subject": "Optimize pre-commit and local validation",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        "Makefile",
+        "RELEASES.md",
+        "python/generate_stubs.py",
+        "python/tests/unit/persistence/test_persistence.py",
+        "python/tests/unit/test_generate_stubs.py",
+        "scripts/ci/test-build-artifact-reuse.bash",
+        "scripts/clippy-changed.sh"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4870a3ffc935eec8a5778d775c571effba3b876c",
+      "subject": "Improve Polymarket local book handling",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/data/auto_load.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/mod.rs",
+        "crates/adapters/polymarket/src/data/runtime.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6af3e7bf091c40d233a8348667f0e33c5d1b29be",
+      "subject": "Fix Binance Futures hedge-mode positionSide for close_position orders (#4732)",
+      "upstream_paths": [
+        "crates/adapters/binance/src/futures/conversions.rs",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/tests/futures/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "36b1045d7c2528380fb0101414d77ec7564914e8",
+      "subject": "Serialize Blockchain execution client tests",
+      "upstream_paths": [
+        ".config/nextest.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2cfc9f357f699ef659ee4e2a75f9aafaa239e8de",
+      "subject": "Guard the domain of the f32 ln approximation (#4740)",
+      "upstream_paths": [
+        "crates/model/src/data/black_scholes.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "fecd121e72d044f214e2f8252271a076144ef71f",
+      "subject": "Use tolerance function for remaining indicator tests (#4742)",
+      "upstream_paths": [
+        "crates/indicators/src/average/rma.rs",
+        "crates/indicators/src/volatility/dc.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "51028a64cfb1a7643563d8bbb4e5c3456b9ba4b9",
+      "subject": "Clarify Rust hook build inputs",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        "scripts/ci/test-build-artifact-reuse.bash",
+        "scripts/clippy-changed.sh",
+        "scripts/doc-changed.sh"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "28b5e99cba05cf5ab056acce1d7f7368f77f04b4",
+      "subject": "Validate Polymarket CLOB version",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/execution/lifecycle.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/error.rs",
+        "crates/adapters/polymarket/src/http/query.rs",
+        "crates/adapters/polymarket/test_data/http_version_response.json",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "756acafe6c8dd131786d8c5f479a9b19c2558168",
+      "subject": "Fix backtest timer callback time (#4747)",
+      "upstream_paths": [
+        "crates/backtest/src/engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8662d123d46d121a548cb79dfd22d9ad33d1e1e1",
+      "subject": "Optimize Polymarket token ID lookups",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3b5d7a29b63421457f94540f6af43ba05db685e9",
+      "subject": "Restore backtest timer flush cursor",
+      "upstream_paths": [
+        "crates/backtest/src/engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "bb3b09ddd3c3e9d12258202830bf0777fa98c493",
+      "subject": "Add raw socket reconnect control",
+      "upstream_paths": [
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/socket/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a8f122a56418b3bab589dd58a9e2e5d7587a0d3d",
+      "subject": "Fix WebSocket reconnect ordering",
+      "upstream_paths": [
+        "crates/network/src/mode.rs",
+        "crates/network/src/sink.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/auth.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "bb79b73258412199ef9d80eb24b8bdd9be617075",
+      "subject": "Fix ExecutionAlgorithm command routing",
+      "upstream_paths": [
+        "crates/system/src/trader.rs",
+        "crates/trading/src/algorithm/mod.rs",
+        "crates/trading/src/algorithm/twap.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d2f5ce803873dadbfa65ba144eff4431b7752a16",
+      "subject": "Fix Derive WebSocket recovery",
+      "upstream_paths": [
+        "crates/adapters/derive/src/common/consts.rs",
+        "crates/adapters/derive/src/websocket/client.rs",
+        "crates/adapters/derive/src/websocket/handler.rs",
+        "crates/adapters/derive/tests/websocket.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/tests/turmoil_websocket.rs",
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3e1961d09083d0b9376e83bc6dd4374aa5eee96f",
+      "subject": "Fix Hyperliquid reconciliation across DEXes",
+      "upstream_paths": [
+        "crates/adapters/hyperliquid/src/http/client.rs",
+        "crates/adapters/hyperliquid/src/http/query.rs",
+        "crates/adapters/hyperliquid/src/python/http.rs",
+        "crates/adapters/hyperliquid/tests/http.rs",
+        "docs/integrations/hyperliquid.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "409214a9d2d23ecae72a7d9376b06afc1ecc7694",
+      "subject": "Fix Betfair session reconnect ordering",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/betfair/src/data.rs",
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/betfair/src/http/client.rs",
+        "crates/adapters/betfair/src/stream/client.rs",
+        "crates/adapters/betfair/tests/common/mod.rs",
+        "crates/adapters/betfair/tests/data_client.rs",
+        "crates/adapters/betfair/tests/exec_client.rs",
+        "crates/adapters/betfair/tests/stream_client.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/socket/mod.rs",
+        "crates/network/src/socket/types.rs",
+        "docs/integrations/betfair.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "22c4d596270c9225ec3940f42556794c60e6af30",
+      "subject": "Fix macOS Python allocator compatibility (#4758)",
+      "upstream_paths": [
+        "README.md",
+        "crates/pyo3/Cargo.toml",
+        "crates/pyo3/src/lib.rs",
+        "docs/concepts/architecture.md",
+        "docs/concepts/rust.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "496ee290f9f538b9fc8dfd166d51db7b5568e1ca",
+      "subject": "Fix OKX query order routing (#4731)",
+      "upstream_paths": [
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/http/error.rs",
+        "crates/adapters/okx/src/http/models.rs",
+        "crates/adapters/okx/src/http/query.rs",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/okx/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a3f12457b033605b3c7f8e3a1de8bfef450fcc32",
+      "subject": "Document PyO3 allocator TLS requirement",
+      "upstream_paths": [
+        "crates/pyo3/Cargo.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "5b0c2489e53a069cd0976ba2fa2d97f4a53eb92c",
+      "subject": "Fix OKX conditional query recovery",
+      "upstream_paths": [
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/tests/exec_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "778ecb2753f8d752de7e7315951e218f4c7f818a",
+      "subject": "Standardize risk engine order denied reasons (#4744)",
+      "upstream_paths": [
+        "crates/model/src/events/mod.rs",
+        "crates/model/src/events/order/denied_reason.rs",
+        "crates/risk/src/engine/mod.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "docs/concepts/execution.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "5596b42aaaa4be31c2a1f995f93a21581ebdda61",
+      "subject": "Fix wheel purge Bash 3.2 compatibility",
+      "upstream_paths": [
+        "scripts/ci/test-publish-wheels.bash",
+        "scripts/purge-orphan-dev-wheels.sh"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3a47d2825be25a953332b726b4678308d2949b38",
+      "subject": "Add Polymarket backtest fee model",
+      "upstream_paths": [
+        "crates/adapters/polymarket/Cargo.toml",
+        "crates/adapters/polymarket/src/http/models.rs",
+        "crates/adapters/polymarket/src/http/parse.rs",
+        "crates/adapters/polymarket/src/lib.rs",
+        "crates/adapters/polymarket/src/models.rs",
+        "crates/adapters/polymarket/src/python/mod.rs",
+        "crates/adapters/polymarket/tests/python.rs",
+        "docs/integrations/polymarket.md",
+        "python/nautilus_trader/adapters/polymarket/__init__.py",
+        "python/nautilus_trader/adapters/polymarket/__init__.pyi"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6bcd5ecc7634e1796c94b159964172f1ef980eec",
+      "subject": "Add networking concept guide",
+      "upstream_paths": [
+        "crates/network/src/http/mod.rs",
+        "crates/network/src/socket/mod.rs",
+        "crates/network/src/websocket/mod.rs",
+        "docs/concepts/index.md",
+        "docs/concepts/networking.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "96223118f3ee8e034972bd397929d6bf7c39a208",
+      "subject": "Update DST guide and restore pre-flight validation",
+      "upstream_paths": [
+        "Makefile",
+        "crates/network/src/socket/client.rs",
+        "docs/concepts/dst.md",
+        "scripts/ci/test-build-artifact-reuse.bash"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a15c630f97d683fbe343baff072989319c22e2f1",
+      "subject": "Fix WebSocket control frame replay",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/mod.rs",
+        "docs/concepts/networking.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "9eded6c8be91ae435f5bafe68d7fdb4b6f5b4881",
+      "subject": "Fix Betfair data client disconnect test race",
+      "upstream_paths": [
+        "crates/adapters/betfair/tests/data_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e60b7115cb4881df4ad0fc4b8c3ee13af902a626",
+      "subject": "Refine reports concept guide",
+      "upstream_paths": [
+        "docs/concepts/reports.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8fc11f38e57c964ac4ad417ea926d253ff6190db",
+      "subject": "Refine documentation section headings",
+      "upstream_paths": [
+        "docs/concepts/accounting.md",
+        "docs/concepts/actors.md",
+        "docs/concepts/adapters.md",
+        "docs/concepts/architecture.md",
+        "docs/concepts/message_bus.md",
+        "docs/concepts/reconciliation.md",
+        "docs/concepts/reports.md",
+        "docs/getting_started/index.md",
+        "docs/integrations/bitmex.md",
+        "docs/integrations/dydx.md",
+        "docs/integrations/polymarket.md",
+        "docs/tutorials/grid_market_maker_bitmex.md",
+        "docs/tutorials/grid_market_maker_dydx.md",
+        "docs/tutorials/options_data_bybit.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0d531cf4cd7a8a2033a431c271afe91fd52b5679",
+      "subject": "Refine strategies concept guide",
+      "upstream_paths": [
+        "docs/concepts/strategies.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2b58e81b78f066da3c1ac7500f7c4c6f8c91f07e",
+      "subject": "Refine order denial reason conventions",
+      "upstream_paths": [
+        "crates/execution/tests/exec_engine.rs",
+        "crates/model/src/events/mod.rs",
+        "crates/model/src/events/order/denied_reason.rs",
+        "crates/risk/src/engine/mod.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "docs/concepts/execution.md",
+        "docs/developer_guide/adapters.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b63bb450a09be2d7715b39fe90afe3fbfc0eb378",
+      "subject": "Reset the inner moving average in AverageTrueRange (#4749)",
+      "upstream_paths": [
+        "crates/indicators/src/volatility/atr.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e892532eebeafb811bcc59c4416e06c4d824e2a7",
+      "subject": "Fix Lighter bounded history reconciliation",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/tests/exec_client.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/tests/manager.rs",
+        "crates/model/src/python/reports/mass_status.rs",
+        "crates/model/src/reports/mass_status.rs",
+        "docs/concepts/adapters.md",
+        "docs/concepts/execution.md",
+        "docs/concepts/live.md",
+        "docs/concepts/reconciliation.md",
+        "docs/concepts/reports.md",
+        "docs/developer_guide/adapters.md",
+        "docs/integrations/lighter.md",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/unit/model/test_reports.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "eaf271a7a35dab8974bb5ad9f01e0db36c85c6bf",
+      "subject": "Fix AverageTrueRange inner moving average type",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/indicators/src/volatility/atr.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "dbae1c8e8307edda4f05f7812fb26fdb626beaa4",
+      "subject": "Rename AggressorSide to Buy and Sell",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/common/enums.rs",
+        "crates/adapters/architect_ax/src/common/parse.rs",
+        "crates/adapters/architect_ax/src/http/parse.rs",
+        "crates/adapters/architect_ax/src/websocket/data/parse.rs",
+        "crates/adapters/binance/src/common/parse.rs",
+        "crates/adapters/binance/src/futures/http/client.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/parse_data.rs",
+        "crates/adapters/binance/src/spot/websocket/public_json/parse.rs",
+        "crates/adapters/binance/src/spot/websocket/streams/parse.rs",
+        "crates/adapters/bitmex/src/common/parse.rs",
+        "crates/adapters/bitmex/src/websocket/enums.rs",
+        "crates/adapters/bitmex/src/websocket/parse.rs",
+        "crates/adapters/bybit/src/common/enums.rs",
+        "crates/adapters/bybit/src/common/parse.rs",
+        "crates/adapters/bybit/src/data.rs",
+        "crates/adapters/bybit/src/websocket/parse.rs",
+        "crates/adapters/coinbase/src/http/parse.rs",
+        "crates/adapters/coinbase/src/websocket/parse.rs",
+        "crates/adapters/databento/src/decode/primitives.rs",
+        "crates/adapters/databento/src/decode/tests.rs",
+        "crates/adapters/deribit/src/common/parse.rs",
+        "crates/adapters/deribit/src/websocket/parse.rs",
+        "crates/adapters/derive/src/websocket/parse.rs",
+        "crates/adapters/dydx/src/http/parse.rs",
+        "crates/adapters/dydx/src/websocket/parse.rs",
+        "crates/adapters/hyperliquid/src/common/enums.rs",
+        "crates/adapters/hyperliquid/src/data.rs",
+        "crates/adapters/hyperliquid/src/data_types.rs",
+        "crates/adapters/hyperliquid/src/http/parse.rs",
+        "crates/adapters/hyperliquid/tests/catalog.rs",
+        "crates/adapters/kraken/src/common/parse.rs",
+        "crates/adapters/kraken/src/websocket/futures/parse.rs",
+        "crates/adapters/kraken/src/websocket/spot_v2/parse.rs",
+        "crates/adapters/lighter/src/data/mod.rs",
+        "crates/adapters/lighter/src/http/parse.rs",
+        "crates/adapters/lighter/tests/http.rs",
+        "crates/adapters/okx/src/common/enums.rs",
+        "crates/adapters/okx/src/common/parse.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/polymarket/src/common/enums.rs",
+        "crates/adapters/polymarket/src/http/data_api.rs",
+        "crates/adapters/polymarket/src/websocket/parse.rs",
+        "crates/adapters/sandbox/tests/execution.rs",
+        "crates/adapters/tardis/src/common/parse.rs",
+        "crates/adapters/tardis/src/csv/load.rs",
+        "crates/adapters/tardis/src/csv/stream.rs",
+        "crates/adapters/tardis/src/machine/parse.rs",
+        "crates/backtest/benches/engine.rs",
+        "crates/backtest/tests/backtest_node.rs",
+        "crates/backtest/tests/exchange.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/data/benches/aggregation.rs",
+        "crates/data/benches/engine.rs",
+        "crates/data/src/aggregation.rs",
+        "crates/data/tests/engine.rs",
+        "crates/event_store/src/markers/extractor.rs",
+        "crates/event_store/src/markers/join.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/event_store/src/replay/catalog.rs",
+        "crates/execution/benches/matching_engine.rs",
+        "crates/execution/src/matching_engine/mod.rs",
+        "crates/execution/src/order_emulator/emulator.rs",
+        "crates/execution/tests/matching_engine.rs",
+        "crates/indicators/src/stubs.rs",
+        "crates/infrastructure/src/sql/models/enums.rs",
+        "crates/infrastructure/tests/test_cache_database_postgres.rs",
+        "crates/live/benches/runner.rs",
+        "crates/live/tests/stress.rs",
+        "crates/model/src/data/stubs.rs",
+        "crates/model/src/data/trade.rs",
+        "crates/model/src/enums.rs",
+        "crates/model/src/orderbook/tests.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/model/src/python/data/trade.rs",
+        "crates/persistence/src/backend/feather.rs",
+        "crates/persistence/tests/test_catalog.rs",
+        "crates/persistence/tests/test_feather.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "crates/serialization/benches/capnp_serialization.rs",
+        "crates/serialization/benches/market_data_capnp_vs_sbe.rs",
+        "crates/serialization/benches/serialization_comparison.rs",
+        "crates/serialization/generated/capnp/common/enums_capnp.rs",
+        "crates/serialization/schemas/capnp/common/enums.capnp",
+        "crates/serialization/src/arrow/display/trade.rs",
+        "crates/serialization/src/arrow/trade.rs",
+        "crates/serialization/src/capnp/conversions.rs",
+        "crates/serialization/tests/test_enums_capnp.rs",
+        "crates/serialization/tests/test_market_data_capnp.rs",
+        "crates/serialization/tests/test_market_data_sbe.rs",
+        "crates/testkit/src/testers/exec/tests.rs",
+        "crates/trading/src/examples/strategies/hurst_vpin_directional/strategy.rs",
+        "crates/trading/src/examples/strategies/hurst_vpin_directional/tests.rs",
+        "crates/trading/src/python/strategy.rs",
+        "docs/concepts/backtesting/trade-execution.md",
+        "docs/concepts/data/trade_tick.md",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/nautilus_trader/testkit/providers.py",
+        "python/tests/acceptance/test_backtest.py",
+        "python/tests/stubs.py",
+        "python/tests/unit/backtest/test_backtest_engine_surface.py",
+        "python/tests/unit/common/test_actor.py",
+        "python/tests/unit/model/test_book.py",
+        "python/tests/unit/model/test_enums.py",
+        "python/tests/unit/model/test_trade.py",
+        "python/tests/unit/serialization/test_arrow.py",
+        "python/tests/unit/trading/test_trading.py",
+        "schema/sql/types.sql",
+        "test_data/databento/esh4-glbx-mdp3-20231225.mbo.json"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "70a70d7da269ba36202768fb382efab4b2a0d4c4",
+      "subject": "Insert encoded query parameters before any URL fragment (#4750)",
+      "upstream_paths": [
+        "crates/network/src/http/client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "5cc096dea35e68f950d57489711c52f201be1d2b",
+      "subject": "Validate the strike price on option constructors (#4745)",
+      "upstream_paths": [
+        "crates/model/src/instruments/crypto_option.rs",
+        "crates/model/src/instruments/option_contract.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0039d0396cfea63f73f3abb45ab4862fa284c2d4",
+      "subject": "Reserve margin on absolute notional value (#4751)",
+      "upstream_paths": [
+        "crates/model/src/accounts/margin_model.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "26d3a60bc047b570ba66bb0c7847e8f5ae2eeca7",
+      "subject": "Skip a rehedge whose quantity rounds to zero (#4752)",
+      "upstream_paths": [
+        "crates/trading/src/examples/strategies/delta_neutral_vol/strategy.rs",
+        "crates/trading/src/examples/strategies/delta_neutral_vol/tests.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d6548fa62523251790dd9b68e07ec62f664c723f",
+      "subject": "Implement Derive fixed-window rate limiting",
+      "upstream_paths": [
+        "crates/adapters/derive/src/common/rate_limit.rs",
+        "crates/adapters/derive/src/config.rs",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/client.rs",
+        "crates/adapters/derive/src/python/config.rs",
+        "crates/adapters/derive/src/websocket/client.rs",
+        "crates/adapters/derive/src/websocket/messages.rs",
+        "crates/adapters/derive/tests/exec_client.rs",
+        "crates/adapters/derive/tests/http.rs",
+        "crates/adapters/derive/tests/live_smoke.rs",
+        "crates/adapters/derive/tests/websocket.rs",
+        "docs/integrations/derive.md",
+        "python/nautilus_trader/adapters/derive/__init__.pyi"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "62887643cf95435b085dcde44a125dc8c7d2045c",
+      "subject": "Document custom data Feather streaming limitation",
+      "upstream_paths": [
+        "docs/concepts/custom_data.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "563d564c9c1bd9a27195fba065330c083c933ca2",
+      "subject": "Document reconciliation instrument resolution policy",
+      "upstream_paths": [
+        "docs/concepts/adapters.md",
+        "docs/concepts/reconciliation.md",
+        "docs/developer_guide/adapters.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "14c94a07ba8c16d09e35a7db142ac47e341e65c3",
+      "subject": "Document adapter reconciliation report methods",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "39f427ee44dc4e0a7f745396c4f4a2c009e2e4c0",
+      "subject": "Fix Bybit string-encoded integer decoding",
+      "upstream_paths": [
+        "crates/adapters/bybit/src/common/parse.rs",
+        "crates/adapters/bybit/src/http/models.rs",
+        "crates/adapters/bybit/src/websocket/messages.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "39f6118704d30c47a3663802f05919b852850256",
+      "subject": "Fix expiration account resolution for restored positions",
+      "upstream_paths": [
+        "crates/execution/src/matching_engine/mod.rs",
+        "crates/execution/tests/matching_engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "dcd17467ec20ed41b0ce5a6efa846673af580328",
+      "subject": "Fix MarketStatus Closed variant doc comment",
+      "upstream_paths": [
+        "crates/model/src/enums.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d7276bedc627cebedfbbe237fca11d48d6b92d53",
+      "subject": "Remove obsolete cbindgen enum export exclusions",
+      "upstream_paths": [
+        "crates/model/cbindgen.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4721ffdad220ff09490f0831bb89d5553b42faca",
+      "subject": "Remove PositionSideSpecified Python exposure",
+      "upstream_paths": [
+        "crates/model/src/enums.rs",
+        "crates/model/src/python/mod.rs",
+        "docs/api_reference/model/position.md",
+        "python/nautilus_trader/model/__init__.pyi"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2a00a65d940915e253d2ea7ac1a27ecce9569f1e",
+      "subject": "Fix Postgres enum type declarations",
+      "upstream_paths": [
+        "crates/infrastructure/src/sql/models/enums.rs",
+        "schema/sql/types.sql"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3ee45c9ec840502cf38f1a2f61c000e6ca385b6c",
+      "subject": "Remove dead cbindgen build dependency",
+      "upstream_paths": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "crates/core/Cargo.toml",
+        "crates/model/Cargo.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "012ec5cad1c2eda2f91fc0f31bb5b7caf3bbee43",
+      "subject": "Remove unused OrderBookDeltaType Cap'n Proto enum",
+      "upstream_paths": [
+        "crates/serialization/generated/capnp/common/enums_capnp.rs",
+        "crates/serialization/schemas/capnp/common/enums.capnp"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c8dc78d4c254c30b15c545b2f2e71f009bd9d1f8",
+      "subject": "Fix PositionSideSpecified doc comment",
+      "upstream_paths": [
+        "crates/model/src/enums.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2d5268459804e8022679c581b0fdf39c89704d7b",
+      "subject": "Add Postgres enum parity tests",
+      "upstream_paths": [
+        "Cargo.lock",
+        "crates/infrastructure/Cargo.toml",
+        "crates/infrastructure/src/sql/models/enums.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "877e37d2251fdb756d2ad0a77070c98485d05af0",
+      "subject": "Fix Python v2 actor and strategy default IDs",
+      "upstream_paths": [
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/tests.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/live/src/python/node.rs",
+        "crates/model/src/identifiers/mod.rs",
+        "crates/model/src/identifiers/strategy_id.rs",
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/strategy.rs",
+        "crates/trading/src/strategy/core.rs",
+        "docs/concepts/actors.md",
+        "docs/concepts/strategies.md",
+        "python/tests/unit/backtest/test_backtest_engine_default_ids.py",
+        "python/tests/unit/common/test_actor.py",
+        "python/tests/unit/test_live_node.py",
+        "python/tests/unit/trading/test_trading.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "34b10eed77ad328e6bff325f0f057256fb7d3895",
+      "subject": "Resolve Python actor IDs at registration",
+      "upstream_paths": [
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/live/src/python/node.rs",
+        "crates/system/src/trader.rs",
+        "docs/concepts/actors.md",
+        "python/tests/unit/backtest/test_backtest_engine_default_ids.py",
+        "python/tests/unit/test_live_node.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "68cf7717bac3ff98d9cb24b60fa444c5791e4545",
+      "subject": "Standardize strategy ID handling",
+      "upstream_paths": [
+        "crates/trading/src/strategy/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "908e31a7b91bac2f955b905dbe4b0221e10ff0ff",
+      "subject": "Document adapter conformance and shared baseline",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b76c81422dacf1e8ed59da9e1607a72a96c788f1",
+      "subject": "Improve Derive fill commissions handling",
+      "upstream_paths": [
+        "crates/adapters/derive/src/http/parse.rs",
+        "crates/adapters/derive/tests/exec_client.rs",
+        "crates/adapters/derive/tests/live_smoke.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "74e4c3f19d120cdae4759d6678e31033538c834e",
+      "subject": "Improve strategy order ID tag validation",
+      "upstream_paths": [
+        "crates/model/src/identifiers/mod.rs",
+        "crates/model/src/identifiers/strategy_id.rs",
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/strategy.rs",
+        "crates/trading/src/strategy/config.rs",
+        "crates/trading/src/strategy/core.rs",
+        "docs/concepts/strategies.md",
+        "docs/how_to/configure_live_trading.md",
+        "python/tests/unit/trading/test_trading.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e1a7f2a3ef1bc541d354a1832985541d13a5768c",
+      "subject": "Add Cargo dependency cooldown gate",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "Makefile",
+        "RELEASES.md",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "python/pyproject.toml",
+        "python/uv.lock",
+        "scripts/check-cargo-cooldown.sh",
+        "scripts/test-check-cargo-cooldown.bash"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b4f2a85721f0026e0901336fab90dc1549222c16",
+      "subject": "Fix Derive account-state margin mapping",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/models.rs",
+        "crates/adapters/derive/src/http/parse.rs",
+        "crates/adapters/derive/test_data/common/http_subaccount_negative_health.json",
+        "crates/adapters/derive/test_data/common/http_subaccount_open_orders_margin.json",
+        "crates/adapters/derive/test_data/common/http_subaccount_positions_margin.json",
+        "crates/adapters/derive/test_data/common/http_subaccount_usdc.json",
+        "crates/adapters/derive/tests/exec_client.rs",
+        "crates/adapters/derive/tests/live_smoke.rs",
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d6eba5ab72252910e1b662752e9bc9725cf6f5ef",
+      "subject": "Reject ambiguous Polymarket allowance evidence (#4760)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/bin/set_allowances.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/query.rs",
+        "crates/adapters/polymarket/src/signing/eip712.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b612e429a1dd0c781553b01f2968e5290829ebc1",
+      "subject": "Reject issue references anywhere in commit subjects",
+      "upstream_paths": [
+        ".github/pull_request_template.md",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "docs/developer_guide/coding_standards.md",
+        "scripts/ci/check_commit_message.py",
+        "scripts/ci/test_check_commit_message.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3d76a6d6892ae0df4dba75ade9452f73f7e8a423",
+      "subject": "Document trader ID tag uniqueness",
+      "upstream_paths": [
+        "docs/concepts/strategies.md",
+        "docs/how_to/configure_live_trading.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "abed516f032e4a930e0ec460e175b7b0a2b2c635",
+      "subject": "Fix Tardis derivative ticker funding timestamps",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/tardis/src/csv/load.rs",
+        "crates/adapters/tardis/src/csv/mod.rs",
+        "crates/adapters/tardis/src/csv/stream.rs",
+        "crates/adapters/tardis/src/http/parse.rs",
+        "crates/adapters/tardis/src/machine/message.rs",
+        "crates/adapters/tardis/src/machine/parse.rs",
+        "crates/adapters/tardis/test_data/csv/deribit_derivative_ticker.csv",
+        "crates/adapters/tardis/test_data/csv/okex_futures_xperp_derivative_ticker.csv",
+        "crates/adapters/tardis/test_data/csv/okex_swap_usdc_index_migration.csv",
+        "crates/adapters/tardis/test_data/okex_futures_xperp_derivative_ticker.json",
+        "crates/adapters/tardis/test_data/okex_futures_xperp_instrument.json",
+        "crates/adapters/tardis/test_data/okex_swap_derivative_ticker_post_index_migration.json",
+        "crates/adapters/tardis/test_data/okex_swap_derivative_ticker_pre_index_migration.json"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "cd9332ec25d49c684815cd91d41e7aefcbfd9c9d",
+      "subject": "Validate strategy order ID tags at construction",
+      "upstream_paths": [
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/strategy.rs",
+        "crates/trading/src/strategy/core.rs",
+        "docs/how_to/write_rust_strategy.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "ed08adeb0988f060ea1ed4f565c6149018b79e35",
+      "subject": "Remove redundant Ustr re-interning",
+      "upstream_paths": [
+        ".pre-commit-config.yaml",
+        ".pre-commit-hooks/check_ustr_conventions.sh",
+        ".pre-commit-hooks/test_check_ustr_conventions.sh",
+        "Makefile",
+        "crates/adapters/binance/src/futures/websocket/streams/dispatch.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/recovery.rs",
+        "crates/adapters/binance/src/spot/data.rs",
+        "crates/adapters/bitmex/src/websocket/parse.rs",
+        "crates/adapters/deribit/src/execution.rs",
+        "crates/adapters/deribit/src/http/client.rs",
+        "crates/adapters/deribit/src/websocket/handler.rs",
+        "crates/adapters/derive/src/common/parse.rs",
+        "crates/adapters/derive/src/websocket/parse.rs",
+        "crates/adapters/dydx/src/common/instrument_cache.rs",
+        "crates/adapters/hyperliquid/src/execution.rs",
+        "crates/adapters/okx/src/data.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/tardis/src/http/client.rs",
+        "crates/adapters/tardis/src/machine/client.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/system/src/trader.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "209ef971f12f277067c0512971dc5cfe2e8f92ce",
+      "subject": "Fix Derive historical trades aggressor side",
+      "upstream_paths": [
+        "crates/adapters/derive/src/data.rs",
+        "crates/adapters/derive/src/http/models.rs",
+        "crates/adapters/derive/src/websocket/mod.rs",
+        "crates/adapters/derive/src/websocket/parse.rs",
+        "crates/adapters/derive/test_data/perps/http_public_trade_eth_maker.json",
+        "crates/adapters/derive/test_data/perps/http_public_trade_eth_unknown_role.json",
+        "crates/adapters/derive/test_data/perps/http_public_trades_result_eth_paired_maker_first.json",
+        "crates/adapters/derive/test_data/perps/http_public_trades_result_eth_paired_taker_first.json",
+        "crates/adapters/derive/test_data/perps/ws_trade_eth_absent_role.json",
+        "crates/adapters/derive/tests/data_client.rs",
+        "crates/adapters/derive/tests/live_smoke.rs",
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "27f7f82b68a0638880b37f4f8ec172370166c19f",
+      "subject": "Validate Python message bus endpoint addresses",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/python/msgbus.rs",
+        "python/tests/unit/test_msgbus.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "68975d9347eb0f0028a01298f8f457ea1d9c4202",
+      "subject": "Make adapter commission calculation fallible",
+      "upstream_paths": [
+        "crates/adapters/polymarket/benches/data.rs",
+        "crates/adapters/polymarket/src/execution/mod.rs",
+        "crates/adapters/polymarket/src/execution/orders.rs",
+        "crates/adapters/polymarket/src/execution/parse.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/common/src/clients/execution.rs",
+        "crates/execution/src/reconciliation/mod.rs",
+        "crates/execution/src/reconciliation/orders.rs",
+        "crates/execution/src/reconciliation/proptests.rs",
+        "crates/execution/src/reconciliation/tests.rs",
+        "crates/live/src/execution/client.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/tests/manager.rs",
+        "docs/concepts/reconciliation.md",
+        "docs/developer_guide/adapters.md",
+        "docs/developer_guide/spec_exec_testing.md",
+        "docs/integrations/polymarket.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/references/guides/official_adapter_spec.md",
+        "skills/nt-adapters/references/guides/rust.md"
+      ]
+    },
+    {
+      "commit": "3df9ef4f1b2e373c3810bebcfa97eb3d382d01d4",
+      "subject": "Fix Polymarket Gamma composite game ID pagination",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/common/parse.rs",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/adapters/polymarket/src/http/models.rs",
+        "crates/adapters/polymarket/src/http/parse.rs",
+        "crates/adapters/polymarket/test_data/gamma_event_sports_composite_game_id.json",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1b495a4dcff2bcbfb934c3b7948aae721f25252c",
+      "subject": "Fix message bus endpoint lookup panic",
+      "upstream_paths": [
+        "crates/common/src/msgbus/api.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e05b27daf8575e8f2ceb43857129a588adb5a0a5",
+      "subject": "Refine adapter conformance and allowance guidance",
+      "upstream_paths": [
+        "docs/developer_guide/adapters.md",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "700b1cd7868694975273f70598090f316294997c",
+      "subject": "Validate Python message bus subscription patterns",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/msgbus/mstr.rs",
+        "crates/common/src/python/msgbus.rs",
+        "python/tests/unit/test_msgbus.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "ff92fd2e2ee05f46f484695433aedc335d80ef9f",
+      "subject": "Validate OptionSeriesId venue at construction",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/identifiers/option_series_id.rs",
+        "crates/model/src/python/identifiers/option_series_id.rs",
+        "python/tests/unit/model/test_identifiers.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "f18b1b412963eccef9e9a726f64d5a833ebcdaba",
+      "subject": "Remove ignored live network adapter tests",
+      "upstream_paths": [
+        "crates/adapters/derive/tests/http.rs",
+        "crates/adapters/derive/tests/live_smoke.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6bf1a9d8c6b514035bde86873a54bbd06e69f52a",
+      "subject": "Use Derive ticker event time for forward prices",
+      "upstream_paths": [
+        "crates/adapters/derive/src/data.rs",
+        "crates/adapters/derive/src/websocket/mod.rs",
+        "crates/adapters/derive/src/websocket/parse.rs",
+        "crates/adapters/derive/tests/data_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b2b24f80bc2c220124ebc5b95460d644fbb30146",
+      "subject": "Retain open Polymarket markets during auto-load (#4728)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/data/auto_load.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/instruments.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/mod.rs",
+        "crates/adapters/polymarket/src/data/requests.rs",
+        "crates/adapters/polymarket/src/data/runtime.rs",
+        "crates/adapters/polymarket/src/data/subscriptions.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "60208b0c1110797f1ab3b3930d27b1ba118a97db",
+      "subject": "Release retired Python components",
+      "upstream_paths": [
+        "Cargo.lock",
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/registry.rs",
+        "crates/common/src/component.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/core/src/python/mod.rs",
+        "crates/live/src/python/node.rs",
+        "crates/system/Cargo.toml",
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/algorithm.rs",
+        "crates/trading/src/python/strategy.rs",
+        "python/tests/unit/test_component_ownership.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "9d5f3004f81c3ae16a5f80f2fa74e4b60115ecf3",
+      "subject": "Fix Polymarket terminal condition retirement",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/data/auto_load.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/instruments.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/runtime.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "fca9d741cda4d134a8526547c4dcc8edd95e8f4f",
+      "subject": "Report Lighter incomplete fill history",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/tests/exec_client.rs",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8996f7dceb94ea763b59fed9559ee1217731d815",
+      "subject": "Reject a GTD market exit time in force in strategy config (#4762)",
+      "upstream_paths": [
+        "crates/trading/src/strategy/config.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a4b06ed870971b5671d12754ea138a3ab99b1dec",
+      "subject": "Validate market exit interval against nanosecond overflow",
+      "upstream_paths": [
+        "crates/trading/src/strategy/config.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8c92f662feb6d4261f2332d19cdf939d92893091",
+      "subject": "Commit cached position state before persisting it (#4767)",
+      "upstream_paths": [
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/tests/exchange.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/testkit/src/cache.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "483a192ab900c5923dd4781d69bd9c6b1d4a8737",
+      "subject": "Remove CleanDrop network cleanup abstraction",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/core/src/drop.rs",
+        "crates/core/src/lib.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "828871f027b75dafbdecc79780c855832644adae",
+      "subject": "Remove stale drop_non_drop clippy suppression",
+      "upstream_paths": [
+        ".cargo/config.toml",
+        "Makefile"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e8d5440626ccf6d5c87b565b0a79dcdc0dc9c3c0",
+      "subject": "Enable clippy redundant closure lint for pedantic crates",
+      "upstream_paths": [
+        "Cargo.toml",
+        "crates/core/src/lib.rs",
+        "crates/core/src/params.rs",
+        "crates/core/src/string/stack_str.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/lib.rs",
+        "crates/model/src/data/custom.rs",
+        "crates/model/src/defi/pool_analysis/tests.rs",
+        "crates/model/src/events/order/initialized.rs",
+        "crates/model/src/instruments/synthetic.rs",
+        "crates/model/src/lib.rs",
+        "crates/model/src/orderbook/book.rs",
+        "crates/model/src/orderbook/ladder.rs",
+        "crates/model/src/orderbook/level.rs",
+        "crates/model/src/orderbook/tests.rs",
+        "crates/model/src/orders/list.rs",
+        "crates/model/src/orders/mod.rs",
+        "crates/model/src/orders/stop_limit.rs",
+        "crates/model/src/position.rs",
+        "crates/model/src/python/events/order/initialized.rs",
+        "crates/model/src/python/orders/limit.rs",
+        "crates/model/src/python/orders/limit_if_touched.rs",
+        "crates/model/src/python/orders/market.rs",
+        "crates/model/src/python/orders/market_if_touched.rs",
+        "crates/model/src/python/orders/market_to_limit.rs",
+        "crates/model/src/python/orders/stop_limit.rs",
+        "crates/model/src/python/orders/stop_market.rs",
+        "crates/model/src/python/orders/trailing_stop_limit.rs",
+        "crates/model/src/python/orders/trailing_stop_market.rs",
+        "crates/model/src/python/reports/order.rs",
+        "crates/network/src/lib.rs",
+        "crates/network/src/tls.rs",
+        "crates/trading/src/algorithm/mod.rs",
+        "crates/trading/src/algorithm/twap.rs",
+        "crates/trading/src/examples/strategies/composite_market_maker/strategy.rs",
+        "crates/trading/src/examples/strategies/grid_mm/strategy.rs",
+        "crates/trading/src/lib.rs",
+        "crates/trading/src/strategy/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "32592586c1a36fd2806b4acede1553e5595b6acc",
+      "subject": "Defer backtest order events during immediate dispatch (#4763)",
+      "upstream_paths": [
+        "crates/backtest/src/engine.rs",
+        "crates/backtest/src/exchange.rs",
+        "crates/backtest/src/execution_client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c73bba6f48f089602e6913bbd59e3be0e46d5468",
+      "subject": "Fix Polymarket WebSocket heartbeat and liveness",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/websocket/client.rs",
+        "crates/adapters/polymarket/src/websocket/handler.rs",
+        "crates/network/src/websocket/client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "af13108097b4542f1281c7e7d4b43864e1ce8a51",
+      "subject": "Add Derive signing oracle vectors",
+      "upstream_paths": [
+        ".gitleaks.toml",
+        "crates/adapters/derive/licenses/THIRD_PARTY_LICENSES.md",
+        "crates/adapters/derive/src/signing/eip712.rs",
+        "crates/adapters/derive/src/signing/mod.rs",
+        "crates/adapters/derive/test_data/common/signing_trade_action_vectors.json",
+        "crates/adapters/derive/tests/oracle-py/generate_oracle.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0876a8f453da5950729a2dd65dcfff3c42052b16",
+      "subject": "Centralize Polymarket approval plan (#4773)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/bin/set_allowances.rs",
+        "crates/adapters/polymarket/src/signing/eip712.rs",
+        "crates/adapters/polymarket/src/signing/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "dfc8460971be10f2deeb855a88df1e895f011b3a",
+      "subject": "Support IB canonical OPRA option IDs (#4774)",
+      "upstream_paths": [
+        "crates/adapters/interactive_brokers/src/common/parse.rs",
+        "crates/adapters/interactive_brokers/src/execution/core_tests.rs",
+        "crates/adapters/interactive_brokers/src/providers/instruments.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "19cad23b55861709d77ebef201954743a7ff7cfb",
+      "subject": "Pass the simulation cfg through cargo --config",
+      "upstream_paths": [
+        "Makefile",
+        "scripts/ci/test-build-artifact-reuse.bash"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "5b35a10adbb38fe00d3c6015cff0cb74c566a7f1",
+      "subject": "Clarify shared cell and Python reference ownership",
+      "upstream_paths": [
+        "crates/backtest/src/execution_client.rs",
+        "crates/core/src/python/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "22fb5bffe035511c1a0443d491bacdd4a4802628",
+      "subject": "Fix Clock callback cancellation doc comments",
+      "upstream_paths": [
+        "crates/common/src/clock.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4776ed8b444827e498f6ff73f77436f68d08f6f7",
+      "subject": "Refine synthetics concept documentation",
+      "upstream_paths": [
+        "docs/concepts/synthetics.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3e16c31036f30f44673e2bc2957ad23ea98c7bc6",
+      "subject": "Refine value types concept documentation",
+      "upstream_paths": [
+        "docs/concepts/value_types.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "f6fa3067056ec368e7de3e435ed880cc0faa4c8c",
+      "subject": "Refine visualization concept documentation",
+      "upstream_paths": [
+        "docs/concepts/visualization.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c98c8192b605e4971f648f81e713344d4660a45e",
+      "subject": "Refine accounting concept documentation",
+      "upstream_paths": [
+        "docs/concepts/accounting.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "97dd7b01666b60d0d2983b43d56ebe1c7a7bdcf5",
+      "subject": "Fix MovingAverageConvergenceDivergence input count (#4779)",
+      "upstream_paths": [
+        "crates/indicators/src/momentum/macd.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "510b5937560c23cca7dec87a9d23720309d29d1c",
+      "subject": "Add Lighter socket state reporting and liveness timeout",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/common/consts.rs",
+        "crates/adapters/lighter/src/common/mod.rs",
+        "crates/adapters/lighter/src/common/socket.rs",
+        "crates/adapters/lighter/src/data/mod.rs",
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/client.rs",
+        "crates/adapters/lighter/tests/data_client.rs",
+        "crates/adapters/lighter/tests/exec_client.rs",
+        "crates/adapters/lighter/tests/websocket.rs",
+        "docs/concepts/live.md",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e3625c583d5393e01604ae2e76e17891e9ee24fe",
+      "subject": "Resolve the failed-disposal dead end for components",
+      "upstream_paths": [
+        "crates/common/src/component.rs",
+        "crates/system/src/trader.rs",
+        "docs/concepts/architecture.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "476140b5855306d3e909685bf20f21dd92ce7b32",
+      "subject": "Fix OrderBook out-of-order snapshot reporting",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/orderbook/book.rs",
+        "crates/model/src/orderbook/tests.rs",
+        "docs/concepts/order_book.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b61d1c7afdc2af25d2da8fa3df2c112d024c0b51",
+      "subject": "Refine Rust concept documentation",
+      "upstream_paths": [
+        "docs/concepts/rust.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6acd918cbcd6efa5ea7f1248243884ffffd3c8e0",
+      "subject": "Accrue position fees across a fee growth counter wrap (#4768)",
+      "upstream_paths": [
+        "crates/model/src/defi/pool_analysis/position.rs",
+        "crates/model/src/defi/pool_analysis/tests.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b221792c8dbfef88bf46db3d6bf00bc16112f407",
+      "subject": "Consolidate Python component registration paths",
+      "upstream_paths": [
+        "crates/backtest/src/python/engine.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/common/src/python/actor.rs",
+        "crates/common/src/python/mod.rs",
+        "crates/common/src/python/wrappers.rs",
+        "crates/live/src/python/node.rs",
+        "crates/system/src/python/mod.rs",
+        "crates/system/src/python/registration.rs",
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/strategy.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a08a0159efbfe0717cf12e09d15633ac514a70e7",
+      "subject": "Refine Python exec algorithm registration rollback",
+      "upstream_paths": [
+        "crates/common/src/python/wrappers.rs",
+        "crates/system/src/python/registration.rs",
+        "crates/system/src/trader.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e166a5e57c99e818899e9b9422fd436a2e39ef95",
+      "subject": "Support LiveNode Python hosted async execution",
+      "upstream_paths": [
+        "MIGRATION_V2.md",
+        "RELEASES.md",
+        "crates/infrastructure/src/redis/cache.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/node/state.rs",
+        "crates/live/src/python/mod.rs",
+        "crates/live/src/python/node.rs",
+        "docs/concepts/adapters.md",
+        "docs/concepts/architecture.md",
+        "docs/concepts/index.md",
+        "docs/concepts/live.md",
+        "docs/concepts/python.md",
+        "docs/concepts/rust.md",
+        "docs/how_to/configure_live_trading.md",
+        "examples/live/blockchain/node_test_factory.py",
+        "python/nautilus_trader/live/__init__.pyi",
+        "python/pyproject.toml",
+        "python/tests/integration/test_live_node_cache.py",
+        "python/tests/integration/test_live_node_hosted.py",
+        "python/tests/integration/test_live_node_loops.py",
+        "python/tests/integration/test_live_node_uvicorn.py",
+        "python/tests/unit/test_generate_stubs.py",
+        "python/tests/unit/test_live_node.py",
+        "python/uv.lock"
+      ],
+      "affected_files": [
+        "skills/nt-live/SKILL.md",
+        "skills/nt-live/references/guides/run_rust_live_trading.md",
+        "skills/nt-strategy-builder-rust/SKILL.md"
+      ]
+    },
+    {
+      "commit": "4e3a146abbad9651bfe45f71a447a90844d0a61b",
+      "subject": "Fix Order fill overflow at Quantity domain max",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/accounts/margin.rs",
+        "crates/model/src/orders/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a915943406cdb5024dc1aaf85cccc032daae9faf",
+      "subject": "Fix Polymarket 429 and 425 error classification",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/execution/submitter.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/error.rs",
+        "crates/adapters/polymarket/src/http/rate_limits.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3e9e42dfed197f9926fde62a1207b0ed18e961b2",
+      "subject": "Fix Cache venue order ID alias indexing and purging",
+      "upstream_paths": [
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/live/src/execution/manager.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1e960b3b215c88ad47842f7ae28a15cfcc63fbf4",
+      "subject": "Deny unsupported Derive orders before submission",
+      "upstream_paths": [
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/query.rs",
+        "crates/adapters/derive/tests/exec_client.rs",
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "cb2a07c0712de53de776c0315f0bc6a633dc7d56",
+      "subject": "Fix Postgres order tag persist/restore",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/infrastructure/src/sql/models/orders.rs",
+        "crates/infrastructure/src/sql/queries.rs",
+        "crates/infrastructure/tests/test_cache_database_postgres.rs",
+        "crates/infrastructure/tests/test_cache_postgres.rs",
+        "crates/model/src/events/order/initialized.rs",
+        "crates/model/src/events/order/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "74d57e7e055015a8d974a0cf047ac2e5139610b3",
+      "subject": "Add network dead-peer detection and align config naming",
+      "upstream_paths": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/websocket/data/client.rs",
+        "crates/adapters/architect_ax/src/websocket/orders/client.rs",
+        "crates/adapters/betfair/src/config.rs",
+        "crates/adapters/betfair/src/python/config.rs",
+        "crates/adapters/betfair/src/stream/client.rs",
+        "crates/adapters/betfair/src/stream/config.rs",
+        "crates/adapters/betfair/tests/common/mod.rs",
+        "crates/adapters/betfair/tests/stream_client.rs",
+        "crates/adapters/binance/bin/capture_spot_ws_user_data.rs",
+        "crates/adapters/binance/src/common/consts.rs",
+        "crates/adapters/binance/src/futures/data.rs",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/client.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/recovery.rs",
+        "crates/adapters/binance/src/futures/websocket/trading/client.rs",
+        "crates/adapters/binance/src/spot/data.rs",
+        "crates/adapters/binance/src/spot/execution.rs",
+        "crates/adapters/binance/src/spot/websocket/public_json/client.rs",
+        "crates/adapters/binance/src/spot/websocket/streams/client.rs",
+        "crates/adapters/binance/src/spot/websocket/trading/client.rs",
+        "crates/adapters/bitmex/src/websocket/client.rs",
+        "crates/adapters/blockchain/src/rpc/core.rs",
+        "crates/adapters/bybit/src/config.rs",
+        "crates/adapters/bybit/src/websocket/client.rs",
+        "crates/adapters/coinbase/src/websocket/client.rs",
+        "crates/adapters/deribit/src/websocket/client.rs",
+        "crates/adapters/derive/src/websocket/client.rs",
+        "crates/adapters/dydx/src/common/consts.rs",
+        "crates/adapters/dydx/src/python/websocket.rs",
+        "crates/adapters/dydx/src/websocket/client.rs",
+        "crates/adapters/hyperliquid/src/websocket/client.rs",
+        "crates/adapters/kraken/src/websocket/futures/client.rs",
+        "crates/adapters/kraken/src/websocket/spot_v2/client.rs",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/adapters/lighter/src/websocket/client.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/okx/src/websocket/client.rs",
+        "crates/adapters/polymarket/src/rtds.rs",
+        "crates/adapters/polymarket/src/websocket/client.rs",
+        "crates/network/Cargo.toml",
+        "crates/network/src/net.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/socket/config.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/config.rs",
+        "crates/network/src/websocket/consts.rs",
+        "crates/network/src/websocket/proxy.rs",
+        "crates/network/tests/turmoil_socket.rs",
+        "crates/network/tests/turmoil_sockudo.rs",
+        "crates/network/tests/turmoil_websocket.rs",
+        "crates/network/tests/websocket_proxy.rs",
+        "docs/concepts/live.md",
+        "docs/concepts/networking.md",
+        "docs/integrations/betfair.md",
+        "docs/integrations/kraken.md",
+        "python/nautilus_trader/adapters/betfair/__init__.pyi",
+        "python/nautilus_trader/adapters/dydx/__init__.pyi",
+        "python/nautilus_trader/adapters/okx/__init__.pyi",
+        "python/tests/unit/test_generate_stubs.py"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/references/guides/official_adapter_spec.md"
+      ]
+    },
+    {
+      "commit": "5a790bfcd89f31f80932489c375a10071d3786ee",
+      "subject": "Update dependencies and release notes",
+      "upstream_paths": [
+        ".docker/DockerfileUbuntu",
+        ".docker/jupyterlab.dockerfile",
+        ".docker/nautilus_trader.dockerfile",
+        ".pre-commit-config.yaml",
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "python/uv.lock",
+        "tools.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "187e96fb7bdb69586321cf33c078e684408f561b",
+      "subject": "Fix Bybit open-only reports missing closed orders",
+      "upstream_paths": [
+        ".typos.toml",
+        "RELEASES.md",
+        "crates/adapters/bybit/src/http/client.rs",
+        "crates/adapters/bybit/src/python/http.rs",
+        "crates/adapters/bybit/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a5a1b0006581cb6ea5dfc8f8c41a9aeec9d373a2",
+      "subject": "Remove stale v1 Cython docs",
+      "upstream_paths": [
+        "docs/concepts/adapters.md",
+        "docs/concepts/rust.md",
+        "docs/developer_guide/adapters.md",
+        "docs/developer_guide/benchmarking.md",
+        "docs/developer_guide/environment_setup.md",
+        "docs/developer_guide/spec_data_testing.md",
+        "docs/developer_guide/spec_exec_testing.md",
+        "docs/developer_guide/test_datasets.md",
+        "docs/getting_started/backtest_low_level.py",
+        "docs/how_to/loading_external_data.py",
+        "docs/integrations/index.md",
+        "docs/tutorials/assets/backtest_fx_bars/render_panels.py",
+        "docs/tutorials/assets/fx_mean_reversion_ax/render_panels.py",
+        "docs/tutorials/assets/gold_book_imbalance_ax/render_panels.py",
+        "docs/tutorials/assets/grid_market_maker_bitmex/render_panels.py",
+        "docs/tutorials/backtest_fx_bars.py",
+        "docs/tutorials/backtest_orderbook_binance.py",
+        "docs/tutorials/ema_cross.py",
+        "docs/tutorials/fx_mean_reversion_ax.md",
+        "docs/tutorials/gold_book_imbalance_ax.md",
+        "docs/tutorials/grid_market_maker_bitmex.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6dc919500ef573c6e6aeecf489cd99a7d627a198",
+      "subject": "Replace leftover Atomic fetch_update with try_update",
+      "upstream_paths": [
+        "crates/adapters/betfair/src/stream/client.rs",
+        "crates/network/src/mode.rs",
+        "crates/network/src/websocket/auth.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "dc22cbaa839373b68a912f784fcdf48e349b358b",
+      "subject": "Upgrade EventStore redb to 4.2.0",
+      "upstream_paths": [
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "crates/event_store/tests/verifier.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8045b18bc616c1ae87b5322788925b7507f662ef",
+      "subject": "Standardize OKX order command failures",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/okx/src/common/consts.rs",
+        "crates/adapters/okx/src/common/failure.rs",
+        "crates/adapters/okx/src/common/mod.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/http/error.rs",
+        "crates/adapters/okx/src/python/http.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/okx/src/websocket/client.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/src/websocket/error.rs",
+        "crates/adapters/okx/src/websocket/handler.rs",
+        "crates/adapters/okx/src/websocket/messages.rs",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/okx/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b9f99364e26d1d990c28c4ebfde0d1b503ecff38",
+      "subject": "Standardize Polymarket command failure outcomes",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/polymarket/src/execution/cancellations.rs",
+        "crates/adapters/polymarket/src/execution/identity.rs",
+        "crates/adapters/polymarket/src/execution/order_builder.rs",
+        "crates/adapters/polymarket/src/execution/order_fill_tracker.rs",
+        "crates/adapters/polymarket/src/execution/orders.rs",
+        "crates/adapters/polymarket/src/execution/pending.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/execution/types.rs",
+        "crates/adapters/polymarket/src/http/models.rs",
+        "crates/adapters/polymarket/src/http/parse.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1015938d216f660259c52fab2bbafd4bf2911d81",
+      "subject": "Preserve execution client source during startup reconciliation (#4781)",
+      "upstream_paths": [
+        "crates/execution/src/client/mod.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/tests/manager.rs",
+        "crates/live/tests/node.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e837e3b6785739beeac8720043f1bc6486aa659f",
+      "subject": "Remove dead clock and timer API surface",
+      "upstream_paths": [
+        "crates/common/src/clock.rs",
+        "crates/common/src/live/clock.rs",
+        "crates/common/src/python/timer.rs",
+        "crates/common/src/timer.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "519f6584ee90b148ba41efc31e389839a47f3c42",
+      "subject": "Commit cached add transaction state before persisting it (#4783)",
+      "upstream_paths": [
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/python/cache.rs",
+        "crates/execution/tests/matching_engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0c9abb7260cac1b69f72b9ab9eaa65b113b6098e",
+      "subject": "Validate Python Dex factory addresses",
+      "upstream_paths": [
+        "crates/model/src/python/defi/types.rs",
+        "python/tests/unit/model/test_defi.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "21a9a913ee428605fb638a104cb9c5899028e6bd",
+      "subject": "Validate BarSpecification interval conversion range",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/model/src/data/bar.rs",
+        "docs/concepts/data/index.md",
+        "python/tests/unit/model/test_bar.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2879fd33581a1261e3cb2e4809b2a588379702b9",
+      "subject": "Fix WebSocket heartbeat replay after reconnect",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/betfair/src/common/consts.rs",
+        "crates/adapters/betfair/src/config.rs",
+        "crates/adapters/betfair/src/stream/config.rs",
+        "crates/adapters/coinbase/src/websocket/handler.rs",
+        "crates/adapters/tardis/src/machine/mod.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/types.rs",
+        "docs/integrations/binance.md",
+        "docs/integrations/coinbase.md",
+        "docs/integrations/derive.md",
+        "docs/integrations/hyperliquid.md",
+        "docs/integrations/polymarket.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0571b9a0df7cb87f335fe347c6f06d144eccf194",
+      "subject": "Reuse DataEngine frames and matching scratch",
+      "upstream_paths": [
+        "crates/data/benches/engine.rs",
+        "crates/data/src/engine/mod.rs",
+        "crates/data/tests/engine.rs",
+        "crates/execution/benches/matching_engine.rs",
+        "crates/execution/src/matching_engine/mod.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "6812da7e0df4b4979172f620441ff75f162383b2",
+      "subject": "Make Python betting arithmetic fallible",
+      "upstream_paths": [
+        "crates/model/src/data/bet.rs",
+        "crates/model/src/python/data/bet.rs",
+        "python/tests/unit/model/test_betting.py"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "7a6dff49e0d953c85fd980b70f715a9cec1b2829",
+      "subject": "Fix EventStore verify worker pipe drain",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/event_store/src/bin/verify.rs",
+        "crates/event_store/src/writer/mod.rs",
+        "crates/event_store/tests/verifier.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "ac72c9f4a0a52841c71f73078d089bb84fbe85d6",
+      "subject": "Document planned Python out-of-tree adapter support",
+      "upstream_paths": [
+        "MIGRATION_V2.md",
+        "docs/concepts/adapters.md",
+        "docs/concepts/python.md",
+        "docs/developer_guide/adapters.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "7ac8cc0ca6cf4cfbe5277e0b3e6c393866134ceb",
+      "subject": "Fix clock validation and live timer scheduling",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/clock.rs",
+        "crates/common/src/live/clock.rs",
+        "crates/common/src/live/timer.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "166dc80abd85687e48540b891584c4cfcf15f8f5",
+      "subject": "Publish Blockchain wallet account state",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_call_balance_usdc.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_call_balance_usdc_updated.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_call_balance_weth.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_call_balance_weth_updated.json",
+        "crates/live/src/execution/emitter.rs",
+        "crates/model/src/defi/types/money.rs",
+        "crates/model/src/defi/wallet.rs",
+        "docs/integrations/blockchain.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "bb0f68cc4fdff9ad0df907e2c0ae4e32c971f753",
+      "subject": "Add Blockchain Uniswap V3 swap execution",
+      "upstream_paths": [
+        "crates/adapters/blockchain/bin/node_wallet.rs",
+        "crates/adapters/blockchain/src/cache/database.rs",
+        "crates/adapters/blockchain/src/cache/mod.rs",
+        "crates/adapters/blockchain/src/cache/rows.rs",
+        "crates/adapters/blockchain/src/config.rs",
+        "crates/adapters/blockchain/src/contracts/mod.rs",
+        "crates/adapters/blockchain/src/contracts/uniswap_v3_swap.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/src/execution/preflight.rs",
+        "crates/adapters/blockchain/src/execution/transaction.rs",
+        "crates/adapters/blockchain/src/python/config.rs",
+        "crates/adapters/blockchain/src/rpc/http.rs",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_balance_insufficient.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_transaction_count_next.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_send_raw_transaction_nonce_too_low.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_send_raw_transaction_rejected.json",
+        "crates/adapters/blockchain/tests/execution_fork.rs",
+        "crates/adapters/blockchain/tests/python.rs",
+        "crates/common/src/live/task.rs",
+        "docs/integrations/blockchain.md",
+        "python/nautilus_trader/adapters/blockchain/__init__.pyi",
+        "schema/sql/tables.sql"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1969587dc9b5a37f0d4124c03efe8abcb3c9777c",
+      "subject": "Add Blockchain execution reconciliation",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/cache/database.rs",
+        "crates/adapters/blockchain/src/cache/rows.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/src/execution/transaction.rs",
+        "crates/adapters/blockchain/src/rpc/http.rs",
+        "crates/adapters/blockchain/src/rpc/types.rs",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_block_by_number.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_block_canonical.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_block_finalized.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_transaction_receipt_reverted.json",
+        "crates/adapters/blockchain/test_data/execution/rpc_eth_get_transaction_receipt_success.json",
+        "crates/adapters/blockchain/tests/execution_fork.rs",
+        "docs/integrations/blockchain.md",
+        "schema/sql/tables.sql"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "f6d72562b2dc29d1fa9c50fbe55bebf64de46aab",
+      "subject": "Preserve Blockchain wallet currency identity",
+      "upstream_paths": [
+        "crates/infrastructure/src/redis/queries.rs",
+        "crates/infrastructure/src/sql/models/accounts.rs",
+        "crates/infrastructure/src/sql/queries.rs",
+        "crates/infrastructure/tests/test_cache_database_postgres.rs",
+        "crates/model/src/defi/wallet.rs",
+        "crates/model/src/events/account/state.rs",
+        "crates/model/src/types/balance.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b1348aedb0b5125ade2f1913627fb77a1bdeed65",
+      "subject": "Improve Blockchain execution compatibility",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/cache/database.rs",
+        "crates/adapters/blockchain/src/config.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/src/python/config.rs",
+        "crates/adapters/blockchain/tests/python.rs",
+        "python/nautilus_trader/adapters/blockchain/__init__.pyi",
+        "schema/sql/tables.sql"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1a9167e3a53beb5c408df275179ca2fd6d959a96",
+      "subject": "Fail closed Blockchain unsupported execution commands",
+      "upstream_paths": [
+        ".config/nextest.toml",
+        "Cargo.lock",
+        "crates/adapters/blockchain/Cargo.toml",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/tests/execution_fork.rs",
+        "crates/adapters/blockchain/tests/execution_livenode_fork.rs",
+        "crates/adapters/blockchain/tests/harness/mod.rs",
+        "docs/integrations/blockchain.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "807c24624d838eba02222bfe88e667bac936a63c",
+      "subject": "Recover Blockchain wrap and approve on restart",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/blockchain/tests/execution_fork.rs",
+        "crates/adapters/blockchain/tests/harness/mod.rs",
+        "docs/integrations/blockchain.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "edf4cf42010401187e169e83a976dc6113b22340",
+      "subject": "Keep Blockchain wrap and approve active until proven",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/cache/database.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "docs/integrations/blockchain.md",
+        "schema/sql/tables.sql"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "31f5004956829cbee93709bf99583408b2fc771f",
+      "subject": "Fix Blockchain execution status test",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/execution/client.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "70ce722a4eee779c29d8ba640e47dc051b401053",
+      "subject": "Replace SocketConfig heartbeat pair with SocketHeartbeat",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/betfair/src/stream/client.rs",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/network/src/heartbeat.rs",
+        "crates/network/src/lib.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/socket/config.rs",
+        "crates/network/src/socket/mod.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/config.rs",
+        "crates/network/src/websocket/consts.rs",
+        "crates/network/tests/turmoil_socket.rs",
+        "docs/concepts/networking.md"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/references/guides/official_adapter_spec.md"
+      ]
+    },
+    {
+      "commit": "cdfe29e08d53fdf8436a743a2e0378eb65e16b71",
+      "subject": "Standardize OKX reconciliation reports and fees",
+      "upstream_paths": [
+        "crates/adapters/okx/src/common/parse.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/okx/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c13d4d2de79d82c45cf72bbb4d89c768f03a8c12",
+      "subject": "Standardize Polymarket reconciliation reports",
+      "upstream_paths": [
+        "crates/adapters/polymarket/examples/node_exec_tester.rs",
+        "crates/adapters/polymarket/src/config.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/python/config.rs",
+        "crates/adapters/polymarket/tests/exec_client.rs",
+        "crates/adapters/polymarket/tests/http.rs",
+        "docs/integrations/polymarket.md",
+        "examples/live/polymarket/exec_tester.py",
+        "python/nautilus_trader/adapters/polymarket/__init__.pyi"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1756cd4e0bf2f0958e07d49e6ecfba79e60d1c6d",
+      "subject": "Make strategy order ID tag interpolation fallible",
+      "upstream_paths": [
+        "crates/system/src/trader.rs",
+        "crates/trading/src/python/strategy.rs",
+        "crates/trading/src/strategy/core.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "fbc5910b0ae1ad89303be65e6e1dab4d0400874c",
+      "subject": "Extend common version header metadata",
+      "upstream_paths": [
+        "crates/cli/Cargo.toml",
+        "crates/common/Cargo.toml",
+        "crates/common/build.rs",
+        "crates/common/src/logging/headers.rs",
+        "crates/event_store/Cargo.toml",
+        "crates/pyo3/Cargo.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "3f4321c11c1a63b6b69319d00905c8d07efa7019",
+      "subject": "Refine common version header metadata",
+      "upstream_paths": [
+        "Cargo.lock",
+        "crates/backtest/Cargo.toml",
+        "crates/backtest/examples/allocator/mod.rs",
+        "crates/backtest/examples/engine_ema_cross.rs",
+        "crates/backtest/examples/node_ema_cross.rs",
+        "crates/backtest/examples/tardis_option_chain.rs",
+        "crates/backtest/src/lib.rs",
+        "crates/cli/Cargo.toml",
+        "crates/cli/src/bin/cli.rs",
+        "crates/common/Cargo.toml",
+        "crates/common/build.rs",
+        "crates/common/src/logging/headers.rs",
+        "crates/pyo3/Cargo.toml",
+        "crates/pyo3/src/lib.rs",
+        "docs/concepts/rust.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8d12886d99eaa919e1450908426bb5cad844eabd",
+      "subject": "Clarify Polymarket unmapped reconciliation errors",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/python/config.rs",
+        "crates/adapters/polymarket/tests/python.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "f23ca8bf15c383b2589250c1ff5dad5a6d6b7db1",
+      "subject": "Skip unknown Polymarket user channel event types (#4794)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/websocket/messages.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "5fb249061c34030e68eb3f9f573f664c7ba4e479",
+      "subject": "Map partial Polymarket GTC fills to terminal status (#4795)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/execution/parse.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "860561f40c2a78d78752cf02c8582a4c4f2ede5a",
+      "subject": "Require OKX option instrument family",
+      "upstream_paths": [
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/python/http.rs",
+        "crates/adapters/okx/tests/http.rs",
+        "docs/integrations/okx.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a6c463a19b528248ef76249e0ebbb93d0ba78660",
+      "subject": "Add Hyperliquid socket-state reporting and reconnect fixes",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/adapters/hyperliquid/src/common/converters.rs",
+        "crates/adapters/hyperliquid/src/common/enums.rs",
+        "crates/adapters/hyperliquid/src/common/mod.rs",
+        "crates/adapters/hyperliquid/src/common/socket.rs",
+        "crates/adapters/hyperliquid/src/config.rs",
+        "crates/adapters/hyperliquid/src/data.rs",
+        "crates/adapters/hyperliquid/src/execution.rs",
+        "crates/adapters/hyperliquid/src/http/models.rs",
+        "crates/adapters/hyperliquid/src/http/parse.rs",
+        "crates/adapters/hyperliquid/src/signing/signers.rs",
+        "crates/adapters/hyperliquid/src/websocket/client.rs",
+        "crates/adapters/hyperliquid/src/websocket/handler.rs",
+        "crates/adapters/hyperliquid/src/websocket/parse.rs",
+        "crates/adapters/hyperliquid/test_data/http_historical_order_liquidation_market.json",
+        "crates/adapters/hyperliquid/test_data/http_order_status_frontend_market.json",
+        "crates/adapters/hyperliquid/tests/exec_client.rs",
+        "crates/adapters/hyperliquid/tests/live_mainnet_smoke.rs",
+        "crates/adapters/hyperliquid/tests/live_soak.rs",
+        "crates/adapters/hyperliquid/tests/websocket.rs",
+        "docs/concepts/live.md",
+        "docs/integrations/hyperliquid.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2297c36fa3f7c7816d161b95b4fad97f3b97ef58",
+      "subject": "Fix Betfair stream recovery submission gate",
+      "upstream_paths": [
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/betfair/src/stream/client.rs",
+        "crates/adapters/betfair/tests/exec_client.rs",
+        "crates/adapters/betfair/tests/stream_live.rs",
+        "crates/model/src/events/order/denied_reason.rs",
+        "crates/network/src/socket/client.rs",
+        "docs/concepts/execution.md",
+        "docs/integrations/betfair.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "66ae25e11204e1d647420ba01c46537c23291938",
+      "subject": "Refuse a cache position update for an unknown ID (#4785)",
+      "upstream_paths": [
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "bd0e713790d8725b84c8862f0748f285c7180e56",
+      "subject": "Resume a stopped TWAP execution schedule (#4786)",
+      "upstream_paths": [
+        "crates/trading/src/algorithm/mod.rs",
+        "crates/trading/src/algorithm/twap.rs",
+        "crates/trading/src/python/algorithm.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c4e895d026b1ca8f16ac7079763e38542bebb9d7",
+      "subject": "Update Lighter signing benches",
+      "upstream_paths": [
+        "crates/adapters/lighter/README.md",
+        "crates/adapters/lighter/benches/BENCHMARKS.md",
+        "crates/adapters/lighter/benches/micros.rs",
+        "crates/adapters/lighter/benches/signing_curve.rs",
+        "crates/adapters/lighter/benches/signing_poseidon2.rs",
+        "crates/adapters/lighter/benches/signing_sign_verify.rs",
+        "docs/developer_guide/adapters.md",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "210b453afaae546b64a3fa937a0931fbf38013ca",
+      "subject": "Update project documentation and links",
+      "upstream_paths": [
+        ".github/OVERVIEW.md",
+        ".github/workflows/build.yml",
+        "ADAPTERS.md",
+        "BENCHMARKING.md",
+        "CODE_OF_CONDUCT.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "c9732b4704a09f2dbc8a4d442fb78da27039bf04",
+      "subject": "Add reconnect throttling for flapping connections",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/network/src/backoff.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/src/websocket/config.rs",
+        "crates/network/tests/turmoil_socket.rs",
+        "crates/network/tests/turmoil_sockudo.rs",
+        "crates/network/tests/turmoil_websocket.rs",
+        "docs/concepts/networking.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "22b3b9d571fae7c76fba3781d335453bf64a7090",
+      "subject": "Stamp external orders with execution client origin",
+      "upstream_paths": [
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/src/engine/stubs.rs",
+        "crates/execution/tests/exec_engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a9831cf3134a385e50ade6b6b288d4cdafa8cec8",
+      "subject": "Normalize Lighter WS order timestamps to nanoseconds",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/websocket/dispatch.rs",
+        "crates/adapters/lighter/src/websocket/parse.rs",
+        "docs/integrations/lighter.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "04650a6c45a4ce95b6e0965396f56fa8411f3c0d",
+      "subject": "Improve OKX execution message handling robustness",
+      "upstream_paths": [
+        "crates/adapters/okx/src/common/enums.rs",
+        "crates/adapters/okx/src/common/parse.rs",
+        "crates/adapters/okx/src/config.rs",
+        "crates/adapters/okx/src/data.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/python/config.rs",
+        "crates/adapters/okx/src/python/websocket.rs",
+        "crates/adapters/okx/src/websocket/client.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/src/websocket/enums.rs",
+        "crates/adapters/okx/src/websocket/handler.rs",
+        "crates/adapters/okx/src/websocket/messages.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/okx/test_data/ws_liquidation_warning.json",
+        "crates/adapters/okx/test_data/ws_orders_algo_states.json",
+        "crates/adapters/okx/test_data/ws_orders_mmp_canceled.json",
+        "crates/adapters/okx/test_data/ws_orders_unknown_ord_type_fill.json",
+        "crates/adapters/okx/test_data/ws_orders_unknown_state_fill.json",
+        "crates/adapters/okx/test_data/ws_positions.json",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/okx/tests/http.rs",
+        "crates/adapters/okx/tests/websocket.rs",
+        "docs/developer_guide/adapters.md",
+        "docs/integrations/okx.md",
+        "examples/live/okx/okx_exec_tester.py",
+        "examples/live/okx/okx_spot_swap_quoter.py",
+        "python/nautilus_trader/adapters/okx/__init__.pyi"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "4c5c4e53d3289e5c3a5c9e5291940e80bb26898c",
+      "subject": "Validate purge retention minutes and remove purge panics (#4784)",
+      "upstream_paths": [
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/execution/src/engine/config.rs",
+        "crates/live/src/node/config.rs",
+        "crates/model/src/accounts/base.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "9d913f53827e3d56b3ed3bf66bc2608d85d60fa8",
+      "subject": "Align license metadata with the existing LGPLv3 grant",
+      "upstream_paths": [
+        "Cargo.toml",
+        "README.md",
+        "SECURITY.md",
+        "python/pyproject.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "764d5ea077baad5c2b608ad0078a67a25a830d8e",
+      "subject": "Restore Python distribution license text",
+      "upstream_paths": [
+        "python/LICENSE",
+        "python/pyproject.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "b569499ed49d1f358f0616c888bc8affa67f00c1",
+      "subject": "Update release notes",
+      "upstream_paths": [
+        "RELEASES.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d700a6d0c8c0a1184f8262140b372d1e36fda012",
+      "subject": "Improve Betfair execution reconnect recovery",
+      "upstream_paths": [
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/betfair/tests/common/mod.rs",
+        "crates/adapters/betfair/tests/exec_client.rs",
+        "docs/integrations/betfair.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "153382771b7ccecf390bb3402c55f8577bbcd963",
+      "subject": "Align cargo-deny license allow lists",
+      "upstream_paths": [
+        ".cargo/deny-fuzz.toml",
+        "deny.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "a6813dd7726f83db364f6600e794e9f1f764778d",
+      "subject": "Harden dependency and workflow security audits",
+      "upstream_paths": [
+        ".cargo/audit.toml",
+        ".cargo/deny-fuzz.toml",
+        ".github/actions/cargo-tool-install/action.yml",
+        ".github/actions/common-setup/action.yml",
+        ".github/actions/install-capnp/action.yml",
+        ".github/actions/publish-wheels/action.yml",
+        ".github/actions/upload-artifact-wheel/action.yml",
+        ".github/workflows/build.yml",
+        ".github/workflows/codeql-analysis.yml",
+        ".github/workflows/docker.yml",
+        ".github/workflows/nightly-merge.yml",
+        ".github/workflows/security-audit.yml",
+        ".pre-commit-config.yaml",
+        ".supply-chain/config.toml",
+        ".zizmor.yml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "Makefile",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/network/Cargo.toml",
+        "crates/network/src/tls.rs",
+        "deny.toml",
+        "osv-scanner.toml",
+        "scripts/ci/security-audit-gate.sh"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8e46665e2ec07499d87cd5d7656716f4e08d8be6",
+      "subject": "Remove remaining purge timer conversion panics (#4804)",
+      "upstream_paths": [
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/tests/exec_engine.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "8c8bbd685364457b3a0c23873a6ca8d7c7af1c87",
+      "subject": "Unblock clippy-fix-nightly with pinned toolchain and allows",
+      "upstream_paths": [
+        "Cargo.toml",
+        "Makefile",
+        "crates/adapters/architect_ax/src/lib.rs",
+        "crates/adapters/binance/src/lib.rs",
+        "crates/adapters/bitmex/src/lib.rs",
+        "crates/adapters/blockchain/src/lib.rs",
+        "crates/adapters/bybit/src/lib.rs",
+        "crates/adapters/coinbase/src/lib.rs",
+        "crates/adapters/databento/src/lib.rs",
+        "crates/adapters/deribit/src/lib.rs",
+        "crates/adapters/derive/src/lib.rs",
+        "crates/adapters/dydx/src/lib.rs",
+        "crates/adapters/hyperliquid/src/lib.rs",
+        "crates/adapters/interactive_brokers/src/lib.rs",
+        "crates/adapters/kraken/src/lib.rs",
+        "crates/adapters/lighter/src/lib.rs",
+        "crates/adapters/okx/src/lib.rs",
+        "crates/adapters/polymarket/src/lib.rs",
+        "crates/analysis/src/lib.rs",
+        "crates/backtest/src/lib.rs",
+        "crates/cli/src/lib.rs",
+        "crates/common/src/lib.rs",
+        "crates/core/src/datetime.rs",
+        "crates/core/src/lib.rs",
+        "crates/core/src/math.rs",
+        "crates/core/src/uuid.rs",
+        "crates/cryptography/src/lib.rs",
+        "crates/data/src/lib.rs",
+        "crates/event_store/src/lib.rs",
+        "crates/execution/src/lib.rs",
+        "crates/indicators/src/lib.rs",
+        "crates/infrastructure/src/lib.rs",
+        "crates/live/src/lib.rs",
+        "crates/live/src/node/config.rs",
+        "crates/model/src/lib.rs",
+        "crates/network/src/lib.rs",
+        "crates/network/src/retry.rs",
+        "crates/persistence/macros/src/lib.rs",
+        "crates/persistence/src/lib.rs",
+        "crates/plugin/src/lib.rs",
+        "crates/portfolio/src/lib.rs",
+        "crates/risk/src/lib.rs",
+        "crates/risk/tests/risk_engine.rs",
+        "crates/serialization/src/lib.rs",
+        "crates/system/src/lib.rs",
+        "crates/testkit/src/lib.rs",
+        "crates/trading/src/lib.rs",
+        "tools.toml"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "e05498c4cdaa203ec741c4924ec48c44c7b21202",
+      "subject": "Harden Polymarket pagination progress (#4800)",
+      "upstream_paths": [
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/data_api.rs",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/adapters/polymarket/src/http/mod.rs",
+        "crates/adapters/polymarket/src/http/pagination.rs",
+        "crates/adapters/polymarket/tests/http.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "0c0986f04506d15401e8e2eee5c1ab8780241db1",
+      "subject": "Document Derive margin transient and empty-book behavior",
+      "upstream_paths": [
+        "docs/integrations/derive.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "d3ae97ca9a19c53d98dd7497ffe2e823f2f61629",
+      "subject": "Persist resolved execution client origins (#4797)",
+      "upstream_paths": [
+        "crates/common/src/cache/database.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/infrastructure/src/redis/cache.rs",
+        "crates/infrastructure/src/sql/cache.rs",
+        "crates/infrastructure/src/sql/queries.rs",
+        "crates/infrastructure/tests/test_cache_database_postgres.rs",
+        "crates/infrastructure/tests/test_cache_redis.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "1cb7d335377d7bc3927aae44923d55ed0b1bf071",
+      "subject": "Extend sockudo coverage across WebSocket proxy tests",
+      "upstream_paths": [
+        "crates/network/tests/websocket_proxy.rs"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "7214db4239635369db43815ce4dc11aaa7094a60",
+      "subject": "Standardize Lighter Python examples for immediate startup",
+      "upstream_paths": [
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/live/src/execution/manager.rs",
+        "docs/concepts/execution.md",
+        "docs/getting_started/installation.md",
+        "docs/how_to/get_started_lighter.md",
+        "docs/integrations/lighter.md",
+        "examples/README.md",
+        "examples/live/lighter/data_tester.py",
+        "examples/live/lighter/exec_tester.py",
+        "examples/live/lighter/nvda_composite_mm.py",
+        "python/tests/unit/adapters/lighter/test_lighter_factories.py"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/references/integrations/lighter.md",
+        "references/integrations/lighter.md"
+      ]
+    },
+    {
+      "commit": "e8daa045ab84fbe1c59e0b8a8d20ff70eacfcad0",
+      "subject": "Standardize Python adapter examples for immediate startup",
+      "upstream_paths": [
+        "README.md",
+        "docs/developer_guide/adapters.md",
+        "examples/backtest/example_01_load_bars_from_custom_csv/6EH4.XCME_1min_bars.csv",
+        "examples/backtest/example_01_load_bars_from_custom_csv/run_example.py",
+        "examples/backtest/example_01_load_bars_from_custom_csv/strategy.py",
+        "examples/backtest/example_02_use_clock_timer/README.md",
+        "examples/backtest/example_02_use_clock_timer/run_example.py",
+        "examples/backtest/example_02_use_clock_timer/strategy.py",
+        "examples/backtest/example_03_bar_aggregation/README.md",
+        "examples/backtest/example_03_bar_aggregation/run_example.py",
+        "examples/backtest/example_03_bar_aggregation/strategy.py",
+        "examples/backtest/example_04_using_data_catalog/README.md",
+        "examples/backtest/example_04_using_data_catalog/run_example.py",
+        "examples/backtest/example_04_using_data_catalog/strategy.py",
+        "examples/backtest/example_05_using_portfolio/README.md",
+        "examples/backtest/example_05_using_portfolio/run_example.py",
+        "examples/backtest/example_05_using_portfolio/strategy.py",
+        "examples/backtest/example_06_using_cache/README.md",
+        "examples/backtest/example_06_using_cache/run_example.py",
+        "examples/backtest/example_06_using_cache/strategy.py",
+        "examples/backtest/example_07_using_indicators/README.md",
+        "examples/backtest/example_07_using_indicators/run_example.py",
+        "examples/backtest/example_07_using_indicators/strategy.py",
+        "examples/backtest/example_08_cascaded_indicator/README.md",
+        "examples/backtest/example_08_cascaded_indicator/run_example.py",
+        "examples/backtest/example_08_cascaded_indicator/strategy.py",
+        "examples/backtest/example_09_messaging_with_msgbus/README.md",
+        "examples/backtest/example_09_messaging_with_msgbus/run_example.py",
+        "examples/backtest/example_09_messaging_with_msgbus/strategy.py",
+        "examples/backtest/example_10_messaging_with_actor_data/README.md",
+        "examples/backtest/example_10_messaging_with_actor_data/run_example.py",
+        "examples/backtest/example_10_messaging_with_actor_data/strategy.py",
+        "examples/backtest/example_11_messaging_with_actor_signals/README.md",
+        "examples/backtest/example_11_messaging_with_actor_signals/run_example.py",
+        "examples/backtest/example_11_messaging_with_actor_signals/strategy.py",
+        "examples/live/architect_ax/ax_book_imbalance.py",
+        "examples/live/architect_ax/ax_mean_reversion.py",
+        "examples/live/architect_ax/data_tester.py",
+        "examples/live/architect_ax/exec_tester.py",
+        "examples/live/betfair/data_tester.py",
+        "examples/live/betfair/exec_tester.py",
+        "examples/live/binance/data_tester.py",
+        "examples/live/binance/exec_tester.py",
+        "examples/live/bitmex/__init__.py",
+        "examples/live/bitmex/bitmex_data_tester.py",
+        "examples/live/bitmex/bitmex_exec_tester.py",
+        "examples/live/bitmex/data_tester.py",
+        "examples/live/bitmex/exec_tester.py",
+        "examples/live/blockchain/data_tester.py",
+        "examples/live/blockchain/node_test.py",
+        "examples/live/bybit/bybit_option_greeks.py",
+        "examples/live/bybit/data_tester.py",
+        "examples/live/bybit/exec_tester.py",
+        "examples/live/coinbase/data_tester.py",
+        "examples/live/coinbase/exec_tester.py",
+        "examples/live/databento/data_tester.py",
+        "examples/live/deribit/data_tester.py",
+        "examples/live/deribit/deribit_option_greeks.py",
+        "examples/live/deribit/exec_tester.py",
+        "examples/live/derive/data_tester.py",
+        "examples/live/derive/exec_tester.py",
+        "examples/live/dydx/data_tester.py",
+        "examples/live/dydx/exec_tester.py",
+        "examples/live/hyperliquid/data_tester.py",
+        "examples/live/hyperliquid/exec_tester.py",
+        "examples/live/interactive_brokers/data_tester.py",
+        "examples/live/interactive_brokers/exec_tester.py",
+        "examples/live/kraken/data_tester.py",
+        "examples/live/kraken/exec_tester.py",
+        "examples/live/lighter/data_tester.py",
+        "examples/live/lighter/exec_tester.py",
+        "examples/live/lighter/nvda_composite_mm.py",
+        "examples/live/okx/data_tester.py",
+        "examples/live/okx/exec_tester.py",
+        "examples/live/okx/okx_data_tester.py",
+        "examples/live/okx/okx_exec_tester.py",
+        "examples/live/okx/okx_option_greeks.py",
+        "examples/live/okx/okx_spot_swap_quoter.py",
+        "examples/live/polymarket/data_tester.py",
+        "examples/live/polymarket/exec_tester.py",
+        "examples/live/polymarket/updown_smoke_tester.py",
+        "examples/live/sandbox/exec_tester.py",
+        "examples/live/tardis/data_tester.py",
+        "python/tests/unit/adapters/architect_ax/test_architect_ax_factories.py",
+        "python/tests/unit/adapters/betfair/test_betfair_factories.py",
+        "python/tests/unit/adapters/binance/test_binance_factories.py",
+        "python/tests/unit/adapters/bitmex/test_bitmex_factories.py",
+        "python/tests/unit/adapters/blockchain/test_blockchain_factories.py",
+        "python/tests/unit/adapters/bybit/test_bybit_factories.py",
+        "python/tests/unit/adapters/coinbase/test_factories.py",
+        "python/tests/unit/adapters/databento/test_databento_factories.py",
+        "python/tests/unit/adapters/deribit/test_deribit_factories.py",
+        "python/tests/unit/adapters/derive/test_derive_factories.py",
+        "python/tests/unit/adapters/dydx/test_dydx_factories.py",
+        "python/tests/unit/adapters/example_modules.py",
+        "python/tests/unit/adapters/hyperliquid/test_hyperliquid_factories.py",
+        "python/tests/unit/adapters/interactive_brokers/test_interactive_brokers_factories.py",
+        "python/tests/unit/adapters/kraken/test_kraken_factories.py",
+        "python/tests/unit/adapters/okx/test_okx_factories.py",
+        "python/tests/unit/adapters/polymarket/test_polymarket_factories.py",
+        "python/tests/unit/adapters/sandbox/test_sandbox_factories.py",
+        "python/tests/unit/adapters/tardis/test_tardis_factories.py"
+      ],
+      "affected_files": [
+        "skills/nt-adapters/references/integrations/lighter.md",
+        "references/integrations/lighter.md"
+      ]
+    },
+    {
+      "commit": "8321fae67f414ea1a1d0c2d99ed4bfae67d2046d",
+      "subject": "Fix docs anchor links broken by non-breaking hyphens",
+      "upstream_paths": [
+        "docs/concepts/custom_data.md",
+        "docs/concepts/live.md",
+        "docs/concepts/positions.md",
+        "docs/concepts/reconciliation.md",
+        "docs/developer_guide/adapters.md",
+        "docs/developer_guide/ffi.md",
+        "docs/integrations/dydx.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "86eebbe01400ada797ef2190c259da2790bfae86",
+      "subject": "Restore startup reconciliation for legacy caches",
+      "upstream_paths": [
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/tests/manager.rs",
+        "crates/live/tests/node.rs",
+        "docs/concepts/reconciliation.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "aebf6977365177bcbf6acceaa1fd7b0490b1b868",
+      "subject": "Update Blockchain configuration docs",
+      "upstream_paths": [
+        "crates/adapters/blockchain/src/config.rs",
+        "crates/adapters/blockchain/src/rpc/core.rs",
+        "docs/integrations/blockchain.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "2114cf6f761429e0adb5ca9596fcd7b895b16011",
+      "subject": "Prepare release",
+      "upstream_paths": [
+        "ADAPTERS.md",
+        "RELEASES.md"
+      ],
+      "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
     }
   ]
 }
