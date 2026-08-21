@@ -30,13 +30,12 @@ NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and ob
   file: skills/nt-adapters/references/integrations/betfair_v2.md:279
   evidence: upstream commit `74d57e7e05` renamed `crates/adapters/betfair/src/config.rs:85-86` to `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs`; the same stale table is mirrored at `references/integrations/betfair_v2.md:279` and `:306`.
   fix: update both config tables with the current field names and a develop-only boundary note.
-  closure: `grep -rn 'stream_idle_timeout_ms' skills/ references/` returns no uncorrected hit.
-  closure: `python3 -m pytest -q tests/test_v2_guidance_hardening.py::test_network_config_guides_use_current_field_names` passes; `grep -rn 'stream_idle_timeout_ms' skills/ references/` returns only the boundary note's pre-rename wording.
+  closure: `python3 -m pytest -q tests/test_v2_guidance_hardening.py::test_network_config_guides_use_current_field_names` passes; `grep -rn 'stream_idle_timeout_ms' skills/ references/` returns zero hits (exit 1).
 
-[NT-2026-08-21-04] [P1] [CLOSED] Validation: durable G2 evidence hashes are stale for nt-architect, nt-implement, and nt-review, leaving the repository red on main.
-  evidence: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 1 naming those three skills at baseline `bd8118a8`; `python3 -m pytest -q` fails `tests/test_skill_g2_harnesses.py::test_current_readiness_evidence_matches_owned_content` (1 failed, 470 passed).
-  fix: re-execute the three harnesses via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` against the pinned upstream to regenerate evidence with current owned-content hashes.
-  closure: `--check-cards` exits 0 and the pytest evidence test passes.
+[NT-2026-08-21-04] [P1] [CLOSED] Validation: G2 durable-evidence hashes drifted out of sync with owned skill content during this mission (preflight manifest refresh plus mission edits), leaving `--check-cards` red mid-mission.
+  evidence: at the clean baseline commit `bd8118a8` every G2 check passes (clean-clone reproduction: `--check-cards` exit 0; `tests/test_skill_g2_harnesses.py::test_current_readiness_evidence_matches_owned_content` passes; the baseline suite's single failure is `tests/test_upstream_freshness.py::test_required_develop_ref_contains_current_nightly_history`, closed by the preflight manifest refresh). The uncommitted preflight refresh of `references/upstream-delta-review.json` invalidated owned-content hashes for the skills owning `references/` (nt-architect, nt-implement, nt-review); mission edits to `tests/test_v2_guidance_hardening.py` and `skills/nt-adapters`/`skills/nt-live` content extended the mismatch to nt, nt-adapters, and nt-live.
+  fix: re-execute the six affected harnesses via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` against the pinned upstream and commit the refreshed evidence.
+  correction: an earlier revision of this record wrongly described the red as pre-existing on main; the independent post-fix review disproved that with a clean-clone reproduction and this record was rewritten.
   closure: `python3 tools/check_skill_g2_harnesses.py --check-cards` and `--check-card-declarations` exit 0; `python3 -m pytest -q` reports 475 passed.
 
 [NT-2026-08-21-05] [P2] [CLOSED] Improvement: current-develop `LiveNode` Python hosted async execution (`run_async` owned/hosted run modes) is not covered by live-operation guidance.
@@ -56,9 +55,16 @@ NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and ob
   fix: move `UPSTREAM_COMMIT` to the reviewed tip and refresh every pin-citing layer when a full G2 re-execution window is available; until then no gate `Pass` claim may depend on behavior newer than the pin.
   closure: pin equals the reviewed tip with all 17 G2 evidence files re-executed, or a dated re-run decision supersedes this record.
 
+[NT-2026-08-21-08] [P2] [OPEN] Residual: the migration/reference-labelled v1 Betfair guide states current-tense Rust differences contradicted by the reviewed develop tip rename.
+  file: references/integrations/betfair.md:496
+  evidence: `references/integrations/betfair.md:482,496,518,535` teach `stream_heartbeat_ms` as what "Rust currently requires"; upstream commit `74d57e7e05` renamed the pair at the reviewed tip `2114cf6f76`. The file is v1 migration/reference-labelled and outside NT-2026-08-21-03's declared scope (the v2 guide copies).
+  fix: scope the v1 guide's "Current Rust differences" block to the pinned baseline or align its stream-heartbeat claims with the v2 guide's boundary note.
+  closure: the current-tense heartbeat claims carry a pinned-baseline scope note and `python3 tools/check_legacy_labelling.py` passes.
+
 ## Follow-up TODO
 
 - [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).
+- [ ] [NT-2026-08-21-08] Scope the v1 Betfair guide's current-tense stream-heartbeat claims to the pinned baseline.
 
 ## Closed findings
 
@@ -176,6 +182,8 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
 2026-08-21 — P2 — MODIFIED: added develop-only overlays for LiveNode hosted run modes (e166a5e57c) and the fallible calculate_commission contract (68975d9347) — files: skills/nt-live/references/guides/run_rust_live_trading.md, skills/nt-adapters/references/guides/official_adapter_spec.md, tests/test_v2_guidance_hardening.py
 
 2026-08-21 — P1 — MODIFIED: refreshed stale G2 durable evidence for nt, nt-adapters, nt-architect, nt-implement, nt-live, nt-review against pinned 6e59fd74ea — files: references/g2-evidence/*.json
+
+2026-08-21 — P1 — CORRECTED: rewrote the NT-2026-08-21-04 record after the independent review disproved its baseline-red evidence claim; tightened the NT-03 closure observation; recorded the v1 Betfair residual as NT-2026-08-21-08 — files: docs/tracking/Findings.md
 
 2026-08-10 — P1 — MODIFIED: replaced obsolete or phantom Rust API guidance with pinned V2 builders, factories, imports, macro contracts, and strategy facades — files: skills/nt-adapters/SKILL.md, skills/nt-backtest/SKILL.md, skills/nt-data/SKILL.md, skills/nt-model/SKILL.md, skills/nt-signals/SKILL.md, skills/nt-trading/SKILL.md, tests/test_v2_guidance_hardening.py
 
