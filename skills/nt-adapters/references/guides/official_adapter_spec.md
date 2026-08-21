@@ -592,6 +592,27 @@ async fn connect(&mut self) -> anyhow::Result<()> {
 }
 ```
 
+#### Commission calculation
+
+The shared `ExecutionClient::calculate_commission` hook
+(`crates/common/src/clients/execution.rs`) returns `anyhow::Result<Option<Money>>` and
+distinguishes three outcomes:
+
+| Result                 | Meaning                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `Ok(Some(commission))` | The venue formula applies and produces a representable commission. Use that exact value. |
+| `Ok(None)`             | The adapter has no venue override. The caller may use the generic commission formula.    |
+| `Err(error)`           | The venue formula applies but cannot produce a representable value. Fail closed.         |
+
+Never replace `Err(error)` with zero commission or the generic formula — that substitution records
+a confirmed trade with economics the venue did not report. Commission construction belongs to the
+REST report request: if it fails for any required fill, return an error from the direct fill report
+request, targeted recovery, or complete mass status.
+
+NT v2 compatibility note: current-develop overlay. The fallible signature and fail-closed rule
+reflect upstream commit `68975d9347` (reviewed develop tip `2114cf6f76`); the pinned baseline
+`6e59fd74ea` returns a bare `Option<Money>` with no error channel.
+
 #### Account state emission
 
 The `ExecutionEventEmitter` provides two methods for emitting account state:

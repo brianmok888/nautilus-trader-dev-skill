@@ -589,3 +589,27 @@ def test_network_config_guides_use_current_field_names() -> None:
 
         assert "| `stream_heartbeat_secs` " in guide
         assert "| `stream_heartbeat_timeout_secs` " in guide
+
+def test_adapter_spec_covers_fallible_commission_contract() -> None:
+    spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
+
+    for marker in (
+        "calculate_commission",
+        "anyhow::Result<Option<Money>>",
+        "Ok(None)",
+        "Fail closed",
+        "68975d9347",
+    ):
+        assert marker in spec, f"spec lacks commission contract marker {marker}"
+
+def test_live_guide_covers_hosted_async_run_modes() -> None:
+    live = read("skills/nt-live/references/guides/run_rust_live_trading.md")
+
+    for marker in (
+        "run_async()",
+        "LiveNodeHandle",
+        "hosted",
+        "signal handling",
+        "e166a5e57c",
+    ):
+        assert marker in live, f"live guide lacks run-mode marker {marker}"

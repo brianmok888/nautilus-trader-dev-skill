@@ -149,6 +149,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Owned and hosted run modes (Python `LiveNode`)
+
+NT v2 compatibility note: current-develop overlay. Upstream commit `e166a5e57c` (reviewed develop
+tip `2114cf6f76`) finalized two run modes for the Python `LiveNode`; the pinned baseline
+`6e59fd74ea` still exposes the historical `start`/`poll` entry points.
+
+- `run()`: the node owns the calling thread and installs its own `SIGINT`/`SIGTERM` handling. Use
+  it for standalone processes.
+- `run_async()`: the node runs on an event loop the host already owns (an ASGI server serving a
+  dashboard beside the node, for example). A hosted node installs no signal handlers — the host
+  owns them.
+
+Both entry points run the same lifecycle (startup ordering, maintenance, reconciliation, shutdown);
+the mode decides only who owns signal handling. `run_async()` lends the node to the coroutine for
+the run's duration: capture `cache`, `portfolio`, and `handle()` before starting, because reading
+state through the node itself raises until the run returns. `handle()` and `is_running` answer
+throughout; `dispose()` during a run returns without doing anything — call it after the run task
+finishes. `LiveNodeHandle` is safe to call from any thread, including a signal handler.
+
+Rust callers are unaffected: `LiveNode::run()` on the Tokio runtime remains the Rust path, and the
+hosted/owned distinction above is the Python `LiveNode` surface.
+
 ## Adapter examples
 
 Most adapters include runnable examples with data testers and execution
