@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.upstream_baseline import UPSTREAM_COMMIT
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -34,4 +36,4 @@ def test_live_curriculum_identifies_the_actual_pinned_baseline() -> None:
     )
 
     assert "pinned upstream examples at develop commit `45903fc8`" not in curriculum
-    assert "6e59fd74eaacacbb7410936f1766bd89fcce6f59" in curriculum
+    assert UPSTREAM_COMMIT in curriculum

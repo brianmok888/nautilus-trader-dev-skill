@@ -1,8 +1,8 @@
 ---
-source_url: https://nautilustrader.io/docs/nightly/developer_guide/
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/index/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/index.md
-source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
-sync_date: 2026-08-16
+source_commit: baa667bc3c57cd3f639d9722b6fd592e4fcde36f
+sync_date: 2026-08-22
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -25,6 +25,7 @@ This approach combines Python's simplicity and ecosystem with Rust's performance
 - [Environment Setup](environment_setup.md)
 - [Design Principles](design_principles.md)
 - [Coding Standards](coding_standards.md)
+- [Shell](shell.md)
 - [Rust](rust.md)
 - [Python](python.md)
 - [Testing](testing.md)
@@ -32,7 +33,7 @@ This approach combines Python's simplicity and ecosystem with Rust's performance
 - [Docs Style](docs.md)
 - [Markdown Style](markdown_style.md)
 - [Release Notes](releases.md)
-- [Release Security Architecture](release_security.md)
+- [Security Architecture](security.md)
 - [Adapters](adapters.md)
 - [Data Testing Spec](spec_data_testing.md)
 - [Execution Testing Spec](spec_exec_testing.md)

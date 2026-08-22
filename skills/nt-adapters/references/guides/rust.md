@@ -426,7 +426,7 @@ python = ["pyo3", "pyo3-stub-gen"]
 pyo3-stub-gen = { workspace = true, optional = true }
 ```
 
-**Regenerating stubs:** run `make py-stubs-v2` (or `python python/generate_stubs.py`)
+**Regenerating stubs:** run `make py-stubs` (or `python python/generate_stubs.py`)
 after changing annotations. The post-processor handles `py_` prefix stripping,
 `@property`/`@staticmethod`/`@classmethod` decoration, keyword escaping, deduplication,
 and ruff formatting.

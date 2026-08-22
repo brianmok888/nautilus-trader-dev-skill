@@ -20,6 +20,15 @@ NT_RUST_STRATEGY = REPO_ROOT / "skills/nt-strategy-builder-rust/SKILL.md"
 UPSTREAM_ROOT = default_upstream_root()
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 
+def _pinned_toolchain() -> str:
+    channel = "stable"
+    for line in (UPSTREAM_ROOT / "rust-toolchain.toml").read_text().splitlines():
+        match = re.match(r'channel\s*=\s*"(.+)"', line.strip())
+        if match:
+            channel = match.group(1)
+            break
+    return channel
+
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -111,7 +120,7 @@ def test_primary_live_node_source_compiles_against_pinned_upstream(tmp_path: Pat
 name = "nt-guide-smoke"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.97.1"
+rust-version = "1.98.0"
 
 [dependencies]
 anyhow = "1"
@@ -127,7 +136,7 @@ nautilus-trading = { path = "UPSTREAM/crates/trading", features = ["examples"] }
         encoding="utf-8",
     )
 
-    cargo = ["rustup", "run", "1.97.1", "cargo"] if shutil.which("rustup") else ["cargo"]
+    cargo = ["rustup", "run", _pinned_toolchain(), "cargo"] if shutil.which("rustup") else ["cargo"]
     result = subprocess.run(
         [*cargo, "check", "--manifest-path", str(crate / "Cargo.toml")],
         capture_output=True,
@@ -175,7 +184,7 @@ def test_rust_strategy_skill_example_compiles_against_pinned_upstream(tmp_path: 
 name = "nt-rust-strategy-skill-smoke"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.97.1"
+rust-version = "1.98.0"
 
 [dependencies]
 anyhow = "1"
@@ -186,7 +195,7 @@ nautilus-trading = { path = "UPSTREAM/crates/trading" }
         encoding="utf-8",
     )
 
-    cargo = ["rustup", "run", "1.97.1", "cargo"] if shutil.which("rustup") else ["cargo"]
+    cargo = ["rustup", "run", _pinned_toolchain(), "cargo"] if shutil.which("rustup") else ["cargo"]
     result = subprocess.run(
         [*cargo, "check", "--manifest-path", str(crate / "Cargo.toml")],
         capture_output=True,

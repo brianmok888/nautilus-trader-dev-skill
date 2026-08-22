@@ -40,9 +40,10 @@ CURRENT_DEV_GUIDE_FILES = [
     "markdown_style.md",
     "plugins.md",
     "python.md",
-    "release_security.md",
     "releases.md",
     "rust.md",
+    "security.md",
+    "shell.md",
     "spec_data_testing.md",
     "spec_exec_testing.md",
     "test_datasets.md",
@@ -62,10 +63,10 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-08-16"
+CURRENT_SYNC_DATE = "2026-08-22"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
-CURRENT_RELEASE_TAG = "v1.230.0"
-CURRENT_RELEASE_DATE = "2026-06-29"
+CURRENT_RELEASE_TAG = "v1.231.0"
+CURRENT_RELEASE_DATE = "2026-08-02"
 CURRENT_TARGET = "NautilusTrader develop developer guide source snapshot"
 SOURCE_STALE_AFTER_DAYS = 14
 PINNED_SNAPSHOT_LEGACY_POLICY = (
@@ -104,6 +105,7 @@ ENTRY_SKILL_ROUTING_TARGETS = [
 
 RETIRED_UPSTREAM_REFERENCE_FILES = [
     Path("references/developer_guide/cython.md"),
+    Path("references/developer_guide/release_security.md"),
     Path("references/developer_guide/docs_style.md"),
     Path("references/developer_guide/packaged_data.md"),
     Path("references/api_reference/adapters/coinbase_intx.md"),
@@ -304,7 +306,7 @@ CONTRACT_TERM_GROUPS = {
 LATEST_UPSTREAM_DELTA_TARGETS = {
     Path("references/developer_guide/rust.md"): [
         "Generated Python artifacts",
-        "make py-stubs-v2",
+        "make py-stubs",
         "bon::bon",
         "try_order",
     ],
@@ -317,9 +319,9 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
         "StrategyConfig",
         "build()?",
     ],
-    Path("references/developer_guide/release_security.md"): [
-        "export TAG=",
-        "export REPO=",
+    Path("references/developer_guide/security.md"): [
+        "TAG=\"v$VERSION\"",
+        "REPO=nautechsystems/nautilus_trader",
         "gh attestation verify",
     ],
 }
@@ -327,12 +329,11 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
 
 NT_V2_CUTOVER_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
-        "v1.230.0",
-        "1.231.0",
+        "v1.231.0",
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.97.1",
+        "1.98.0",
         "Python v2 controller subclassing",
         "subclassable execution algorithms",
         "FeeModel",
@@ -376,8 +377,8 @@ NT_V2_TESTING_TARGETS = {
 NT_V2_RUST_TARGETS = {
     Path("references/developer_guide/rust.md"): [
         "Generated Python artifacts",
-        "HIGH_PRECISION=true",
-        "py-stubs-v2",
+        "Propagate `high-precision`",
+        "pyo3-stub-gen",
     ],
 }
 
@@ -388,7 +389,7 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.97.1",
+        "1.98.0",
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
@@ -548,7 +549,7 @@ NT_V2_READINESS_DOMAIN_GATE_TARGETS = {
 
 LATEST_SKILL_ALIGNMENT_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
-        "make py-stubs-v2",
+        "make py-stubs",
         "Generated Python artifacts",
         "arrow,ffi,python,high-precision,streaming,defi",
     ],
@@ -559,7 +560,7 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Generated Python artifacts",
-        "make py-stubs-v2",
+        "make py-stubs",
     ],
     Path("skills/nt-data/SKILL.md"): [
         "try_order",
@@ -717,17 +718,18 @@ CURRENT_GUIDE_DELTA_TARGETS = {
     ],
     Path("references/developer_guide/rust.md"): [
         "Generated Python artifacts",
-        "HIGH_PRECISION=true",
+        "Propagate `high-precision`",
     ],
     Path("references/developer_guide/python.md"): [
-        "Python v2 live callback routing",
+        "Python live callback routing",
         "Do not call `Python::attach` from Tokio worker tasks",
     ],
     Path("references/developer_guide/ffi.md"): [
-        "Typed CVec wrappers and Send",
-        "Rust-owned CVec capsules with explicit drop",
+        "`CVec` ownership",
+        "CVec::into_vec",
+        "CVec::as_slice",
     ],
-    Path("references/developer_guide/release_security.md"): [
+    Path("references/developer_guide/security.md"): [
         "Trusted Publishing",
         "Sigstore",
         "SLSA posture",
@@ -1431,7 +1433,7 @@ def _check_coinbase_status(root: Path, errors: list[str]) -> None:
 
 
 def _check_release_security_bash_examples(root: Path, errors: list[str]) -> None:
-    relative = Path("references/developer_guide/release_security.md")
+    relative = Path("references/developer_guide/security.md")
     absolute = root / relative
     if not absolute.exists():
         return

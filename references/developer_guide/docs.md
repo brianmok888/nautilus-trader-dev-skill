@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/docs/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/docs.md
-source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
-sync_date: 2026-08-16
+source_commit: baa667bc3c57cd3f639d9722b6fd592e4fcde36f
+sync_date: 2026-08-22
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -57,7 +57,7 @@ they want X. Keep these distinct:
 - How-to guides should not teach background concepts.
 
 When one type needs to reference another, link to it instead of inlining. For
-example, a how-to guide that configures `TradingNodeConfig` should link to the
+example, a how-to guide that configures `LiveNodeConfig` should link to the
 API reference for field definitions rather than listing them again.
 
 ## Language and tone

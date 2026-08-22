@@ -15,9 +15,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped examples and owners against `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped examples and owners against `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -43,7 +43,7 @@ it is not a template for new production implementation.
 
 ## Source-pinned upstream lane
 
-Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `6e59fd74eaacacbb7410936f1766bd89fcce6f59`; label newer upstream behavior as version-scoped drift.
+Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; label newer upstream behavior as version-scoped drift.
 
 ## What This Skill Covers
 
@@ -247,16 +247,16 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
 - **Logging**: `log::info!`, `log::warn!` etc. — always fully qualified
 - **Async**: `get_runtime().spawn()` in adapters (not `tokio::spawn()`); `#[tokio::test]` OK in tests
 
-### NT v2 transition baseline (v1.230.0 release)
+### NT v2 transition baseline (v1.231.0 release)
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
-- NautilusTrader v1.230.0 is the latest release baseline as of 2026-07-28.
+- NautilusTrader v1.231.0 is the latest release baseline as of 2026-08-02.
   Preserve legacy Cython/v1 guidance where explicitly labelled, but target
   Rust v2 / PyO3 for new Rust-backed work only when the required engine,
   adapter, and test coverage exist.
 - Upstream `develop` source label is 1.231.0 and `python/pyproject.toml` is
-  `2.0.0rc2`; upstream release notes identify 2.0.0rc1 as the first public
+  `2.0.0rc4`; upstream release notes identify 2.0.0rc1 as the first public
   candidate and describe the rolling `2.0.0rcN` line before final 2.0.0.
 - Rust-oriented v2.0 readiness is the default: Rust core first and bounded PyO3
   configuration/inspection second. Python production guidance remains migration/reference-only; bounded PyO3 control-plane bindings are allowed.
@@ -264,13 +264,16 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
 - Officially supported Python versions are Python 3.12-3.14.
-- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.97.1. This is not a permanent MSRV promise;
+- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.98.0. This is not a permanent MSRV promise;
   upstream policy generally follows the latest stable Rust release.
 - Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
   `migration_reference/`; implement new orchestration, routed-order,
-  fee, and fill behavior in Rust.
+  fee, and fill behavior in Rust. At the pinned develop `baa667bc`, change
+  `e4d3ac7f37` additionally accepts any Python object exposing
+  `get_commission` as `FeeModelAny::Python` in simulation configs; that
+  duck-typed path stays reference-only.
 - Compatibility inventory terms `Python v2 controller subclassing` and
   `subclassable execution algorithms` describe those quarantined upstream
   capabilities only; they do not create an active Python lane.
@@ -284,7 +287,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   non-trivial work, or collection clones.
 - Python stubs: annotate Python-exposed Rust APIs with `pyo3-stub-gen`
   (`gen_stub_pyclass`, `gen_stub_pyclass_enum`, `gen_stub_pymethods`,
-  `gen_stub_pyfunction`) and regenerate with `make py-stubs-v2`.
+  `gen_stub_pyfunction`) and regenerate with `make py-stubs`.
 - PyO3 enums: do not combine the `hash` pyclass attribute with `eq_int`;
   implement manual `__hash__` returning the discriminant.
 - DST-observable iteration: use `IndexMap` / `IndexSet` when iteration order
@@ -298,10 +301,10 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   `ExecutionClient` trait method implementations; spawn work with
   `get_runtime().spawn()` and return immediately. Python-thread-sensitive tasks
   should also use `get_runtime().spawn()`.
-- Generated FFI bindings and precision mode: when compiling `nautilus-model`
-  with `ffi` outside the aligned feature set, include `high-precision` or set
-  `HIGH_PRECISION=true`; verify generated `model.h` / `model.pxd` did not drift
-  before committing FFI-related work.
+- Generated FFI bindings and precision mode: propagate the `high-precision`
+  feature to dependent Nautilus crates that store or construct fixed-point
+  domain values; verify generated `model.h` did not drift before committing
+  FFI-related work.
 - Python v2 live callback routing: Tokio worker threads must not run Python
   code during live trading. Route unavoidable Python callbacks through live
   runner event channels; do not call `Python::attach` from Tokio worker tasks.
@@ -328,7 +331,7 @@ fixture helpers close to the crate/module under test.
 
 After changing Python-exposed Rust surfaces (`#[pyclass]`, `#[pymethods]`,
 `#[pyfunction]`, stub annotations, wrapped Rust docs, or adapter feature wiring),
-run `make py-stubs-v2` and commit every generated `.pyi` file and wrapper doc
+run `make py-stubs` and commit every generated `.pyi` file and wrapper doc
 comment. The v2 stub target checks the uv version pinned by `required-version`
 in `python/pyproject.toml`; follow the printed `uv self update --version ...`
 hint before rerunning if local uv differs.

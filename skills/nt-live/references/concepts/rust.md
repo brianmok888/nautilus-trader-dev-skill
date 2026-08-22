@@ -97,11 +97,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.61.0"
-nautilus-common = "0.61.0"
-nautilus-execution = "0.61.0"
-nautilus-model = { version = "0.61.0", features = ["stubs"] }
-nautilus-trading = { version = "0.61.0", features = ["examples"] }
+nautilus-backtest = "0.63.0"
+nautilus-common = "0.63.0"
+nautilus-execution = "0.63.0"
+nautilus-model = { version = "0.63.0", features = ["stubs"] }
+nautilus-trading = { version = "0.63.0", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -111,8 +111,8 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.61.0"
-nautilus-okx = "0.61.0"
+nautilus-live = "0.63.0"
+nautilus-okx = "0.63.0"
 ```
 
 To track the latest development branch, point all Nautilus dependencies at the
@@ -128,7 +128,7 @@ nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.gi
 ```
 
 Follow the checked-out `rust-toolchain.toml` for the active Rust version.
-Source-aligned work as of 2026-07-28 uses Rust 1.97.1; older 1.96.x
+Source-aligned work as of 2026-08-22 uses Rust 1.98.0; older 1.97.x
 release/docs references are lag notes unless the checked-out repository pins them.
 
 ### Feature flags

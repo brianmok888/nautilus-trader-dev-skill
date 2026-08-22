@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
-sync_date: 2026-08-16
+source_commit: baa667bc3c57cd3f639d9722b6fd592e4fcde36f
+sync_date: 2026-08-22
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -118,7 +118,7 @@ Copy the standard copyright and license header from a neighboring hand‑written
 files retain their generator header instead. The copyright hook checks the year.
 
 Change a generator input and rerun the generator instead of editing generated Rust, C headers,
-Cython declarations, Python stubs, or wrapper doc comments.
+Python stubs, or wrapper doc comments.
 
 ### Module declarations
 
@@ -345,12 +345,18 @@ Choose a hash collection by iteration semantics and trust boundary:
 | ---------------------------------------------- | ------------------------- |
 | Observable insertion‑order iteration.          | `IndexMap` or `IndexSet`. |
 | Hot lookup with no observable iteration order. | `AHashMap` or `AHashSet`. |
-| Untrusted keys or a network‑facing boundary.   | `HashMap` or `HashSet`.   |
+| Keys chosen by an untrusted third party.       | `HashMap` or `HashSet`.   |
 | External API requires a standard collection.   | `HashMap` or `HashSet`.   |
 
-`AHash` iteration varies between processes. Use `IndexMap` or `IndexSet` when iteration affects
-emitted events, returned sequences, random number consumption, or other observable state. Use
-`shift_remove` when removal must preserve insertion order and `swap_remove` when it need not.
+`AHash` iteration varies between processes. Fix the order when it leaves the process or advances the
+seeded RNG: emitted events, commands and traffic sent to a venue, persisted output, and random number
+consumption. A sequence that no production caller consumes does not need it.
+
+Either mechanism satisfies this: hold the collection in `IndexMap` or `IndexSet`, or keep the hash
+collection and sort at the point of use. Prefer sorting when the collection is hot on lookup or
+removal, since `shift_remove` is O(n); prefer `IndexMap` when insertion order is itself the
+meaningful sequence. Use `shift_remove` when removal must preserve insertion order and `swap_remove`
+when it need not.
 
 `AHashMap` and `AHashSet` use a non‑cryptographic hasher. Do not use them where untrusted keys make
 hash‑flooding resistance part of the security boundary.
@@ -470,7 +476,7 @@ cannot import the item they document.
 - When a binding needs a Rust‑only wrapper type, prefix it with `Py` and expose the Python name
   without that prefix.
 - Use `nautilus_trader.adapters.<adapter_name>` for public adapter stub metadata. Runtime module
-  paths use `nautilus_trader.core.nautilus_pyo3.<adapter_name>`.
+  paths use `nautilus_trader._libnautilus.<adapter_name>`.
 - Convert standard Python exceptions with `to_pyvalue_err`, `to_pytype_err`, `to_pyruntime_err`,
   `to_pykey_err`, `to_pyexception`, or `to_pynotimplemented_err` from
   `nautilus_core::python`.
@@ -521,11 +527,11 @@ Every Python‑exposed type and function needs the matching `pyo3-stub-gen` anno
 
 ### Generated Python artifacts
 
-The v2 Python surface commits generated `.pyi` files under `python/nautilus_trader/` and generated
+The Python surface commits generated `.pyi` files under `python/nautilus_trader/` and generated
 wrapper doc comments under `crates/**/src/python/`. Regenerate both with:
 
 ```bash
-make py-stubs-v2
+make py-stubs
 ```
 
 Run the target after changing a Python‑exposed Rust item, its stub annotation, its core doc comments,
@@ -536,9 +542,10 @@ only through `extension-module` explicitly to `cargo_features` in `python/genera
 otherwise its exported types disappear from the generated stubs. The Interactive Brokers `gateway`
 feature is the model.
 
-The v2 targets require the uv version pinned by `required-version` in `python/pyproject.toml`.
-`make sync-v2`, `make py-stubs-v2`, and `make build-debug-v2` stop before syncing when the installed
-version differs. Use the update command printed by the preflight.
+The Python targets accept the uv minor series defined by `required-version` in
+`python/pyproject.toml`. `make sync`, `make py-stubs`, and `make build-debug` stop when the installed
+version falls outside that range. Run `make update-uv` to install the exact project version from
+`tools.toml`.
 
 Do not edit wrapper `///` comments in `crates/**/src/python/`. Edit the core Rust item docs and
 regenerate. The doc sync:
@@ -653,22 +660,16 @@ component lifecycle operations re‑entrant.
 
 ### FFI bindings and precision
 
-Enabling `ffi` for `nautilus-model` regenerates `nautilus_trader/core/includes/model.h` and
-`nautilus_trader/core/rust/model.pxd`. The committed files use high precision. For a narrow check,
-keep the environment and Cargo feature aligned:
+Only `nautilus-core` and `nautilus-model` expose an `ffi` feature. Check both crates directly when
+changing their C ABI:
 
 ```bash
-env HIGH_PRECISION=true cargo check -q -p nautilus-model --features ffi,python,high-precision
+cargo check -q -p nautilus-core --features ffi
+cargo check -q -p nautilus-model --features ffi,python,high-precision
 ```
 
-Review both files after an FFI‑related command:
-
-```bash
-git diff -- nautilus_trader/core/includes/model.h nautilus_trader/core/rust/model.pxd
-```
-
-If only the precision mode drifted, rerun the generating command with high precision. Do not edit
-the files by hand.
+The crate‑local `cbindgen.toml` files define the header layout for native consumers. Do not add an
+`ffi` feature or `src/ffi` module to another workspace crate.
 
 ### Cap'n Proto schemas
 

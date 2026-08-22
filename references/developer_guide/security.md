@@ -1,25 +1,25 @@
 ---
-source_url: https://nautilustrader.io/docs/nightly/developer_guide/release_security/
-source_repo: nautechsystems/nautilus_trader/docs/developer_guide/release_security.md
-source_commit: 6e59fd74eaacacbb7410936f1766bd89fcce6f59
-sync_date: 2026-08-16
+source_url: https://nautilustrader.io/docs/nightly/developer_guide/security/
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/security.md
+source_commit: baa667bc3c57cd3f639d9722b6fd592e4fcde36f
+sync_date: 2026-08-22
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
 
-# Release Security Architecture
+# Security Architecture
 
 This page describes the security model for the NautilusTrader release pipeline.
 It explains how release artifacts are built, published, attested, and verified.
 
 Use this page with:
 
+- [Supply chain policy](https://nautilustrader.io/security/supply-chain/), which states the public
+  dependency and release integrity commitments.
 - [Releases](releases.md), which documents the release workflow and checklist.
-- [Security Policy](https://github.com/nautechsystems/nautilus_trader/blob/develop/SECURITY.md),
-  which gives consumer-facing verification commands.
-- [.github/OVERVIEW.md](https://github.com/nautechsystems/nautilus_trader/blob/develop/.github/OVERVIEW.md#security),
-  which documents CI/CD controls.
+- [Security Policy](../../SECURITY.md), which gives consumer‑facing verification commands.
+- [GitHub Actions overview](../../.github/OVERVIEW.md#security), which documents CI/CD controls.
 
 ## Security goals
 
@@ -85,9 +85,10 @@ The pipeline does not defend against:
 ```mermaid
 flowchart TD
     source["Reviewed commit on master"]
-    gates["Release gates<br/>cargo-deny + cargo-vet"]
-    build["Build wheels and sdist"]
+    gates["Release gates<br/>Rust suite + cargo-deny + cargo-vet<br/>Cargo publish + docs/features preflights"]
+    wheels["Build wheels"]
     draft["Create tag and draft GitHub release"]
+    sdist["Build sdist"]
     assets["Attach wheels and sdist to draft release"]
     registries["Publish PyPI and crates.io<br/>Trusted Publishing"]
     verify["Verify registries against release assets"]
@@ -97,10 +98,12 @@ flowchart TD
     docker["Build, sign, and attest Docker images"]
 
     source --> gates
-    source --> build
+    source --> wheels
     gates --> draft
-    build --> draft
-    draft --> assets
+    wheels --> draft
+    draft --> sdist
+    sdist --> assets
+    wheels --> assets
     assets --> registries
     registries --> verify
     verify --> integrity
@@ -120,8 +123,8 @@ digest to the expected GitHub Actions workflow identity.
   `.sha256` files, and `dist-manifest.json` record integrity. GitHub artifact
   attestations, PyPI publish attestations, `.sigstore` bundles, and
   `.intoto.jsonl` envelopes record provenance.
-- Python sdists use the same public locations, integrity records, and provenance
-  records as wheels.
+- Python sdists are published to GitHub Releases and PyPI. They use the same integrity and
+  provenance records as wheels but are not published to the wheel‑only package index.
 - Rust crates are published to crates.io. The crates.io checksum and
   `crates-manifest.json` record integrity. crates.io `trustpub_data` records
   provenance unless an explicit manual exception is present.
@@ -152,11 +155,12 @@ Verify:
 Example:
 
 ```bash
-export TAG=v1.228.0
-export REPO=nautechsystems/nautilus_trader
-export ARTIFACT=nautilus_trader-1.228.0.tar.gz
-export ISSUER=https://token.actions.githubusercontent.com
-export IDENTITY='^https://github\.com/nautechsystems/nautilus_trader/\.github/workflows/build\.yml@refs/heads/(master|nightly)$'
+: "${VERSION:?Set VERSION to the Python package version}"
+: "${ARTIFACT:?Set ARTIFACT to the release asset filename}"
+TAG="v$VERSION"
+REPO=nautechsystems/nautilus_trader
+ISSUER=https://token.actions.githubusercontent.com
+IDENTITY='^https://github\.com/nautechsystems/nautilus_trader/\.github/workflows/build\.yml@refs/heads/(master|nightly)$'
 
 gh release download "$TAG" --repo "$REPO" --pattern "$ARTIFACT" --pattern "$ARTIFACT.sha256"
 sha256sum -c "$ARTIFACT.sha256"
@@ -177,9 +181,9 @@ Verify:
 Example:
 
 ```bash
-export VERSION=1.228.0
-export ARTIFACT=nautilus_trader-1.228.0.tar.gz
-export PYPI_URL=$(curl -sS "https://pypi.org/pypi/nautilus_trader/$VERSION/json" | \
+: "${VERSION:?Set VERSION to the Python package version}"
+: "${ARTIFACT:?Set ARTIFACT to the release asset filename}"
+PYPI_URL=$(curl -sS "https://pypi.org/pypi/nautilus_trader/$VERSION/json" | \
   jq -r --arg artifact "$ARTIFACT" '.urls[] | select(.filename == $artifact) | .url')
 
 uv run --no-project --no-build --with pypi-attestations -- \
@@ -201,12 +205,12 @@ Verify:
 Example:
 
 ```bash
-export CRATE=nautilus-core
-export VERSION=0.58.0
-export REPO=nautechsystems/nautilus_trader
-export VERSION_JSON=$(curl -sS "https://crates.io/api/v1/crates/$CRATE/versions" | \
+CRATE=${CRATE:-nautilus-core}
+: "${VERSION:?Set VERSION to the crate version}"
+REPO=nautechsystems/nautilus_trader
+VERSION_JSON=$(curl -sS "https://crates.io/api/v1/crates/$CRATE/versions" | \
   jq -c --arg version "$VERSION" '.versions[] | select(.num == $version)')
-export CRATE_SHA256=$(printf '%s\n' "$VERSION_JSON" | jq -r '.checksum')
+CRATE_SHA256=$(printf '%s\n' "$VERSION_JSON" | jq -r '.checksum')
 
 printf '%s\n' "$VERSION_JSON" | jq -e --arg repo "$REPO" \
   '.trustpub_data.provider == "github" and .trustpub_data.repository == $repo and .published_by == null'

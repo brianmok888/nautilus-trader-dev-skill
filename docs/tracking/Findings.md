@@ -4,8 +4,8 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-21
-Reviewed upstream develop: `2114cf6f761429e0adb5ca9596fcd7b895b16011`
+Review date: 2026-08-22
+Reviewed upstream develop: `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`
 Pinned G2 baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`
 
 NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance.
@@ -50,10 +50,10 @@ NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and ob
   closure: the overlay section exists citing commit `68975d9347`.
   closure: `python3 -m pytest -q tests/test_v2_guidance_hardening.py::test_adapter_spec_covers_fallible_commission_contract` passes.
 
-[NT-2026-08-21-07] [P2] [OPEN] Pin deferral: the reproducible G2 pin `6e59fd74` is 560 commits behind reviewed develop tip `2114cf6f`.
-  evidence: `python3 tools/check_upstream_freshness.py --format json` reports develop `drifted`, `commits_ahead` 560, `pinned_is_ancestor` true, manifest reviewed through `2114cf6f`.
-  fix: move `UPSTREAM_COMMIT` to the reviewed tip and refresh every pin-citing layer when a full G2 re-execution window is available; until then no gate `Pass` claim may depend on behavior newer than the pin.
-  closure: pin equals the reviewed tip with all 17 G2 evidence files re-executed, or a dated re-run decision supersedes this record.
+[NT-2026-08-21-07] [P2] [CLOSED] Pin deferral: the reproducible G2 pin `6e59fd74` was 560 commits behind the reviewed develop tip; superseded by the 2026-08-22 pin move to `baa667bc`.
+  evidence: `python3 tools/check_upstream_freshness.py --format json` exits 0 with `pinned_commit` = reviewed tip `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; G2 evidence files re-executed against the new pin.
+  fix: moved `UPSTREAM_COMMIT` to `baa667bc`, re-copied developer-guide snapshots, refreshed version cites, and re-executed the G2 harnesses.
+  closure: pin equals the reviewed tip; all G2 evidence files re-executed against `baa667bc` (see `references/g2-evidence/`).
 
 [NT-2026-08-21-08] [P2] [CLOSED] Residual: the migration/reference-labelled v1 Betfair guide states current-tense Rust differences contradicted by the reviewed develop tip rename.
   file: references/integrations/betfair.md:496

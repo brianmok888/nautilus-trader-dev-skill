@@ -63,8 +63,8 @@ def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None
             dependencies.append((path, version))
 
     assert dependencies
-    assert [(path, version) for path, version in dependencies if version != "0.61.0"] == []
-    assert "Rust 1.97.1" in read("docs/end_to_end_guide.md")
+    assert [(path, version) for path, version in dependencies if version != "0.63.0"] == []
+    assert "Rust 1.98.0" in read("docs/end_to_end_guide.md")
 
 def test_documented_inventory_lists_all_seventeen_nt_skills() -> None:
     expected = {
@@ -191,7 +191,7 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
 
     for text in [readme, dev]:
         assert "Python 3.12-3.14" in text
-        assert "repository toolchain is pinned to Rust 1.97.1" in text
+        assert "repository toolchain is pinned to Rust 1.98.0" in text
         assert "not a permanent MSRV promise" in text
 
     assert "Current release baseline: NautilusTrader v1.230.0 latest release" not in readme

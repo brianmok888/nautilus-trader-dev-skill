@@ -33,7 +33,7 @@ All moving averages extend `MovingAverage(Indicator)` and share: `period`, `valu
 | `DoubleExponentialMovingAverage` | `period` | DEMA: 2*EMA1 - EMA2 for reduced lag | `average::dema` |
 | `WeightedMovingAverage` | `period, weights=None` | Weighted average with custom or linear weights | `average::wma` |
 | `HullMovingAverage` | `period` | Alan Hull's fast smooth MA using nested WMAs | `average::hma` |
-| `AdaptiveMovingAverage` | `period_er, period_alpha_fast, period_alpha_slow` | Kaufman AMA adapting to noise via EfficiencyRatio | `average::ama` |
+| `AdaptiveMovingAverage` | `period_efficiency_ratio (>=2), period_fast, period_slow` | Kaufman AMA adapting to noise via EfficiencyRatio | `average::ama` |
 | `WilderMovingAverage` | `period` | EMA variant with alpha = 1/period (Wilder smoothing) | `average::rma` |
 | `VariableIndexDynamicAverage` | `period, cmo_ma_type=SIMPLE` | VIDYA: EMA with dynamic alpha from Chande Momentum Oscillator | `average::vidya` |
 
@@ -54,7 +54,7 @@ Additional Rust-only averages: `average::lr` (linear regression MA), `average::v
 | `ChandeMomentumOscillator` | `period, ma_type=WILDER` | `value` (-100..100) | CMO: momentum with overbought/oversold at +/-50 | `momentum::cmo` |
 | `Stochastics` | `period_k, period_d, slowing=1, ma_type=EXP, d_method="ratio"` | `value_k, value_d` | %K/%D oscillator; supports "ratio" and "moving_average" D methods | `momentum::stochastics` |
 | `CommodityChannelIndex` | `period, scalar=0.015, ma_type=SIMPLE` | `value` | CCI: deviation of typical price from its MA | `momentum::cci` |
-| `EfficiencyRatio` | `period` | `value` (0-1) | Kaufman ER: net price change / sum of absolute changes | `ratio::efficiency_ratio` |
+| `EfficiencyRatio` | `period (>=2)` | `value` (0-1) | Kaufman ER: \|P(t)−P(t−n)\| / sum of \|ΔP\| over the n price changes in the window (initialized after n inputs) | `ratio::efficiency_ratio` |
 | `RelativeVolatilityIndex` | `period, scalar=100, ma_type=EXP` | `value` (0-100) | RVI: standard deviation direction tracker | `momentum::rvi` (volatility crate) |
 | `PsychologicalLine` | `period, ma_type=SIMPLE` | `value` (0-100) | Percentage of bars closing above prior close | `momentum::psl` |
 

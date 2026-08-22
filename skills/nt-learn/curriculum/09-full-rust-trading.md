@@ -56,7 +56,7 @@ ustr = "1"
 | `defi` | `nautilus-model` | DeFi data types (implies `high-precision`) |
 
 Rust toolchain: follow the checked-out `rust-toolchain.toml`; source-aligned
-work as of 2026-07-28 uses Rust 1.97.1. Older 1.96.x release/docs
+work as of 2026-08-22 uses Rust 1.98.0. Older 1.97.x release/docs
 references are lag notes unless the checked-out repository pins them.
 
 ## Writing a Rust Actor

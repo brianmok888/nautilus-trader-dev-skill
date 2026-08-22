@@ -44,9 +44,10 @@ def test_current_developer_guide_inventory_matches_pinned_upstream() -> None:
         "markdown_style.md",
         "plugins.md",
         "python.md",
-        "release_security.md",
         "releases.md",
         "rust.md",
+        "security.md",
+        "shell.md",
         "spec_data_testing.md",
         "spec_exec_testing.md",
         "test_datasets.md",
@@ -153,7 +154,7 @@ def test_reports_missing_required_guide_files(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
-        "missing required guide file: references/developer_guide/release_security.md"
+        "missing required guide file: references/developer_guide/security.md"
         in result.errors
     )
     assert (
@@ -730,14 +731,14 @@ def test_reports_missing_current_reference_deltas(tmp_path: Path) -> None:
     )
     assert (
         "missing current guide delta 'Trusted Publishing' "
-        "in references/developer_guide/release_security.md" in result.errors
+        "in references/developer_guide/security.md" in result.errors
     )
     assert (
-        "missing current guide delta 'Python v2 live callback routing' "
+        "missing current guide delta 'Python live callback routing' "
         "in references/developer_guide/python.md" in result.errors
     )
     assert (
-        "missing current guide delta 'Typed CVec wrappers and Send' "
+        "missing current guide delta '`CVec` ownership' "
         "in references/developer_guide/ffi.md" in result.errors
     )
 
@@ -766,17 +767,22 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "Sigstore\n"
             + "SLSA posture\n"
             + "cosign\n"
-            + "Python v2 live callback routing\n"
+            + "Python live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
             + "Generated FFI bindings and precision mode\n"
-            + "HIGH_PRECISION=true\n"
-            + "Typed CVec wrappers and Send\n"
-            + "Rust-owned CVec capsules with explicit drop\n"
+            + "Propagate `high-precision`\n"
+            + "`CVec` ownership\n"
+            + "CVec::into_vec\n"
+            + "CVec::as_slice\n"
+            + 'TAG="v$VERSION"\n'
+            + "REPO=nautechsystems/nautilus_trader\n"
+            + "gh attestation verify\n"
+            + "pyo3-stub-gen\n"
             + "Do not copy current version numbers\n"
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
-            + "Generated Python artifacts make py-stubs-v2 uv version pinned by `required-version` bon::bon try_order.\n"
-            + "rust-toolchain.toml 1.97.1 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
+            + "Generated Python artifacts make py-stubs uv version pinned by `required-version` bon::bon try_order.\n"
+            + "rust-toolchain.toml 1.98.0 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
@@ -798,7 +804,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
-        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.97.1 "
+        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.98.0 "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -1054,7 +1060,7 @@ def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
         "ExecTesterConfig::new(...).\n",
     )
     write(
-        tmp_path / "references/developer_guide/release_security.md",
+        tmp_path / "references/developer_guide/security.md",
         "Fish-compatible example.\n",
     )
     write(tmp_path / "skills/nt-dev/SKILL.md", "Run Rust checks.\n")
@@ -1074,11 +1080,11 @@ def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
         "in references/developer_guide/spec_exec_testing.md" in result.errors
     )
     assert (
-        "missing latest upstream delta 'export TAG=' "
-        "in references/developer_guide/release_security.md" in result.errors
+        'missing latest upstream delta \'TAG="v$VERSION\"\' '
+        "in references/developer_guide/security.md" in result.errors
     )
     assert (
-        "missing latest skill alignment 'make py-stubs-v2' in skills/nt-dev/SKILL.md"
+        "missing latest skill alignment 'make py-stubs' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -1966,8 +1972,8 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
     write(
         tmp_path / "references/developer_guide/rust.md",
-        "Rust guidance with rust-toolchain.toml 1.97.1 "
-        "Generated Python bindings HIGH_PRECISION=true py-stubs-v2 "
+        "Rust guidance with rust-toolchain.toml 1.98.0 "
+        "Generated Python bindings Propagate `high-precision` py-stubs "
         "ffi,python,high-precision,defi "
         "arrow,ffi,python,high-precision,streaming,defi.\n",
     )
@@ -1976,7 +1982,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
 
     assert result.ok is False
     assert (
-        "missing NT v2 cutover term 'v1.230.0' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term 'v1.231.0' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -1984,7 +1990,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
-        "missing NT v2 cutover term '1.97.1' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term '1.98.0' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -2003,7 +2009,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
 
 def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -> None:
     write(
-        tmp_path / "references/developer_guide/release_security.md",
+        tmp_path / "references/developer_guide/security.md",
         "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "
         "gh attestation verify.\n"
         "```bash\n"
@@ -2018,14 +2024,14 @@ def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -
 
     assert result.ok is False
     assert (
-        "invalid release-security bash example in references/developer_guide/release_security.md"
+        "invalid release-security bash example in references/developer_guide/security.md"
         in result.errors
     )
 
 
 def test_accepts_release_security_bash_array_assignments(tmp_path: Path) -> None:
     write(
-        tmp_path / "references/developer_guide/release_security.md",
+        tmp_path / "references/developer_guide/security.md",
         "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "
         "gh attestation verify.\n"
         "```bash\n"
@@ -2038,7 +2044,7 @@ def test_accepts_release_security_bash_array_assignments(tmp_path: Path) -> None
     result = run_checks(tmp_path)
 
     assert (
-        "invalid release-security bash example in references/developer_guide/release_security.md"
+        "invalid release-security bash example in references/developer_guide/security.md"
         not in result.errors
     )
 
@@ -2120,18 +2126,18 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "pip-audit maturin\n"
         ),
         "rust.md": (
-            "rust-toolchain.toml 1.97.1 "
-            "Generated FFI bindings and precision mode HIGH_PRECISION=true\n"
-            "Generated Python artifacts make py-stubs-v2 bon::bon try_order.\n"
+            "rust-toolchain.toml 1.98.0 "
+            "Generated FFI bindings and precision mode Propagate `high-precision`\n"
+            "Generated Python artifacts make py-stubs bon::bon try_order.\n"
             "Generated Python bindings arrow,ffi,python,high-precision,streaming,defi\n"
             "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
         ),
         "python.md": (
-            "Python v2 live callback routing Do not call `Python::attach` "
+            "Python live callback routing Do not call `Python::attach` "
             "from Tokio worker tasks\n"
         ),
-        "ffi.md": "Typed CVec wrappers and Send Rust-owned CVec capsules with explicit drop\n",
-        "release_security.md": "Trusted Publishing Sigstore SLSA posture cosign export TAG= export REPO= gh attestation verify\n",
+        "ffi.md": "`CVec` ownership CVec::into_vec CVec::as_slice\n",
+        "security.md": 'Trusted Publishing Sigstore SLSA posture cosign TAG="v$VERSION" REPO=nautechsystems/nautilus_trader gh attestation verify\n',
     }
     for name in CURRENT_DEV_GUIDE_FILES:
         write(
@@ -2196,8 +2202,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         tmp_path / "skills/nt-dev/SKILL.md",
         "NT v2 compatibility note: legacy Cython/v1 reference-only; "
         "prefer Rust v2/PyO3 for new work.\n"
-        "Rust-oriented v2.0 readiness: v1.230.0 latest release, 1.231.0 develop source, "
-        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.97.1. "
+        "Rust-oriented v2.0 readiness: v1.231.0 latest release, 1.231.0 develop source, "
+        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.98.0. "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         "Do not copy current version numbers into docs. Generated FFI bindings and precision mode "
@@ -2205,8 +2211,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Tokio worker threads from running Python code. Typed CVec wrappers and Send are required "
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
-        "v1.230.0 rust-toolchain.toml 1.97.1 "
-        "Generated Python artifacts make py-stubs-v2 arrow,ffi,python,high-precision,streaming,defi.\n"
+        "v1.231.0 rust-toolchain.toml 1.98.0 "
+        "Generated Python artifacts make py-stubs arrow,ffi,python,high-precision,streaming,defi.\n"
         "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -2225,7 +2231,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "prefer Rust v2/PyO3 for new work.\n"
         "Rust-oriented v2.0 readiness rejects unlabelled legacy/Cython/v1 guidance. "
         "Review LiveNode for Rust v2 and TradingNode as Python live/integration-specific. "
-        "Generated Python artifacts make py-stubs-v2. Python v2 config stub/readback drift, "
+        "Generated Python artifacts make py-stubs. Python v2 config stub/readback drift, "
         "subclassable PyO3 stubs, v2 wranglers, raw fixed-point overflow, RecencyMap, "
         "DataActor, and message bus.\n",
     )
@@ -2268,12 +2274,17 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "Sigstore\n"
             + "SLSA posture\n"
             + "cosign\n"
-            + "Python v2 live callback routing\n"
+            + "Python live callback routing\n"
             + "Do not call `Python::attach` from Tokio worker tasks\n"
             + "Generated FFI bindings and precision mode\n"
-            + "HIGH_PRECISION=true\n"
-            + "Typed CVec wrappers and Send\n"
-            + "Rust-owned CVec capsules with explicit drop\n"
+            + "Propagate `high-precision`\n"
+            + "`CVec` ownership\n"
+            + "CVec::into_vec\n"
+            + "CVec::as_slice\n"
+            + 'TAG="v$VERSION"\n'
+            + "REPO=nautechsystems/nautilus_trader\n"
+            + "gh attestation verify\n"
+            + "pyo3-stub-gen\n"
             + "Do not copy current version numbers\n"
             + "current version numbers into docs\n"
             + "pip-audit\n"
@@ -2282,8 +2293,8 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "synchronous adapter code can use get_runtime().block_on() to call an async function.\n"
             + "Never use `block_on` in trait methods for DataClient or ExecutionClient; spawn the operation and return.\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
-            + "Generated Python artifacts make py-stubs-v2 bon::bon try_order.\n"
-            + "rust-toolchain.toml 1.97.1 Generated Python bindings HIGH_PRECISION=true py-stubs-v2.\n"
+            + "Generated Python artifacts make py-stubs bon::bon try_order.\n"
+            + "rust-toolchain.toml 1.98.0 Generated Python bindings Propagate `high-precision` py-stubs.\n"
             + "2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
