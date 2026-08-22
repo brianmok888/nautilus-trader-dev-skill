@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "0b510411b18e51ed9852e48e2656190d627e21bc33f8308c0001ad24f6f489f2",
+  "owned_content_sha256": "922556b91e0c6eb25cf74744f389883ddd261bf8f1a9b4f20b89d7efdb45bc0b",
   "schema_version": 2,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
@@ -12,10 +12,14 @@
         "pytest",
         "-q",
         "tests/test_dev_guide_sync.py",
-        "tests/test_v2_guidance_hardening.py"
+        "tests/test_v2_guidance_hardening.py",
+        "tests/test_v2_strategy_routing_scope.py",
+        "tests/test_v2_dex_template_policy.py",
+        "tests/test_v2_inventory_pins_versions.py",
+        "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.162038,
+      "duration_seconds": 1.970874,
       "returncode": 0
     },
     {
@@ -25,11 +29,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.633443,
+      "duration_seconds": 0.641425,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-21T15:02:44.722100+00:00"
+  "verified_at": "2026-08-21T22:07:59.521839+00:00"
 }

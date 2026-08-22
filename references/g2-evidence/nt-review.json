@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "f1c42453ba15ac16f1ef37daf29486e0ec0f346b6af38a35f3ee89a7c07940aa",
+  "owned_content_sha256": "6f44f16e079e6153eb5604529f7192e932c8750caede3d9df572191ca762e234",
   "schema_version": 2,
   "scope": "repository:review-policy-plus-upstream-safety-owners",
   "skill": "nt-review",
@@ -13,10 +13,14 @@
         "-q",
         "tests/test_dev_guide_sync.py",
         "tests/test_template_classification.py",
-        "tests/test_v2_guidance_hardening.py"
+        "tests/test_v2_guidance_hardening.py",
+        "tests/test_v2_strategy_routing_scope.py",
+        "tests/test_v2_dex_template_policy.py",
+        "tests/test_v2_inventory_pins_versions.py",
+        "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.294363,
+      "duration_seconds": 2.363556,
       "returncode": 0
     },
     {
@@ -34,11 +38,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.364199,
+      "duration_seconds": 1.543909,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "verified_at": "2026-08-21T15:02:51.635650+00:00"
+  "verified_at": "2026-08-21T22:08:04.362422+00:00"
 }
