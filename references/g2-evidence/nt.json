@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "e92898267c767b3d0376c37d2956219f10ebcfbe5b4b9e174e0c96ccf43f9bb8",
+  "owned_content_sha256": "30e960de55d23d8e411edae8cf30a62e773c47a8de5a3cc17d87f0df21d76298",
   "schema_version": 2,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
@@ -19,7 +19,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.882469,
+      "duration_seconds": 2.523663,
       "returncode": 0
     },
     {
@@ -29,11 +29,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.606258,
+      "duration_seconds": 0.743448,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "baa667bc3c57cd3f639d9722b6fd592e4fcde36f",
-  "verified_at": "2026-08-22T08:33:15.900251+00:00"
+  "verified_at": "2026-08-22T09:37:46.223575+00:00"
 }
