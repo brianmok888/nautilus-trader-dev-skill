@@ -493,13 +493,12 @@ Current Rust differences:
 - Rust does not yet expose `certs_dir`.
 - Rust does not use `instrument_config`; it scopes instruments with direct filter fields on `BetfairDataConfig`.
 - Rust uses a fixed 36,000 second keep-alive interval.
-- Rust currently requires `stream_heartbeat_ms`; it does not accept `None` to omit the heartbeat.
+- Rust currently requires `stream_heartbeat_secs`; it does not accept `None` to omit the heartbeat.
 
-NT v2 compatibility note: the differences above describe the pinned baseline `6e59fd74ea`.
-Upstream commit `74d57e7e05` (reviewed develop tip `2114cf6f76`) renamed the stream heartbeat
-pair to `stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and
-Python surfaces, so the heartbeat requirement above is historical for current develop. See the
-v2 integration guide for current guidance.
+NT v2 compatibility note: the differences above describe the pinned baseline `baa667bc`, which
+includes upstream commit `74d57e7e05` renaming the stream heartbeat pair to
+`stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and Python
+surfaces. Older pins through `6e59fd74ea` used the `stream_heartbeat_ms` millisecond spelling.
 
 :::
 
@@ -538,13 +537,12 @@ Current Rust differences:
 - If `reconcile_market_ids_only=False`, Rust currently falls back to `stream_market_ids_filter`
   for startup reconciliation when `reconcile_market_ids` is unset.
 - Rust currently applies `ignore_external_orders` only to OCM updates with no `rfo`.
-- Rust currently requires `stream_heartbeat_ms`; it does not accept `None` to omit the heartbeat.
+- Rust currently requires `stream_heartbeat_secs`; it does not accept `None` to omit the heartbeat.
 
-NT v2 compatibility note: the differences above describe the pinned baseline `6e59fd74ea`.
-Upstream commit `74d57e7e05` (reviewed develop tip `2114cf6f76`) renamed the stream heartbeat
-pair to `stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and
-Python surfaces, so the heartbeat requirement above is historical for current develop. See the
-v2 integration guide for current guidance.
+NT v2 compatibility note: the differences above describe the pinned baseline `baa667bc`, which
+includes upstream commit `74d57e7e05` renaming the stream heartbeat pair to
+`stream_heartbeat_secs`/`stream_heartbeat_timeout_secs` in seconds on both the Rust and Python
+surfaces. Older pins through `6e59fd74ea` used the `stream_heartbeat_ms` millisecond spelling.
 
 :::
 

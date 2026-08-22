@@ -1432,7 +1432,7 @@ def _check_coinbase_status(root: Path, errors: list[str]) -> None:
             errors.append(f"stale Coinbase integration status in {relative.as_posix()}")
 
 
-def _check_release_security_bash_examples(root: Path, errors: list[str]) -> None:
+def _check_security_bash_examples(root: Path, errors: list[str]) -> None:
     relative = Path("references/developer_guide/security.md")
     absolute = root / relative
     if not absolute.exists():
@@ -1482,7 +1482,7 @@ def run_checks(root: Path) -> CheckResult:
     _check_coinbase_status(root, errors)
     _check_secret_ignore_patterns(root, errors)
     _check_security_guidance(root, errors)
-    _check_release_security_bash_examples(root, errors)
+    _check_security_bash_examples(root, errors)
     _check_python_shebang_positions(root, errors)
     _check_python_fence_compatibility_labels(root, errors)
     _check_duplicate_compatibility_labels(root, errors)

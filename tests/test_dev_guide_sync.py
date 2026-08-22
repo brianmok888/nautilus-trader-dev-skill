@@ -2007,7 +2007,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     )
 
 
-def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -> None:
+def test_reports_security_fish_syntax_in_bash_examples(tmp_path: Path) -> None:
     write(
         tmp_path / "references/developer_guide/security.md",
         "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "
@@ -2029,7 +2029,7 @@ def test_reports_release_security_fish_syntax_in_bash_examples(tmp_path: Path) -
     )
 
 
-def test_accepts_release_security_bash_array_assignments(tmp_path: Path) -> None:
+def test_accepts_security_bash_array_assignments(tmp_path: Path) -> None:
     write(
         tmp_path / "references/developer_guide/security.md",
         "trusted publishing Sigstore SLSA provenance cosign export TAG= export REPO= "

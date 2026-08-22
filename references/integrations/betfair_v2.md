@@ -316,10 +316,9 @@ keep-alive interval.
 | `use_market_version`                | `False`       | Attach market version to place and replace requests.   |
 | `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post‑reconnect mass‑status reconciliation. |
 
-NT v2 compatibility note: current-develop overlay. The `stream_heartbeat_secs` and
-`stream_heartbeat_timeout_secs` names (seconds) reflect upstream commit `74d57e7e05` (reviewed
-develop tip `2114cf6f76`); the reproducible pinned baseline `6e59fd74ea` uses the pre-rename
-millisecond spellings.
+NT v2 compatibility note: the `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs` names
+(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `baa667bc`;
+older pins through `6e59fd74ea` used the pre-rename millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
 
 ## Cutover plan

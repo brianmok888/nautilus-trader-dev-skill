@@ -6,7 +6,7 @@
 
 Review date: 2026-08-22
 Reviewed upstream develop: `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`
-Pinned G2 baseline: `6e59fd74eaacacbb7410936f1766bd89fcce6f59`
+Pinned G2 baseline: `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`
 
 NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance.
 
@@ -173,6 +173,8 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
+2026-08-22 — P2 — CORRECTED: reconciled independent-review misses from the baa667bc pin move — Findings.md header still pinned to 6e59fd74 full-sha, five integration/adapter guides still labelling in-pin commits (74d57e7e05, 70ce722a4e, e8daa045ab, 7214db4239, 68975d9347, e166a5e57c) as develop-only overlays, nt-testing full-sha historical boundary, stale release_security helper/test names — files: docs/tracking/Findings.md, skills/nt-testing/SKILL.md, skills/nt-adapters/references/guides/official_adapter_spec.md, skills/nt-live/references/guides/run_rust_live_trading.md, skills/nt-adapters/references/integrations/{betfair,betfair_v2,lighter}.md, references/integrations/{betfair,betfair_v2,lighter}.md, tools/check_dev_guide_sync.py, tests/test_dev_guide_sync.py
+
 2026-08-21 — P2 — MODIFIED: scoped the v1 Betfair guides' current-tense stream-heartbeat claims to the pinned baseline (NT-2026-08-21-08) — files: references/integrations/betfair.md, skills/nt-adapters/references/integrations/betfair.md, tests/test_v2_guidance_hardening.py
 
 

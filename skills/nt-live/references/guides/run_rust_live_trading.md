@@ -151,9 +151,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Owned and hosted run modes (Python `LiveNode`)
 
-NT v2 compatibility note: current-develop overlay. Upstream commit `e166a5e57c` (reviewed develop
-tip `2114cf6f76`) finalized two run modes for the Python `LiveNode`; the pinned baseline
-`6e59fd74ea` still exposes the historical `start`/`poll` entry points.
+NT v2 compatibility note: upstream commit `e166a5e57c` finalized two run modes for the Python
+`LiveNode` and is included in the pinned baseline `baa667bc`; older pins through `6e59fd74ea`
+still exposed the historical `start`/`poll` entry points.
 
 - `run()`: the node owns the calling thread and installs its own `SIGINT`/`SIGTERM` handling. Use
   it for standalone processes.

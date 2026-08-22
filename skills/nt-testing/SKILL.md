@@ -20,7 +20,7 @@ immutable snapshot now contains the contracts that previously differed from
 older pins: at develop commit `45903fc8b925adae6323035fb0b4fb5b49b4f89b` the
 book-depth request toggles landed, and change commit
 `184e231f192ea7410aeb7730d6118fedfdf2c4d7` introduced the precision-close
-contract. Older pins through `6e59fd74eaacacbb7410936f1766bd89fcce6f59` lack
+contract. Older pins through `6e59fd74ea` lack
 these; the version-scoped notes below remain for reviewers whose baseline
 differs from the pinned snapshot:
 

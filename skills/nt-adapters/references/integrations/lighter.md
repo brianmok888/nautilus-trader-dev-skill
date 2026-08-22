@@ -52,10 +52,9 @@ cargo run --example lighter-data-tester --package nautilus-lighter --features ex
 cargo run --example lighter-exec-tester --package nautilus-lighter --features examples
 ```
 
-NT v2 compatibility note: current-develop overlay. The immediate-startup tester convention above
-reflects upstream commits `e8daa045ab` and `7214db4239` (reviewed develop tip `2114cf6f76`); the
-reproducible pinned baseline `6e59fd74ea` still uses the historical CLI opt-in convention.
-Treat the immediate-startup convention as current guidance.
+NT v2 compatibility note: the immediate-startup tester convention above reflects upstream
+commits `e8daa045ab` and `7214db4239`, included in the pinned baseline `baa667bc`; older pins
+through `6e59fd74ea` used the historical CLI opt-in convention.
 
 :::warning
 Examples can connect to live venues. Execution examples with live order flow enabled can submit
