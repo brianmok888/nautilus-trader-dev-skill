@@ -232,6 +232,18 @@ def test_ignores_omx_runtime_context(tmp_path: Path) -> None:
     )
 
 
+def test_ignores_nested_worktree_checkouts(tmp_path: Path) -> None:
+    write(
+        tmp_path / ".worktrees/mission-x/docs/tracking/Findings.md",
+        "Historical notes may mention references/guides/spec_exec_testing.md.\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert not any(
+        ".worktrees/mission-x" in error for error in result.errors
+    )
+
 def test_ignores_hidden_superpowers_sdd_scratch(tmp_path: Path) -> None:
     write(
         tmp_path / ".superpowers/sdd/task-notes.md",

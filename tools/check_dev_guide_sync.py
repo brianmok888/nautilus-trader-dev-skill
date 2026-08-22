@@ -779,6 +779,8 @@ def _iter_checked_markdown_files(root: Path) -> list[Path]:
             continue
         if relative.parts and relative.parts[0] == ".omx":
             continue
+        if relative.parts and relative.parts[0] == ".worktrees":
+            continue
         if relative.parts[:2] == (".superpowers", "sdd"):
             continue
         if relative.parts[:2] == ("docs", "superpowers"):
