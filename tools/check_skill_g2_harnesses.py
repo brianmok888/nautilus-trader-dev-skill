@@ -100,6 +100,10 @@ HARNESSES: dict[str, Harness] = {
         allowed_tokens=(
             "test_dev_guide_sync.py",
             "test_v2_guidance_hardening.py",
+            "test_v2_strategy_routing_scope.py",
+            "test_v2_dex_template_policy.py",
+            "test_v2_inventory_pins_versions.py",
+            "test_v2_current_develop_overlays.py",
             "--check-card-declarations",
         ),
         steps=(
@@ -110,6 +114,10 @@ HARNESSES: dict[str, Harness] = {
                 "-q",
                 "tests/test_dev_guide_sync.py",
                 "tests/test_v2_guidance_hardening.py",
+                "tests/test_v2_strategy_routing_scope.py",
+                "tests/test_v2_dex_template_policy.py",
+                "tests/test_v2_inventory_pins_versions.py",
+                "tests/test_v2_current_develop_overlays.py",
             ),
             repository_step(
                 PYTHON,
@@ -121,6 +129,10 @@ HARNESSES: dict[str, Harness] = {
             Path("skills/nt/SKILL.md"),
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_v2_guidance_hardening.py"),
+            Path("tests/test_v2_strategy_routing_scope.py"),
+            Path("tests/test_v2_dex_template_policy.py"),
+            Path("tests/test_v2_inventory_pins_versions.py"),
+            Path("tests/test_v2_current_develop_overlays.py"),
             Path("tools/check_skill_g2_harnesses.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt.json"),
@@ -388,7 +400,7 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-review",
         scope="repository:review-policy-plus-upstream-safety-owners",
         summary="Run review-policy gates and compile Rust safety/binding owners",
-        allowed_tokens=("test_dev_guide_sync.py", "test_template_classification.py", "test_v2_guidance_hardening.py", "nautilus-core", "nautilus-model", "nautilus-pyo3"),
+        allowed_tokens=("test_dev_guide_sync.py", "test_template_classification.py", "test_v2_guidance_hardening.py", "test_v2_strategy_routing_scope.py", "test_v2_dex_template_policy.py", "test_v2_inventory_pins_versions.py", "test_v2_current_develop_overlays.py", "nautilus-core", "nautilus-model", "nautilus-pyo3"),
         steps=(
             repository_step(
                 PYTHON,
@@ -398,6 +410,10 @@ HARNESSES: dict[str, Harness] = {
                 "tests/test_dev_guide_sync.py",
                 "tests/test_template_classification.py",
                 "tests/test_v2_guidance_hardening.py",
+                "tests/test_v2_strategy_routing_scope.py",
+                "tests/test_v2_dex_template_policy.py",
+                "tests/test_v2_inventory_pins_versions.py",
+                "tests/test_v2_current_develop_overlays.py",
             ),
             upstream_step(
                 "cargo",
@@ -418,6 +434,10 @@ HARNESSES: dict[str, Harness] = {
             Path("tests/test_dev_guide_sync.py"),
             Path("tests/test_template_classification.py"),
             Path("tests/test_v2_guidance_hardening.py"),
+            Path("tests/test_v2_strategy_routing_scope.py"),
+            Path("tests/test_v2_dex_template_policy.py"),
+            Path("tests/test_v2_inventory_pins_versions.py"),
+            Path("tests/test_v2_current_develop_overlays.py"),
         ),
         evidence_file=Path("references/g2-evidence/nt-review.json"),
     ),
