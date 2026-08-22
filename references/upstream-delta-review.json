@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_ref": "origin/develop",
   "pinned_commit": "6e59fd74eaacacbb7410936f1766bd89fcce6f59",
-  "reviewed_commit": "2114cf6f761429e0adb5ca9596fcd7b895b16011",
-  "reviewed_on": "2026-08-21",
+  "reviewed_commit": "baa667bc3c57cd3f639d9722b6fd592e4fcde36f",
+  "reviewed_on": "2026-08-22",
   "deltas": [
     {
       "commit": "d46f56505a8675ae49025bc6abaa851d33f60c56",
@@ -11168,6 +11168,139 @@
         "RELEASES.md"
       ],
       "no_impact_rationale": "Reviewed on 2026-08-21; implementation, test, maintenance, or already-covered documentation delta requires no additional durable skill guidance."
+    },
+    {
+      "commit": "77d3146e00418a73f5520e83ddf0a12f3cdf4cb1",
+      "subject": "Bump version",
+      "upstream_paths": [
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "Makefile",
+        "RELEASES.md",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/core/build.rs",
+        "docs/concepts/rust.md",
+        "docs/how_to/run_rust_backtest.md",
+        "docs/how_to/run_rust_live_trading.md",
+        "python/pyproject.toml",
+        "python/uv.lock",
+        "scripts/check-cargo-cooldown.sh",
+        "scripts/test-check-cargo-cooldown.bash",
+        "scripts/test-update-cargo-dependencies.bash",
+        "scripts/update-cargo-dependencies.bash",
+        "version.json"
+      ],
+      "affected_files": [
+        "README.md",
+        "skills/nt-live/SKILL.md",
+        "skills/nt-dev/SKILL.md"
+      ]
+    },
+    {
+      "commit": "d4891c6caa50d195b4998efe8ecc80f4e8502efa",
+      "subject": "Fix nightly merge build selection",
+      "upstream_paths": [
+        ".github/workflows/nightly-merge.yml",
+        "scripts/ci/check-nightly-merge-status.bash",
+        "scripts/ci/test-check-nightly-merge-status.bash"
+      ],
+      "no_impact_rationale": "No files in this commit affect the repository skills, references, templates, or documented Rust-first migration guidance."
+    },
+    {
+      "commit": "9140146e5dd9de81830f417f422976474135b75d",
+      "subject": "Upgrade Rust",
+      "upstream_paths": [
+        ".docker/DockerfileUbuntu",
+        ".docker/nautilus_trader.dockerfile",
+        "Cargo.toml",
+        "README.md",
+        "RELEASES.md",
+        "crates/infrastructure/src/redis/cache.rs",
+        "docs/concepts/rust.md",
+        "docs/tutorials/lighter_rwa_composite_mm.md",
+        "examples/quickstarts/lighter-rust-data-client/Cargo.toml",
+        "rust-toolchain.toml",
+        "scripts/ci/test-check-docker-toolchain-pins.bash",
+        "scripts/ci/test-rust-toolchain.bash"
+      ],
+      "affected_files": [
+        "README.md",
+        "docs/end_to_end_guide.md",
+        "skills/nt-dev/SKILL.md",
+        "skills/nt-learn/curriculum/09-full-rust-trading.md",
+        "skills/nt-live/references/concepts/rust.md"
+      ]
+    },
+    {
+      "commit": "0986489bb7777e706f841b2668192f8b53da4b0f",
+      "subject": "Upgrade DataFusion and Arrow dependencies",
+      "upstream_paths": [
+        ".supply-chain/audits.toml",
+        ".supply-chain/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "RELEASES.md",
+        "crates/adapters/blockchain/Cargo.toml",
+        "crates/adapters/derive/src/http/query.rs",
+        "crates/backtest/src/result.rs",
+        "crates/cli/Cargo.toml",
+        "crates/serialization/src/arrow/bar.rs",
+        "crates/serialization/src/arrow/close.rs",
+        "crates/serialization/src/arrow/delta.rs",
+        "crates/serialization/src/arrow/index_price.rs",
+        "crates/serialization/src/arrow/mark_price.rs",
+        "crates/serialization/src/arrow/mod.rs",
+        "crates/serialization/src/arrow/quote.rs",
+        "crates/serialization/src/arrow/trade.rs",
+        "deny.toml",
+        "patches/README.md",
+        "patches/arrow-compat/Cargo.toml",
+        "patches/arrow-compat/src/lib.rs",
+        "patches/parquet-compat/Cargo.toml",
+        "patches/parquet-compat/src/lib.rs"
+      ],
+      "no_impact_rationale": "Repository guidance does not pin DataFusion, Arrow, or Parquet dependency versions, so the upgrade and patches/* shims do not change taught contracts."
+    },
+    {
+      "commit": "5e2936bebc2ab15fab0551c0e05ad98ad75bab6a",
+      "subject": "Fix Efficiency Ratio windowing",
+      "upstream_paths": [
+        "crates/indicators/src/average/ama.rs",
+        "crates/indicators/src/python/average/ama.rs",
+        "crates/indicators/src/python/ratio/efficiency_ratio.rs",
+        "crates/indicators/src/ratio/efficiency_ratio.rs",
+        "python/tests/unit/indicators/test_efficiency_ratio.py"
+      ],
+      "affected_files": [
+        "skills/nt-signals/references/guides/indicators_guide.md"
+      ]
+    },
+    {
+      "commit": "e4d3ac7f3712916ca12d61c81c464d7ef66aa422",
+      "subject": "Support Python fee models in simulation configs",
+      "upstream_paths": [
+        "crates/adapters/sandbox/tests/execution.rs",
+        "crates/execution/src/models/fee.rs",
+        "crates/execution/src/python/fee.rs",
+        "docs/integrations/polymarket.md",
+        "python/tests/unit/adapters/sandbox/test_sandbox_factories.py",
+        "python/tests/unit/backtest/test_backtest_configs.py"
+      ],
+      "affected_files": [
+        "skills/nt-dev/SKILL.md",
+        "skills/nt-testing/SKILL.md"
+      ]
+    },
+    {
+      "commit": "baa667bc3c57cd3f639d9722b6fd592e4fcde36f",
+      "subject": "Add fill voided order event topic",
+      "upstream_paths": [
+        "crates/common/src/msgbus/switchboard.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/tests/exec_engine.rs"
+      ],
+      "no_impact_rationale": "Skills teach OrderFillVoided through events, callbacks, and terminal VOIDED status rather than msgbus switchboard topic names, so the new events.order_fill_voided topic does not invalidate taught guidance."
     }
   ]
 }
