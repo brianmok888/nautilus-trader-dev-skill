@@ -83,3 +83,19 @@ def test_v1_betfair_guides_scope_heartbeat_claims_to_pinned_baseline() -> None:
 
         assert guide.count("74d57e7e05") >= 2, f"{path} lacks pinned-baseline scoping notes"
         assert "pinned baseline" in guide, f"{path} lacks pinned-baseline scoping language"
+
+
+def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:
+    for path in (
+        "skills/nt-adapters/references/integrations/betfair_v2.md",
+        "references/integrations/betfair_v2.md",
+    ):
+        guide = read(path)
+
+        assert "98e6c39d83" in guide, f"{path} lacks the socket-state overlay commit"
+        assert "betfair-data-streams" in guide and "betfair-user-streams" in guide, (
+            f"{path} lacks the stable socket endpoint labels"
+        )
+        assert "SocketReconnectRegistry" in guide, (
+            f"{path} lacks the targeted reconnect registry teaching"
+        )

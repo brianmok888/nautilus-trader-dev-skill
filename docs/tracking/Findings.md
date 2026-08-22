@@ -5,12 +5,18 @@
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
 Review date: 2026-08-22
-Reviewed upstream develop: `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`
+Reviewed upstream develop: `98e6c39d8384c91dbf0102ea581aff5313ba9811`
 Pinned G2 baseline: `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`
 
 NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance.
 
 ## Open findings
+
+[NT-2026-08-22-09] [P2] [OPEN] Pin deferral: the pinned G2 baseline `baa667bc` lags the reviewed develop tip `98e6c39d8` by one adapter-scoped commit (Betfair socket-state reporting and reconnect control).
+  file: tools/upstream_baseline.py:4
+  evidence: `python3 tools/check_upstream_freshness.py --format json` exits 0 with the delta recorded in `references/upstream-delta-review.json`; the socket-state layer is documented as a current-develop overlay in both `betfair_v2.md` copies.
+  fix: defer the full pin move (pinned-checkout bump, cargo rebuild, venv rebuild, 17-harness G2 re-execution) until the delta grows beyond adapter-scoped overlays or the next pin-cycle mission; keep overlays current in the meantime.
+  status: reviewed and deferred with overlay coverage; not blocking this mission.
 
 [NT-2026-08-21-01] [P1] [CLOSED] V2 compliance: Lighter integration guides teach the removed `--run`/`--live-orders` tester opt-in convention that current develop replaced with immediate startup.
   file: skills/nt-adapters/references/integrations/lighter.md:34
@@ -173,6 +179,8 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
+2026-08-22 — P2 — MODIFIED: added current-develop overlays for Betfair socket-state endpoints (`betfair-data-streams`/`betfair-user-streams`), `SocketReconnectRegistry` targeted reconnect with auth/subscription replay, and execution gating until replacement-stream reconciliation (upstream `98e6c39d83`) — files: skills/nt-adapters/references/integrations/betfair_v2.md, references/integrations/betfair_v2.md, tests/test_v2_current_develop_overlays.py, references/upstream-delta-review.json
+
 2026-08-22 — P3 — FIXED: check_dev_guide_sync now skips nested .worktrees checkouts when scanning markdown, so gate results no longer depend on untracked sibling worktree copies — files: tools/check_dev_guide_sync.py, tests/test_dev_guide_sync.py
 
 2026-08-22 — P2 — CORRECTED: reconciled independent-review misses from the baa667bc pin move — Findings.md header still pinned to 6e59fd74 full-sha, five integration/adapter guides still labelling in-pin commits (74d57e7e05, 70ce722a4e, e8daa045ab, 7214db4239, 68975d9347, e166a5e57c) as develop-only overlays, nt-testing full-sha historical boundary, stale release_security helper/test names — files: docs/tracking/Findings.md, skills/nt-testing/SKILL.md, skills/nt-adapters/references/guides/official_adapter_spec.md, skills/nt-live/references/guides/run_rust_live_trading.md, skills/nt-adapters/references/integrations/{betfair,betfair_v2,lighter}.md, references/integrations/{betfair,betfair_v2,lighter}.md, tools/check_dev_guide_sync.py, tests/test_dev_guide_sync.py
