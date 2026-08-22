@@ -61,6 +61,15 @@ Missions validate guidance against the **current** upstream `origin/develop`, no
 3. **Refresh the delta review whenever `reviewed_commit` differs from the resolved tip.** Review every commit in `pinned_commit..tip` that touches paths this repository teaches about, and update `references/upstream-delta-review.json` (`reviewed_commit`, `reviewed_on`, per-commit deltas). Open P1 findings for any delta that invalidates current guidance. `python3 tools/check_upstream_freshness.py --format json` must exit 0 before the mission may ship.
 4. **Move the pin when develop has moved.** Update `UPSTREAM_COMMIT` in `tools/upstream_baseline.py` to the reviewed tip, then refresh every pin-citing layer: the README pinned-baseline line, `skills/nt-learn/curriculum/` pin references, and each affected `references/g2-evidence/*.json` re-executed via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree. `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` must pass afterwards. Deferring the pin move requires an OPEN P2 finding recording the drift count and a re-run date; deferral blocks any `Pass` claim whose evidence depends on behavior newer than the pin.
 
+### Storage hygiene (build and test caches)
+
+Upstream builds and G2 harness runs are mission infrastructure, not deliverables. A full cargo workspace target plus a rebuilt Python venv can consume 30-60 GB; unmanaged caches filled the disk to 100% during a prior mission and froze every tool call. Prevent recurrence:
+
+1. **Redirect every cargo invocation** through one shared `CARGO_TARGET_DIR` under the writable upstream worktree, and name that directory `target` — upstream's `.gitignore` covers `*target/`, which keeps the checkout clean for the handguard's `git status` requirement. Never run cargo without the redirect (un-redirected runs silently create multi-GB orphan `target/` directories next to each checkout), and never use non-matching names like `target-v2`.
+2. **Check free disk before and after every build or test batch** (`df -h /`). If free space falls below 20 GB, stop and clean before continuing; a full filesystem blocks all execution, not just builds.
+3. **Clean disposable caches each time a test or build task completes**, before closing the mission, and before starting the next task segment: delete orphan `target/` directories this mission created outside the shared redirect, stale `/tmp/.tmp*` maturin and wheel temp directories, and superseded duplicate build directories. Deleting reproducible caches is always safe; rebuilds are expensive, outages are worse.
+4. **Never treat source as cache.** The pinned upstream checkout, the writable worktree's tracked files, `~/.cargo` toolchains, and everything under the skill repository are not deletable caches.
+
 ### States and stop conditions
 
 - A finding is `OPEN` until its required correction and closure proof both pass; then it becomes `CLOSED`.
@@ -271,6 +280,7 @@ Report in chat, not in a new committed artifact:
 - Exact validation commands and results.
 - Commit SHAs and the local and remote final SHA.
 - Upstream checkout cleanliness and pinned/reviewed upstream SHAs.
+- Final `df -h /` confirming disposable build caches from this mission were cleaned and free space remains above the 20 GB floor.
 - Anything still `Pending` or `Blocked`, including failed review or shipping infrastructure.
 
 ---
