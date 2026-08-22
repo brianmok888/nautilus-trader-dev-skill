@@ -1,10 +1,12 @@
 import hashlib
 from pathlib import Path
 
+from tools.upstream_baseline import UPSTREAM_COMMIT
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATH = REPO_ROOT / "skills/nt-testing/SKILL.md"
 PINNED_SPEC_PATH = REPO_ROOT / "references/developer_guide/spec_exec_testing.md"
-PINNED_SPEC_SHA256 = "6984b46a8f845603a53bf88890b5e173d62722c0d461e6fcc30090ddada6c5e5"
+PINNED_SPEC_SHA256 = "1b5ce581ea705d439739c02acc03e38438574e58abbee372c53658780351a064"
 
 
 def read(path: Path) -> str:
@@ -27,7 +29,7 @@ def test_pinned_execution_spec_snapshot_remains_immutable() -> None:
 def test_current_overlay_versions_the_execution_spec_delta() -> None:
     section = execution_freshness_section()
 
-    assert "baa667bc3c57cd3f639d9722b6fd592e4fcde36f" in section
+    assert UPSTREAM_COMMIT in section
     assert "45903fc8" in section
     assert "184e231f192ea7410aeb7730d6118fedfdf2c4d7" in section
     assert "pinned" in section.lower()

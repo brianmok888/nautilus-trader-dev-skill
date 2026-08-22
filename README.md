@@ -9,7 +9,7 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 NT v2 compatibility note: v1.x release/source labels in this baseline paragraph are release-history identifiers, not guidance to use legacy APIs.
 These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter.
 
-**Pinned reproducible baseline (verified 2026-08-22):** commit `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`, workspace crates `0.63.0`, source label `v1.231.0`, and Python package `2.0.0rc4`; the repository toolchain is pinned to Rust 1.98.0. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.231.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
+**Pinned reproducible baseline (verified 2026-08-22):** commit `98e6c39d8384c91dbf0102ea581aff5313ba9811`, workspace crates `0.63.0`, source label `v1.231.0`, and Python package `2.0.0rc4`; the repository toolchain is pinned to Rust 1.98.0. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.231.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
 
 **Current develop observation (reviewed 2026-08-08):** `origin/develop` is ahead of the reproducible pin. Develop-only guidance is labelled with its introducing commit and must not be assumed available at the pinned G2 baseline. Run `python3 tools/check_upstream_freshness.py --format json` for the current delta. Upstream is read-only ground truth for improving this skill repository.
 
@@ -174,7 +174,7 @@ uv run --with pytest pytest tests/test_dev_guide_sync.py -q
 The checker validates required local developer-guide pages, source metadata,
 stale reference paths, and high-risk NautilusTrader invariants used by the skill
 suite. The snapshot and Rust-reference commands require a NautilusTrader checkout
-at commit `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; pass its path with
+at commit `98e6c39d8384c91dbf0102ea581aff5313ba9811`; pass its path with
 `--upstream-root` when it is not available at the documented default under `/tmp`.
 
 ## Source of Truth

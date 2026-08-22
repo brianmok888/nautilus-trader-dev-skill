@@ -178,7 +178,7 @@ class MyDEXExecClientConfig(LiveExecClientConfig, frozen=True):
 
 ### Rust Core Patterns (DEX-specific)
 
-**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `baa667bc3c57cd3f639d9722b6fd592e4fcde36f` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
+**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
 ```rust
 use nautilus_common::live::get_runtime;
 
@@ -251,7 +251,7 @@ safe_gas_limit = int(estimated_gas * 1.2)
 
 ### Rust Conventions
 
-**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `baa667bc3c57cd3f639d9722b6fd592e4fcde36f` adapter test modules).
+**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811` adapter test modules).
 ```rust
 // ❌ WRONG — panics from Python threads
 tokio::spawn(async move { ... });

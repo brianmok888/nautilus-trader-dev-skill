@@ -1,28 +1,8 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "baa667bc3c57cd3f639d9722b6fd592e4fcde36f",
+  "pinned_commit": "98e6c39d8384c91dbf0102ea581aff5313ba9811",
   "reviewed_commit": "98e6c39d8384c91dbf0102ea581aff5313ba9811",
   "reviewed_on": "2026-08-22",
-  "deltas": [
-    {
-      "commit": "98e6c39d8384c91dbf0102ea581aff5313ba9811",
-      "subject": "Add Betfair socket-state reporting and reconnect control",
-      "upstream_paths": [
-        "crates/adapters/betfair/src/common/mod.rs",
-        "crates/adapters/betfair/src/common/socket.rs",
-        "crates/adapters/betfair/src/data.rs",
-        "crates/adapters/betfair/src/execution.rs",
-        "crates/adapters/betfair/src/stream/client.rs",
-        "crates/adapters/betfair/tests/common/mod.rs",
-        "crates/adapters/betfair/tests/data_client.rs",
-        "crates/adapters/betfair/tests/exec_client.rs",
-        "docs/concepts/live.md"
-      ],
-      "affected_files": [
-        "skills/nt-adapters/references/integrations/betfair_v2.md",
-        "references/integrations/betfair_v2.md"
-      ]
-    }
-  ]
+  "deltas": []
 }

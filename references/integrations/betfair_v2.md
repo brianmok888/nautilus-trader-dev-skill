@@ -116,16 +116,16 @@ connection attempt.
 The data client reconnect handler also updates the race stream auth when a race stream
 is active.
 
-NT v2 compatibility note: current-develop overlay. Upstream commit `98e6c39d83` (ahead
-of the pinned baseline `baa667bc`) adds a socket-state and reconnect-control layer on top
-of the session logic above: the data and execution clients publish transport state on the
-stable endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the
-runner as `SocketStateChanged` on `events.system.SocketStateChanged`), register
-targeted reconnects through the `SocketReconnectRegistry` with authentication and
-subscription replay, and keep the pre-existing execution reconciliation gate closed until
-the replacement stream reconciles.
-Older pins through `baa667bc` lack this layer; the session mechanisms above remain the
-pinned-baseline behavior.
+NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
+session logic above and is included in the pinned baseline `98e6c39d8` (upstream commit
+`98e6c39d83`): the data and execution clients publish transport state on the stable
+endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
+as `SocketStateChanged` on `events.system.SocketStateChanged`), register targeted
+reconnects through the `SocketReconnectRegistry` with authentication and subscription
+replay, and keep the pre-existing execution reconciliation gate closed until the
+replacement stream reconciles.
+Older pins through `baa667bc` lack this layer; the session mechanisms above are the
+complete pinned-baseline behavior there.
 
 ## Post-reconnect reconciliation
 

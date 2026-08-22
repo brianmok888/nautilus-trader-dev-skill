@@ -15,7 +15,7 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` reports PASS nt-implement with Cap'n Proto `capnp 1.0.1` available in the standard verification environment; both harness steps (pytest `tests/test_capnp_schema_precision.py` and the owning-crate `cargo check`) returned 0 on `2026-08-07T01:06:05Z`. Durable evidence: `references/g2-evidence/nt-implement.json` (`status: pass`, no `pending_reason`). A G2 `cargo check` result is compilation only; this is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -45,7 +45,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `baa667bc3c57cd3f639d9722b6fd592e4fcde36f`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `98e6c39d8384c91dbf0102ea581aff5313ba9811`.
 
 ## Overview
 
