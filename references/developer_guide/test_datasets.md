@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/test_datasets/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/test_datasets.md
-source_commit: 98e6c39d8384c91dbf0102ea581aff5313ba9811
-sync_date: 2026-08-22
+source_commit: f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f
+sync_date: 2026-08-23
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -65,7 +65,7 @@ User-fetched datasets use the same metadata fields where they apply. They should
 | ------------------- | -------------------------------------------------------------------- |
 | `distribution`      | Must be `"user-fetch"`.                                              |
 | `fetch_method`      | How the user acquires the source data (API, web portal, CLI, etc.).  |
-| `fetch_reference`   | URL or document reference for the user‑facing download flow.         |
+| `fetch_reference`   | URL or document reference for the user-facing download flow.         |
 | `auth`              | Required credentials or entitlements, if any.                        |
 | `transform_version` | Version of the local transform pipeline that builds the final files. |
 | `redistribution`    | Short note describing redistribution limits for the dataset.         |

@@ -15,9 +15,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No migration/reference-only Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `98e6c39d8384c91dbf0102ea581aff5313ba9811`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -48,7 +48,7 @@ clients. Do not copy them into a new adapter. Active Python remains limited to
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `98e6c39d8384c91dbf0102ea581aff5313ba9811`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 
@@ -218,7 +218,7 @@ See `rules/dos_and_donts.md` for the full ruleset.
 - ❌ Do not use `Arc<PyObject>` for ordinary callbacks — prefer direct `PyObject`/`Py<T>` with `clone_py_object()`; justify any exception and audit cycles, weakrefs, cleanup, and PyO3 GC hooks when applicable
 - ❌ Don't treat AMM spot price as fill price without modelling slippage
 
-Runtime-spawn rule source (upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
+Runtime-spawn rule source (upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
 
 ## Compliance Checklist
 

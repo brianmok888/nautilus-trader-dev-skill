@@ -22,6 +22,7 @@ from tools.g2_owned_content import (
 from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SHARED_TRADING_COMMAND = (
     "cargo",
     "check",
@@ -465,17 +466,15 @@ HARNESSES: dict[str, Harness] = {
         summary="Validate migration-only Python strategy/configuration references against current V2 APIs",
         allowed_tokens=(
             "skills/nt-strategy-builder/templates",
-            "skills/nt-strategy-builder/tests",
+            "tests/test_strategy_builder_v2_contract.py",
             "test_backtest.py",
             "test_live_configs.py",
         ),
         steps=(
             repository_step(
                 PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "skills/nt-strategy-builder/tests",
+                "tools/run_pinned_v2_pytest.py",
+                "tests/test_strategy_builder_v2_contract.py",
             ),
             upstream_python_step(
                 ".venv/bin/python",

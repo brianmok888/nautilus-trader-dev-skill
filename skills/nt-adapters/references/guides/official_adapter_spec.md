@@ -105,11 +105,11 @@ Build the low-level networking and parsing foundation.
 
 | Step | Component                  | Description                                                                                  |
 |------|----------------------------|----------------------------------------------------------------------------------------------|
-| 1.1  | HTTP error types           | Define HTTP‑specific error enum with retryable/non‑retryable variants (`http/error.rs`).     |
+| 1.1  | HTTP error types           | Define HTTP-specific error enum with retryable/non-retryable variants (`http/error.rs`).     |
 | 1.2  | HTTP client                | Implement credentials, request signing, rate limiting, and retry logic.                      |
 | 1.3  | HTTP API models            | Define request/response structs for REST endpoints (`http/models.rs`, `http/query.rs`).      |
 | 1.4  | HTTP parsing               | Convert venue responses to Nautilus domain models (`http/parse.rs`, `common/parse.rs`).      |
-| 1.5  | WebSocket error types      | Define WebSocket‑specific error enum (`websocket/error.rs`).                                 |
+| 1.5  | WebSocket error types      | Define WebSocket-specific error enum (`websocket/error.rs`).                                 |
 | 1.6  | WebSocket client           | Implement connection lifecycle, authentication, heartbeat, and reconnection.                 |
 | 1.7  | WebSocket messages         | Define streaming payload types (`websocket/messages.rs`).                                    |
 | 1.8  | WebSocket parsing          | Convert stream messages to Nautilus domain models (`websocket/parse.rs`).                    |
@@ -125,7 +125,7 @@ Instruments are the foundation: both data and execution clients depend on them.
 |------|----------------------------|----------------------------------------------------------------------------------------------|
 | 2.1  | Instrument parsing         | Parse venue instrument definitions into Nautilus types (spot, perpetual, future, option).    |
 | 2.2  | Instrument provider        | Implement `InstrumentProvider` to load, filter, and cache instruments.                       |
-| 2.3  | Symbol mapping             | Handle venue‑specific symbol formats and Nautilus `InstrumentId` conversion.                 |
+| 2.3  | Symbol mapping             | Handle venue-specific symbol formats and Nautilus `InstrumentId` conversion.                 |
 
 **Milestone**: `InstrumentProvider.load_all_async()` returns valid Nautilus instruments.
 
@@ -161,9 +161,9 @@ Extend coverage based on venue capabilities.
 
 | Step | Component                  | Description                                                                                  |
 |------|----------------------------|----------------------------------------------------------------------------------------------|
-| 5.1  | Advanced order types       | Conditional orders, stop‑loss, take‑profit, trailing stops, iceberg, etc.                    |
+| 5.1  | Advanced order types       | Conditional orders, stop-loss, take-profit, trailing stops, iceberg, etc.                    |
 | 5.2  | Batch operations           | Batch order submission, batch cancellation, mass cancel.                                     |
-| 5.3  | Venue‑specific features    | Options chains, funding rates, liquidations, or other venue‑specific data.                   |
+| 5.3  | Venue-specific features    | Options chains, funding rates, liquidations, or other venue-specific data.                   |
 
 ### Phase 6: Configuration and factories
 
@@ -610,7 +610,7 @@ REST report request: if it fails for any required fill, return an error from the
 request, targeted recovery, or complete mass status.
 
 NT v2 compatibility note: the fallible signature and fail-closed rule reflect upstream commit
-`68975d9347`, included in the pinned baseline `baa667bc`; older pins through `6e59fd74ea`
+`68975d9347`, included in the pinned baseline `f725e184db`; older pins through `6e59fd74ea`
 returned a bare `Option<Money>` with no error channel.
 
 #### Account state emission
@@ -1095,7 +1095,7 @@ Support both WebSocket control frame pings and application-level text pings:
 - **Text pings**: Some venues (e.g., OKX) use `"ping"`/`"pong"` text messages. Configure `heartbeat_interval_secs` and `heartbeat_payload: Some(TEXT_PING.to_string())` in `WebSocketConfig` and respond to incoming `TEXT_PING` with `TEXT_PONG` in the handler. When `heartbeat_payload` is `None` the heartbeat is an empty Ping control frame instead — a venue that counts only application-level keepalives needs the text form.
 
 NT v2 compatibility note: the field names above reflect upstream commits `70ce722a4e` and
-`74d57e7e05`, included in the pinned baseline `baa667bc`; older pins through `6e59fd74ea` used
+`74d57e7e05`, included in the pinned baseline `f725e184db`; older pins through `6e59fd74ea` used
 the pre-rename spellings.
 
 The handler should check for ping messages early in the message processing loop and respond immediately to maintain connection health.
@@ -1195,7 +1195,7 @@ Define handler-specific tuning constants for consistent behavior:
 
 | Constant                   | Purpose                                          | Typical value |
 |----------------------------|--------------------------------------------------|---------------|
-| `DEFAULT_HEARTBEAT_SECS`   | Interval for sending keep‑alive messages.        | 15-30         |
+| `DEFAULT_HEARTBEAT_SECS`   | Interval for sending keep-alive messages.        | 15-30         |
 | `WEBSOCKET_AUTH_WINDOW_MS` | Maximum age for authentication timestamps.       | 5000-30000    |
 | `BATCH_PROCESSING_LIMIT`   | Maximum messages processed per event loop cycle. | 100-1000      |
 
@@ -1433,7 +1433,7 @@ WebSocket message channels follow a two-stage transformation pipeline within the
 | Stage | Type | Description | Example |
 |-------|------|-------------|---------|
 | `raw` | Raw WebSocket frames | Bytes/text from the network layer. | `raw_rx: UnboundedReceiver<Message>` |
-| `out` | Venue‑specific messages | Parsed venue message types. | `out_tx: UnboundedSender<MyWsMessage>` |
+| `out` | Venue-specific messages | Parsed venue message types. | `out_tx: UnboundedSender<MyWsMessage>` |
 
 The handler deserializes raw frames into venue-specific types and emits them on `out_tx`.
 The data and execution client layers then convert venue types into Nautilus domain types.
@@ -1471,7 +1471,7 @@ Structs holding references to lower-level components follow these conventions:
 
 | Field         | Type                                                | Description |
 |---------------|-----------------------------------------------------|-------------|
-| `inner`       | `Option<WebSocketClient>`                           | Network‑level WebSocket client (handler only, exclusively owned). |
+| `inner`       | `Option<WebSocketClient>`                           | Network-level WebSocket client (handler only, exclusively owned). |
 | `cmd_tx`      | `Arc<tokio::sync::RwLock<UnboundedSender<...>>>`   | Command channel to handler (client side). |
 | `cmd_rx`      | `UnboundedReceiver<HandlerCommand>`                 | Command channel from client (handler side). |
 | `out_tx`      | `UnboundedSender<{Venue}WsMessage>`                 | Output channel to client (handler side). |
@@ -1711,7 +1711,7 @@ fn query_order(&self, cmd: &QueryOrder) -> anyhow::Result<()> {
 | Context                      | Why safe                                       |
 |------------------------------|------------------------------------------------|
 | PyO3 `#[pymethods]`         | Called from Python, no ambient runtime          |
-| Binary `main()` functions   | Top‑level entry point, runtime not yet started  |
+| Binary `main()` functions   | Top-level entry point, runtime not yet started  |
 | Dedicated background threads | Thread created outside tokio's worker pool     |
 | `block_in_place` wrapper    | Moves the thread out of the worker pool first   |
 | Test code with own runtime  | `Runtime::new()` creates an isolated runtime    |
@@ -1776,7 +1776,7 @@ crates/adapters/your_adapter/
 |----------------------|---------------------------------------------------------------------------------------------------------------------------|
 | `tests/data_client.rs` | Integration tests for the data client. Validates data subscriptions, historical data requests, and market data parsing.    |
 | `tests/exec_client.rs` | Integration tests for the execution client. Validates order submission, modification, cancellation, and execution reports. |
-| `tests/http.rs`      | Low‑level HTTP client tests. Validates request signing, error handling, and response parsing against mock Axum servers.    |
+| `tests/http.rs`      | Low-level HTTP client tests. Validates request signing, error handling, and response parsing against mock Axum servers.    |
 | `tests/websocket.rs` | WebSocket client tests. Validates connection lifecycle, authentication, subscriptions, and message routing.                |
 
 **Guidelines:**
@@ -1895,7 +1895,7 @@ Data (`tests/data_client.rs`) and execution (`tests/exec_client.rs`) client inte
 |------------------------------|------------------------------------------------------------------------------------|
 | Mock Axum server             | Serves HTTP endpoints (instruments, fee rates, positions) and WebSocket channels.  |
 | `TestServerState`            | Tracks connections, subscriptions, and authentication state for assertions.        |
-| Thread‑local event channels  | `set_data_event_sender()` / `set_exec_event_sender()` for capturing emitted events.|
+| Thread-local event channels  | `set_data_event_sender()` / `set_exec_event_sender()` for capturing emitted events.|
 | `wait_until_async`           | Polls conditions with timeout for deterministic async assertions.                  |
 
 **Data client coverage:**
@@ -2240,7 +2240,7 @@ class TemplateLiveMarketDataClient(LiveMarketDataClient):
 | `_subscribe_instrument`            | Subscribes to market data for a single instrument.      |
 | `_subscribe_order_book_deltas`     | Subscribes to order book delta updates.                 |
 | `_subscribe_order_book_depth`      | Subscribes to order book depth updates.                 |
-| `_subscribe_quote_ticks`           | Subscribes to top‑of‑book quote updates.                |
+| `_subscribe_quote_ticks`           | Subscribes to top-of-book quote updates.                |
 | `_subscribe_trade_ticks`           | Subscribes to trade tick updates.                       |
 | `_subscribe_mark_prices`           | Subscribes to mark price updates.                       |
 | `_subscribe_index_prices`          | Subscribes to index price updates.                      |

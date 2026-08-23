@@ -49,7 +49,7 @@ Cargo's build cache is keyed by the exact combination of features, profiles, and
 | Target                      | Features                         | Profile   | `--all-targets` | `--no-deps` | Purpose        |
 |-----------------------------|----------------------------------|-----------|-----------------|-------------|----------------|
 | `cargo-test`                | `ffi,python,high-precision,defi` | `nextest` | ✓ (implicit)    | n/a         | Run tests.     |
-| `cargo-clippy` (pre‑commit) | `ffi,python,high-precision,defi` | `nextest` | ✓               | n/a         | Lint all code. |
+| `cargo-clippy` (pre-commit) | `ffi,python,high-precision,defi` | `nextest` | ✓               | n/a         | Lint all code. |
 
 These targets share the same feature set and profile, allowing cargo to reuse compiled artifacts between linting and testing without rebuilds.
 The `nextest` profile is used to align with the workflow of the majority of core maintainers who use cargo-nextest for running tests.
@@ -1324,11 +1324,11 @@ Choosing a mechanism:
 |--------------------------------------------------------------------|---------------------------------------------------|
 | Public API input against named preconditions                       | `check_*` from `nautilus_core::correctness`       |
 | Validated constructors (fallible + panic pair)                     | `new_checked()` / `new()`                         |
-| Recoverable non‑validation errors (I/O, parse, network)            | `Result<T, DomainError>`                          |
+| Recoverable non-validation errors (I/O, parse, network)            | `Result<T, DomainError>`                          |
 | Internal invariant the compiler cannot prove                       | `debug_assert!`                                   |
-| Always‑on internal invariant without a matching `CorrectnessError` | `assert!`                                         |
-| Soundness‑critical `unsafe` precondition                           | `assert!` (always on)                             |
-| Hot‑path `unsafe` precondition upheld by design                    | `debug_assert!` plus a documented `Safety` clause |
+| Always-on internal invariant without a matching `CorrectnessError` | `assert!`                                         |
+| Soundness-critical `unsafe` precondition                           | `assert!` (always on)                             |
+| Hot-path `unsafe` precondition upheld by design                    | `debug_assert!` plus a documented `Safety` clause |
 
 Style:
 
@@ -1439,9 +1439,9 @@ differ in how they handle aliased access:
 | Property          | Actor registry                     | Component registry                 |
 |-------------------|------------------------------------|------------------------------------|
 | Aliasing          | Allowed (multiple guards)          | Prevented (`BorrowGuard` + set)    |
-| Re‑entrant access | Yes, required for callbacks        | No, lifecycle ops are sequential   |
+| Re-entrant access | Yes, required for callbacks        | No, lifecycle ops are sequential   |
 | Error handling    | Panic or `None` on lookup failure  | Returns `anyhow::Result` on error  |
-| Guard type        | `ActorRef<T>` (Rc‑backed)          | Stack‑local `BorrowGuard`          |
+| Guard type        | `ActorRef<T>` (Rc-backed)          | Stack-local `BorrowGuard`          |
 
 The actor registry chooses re-entrant access over aliasing prevention because
 message handlers frequently call back into the registry to look up other

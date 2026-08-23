@@ -74,15 +74,25 @@ def test_live_guide_covers_hosted_async_run_modes() -> None:
     ):
         assert marker in live, f"live guide lacks run-mode marker {marker}"
 
-def test_v1_betfair_guides_scope_heartbeat_claims_to_pinned_baseline() -> None:
+def test_betfair_guides_cover_current_replacement_recovery() -> None:
     for path in (
         "skills/nt-adapters/references/integrations/betfair.md",
         "references/integrations/betfair.md",
+        "skills/nt-adapters/references/integrations/betfair_v2.md",
+        "references/integrations/betfair_v2.md",
     ):
         guide = read(path)
 
-        assert guide.count("74d57e7e05") >= 2, f"{path} lacks pinned-baseline scoping notes"
-        assert "pinned baseline" in guide, f"{path} lacks pinned-baseline scoping language"
+        for marker in (
+            "customerOrderRef",
+            "customerRef",
+            "CANCELLED_NOT_PLACED",
+            "OrderUpdated",
+            "45-second",
+            "pending",
+            "reconciliation",
+        ):
+            assert marker in guide, f"{path} lacks Betfair recovery marker {marker}"
 
 
 def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:
@@ -92,7 +102,7 @@ def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:
     ):
         guide = read(path)
 
-        assert "98e6c39d83" in guide, f"{path} lacks the socket-state overlay commit"
+        assert "f725e184db" in guide, f"{path} lacks the pinned socket-state source commit"
         assert "betfair-data-streams" in guide and "betfair-user-streams" in guide, (
             f"{path} lacks the stable socket endpoint labels"
         )

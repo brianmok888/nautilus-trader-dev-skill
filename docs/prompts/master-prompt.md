@@ -4,7 +4,8 @@
 
 Before executing any part of this mission, read and apply the target repository's root `AGENTS.md`. Its project-scoped workflow, NT-only boundary, read-only upstream rule, validation requirements, and reporting requirements are mandatory for the entire mission. When work enters a subdirectory, also read and apply any deeper `AGENTS.md`; deeper instructions override broader ones.
 
-**Target:** `/home/mok/projects/nautilus-trader-dev-skill`
+**Primary repository:** `/home/mok/projects/nautilus-trader-dev-skill`
+**Mission worktree:** resolve and record a dedicated linked worktree during preflight. After creating it, run every edit, test, validation command, and mission commit from that worktree. Use the primary repository only for its cleanliness check and an explicitly authorized final integration.
 **Mission output:** Improvements to this skill repository's skills, references, templates, tests, and validation tooling.
 **Downstream purpose:** Make `nautilus-trader-dev-skill` reliably guide agents that architect, develop, test, integrate, operate, and review NautilusTrader Rust V2 components against current upstream APIs and standards.
 

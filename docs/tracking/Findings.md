@@ -4,13 +4,62 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-22
-Reviewed upstream develop: `98e6c39d8384c91dbf0102ea581aff5313ba9811`
-Pinned G2 baseline: `98e6c39d8384c91dbf0102ea581aff5313ba9811`
+Review date: 2026-08-23
+Reviewed upstream develop: `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`
+Pinned G2 baseline: `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`
 
-NT v2 compatibility note: Legacy migration/reference-only Cython v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance.
+NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
 ## Open findings
+
+[NT-2026-08-23-08] [P1] [CLOSED] Migration-only Python strategy tests imported removed V2 modules `nautilus_trader.backtest.engine` and `nautilus_trader.backtest.models`.
+  file: tests/test_strategy_builder_v2_contract.py; tools/check_skill_g2_harnesses.py; skills/nt-strategy-builder/SKILL.md; skills/nt/SKILL.md
+  evidence: pinned V2 exports `BacktestNode` from `nautilus_trader.backtest` and current typed run configuration from `nautilus_trader.config`; the obsolete suite is no longer an executable G2 target.
+  fix: replaced the obsolete suite with an executable current-V2 `BacktestNode`/`BacktestRunConfig` contract, retained legacy templates under static migration/reference checks, and kept upstream backtest/live acceptance tests as integration evidence.
+  closure: `NT_UPSTREAM_ROOT=/home/mok/.cache/nautilus-trader-dev-skill/nautilus_trader-g2build python3 tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed.
+
+[NT-2026-08-23-06] [P0] [CLOSED] Pressure review: active inline examples and contracts invented or retained removed V2 APIs.
+  file: skills/nt-backtest/SKILL.md; skills/nt-data/SKILL.md; skills/nt-architect/SKILL.md; skills/nt-adapters/SKILL.md; references/developer_guide/contracts/adapter_contract.md
+  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/execution/src/models/fill.rs`, `crates/backtest/src/config.rs`, `crates/common/src/providers.rs`, and `crates/common/src/actor/data_actor.rs`.
+  fix: taught the real `FillModel`/`FillModelAny` seam, removed the invented persistence backend and removed decorator, corrected signal publication, and replaced `load_all_async` with the required provider methods.
+  closure: `python3 -m pytest -q tests/test_pressure_review_regressions.py` exits 0.
+
+[NT-2026-08-23-07] [P1] [CLOSED] Pressure review: runtime routing, serialization, and upstream-workspace boundaries could route agents to false-green or unsafe workflows.
+  NT v2 compatibility note: the legacy routing evidence in this finding is migration/reference-only.
+  file: skills/nt/SKILL.md; skills/nt-dev/SKILL.md; skills/nt-strategy-builder/SKILL.md; docs/serialization.md; skills/nt-strategy-builder/tests/conftest.py; skills/nt-dex-adapter/tests/test_backtest_integration.py
+  evidence: pinned package version `2.0.0rc4`, absence of `msgspec` from the pinned workspace, and the repository read-only upstream invariant.
+  fix: added runtime/language classification and migration/reference-only legacy routing, disposable writable upstream-worktree rules, pinned-runtime test guards, and removed the unsupported serialization recommendation.
+  closure: `python3 -m pytest -q tests/test_pressure_review_regressions.py` exits 0.
+
+[NT-2026-08-23-01] [P0] [CLOSED] Rust conversion correctness: the retained `nt-signals` analysis source snapshot lagged the pinned Rust/PyO3 crate.
+  file: skills/nt-signals/references/rust/analysis/
+  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/analysis/` contains the current statistics, snapshot, and PyO3 modules that the older retained tree omitted.
+  fix: mirrored the complete pinned `crates/analysis` tree and added deterministic byte-for-byte snapshot coverage.
+  closure: `python3 -m pytest -q tests/test_rust_analysis_reference_sync.py` exits 0.
+
+[NT-2026-08-23-02] [P1] [CLOSED] V2 compliance: the canonical actor and adapter examples used nonexistent current APIs.
+  file: skills/nt-architect/SKILL.md; skills/nt-adapters/SKILL.md
+  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/common/examples/greeks_actor_example.rs`, `crates/common/src/factories/client.rs`, and `examples/quickstarts/lighter-rust-data-client/src/main.rs`.
+  fix: replaced the actor sketch with `DataActorCore`/`nautilus_actor!`/`CustomData`/`publish_data`, replaced `AdapterRegistry` with separate current factory traits and `LiveNode` registration, and documented the complete lifecycle callbacks.
+  closure: `python3 -m pytest -q tests/test_current_v2_contracts.py` exits 0.
+
+[NT-2026-08-23-03] [P1] [CLOSED] V2 compliance: Betfair replacement and ambiguous command-recovery guidance predated develop commit `79fb940dc794b953570ad5ac76f4f1e6b68ea93f`.
+  file: references/integrations/betfair.md; references/integrations/betfair_v2.md; skills/nt-adapters/references/integrations/betfair.md; skills/nt-adapters/references/integrations/betfair_v2.md
+  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `docs/integrations/betfair.md` and `crates/adapters/betfair/src/execution.rs`.
+  fix: refreshed the canonical guide and documented logical-order identity, terminal replacement outcomes, stable request correlation, bounded retries, and pending reconciliation.
+  closure: mirrored reference pairs are byte-identical and `python3 tools/check_upstream_freshness.py --format json` exits 0.
+
+[NT-2026-08-23-04] [P1] [CLOSED] Upstream standards: active guidance retained U+2011 after current develop prohibited non-ASCII hyphens.
+  file: skills/**/*.md; references/**/*.md
+  evidence: upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `.pre-commit-hooks/check_unicode_typography.sh`.
+  fix: normalized active guidance to ASCII hyphens and added a repository regression gate.
+  closure: `python3 -m pytest -q tests/test_ascii_typography.py` exits 0.
+
+[NT-2026-08-23-05] [P1] [CLOSED] Durable tracking could drift from the delta manifest and retained skill inventory.
+  file: docs/tracking/Components.md; tests/test_upstream_freshness.py
+  evidence: the stale `reviewed exactly through` SHA survived two prior pin moves while all prior validators passed.
+  fix: synchronized current tracking metadata and added manifest/skill-inventory assertions.
+  closure: `python3 -m pytest -q tests/test_upstream_freshness.py` exits 0.
 
 [NT-2026-08-22-09] [P2] [CLOSED] Pin deferral: the pinned G2 baseline `baa667bc` lags the reviewed develop tip `98e6c39d8` by one adapter-scoped commit (Betfair socket-state reporting and reconnect control).
   file: tools/upstream_baseline.py:4
@@ -246,3 +295,7 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
 - NT-only repository boundary tests and manual router inspection.
 
 No readiness claim is valid until those gates pass in the final working tree.
+
+2026-08-23 — P0 — MODIFIED: synchronized the retained Rust analysis crate and corrected active V2 actor, fill-model, data, and adapter contracts — files: skills/nt-signals/references/rust/analysis/, skills/nt-architect/SKILL.md, skills/nt-backtest/SKILL.md, skills/nt-data/SKILL.md, skills/nt-adapters/SKILL.md
+2026-08-23 — P1 — MODIFIED: refreshed Betfair recovery guidance, ASCII typography, runtime routing, upstream-worktree safety, and durable validation — files: references/integrations/betfair.md, references/integrations/betfair_v2.md, skills/nt/SKILL.md, skills/nt-dev/SKILL.md, tests/
+2026-08-23 — P2 — MODIFIED: advanced the reproducible baseline and all pin-derived snapshots/evidence to reviewed develop `f725e184db` — files: tools/upstream_baseline.py, references/developer_guide/, references/g2-evidence/, docs/tracking/

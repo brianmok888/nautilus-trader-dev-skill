@@ -19,7 +19,11 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("nautilus_trader")
+nautilus_trader = pytest.importorskip("nautilus_trader")
+pytest.importorskip(
+    "nautilus_trader._libnautilus.common",
+    reason="skill tests require the pinned NautilusTrader V2 module set",
+)
 
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import FillModel

@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import TypedDict, cast
 
 from tools.check_upstream_freshness import (
     FreshnessStatus,
@@ -15,6 +16,50 @@ from tools.upstream_baseline import UPSTREAM_REMOTE_REFS, default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+
+class ReviewManifest(TypedDict):
+    reviewed_commit: str
+    pinned_commit: str
+
+
+def _tracking_commit(path: Path, label: str) -> str:
+    prefix = f"{label}: `"
+    line = next(
+        line for line in path.read_text(encoding="utf-8").splitlines()
+        if line.startswith(prefix)
+    )
+    return line.removeprefix(prefix).removesuffix("`")
+
+def test_tracking_metadata_matches_review_manifest() -> None:
+    manifest = cast(
+        ReviewManifest,
+        json.loads(
+            (REPO_ROOT / "references/upstream-delta-review.json").read_text(
+                encoding="utf-8"
+            )
+        ),
+    )
+    reviewed = manifest["reviewed_commit"]
+    pinned = manifest["pinned_commit"]
+
+    for name in ("Findings.md", "Components.md"):
+        path = REPO_ROOT / "docs/tracking" / name
+        assert _tracking_commit(path, "Reviewed upstream develop") == reviewed
+        assert _tracking_commit(path, "Pinned G2 baseline") == pinned
+
+    components = (REPO_ROOT / "docs/tracking/Components.md").read_text(encoding="utf-8")
+    assert f"reviewed exactly through `{reviewed}`" in components
+
+def test_components_index_matches_retained_skill_inventory() -> None:
+    components = (REPO_ROOT / "docs/tracking/Components.md").read_text(encoding="utf-8")
+    indexed = {
+        line.split("`")[1]
+        for line in components.splitlines()
+        if line.startswith("| `")
+    }
+    retained = {path.parent.name for path in (REPO_ROOT / "skills").glob("*/SKILL.md")}
+
+    assert indexed == retained
 
 def test_only_authoritative_develop_is_a_required_moving_ref() -> None:
     assert UPSTREAM_REMOTE_REFS == ("origin/develop",)

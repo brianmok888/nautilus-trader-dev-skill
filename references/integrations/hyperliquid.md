@@ -35,7 +35,7 @@ You can find live example scripts [here](https://github.com/nautechsystems/nauti
 
 Mainnet orders submitted through the adapter include a NautilusTrader builder address with a
 **zero fee rate**, so attribution adds no trading cost to your orders. This marks
-NautilusTrader‑originated order flow on‑chain, which helps us gauge real usage of the integration
+NautilusTrader-originated order flow on-chain, which helps us gauge real usage of the integration
 and prioritize ongoing maintenance and improvements.
 
 The builder address is omitted from orders in two cases:
@@ -121,10 +121,10 @@ spot markets, and HIP-4 binary outcome markets.
 
 | Product Type      | Data Feed | Trading | Notes                                           |
 |-------------------|-----------|---------|-------------------------------------------------|
-| Perpetual Futures | ✓         | ✓       | USDC‑settled linear perps (validator‑operated). |
-| HIP‑3 Perpetuals  | ✓         | ✓       | Builder‑deployed perps. Excluded by default.    |
+| Perpetual Futures | ✓         | ✓       | USDC-settled linear perps (validator-operated). |
+| HIP-3 Perpetuals  | ✓         | ✓       | Builder-deployed perps. Excluded by default.    |
 | Spot              | ✓         | ✓       | Native spot markets.                            |
-| HIP‑4 Outcomes    | ✓         | ✓       | USDH‑settled binary outcomes. See [HIP-4 outcome markets](#hip-4-outcome-markets). |
+| HIP-4 Outcomes    | ✓         | ✓       | USDH-settled binary outcomes. See [HIP-4 outcome markets](#hip-4-outcome-markets). |
 
 :::note
 All perpetual futures on Hyperliquid are settled in USDC. Spot markets are standard
@@ -414,9 +414,9 @@ await client.submit_negate_outcome(9, 52, Decimal("1.0"))
 
 | Action                  | Use case |
 |-------------------------|----------|
-| `submit_split_outcome`  | Mint paired Yes + No tokens from quote (initial market making, dual‑side hedges) |
+| `submit_split_outcome`  | Mint paired Yes + No tokens from quote (initial market making, dual-side hedges) |
 | `submit_merge_outcome`  | Burn a matched Yes + No pair back to quote without crossing the spread |
-| `submit_merge_question` | Close a full multi‑outcome basket back to quote atomically |
+| `submit_merge_question` | Close a full multi-outcome basket back to quote atomically |
 | `submit_negate_outcome` | Convert No shares of one outcome into Yes shares of every other in the same question |
 
 For directional bets the ordinary `SubmitOrder` path is sufficient; the
@@ -672,7 +672,7 @@ def round_to_sig_figs(price: Decimal, sig_figs: int = 5) -> Decimal:
 | Instruction   | Perpetuals | Spot | Notes                            |
 |---------------|------------|------|----------------------------------|
 | `post_only`   | ✓          | ✓    | Equivalent to ALO time in force. |
-| `reduce_only` | ✓          | ✓    | Close‑only orders.               |
+| `reduce_only` | ✓          | ✓    | Close-only orders.               |
 
 :::info
 Post-only orders that would immediately match are rejected by Hyperliquid. The adapter detects
@@ -956,17 +956,17 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 | `environment`                  | `None`  | Environment enum (`MAINNET` or `TESTNET`); resolves to `MAINNET` when unset.              |
 | `base_url_ws`                  | `None`  | Override for the WebSocket base URL.                                                      |
 | `product_types`                | `None`  | Optional product types to load, for example `PERP_HIP3` for HIP-3 perps.                  |
-| `max_retries`                  | `None`  | Maximum retry attempts for submit, cancel, or modify order requests. Rust‑only.           |
-| `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries. Rust‑only.                                  |
-| `retry_delay_max_ms`           | `None`  | Maximum delay (milliseconds) between retries. Rust‑only.                                  |
+| `max_retries`                  | `None`  | Maximum retry attempts for submit, cancel, or modify order requests. Rust-only.           |
+| `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries. Rust-only.                                  |
+| `retry_delay_max_ms`           | `None`  | Maximum delay (milliseconds) between retries. Rust-only.                                  |
 | `http_timeout_secs`            | `10`    | Timeout (seconds) applied to REST calls.                                                  |
 | `normalize_prices`             | `True`  | Normalize order prices to 5 significant figures before submission.                        |
-| `market_order_slippage_bps`    | `50`    | Slippage buffer (bps) applied to MARKET and stop trigger derivations. Rust‑only.          |
-| `outcome_settlement_poll_secs` | `0`     | HIP‑4 `outcomeMeta` settlement poll interval (seconds). Rust‑only; venue `Settlement` fills cover settlement, so polling is disabled by default. |
+| `market_order_slippage_bps`    | `50`    | Slippage buffer (bps) applied to MARKET and stop trigger derivations. Rust-only.          |
+| `outcome_settlement_poll_secs` | `0`     | HIP-4 `outcomeMeta` settlement poll interval (seconds). Rust-only; venue `Settlement` fills cover settlement, so polling is disabled by default. |
 | `proxy_url`                    | `None`  | Optional proxy URL for HTTP and WebSocket transports.                                     |
 
 :::note
-"Rust‑only" options apply when the execution client is created through the Rust-native
+"Rust-only" options apply when the execution client is created through the Rust-native
 `HyperliquidExecutionClientFactory`. `market_order_slippage_bps` and
 `outcome_settlement_poll_secs` are not exposed on the Python
 `HyperliquidExecClientConfig` and will be rejected by the config validator if set on

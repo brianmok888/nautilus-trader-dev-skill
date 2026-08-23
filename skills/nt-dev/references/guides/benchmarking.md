@@ -15,8 +15,8 @@ NautilusTrader uses two complementary Rust benchmarking frameworks:
 
 | Framework                                                    | What it measures                          | When to prefer it                                    |
 |--------------------------------------------------------------|-------------------------------------------|------------------------------------------------------|
-| [**Criterion**](https://docs.rs/criterion/latest/criterion/) | Wall‑clock time with confidence bands     | Anything ≥ 100 ns; absolute measurement; comparison. |
-| [**iai**](https://docs.rs/iai/latest/iai/)                   | Retired CPU instructions (via Cachegrind) | Sub‑100 ns functions; CI regression detection.       |
+| [**Criterion**](https://docs.rs/criterion/latest/criterion/) | Wall-clock time with confidence bands     | Anything ≥ 100 ns; absolute measurement; comparison. |
+| [**iai**](https://docs.rs/iai/latest/iai/)                   | Retired CPU instructions (via Cachegrind) | Sub-100 ns functions; CI regression detection.       |
 
 Most hot code paths benefit from both. Criterion gives the user-visible
 number; iai gives a noise-free regression signal.

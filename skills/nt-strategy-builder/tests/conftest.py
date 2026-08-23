@@ -6,7 +6,11 @@ Shared fixtures for unit and integration tests.
 
 import pytest
 
-pytest.importorskip("nautilus_trader")
+nautilus_trader = pytest.importorskip("nautilus_trader")
+pytest.importorskip(
+    "nautilus_trader._libnautilus.common",
+    reason="skill tests require the pinned NautilusTrader V2 module set",
+)
 
 from decimal import Decimal
 

@@ -200,7 +200,7 @@ InstrumentId.from_str("PF_XBTUSD.KRAKEN")  # Perpetual fixed-margin BTC
 | `TradeTick`            | ✓    | ✓       |                                        |
 | `Bar`                  | ✓    | ✓       |                                        |
 | `OrderBook` (snapshot) | ✓    | ✓       | Via HTTP depth endpoint.               |
-| `FundingRateUpdate`    | -    | ✓       | Client‑side start/end/limit filtering. |
+| `FundingRateUpdate`    | -    | ✓       | Client-side start/end/limit filtering. |
 
 ## L3 order book (market-by-order)
 
@@ -271,12 +271,12 @@ more events per instrument than L2. Recommended settings:
 |------------------------|------|---------|-----------------------------------------------|
 | `MARKET`               | ✓    | ✓       | Immediate execution at market price.          |
 | `LIMIT`                | ✓    | ✓       | Execution at specified price or better.       |
-| `STOP_MARKET`          | ✓    | ✓       | Conditional market order (stop‑loss).         |
-| `MARKET_IF_TOUCHED`    | ✓    | ✓       | Conditional market order (take‑profit).       |
-| `STOP_LIMIT`           | ✓    | ✓       | Conditional limit order (stop‑loss‑limit).    |
+| `STOP_MARKET`          | ✓    | ✓       | Conditional market order (stop-loss).         |
+| `MARKET_IF_TOUCHED`    | ✓    | ✓       | Conditional market order (take-profit).       |
+| `STOP_LIMIT`           | ✓    | ✓       | Conditional limit order (stop-loss-limit).    |
 | `LIMIT_IF_TOUCHED`     | ✓    | ✓       | Maps to `take_profit` with `limit_price`.     |
 | `TRAILING_STOP_MARKET` | ✓    | -       | Trailing stop with `trailing_offset`.         |
-| `TRAILING_STOP_LIMIT`  | ✓    | -       | Trailing stop‑limit with `limit_offset`.      |
+| `TRAILING_STOP_LIMIT`  | ✓    | -       | Trailing stop-limit with `limit_offset`.      |
 
 ### Time in force
 
@@ -323,7 +323,7 @@ time rather than silently coercing them.
 |--------------|------|---------|---------------------------------------------------------|
 | Batch Submit | ✓    | ✓       | Spot chunks at 15 orders. Futures chunks at 10.         |
 | Batch Modify | -    | ✓       | Futures HTTP helper only. Execution sends one command.  |
-| Batch Cancel | ✓    | ✓       | Auto‑chunks into batches of 50.                         |
+| Batch Cancel | ✓    | ✓       | Auto-chunks into batches of 50.                         |
 
 :::note
 **Cancel all orders**:
@@ -338,9 +338,9 @@ time rather than silently coercing them.
 
 | Feature          | Spot | Futures | Notes                                                   |
 |------------------|------|---------|---------------------------------------------------------|
-| Query positions  | ✓    | ✓       | Spot margin via `OpenPositions`; spot cash opt‑in.      |
+| Query positions  | ✓    | ✓       | Spot margin via `OpenPositions`; spot cash opt-in.      |
 | Position mode    | -    | -       | Single position per instrument.                         |
-| Leverage control | ✓    | ✓       | Spot tiers; per‑order `params={"leverage": N}`.         |
+| Leverage control | ✓    | ✓       | Spot tiers; per-order `params={"leverage": N}`.         |
 | Margin mode      | ✓    | ✓       | Spot/Futures cross margin; no isolated spot margin.     |
 
 ### Order querying
@@ -349,7 +349,7 @@ time rather than silently coercing them.
 |----------------------|------|---------|----------------------------------------------|
 | Query open orders    | ✓    | ✓       | List all active orders.                      |
 | Query order history  | ✓    | ✓       | Historical order data with pagination.       |
-| Order status updates | ✓    | ✓       | Real‑time order state changes via WebSocket. |
+| Order status updates | ✓    | ✓       | Real-time order state changes via WebSocket. |
 | Trade history        | ✓    | ✓       | Execution and fill reports.                  |
 
 ### Contingent orders
@@ -359,7 +359,7 @@ time rather than silently coercing them.
 | Order lists         | -    | -       | *Not supported*.                         |
 | OCO orders          | -    | -       | *Not supported*.                         |
 | Bracket orders      | -    | -       | *Not supported*.                         |
-| Conditional orders  | ✓    | ✓       | Stop and take‑profit orders.             |
+| Conditional orders  | ✓    | ✓       | Stop and take-profit orders.             |
 
 ## Order routing (Spot)
 
@@ -384,15 +384,15 @@ the WS API supports but this adapter does not yet encode.
 |---------------------------|--------------------------------------------------------------|
 | Unsupported trigger types | `triggers.reference` accepts only `last` and `index`.        |
 | `FOK` time in force       | Kraken WS v2 has no `FOK` value (only `GTC`, `IOC`, `GTD`).  |
-| Mixed‑symbol order lists  | `batch_add` requires a single shared symbol.                 |
+| Mixed-symbol order lists  | `batch_add` requires a single shared symbol.                 |
 
 **Not yet encoded by this adapter (follow-up work, currently REST):**
 
 | Shape                       | Notes                                                                                |
 |-----------------------------|--------------------------------------------------------------------------------------|
-| Trailing stop / stop‑limit  | Encodable via `triggers.price` + `triggers.price_type`, but the builder routes REST. |
+| Trailing stop / stop-limit  | Encodable via `triggers.price` + `triggers.price_type`, but the builder routes REST. |
 | Iceberg (`display_qty`)     | Encodable as `order_type: "iceberg"` + `display_qty`, but the builder routes REST.   |
-| Quote‑quantity orders       | Buy market quote‑qty maps to `cash_order_qty`; routed REST today.                    |
+| Quote-quantity orders       | Buy market quote-qty maps to `cash_order_qty`; routed REST today.                    |
 
 The per-call `params={"use_ws_trade": False}` override forces a single
 command through REST regardless of the configured default. Set it on
@@ -429,7 +429,7 @@ The Rust `KrakenExecClientConfig` (and its pyo3 wrapper) exposes:
 | Option                    | Default | Description                                                      |
 |---------------------------|---------|------------------------------------------------------------------|
 | `use_ws_trade`            | `True`  | Route orders via WS when the trade channel is active.            |
-| `ws_request_timeout_secs` | `5`     | WS round‑trip timeout before a synthesised rejection is emitted. |
+| `ws_request_timeout_secs` | `5`     | WS round-trip timeout before a synthesised rejection is emitted. |
 
 These are not exposed on the Python live `KrakenExecClientConfig` because
 the Python live execution client does not yet honour them.

@@ -40,9 +40,9 @@ alongside this guide for additional details.
 
 | Product type           | Supported | Notes                                                                |
 |------------------------|-----------|----------------------------------------------------------------------|
-| ERC-20 spot            | ✓         | USDC‑quoted pairs such as `ETH-USDC`; parsed as `CurrencyPair`.      |
-| Perpetual swaps        | ✓         | Cash‑settled in USDC, with per‑currency listings such as `ETH-PERP`. |
-| Options (calls / puts) | ✓         | European‑style options using `{CURRENCY}-{EXPIRY}-{STRIKE}-{C|P}`.   |
+| ERC-20 spot            | ✓         | USDC-quoted pairs such as `ETH-USDC`; parsed as `CurrencyPair`.      |
+| Perpetual swaps        | ✓         | Cash-settled in USDC, with per-currency listings such as `ETH-PERP`. |
+| Options (calls / puts) | ✓         | European-style options using `{CURRENCY}-{EXPIRY}-{STRIKE}-{C|P}`.   |
 
 ## Symbology
 
@@ -195,7 +195,7 @@ Mainnet onboarding mirrors testnet against the production dashboard. Use real fu
 | Order book snapshot (REST)     | -         | *Not supported.* Not exposed by the adapter.                            |
 | Historical book deltas (REST)  | -         | *Not supported.* Not exposed by the adapter.                            |
 | Quotes (`ticker_slim`)         | ✓         | Channel: `ticker_slim.{instrument}.{interval}`.                         |
-| Quote snapshot (REST)          | ✓         | One‑shot `public/get_tickers`; emits a single `QuoteTick`.              |
+| Quote snapshot (REST)          | ✓         | One-shot `public/get_tickers`; emits a single `QuoteTick`.              |
 | Historical quotes (REST)       | -         | *Not supported.* The venue exposes ticker snapshots only.               |
 | Trades                         | ✓         | Channel: `trades.{instrument_type}.{currency}`.                         |
 | Historical trades (REST)       | ✓         | `public/get_trade_history`; honors `start`, `end`, and `limit`.         |
@@ -400,9 +400,9 @@ Class/struct: `DeriveDataClientConfig`.
 | `http_timeout_secs`                | `10`      | REST request timeout in seconds. |
 | `ws_timeout_secs`                  | `30`      | WebSocket connect and idle timeout in seconds. |
 | `update_instruments_interval_mins` | `60`      | Interval in minutes between instrument refreshes. |
-| `currencies`                       | `[]`      | Currencies to bulk‑load on connect. Empty means lazy‑load on demand. |
+| `currencies`                       | `[]`      | Currencies to bulk-load on connect. Empty means lazy-load on demand. |
 | `include_expired`                  | `false`   | Include expired option rows from `public/get_instruments`. |
-| `auto_load_missing_instruments`    | `true`    | Lazy‑load unknown instruments before subscribe or request commands. |
+| `auto_load_missing_instruments`    | `true`    | Lazy-load unknown instruments before subscribe or request commands. |
 | `transport_backend`                | `Sockudo` | WebSocket transport when `transport-sockudo` is enabled. |
 
 ### Execution client configuration options
@@ -411,23 +411,23 @@ Class/struct: `DeriveExecClientConfig`.
 
 | Option                      | Default   | Description |
 |-----------------------------|-----------|-------------|
-| `wallet_address`            | `None`    | Derive Chain smart‑contract wallet address. Falls back to env vars below. |
-| `session_key`               | `None`    | secp256k1 session‑key private key. Falls back to env vars below. |
+| `wallet_address`            | `None`    | Derive Chain smart-contract wallet address. Falls back to env vars below. |
+| `session_key`               | `None`    | secp256k1 session-key private key. Falls back to env vars below. |
 | `subaccount_id`             | `None`    | Derive subaccount id. Falls back to env vars below. |
 | `base_url_rest`             | `None`    | Override for the REST base URL. |
 | `base_url_ws`               | `None`    | Override for the WebSocket base URL. |
 | `proxy_url`                 | `None`    | Optional proxy URL for HTTP and WebSocket transports. |
 | `environment`               | `Mainnet` | Network selector (`MAINNET` or `TESTNET` in Python). |
 | `http_timeout_secs`         | `10`      | REST request timeout in seconds. |
-| `max_retries`               | `3`       | Retry attempts for recoverable reads and definitive non‑write paths. |
+| `max_retries`               | `3`       | Retry attempts for recoverable reads and definitive non-write paths. |
 | `retry_delay_initial_ms`    | `100`     | Initial retry delay in milliseconds. |
 | `retry_delay_max_ms`        | `5000`    | Maximum retry delay in milliseconds. |
-| `max_fee_per_contract`      | `None`    | Per‑contract USDC fee cap signed into each order. |
+| `max_fee_per_contract`      | `None`    | Per-contract USDC fee cap signed into each order. |
 | `domain_separator`          | `None`    | Optional EIP-712 domain separator override. |
 | `action_typehash`           | `None`    | Optional EIP-712 action typehash override. |
 | `trade_module_address`      | `None`    | Optional Trade module contract address override. |
 | `signature_expiry_secs`     | `600`     | Order/replace TTL; must be >300s. Trigger orders use fixed 31-day TTL. |
-| `market_order_slippage_bps` | `50`      | Slippage bound for market‑order limit prices. |
+| `market_order_slippage_bps` | `50`      | Slippage bound for market-order limit prices. |
 | `transport_backend`         | `Sockudo` | WebSocket transport when `transport-sockudo` is enabled. |
 
 The default transport falls back to `Tungstenite` when the build disables the

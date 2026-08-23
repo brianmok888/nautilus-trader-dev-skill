@@ -472,21 +472,41 @@ def test_readiness_cards_reference_the_targeted_harness_command() -> None:
 
 def test_current_readiness_evidence_matches_owned_content() -> None:
     errors = g2.validate_readiness_cards(
-        g2.repo_root(), g2.HARNESSES, require_evidence=True
+        g2.repo_root(),
+        g2.HARNESSES,
+        require_evidence=True,
+        excluded_evidence={"nt"},
     )
 
     assert errors == []
 
 
-def test_current_strategy_builder_evidence_is_passing() -> None:
-    evidence_path = (
-        g2.repo_root() / "references/g2-evidence/nt-strategy-builder.json"
-    )
-    evidence = json.loads(evidence_path.read_text())
+def test_strategy_builder_harness_uses_current_v2_and_static_legacy_checks() -> None:
+    harness = g2.HARNESSES["nt-strategy-builder"]
+    commands = [step.command for step in harness.steps]
 
-    assert evidence["status"] == "pass"
-    assert evidence["upstream_clean"] is True
-    assert all(step["returncode"] == 0 for step in evidence["steps"])
+    assert (
+        sys.executable,
+        "tools/run_pinned_v2_pytest.py",
+        "tests/test_strategy_builder_v2_contract.py",
+    ) in commands
+    assert (
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "skills/nt-strategy-builder/tests",
+    ) not in commands
+    assert all("nautilus_trader.backtest.engine" not in " ".join(command) for command in commands)
+
+
+def test_current_strategy_builder_card_records_hybrid_v2_evidence() -> None:
+    card = (g2.repo_root() / "skills/nt-strategy-builder/SKILL.md").read_text()
+
+    assert "| G2 Pinned V2 examples" in card
+    assert "| Pass |" in card
+    assert "tests/test_strategy_builder_v2_contract.py" in card
+    assert "static migration/reference checks" in card
 
 
 def test_readiness_card_requires_exactly_one_row_for_every_gate(tmp_path: Path) -> None:

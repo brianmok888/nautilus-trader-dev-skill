@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 98e6c39d8384c91dbf0102ea581aff5313ba9811
-sync_date: 2026-08-22
+source_commit: f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f
+sync_date: 2026-08-23
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -137,12 +137,12 @@ explaining the change.
   `Add`, `Fix`, `Improve`, `Refine`, `Update`, `Remove`, `Refactor`, and `Standardize` cover most of the history.
 - Name the affected surface (crate, adapter, subsystem, or type) so the log stays scannable.
 - Keep the subject at 10 characters or more so it can name the affected surface clearly.
-- Aim for 60 characters or fewer for clear GitHub rendering and concise text. The commit‑message
+- Aim for 60 characters or fewer for clear GitHub rendering and concise text. The commit-message
   hook warns without failing when the subject exceeds this target. The project plans to enforce
   this limit in the future.
 - Do not end the subject with a period.
 - Do not put an issue or pull request number in the subject. GitHub appends the pull request number
-  on squash merge, and any other reference belongs in the body. The commit‑message hook rejects a
+  on squash merge, and any other reference belongs in the body. The commit-message hook rejects a
   subject containing `#<number>` in any position.
 
 ```text
@@ -190,5 +190,5 @@ restate the diff.
   do not reference a pull request or issue anywhere else in the subject either. The subject has no
   room for detail the body carries better, and a hand-written number duplicates or contradicts the
   appended one.
-- Aim to keep the pull request title short enough for the appended suffix to leave the squash‑merged
+- Aim to keep the pull request title short enough for the appended suffix to leave the squash-merged
   subject at 60 characters or fewer.

@@ -18,6 +18,7 @@
 use std::collections::BTreeMap;
 
 use nautilus_core::UnixNanos;
+use nautilus_model::position::Position;
 
 use crate::statistic::PortfolioStatistic;
 
@@ -29,11 +30,21 @@ use crate::statistic::PortfolioStatistic;
 /// Formula: CAGR = (Ending Value / Beginning Value)^(Period/Days) - 1
 ///
 /// For returns: CAGR = ((1 + Total Return)^(Period/Days)) - 1
+///
+/// # References
+///
+/// - Bacon, C. R. (2008). *Practical Portfolio Performance Measurement and Attribution*
+///   (2nd ed.). Wiley.
+/// - CFA Institute Level I Curriculum: Quantitative Methods
 #[repr(C)]
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.analysis", from_py_object)
+    pyo3::pyclass(module = "nautilus_trader.analysis", from_py_object)
+)]
+#[cfg_attr(
+    feature = "python",
+    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.analysis")
 )]
 pub struct CAGR {
     /// The number of periods per year for annualization (e.g., 252 for trading days).
@@ -73,13 +84,24 @@ impl PortfolioStatistic for CAGR {
         let days = daily_returns.len().max(1) as f64;
 
         // CAGR = (1 + total_return)^(period/days) - 1
-        let cagr = (1.0 + total_return).powf(self.period as f64 / days) - 1.0;
+        let ending_value = 1.0 + total_return;
+        if ending_value < 0.0 {
+            return Some(f64::NAN);
+        }
+        let cagr = ending_value.powf(self.period as f64 / days) - 1.0;
 
         if cagr.is_finite() {
             Some(cagr)
         } else {
-            Some(0.0)
+            Some(f64::NAN)
         }
+    }
+    fn calculate_from_realized_pnls(&self, _realized_pnls: &[f64]) -> Option<Self::Item> {
+        None
+    }
+
+    fn calculate_from_positions(&self, _positions: &[Position]) -> Option<Self::Item> {
+        None
     }
 }
 
@@ -89,7 +111,7 @@ mod tests {
 
     use super::*;
 
-    fn create_returns(values: Vec<f64>) -> BTreeMap<UnixNanos, f64> {
+    fn create_returns(values: &[f64]) -> BTreeMap<UnixNanos, f64> {
         let mut returns = BTreeMap::new();
         let nanos_per_day = 86_400_000_000_000;
         let start_time = 1_600_000_000_000_000_000;
@@ -122,7 +144,7 @@ mod tests {
         // Simulate 252 days with 0.1% daily return
         // Total return = (1.001)^252 - 1 ≈ 0.288 (28.8%)
         // CAGR should be approximately same as total return for full year
-        let returns = create_returns(vec![0.001; 252]);
+        let returns = create_returns(&vec![0.001; 252]);
         let result = cagr.calculate_from_returns(&returns).unwrap();
 
         // For 252 days of 0.1% daily return
@@ -135,7 +157,7 @@ mod tests {
         let cagr = CAGR::new(Some(252));
         // Simulate 126 days (half year) with total return of 10%
         let daily_return = (1.10_f64.powf(1.0 / 126.0)) - 1.0;
-        let returns = create_returns(vec![daily_return; 126]);
+        let returns = create_returns(&vec![daily_return; 126]);
         let result = cagr.calculate_from_returns(&returns).unwrap();
 
         // CAGR should annualize the 10% half-year return
@@ -147,11 +169,25 @@ mod tests {
     fn test_negative_returns() {
         let cagr = CAGR::new(Some(252));
         // Simulate losses
-        let returns = create_returns(vec![-0.001; 252]);
+        let returns = create_returns(&vec![-0.001; 252]);
         let result = cagr.calculate_from_returns(&returns).unwrap();
 
         // Should be negative
         assert!(result < 0.0);
+    }
+
+    #[rstest]
+    #[case(5)]
+    #[case(252)]
+    fn test_undefined_cagr_returns_nan(#[case] days: usize) {
+        let cagr = CAGR::new(Some(252));
+        let mut values = vec![0.0; days];
+        values[0] = -1.5;
+        let returns = create_returns(&values);
+
+        let result = cagr.calculate_from_returns(&returns).unwrap();
+
+        assert!(result.is_nan());
     }
 
     #[rstest]

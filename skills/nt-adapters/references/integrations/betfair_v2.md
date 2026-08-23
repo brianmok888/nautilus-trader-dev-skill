@@ -23,7 +23,7 @@ rewrite.
 | Batch operations         | `SubmitOrderList` and `BatchCancelOrders` are implemented.                                                   | Stable guide used to mark these as unsupported.                           | Keep and promote.                                   |
 | Reconciliation scope     | `reconcile_market_ids_only` uses `reconcile_market_ids`; otherwise falls back to `stream_market_ids_filter`. | Stable guide says stream filtering and reconciliation are separate.       | Decide if Rust keeps or removes this coupling.      |
 | Full image cache checks  | Rust uses `generate_mass_status()` at startup and on every stream reconnect; no `check_cache_against_order_image`. | Stable guide describes the Python full image cache check.                 | Add parity or document the Rust path as final.      |
-| Post‑reconnect halt      | `submit_order` and `submit_order_list` emit `OrderDenied STREAM_RECONCILING` while the reconcile is in flight. | Python keeps trading during reconnect.                                    | Promote as the Rust default once `betfair.md` flips. |
+| Post-reconnect halt      | `submit_order` and `submit_order_list` emit `OrderDenied STREAM_RECONCILING` while the reconcile is in flight. | Python keeps trading during reconnect.                                    | Promote as the Rust default once `betfair.md` flips. |
 | External order filtering | `ignore_external_orders` only skips OCM updates with no `rfo`.                                               | Python also uses it during full image cache checks.                       | Decide final filtering behavior.                    |
 | Config surface           | No `certs_dir`, no `instrument_config`, fixed keep alive, required heartbeat value.                          | Stable guide still documents the Python config surface.                   | Decide whether to add parity or bless Rust surface. |
 | SSL certificates         | Stream client currently hardcodes `certs_dir=None`.                                                          | Stable guide documents certificate configuration and `BETFAIR_CERTS_DIR`. | Add support or remove from the future guide.        |
@@ -93,9 +93,9 @@ automatically through three mechanisms:
 
 | Mechanism           | Trigger                           | Action                                                               |
 |---------------------|-----------------------------------|----------------------------------------------------------------------|
-| Periodic keep‑alive | Every 10 hours.                   | Renew session token, push to all stream watch channels.              |
-| Keep‑alive fallback | Keep‑alive returns `LoginFailed`. | Full re‑login via `reconnect()`, push fresh token to streams.        |
-| Stream reconnect    | `Connection` message after drop.  | Try keep‑alive, fall back to re‑login on `LoginFailed`, update auth. |
+| Periodic keep-alive | Every 10 hours.                   | Renew session token, push to all stream watch channels.              |
+| Keep-alive fallback | Keep-alive returns `LoginFailed`. | Full re-login via `reconnect()`, push fresh token to streams.        |
+| Stream reconnect    | `Connection` message after drop.  | Try keep-alive, fall back to re-login on `LoginFailed`, update auth. |
 
 Transient errors (network timeouts, 5xx responses) during keep-alive are logged and
 skipped. The existing session token is preserved and the next keep-alive interval
@@ -117,8 +117,8 @@ The data client reconnect handler also updates the race stream auth when a race 
 is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
-session logic above and is included in the pinned baseline `98e6c39d8` (upstream commit
-`98e6c39d83`): the data and execution clients publish transport state on the stable
+session logic above and is included in the pinned baseline `f725e184db` (upstream commit
+`f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
 as `SocketStateChanged` on `events.system.SocketStateChanged`), register targeted
 reconnects through the `SocketReconnectRegistry` with authentication and subscription
@@ -138,10 +138,10 @@ add new exposure.
 | Step | Trigger                                        | Action                                                                                                          |
 |------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
 | 1    | Second `Connection` message after stream drop. | OCM handler raises `pending_resync` and `is_reconciling`, sends a reconnect signal to the background task.      |
-| 2    | Reconnect task receives signal.                | Re‑asserts `is_reconciling` so a queued second reconnect halts during its own iteration too.                    |
+| 2    | Reconnect task receives signal.                | Re-asserts `is_reconciling` so a queued second reconnect halts during its own iteration too.                    |
 | 3    | Reconnect task body.                           | Refreshes session, updates stream auth, fetches `getAccountFunds`, and calls `listCurrentOrders` for orders+fills. |
 | 4    | Mass status built.                             | Dispatched as `ExecutionReport::MassStatus` so the engine reconciles into the cache.                            |
-| 5    | Iteration ends.                                | `is_reconciling` cleared. A failed iteration also clears it (fail‑open, consistent with the rest of Nautilus).  |
+| 5    | Iteration ends.                                | `is_reconciling` cleared. A failed iteration also clears it (fail-open, consistent with the rest of Nautilus).  |
 
 While `is_reconciling` is set:
 
@@ -180,15 +180,27 @@ Minimum price is 1.01, maximum is 1000.00.
 
 ## Order modification
 
-- Price and size cannot change atomically; these require separate operations.
+- Quantity modification uses `CancelOrders` with `size_reduction`.
 - Price modification uses `ReplaceOrders` (cancel + new order at new price).
-- Size reduction uses `CancelOrders` with a `size_reduction` parameter.
-- Size increase is not supported; submit a new order instead.
+- Order cancellation uses `CancelOrders`.
+- Cancel-all uses `cancel_orders` without market and order filters.
 
-A replace operation generates both a cancel event for the original order and an accepted
-event for the replacement. The adapter tracks pending replacements to suppress synthetic
-cancel events.
+Current develop commit `79fb940dc794b953570ad5ac76f4f1e6b68ea93f`
+preserves one logical Nautilus order across cancel-replace. The old and
+replacement Bet IDs map to one `client_order_id`; success emits exactly one
+`OrderUpdated` with the replacement Bet ID, suppresses the old-Bet cancel, and
+orders that update before any fill already present in the replacement OCM.
+`CANCELLED_NOT_PLACED` emits `OrderCanceled`, not `OrderModifyRejected`; late
+fills on the canceled old Bet ID apply once without reopening the order.
 
+Use `customerOrderRef` to correlate the logical order. Generate one
+`customerRef` per REST command and reuse it unchanged across retries.
+State-changing commands may retry at most three times within a 45-second budget,
+inside Betfair's 60-second deduplication window. Treat transport failures,
+timeouts, malformed success responses, HTTP 5xx, throttling/service-busy, and
+documented unexpected errors as ambiguous. If the budget expires, keep the
+order pending for OCM or startup reconciliation; reject only on definitive venue
+evidence.
 ## Order stream fill handling
 
 The execution client processes order updates from the Betfair Exchange Streaming API.
@@ -222,7 +234,7 @@ reconciliation do not throttle order placement:
 
 | Bucket  | Default | Endpoints                                       |
 |---------|---------|-------------------------------------------------|
-| General | 5/s     | Account state, reconciliation, keep‑alive.      |
+| General | 5/s     | Account state, reconciliation, keep-alive.      |
 | Orders  | 20/s    | `placeOrders`, `replaceOrders`, `cancelOrders`. |
 
 Order status and fill report queries retry once on session errors after refreshing the
@@ -325,10 +337,10 @@ keep-alive interval.
 | `reconcile_market_ids_only`         | `False`       | When `True`, use `reconcile_market_ids`.               |
 | `reconcile_market_ids`              | `None`        | Explicit startup reconciliation market IDs.            |
 | `use_market_version`                | `False`       | Attach market version to place and replace requests.   |
-| `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post‑reconnect mass‑status reconciliation. |
+| `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post-reconnect mass-status reconciliation. |
 
 NT v2 compatibility note: the `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs` names
-(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `baa667bc`;
+(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `f725e184db`;
 older pins through `6e59fd74ea` used the pre-rename millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
 

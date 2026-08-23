@@ -16,7 +16,7 @@ Sources:
 - Use `get_runtime().spawn()` for Python-runtime-sensitive async Rust paths; do
   not teach `tokio::spawn()` as the default from Python-driven adapter code.
 - Align Python adapter methods with current command/request object signatures.
-- Treat `InstrumentProvider.load_all_async()` as the required load method for
+- Treat the required `InstrumentProvider` methods `load_all`, `load_ids`, and `load` for
   current v1.227-era guidance; override targeted load methods only for venue
   semantics or efficiency.
 - Require order status reports, fill reports, position status reports, and mass

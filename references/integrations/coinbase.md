@@ -35,8 +35,8 @@ Current components:
 
 | Component                          | Status | Notes                                                                      |
 |------------------------------------|--------|----------------------------------------------------------------------------|
-| `CoinbaseHttpClient`               | Built  | Two‑layer REST client: raw endpoint methods + domain wrapper.              |
-| `CoinbaseWebSocketClient`          | Built  | Low‑level WebSocket connectivity with JWT subscribe auth.                  |
+| `CoinbaseHttpClient`               | Built  | Two-layer REST client: raw endpoint methods + domain wrapper.              |
+| `CoinbaseWebSocketClient`          | Built  | Low-level WebSocket connectivity with JWT subscribe auth.                  |
 | `CoinbaseInstrumentProvider`       | Built  | Instrument parsing and loading.                                            |
 | `CoinbaseDataClient`               | Built  | Rust market data feed manager.                                             |
 | `CoinbaseDataClientFactory`        | Built  | Rust data client factory.                                                  |
@@ -237,7 +237,7 @@ For full details see the Coinbase
 | Variable              | Description                                               |
 |-----------------------|-----------------------------------------------------------|
 | `COINBASE_API_KEY`    | Key name (`organizations/{org_id}/apiKeys/{key_id}`).     |
-| `COINBASE_API_SECRET` | PEM‑encoded EC private key (full multi‑line string).      |
+| `COINBASE_API_SECRET` | PEM-encoded EC private key (full multi-line string).      |
 
 Example:
 
@@ -318,7 +318,7 @@ works out of the box. Create one on
 [coinbase.com/portfolios](https://www.coinbase.com/portfolios) only if you
 want to:
 
-- Segregate API‑driven trading from manual retail activity.
+- Segregate API-driven trading from manual retail activity.
 - Isolate risk or P&L between strategies.
 - Work around a restricted default (e.g. a Vault).
 
@@ -333,9 +333,9 @@ running the probe binary above and inspecting the portfolio wallet list.
 
 | Symptom                                                              | Likely cause                                                                                          | Fix                                                                                       |
 |----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| Rejected only for a specific product (e.g. `BTC-USD` with only USDC) | Portfolio is missing a wallet for the product's quote currency. USD and USDC are separate on Coinbase, and the venue routes orders by the submitted `product_id`, not by the canonical alias. | Submit against the product whose quote currency you hold (e.g. `BTC-USDC` for USDC wallets). The adapter resolves the data‑side alias internally; no config change needed. Funding the missing wallet via coinbase.com is also an option but unnecessary when only one currency is held. |
-| Every order rejected across all products                             | Key is bound to a non‑default portfolio and `retail_portfolio_id` is unset.                           | Set `retail_portfolio_id` on `CoinbaseExecClientConfig` to the target portfolio UUID.     |
-| Rejected for `*-USD` products on a non‑US account                    | Jurisdictional restriction (e.g. AU accounts cannot trade USD‑quoted pairs).                          | Use locally‑available quotes (USDC, AUD, EUR, etc.) instead of USD.                       |
+| Rejected only for a specific product (e.g. `BTC-USD` with only USDC) | Portfolio is missing a wallet for the product's quote currency. USD and USDC are separate on Coinbase, and the venue routes orders by the submitted `product_id`, not by the canonical alias. | Submit against the product whose quote currency you hold (e.g. `BTC-USDC` for USDC wallets). The adapter resolves the data-side alias internally; no config change needed. Funding the missing wallet via coinbase.com is also an option but unnecessary when only one currency is held. |
+| Every order rejected across all products                             | Key is bound to a non-default portfolio and `retail_portfolio_id` is unset.                           | Set `retail_portfolio_id` on `CoinbaseExecClientConfig` to the target portfolio UUID.     |
+| Rejected for `*-USD` products on a non-US account                    | Jurisdictional restriction (e.g. AU accounts cannot trade USD-quoted pairs).                          | Use locally-available quotes (USDC, AUD, EUR, etc.) instead of USD.                       |
 | Rejected right after key rotation                                    | New key was created in a different portfolio than the previous one.                                   | Update `retail_portfolio_id` to match the new key's portfolio, or move funds.             |
 
 ## Orders capability
@@ -414,13 +414,13 @@ rejected at submit time with `"Unsupported TIF {tif} for {order_type}"`.
 
 | Feature            | Spot | Perpetual | Future | Notes                                                                              |
 |--------------------|------|-----------|--------|------------------------------------------------------------------------------------|
-| Order Modification | ✓    | ✓         | ✓      | GTC variants only (LIMIT, STOP_LIMIT, Bracket); other types use cancel‑replace.    |
+| Order Modification | ✓    | ✓         | ✓      | GTC variants only (LIMIT, STOP_LIMIT, Bracket); other types use cancel-replace.    |
 | Bracket Orders     | -    | -         | -      | *Not yet supported.* Venue exposes `trigger_bracket_gtc` / `trigger_bracket_gtd`.  |
 | OCO Orders         | -    | -         | -      | *Not exposed by the venue* as a distinct order type.                               |
 | Iceberg Orders     | -    | -         | -      | *Not exposed by the venue.*                                                        |
 | TWAP Orders        | -    | -         | -      | *Not yet supported.* Venue exposes `twap_limit_gtd`.                               |
 | Scaled Orders      | -    | -         | -      | *Not yet supported.* Venue exposes `scaled_limit_gtc`.                             |
-| SOR LIMIT IOC      | -    | -         | -      | *Not yet supported.* Venue exposes `sor_limit_ioc` for smart‑order‑routed LIMIT IOC. |
+| SOR LIMIT IOC      | -    | -         | -      | *Not yet supported.* Venue exposes `sor_limit_ioc` for smart-order-routed LIMIT IOC. |
 
 See the [Create Order reference](https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/orders/create-order)
 and [Edit Order reference](https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/orders/edit-order)
@@ -432,7 +432,7 @@ for the underlying venue specification.
 |---------------|----------------------------------------------------------------------|
 | Leverage      | Set per order; default `1.0`.                                        |
 | Margin type   | Set per order: cross (default) or isolated.                          |
-| Position mode | One‑way only; hedge mode is not exposed.                             |
+| Position mode | One-way only; hedge mode is not exposed.                             |
 
 ### Batch operations
 
@@ -440,7 +440,7 @@ for the underlying venue specification.
 |---------------|----------------------------------------------------------------------------------------------------|
 | Batch Submit  | Not supported. Each order is one `Create Order` request.                                           |
 | Batch Modify  | Not supported. Each edit is one `Edit Order` request.                                              |
-| Batch Cancel  | `POST /api/v3/brokerage/orders/batch_cancel` accepts an `order_ids` array. No documented max size; per‑order success/failure in the response. |
+| Batch Cancel  | `POST /api/v3/brokerage/orders/batch_cancel` accepts an `order_ids` array. No documented max size; per-order success/failure in the response. |
 
 ### Order querying
 
@@ -448,7 +448,7 @@ for the underlying venue specification.
 |----------------------|------|-----------|--------|---------------------------------------------|
 | Query open orders    | ✓    | ✓         | ✓      | List all active orders.                     |
 | Query order history  | ✓    | ✓         | ✓      | Historical order data with cursor paging.   |
-| Order status updates | ✓    | ✓         | ✓      | Real‑time state changes via `user` channel. |
+| Order status updates | ✓    | ✓         | ✓      | Real-time state changes via `user` channel. |
 | Trade history        | ✓    | ✓         | ✓      | Execution and fill reports.                 |
 
 ### Spot trading limitations
@@ -456,8 +456,8 @@ for the underlying venue specification.
 - `reduce_only` is not supported on spot orders (the instruction applies to
   derivatives).
 - Trailing stop orders are not supported.
-- Native stop‑limit and bracket orders are not available on Spot.
-- Quote‑denominated MARKET orders are supported; LIMIT orders are sized in
+- Native stop-limit and bracket orders are not available on Spot.
+- Quote-denominated MARKET orders are supported; LIMIT orders are sized in
   base units.
 
 ### Derivatives trading
@@ -616,7 +616,7 @@ Coinbase publishes the following limits for the Advanced Trade APIs:
 | WebSocket unauthenticated msgs    | 8 per second per IP address                          | Advanced Trade WebSocket Rate Limits                  |
 | WebSocket subscribe deadline      | First subscribe message must arrive within 5 s of connect or the server disconnects | Advanced Trade WebSocket Overview |
 | Authenticated WebSocket JWT       | 120 s; a fresh JWT must be generated for every authenticated subscribe message | Advanced Trade WebSocket Overview |
-| REST per‑key quota                | 10,000 requests per hour per API key (Coinbase App general policy) | Coinbase App Rate Limiting       |
+| REST per-key quota                | 10,000 requests per hour per API key (Coinbase App general policy) | Coinbase App Rate Limiting       |
 
 When the REST limit is exceeded, Coinbase returns HTTP `429` with this body:
 
@@ -697,7 +697,7 @@ fill deltas remain correct.
 | `account_type`           | `Cash`  | `Cash` for spot or `Margin` for CFM derivatives. See [Execution scope](#execution-scope).                |
 | `default_margin_type`    | `None`  | Default `CoinbaseMarginType` (`Cross` or `Isolated`) applied to derivatives orders. Ignored on Cash.     |
 | `default_leverage`       | `None`  | Default leverage applied to derivatives orders. Ignored on Cash.                                         |
-| `retail_portfolio_id`    | `None`  | CDP retail portfolio UUID. Required when the API key is bound to a non‑default portfolio (the venue rejects orders with `account is not available` otherwise). See [Portfolios](#portfolios). |
+| `retail_portfolio_id`    | `None`  | CDP retail portfolio UUID. Required when the API key is bound to a non-default portfolio (the venue rejects orders with `account is not available` otherwise). See [Portfolios](#portfolios). |
 
 Configurations are constructed from Python via the PyO3-exported types:
 

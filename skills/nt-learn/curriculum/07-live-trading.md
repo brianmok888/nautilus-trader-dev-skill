@@ -57,7 +57,7 @@ node.run().await?;
 ```
 
 Use the concrete factory and config types from the selected adapter. The pinned
-upstream baseline `98e6c39d8384c91dbf0102ea581aff5313ba9811` includes runnable nodes under
+upstream baseline `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` includes runnable nodes under
 `crates/adapters/<venue>/examples/` and the official
 `docs/how_to/run_rust_live_trading.md` guide.
 

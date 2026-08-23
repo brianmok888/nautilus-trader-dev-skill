@@ -20,9 +20,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `98e6c39d8384c91dbf0102ea581aff5313ba9811`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed 32 repository migration tests and 69 pinned-upstream V2 tests (6 explicit post-cutover skips); durable evidence is recorded in `references/g2-evidence/nt-strategy-builder.json`. |
+| G2 Pinned V2 examples | Execute the supported `BacktestNode`/`BacktestRunConfig` contract against pinned V2 and statically verify that retained Python templates remain migration/reference-only. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed against the writable pinned-V2 build selected through `NT_UPSTREAM_ROOT`; `tests/test_strategy_builder_v2_contract.py` provides executable V2 coverage plus static migration/reference checks, while pinned upstream backtest/live acceptance tests provide integration coverage; `references/g2-evidence/nt-strategy-builder.json` records provenance. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -49,7 +49,7 @@ Historical Python prose and examples are pointer-only from this root. Read `migr
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `98e6c39d8384c91dbf0102ea581aff5313ba9811`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 
@@ -115,7 +115,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ## Modern Tooling Standards
 - **Project Management**: Use `uv` for lightning-fast dependency resolution and environment management (see `docs/uv_guide.md`).
-- **Serialization**: Prefer `msgspec.Struct` for custom data types over standard dataclasses for 10-100x speedups (see `docs/serialization.md`).
+- **Serialization**: Use pinned NautilusTrader model and serialization APIs; verify custom-type schemas against the current registration contract (see `docs/serialization.md`).
 - **Visualization (migration/reference-only)**: Use `TearsheetConfig` with `create_tearsheet` from `nautilus_trader.analysis` and install the `visualization` extra (see `docs/visualization.md`).
 
 ## Implementation Workflow

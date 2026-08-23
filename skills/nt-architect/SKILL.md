@@ -13,7 +13,7 @@ Use these gates as the architecture acceptance card. A gate is `Pass` only when 
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin the developer-guide snapshot and APIs before design. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
 | G1 Legacy labelling | legacy: Keep migration/reference labels on legacy/Cython/v1 guidance outside production design. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Compile representative Rust API shapes against the pinned baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed against `98e6c39d8384c91dbf0102ea581aff5313ba9811`; evidence: `references/g2-evidence/nt-architect.json`. |
+| G2 Pinned V2 examples | Compile representative Rust API shapes against the pinned baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; evidence: `references/g2-evidence/nt-architect.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Quarantine Python and keep execution authority in Rust. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Map each component to unit, integration, and lifecycle evidence. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
@@ -39,18 +39,28 @@ Use a component ownership matrix with crate/module, input messages, output messa
 For adapters, preserve dependency order: domain types and parsing, HTTP client, WebSocket client, instrument provider, live data client, live execution client, then factories/configuration. Runtime tasks use the project runtime rather than an isolated executor, hot handlers do not block, and every reconnect/reconciliation path has test evidence.
 
 ```rust
+#[derive(Debug)]
 pub struct RegimeActor {
+    core: DataActorCore,
     current: Option<Regime>,
 }
 
+nautilus_actor!(RegimeActor);
+
 impl DataActor for RegimeActor {
-    fn on_data(&mut self, data: &Data) -> anyhow::Result<()> {
+    fn on_data(&mut self, data: &CustomData) -> anyhow::Result<()> {
         let next = self.classify(data)?;
         self.current = Some(next);
-        self.publish(next.into())
+        self.publish_signal("regime", next.to_string(), self.clock().timestamp_ns())
     }
 }
 ```
+
+The actor owns a `DataActorCore`, uses `nautilus_actor!` for the component
+contract, receives `CustomData`, and publishes through the current
+`publish_data`/`publish_signal` APIs. Treat this as a contract sketch: use the
+pinned `crates/common/examples/greeks_actor_example.rs` for complete imports,
+construction, registration, and subscription wiring.
 
 Execution-event architecture uses the current Rust callbacks
 `on_order_filled(&OrderFilled)` and `on_order_canceled(&OrderCanceled)`; do not
@@ -71,4 +81,4 @@ Legacy Python architecture prose and examples are physically quarantined at [`mi
 
 ## Source-pinned upstream lane
 
-Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `98e6c39d8384c91dbf0102ea581aff5313ba9811`. Treat newer upstream behavior as version-scoped until the repository pin advances.
+Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Treat newer upstream behavior as version-scoped until the repository pin advances.

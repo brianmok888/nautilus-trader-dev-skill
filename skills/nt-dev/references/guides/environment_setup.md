@@ -147,7 +147,7 @@ to read them.
 |----------------------------------------------|-------------------------------------------------------|
 | `rust-toolchain.toml`                        | Rust toolchain.                                       |
 | `Cargo.toml` and `Cargo.lock`                | Rust workspace dependencies and exact resolution.     |
-| `Cargo.toml` `[workspace.metadata.tools]`    | Cargo‑installable development tools.                  |
+| `Cargo.toml` `[workspace.metadata.tools]`    | Cargo-installable development tools.                  |
 | `pyproject.toml` and `python/pyproject.toml` | Python dependencies, supported Python range, and uv.  |
 | `uv.lock` and `python/uv.lock`               | Exact Python dependency resolutions.                  |
 | `tools.toml`                                 | External CLIs and binaries without a native manifest. |

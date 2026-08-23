@@ -176,13 +176,13 @@ for historical data backfill.
 
 | AX Data           | Nautilus Data Type   | Notes                                                              |
 |-------------------|----------------------|--------------------------------------------------------------------|
-| Order book (L1)   | `QuoteTick`          | Best bid/ask top‑of‑book from L1 book subscription.                |
+| Order book (L1)   | `QuoteTick`          | Best bid/ask top-of-book from L1 book subscription.                |
 | Order book (L2)   | `OrderBookDelta`     | Aggregated price levels.                                           |
 | Order book (L3)   | `OrderBookDelta`     | Individual order quantities.                                       |
-| Trades            | `TradeTick`          | Real‑time trade events from L1 subscription.                       |
+| Trades            | `TradeTick`          | Real-time trade events from L1 subscription.                       |
 | Mark price        | `MarkPriceUpdate`    | Extracted from L1 ticker subscription.                             |
 | Bars/candles      | `Bar`                | OHLCV data (total volume only, no buy/sell breakdown).             |
-| Funding rates     | `FundingRateUpdate`  | Polled via HTTP (not real‑time WebSocket); interval configurable.  |
+| Funding rates     | `FundingRateUpdate`  | Polled via HTTP (not real-time WebSocket); interval configurable.  |
 | Instrument status | `InstrumentStatus`   | State changes (open, halted, closed) from L1 ticker subscription.  |
 
 :::note
@@ -222,7 +222,7 @@ AX Exchange supports market and limit order types with stop triggers.
 
 | Instruction   | Supported | Notes                                               |
 |---------------|-----------|-----------------------------------------------------|
-| `post_only`   | ✓         | Maker‑only; rejected if order would take liquidity. |
+| `post_only`   | ✓         | Maker-only; rejected if order would take liquidity. |
 | `reduce_only` | -         | *Not supported*.                                    |
 
 ### Time in force
@@ -245,15 +245,15 @@ AX Exchange supports market and limit order types with stop triggers.
 | Cancel order       | ✓         | Single order cancellation.                                         |
 | Cancel all orders  | ✓         | Cancel all open orders for an instrument.                          |
 | Batch cancel       | -         | *Not supported by AX Exchange*. Individual cancels used instead.   |
-| Order lists        | ✓         | Sequential submission (orders submitted individually, non‑atomic). |
+| Order lists        | ✓         | Sequential submission (orders submitted individually, non-atomic). |
 
 ### Position management
 
 | Feature          | Supported | Notes                                |
 |------------------|-----------|--------------------------------------|
-| Query positions  | ✓         | Real‑time position updates.          |
+| Query positions  | ✓         | Real-time position updates.          |
 | Position mode    | -         | Netting mode only.                   |
-| Cross margin     | ✓         | Cross‑margin across all instruments. |
+| Cross margin     | ✓         | Cross-margin across all instruments. |
 
 ### Order querying
 

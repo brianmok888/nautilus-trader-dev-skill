@@ -38,7 +38,11 @@ use crate::{Returns, statistic::PortfolioStatistic};
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.analysis", from_py_object)
+    pyo3::pyclass(module = "nautilus_trader.analysis", from_py_object)
+)]
+#[cfg_attr(
+    feature = "python",
+    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.analysis")
 )]
 pub struct WinRate {}
 
@@ -115,6 +119,17 @@ mod tests {
         let result = win_rate.calculate_from_realized_pnls(&realized_pnls);
         assert!(result.is_some());
         assert!(approx_eq!(f64, result.unwrap(), 0.5, epsilon = 1e-9));
+    }
+
+    #[rstest]
+    fn test_breakeven_trades_count_in_denominator() {
+        // Per the documented formula Count(PnL > 0) / Total Trades, a breakeven
+        // trade is not a win but still counts in the denominator: 1 / 3.
+        let win_rate = WinRate {};
+        let realized_pnls = vec![100.0, 0.0, -50.0];
+        let result = win_rate.calculate_from_realized_pnls(&realized_pnls);
+        assert!(result.is_some());
+        assert!(approx_eq!(f64, result.unwrap(), 1.0 / 3.0, epsilon = 1e-9));
     }
 
     #[rstest]

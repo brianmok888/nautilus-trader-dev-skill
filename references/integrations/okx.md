@@ -27,7 +27,7 @@ Python live-node wiring is migration/reference-only under
 | Margin            | ✓         | ✓       | Spot trading with margin or leverage.               |
 | Perpetual swaps   | ✓         | ✓       | Linear and inverse contracts.                       |
 | Futures           | ✓         | ✓       | Dated futures contracts.                            |
-| Options           | ✓         | ✓       | Limit‑style orders only; no market or conditional.  |
+| Options           | ✓         | ✓       | Limit-style orders only; no market or conditional.  |
 | Event contracts   | ✓         | ✓       | Parsed as Nautilus `BinaryOption` instruments.      |
 
 :::note
@@ -247,7 +247,7 @@ strategy.submit_order(order)
 | `GTC`         | ✓                     | Good Till Canceled.                               |
 | `FOK`         | ✓                     | Fill or Kill.                                     |
 | `IOC`         | ✓                     | Immediate or Cancel.                              |
-| `GTD`         | -                     | *No native OKX order time‑in‑force.*              |
+| `GTD`         | -                     | *No native OKX order time-in-force.*              |
 
 :::note
 **GTD (Good Till Date) time in force**: OKX supports request expiry through `expTime`,
@@ -269,7 +269,7 @@ order expiration by canceling the order at the specified expiry time.
 
 | Feature           | Linear perpetual swap | Notes                                                |
 |-------------------|-----------------------|------------------------------------------------------|
-| Query positions   | ✓                     | Real‑time position updates.                          |
+| Query positions   | ✓                     | Real-time position updates.                          |
 | Position mode     | ✓                     | Net vs Long/Short mode (see below).                  |
 | Leverage control  | ✓                     | Dynamic leverage adjustment per instrument.          |
 | Margin mode       | ✓                     | Supports cash, isolated, and cross modes.            |
@@ -421,7 +421,7 @@ Only use manual override for requirements that cannot be met through configurati
 |----------------------|-----------------------|-------------------------------------------|
 | Query open orders    | ✓                     | List all active orders.                   |
 | Query order history  | ✓                     | Historical order data.                    |
-| Order status updates | ✓                     | Real‑time order state changes.            |
+| Order status updates | ✓                     | Real-time order state changes.            |
 | Trade history        | ✓                     | Execution and fill reports.               |
 
 ### Contingent orders
@@ -429,9 +429,9 @@ Only use manual override for requirements that cannot be met through configurati
 | Feature            | Linear perpetual swap | Notes                                 |
 |--------------------|-----------------------|---------------------------------------|
 | Order lists        | ✓                     | Batch via WS; regular orders only.    |
-| OCO orders         | ✓                     | One‑Cancels‑Other orders.             |
+| OCO orders         | ✓                     | One-Cancels-Other orders.             |
 | Bracket orders     | ✓                     | Stop loss + take profit combinations. |
-| Conditional orders | ✓                     | Stop and limit‑if‑touched orders.     |
+| Conditional orders | ✓                     | Stop and limit-if-touched orders.     |
 
 #### Conditional order architecture
 
@@ -497,7 +497,7 @@ recognized values are:
 |-------------------------|------------------------------------------------------|
 | `full_liquidation`      | Full position liquidation.                           |
 | `partial_liquidation`   | Partial position liquidation.                        |
-| `adl`                   | Auto‑deleveraging close.                             |
+| `adl`                   | Auto-deleveraging close.                             |
 | `delivery`              | Contract delivery at expiry.                         |
 | `normal` / other values | Regular order flow.                                  |
 
@@ -809,7 +809,7 @@ responses and temporary throttling on that key.
 
 | Key / endpoint                          | Limit (req/sec) | Notes                                          |
 |-----------------------------------------|-----------------|------------------------------------------------|
-| `okx:global`                            | 250             | Adapter‑level shared bucket.                   |
+| `okx:global`                            | 250             | Adapter-level shared bucket.                   |
 | `/api/v5/public/instruments`            | 10              | OKX 20 requests / 2 seconds.                   |
 | `/api/v5/public/event-contract/series`  | 5               | OKX 10 requests / 2 seconds.                   |
 | `/api/v5/public/event-contract/events`  | 5               | OKX 10 requests / 2 seconds.                   |
@@ -856,7 +856,7 @@ The OKX data client provides the following configuration options:
 | `retry_delay_initial_ms`           | `1,000`                     | Initial delay before retrying.               |
 | `retry_delay_max_ms`               | `10,000`                    | Maximum exponential backoff delay.           |
 | `update_instruments_interval_mins` | `60`                        | Background instrument refresh interval.      |
-| `vip_level`                        | `None`                      | Enables higher‑depth books by VIP tier.      |
+| `vip_level`                        | `None`                      | Enables higher-depth books by VIP tier.      |
 | `proxy_url`                        | `None`                      | Optional HTTP and WebSocket proxy URL.       |
 
 `instrument_families` is required for `OPTION`, optional for `FUTURES`, `SWAP`, and
@@ -879,10 +879,10 @@ The OKX execution client provides the following configuration options:
 | `api_passphrase`                  | `None`                      | Falls back to `OKX_API_PASSPHRASE`.         |
 | `environment`                     | `None`                      | Environment enum (`LIVE` or `DEMO`).        |
 | `margin_mode`                     | `None`                      | Margin mode (`ISOLATED` or `CROSS`).        |
-| `use_spot_margin`                 | `False`                     | Enables spot‑style margin or leverage.      |
+| `use_spot_margin`                 | `False`                     | Enables spot-style margin or leverage.      |
 | `http_timeout_secs`               | `60`                        | REST trading request timeout.               |
 | `use_fills_channel`               | `False`                     | Subscribes to fills channel (VIP5+).        |
-| `use_mm_mass_cancel`              | `False`                     | Uses the market‑maker bulk cancel endpoint. |
+| `use_mm_mass_cancel`              | `False`                     | Uses the market-maker bulk cancel endpoint. |
 | `max_retries`                     | `3`                         | Retry attempts for recoverable REST errors. |
 | `retry_delay_initial_ms`          | `1,000`                     | Initial delay before retrying.              |
 | `retry_delay_max_ms`              | `10,000`                    | Maximum exponential backoff delay.          |

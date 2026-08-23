@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/releases/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/releases.md
-source_commit: 98e6c39d8384c91dbf0102ea581aff5313ba9811
-sync_date: 2026-08-22
+source_commit: f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f
+sync_date: 2026-08-23
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -14,10 +14,10 @@ This guide covers the release process and the standards for writing release note
 
 ## Overview
 
-NautilusTrader uses a three‑branch model:
+NautilusTrader uses a three-branch model:
 
 - **`develop`**: active development; publishes dev wheels to Cloudflare R2 on every push.
-- **`nightly`**: pre‑release testing; publishes all supported pre‑release wheels and CLI binaries.
+- **`nightly`**: pre-release testing; publishes all supported pre-release wheels and CLI binaries.
 - **`master`**: stable releases; triggers the full release pipeline.
 
 Merging a release commit to `master` automatically tags the version from `python/pyproject.toml`,
@@ -98,7 +98,7 @@ The project maintains two version numbers:
 | `Cargo.toml` (workspace) | Rust crates    |
 
 These are bumped independently. The Python version drives the `v<python-version>` release tag.
-Versions ending in `aN`, `bN`, or `rcN` create a GitHub pre‑release; final versions create a normal
+Versions ending in `aN`, `bN`, or `rcN` create a GitHub pre-release; final versions create a normal
 release.
 
 ## Crates.io publishing

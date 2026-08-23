@@ -111,7 +111,7 @@ The table below outlines the mappings between Nautilus venues and corresponding 
 |:------------------------|:------------------------------------------------------|
 | `ASCENDEX`              | `ascendex`                                            |
 | `BINANCE`               | `binance`, `binance-dex`, `binance-european-options`, `binance-futures`, `binance-jersey`, `binance-options` |
-| `BINANCE_DELIVERY`      | `binance-delivery` (*COIN‑margined contracts*)        |
+| `BINANCE_DELIVERY`      | `binance-delivery` (*COIN-margined contracts*)        |
 | `BINANCE_US`            | `binance-us`                                          |
 | `BITFINEX`              | `bitfinex`, `bitfinex-derivatives`                    |
 | `BITFLYER`              | `bitflyer`                                            |

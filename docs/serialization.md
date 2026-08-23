@@ -2,9 +2,9 @@
 
 NautilusTrader supports multiple serialization formats for high-performance data interchange.
 
-## Comparison: msgspec vs Cap'n Proto
+## Comparison: NautilusTrader model serialization vs Cap'n Proto
 
-| Feature | `msgspec` | Cap'n Proto (`capnp`) |
+| Feature | `NautilusTrader model serialization` | Cap'n Proto (`capnp`) |
 |---------|-----------|-----------------------|
 | **Speed** | Very Fast | Blazing (Zero-copy) |
 | **Ease of Use** | High (Python-native) | Moderate (Requires Schema) |
@@ -12,12 +12,12 @@ NautilusTrader supports multiple serialization formats for high-performance data
 | **Language Cross-op** | Good | Excellent |
 | **When to use** | Standard trading data | Extreme performance / Rust core |
 
-## Using `msgspec`
+## Using `NautilusTrader model serialization`
 
 Default in Nautilus. Use for custom data objects:
 
 ```python
-from msgspec import Struct
+from NautilusTrader model serialization import Struct
 
 class MyModel(Struct):
     price: float
@@ -36,4 +36,4 @@ Example schema: [capnp_schema.capnp](../skills/nt-implement/templates/capnp_sche
 
 ## Performance Tip
 
-Avoid using standard `pickle` or `json` (built-in) in hot paths, as they are significantly slower than `msgspec`.
+Avoid using standard `pickle` or `json` (built-in) in hot paths, as they are significantly slower than `NautilusTrader model serialization`.

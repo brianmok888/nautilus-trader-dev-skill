@@ -13,9 +13,9 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Portfolio analysis and performance metrics for [NautilusTrader](http://nautilustrader.io).
+//! Portfolio analysis and performance metrics for [NautilusTrader](https://nautilustrader.io).
 //!
-//! The `nautilus-analysis` crate provides a comprehensive suite of portfolio analysis tools and performance
+//! The `nautilus-analysis` crate provides portfolio analysis tools and performance
 //! statistics for evaluating trading strategies and portfolios. This includes return-based metrics,
 //! PnL-based statistics, and risk measurements commonly used in quantitative finance:
 //!
@@ -24,15 +24,13 @@
 //! - Flexible statistic calculation framework supporting different data sources.
 //! - Support for multi-currency portfolios and unrealized PnL calculations.
 //!
-//! # Platform
+//! # NautilusTrader
 //!
-//! [NautilusTrader](http://nautilustrader.io) is an open-source, high-performance, production-grade
-//! algorithmic trading platform, providing quantitative traders with the ability to backtest
-//! portfolios of automated trading strategies on historical data with an event-driven engine,
-//! and also deploy those same strategies live, with no code changes.
+//! [NautilusTrader](https://nautilustrader.io) is an open-source, production-grade, Rust-native
+//! engine for multi-asset, multi-venue trading systems.
 //!
-//! NautilusTrader's design, architecture, and implementation philosophy prioritizes software correctness and safety at the
-//! highest level, with the aim of supporting mission-critical, trading system backtesting and live deployment workloads.
+//! The system spans research, deterministic simulation, and live execution within a single
+//! event-driven architecture, providing research-to-live semantic parity.
 //!
 //! # Feature Flags
 //!
@@ -45,6 +43,7 @@
 //! - `extension-module`: Builds the crate as a Python extension module.
 
 #![warn(rustc::all)]
+#![warn(clippy::pedantic)]
 #![deny(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(nonstandard_style)]
@@ -52,10 +51,36 @@
 #![deny(clippy::missing_errors_doc)]
 #![deny(clippy::missing_panics_doc)]
 #![deny(rustdoc::broken_intra_doc_links)]
+#![allow(
+    clippy::similar_names,
+    reason = "domain terms such as returns/realized and pnl/pnls are intentionally parallel"
+)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    reason = "analysis math casts between usize/i32/i64/f64 with values bounded by sample counts"
+)]
+#![allow(
+    clippy::assert_is_empty,
+    reason = "`assert!(x.is_empty())` is clearer than comparing against an empty value"
+)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::float_cmp,
+        clippy::unreadable_literal,
+        reason = "analysis tests assert exact float outputs and reference statistic constants"
+    )
+)]
 
 pub mod analyzer;
+pub mod snapshot;
 pub mod statistic;
 pub mod statistics;
+
+pub use snapshot::PortfolioStatistics;
 
 #[cfg(feature = "python")]
 pub mod python;

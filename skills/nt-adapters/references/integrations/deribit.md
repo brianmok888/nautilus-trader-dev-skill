@@ -281,7 +281,7 @@ This provides several advantages:
 
 | Feature           | Supported | Notes                                     |
 |-------------------|-----------|-------------------------------------------|
-| Query positions   | ✓         | Real‑time position updates.               |
+| Query positions   | ✓         | Real-time position updates.               |
 | Position mode     | -         | Deribit uses net position mode only.      |
 | Leverage control  | -         | Leverage set at account level via UI.     |
 | Margin mode       | -         | Portfolio margin via Deribit UI settings. |
@@ -292,7 +292,7 @@ This provides several advantages:
 |----------------------|-----------|-----------------------------------|
 | Query open orders    | ✓         | List all active orders.           |
 | Query order history  | ✓         | Historical order data.            |
-| Order status updates | ✓         | Real‑time order state changes.    |
+| Order status updates | ✓         | Real-time order state changes.    |
 | Trade history        | ✓         | Execution and fill reports.       |
 
 ### Contingent orders
@@ -315,7 +315,7 @@ Deribit tags any trade that was triggered by a liquidation. On the
 | `"M"`  | Maker side was liquidated.                |
 | `"T"`  | Taker side was liquidated.                |
 | `"MT"` | Both sides were liquidated.               |
-| absent | Normal (non‑liquidation) trade.           |
+| absent | Normal (non-liquidation) trade.           |
 
 The adapter logs a warning for each liquidation-tagged fill with the
 instrument, trade ID, order ID, and liquidation side, and then emits the
@@ -574,7 +574,7 @@ for the testnet through the testnet interface at [test.deribit.com](https://test
 | `retry_delay_initial_ms`           | `1,000`    | Initial delay (milliseconds) before retrying. |
 | `retry_delay_max_ms`               | `10,000`   | Maximum delay (milliseconds) between retries. |
 | `update_instruments_interval_mins` | `60`       | Interval (minutes) between instrument refreshes. |
-| `auto_load_missing_instruments`    | `False`    | Lazy‑load uncached instruments on subscribe; see [Lazy‑load on subscribe](#lazy-load-on-subscribe). |
+| `auto_load_missing_instruments`    | `False`    | Lazy-load uncached instruments on subscribe; see [Lazy-load on subscribe](#lazy-load-on-subscribe). |
 
 #### Lazy-load on subscribe
 

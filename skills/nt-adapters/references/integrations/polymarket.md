@@ -86,12 +86,12 @@ The table below shows the main differences that affect behavior today.
 |---------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------|-------|
 | Public package path | `nautilus_trader.adapters.polymarket`                                         | `nautilus_trader.polymarket`                                  | Rust is the consolidation target. |
 | Order signing       | Uses `py-clob-client-v2`                                                      | Native Rust signing                                           | Python signing is slower. |
-| Post‑only orders    | Supported for `GTC` and `GTD` only                                            | Supported for `GTC` and `GTD` only                            | Both reject post‑only with market TIF (`IOC` or `FOK`). |
+| Post-only orders    | Supported for `GTC` and `GTD` only                                            | Supported for `GTC` and `GTD` only                            | Both reject post-only with market TIF (`IOC` or `FOK`). |
 | Batch submit        | Uses `POST /orders` for batchable `SubmitOrderList` requests                  | Uses `POST /orders` for batchable `SubmitOrderList` requests  | Both batch only independent limit orders, capped at 15 per request. |
 | Batch cancel        | Uses `DELETE /orders`                                                         | Uses `DELETE /orders`                                         | Both align with official Polymarket docs. |
 | Market unsubscribe  | Sends dynamic WebSocket `unsubscribe` messages                                | Sends dynamic WebSocket `unsubscribe` messages                | Both support subscribe and unsubscribe. |
-| Data client config  | Credentials, subscription buffering, quote handling, provider config          | Base URLs, timeouts, filters, new‑market discovery            | Config surfaces differ materially. |
-| Exec client config  | Credentials, retries, raw WS logging, experimental trade‑based order recovery | Credentials, retries, account IDs, native timeouts            | Rust does not expose every Python‑only option. |
+| Data client config  | Credentials, subscription buffering, quote handling, provider config          | Base URLs, timeouts, filters, new-market discovery            | Config surfaces differ materially. |
+| Exec client config  | Credentials, retries, raw WS logging, experimental trade-based order recovery | Credentials, retries, account IDs, native timeouts            | Rust does not expose every Python-only option. |
 
 ## pUSD
 
@@ -116,7 +116,7 @@ Polymarket supports multiple signature types for order signing and verification:
 | Signature Type | Wallet Type                    | Description | Use Case |
 |----------------|--------------------------------|-------------|----------|
 | `0`            | EOA (Externally Owned Account) | Standard EIP712 signatures from wallets with direct private key control. | **Default.** Direct wallet connections (MetaMask, hardware wallets, etc.). |
-| `1`            | Email/Magic Wallet Proxy       | Smart contract wallet for email‑based accounts (Magic Link). Only the email‑associated address can execute functions. | Polymarket Proxy associated with Email/Magic accounts. Requires `funder` address. |
+| `1`            | Email/Magic Wallet Proxy       | Smart contract wallet for email-based accounts (Magic Link). Only the email-associated address can execute functions. | Polymarket Proxy associated with Email/Magic accounts. Requires `funder` address. |
 | `2`            | Browser Wallet Proxy           | Modified Gnosis Safe (1-of-1 multisig) for browser wallets. | Polymarket Proxy associated with browser wallets. Enables UI verification. Requires `funder` address. |
 
 :::note
@@ -305,8 +305,8 @@ Polymarket calls the `POST /order` field `orderType`. In NautilusTrader, this ma
 
 | Nautilus TIF | Polymarket `orderType` | Nautilus order scope | Notes |
 |--------------|------------------------|----------------------|-------|
-| `GTC`        | `GTC`                  | `LIMIT` only         | Good‑Til‑Cancelled; rests on the book. |
-| `GTD`        | `GTD`                  | `LIMIT` only         | Good‑Til‑Date; rests until expiration, fill, or cancel. |
+| `GTC`        | `GTC`                  | `LIMIT` only         | Good-Til-Cancelled; rests on the book. |
+| `GTD`        | `GTD`                  | `LIMIT` only         | Good-Til-Date; rests until expiration, fill, or cancel. |
 | `FOK`        | `FOK`                  | `LIMIT` or `MARKET`  | Fill the full size immediately or cancel the whole order. |
 | `IOC`        | `FAK`                  | `LIMIT` or `MARKET`  | Fill available size immediately and cancel the remainder. |
 
@@ -330,7 +330,7 @@ resting `LIMIT` orders only.
 
 | Operation    | Binary Options | Notes                                                                                                                           |
 |--------------|----------------|---------------------------------------------------------------------------------------------------------------------------------|
-| Batch Submit | ✓              | Both adapters use `POST /orders` for independent limit‑order batches (max 15 orders per request). See [Batch submit](#batch-submit). |
+| Batch Submit | ✓              | Both adapters use `POST /orders` for independent limit-order batches (max 15 orders per request). See [Batch submit](#batch-submit). |
 | Batch Modify | -              | *Not supported by Polymarket*.                                                                                                  |
 | Batch Cancel | ✓              | Both adapters use `DELETE /orders`.                                                                                             |
 
@@ -338,14 +338,14 @@ resting `LIMIT` orders only.
 
 `SubmitOrderList` commands are routed to Polymarket's `POST /orders` endpoint. The endpoint
 accepts at most 15 orders per request (`BATCH_ORDER_LIMIT`); larger lists are split into
-sequential 15‑order chunks.
+sequential 15-order chunks.
 
 - Only `LIMIT` orders are batched. `MARKET` orders inside the list are routed to the
   single-order path, which signs a marketable order and submits it with `FAK` or `FOK`
   based on Nautilus `time_in_force`.
 - `reduce_only` orders, `quote_quantity` orders, and `post_only` with market TIF
   (`IOC` or `FOK`) are rejected before submission.
-- A single eligible order falls through to `POST /order` so it keeps the single‑order retry
+- A single eligible order falls through to `POST /order` so it keeps the single-order retry
   semantics; the batch path deliberately disables retry because the venue does not expose an
   idempotency key.
 - `BatchCancelOrders` is dispatched to `DELETE /orders` in one shot.
@@ -387,7 +387,7 @@ venue order ID is known, and fill tracking is registered under that ID.
 |----------------------|----------------|--------------------------------|
 | Query open orders    | ✓              | Active orders only.            |
 | Query order history  | ✓              | Limited historical data.       |
-| Order status updates | ✓              | Real‑time order state changes. |
+| Order status updates | ✓              | Real-time order state changes. |
 | Trade history        | ✓              | Execution and fill reports.    |
 
 ### Contingent orders
@@ -595,8 +595,8 @@ overfill.
 
 | Direction | Source                                  | Adapter behaviour                         |
 |-----------|-----------------------------------------|-------------------------------------------|
-| Overfill  | V2 USDC‑scale truncation (microshares)  | Snap fill DOWN to `submitted_qty`         |
-| Underfill | CLOB cent‑tick truncation (≤ `0.01`)    | Preserved; synthetic dust fill at MATCHED |
+| Overfill  | V2 USDC-scale truncation (microshares)  | Snap fill DOWN to `submitted_qty`         |
+| Underfill | CLOB cent-tick truncation (≤ `0.01`)    | Preserved; synthetic dust fill at MATCHED |
 
 `FillReport.commission` always reflects the venue-reported size, not the
 snapped quantity. The few-ulp difference is sub-microcent in pUSD.
@@ -727,9 +727,9 @@ Polymarket changes these quotas over time. As of 2026-05-06, the official limits
 | General rate limiting         | 15,000      | -                  | Global documented rate limit. |
 | Health check (`/ok`)          | 100         | -                  | Health endpoint. |
 | CLOB general                  | 9,000       | -                  | Aggregate across CLOB endpoints. |
-| CLOB `POST /order`            | 3,500       | 36,000             | Single‑order submit. |
+| CLOB `POST /order`            | 3,500       | 36,000             | Single-order submit. |
 | CLOB `POST /orders`           | 1,000       | 15,000             | Batch submit (up to 15 orders per request). |
-| CLOB `DELETE /order`          | 3,000       | 30,000             | Single‑order cancel. |
+| CLOB `DELETE /order`          | 3,000       | 30,000             | Single-order cancel. |
 | CLOB `DELETE /orders`         | 1,000       | 15,000             | Batch cancel. |
 | CLOB `GET /balance-allowance` | 200         | -                  | Balance and allowance queries. |
 | CLOB API key endpoints        | 100         | -                  | Key management. |
@@ -851,7 +851,7 @@ Struct: `PolymarketDataClientConfig` in `crates/adapters/polymarket/src/config.r
 | `ws_timeout_secs`                  | `30`                                       | WebSocket connect/idle timeout (seconds). |
 | `ws_max_subscriptions`             | `200`                                      | Maximum instrument subscriptions per WebSocket connection. |
 | `update_instruments_interval_mins` | `60`                                       | Interval (minutes) between instrument catalogue refreshes. |
-| `subscribe_new_markets`            | `false`                                    | Subscribe to new‑market discovery events via WebSocket when `true`. |
+| `subscribe_new_markets`            | `false`                                    | Subscribe to new-market discovery events via WebSocket when `true`. |
 | `auto_load_missing_instruments`    | `true`                                     | Load instruments on demand when subscribe or request commands reference uncached instruments. |
 | `auto_load_debounce_ms`            | `100`                                      | Debounce window (milliseconds) for coalescing concurrent runtime instrument loads. |
 | `filters`                          | `[]`                                       | Instrument filters applied during loading and discovery. |
@@ -880,7 +880,7 @@ Struct: `PolymarketExecClientConfig` in `crates/adapters/polymarket/src/config.r
 | `base_url_ws`            | `None` (official CLOB endpoint)            | Override for the CLOB WebSocket base URL. |
 | `base_url_data_api`      | `None` (`https://data-api.polymarket.com`) | Override for the Data API base URL. |
 | `http_timeout_secs`      | `60`                                       | HTTP request timeout (seconds). |
-| `max_retries`            | `3`                                        | Maximum retry attempts for single‑order submit/cancel requests. |
+| `max_retries`            | `3`                                        | Maximum retry attempts for single-order submit/cancel requests. |
 | `retry_delay_initial_ms` | `1000`                                     | Initial delay (milliseconds) between retries. |
 | `retry_delay_max_ms`     | `10000`                                    | Maximum delay (milliseconds) between retries. |
 | `ack_timeout_secs`       | `5`                                        | Timeout (seconds) waiting for WebSocket order/trade acknowledgment. |
@@ -897,7 +897,7 @@ The instrument provider config is passed via the `instrument_config` parameter o
 
 | Option               | Default | Description                                                                                    |
 |----------------------|---------|------------------------------------------------------------------------------------------------|
-| `load_all`           | `False` | Load all venue instruments on start. Auto‑set to `True` when `event_slug_builder` is provided. |
+| `load_all`           | `False` | Load all venue instruments on start. Auto-set to `True` when `event_slug_builder` is provided. |
 | `event_slug_builder` | `None`  | Fully qualified path to a callable returning event slugs (e.g., `"mymodule:build_slugs"`).     |
 
 #### Event slug builder

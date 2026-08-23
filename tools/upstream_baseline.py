@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-UPSTREAM_COMMIT = "98e6c39d8384c91dbf0102ea581aff5313ba9811"
+UPSTREAM_COMMIT = "f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f"
 
 
 def default_upstream_root() -> Path:

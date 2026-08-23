@@ -53,7 +53,7 @@ cargo run --example lighter-exec-tester --package nautilus-lighter --features ex
 ```
 
 NT v2 compatibility note: the immediate-startup tester convention above reflects upstream
-commits `e8daa045ab` and `7214db4239`, included in the pinned baseline `baa667bc`; older pins
+commits `e8daa045ab` and `7214db4239`, included in the pinned baseline `f725e184db`; older pins
 through `6e59fd74ea` used the historical CLI opt-in convention.
 
 :::warning
@@ -217,8 +217,14 @@ depth10 snapshots or `request_book_snapshot` for a REST `OrderBook` snapshot.
 ### Order identification
 
 Lighter uses a numeric venue order index and a caller-supplied `client_order_index`.
-The adapter derives the Lighter `client_order_index` from the Nautilus `ClientOrderId` and keeps a
-local map so private WebSocket reports can recover the original client order ID.
+The adapter derives a 31-bit index from the Nautilus `ClientOrderId` and probes forward when that
+index collides with another live order. Because a collision-probed value cannot be re-derived after
+restart, reconciliation resolves each raw `VenueOrderId` through cached venue-order mappings and
+restores its actual `client_order_index` before translating order and fill reports.
+
+After restart, rely on the cached `VenueOrderId` mapping: never infer a `ClientOrderId` from the
+numeric index alone. If the cache does not retain the matching venue-order identity, reports use the
+unique venue order ID as their external client order ID.
 
 Query paths can use either the Nautilus client order ID or the numeric venue order ID when the
 required mapping is available.
@@ -227,12 +233,12 @@ required mapping is available.
 
 | Order type             | Perpetuals | Spot | Notes                                                   |
 |------------------------|------------|------|---------------------------------------------------------|
-| `MARKET`               | ✓          | ✓    | Cap derived from cached far‑side quote + slippage.      |
+| `MARKET`               | ✓          | ✓    | Cap derived from cached far-side quote + slippage.      |
 | `LIMIT`                | ✓          | ✓    | Requires a limit price.                                 |
 | `STOP_MARKET`          | ✓          | -    | Perp only; cap derived from `trigger_price` + slippage. |
-| `STOP_LIMIT`           | ✓          | -    | Perp only; maps to Lighter stop‑loss limit orders.      |
+| `STOP_LIMIT`           | ✓          | -    | Perp only; maps to Lighter stop-loss limit orders.      |
 | `MARKET_IF_TOUCHED`    | ✓          | -    | Perp only; cap derived from `trigger_price` + slippage. |
-| `LIMIT_IF_TOUCHED`     | ✓          | -    | Perp only; maps to Lighter take‑profit limit orders.    |
+| `LIMIT_IF_TOUCHED`     | ✓          | -    | Perp only; maps to Lighter take-profit limit orders.    |
 | `MARKET_TO_LIMIT`      | -          | -    | *Not supported*.                                        |
 | `TRAILING_STOP_MARKET` | -          | -    | *Not supported*.                                        |
 | `TRAILING_STOP_LIMIT`  | -          | -    | *Not supported*.                                        |
@@ -256,10 +262,10 @@ the strategy has subscribed to quotes is denied with a clear error. Override per
 
 | Feature                         | Perpetuals | Spot | Notes                                                  |
 |---------------------------------|------------|------|--------------------------------------------------------|
-| Stop‑loss market                | ✓          | -    | `STOP_MARKET` maps to Lighter `STOP_LOSS`.             |
-| Stop‑loss limit                 | ✓          | -    | `STOP_LIMIT` maps to Lighter `STOP_LOSS_LIMIT`.        |
-| Take‑profit market              | ✓          | -    | `MARKET_IF_TOUCHED` maps to Lighter `TAKE_PROFIT`.     |
-| Take‑profit limit               | ✓          | -    | `LIMIT_IF_TOUCHED` maps to `TAKE_PROFIT_LIMIT`.        |
+| Stop-loss market                | ✓          | -    | `STOP_MARKET` maps to Lighter `STOP_LOSS`.             |
+| Stop-loss limit                 | ✓          | -    | `STOP_LIMIT` maps to Lighter `STOP_LOSS_LIMIT`.        |
+| Take-profit market              | ✓          | -    | `MARKET_IF_TOUCHED` maps to Lighter `TAKE_PROFIT`.     |
+| Take-profit limit               | ✓          | -    | `LIMIT_IF_TOUCHED` maps to `TAKE_PROFIT_LIMIT`.        |
 | Trigger price                   | ✓          | -    | Required for every supported conditional order.        |
 | Trigger price type              | -          | -    | *Not supported*; no trigger source selector.           |
 | Grouped order lists             | -          | -    | *Not supported*.                                       |
@@ -271,7 +277,7 @@ the strategy has subscribed to quotes is denied with a clear error. Override per
 
 | Option           | Perpetuals | Spot | Notes                                                                      |
 |------------------|------------|------|----------------------------------------------------------------------------|
-| `post_only`      | ✓          | ✓    | Maps to Lighter's post‑only time‑in‑force.                                 |
+| `post_only`      | ✓          | ✓    | Maps to Lighter's post-only time-in-force.                                 |
 | `reduce_only`    | ✓          | -    | Passed through to `CreateOrder`; use only to reduce an existing position.  |
 | `quote_quantity` | -          | -    | *Not supported*; submit base quantity instead.                             |
 | `display_qty`    | -          | -    | *Not supported*; Lighter exposes no iceberg display quantity field.        |
@@ -280,7 +286,7 @@ the strategy has subscribed to quotes is denied with a clear error. Override per
 
 | Param                                      | Perpetuals | Spot | Notes                                               |
 |--------------------------------------------|------------|------|-----------------------------------------------------|
-| `market_order_slippage_bps`                | ✓          | ✓    | Overrides the config default for market‑style caps. |
+| `market_order_slippage_bps`                | ✓          | ✓    | Overrides the config default for market-style caps. |
 | `post_only` through `SubmitOrder.params`   | -          | -    | *Not supported*; use the Nautilus order flag.       |
 | `reduce_only` through `SubmitOrder.params` | -          | -    | *Not supported*; use the Nautilus order flag.       |
 
@@ -288,9 +294,9 @@ the strategy has subscribed to quotes is denied with a clear error. Override per
 
 | Time in force  | Perpetuals | Spot | Notes                                                                        |
 |----------------|------------|------|------------------------------------------------------------------------------|
-| `GTC`          | ✓          | ✓    | Limit‑style uses `GoodTillTime`; market‑style uses `IOC`.                    |
-| `DAY`          | ✓          | ✓    | Limit‑style and conditional orders use a positive order expiry.              |
-| `GTD`          | ✓          | ✓    | Limit‑style and conditional orders use the supplied Nautilus expiry.         |
+| `GTC`          | ✓          | ✓    | Limit-style uses `GoodTillTime`; market-style uses `IOC`.                    |
+| `DAY`          | ✓          | ✓    | Limit-style and conditional orders use a positive order expiry.              |
+| `GTD`          | ✓          | ✓    | Limit-style and conditional orders use the supplied Nautilus expiry.         |
 | `IOC`          | ✓          | ✓    | Plain `MARKET`/`LIMIT` use expiry `0`; conditional limit uses trigger expiry. |
 | `FOK`          | -          | -    | *Not supported*.                                                            |
 | `AT_THE_OPEN`  | -          | -    | *Not supported*.                                                            |
@@ -317,7 +323,7 @@ also shown that very short GTD expiries can be rejected by the sequencer with
 | Instruction   | Perpetuals | Spot | Notes                                                        |
 |---------------|------------|------|--------------------------------------------------------------|
 | `post_only`   | ✓          | ✓    | Overrides the TIF and sends Lighter `PostOnly`.              |
-| `reduce_only` | ✓          | -    | Position‑reducing flag for existing derivative positions.    |
+| `reduce_only` | ✓          | -    | Position-reducing flag for existing derivative positions.    |
 
 Use `post_only` on limit-style orders. The adapter does not synthesize maker-only market orders.
 Live mainnet testing confirms `reduce_only=true` for closing perpetual positions. Invalid
@@ -335,7 +341,7 @@ them as `INFLIGHT_TIMEOUT` rather than a venue-supplied rejection reason.
 | Pegged orders        | -          | -    | *Not supported*.                                            |
 | TWAP orders          | -          | -    | *Not supported*; no Nautilus mapping.                       |
 | Leverage update      | ✓          | -    | Perp only; submits a signed `UpdateLeverage` tx.            |
-| Native cancel‑all    | -          | -    | *Not supported*; adapter scopes cancel‑all per instrument.  |
+| Native cancel-all    | -          | -    | *Not supported*; adapter scopes cancel-all per instrument.  |
 | Dead man's switch    | -          | -    | *Not supported*.                                            |
 
 ### Order operations
@@ -353,7 +359,7 @@ them as `INFLIGHT_TIMEOUT` rather than a venue-supplied rejection reason.
 | Native batch cancel | ✓          | ✓    | Uses one `sendTxBatch`, capped at 15 cancel txs.            |
 | Query order         | ✓          | ✓    | Requires credentials and REST lookup.                       |
 | Query account       | ✓          | ✓    | Replays the latest private WebSocket account state.         |
-| Mass status         | ✓          | ✓    | Bounded to account‑active markets from WS and REST reports. |
+| Mass status         | ✓          | ✓    | Bounded to account-active markets from WS and REST reports. |
 
 The native venue `CancelAllOrders` transaction is account-wide. The adapter deliberately cancels
 cached open orders per instrument to avoid touching unrelated markets.
@@ -446,7 +452,7 @@ does not by itself guarantee the higher limit is active for your connection.
 
 | Tier     | Latency (maker / taker) | REST weighted limit | `sendTx` limit       | Fees (maker / taker)      | Notes                                   |
 |----------|-------------------------|---------------------|----------------------|---------------------------|-----------------------------------------|
-| Standard | 200 ms / 300 ms         | 60 req/min          | 60 req/min           | 0 / 0                     | Zero‑fee default tier.                  |
+| Standard | 200 ms / 300 ms         | 60 req/min          | 60 req/min           | 0 / 0                     | Zero-fee default tier.                  |
 | Premium  | 0 ms / 140-200 ms       | 24,000 req/min      | 4,000-40,000 req/min | 0.28-0.40 / 1.96-2.80 bps | Lowest latency; scales with staked LIT. |
 | Plus     | 200 ms / 300 ms         | 120,000 req/min     | 8,000 req/min        | 0.5 / 0.5 bps             | Raised limits, standard latency.        |
 | Builder  | -                       | 240,000 req/min     | -                    | -                         | Highest REST throughput.                |
@@ -486,8 +492,8 @@ approval). Their combined rate therefore stays under the one venue limit.
 | `sendTx` / `sendTxBatch`, premium      | 4,000-40,000 req/min        | Set `sendtx_quota_per_min` (scales with staked LIT). |
 | Default transaction type limit         | 40 req/min                  | Applies to tx types not covered by volume quota.     |
 | `L2UpdateLeverage` transaction limit   | 40 req/min                  | Relevant to `update_leverage`.                       |
-| Pending orders                         | 500/account, 16/market      | Venue limit; adapter does not pre‑count it.          |
-| Active orders                          | 1,500/account, 1,000/market | Venue limit; adapter does not pre‑count it.          |
+| Pending orders                         | 500/account, 16/market      | Venue limit; adapter does not pre-count it.          |
+| Active orders                          | 1,500/account, 1,000/market | Venue limit; adapter does not pre-count it.          |
 
 | Endpoint or transport                  | Limit      | Notes                                              |
 |----------------------------------------|------------|----------------------------------------------------|

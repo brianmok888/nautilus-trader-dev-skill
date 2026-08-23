@@ -49,10 +49,10 @@ The following product types are supported on Bybit:
 |-----------------------------|-----------|------------------------------------------|
 | Spot cryptocurrencies       | ✓         | Native spot markets with margin support. |
 | Linear perpetual contracts  | ✓         | USDT/USDC margined perpetual swaps.      |
-| Linear futures contracts    | ✓         | Delivery‑settled linear futures.         |
-| Inverse perpetual contracts | ✓         | Coin‑margined perpetual swaps.           |
-| Inverse futures contracts   | ✓         | Coin‑margined delivery futures.          |
-| Option contracts            | ✓         | USDT‑settled European options.           |
+| Linear futures contracts    | ✓         | Delivery-settled linear futures.         |
+| Inverse perpetual contracts | ✓         | Coin-margined perpetual swaps.           |
+| Inverse futures contracts   | ✓         | Coin-margined delivery futures.          |
+| Option contracts            | ✓         | USDT-settled European options.           |
 
 ## Symbology
 
@@ -244,8 +244,8 @@ All the order types listed below can be used as *either* entries or exits, excep
 
 | Feature             | Spot | Linear | Inverse | Option | Notes                                    |
 |---------------------|------|--------|---------|--------|------------------------------------------|
-| Query positions     | -    | ✓      | ✓       | ✓      | Real‑time position updates.              |
-| Position mode       | -    | ✓      | ✓       | -      | One‑Way only for Options.                |
+| Query positions     | -    | ✓      | ✓       | ✓      | Real-time position updates.              |
+| Position mode       | -    | ✓      | ✓       | -      | One-Way only for Options.                |
 | Leverage control    | -    | ✓      | ✓       | -      | Not applicable for Options.              |
 | Margin mode         | -    | ✓      | ✓       | ✓      | Cross, Isolated, or Portfolio Margin.    |
 
@@ -286,8 +286,8 @@ params={"position_idx": 1}  # 0 one-way, 1 long, 2 short
 
 | Feature                   | Spot | Linear | Inverse | Option | Notes                                     |
 |---------------------------|------|--------|---------|--------|-------------------------------------------|
-| Liquidation handling      | -    | ✓      | ✓       | ✓      | Takeover fills flagged as exchange‑generated. |
-| ADL handling              | -    | ✓      | ✓       | ✓      | Auto‑deleveraging fills flagged and logged.   |
+| Liquidation handling      | -    | ✓      | ✓       | ✓      | Takeover fills flagged as exchange-generated. |
+| ADL handling              | -    | ✓      | ✓       | ✓      | Auto-deleveraging fills flagged and logged.   |
 | ADL rank warnings         | -    | ✓      | ✓       | ✓      | Position reports logged when `adlRankIndicator >= 4`. |
 
 Bybit emits venue-initiated fills with `execType` set to:
@@ -324,7 +324,7 @@ Upstream references:
 |---------------------|------|--------|---------|--------|-----------------------------------------|
 | Query open orders   | ✓    | ✓      | ✓       | ✓      | List all active orders.                 |
 | Query order history | ✓    | ✓      | ✓       | ✓      | Historical order data.                  |
-| Order status updates| ✓    | ✓      | ✓       | ✓      | Real‑time order state changes.          |
+| Order status updates| ✓    | ✓      | ✓       | ✓      | Real-time order state changes.          |
 | Trade history       | ✓    | ✓      | ✓       | ✓      | Execution and fill reports.             |
 
 ### Contingent orders
@@ -334,7 +334,7 @@ Upstream references:
 | Order lists         | ✓    | ✓      | ✓       | ✓      | Submitted as a batch via WebSocket.     |
 | OCO orders          | ✓    | ✓      | ✓       | -      | UI only; API users implement manually.  |
 | Bracket orders      | ✓    | ✓      | ✓       | -      | UI only; API users implement manually.  |
-| Conditional orders  | ✓    | ✓      | ✓       | -      | Stop and limit‑if‑touched orders.       |
+| Conditional orders  | ✓    | ✓      | ✓       | -      | Stop and limit-if-touched orders.       |
 
 ### Order parameters
 
@@ -354,7 +354,7 @@ Individual orders can be customized using the `params` dictionary when submittin
 | `tp_trigger_price` | `str` or `float`       | Custom TP trigger price (overrides `take_profit`).                      |
 | `sl_trigger_price` | `str` or `float`       | Custom SL trigger price (overrides `stop_loss`).                        |
 | `close_on_trigger` | `bool`                 | Close the position when TP/SL triggers. Default: `False`.               |
-| `position_idx`     | `int`                  | Hedge‑mode position index. See [Hedge mode](#hedge-mode-bothsides).     |
+| `position_idx`     | `int`                  | Hedge-mode position index. See [Hedge mode](#hedge-mode-bothsides).     |
 | `bbo_side_type`    | `str`                  | Linear/inverse BBO side: `"Queue"` or `"Counterparty"`.                 |
 | `bbo_level`        | `str` or `int`         | Linear/inverse BBO book level: `"1"` through `"5"`.                     |
 
@@ -583,12 +583,12 @@ channel:
 
 | Data type                  | Description                                              |
 |----------------------------|----------------------------------------------------------|
-| Quotes (bid/ask)           | Top‑of‑book prices and sizes for each option contract.   |
+| Quotes (bid/ask)           | Top-of-book prices and sizes for each option contract.   |
 | Greeks                     | Delta, gamma, vega, theta, plus bid/ask/mark IV.         |
 | Mark price                 | Exchange mark price for each option contract.            |
 | Index price                | Underlying index price.                                  |
-| Underlying (forward) price | Per‑expiry forward price, used for ATM determination.    |
-| Open interest              | Per‑contract open interest.                              |
+| Underlying (forward) price | Per-expiry forward price, used for ATM determination.    |
+| Open interest              | Per-contract open interest.                              |
 | Order book deltas          | L2 MBP updates from the option orderbook stream.         |
 
 Subscribe to per-instrument Greeks or aggregate them into option chain
@@ -654,11 +654,11 @@ Every HTTP call consumes the global token bucket as well as any keyed quota(s). 
 
 | Key / Endpoint            | Limit (requests/sec) | Notes                                              |
 |---------------------------|----------------------|----------------------------------------------------|
-| `bybit:global`            | 120                  | Exchange‑wide 600 req / 5 s ceiling.               |
+| `bybit:global`            | 120                  | Exchange-wide 600 req / 5 s ceiling.               |
 | `/v5/market/kline`        | 20                   | Historical sweeps throttled slightly below global. |
 | `/v5/market/trades`       | 24                   | Matches the global quota.                          |
 | `/v5/order/create`        | 10                   | Standard order placement.                          |
-| `/v5/order/cancel`        | 10                   | Single‑order cancellation.                         |
+| `/v5/order/cancel`        | 10                   | Single-order cancellation.                         |
 | `/v5/order/create-batch`  | 5                    | Batch placement endpoints.                         |
 | `/v5/order/cancel-batch`  | 5                    | Batch cancellation endpoints.                      |
 | `/v5/order/cancel-all`    | 2                    | Full book cancel to mirror Bybit guidance.         |
@@ -796,7 +796,7 @@ The product types for each client must be specified in the configurations.
 | `base_url_ws_trade`              | `None`  | Override for the trade WebSocket base URL. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
 | `use_gtd`                        | `False` | Remap GTD orders to GTC when `True` (Bybit lacks native GTD support). |
-| `use_ws_execution_fast`          | `False` | Subscribe to the low‑latency execution stream. |
+| `use_ws_execution_fast`          | `False` | Subscribe to the low-latency execution stream. |
 | `use_http_batch_api`             | `False` | Use Bybit's HTTP batch trading API (deprecated). |
 | `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions when `True`. |
 | `auto_repay_spot_borrows`        | `True`  | Automatically repay Spot margin borrows after BUY orders fully fill (Spot only). |

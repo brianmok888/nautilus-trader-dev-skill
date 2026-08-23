@@ -19,11 +19,19 @@ use nautilus_model::position::Position;
 
 use crate::{Returns, statistic::PortfolioStatistic};
 
+/// Calculates the arithmetic mean of the negative portfolio returns.
+///
+/// Zero returns are excluded (neither wins nor losses). Returns `NaN` for an
+/// empty series or when there are no negative returns.
 #[repr(C)]
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.analysis", from_py_object)
+    pyo3::pyclass(module = "nautilus_trader.analysis", from_py_object)
+)]
+#[cfg_attr(
+    feature = "python",
+    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.analysis")
 )]
 pub struct ReturnsAverageLoss {}
 
@@ -74,7 +82,7 @@ mod tests {
 
     use super::*;
 
-    fn create_returns(values: Vec<f64>) -> Returns {
+    fn create_returns(values: &[f64]) -> Returns {
         let mut new_return = BTreeMap::new();
         for (i, value) in values.iter().enumerate() {
             new_return.insert(UnixNanos::from(i as u64), *value);
@@ -86,7 +94,7 @@ mod tests {
     #[rstest]
     fn test_empty_returns() {
         let avg_loss = ReturnsAverageLoss {};
-        let returns = create_returns(vec![]);
+        let returns = create_returns(&[]);
         let result = avg_loss.calculate_from_returns(&returns);
         assert!(result.is_some());
         assert!(result.unwrap().is_nan());
@@ -95,7 +103,7 @@ mod tests {
     #[rstest]
     fn test_all_positive() {
         let avg_loss = ReturnsAverageLoss {};
-        let returns = create_returns(vec![10.0, 20.0, 30.0]);
+        let returns = create_returns(&[10.0, 20.0, 30.0]);
         let result = avg_loss.calculate_from_returns(&returns);
         assert!(result.is_some());
         assert!(result.unwrap().is_nan());
@@ -104,7 +112,7 @@ mod tests {
     #[rstest]
     fn test_all_negative() {
         let avg_loss = ReturnsAverageLoss {};
-        let returns = create_returns(vec![-10.0, -20.0, -30.0]);
+        let returns = create_returns(&[-10.0, -20.0, -30.0]);
         let result = avg_loss.calculate_from_returns(&returns);
         assert!(result.is_some());
         // Average of [-10.0, -20.0, -30.0] = (-10 + -20 + -30) / 3 = -20.0
@@ -114,7 +122,7 @@ mod tests {
     #[rstest]
     fn test_mixed_returns() {
         let avg_loss = ReturnsAverageLoss {};
-        let returns = create_returns(vec![10.0, -20.0, 30.0, -40.0]);
+        let returns = create_returns(&[10.0, -20.0, 30.0, -40.0]);
         let result = avg_loss.calculate_from_returns(&returns);
         assert!(result.is_some());
         // Average of [-20.0, -40.0] = (-20 + -40) / 2 = -30.0
@@ -124,7 +132,7 @@ mod tests {
     #[rstest]
     fn test_with_zero() {
         let avg_loss = ReturnsAverageLoss {};
-        let returns = create_returns(vec![10.0, 0.0, -20.0, -30.0]);
+        let returns = create_returns(&[10.0, 0.0, -20.0, -30.0]);
         let result = avg_loss.calculate_from_returns(&returns);
         assert!(result.is_some());
         // Average of [-20.0, -30.0] = (-20 + -30) / 2 = -25.0

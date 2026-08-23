@@ -7,7 +7,7 @@ description: "Entry-point router for NautilusTrader development only. Use for Na
 
 Entry-point/router skill for NautilusTrader development. Source of truth: pinned and reviewed upstream evidence from `https://github.com/nautechsystems/nautilus_trader` plus local canonical contracts.
 
-NT v2 compatibility note: legacy, Cython/v1, Python `TradingNode`, and migration material in this file is reference-only and never a production default.
+NT v2 compatibility note: legacy, Cython/v1, Python `TradingNode`, and migration material in this whole file is migration/reference-only and never a production default.
 
 This repository is the generic NT skill layer and covers **NautilusTrader development only**. It teaches agents to architect, implement, test, integrate, operate, and review NautilusTrader components. It is independent of downstream project-specific skills and companion repositories; this router never composes downstream consumers.
 
@@ -32,7 +32,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode reference
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
 | G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 Pinned V2 examples | Execute the router-owned repository harness. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed; evidence is recorded in `references/g2-evidence/nt.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the aggregate router harness at `f725e184db`; `references/g2-evidence/nt.json` records provenance. Every retained child has current durable G2 evidence, including hybrid executable/static evidence for the migration-only `nt-strategy-builder` lane. |
 | G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
 | G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
 | G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
@@ -66,10 +66,10 @@ Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONL
 
 ## Operating sequence
 
-1. Classify the request by NT subsystem and lifecycle stage.
+1. Classify the request by NT subsystem and lifecycle stage; record the NT runtime version and implementation language when stated or detectable.
 2. Load the smallest matching skill set from the table.
 3. Confirm version-sensitive APIs from pinned and reviewed upstream evidence.
-4. Implement in the user's target repository, never in the read-only upstream checkout unless the user explicitly changes the task to upstream contribution work outside this skill-maintenance mission.
+4. Implement in the user's target repository. Upstream contribution work uses a disposable writable clone or worktree; the pinned cache is evidence-only and is never an edit or build target.
 5. Run the selected skill's G2 harness and task-level tests.
 6. Finish with `nt-review` for production-facing, live, adapter, or cross-component changes.
 
@@ -86,11 +86,13 @@ Use bounded public PyO3 projections only when a current upstream binding contrac
 
 ## Migration/reference lane
 
-Migration/reference-only legacy material is physically quarantined under each skill's `migration_reference/` or `legacy_migration/` directory and is not a production default.
+NT v2 compatibility note: the legacy runtime material in this block is migration/reference-only.
+
+Migration/reference-only legacy material is physically quarantined under each skill's `migration_reference/` or `legacy_migration/` directory. An explicitly labelled inline interoperability boundary may only point into that quarantined material; it is never a production default. Requests tied to a legacy runtime route to the owning skill's migration/reference lane; do not answer them with current V2 APIs as though the runtime were V2.
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `98e6c39d8384c91dbf0102ea581aff5313ba9811`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+The authoritative pinned upstream commit is `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 
