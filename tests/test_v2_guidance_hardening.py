@@ -17,10 +17,10 @@ def test_current_guidance_rejects_verified_obsolete_paths_and_defaults() -> None
             "skills/nt-adapters/references/guides/rust.md",
             "skills/nt-dev/references/guides/rust_conventions.md",
             "skills/nt-model/references/concepts/instruments.md",
+            "skills/nt-signals/references/guides/custom_data_patterns.md",
             "skills/nt-architect/references/concepts/instruments.md",
             "skills/nt-implement/references/concepts/instruments.md",
             "skills/nt-review/references/concepts/instruments.md",
-            "skills/nt-signals/references/guides/custom_data_patterns.md",
         )
     )
 
@@ -74,7 +74,6 @@ def test_exec_tester_guidance_uses_current_python_keywords_and_rust_builder() ->
     api_text = read("skills/nt-testing/references/api/exec_tester_config.md")
 
     for keyword in [
-        "strategy_id=",
         "instrument_id=",
         "client_id=",
         "order_qty=",

@@ -646,10 +646,12 @@ def test_card_validation_accepts_blocked_status_with_a_reason(tmp_path: Path) ->
                 ),
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
+                "verified_at": "2026-08-23T10:00:00+00:00",
                 "steps": [
                     {
                         "command": list(harness.steps[0].command),
                         "cwd": harness.steps[0].cwd.value,
+                        "duration_seconds": 0.1,
                         "returncode": 0,
                     }
                 ],
@@ -843,3 +845,71 @@ def test_strategy_builder_preflight_fails_closed_for_missing_pyo3_runtime(
     assert calls == [
         ((str(interpreter), "-c", "import nautilus_trader._libnautilus.common"), python_root)
     ]
+
+
+def test_check_card_declarations_rejects_invalid_harness_manifest(monkeypatch) -> None:
+    harnesses = dict(g2.HARNESSES)
+    harnesses["nt-data"] = replace(
+        harnesses["nt-data"],
+        scope=harnesses["nt-adapters"].scope,
+    )
+    monkeypatch.setattr(g2, "HARNESSES", harnesses)
+
+    assert g2.main(["--check-card-declarations"]) == 1
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_error"),
+    [
+        ({"upstream_clean": 1}, "upstream_clean must be a boolean"),
+        ({"returncode": False}, "returncode must be an integer"),
+        ({"verified_at": None}, "verified_at must be a timezone-aware ISO-8601 timestamp"),
+        ({"duration_seconds": None}, "duration_seconds must be a nonnegative number"),
+    ],
+)
+def test_durable_evidence_rejects_wrong_json_types(
+    tmp_path: Path, mutation: dict[str, object], expected_error: str
+) -> None:
+    skill_path = tmp_path / "skills/nt-data/SKILL.md"
+    skill_path.parent.mkdir(parents=True)
+    evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
+    evidence_path.parent.mkdir(parents=True)
+    harness = g2.HARNESSES["nt-data"]
+    skill_path.write_text(
+        "| G2 Pinned V2 examples | Validate. | Pass | "
+        f"`{g2.evidence_command('nt-data')}` passed; evidence "
+        "`references/g2-evidence/nt-data.json`. |\n"
+    )
+    payload: dict[str, object] = {
+        "schema_version": 2,
+        "skill": "nt-data",
+        "scope": harness.scope,
+        "status": "pass",
+        "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
+        "upstream_clean": True,
+        "owned_content_sha256": ownership.harness_content_hash(tmp_path, harness),
+        "verified_at": "2026-08-23T10:00:00+00:00",
+        "steps": [
+            {
+                "command": list(harness.steps[0].command),
+                "cwd": harness.steps[0].cwd.value,
+                "duration_seconds": 0.1,
+                "returncode": 0,
+            }
+        ],
+    }
+    steps = payload["steps"]
+    assert isinstance(steps, list)
+    step = steps[0]
+    assert isinstance(step, dict)
+    if "returncode" in mutation:
+        step["returncode"] = mutation["returncode"]
+    elif "duration_seconds" in mutation:
+        step["duration_seconds"] = mutation["duration_seconds"]
+    else:
+        payload.update(mutation)
+    evidence_path.write_text(json.dumps(payload))
+
+    errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
+
+    assert any(expected_error in error for error in errors)

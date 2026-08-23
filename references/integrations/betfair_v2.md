@@ -117,8 +117,8 @@ The data client reconnect handler also updates the race stream auth when a race 
 is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
-session logic above and is included in the pinned baseline `f725e184db` (upstream commit
-`f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`): the data and execution clients publish transport state on the stable
+session logic above and is included in the pinned baseline `d2b62d35a7` (upstream commit
+`d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
 as `SocketStateChanged` on `events.system.SocketStateChanged`), register targeted
 reconnects through the `SocketReconnectRegistry` with authentication and subscription
@@ -340,7 +340,7 @@ keep-alive interval.
 | `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post-reconnect mass-status reconciliation. |
 
 NT v2 compatibility note: the `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs` names
-(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `f725e184db`;
+(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `d2b62d35a7`;
 older pins through `6e59fd74ea` used the pre-rename millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
 

@@ -259,7 +259,15 @@ see the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/
 
 ## Waiting for asynchronous effects
 
-When waiting for background work to complete, prefer the polling helpers `await eventually(...)` from `nautilus_trader.test_kit.functions` and `wait_until_async(...)` from `nautilus_common::testing` instead of arbitrary sleeps. They surface failures faster and reduce flakiness in CI because they stop as soon as the condition is satisfied or time out with a useful error.
+### Deterministic async completion
+
+First, subscribe to the exact event or state-transition channel before you trigger the
+action. Await that signal directly and use a bounded timeout only as a failure
+guard for a stuck test. The legacy helper in `nautilus_common::testing` remains
+available for migration-only integration cases, but prefer this event-first
+pattern over fixed delays or polling as the correctness mechanism. Legacy cases
+without an event surface must be labelled explicitly and isolated from
+deterministic unit coverage.
 
 ## Mocks
 

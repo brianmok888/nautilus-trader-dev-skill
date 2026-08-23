@@ -15,9 +15,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -70,7 +70,7 @@ Quarantined Python examples and prior Python adapter guidance live under `migrat
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 
 ## What This Skill Covers
 
@@ -117,7 +117,7 @@ Current high-risk rules:
 - Implement the current required `InstrumentProvider` methods: `load_all`, `load_ids`, and `load`;
   override targeted methods only for venue-specific semantics or efficiency.
 - Use adapter `environment` enums instead of removed legacy environment flags; for Binance and Kraken, use `Live` / `LIVE` naming rather than stale `Mainnet` / `MAINNET` enum variants.
-- Convert venue millisecond timestamps at parser boundaries with `millis_to_nanos`; `ts_event` is the converted venue timestamp and `ts_init` is `clock.get_time_ns()`.
+- Convert `ts_event` and `ts_init` to Unix nanoseconds at parser boundaries; never pass venue seconds, milliseconds, or microseconds through unchanged. Use the matching conversion helper for the venue scale, and treat values below `10^16` as probable scale defects.
 - When adapter examples touch data-engine bar settings, use `time_bars_origin_offset`; never reintroduce stale `time_bars_origins`.
 - Require data tester and execution tester evidence for adapter readiness; execution tests should include marketable limit coverage via `limit_aggressive` and rejected modify coverage via `test_modify_rejected` when the venue supports those paths.
 - For WebSocket handlers that receive the connected client after construction,

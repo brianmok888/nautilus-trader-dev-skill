@@ -5,8 +5,8 @@
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
 Review date: 2026-08-23
-Reviewed upstream develop: `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`
-Pinned G2 baseline: `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`
+Reviewed upstream develop: `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`
+Pinned G2 baseline: `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
@@ -20,7 +20,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-08-23-06] [P0] [CLOSED] Pressure review: active inline examples and contracts invented or retained removed V2 APIs.
   file: skills/nt-backtest/SKILL.md; skills/nt-data/SKILL.md; skills/nt-architect/SKILL.md; skills/nt-adapters/SKILL.md; references/developer_guide/contracts/adapter_contract.md
-  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/execution/src/models/fill.rs`, `crates/backtest/src/config.rs`, `crates/common/src/providers.rs`, and `crates/common/src/actor/data_actor.rs`.
+  evidence: pinned `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `crates/execution/src/models/fill.rs`, `crates/backtest/src/config.rs`, `crates/common/src/providers.rs`, and `crates/common/src/actor/data_actor.rs`.
   fix: taught the real `FillModel`/`FillModelAny` seam, removed the invented persistence backend and removed decorator, corrected signal publication, and replaced `load_all_async` with the required provider methods.
   closure: `python3 -m pytest -q tests/test_pressure_review_regressions.py` exits 0.
 
@@ -33,25 +33,25 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-08-23-01] [P0] [CLOSED] Rust conversion correctness: the retained `nt-signals` analysis source snapshot lagged the pinned Rust/PyO3 crate.
   file: skills/nt-signals/references/rust/analysis/
-  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/analysis/` contains the current statistics, snapshot, and PyO3 modules that the older retained tree omitted.
+  evidence: pinned `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `crates/analysis/` contains the current statistics, snapshot, and PyO3 modules that the older retained tree omitted.
   fix: mirrored the complete pinned `crates/analysis` tree and added deterministic byte-for-byte snapshot coverage.
   closure: `python3 -m pytest -q tests/test_rust_analysis_reference_sync.py` exits 0.
 
 [NT-2026-08-23-02] [P1] [CLOSED] V2 compliance: the canonical actor and adapter examples used nonexistent current APIs.
   file: skills/nt-architect/SKILL.md; skills/nt-adapters/SKILL.md
-  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `crates/common/examples/greeks_actor_example.rs`, `crates/common/src/factories/client.rs`, and `examples/quickstarts/lighter-rust-data-client/src/main.rs`.
+  evidence: pinned `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `crates/common/examples/greeks_actor_example.rs`, `crates/common/src/factories/client.rs`, and `examples/quickstarts/lighter-rust-data-client/src/main.rs`.
   fix: replaced the actor sketch with `DataActorCore`/`nautilus_actor!`/`CustomData`/`publish_data`, replaced `AdapterRegistry` with separate current factory traits and `LiveNode` registration, and documented the complete lifecycle callbacks.
   closure: `python3 -m pytest -q tests/test_current_v2_contracts.py` exits 0.
 
 [NT-2026-08-23-03] [P1] [CLOSED] V2 compliance: Betfair replacement and ambiguous command-recovery guidance predated develop commit `79fb940dc794b953570ad5ac76f4f1e6b68ea93f`.
   file: references/integrations/betfair.md; references/integrations/betfair_v2.md; skills/nt-adapters/references/integrations/betfair.md; skills/nt-adapters/references/integrations/betfair_v2.md
-  evidence: pinned `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `docs/integrations/betfair.md` and `crates/adapters/betfair/src/execution.rs`.
+  evidence: pinned `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `docs/integrations/betfair.md` and `crates/adapters/betfair/src/execution.rs`.
   fix: refreshed the canonical guide and documented logical-order identity, terminal replacement outcomes, stable request correlation, bounded retries, and pending reconciliation.
   closure: mirrored reference pairs are byte-identical and `python3 tools/check_upstream_freshness.py --format json` exits 0.
 
 [NT-2026-08-23-04] [P1] [CLOSED] Upstream standards: active guidance retained U+2011 after current develop prohibited non-ASCII hyphens.
   file: skills/**/*.md; references/**/*.md
-  evidence: upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `.pre-commit-hooks/check_unicode_typography.sh`.
+  evidence: upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `.pre-commit-hooks/check_unicode_typography.sh`.
   fix: normalized active guidance to ASCII hyphens and added a repository regression gate.
   closure: `python3 -m pytest -q tests/test_ascii_typography.py` exits 0.
 
@@ -119,6 +119,52 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 ## Follow-up TODO
 
 - [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).
+
+[NT-2026-08-23-09] [P1] [CLOSED] Active Rust actor and fill-model examples used non-compiling publication and custom-model contracts.
+  file: skills/nt-architect/SKILL.md; skills/nt-backtest/SKILL.md
+  evidence: latest upstream `DataActor::publish_signal(name, value, ts_event)` and `FillModelHandle`/required orderbook method contracts.
+  fix: corrected the actor call/return and replaced the nonexistent `FillModelAny::Custom` path with the complete `FillModel` plus `FillModelHandle` contract.
+
+[NT-2026-08-23-10] [P1] [CLOSED] Active custom-data guidance used removed Python APIs and the wrong Rust Arrow registry owner.
+  file: skills/nt-signals/SKILL.md; skills/nt-signals/references/guides/custom_data_patterns.md; skills/nt-data/SKILL.md; docs/serialization.md
+  evidence: latest upstream `register_custom_data_class`, `nautilus_model::data::register_arrow`, and `ParquetDataCatalog::write_custom_data_batch` contracts.
+  fix: documented explicit JSON/Arrow callbacks, model-owned registration, failure before registration, and catalog round trips.
+
+[NT-2026-08-23-11] [P1] [CLOSED] DEX guidance exposed legacy Python execution as current and collapsed pool identity/fee semantics.
+  file: skills/nt-dex-adapter/SKILL.md; skills/nt-dex-adapter/rules/dos_and_donts.md
+  evidence: upstream blockchain integration uses Rust signer secret references, pool contract/protocol IDs, and taker-fee-only AMM mapping.
+  fix: quarantined the Python rules file and added canonical Rust custody, unique pool identity, and AMM fee requirements.
+
+[NT-2026-08-23-12] [P1] [CLOSED] Live reconciliation guide pointed to removed Python modules and obscured fail-closed startup behavior.
+  file: skills/nt-live/references/guides/reconciliation.md
+  evidence: latest Rust execution reconciliation, network retry, LiveNodeConfig, and startup orchestration modules.
+  fix: rewrote the guide around current Rust owners and explicit startup abort semantics.
+
+[NT-2026-08-23-13] [P1] [CLOSED] Testing guidance missed timestamp scale checks and recommended polling/nonexistent async helpers.
+  file: skills/nt-testing/SKILL.md; skills/nt-testing/references/guides/testing.md; skills/nt-adapters/SKILL.md
+  evidence: upstream TestKit specifies Unix-nanosecond plausibility and message validation.
+  fix: added scale-failure rules and exact-event async completion with bounded timeouts only as guards.
+
+[NT-2026-08-23-14] [P1] [CLOSED] Learning and shared docs used nonexistent crate versions, invalid serialization syntax, and wrong setup commands.
+  file: docs/end_to_end_guide.md; docs/serialization.md; skills/nt-learn/curriculum/01-setup.md; skills/nt-learn/curriculum/09-full-rust-trading.md
+  evidence: crates.io publishes the `0.62` family; upstream root bootstrap is `make sync`; source uses the checked-in Rust toolchain.
+  fix: aligned the published release lane, bootstrap, toolchain, and source-backed serialization examples.
+
+[NT-2026-08-23-15] [P1] [CLOSED] Active implementation/model guidance used nonexistent Make targets, the wrong logging facade, and an incorrect enum discriminant.
+  file: skills/nt-dev/SKILL.md; skills/nt-implement/SKILL.md; skills/nt-model/SKILL.md
+  evidence: upstream Makefile, `log::` conventions, and `InstrumentAny::Betting(BettingInstrument)` definition.
+  fix: corrected commands, logging macros, and exact variant/payload naming.
+
+[NT-2026-08-23-16] [P1] [CLOSED] Durable evidence validation accepted malformed JSON values and declaration checks could miss invalid harness definitions.
+  file: tools/check_skill_g2_harnesses.py; tests/test_skill_g2_harnesses.py
+  evidence: booleans compare equal to integers in Python and prior checks omitted strict timestamps/durations.
+  fix: added strict boolean/integer/timestamp/duration validation and regression coverage for harness declaration validation.
+
+[NT-2026-08-23-17] [P1] [CLOSED] Mirrored OKX exec-tester example lacked the upstream `DRY_RUN` real-funds safety gate.
+  file: skills/nt-adapters/references/examples/rust_adapters/okx/node_exec_tester.rs
+  evidence: upstream `d2b62d35a7` `crates/adapters/okx/examples/node_exec_tester.rs` adds `DRY_RUN` gating, a real-funds warning header, and `maybe_open_position_on_start_qty` wiring; the retained mirror still taught the unguarded `open_position_on_start_qty` flow last synced at `f725e184`.
+  fix: synced the mirrored example byte-for-byte to the reviewed tip.
+  closure: mirror diff against `git show d2b62d35a7:crates/adapters/okx/examples/node_exec_tester.rs` is empty; `python3 -m pytest -q` exits 0.
 
 ## Closed findings
 
@@ -298,4 +344,5 @@ No readiness claim is valid until those gates pass in the final working tree.
 
 2026-08-23 — P0 — MODIFIED: synchronized the retained Rust analysis crate and corrected active V2 actor, fill-model, data, and adapter contracts — files: skills/nt-signals/references/rust/analysis/, skills/nt-architect/SKILL.md, skills/nt-backtest/SKILL.md, skills/nt-data/SKILL.md, skills/nt-adapters/SKILL.md
 2026-08-23 — P1 — MODIFIED: refreshed Betfair recovery guidance, ASCII typography, runtime routing, upstream-worktree safety, and durable validation — files: references/integrations/betfair.md, references/integrations/betfair_v2.md, skills/nt/SKILL.md, skills/nt-dev/SKILL.md, tests/
-2026-08-23 — P2 — MODIFIED: advanced the reproducible baseline and all pin-derived snapshots/evidence to reviewed develop `f725e184db` — files: tools/upstream_baseline.py, references/developer_guide/, references/g2-evidence/, docs/tracking/
+2026-08-23 — P1 — MODIFIED: synced the mirrored OKX exec tester to the reviewed tip's DRY_RUN safety gate — files: skills/nt-adapters/references/examples/rust_adapters/okx/node_exec_tester.rs
+2026-08-23 — P2 — MODIFIED: advanced the reproducible baseline and all pin-derived snapshots/evidence to reviewed develop `d2b62d35a7` — files: tools/upstream_baseline.py, references/developer_guide/, references/g2-evidence/, docs/tracking/

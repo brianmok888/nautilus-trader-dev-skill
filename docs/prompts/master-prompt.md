@@ -4,7 +4,8 @@
 
 Before executing any part of this mission, read and apply the target repository's root `AGENTS.md`. Its project-scoped workflow, NT-only boundary, read-only upstream rule, validation requirements, and reporting requirements are mandatory for the entire mission. When work enters a subdirectory, also read and apply any deeper `AGENTS.md`; deeper instructions override broader ones.
 
-**Primary repository:** `/home/mok/projects/nautilus-trader-dev-skill`
+**Primary repository:** resolve the current checkout with `git rev-parse --show-toplevel`
+and record that path during preflight; do not embed a host-specific repository path.
 **Mission worktree:** resolve and record a dedicated linked worktree during preflight. After creating it, run every edit, test, validation command, and mission commit from that worktree. Use the primary repository only for its cleanliness check and an explicitly authorized final integration.
 **Mission output:** Improvements to this skill repository's skills, references, templates, tests, and validation tooling.
 **Downstream purpose:** Make `nautilus-trader-dev-skill` reliably guide agents that architect, develop, test, integrate, operate, and review NautilusTrader Rust V2 components against current upstream APIs and standards.
@@ -303,7 +304,7 @@ Do NOT duplicate content across trackers. One change → one write-target.
 
 ## Constraints
 
-- **Skill repository only.** Modify `/home/mok/projects/nautilus-trader-dev-skill`; never modify or prepare upstream NautilusTrader changes.
+- **Skill repository only.** Modify the resolved primary repository; never modify or prepare upstream NautilusTrader changes.
 - **Upstream is evidence, not a deliverable.** Source, docs, examples, tests, and standards from `nautilus_trader` are read-only inputs used to improve this repository's skill artifacts.
 - **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader-related components.
 - **Rust-first default.** All new in-scope guidance routes through `skills/nt-strategy-builder-rust/`. Python `skills/nt-strategy-builder/` is reference-only.

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f",
-  "reviewed_commit": "f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f",
+  "pinned_commit": "d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c",
+  "reviewed_commit": "d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c",
   "reviewed_on": "2026-08-23",
   "deltas": []
 }

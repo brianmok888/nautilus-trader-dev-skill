@@ -15,9 +15,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-signals` passed the skill domain's scoped examples and owners against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-signals.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-signals` passed the skill domain's scoped examples and owners against `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-signals.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -41,13 +41,13 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`.
 
 ## What This Skill Covers
 
 NautilusTrader **signals and analysis domain** — indicators, custom data types, bar aggregation, portfolio statistics, and reporting.
 
-**Python modules**: `indicators/`, `data/aggregation`, `model/data`, `model/book`, `model/custom`, `analysis/`
+**Python modules**: `indicators/`, `data/aggregation`, flat `model` PyO3 exports, `model/data`, `model/book`, `analysis/`
 **Rust crates**: `nautilus_indicators`, `nautilus_analysis`, `nautilus_model` (data subset)
 
 ## When To Use
@@ -55,7 +55,7 @@ NautilusTrader **signals and analysis domain** — indicators, custom data types
 - Using or building custom indicators (EMA, RSI, Bollinger Bands, etc.)
 - Signal generation and publishing
 - Bar aggregation (custom bar types, time/tick/volume bars)
-- Defining custom data types (`@customdataclass`)
+- Registering custom data types with `register_custom_data_class`
 - Portfolio statistics, tearsheets, and analysis reporting
 - Order book data processing
 
@@ -119,6 +119,7 @@ pub struct MyRustIndicator {
 
 impl MyRustIndicator {
     fn new(period: usize) -> Self {
+        assert!(period > 0, "period must be positive");
         Self { period, value: 0.0, count: 0, has_inputs: false, initialized: false }
     }
 
@@ -203,10 +204,10 @@ Always register indicators via `self.register_indicator_for_bars()` or `self.reg
 
 ### Custom Data Serialization
 
-- `@customdataclass` auto-generates Arrow schemas
-- `InstrumentId` fields are auto-converted to/from strings
-- All fields need type annotations
-- `ts_event` and `ts_init` are auto-prepended (don't define them)
+- Register current Python types with `nautilus_trader.model.register_custom_data_class`
+- Provide deterministic `to_dict` and `from_dict` callbacks for JSON/message use
+- Provide explicit `encode_record_batch_py` and `decode_record_batch_py` callbacks for catalog persistence; Arrow schemas are not auto-generated
+- Define stable Unix-nanosecond `ts_event` and `ts_init` fields in the type contract
 
 ## References
 

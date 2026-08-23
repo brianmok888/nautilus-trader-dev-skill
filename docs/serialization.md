@@ -1,39 +1,27 @@
-# Serialization in NautilusTrader
+# Serialization
 
-NautilusTrader supports multiple serialization formats for high-performance data interchange.
+## Python custom component data
 
-## Comparison: NautilusTrader model serialization vs Cap'n Proto
-
-| Feature | `NautilusTrader model serialization` | Cap'n Proto (`capnp`) |
-|---------|-----------|-----------------------|
-| **Speed** | Very Fast | Blazing (Zero-copy) |
-| **Ease of Use** | High (Python-native) | Moderate (Requires Schema) |
-| **Schema** | Optional (Structs) | Required (`.capnp`) |
-| **Language Cross-op** | Good | Excellent |
-| **When to use** | Standard trading data | Extreme performance / Rust core |
-
-## Using `NautilusTrader model serialization`
-
-Default in Nautilus. Use for custom data objects:
+Python actors and strategies exchange custom data with the current `DataType` and
+`CustomData` model APIs. The payload type must already satisfy the system's model
+and serialization contracts; do not invent a `Struct` base class or an ad-hoc
+registration decorator.
 
 ```python
-from NautilusTrader model serialization import Struct
+from nautilus_trader.model import CustomData, DataType
 
-class MyModel(Struct):
-    price: float
-    qty: float
+data_type = DataType(dict, metadata={"schema": "regime-v1"})
+message = CustomData(data_type=data_type, data={"value": "risk-on"})
 ```
 
-## Using Cap'n Proto
+Publish and subscribe with the component message-bus APIs documented in the
+pinned upstream `docs/concepts/message_bus.md`. Use an explicit metadata schema
+version when producers and consumers evolve independently.
 
-Requires enabling the `capnp` feature in the `nautilus-serialization` crate.
+## Rust wire formats
 
-1. **Define Schema**: Create a `.capnp` file.
-2. **Compile**: Use `capnpc` to generate code.
-3. **Register**: Add to the message bus handlers.
-
-Example schema: [capnp_schema.capnp](../skills/nt-implement/templates/capnp_schema.capnp).
-
-## Performance Tip
-
-Avoid using standard `pickle` or `json` (built-in) in hot paths, as they are significantly slower than `NautilusTrader model serialization`.
+The `nautilus-serialization` crate provides feature-gated Arrow, Cap'n Proto, and
+SBE support. Enable only the wire format owned by the component, define the
+schema in the owning crate, and prove encode/decode round trips plus version
+compatibility at the boundary. Cap'n Proto schemas require generated bindings;
+adding a Rust type alone does not register it globally.

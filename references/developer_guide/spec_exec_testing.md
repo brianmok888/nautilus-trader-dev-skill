@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_exec_testing.md
-source_commit: f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f
+source_commit: d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c
 sync_date: 2026-08-23
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
@@ -91,6 +91,26 @@ let tester = ExecTester::new(tester_config);
 node.add_strategy(tester)?;
 node.run().await?;
 ```
+
+## Timestamp scale
+
+Nautilus stores `ts_event` and `ts_init` as Unix nanoseconds (`UnixNanos`). Every
+execution message must use that scale: order events, fills, account state, and
+reconciliation reports (`OrderStatusReport`, `FillReport`, `PositionStatusReport`,
+`ExecutionMassStatus`).
+
+- A value below `10^16` is not a plausible Unix-nanosecond timestamp (`10^16` ns is about
+  116 days after 1970-01-01) and usually means the adapter left the venue scale unconverted.
+- Second-precision venue times that were converted correctly end in `000000000` and still
+  pass: that is coarse precision, not a scale error.
+- Live stream `ts_event` should be near wall-clock time for the session. Reconciliation
+  reports may be older and still valid if the scale is nanoseconds.
+- `ts_init` is the local clock when Nautilus created the object. Small `ts_event` >
+  `ts_init` skew is possible when the venue clock is ahead.
+
+`ExecTester` warns when received market-data or order-event timestamps fail the scale
+check. Inspect report timestamps on the reports themselves. Treat a scale warning or leftover
+seconds, milliseconds, or microseconds on any execution message as a failure.
 
 ## Basic smoke test
 
@@ -254,6 +274,11 @@ ExecTesterConfig::builder()
 | **Event sequence** | `OrderInitialized` -> `OrderSubmitted` -> `OrderAccepted` -> `OrderFilled`. |
 | **Pass criteria**  | Same as TC-E01; the IOC TIF is explicitly set on the order.                 |
 | **Skip when**      | No IOC support.                                                             |
+
+**Considerations:**
+
+- Some adapters simulate market orders as aggressive limit IOC. An unfilled simulated
+  market maps to `OrderCanceled`, not `OrderRejected`.
 
 **Python config:**
 
@@ -586,7 +611,8 @@ ExecTesterConfig::builder()
 
 **Considerations:**
 
-- The venue should cancel the unfilled IOC order; verify `OrderCanceled` event (not `OrderExpired`).
+- The venue should cancel the unfilled IOC order; verify `OrderCanceled` (not `OrderExpired`
+  or `OrderRejected`).
 
 ### TC-E15: Limit FOK fill
 
@@ -947,22 +973,32 @@ Test order modification (amend) and cancel-replace workflows.
 | TC-E35 | Cancel-replace stop order | Cancel and resubmit stop at new trigger price. | No stop orders.          |
 | TC-E36 | Modify rejected           | Modify on unsupported adapter.                 | Adapter supports modify. |
 
+`trigger_limit_order_maintenance_once=True` requires exactly one of the limit-order modify or
+cancel-replace modes and at least one enabled limit side. It is incompatible with bracket entries,
+`test_modify_rejected`, and two-sided batch limit submission. Configuration validation rejects these
+combinations.
+
 ### TC-E30: Modify limit BUY price
 
-| Field              | Value                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- |
-| **Prerequisite**   | Open GTC limit buy from TC-E10.                                                                             |
-| **Action**         | ExecTester modifies limit buy to a new price as market moves (`modify_orders_to_maintain_tob_offset=True`). |
-| **Event sequence** | `OrderPendingUpdate` -> `OrderUpdated`.                                                                     |
-| **Pass criteria**  | `OrderUpdated` event logged with the new price; order exits `PendingUpdate`.                                |
-| **Skip when**      | Adapter does not support order modification.                                                                |
+| Field              | Value                                                                        |
+| ------------------ | ---------------------------------------------------------------------------- |
+| **Prerequisite**   | Open GTC limit buy from TC-E10.                                              |
+| **Action**         | ExecTester modifies the open limit buy to a new price.                       |
+| **Event sequence** | `OrderPendingUpdate` -> `OrderUpdated`.                                      |
+| **Pass criteria**  | `OrderUpdated` event logged with the new price; order exits `PendingUpdate`. |
+| **Skip when**      | Adapter does not support order modification.                                 |
 
 **Considerations:**
 
-- Requires market movement to trigger the ExecTester's order maintenance logic.
-- The modify is triggered when the order price drifts from the target TOB offset.
+- `trigger_limit_order_maintenance_once=True` amends to a different valid price directly from
+  the first `OrderAccepted`, preferring one tick more passive. A quiet book is not inconclusive.
+- The one-shot workflow stops further limit maintenance for that side after it starts, so the
+  tester does not immediately amend the order back to the TOB target.
+- Without that flag, the modify waits for the order price to drift from the target
+  TOB offset. No movement and no `OrderUpdated` is inconclusive, not a failure.
 - Verify the `OrderUpdated` log shows the expected price. If the event never
-  arrives, the order stays in `PendingUpdate` and the tester stops modifying it.
+  arrives after a forced or drift-triggered amend, the order stays in `PendingUpdate`
+  and the tester stops modifying it.
 
 **Python config:**
 
@@ -973,6 +1009,7 @@ ExecTesterConfig(
     enable_limit_buys=True,
     enable_limit_sells=False,
     modify_orders_to_maintain_tob_offset=True,
+    trigger_limit_order_maintenance_once=True,
 )
 ```
 
@@ -990,6 +1027,7 @@ ExecTesterConfig::builder()
     .enable_limit_buys(true)
     .enable_limit_sells(false)
     .modify_orders_to_maintain_tob_offset(true)
+    .trigger_limit_order_maintenance_once(true)
     .build()?
 ```
 
@@ -998,10 +1036,14 @@ ExecTesterConfig::builder()
 | Field              | Value                                                                        |
 | ------------------ | ---------------------------------------------------------------------------- |
 | **Prerequisite**   | Open GTC limit sell from TC-E11.                                             |
-| **Action**         | ExecTester modifies limit sell to new price as market moves.                 |
+| **Action**         | ExecTester modifies the open limit sell to a new price.                      |
 | **Event sequence** | `OrderPendingUpdate` -> `OrderUpdated`.                                      |
 | **Pass criteria**  | `OrderUpdated` event logged with the new price; order exits `PendingUpdate`. |
 | **Skip when**      | Adapter does not support order modification.                                 |
+
+**Considerations:**
+
+- Same one-shot trigger and quiet-book guidance as TC-E30.
 
 **Python config:**
 
@@ -1012,6 +1054,7 @@ ExecTesterConfig(
     enable_limit_buys=False,
     enable_limit_sells=True,
     modify_orders_to_maintain_tob_offset=True,
+    trigger_limit_order_maintenance_once=True,
 )
 ```
 
@@ -1029,6 +1072,7 @@ ExecTesterConfig::builder()
     .enable_limit_buys(false)
     .enable_limit_sells(true)
     .modify_orders_to_maintain_tob_offset(true)
+    .trigger_limit_order_maintenance_once(true)
     .build()?
 ```
 
@@ -1037,7 +1081,7 @@ ExecTesterConfig::builder()
 | Field              | Value                                                                                                 |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
 | **Prerequisite**   | Open GTC limit buy.                                                                                   |
-| **Action**         | ExecTester cancels and resubmits limit buy at new price as market moves.                              |
+| **Action**         | ExecTester cancels and resubmits the limit buy at a new price.                                        |
 | **Event sequence** | `OrderPendingCancel` -> `OrderCanceled` -> `OrderInitialized` -> `OrderSubmitted` -> `OrderAccepted`. |
 | **Pass criteria**  | Original order canceled, new order accepted at updated price.                                         |
 | **Skip when**      | Never (cancel-replace is always available).                                                           |
@@ -1046,6 +1090,10 @@ ExecTesterConfig::builder()
 
 - This is the universal alternative when the adapter does not support native modify.
 - Two distinct orders in the cache: the canceled original and the new replacement.
+- `trigger_limit_order_maintenance_once=True` requests one cancel directly from the first
+  `OrderAccepted`, then submits the replacement only after `OrderCanceled`.
+- Without the one-shot trigger, cancel-replace waits for TOB drift. No movement and no replacement
+  is inconclusive, not a failure.
 
 **Python config:**
 
@@ -1056,6 +1104,7 @@ ExecTesterConfig(
     enable_limit_buys=True,
     enable_limit_sells=False,
     cancel_replace_orders_to_maintain_tob_offset=True,
+    trigger_limit_order_maintenance_once=True,
 )
 ```
 
@@ -1073,6 +1122,7 @@ ExecTesterConfig::builder()
     .enable_limit_buys(true)
     .enable_limit_sells(false)
     .cancel_replace_orders_to_maintain_tob_offset(true)
+    .trigger_limit_order_maintenance_once(true)
     .build()?
 ```
 
@@ -1081,10 +1131,14 @@ ExecTesterConfig::builder()
 | Field              | Value                                                                                                 |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
 | **Prerequisite**   | Open GTC limit sell.                                                                                  |
-| **Action**         | ExecTester cancels and resubmits limit sell at new price.                                             |
+| **Action**         | ExecTester cancels and resubmits the limit sell at a new price.                                       |
 | **Event sequence** | `OrderPendingCancel` -> `OrderCanceled` -> `OrderInitialized` -> `OrderSubmitted` -> `OrderAccepted`. |
 | **Pass criteria**  | Original order canceled, new order accepted at updated price.                                         |
 | **Skip when**      | Never.                                                                                                |
+
+**Considerations:**
+
+- Same one-shot trigger and quiet-book guidance as TC-E32.
 
 **Python config:**
 
@@ -1095,6 +1149,7 @@ ExecTesterConfig(
     enable_limit_buys=False,
     enable_limit_sells=True,
     cancel_replace_orders_to_maintain_tob_offset=True,
+    trigger_limit_order_maintenance_once=True,
 )
 ```
 
@@ -1112,6 +1167,7 @@ ExecTesterConfig::builder()
     .enable_limit_buys(false)
     .enable_limit_sells(true)
     .cancel_replace_orders_to_maintain_tob_offset(true)
+    .trigger_limit_order_maintenance_once(true)
     .build()?
 ```
 
@@ -1283,6 +1339,12 @@ ExecTesterConfig::builder()
 | **Pass criteria**  | All open orders canceled; no open orders remaining.            |
 | **Skip when**      | Never.                                                         |
 
+**Considerations:**
+
+- Default stop uses `cancel_all`. Some venues implement that as account-wide. Confirm
+  the adapter's `CancelAllOrders` scope before running beside other open orders.
+  Use `use_individual_cancels_on_stop` or `use_batch_cancel_on_stop` to isolate.
+
 **Python config:**
 
 ```python
@@ -1404,8 +1466,12 @@ ExecTesterConfig::builder()
 
 - The default contract tests the adapter's error handling for invalid cancel requests. The
   rejection reason should indicate the order is not in a cancelable state.
+- `Strategy.cancel_order` and the order manager drop cancels for locally closed orders, so
+  `ExecTester` cannot reach the adapter after TC-E40. A second `cancel_order` that never
+  leaves the process is inconclusive.
 - A venue may treat an already-terminal cancel as idempotent. Document that disposition and use an
-  adapter-focused test when the generic tester or execution engine filters locally closed orders.
+  adapter-focused test that submits `CancelOrder` with the venue order ID after the order is
+  terminal.
 
 ---
 
@@ -1948,6 +2014,10 @@ ExecTesterConfig::builder()
 - Leave limit orders open from a prior test session (do not cancel on stop).
 - Use `external_order_claims` to claim the instrument so the adapter reconciles orders for it.
 - Verify that the reconciled order count matches the venue-reported count.
+- Mass-status may include historical terminal orders. Unclaimed ones appear as EXTERNAL.
+  Compare open-order counts against the venue open-order endpoint, not the full mass-status
+  length.
+- Report `ts_event` values must be Unix nanoseconds even when the venue only has second precision.
 
 ### TC-E85: Reconcile filled orders
 
@@ -1964,6 +2034,9 @@ ExecTesterConfig::builder()
 - Requires orders that filled in a prior session.
 - Verify fill price, quantity, and commission match the venue's reported values.
 - Some adapters may only report fills within a lookback window.
+- Historical fill replay can change a live zero commission to the REST fee. That flip is
+  expected when the stream omits fees and reconciliation supplies them.
+- Report `ts_event` values must be Unix nanoseconds even when the venue only has second precision.
 
 ### TC-E86: Reconcile open long position
 
@@ -2266,6 +2339,7 @@ construction; the Rust builder uses equivalent defaults.
 | `modify_stop_orders_to_maintain_offset`         | `bool`                | `False`                | 4              |
 | `cancel_replace_orders_to_maintain_tob_offset`  | `bool`                | `False`                | 4              |
 | `cancel_replace_stop_orders_to_maintain_offset` | `bool`                | `False`                | 4              |
+| `trigger_limit_order_maintenance_once`          | `bool`                | `False`                | 4              |
 | `use_post_only`                                 | `bool`                | `False`                | 2, 6, 7, 8     |
 | `limit_aggressive`                              | `bool`                | `False`                | 2              |
 | `use_quote_quantity`                            | `bool`                | `False`                | 1, 7           |

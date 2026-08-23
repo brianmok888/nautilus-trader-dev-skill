@@ -8,7 +8,7 @@ that the Rust workspace and representative Rust examples build.
 ## Prerequisites
 
 - Git
-- Rust stable and nightly toolchains
+- The Rust toolchain selected by upstream `rust-toolchain.toml`
 - Clang/LLVM for binding generation
 - `uv`, because the upstream build uses an embedded Python runtime for PyO3
 
@@ -32,8 +32,8 @@ proves that reviewed `origin/develop` contains `origin/nightly`.
 Install Rust with `rustup`, then enable formatting and linting components:
 
 ```bash
-rustup toolchain install stable --component clippy,rustfmt
-rustup toolchain install nightly --component clippy,rustfmt
+rustup show active-toolchain
+rustup component add clippy rustfmt
 rustc --version
 cargo --version
 ```
@@ -51,7 +51,7 @@ The upstream workspace uses an `uv`-managed environment for binding and mixed
 workspace builds:
 
 ```bash
-uv sync --all-extras
+make sync
 export PYO3_PYTHON="$PWD/.venv/bin/python"
 ```
 

@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from tools.upstream_baseline import default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -11,7 +16,7 @@ def read(path: str) -> str:
 def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     text = read("skills/nt-model/SKILL.md")
     expected = {
-        "BettingInstrument",
+        "Betting",
         "BinaryOption",
         "Cfd",
         "Commodity",
@@ -41,7 +46,7 @@ def test_instrument_any_inventory_matches_exact_v2_variants() -> None:
     assert "**14 instrument types:**" not in text
     assert "All 14 instrument types" not in text
 
-def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None:
+def test_pinned_nautilus_rust_dependencies_match_upstream_quickstart() -> None:
     paths = [
         "skills/nt-backtest/references/guides/run_rust_backtest.md",
         "skills/nt-live/references/guides/run_rust_live_trading.md",
@@ -50,6 +55,14 @@ def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None
         "skills/nt-live/SKILL.md",
         "skills/nt-live/references/concepts/rust.md",
     ]
+    quickstart = default_upstream_root() / "docs/how_to/run_rust_live_trading.md"
+    quickstart_match = re.search(
+        r'^nautilus-common\s*=\s*"([^"]+)"',
+        quickstart.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    assert quickstart_match is not None
+    expected_version = quickstart_match.group(1)
     dependency_pattern = re.compile(
         r'^nautilus-[a-z-]+\s*=\s*(?:"(?P<plain>[^"]+)"|\{[^\n]*version\s*=\s*"(?P<table>[^"]+)")',
         re.MULTILINE,
@@ -63,7 +76,7 @@ def test_pinned_nautilus_rust_dependencies_use_exact_workspace_version() -> None
             dependencies.append((path, version))
 
     assert dependencies
-    assert [(path, version) for path, version in dependencies if version != "0.63.0"] == []
+    assert [(path, version) for path, version in dependencies if version != expected_version] == []
     assert "Rust 1.98.0" in read("docs/end_to_end_guide.md")
 
 def test_documented_inventory_lists_all_seventeen_nt_skills() -> None:

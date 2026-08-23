@@ -610,7 +610,7 @@ REST report request: if it fails for any required fill, return an error from the
 request, targeted recovery, or complete mass status.
 
 NT v2 compatibility note: the fallible signature and fail-closed rule reflect upstream commit
-`68975d9347`, included in the pinned baseline `f725e184db`; older pins through `6e59fd74ea`
+`68975d9347`, included in the pinned baseline `d2b62d35a7`; older pins through `6e59fd74ea`
 returned a bare `Option<Money>` with no error channel.
 
 #### Account state emission
@@ -1095,7 +1095,7 @@ Support both WebSocket control frame pings and application-level text pings:
 - **Text pings**: Some venues (e.g., OKX) use `"ping"`/`"pong"` text messages. Configure `heartbeat_interval_secs` and `heartbeat_payload: Some(TEXT_PING.to_string())` in `WebSocketConfig` and respond to incoming `TEXT_PING` with `TEXT_PONG` in the handler. When `heartbeat_payload` is `None` the heartbeat is an empty Ping control frame instead — a venue that counts only application-level keepalives needs the text form.
 
 NT v2 compatibility note: the field names above reflect upstream commits `70ce722a4e` and
-`74d57e7e05`, included in the pinned baseline `f725e184db`; older pins through `6e59fd74ea` used
+`74d57e7e05`, included in the pinned baseline `d2b62d35a7`; older pins through `6e59fd74ea` used
 the pre-rename spellings.
 
 The handler should check for ping messages early in the message processing loop and respond immediately to maintain connection health.

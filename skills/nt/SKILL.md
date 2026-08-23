@@ -32,7 +32,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode reference
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
 | G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the aggregate router harness at `f725e184db`; `references/g2-evidence/nt.json` records provenance. Every retained child has current durable G2 evidence, including hybrid executable/static evidence for the migration-only `nt-strategy-builder` lane. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the aggregate router harness at `d2b62d35a7`; `references/g2-evidence/nt.json` records provenance. Every retained child has current durable G2 evidence, including hybrid executable/static evidence for the migration-only `nt-strategy-builder` lane. |
 | G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
 | G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
 | G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
@@ -92,7 +92,7 @@ Migration/reference-only legacy material is physically quarantined under each sk
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+The authoritative pinned upstream commit is `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 

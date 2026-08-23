@@ -13,7 +13,7 @@ Use these gates as the architecture acceptance card. A gate is `Pass` only when 
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin the developer-guide snapshot and APIs before design. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
 | G1 Legacy labelling | legacy: Keep migration/reference labels on legacy/Cython/v1 guidance outside production design. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Compile representative Rust API shapes against the pinned baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; evidence: `references/g2-evidence/nt-architect.json`. |
+| G2 Pinned V2 examples | Compile representative Rust API shapes against the pinned baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed against `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; evidence: `references/g2-evidence/nt-architect.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Quarantine Python and keep execution authority in Rust. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Map each component to unit, integration, and lifecycle evidence. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
@@ -51,7 +51,12 @@ impl DataActor for RegimeActor {
     fn on_data(&mut self, data: &CustomData) -> anyhow::Result<()> {
         let next = self.classify(data)?;
         self.current = Some(next);
-        self.publish_signal("regime", next.to_string(), self.clock().timestamp_ns())
+        self.publish_signal(
+            "regime",
+            next.to_string(),
+            self.clock().timestamp_ns(),
+        );
+        Ok(())
     }
 }
 ```
@@ -81,4 +86,4 @@ Legacy Python architecture prose and examples are physically quarantined at [`mi
 
 ## Source-pinned upstream lane
 
-Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Treat newer upstream behavior as version-scoped until the repository pin advances.
+Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`. Treat newer upstream behavior as version-scoped until the repository pin advances.

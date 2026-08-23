@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/index/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/index.md
-source_commit: f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f
+source_commit: d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c
 sync_date: 2026-08-23
 target: NautilusTrader develop developer guide source snapshot
 confidence: high

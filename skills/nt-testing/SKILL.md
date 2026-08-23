@@ -15,7 +15,7 @@ surfaces are current; this skill repository still routes new production work to
 Rust and keeps Python execution examples migration/reference-only.
 
 The pinned baseline matches the reviewed `origin/develop` head
-`f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` (verified 2026-08-22). The
+`d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` (verified 2026-08-23). The
 immutable snapshot now contains the contracts that previously differed from
 older pins: at develop commit `45903fc8b925adae6323035fb0b4fb5b49b4f89b` the
 book-depth request toggles landed, and change commit
@@ -37,6 +37,11 @@ differs from the pinned snapshot:
   `request_quotes`, `request_trades`, and `request_bars`); older pins claimed
   Rust book-depth subscription was unsupported, so never reintroduce that
   claim from pre-45903fc8 material.
+- Every adapter timestamp in `ts_event` and `ts_init` must use Unix nanoseconds.
+  Values below `10^16` normally indicate unconverted seconds, milliseconds, or
+  microseconds. Treat a timestamp-scale warning as a failure for the emitting
+  data case. `DataTester` covers live and historical messages but not
+  reconstructed books received through `on_book`, so assert those timestamps explicitly.
 - Repository-only static contract tests that do not import `nautilus_trader` may
   run with the invoking repository Python when the pinned upstream
   `python/.venv` is absent. Any test importing `nautilus_trader` still requires
@@ -68,9 +73,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -114,7 +119,7 @@ The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quara
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
+Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
 
 ## What This Skill Covers
 
@@ -155,7 +160,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
   migration/reference evidence. This repository's active behavior tests
   target Rust ownership and bounded PyO3 configuration/error boundaries.
-  At the pinned develop `f725e184db`, change `e4d3ac7f37` additionally lets
+  At the pinned develop `d2b62d35a7`, change `e4d3ac7f37` additionally lets
   `pyobject_to_fee_model_any` accept any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs
   (`BacktestEngineConfig`, `ExecEngineConfig`); treat that capability the

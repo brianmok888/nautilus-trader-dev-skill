@@ -37,7 +37,7 @@ Betfair adapter is included in the Python package; no adapter-specific extra is 
 
 - [Python examples](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/betfair/)
 - [Rust examples](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/betfair/examples/)
-- [Book imbalance backtest tutorial](https://github.com/nautechsystems/nautilus_trader/blob/f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f/docs/integrations/../tutorials/backtest_book_imbalance_betfair.md)
+- [Book imbalance backtest tutorial](https://github.com/nautechsystems/nautilus_trader/blob/d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c/docs/integrations/../tutorials/backtest_book_imbalance_betfair.md)
 
 ## Betfair documentation
 
@@ -417,7 +417,7 @@ decision. The order stream carries the running total in `sv` (size voided). Void
 removal settle instead of streaming, so they do not reach this path.
 
 The adapter allocates each `sv` increase to locally applied fill lots newest-first and emits one
-cumulative [`OrderFillVoided`](https://github.com/nautechsystems/nautilus_trader/blob/f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f/docs/integrations/../concepts/events/order_fill_voided.md) per affected `trade_id`. A
+cumulative [`OrderFillVoided`](https://github.com/nautechsystems/nautilus_trader/blob/d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c/docs/integrations/../concepts/events/order_fill_voided.md) per affected `trade_id`. A
 first-seen snapshot seeds its cumulative void state without reversing exposure Nautilus never
 applied, so a reconnect does not double-correct. Any `sv` increase also triggers an account refresh.
 

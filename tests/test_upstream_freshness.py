@@ -376,3 +376,13 @@ def test_archival_headers_present_on_prominent_legacy_guides() -> None:
         assert "ARCHIVAL / MIGRATION NOTE" in head, target
         assert "Rust v2/PyO3" in head, target
         assert "LiveNode" in head, target
+
+
+def test_review_manifest_tracks_latest_reviewed_develop_commit() -> None:
+    manifest = cast(
+        ReviewManifest,
+        json.loads((REPO_ROOT / "references/upstream-delta-review.json").read_text()),
+    )
+
+    assert manifest["reviewed_commit"] == "d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c"
+    assert manifest["pinned_commit"] == manifest["reviewed_commit"]

@@ -17,11 +17,11 @@ Add the following to your `Cargo.toml`. The `streaming` and
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.63.0", features = ["streaming"] }
-nautilus-execution = "0.63.0"
-nautilus-model = { version = "0.63.0", features = ["stubs"] }
-nautilus-persistence = "0.63.0"
-nautilus-trading = { version = "0.63.0", features = ["examples"] }
+nautilus-backtest = { version = "0.62", features = ["streaming"] }
+nautilus-execution = "0.62"
+nautilus-model = { version = "0.62", features = ["stubs"] }
+nautilus-persistence = "0.62"
+nautilus-trading = { version = "0.62", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"

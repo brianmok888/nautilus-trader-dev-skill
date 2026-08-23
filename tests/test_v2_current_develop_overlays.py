@@ -102,7 +102,7 @@ def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:
     ):
         guide = read(path)
 
-        assert "f725e184db" in guide, f"{path} lacks the pinned socket-state source commit"
+        assert "d2b62d35a7" in guide, f"{path} lacks the pinned socket-state source commit"
         assert "betfair-data-streams" in guide and "betfair-user-streams" in guide, (
             f"{path} lacks the stable socket endpoint labels"
         )

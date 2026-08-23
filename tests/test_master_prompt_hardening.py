@@ -37,3 +37,11 @@ def test_live_curriculum_identifies_the_actual_pinned_baseline() -> None:
 
     assert "pinned upstream examples at develop commit `45903fc8`" not in curriculum
     assert UPSTREAM_COMMIT in curriculum
+
+
+def test_master_prompt_contains_no_host_specific_absolute_path() -> None:
+    prompt = (ROOT / "docs/prompts/master-prompt.md").read_text()
+
+    assert "/home/" not in prompt
+    assert "/Users/" not in prompt
+    assert "git rev-parse --show-toplevel" in prompt

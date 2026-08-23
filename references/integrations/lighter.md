@@ -53,7 +53,7 @@ cargo run --example lighter-exec-tester --package nautilus-lighter --features ex
 ```
 
 NT v2 compatibility note: the immediate-startup tester convention above reflects upstream
-commits `e8daa045ab` and `7214db4239`, included in the pinned baseline `f725e184db`; older pins
+commits `e8daa045ab` and `7214db4239`, included in the pinned baseline `d2b62d35a7`; older pins
 through `6e59fd74ea` used the historical CLI opt-in convention.
 
 :::warning

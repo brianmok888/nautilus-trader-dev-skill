@@ -1,3 +1,8 @@
+> **NT v2 compatibility note:** legacy Python adapter examples in this file are
+> **migration/reference-only** — preserved for interoperability review, not current
+> production implementation guidance. New DEX signing, execution state, fills, account
+> mutation, and reconciliation belong in Rust.
+
 # DEX Adapter — DO and DON'Ts
 
 Curated DEX-specific rules. For general NautilusTrader adapter rules, see `nt-review/SKILL.md`.
@@ -178,7 +183,7 @@ class MyDEXExecClientConfig(LiveExecClientConfig, frozen=True):
 
 ### Rust Core Patterns (DEX-specific)
 
-**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
+**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
 ```rust
 use nautilus_common::live::get_runtime;
 
@@ -251,7 +256,7 @@ safe_gas_limit = int(estimated_gas * 1.2)
 
 ### Rust Conventions
 
-**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `f725e184dbd2f7432b5c7b9458b4ef6d1f85fd5f` adapter test modules).
+**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` adapter test modules).
 ```rust
 // ❌ WRONG — panics from Python threads
 tokio::spawn(async move { ... });

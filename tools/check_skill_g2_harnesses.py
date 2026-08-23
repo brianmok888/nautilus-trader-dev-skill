@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -858,8 +859,20 @@ def validate_readiness_cards(
             errors.append(f"{skill} blocked durable evidence lacks a reason")
         if payload.get("upstream_commit") != EXPECTED_UPSTREAM_COMMIT:
             errors.append(f"{skill} durable evidence does not match the pinned upstream")
-        if payload.get("upstream_clean") is not True:
+        upstream_clean = payload.get("upstream_clean")
+        if type(upstream_clean) is not bool:
+            errors.append(f"{skill} durable evidence upstream_clean must be a boolean")
+        elif not upstream_clean:
             errors.append(f"{skill} durable evidence was not produced from a clean upstream")
+        verified_at = payload.get("verified_at")
+        try:
+            timestamp = datetime.fromisoformat(verified_at) if isinstance(verified_at, str) else None
+        except ValueError:
+            timestamp = None
+        if timestamp is None or timestamp.tzinfo is None:
+            errors.append(
+                f"{skill} durable evidence verified_at must be a timezone-aware ISO-8601 timestamp"
+            )
         if "repository_commit" in payload:
             errors.append(f"{skill} durable evidence uses self-referential provenance")
         if payload.get("owned_content_sha256") != harness_content_hash(
@@ -870,8 +883,24 @@ def validate_readiness_cards(
         if not isinstance(steps, list) or len(steps) != len(harnesses[skill].steps):
             errors.append(f"{skill} durable evidence has incomplete steps")
         else:
-            if any(not isinstance(step, dict) or step.get("returncode") != 0 for step in steps):
-                errors.append(f"{skill} durable evidence contains a failed step")
+            for step in steps:
+                if not isinstance(step, dict):
+                    continue
+                returncode = step.get("returncode")
+                if type(returncode) is not int:
+                    errors.append(f"{skill} durable evidence returncode must be an integer")
+                elif returncode != 0:
+                    errors.append(f"{skill} durable evidence contains a failed step")
+                duration = step.get("duration_seconds")
+                if (
+                    isinstance(duration, bool)
+                    or not isinstance(duration, (int, float))
+                    or not math.isfinite(duration)
+                    or duration < 0
+                ):
+                    errors.append(
+                        f"{skill} durable evidence duration_seconds must be a nonnegative number"
+                    )
             recorded = [
                 (step.get("command"), step.get("cwd"))
                 for step in steps
