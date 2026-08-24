@@ -104,7 +104,10 @@ production path; new in-scope guidance remains Rust-first and PyO3-oriented.
 - https://nautilustrader.io/docs/latest/developer_guide/adapters/
 - https://nautilustrader.io/docs/latest/developer_guide/spec_exec_testing/
 - https://github.com/nautechsystems/nautilus_trader
+
+**Coding reference URLs:**
 - https://docs.wickra.org/
+- https://github.com/QuantConnect/Lean
 
 ---
 
