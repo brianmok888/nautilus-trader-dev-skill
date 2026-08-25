@@ -68,7 +68,7 @@ def test_remaining_pressure_review_prose_defects_are_fixed() -> None:
     implement = read("skills/nt-implement/SKILL.md")
     backtest = read("skills/nt-backtest/SKILL.md")
     assert "Rust, / remain" not in implement
-    assert "Develop-only" not in backtest or "d2b62d35a7" in backtest
+    assert "Develop-only" not in backtest or "73d4dd5b3" in backtest
 
 
 def test_testing_guidance_covers_current_timestamp_scale_contract() -> None:

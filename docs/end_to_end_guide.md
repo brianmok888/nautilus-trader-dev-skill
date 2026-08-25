@@ -5,7 +5,7 @@ This guide gives the default NautilusTrader Development Skills workflow for a ne
 All new strategy, integration, and live work follows the Rust-first path in this guide. Python NT material is migration/reference-only unless an upstream contract explicitly requires Python bindings.
 
 **Prerequisites**:
-- Rust 1.98.0 toolchain and Cargo installed for the pinned `d2b62d35a7` develop baseline.
+- Rust 1.98.0 toolchain and Cargo installed for the pinned `73d4dd5b3` develop baseline.
 - NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 

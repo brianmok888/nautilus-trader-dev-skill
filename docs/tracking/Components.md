@@ -7,8 +7,8 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Does NOT contain: plans, historical attestations, or removed lanes. -->
 
 Review date: 2026-08-23
-Reviewed upstream develop: `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`
-Pinned G2 baseline: `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`
+Reviewed upstream develop: `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`
+Pinned G2 baseline: `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`
 
 The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its G2 harness requires a separately prepared writable checkout with the pinned Python V2 PyO3 runtime. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
@@ -34,7 +34,7 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 
 ## Final readiness summary
 
-- Upstream delta: Pass - reviewed exactly through `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`.
+- Upstream delta: Pass - reviewed exactly through `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`.
 - Repository scope: Pass - 17 retained NautilusTrader-development skills; active removed-lane routes absent.
 - Readiness cards: Pass - all 136 G0-G7 declarations are structurally complete.
 - G2 execution: Pass - all 17 harnesses completed against the pin and their durable evidence matches final owned content.

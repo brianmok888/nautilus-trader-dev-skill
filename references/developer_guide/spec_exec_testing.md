@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_exec_testing.md
-source_commit: d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c
-sync_date: 2026-08-23
+source_commit: 73d4dd5b3be4cb198bb20c89da6963c85eb24f3a
+sync_date: 2026-08-25
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -49,7 +49,7 @@ register adapter client factories before the node is built.
 
 ```python
 from nautilus_trader.common import Environment
-from nautilus_trader.config import LiveExecEngineConfig
+from nautilus_trader.config import LiveExecutionEngineConfig
 from nautilus_trader.config import LiveRiskEngineConfig
 from nautilus_trader.live import LiveNode
 from nautilus_trader.model import TraderId
@@ -58,7 +58,7 @@ from nautilus_trader.testkit import ExecTesterConfig
 node = (
     LiveNode.builder("TESTER-001", TraderId("TESTER-001"), Environment.SANDBOX)
     .with_risk_engine_config(LiveRiskEngineConfig(bypass=True))
-    .with_exec_engine_config(LiveExecEngineConfig(reconciliation=True))
+    .with_exec_engine_config(LiveExecutionEngineConfig(reconciliation=True))
     .add_exec_client(None, adapter_exec_client_factory, exec_client_config)
     .build()
 )

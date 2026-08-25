@@ -33,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         if not pinned_python.is_file():
             message = (
                 f"pinned NautilusTrader Python environment not found: {pinned_python}; "
-                + "run `make sync-v2` in the pinned upstream checkout"
+                + "run `make sync && make build-debug` in the pinned upstream checkout"
             )
             raise FileNotFoundError(message)
         python = str(pinned_python)

@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c
-sync_date: 2026-08-23
+source_commit: 73d4dd5b3be4cb198bb20c89da6963c85eb24f3a
+sync_date: 2026-08-25
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -65,6 +65,27 @@ documentation feel natural to end-users.
 2. **User-facing API**: Use full, descriptive names for public properties, function parameters, return types, and metric names/labels (e.g., `price_precision`, `size_precision`). This prevents abbreviated terminology from leaking into dashboards or alerts.
 
 3. **Error messages and logs**: Use full words for clarity (e.g., "price precision" not "price prec"). The user should never see abbreviated terminology.
+
+4. **Execution terminology**: Use `Execution` in public, project-owned PascalCase type names, such
+   as `BinanceExecutionClientConfig`. Internal implementation types may retain established `Exec`
+   names. Also reserve `Exec` for the `ExecAlgorithmId` and `ExecTester` families, established
+   `exec_*` names, and venue or protocol terms such as `BitmexExecType`. Name protocol-specific
+   wire models after the venue concept, such as `HyperliquidExchangeAction`. Preserve shipped names
+   on legacy v1 compatibility surfaces, in historical release entries, and on the source side of
+   migration tables.
+
+5. **Runtime qualifiers**: Use `Live` when a type selects or configures real-time runtime semantics,
+   such as `LiveNode` versus `BacktestNode`, `LiveClock` versus `TestClock`, and the
+   `LiveDataEngineConfig`, `LiveRiskEngineConfig`, and `LiveExecutionEngineConfig` family versus
+   reusable core engine configs. Omit `Live` from the ordinary adapter client family because a
+   connected client is the default. Qualify alternate implementations by their behavior, such as
+   `SandboxExecutionClient` or `DatabentoHistoricalClient`. An explicit live/historical protocol
+   pair may retain `Live` to distinguish the two implementations.
+
+6. **Adapter factory configs**: Name the data and execution inputs `<Venue>DataClientConfig` and
+   `<Venue>ExecutionClientConfig`. Factories consume these client configs directly rather than a
+   separate factory config wrapper. `LiveNodeConfig` owns `trader_id`; venue-specific `account_id`
+   values belong on execution client configs.
 
 #### Data loading APIs
 
