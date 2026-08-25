@@ -20,41 +20,47 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, collapse the delta manifest to the new pin, refresh every pin-citing layer (README baseline line, dev-guide snapshots, rust-trading example mirror, G2 evidence re-execution).
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers green.
 
-[NT-2026-08-25-02] [P1] [OPEN] Machine-synced mirrors stale against the reviewed tip.
+[NT-2026-08-25-02] [P1] [CLOSED 2026-08-25] Machine-synced mirrors stale against the reviewed tip.
   file: references/developer_guide/adapters.md; references/developer_guide/coding_standards.md; references/developer_guide/spec_exec_testing.md; skills/nt-trading/references/examples/rust_trading/examples/ (4 strategy files)
   evidence: develop commits `3907750e2` (execution naming: `LiveExecClientConfig`→`ExecutionClientConfig`, `LiveExecEngineConfig`→`LiveExecutionEngineConfig`, `LiveDataClientConfig`→`DataClientConfig`) and `51f641d5c` (adapter client config renames) changed `docs/developer_guide/{adapters,coding_standards,spec_exec_testing}.md`; commit `8d314696e` (Strategy cancel-all scope) changed `crates/trading/src/examples/strategies/{composite_market_maker,delta_neutral_vol,grid_mm,hurst_vpin_directional}/strategy.rs` mirrored under `skills/nt-trading/references/examples/rust_trading/examples/`.
   fix: refresh the three developer-guide snapshots from the tip and mirror the four upstream strategy example files byte-for-byte.
   closure: `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` exit 0 against the moved pin.
+  closure-proof 2026-08-25: `python3 tools/check_dev_guide_snapshot_sync.py` -> 'Developer guide snapshot bodies match pinned upstream.'; `python3 tools/check_rust_trading_reference_sync.py` -> 'Rust trading references match pinned upstream examples.'
 
-[NT-2026-08-25-03] [P1] [OPEN] Active-lane guide teaches removed V2 config name `LiveExecEngineConfig` without any legacy label.
+[NT-2026-08-25-03] [P1] [CLOSED 2026-08-25] Active-lane guide teaches removed V2 config name `LiveExecEngineConfig` without any legacy label.
   file: skills/nt-adapters/references/guides/spec_exec_testing.md; skills/nt-testing/references/guides/spec_exec_testing.md
   evidence: symbol `LiveExecEngineConfig` is absent from the reviewed tip tree (`git grep` over `python/nautilus_trader` and `crates` at `73d4dd5b` returns nothing); develop commit `3907750e2` renamed it to `LiveExecutionEngineConfig`; neither guide file carries an NT v2 compatibility note or migration label.
   fix: update the guide text to the current `LiveExecutionEngineConfig` name (or label retained legacy context per Handguard #5).
   closure: `python3 tools/check_legacy_labelling.py` (with the extended removed-symbol detector from [NT-2026-08-25-04]) exits 0 with the corrected guides.
+  closure-proof 2026-08-25: `python3 tools/check_legacy_labelling.py` exits 0 with the guides teaching `LiveExecutionEngineConfig` (skills/nt-adapters + skills/nt-testing spec_exec_testing.md).
 
-[NT-2026-08-25-04] [P1] [OPEN] Legacy-labelling gate cannot detect v1/V2-removed Python symbols, so unlabelled drift passes the gate.
+[NT-2026-08-25-04] [P1] [CLOSED 2026-08-25] Legacy-labelling gate cannot detect v1/V2-removed Python symbols, so unlabelled drift passes the gate.
   file: tools/check_legacy_labelling.py; tools/check_dev_guide_sync.py (canonical `_check_unlabelled_legacy_guidance`)
   evidence: gate is green at `b30ca0c` while 25 unlabelled files teach symbols absent from the reviewed tip (currency audit 2026-08-25; two audit hits excluded as false positives — `skills/nt-trading/references/guides/write_rust_actor.md` defines its own `SpreadMonitor` example and `skills/nt-adapters/references/examples/bybit/README_options_data_collector.md` configures its own `BybitOptionsDataCollectorConfig`): `references/concepts/{actors,backtesting,execution,orders,portfolio,reports,strategies,visualization}.md`, `references/integrations/{derive,polymarket}.md`, per-skill copies under `skills/nt-{adapters,backtest,model,signals,testing,trading}/references/`, teaching removed modules such as `nautilus_trader.backtest.engine`, `nautilus_trader.backtest.models`, `nautilus_trader.core.rust.model`, and removed types `LiveExecEngineConfig`, `FillModelConfig`, `ImportableFillModelConfig`, `DeriveExecClientConfig`; detector patterns cover only Cython tokens, `.pyx`, `v1`, and `TradingNode`.
   fix: extend the detector with the removed-symbol set verified absent at the pinned/reviewed V2 baseline, honouring file-level and proximate labels; TDD with a failing case first.
   closure: new pytest wrapper in `tests/test_legacy_labelling.py` fails on unlabelled removed symbols and passes labelled ones; `python3 tools/check_legacy_labelling.py` exits 0 after the [NT-2026-08-25-05] labelling fix.
+  closure-proof 2026-08-25: tests/test_legacy_labelling.py 29 passed (failing-first: removed-symbol, fence-label, current-symbol cases); `python3 tools/check_legacy_labelling.py` exits 0.
 
-[NT-2026-08-25-05] [P1] [OPEN] 25 retained v1 mirror files lack the required legacy/migration label (Handguard invariant #5).
+[NT-2026-08-25-05] [P1] [CLOSED 2026-08-25] 25 retained v1 mirror files lack the required legacy/migration label (Handguard invariant #5).
   file: references/concepts/{actors,backtesting,execution,orders,portfolio,reports,strategies,visualization}.md; references/integrations/{derive,polymarket}.md; skills/nt-adapters/references/guides/spec_exec_testing.md; skills/nt-adapters/references/integrations/{derive,polymarket}.md; skills/nt-backtest/references/concepts/backtesting.md; skills/nt-model/references/concepts/value_types.md; skills/nt-signals/references/concepts/{portfolio,reports,visualization}.md; skills/nt-testing/references/guides/spec_exec_testing.md; skills/nt-trading/references/concepts/{actors,execution,orders,portfolio,strategies}.md; skills/nt-trading/references/guides/testing.md
   evidence: 2026-08-25 currency audit against reviewed tip `73d4dd5b` — each listed file teaches imports/types that do not exist at the tip and carries no `NT v2 compatibility note`, `migration/reference-only`, or `legacy:` label (compare labelled peers `references/concepts/cache.md`, `data.md`, `instruments.md`, `logging.md`, `message_bus.md`).
   fix: add the file-level NT v2 compatibility note used by the labelled peers (or refresh the mirror from current upstream docs where the file is machine-synced); guides in active lanes get the current V2 names instead where noted in [NT-2026-08-25-03].
   closure: extended `python3 tools/check_legacy_labelling.py` exits 0 across the full scope.
+  closure-proof 2026-08-25: `python3 tools/check_legacy_labelling.py` exits 0 across references/concepts, references/integrations, and all per-skill mirrors (22 file-level notes + labelled v1-only fences).
 
-[NT-2026-08-25-06] [P2] [OPEN] `official_adapter_spec.md` socket-reconnect overlay cites a pre-drift commit and moved code location.
+[NT-2026-08-25-06] [P2] [CLOSED 2026-08-25] `official_adapter_spec.md` socket-reconnect overlay cites a pre-drift commit and moved code location.
   file: skills/nt-adapters/references/guides/official_adapter_spec.md:954-962
   evidence: overlay cites develop commit `03062cce6372d3c7e9044b39b181a50cc07a067e`; the feature landed via reviewed-tip commit `0fafbd12f` with `ReconnectRequestOutcome` defined at `crates/network/src/mode.rs:251` and re-exported as `SocketReconnectRequestOutcome` at `crates/live/src/socket.rs:36` (`SocketReconnectRegistry` still in `crates/live/src/socket.rs`).
   fix: refresh the overlay cite to `0fafbd12f` and correct the source-path mention.
   closure: updated text cites `0fafbd12f` and current paths; `python3 tools/check_legacy_labelling.py` and skill gates remain green.
+  closure-proof 2026-08-25: official_adapter_spec.md socket overlay cites `0fafbd12f` with crates/network/src/mode.rs and crates/live/src/socket.rs paths; `python3 tools/check_legacy_labelling.py` exits 0.
 
-[NT-2026-08-25-07] [P2] [OPEN] `run_pinned_v2_pytest.py` failure hint references a nonexistent `make sync-v2` target.
+[NT-2026-08-25-07] [P2] [CLOSED 2026-08-25] `run_pinned_v2_pytest.py` failure hint references a nonexistent `make sync-v2` target.
   file: tools/run_pinned_v2_pytest.py:41-44
   evidence: upstream Makefile at pin `d2b62d35` and at reviewed tip `73d4dd5b` exposes `make sync` (line 292) and `make build-debug`/`build` (lines 314-321); no `sync-v2` target exists.
   fix: point the FileNotFoundError hint at `make sync && make build-debug` in the pinned upstream checkout.
   closure: hint text updated; `python3 -m pytest -q tests/` green.
+  closure-proof 2026-08-25: run_pinned_v2_pytest.py hint now `make sync && make build-debug` (targets verified in upstream Makefile lines 292/314); upstream venv built and importable via those targets.
 
 [NT-2026-08-23-08] [P1] [CLOSED] Migration-only Python strategy tests imported removed V2 modules `nautilus_trader.backtest.engine` and `nautilus_trader.backtest.models`.
   file: tests/test_strategy_builder_v2_contract.py; tools/check_skill_g2_harnesses.py; skills/nt-strategy-builder/SKILL.md; skills/nt/SKILL.md
@@ -318,6 +324,8 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
+2026-08-25 — P1 — MODIFIED: moved the pinned baseline to develop `73d4dd5b3` (44-commit delta reviewed and recorded), refreshed the three drift-affected developer-guide snapshots and the rust_trading examples mirror, and updated every pin-citing layer while preserving historical overlay citations — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, tests/test_pressure_review_regressions.py
+2026-08-25 — P1 — MODIFIED: extended the legacy-labelling gate with removed-v2-symbol detection (fence-aware labels, migration_reference exemption), labelled 22 retained v1 concept/integration mirrors, corrected renamed config guidance (LiveExecutionEngineConfig / DataClientConfig / ExecutionClientConfig), and labelled v1-only fences with current Rust contract pointers — files: tools/check_legacy_labelling.py, tests/test_legacy_labelling.py, references/concepts/*.md, references/integrations/*.md, skills/nt-{adapters,backtest,model,signals,testing,trading}/**, tools/run_pinned_v2_pytest.py
 2026-08-22 — P2 — MODIFIED: moved the pinned G2 baseline to develop 98e6c39d8 (Betfair socket-state reporting and reconnect control), relabeled the betfair_v2 overlay as in-pin behavior, reset the delta manifest, and re-executed all 17 G2 harnesses — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, docs/tracking/Findings.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, references/integrations/betfair_v2.md, tests/test_exec_spec_current_overlay.py
 
 2026-08-22 — P2 — MODIFIED: added current-develop overlays for Betfair socket-state endpoints (`betfair-data-streams`/`betfair-user-streams`), `SocketReconnectRegistry` targeted reconnect with auth/subscription replay, and execution gating until replacement-stream reconciliation (upstream `98e6c39d83`) — files: skills/nt-adapters/references/integrations/betfair_v2.md, references/integrations/betfair_v2.md, tests/test_v2_current_develop_overlays.py, references/upstream-delta-review.json
