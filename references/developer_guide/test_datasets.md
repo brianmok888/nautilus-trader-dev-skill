@@ -2,7 +2,7 @@
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/test_datasets/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/test_datasets.md
 source_commit: 73d4dd5b3be4cb198bb20c89da6963c85eb24f3a
-sync_date: 2026-08-23
+sync_date: 2026-08-25
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
