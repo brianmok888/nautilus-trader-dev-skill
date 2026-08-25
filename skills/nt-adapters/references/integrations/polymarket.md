@@ -1,5 +1,7 @@
 # Polymarket
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 Founded in 2020, Polymarket is a decentralized prediction market platform that enables
 traders to speculate on event outcomes by buying and selling outcome tokens.
 

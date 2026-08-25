@@ -1,5 +1,7 @@
 # Reports
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 This guide explains the portfolio analysis and reporting capabilities provided by the `ReportProvider`
 class, and how these reports are used for PnL accounting and backtest post-run analysis.
 

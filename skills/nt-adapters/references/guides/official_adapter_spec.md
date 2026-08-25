@@ -171,7 +171,7 @@ Wire everything together for production usage.
 
 | Step | Component                  | Description                                                                                  |
 |------|----------------------------|----------------------------------------------------------------------------------------------|
-| 6.1  | Configuration classes      | Create `LiveDataClientConfig` and `LiveExecClientConfig` subclasses.                         |
+| 6.1  | Configuration classes      | Create `DataClientConfig` and `ExecutionClientConfig` subclasses.                         |
 | 6.2  | Factory functions          | Implement factory functions to instantiate clients from configuration.                       |
 | 6.3  | Environment variables      | Support credential resolution from environment variables.                                    |
 
@@ -952,7 +952,9 @@ flowchart LR
 
 ### Endpoint-scoped reconnect control
 
-Current-develop overlay (`03062cce6372d3c7e9044b39b181a50cc07a067e`): clients with multiple
+Current-develop overlay (standardized by develop commit `0fafbd12f`, with `ReconnectRequestOutcome` defined in
+`crates/network/src/mode.rs` and re-exported as `SocketReconnectRequestOutcome` from `crates/live/src/socket.rs`):
+clients with multiple
 logical socket endpoints expose a `SocketReconnectRegistry`. Register each endpoint's reconnect
 handle for exactly the connection lifetime and remove it on teardown. Route the `ReconnectSocket`
 system command to the selected endpoint only; never restart every socket as a side effect.
@@ -2003,6 +2005,8 @@ This keeps related functionality together rather than interleaving subscribe/uns
 The `InstrumentProvider` loads instrument definitions from the venue: all instruments, specific
 instruments by ID, or a filtered subset.
 
+NT v2 compatibility note: the Python `nautilus_trader.common.providers` base class below is v1 migration reference; at V2 the provider contract is the Rust trait `nautilus_common::providers::InstrumentProvider` (see `crates/adapters/betfair/src/provider.rs` for a reference implementation).
+
 ```python
 from nautilus_trader.common.providers import InstrumentProvider
 from nautilus_trader.model import InstrumentId
@@ -2031,6 +2035,8 @@ class TemplateInstrumentProvider(InstrumentProvider):
 
 The `LiveDataClient` handles data feeds that are not market data: news feeds, custom data streams,
 or other non-market sources.
+
+NT v2 compatibility note: the Python `nautilus_trader.data.messages` / `LiveDataClient` contract in this and the following `MarketDataClient` subsection is v1 migration reference; at V2 these client contracts are Rust-side — see the `DataClient` trait in `crates/common/src/clients/data.rs` and Rust adapter implementations under `crates/adapters/`.
 
 ```python
 from nautilus_trader.data.messages import RequestData
@@ -2071,6 +2077,8 @@ class TemplateLiveDataClient(LiveDataClient):
 
 The `MarketDataClient` handles market-specific data: order books, top-of-book quotes and trades,
 instrument status updates, and historical data requests.
+
+NT v2 compatibility note: v1 migration reference — at V2 the data/market-data client split collapses into the Rust `DataClient` trait in `crates/common/src/clients/data.rs`.
 
 ```python
 from nautilus_trader.data.messages import RequestBars
@@ -2296,6 +2304,8 @@ data, adapters **must** set `RecordFlag` flags correctly on each
   that has `F_LAST` set. If the venue batches multiple updates into one
   message, terminate each logical group with `F_LAST`.
 
+NT v2 compatibility note: v1 migration reference — at V2 record flags come from the flat `nautilus_trader.model` surface and the Rust `OrderBookDelta` API.
+
 ```python
 from nautilus_trader.model.enums import RecordFlag
 
@@ -2337,6 +2347,8 @@ never receive the data when buffering is enabled.
 
 The `ExecutionClient` manages order submission, modification, and cancellation against the venue
 trading system.
+
+NT v2 compatibility note: the Python `nautilus_trader.execution.messages` / `execution.reports` contract below is v1 migration reference; at V2 the contract is the Rust `ExecutionClient` trait in `crates/common/src/clients/execution.rs`.
 
 ```python
 from nautilus_trader.execution.messages import BatchCancelOrders
@@ -2435,11 +2447,11 @@ class TemplateLiveExecutionClient(LiveExecutionClient):
 Configuration classes hold adapter-specific settings like API keys and connection details.
 
 ```python
-from nautilus_trader.config import LiveDataClientConfig
-from nautilus_trader.config import LiveExecClientConfig
+from nautilus_trader.config import DataClientConfig
+from nautilus_trader.config import ExecutionClientConfig
 
 
-class TemplateDataClientConfig(LiveDataClientConfig):
+class TemplateDataClientConfig(DataClientConfig):
     """Configuration for `TemplateDataClient` instances."""
 
     api_key: str
@@ -2447,7 +2459,7 @@ class TemplateDataClientConfig(LiveDataClientConfig):
     base_url: str
 
 
-class TemplateExecClientConfig(LiveExecClientConfig):
+class TemplateExecClientConfig(ExecutionClientConfig):
     """Configuration for `TemplateExecClient` instances."""
 
     api_key: str

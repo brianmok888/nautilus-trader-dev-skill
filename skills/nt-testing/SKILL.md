@@ -15,7 +15,7 @@ surfaces are current; this skill repository still routes new production work to
 Rust and keeps Python execution examples migration/reference-only.
 
 The pinned baseline matches the reviewed `origin/develop` head
-`d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` (verified 2026-08-23). The
+`73d4dd5b3be4cb198bb20c89da6963c85eb24f3a` (verified 2026-08-23). The
 immutable snapshot now contains the contracts that previously differed from
 older pins: at develop commit `45903fc8b925adae6323035fb0b4fb5b49b4f89b` the
 book-depth request toggles landed, and change commit
@@ -73,9 +73,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -119,7 +119,7 @@ The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quara
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
+Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
 
 ## What This Skill Covers
 

@@ -118,7 +118,7 @@ is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
 session logic above and is included in the pinned baseline `d2b62d35a7` (upstream commit
-`d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`): the data and execution clients publish transport state on the stable
+`73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
 as `SocketStateChanged` on `events.system.SocketStateChanged`), register targeted
 reconnects through the `SocketReconnectRegistry` with authentication and subscription

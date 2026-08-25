@@ -1,5 +1,7 @@
 # Actors
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 An `Actor` receives data, handles events, and manages state. The `Strategy` class extends Actor
 with order management capabilities.
 

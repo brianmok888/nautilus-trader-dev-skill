@@ -1,5 +1,7 @@
 # Value Types
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 NautilusTrader provides specialized value types for representing core trading concepts:
 `Price`, `Quantity`, and `Money`. These types use fixed-point arithmetic internally
 to ensure highly performant and deterministic calculations across different platforms

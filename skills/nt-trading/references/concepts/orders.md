@@ -1,5 +1,7 @@
 # Orders
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 This guide provides further details about the available order types for the platform, along with
 the execution instructions supported for each.
 

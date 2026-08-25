@@ -1,5 +1,7 @@
 # Backtesting
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 Backtesting with NautilusTrader is a methodical simulation process that replicates trading
 activities using a specific system implementation. This system is composed of various components
 including the built-in engines, `Cache`, [MessageBus](https://nautilustrader.io/docs/latest/concepts/message_bus/), `Portfolio`, [Actors](https://nautilustrader.io/docs/latest/concepts/actors/), [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/), [Execution Algorithms](https://nautilustrader.io/docs/latest/concepts/execution/),

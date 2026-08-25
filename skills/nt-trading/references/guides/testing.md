@@ -162,6 +162,8 @@ Install these VS Code extensions: Rust Analyzer, CodeLLDB, Python, Jupyter.
 
 ### Step 1: Set up debugging configuration
 
+legacy: the `setup_debugging` helper and `nautilus_trader.test_kit.debug_helpers` module are v1-only and removed at V2; retained as migration reference for v1 debugging workflows. V2 debugging uses `make build-debug` plus your debugger's native Python attach.
+
 ```python
 from nautilus_trader.test_kit.debug_helpers import setup_debugging
 

@@ -1,5 +1,7 @@
 # Visualization
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 NautilusTrader provides interactive HTML tearsheets for analyzing backtest results through
 an extensible visualization system built on Plotly. The system emphasizes configurability
 and extensibility, allowing you to generate performance reports with minimal

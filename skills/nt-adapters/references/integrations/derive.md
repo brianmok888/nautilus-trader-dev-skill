@@ -1,5 +1,7 @@
 # Derive
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 Derive (formerly Lyra) is a decentralized derivatives venue offering European-style options
 and cash-settled perpetual swaps, and one of the largest on-chain options markets. Trading
 runs against a per-user smart-contract wallet on the Derive Chain, so collateral stays in the

@@ -1,5 +1,7 @@
 # Execution
 
+> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+
 NautilusTrader can handle trade execution and order management for multiple strategies and venues
 simultaneously (per instance). Several interacting components are involved in execution, making it
 crucial to understand the possible flows of execution messages (commands and events).
