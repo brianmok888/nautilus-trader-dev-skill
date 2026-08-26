@@ -1,4 +1,4 @@
-# Mission: Harden and Improve `nautilus-trader-dev-skill`
+# Mission: Harden and Improve `nautilus-trader-dev-skill` for NautilusTrader Rust V2
 
 ## Required repository instructions
 
@@ -14,7 +14,7 @@ and record that path during preflight; do not embed a host-specific repository p
 
 - **This prompt hardens and improves `nautilus-trader-dev-skill`.** It does not develop NautilusTrader itself. Do not implement features in, modify, commit to, or prepare changes for the upstream `nautilus_trader` repository.
 - **Upstream NautilusTrader is read-only ground truth.** Inspect its source, documentation, examples, tests, schemas, and toolchain standards only to correct and strengthen this repository's skill sets.
-- **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components.
+- **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components. Improving, extending, or rebuilding v1 (Cython / Python `TradingNode`) guidance is out of scope: v1 material is audited only to label it migration/reference-only, supersede it, or replace it with Rust v2 (`LiveNode`/PyO3) guidance.
 
 ---
 
@@ -310,7 +310,7 @@ Do NOT duplicate content across trackers. One change → one write-target.
 
 - **Skill repository only.** Modify the resolved primary repository; never modify or prepare upstream NautilusTrader changes.
 - **Upstream is evidence, not a deliverable.** Source, docs, examples, tests, and standards from `nautilus_trader` are read-only inputs used to improve this repository's skill artifacts.
-- **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader-related components.
+- **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader Rust V2 components. Findings may direct v1 material toward labelling, supersession, or Rust-v2 replacement — never toward v1 improvement or new v1 building.
 - **Rust-first default.** All new in-scope guidance routes through `skills/nt-strategy-builder-rust/`. Python `skills/nt-strategy-builder/` is reference-only.
 - **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #5.
 - **Applicable sync checkers must stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, `check_upstream_freshness.py`.
