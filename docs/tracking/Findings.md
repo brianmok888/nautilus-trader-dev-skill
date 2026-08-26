@@ -14,11 +14,12 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 ## Open findings
 
-[NT-2026-08-25-01] [P1] [OPEN] Upstream drift: 44 develop commits ahead of the pin, including renames and API shifts on taught surfaces.
+[NT-2026-08-25-01] [P1] [CLOSED 2026-08-26] Upstream drift: 44 develop commits ahead of the pin, including renames and API shifts on taught surfaces.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json
   evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`, 44 commits ahead of pin `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; per-commit delta review recorded in `references/upstream-delta-review.json`.
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, collapse the delta manifest to the new pin, refresh every pin-citing layer (README baseline line, dev-guide snapshots, rust-trading example mirror, G2 evidence re-execution).
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers green.
+  closure-proof 2026-08-26: re-executed this session - `python3 tools/check_upstream_freshness.py --format json` exits 0 (pin == reviewed develop tip `73d4dd5b3`); all 17 G2 harnesses re-executed PASS at the new pin (`NT_UPSTREAM_ROOT=.../nautilus_trader-build CARGO_TARGET_DIR=.../target-mission python3 tools/check_skill_g2_harnesses.py --execute --upstream-root .../nautilus_trader-build`, exit 0); sync checkers green: check_dev_guide_snapshot_sync, check_rust_trading_reference_sync, check_dev_guide_sync, check_legacy_labelling; rename fallout tracked and closed as NT-2026-08-25-08.
 
 [NT-2026-08-25-02] [P1] [CLOSED 2026-08-25] Machine-synced mirrors stale against the reviewed tip.
   file: references/developer_guide/adapters.md; references/developer_guide/coding_standards.md; references/developer_guide/spec_exec_testing.md; skills/nt-trading/references/examples/rust_trading/examples/ (4 strategy files)
@@ -56,23 +57,18 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   closure-proof 2026-08-25: official_adapter_spec.md socket overlay cites `0fafbd12f` with crates/network/src/mode.rs and crates/live/src/socket.rs paths; `python3 tools/check_legacy_labelling.py` exits 0.
 
 [NT-2026-08-25-07] [P2] [CLOSED 2026-08-25] `run_pinned_v2_pytest.py` failure hint references a nonexistent `make sync-v2` target.
-[NT-2026-08-25-08] [P1] [CLOSED 2026-08-26] Pinned-tip rename `XExecClientConfig` -> `XExecutionClientConfig` (upstream `3907750e2` "Standardize execution naming", inside the reviewed delta) left active-lane guidance teaching imports that no longer resolve at pin `73d4dd5b3`.
-  file: docs/end_to_end_guide.md:71,89; skills/nt-adapters/references/examples/rust_adapters/*/node_exec_tester.rs:32-92; references/integrations/{binance,bitmex,bybit,coinbase,deribit,derive,dydx,hyperliquid,ib,kraken,lighter,okx,polymarket}.md; skills/nt-adapters/references/integrations (mirrors); skills/nt-adapters/references/concepts/live.md; skills/nt-live/references/guides/deployment_patterns.md
-  evidence: failing `tests/test_rust_first_end_to_end.py::test_primary_live_node_source_compiles_against_pinned_upstream` (E0432 unresolved import `nautilus_okx::config::OKXExecClientConfig`); upstream crate exports at pin: `OKXExecutionClientConfig` (crates/adapters/okx/src/config.rs:202), and the v2 Python package exports `XExecutionClientConfig` for every adapter (python/nautilus_trader/adapters/*/__init__.py).
-  fix: guide fence now mirrors upstream `docs/how_to/run_rust_live_trading.md` (renamed symbol, `trader_id` sourced from `LiveNode::builder`, factory-collapse form); 11 rust_adapters example mirrors re-synced byte-for-byte from upstream examples; 158 unlabelled v2-active Python/Rust guidance occurrences renamed, 36 v1/TradingNode-labelled occurrences intentionally retained (v2 Python has no TradingNodeConfig/exec_clients — verified absent in the pinned python package).
-  closure: `python3 -m pytest -q tests/test_rust_first_end_to_end.py tests/test_exec_spec_current_overlay.py` 11 passed (exec-spec snapshot hash tripwire re-pinned to the re-synced snapshot); `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` exit 0.
-  closure-proof 2026-08-26: re-executed this session: 11 passed, LEGACY_OK, DEVGUIDE_OK; compile gate proves the okx fence against the pinned crate.
   file: tools/run_pinned_v2_pytest.py:41-44
   evidence: upstream Makefile at pin `d2b62d35` and at reviewed tip `73d4dd5b` exposes `make sync` (line 292) and `make build-debug`/`build` (lines 314-321); no `sync-v2` target exists.
   fix: point the FileNotFoundError hint at `make sync && make build-debug` in the pinned upstream checkout.
   closure: hint text updated; `python3 -m pytest -q tests/` green.
   closure-proof 2026-08-25: run_pinned_v2_pytest.py hint now `make sync && make build-debug` (targets verified in upstream Makefile lines 292/314); upstream venv built and importable via those targets.
 
-[NT-2026-08-23-08] [P1] [CLOSED] Migration-only Python strategy tests imported removed V2 modules `nautilus_trader.backtest.engine` and `nautilus_trader.backtest.models`.
-  file: tests/test_strategy_builder_v2_contract.py; tools/check_skill_g2_harnesses.py; skills/nt-strategy-builder/SKILL.md; skills/nt/SKILL.md
-  evidence: pinned V2 exports `BacktestNode` from `nautilus_trader.backtest` and current typed run configuration from `nautilus_trader.config`; the obsolete suite is no longer an executable G2 target.
-  fix: replaced the obsolete suite with an executable current-V2 `BacktestNode`/`BacktestRunConfig` contract, retained legacy templates under static migration/reference checks, and kept upstream backtest/live acceptance tests as integration evidence.
-  closure: `NT_UPSTREAM_ROOT=/home/mok/.cache/nautilus-trader-dev-skill/nautilus_trader-g2build python3 tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed.
+[NT-2026-08-25-08] [P1] [CLOSED 2026-08-26] Pinned-tip rename `XExecClientConfig` -> `XExecutionClientConfig` (upstream `3907750e2` "Standardize execution naming", inside the reviewed delta) left active-lane guidance teaching imports that no longer resolve at pin `73d4dd5b3`.
+  file: docs/end_to_end_guide.md:71,89; skills/nt-adapters/references/examples/rust_adapters/*/node_exec_tester.rs:32-92; references/integrations/{binance,bitmex,bybit,coinbase,deribit,derive,dydx,hyperliquid,ib,kraken,lighter,okx,polymarket}.md; skills/nt-adapters/references/integrations (mirrors); skills/nt-adapters/references/concepts/live.md; skills/nt-live/references/guides/deployment_patterns.md
+  evidence: failing `tests/test_rust_first_end_to_end.py::test_primary_live_node_source_compiles_against_pinned_upstream` (E0432 unresolved import `nautilus_okx::config::OKXExecClientConfig`); upstream crate exports at pin: `OKXExecutionClientConfig` (crates/adapters/okx/src/config.rs:202), and the v2 Python package exports `XExecutionClientConfig` for every adapter (python/nautilus_trader/adapters/*/__init__.py).
+  fix: guide fence now mirrors upstream `docs/how_to/run_rust_live_trading.md` (renamed symbol, `trader_id` sourced from `LiveNode::builder`, factory-collapse form); 12 rust_adapters example mirrors re-synced byte-for-byte from upstream examples (node_exec_tester x10 incl. bitmex, node_grid_mm x2); 158 unlabelled v2-active Python/Rust guidance occurrences renamed, 36 v1/legacy TradingNode-labelled occurrences intentionally retained, each under its NT v2 compatibility note; derive.md v2 live-node fences rewritten to the collapsed-factory form (`DeriveExecutionClientConfig(account_id=...)` passed directly to `add_exec_client`, wrapper `DeriveExecFactoryConfig` removed upstream) (v2 Python has no TradingNodeConfig/exec_clients — verified absent in the pinned python package).
+  closure: `python3 -m pytest -q tests/test_rust_first_end_to_end.py tests/test_exec_spec_current_overlay.py` 11 passed (exec-spec snapshot hash tripwire re-pinned to the re-synced snapshot); `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` exit 0.
+  closure-proof 2026-08-26: re-executed this session: 11 passed, LEGACY_OK, DEVGUIDE_OK; compile gate proves the okx fence against the pinned crate.
 
 [NT-2026-08-23-06] [P0] [CLOSED] Pressure review: active inline examples and contracts invented or retained removed V2 APIs.
   file: skills/nt-backtest/SKILL.md; skills/nt-data/SKILL.md; skills/nt-architect/SKILL.md; skills/nt-adapters/SKILL.md; references/developer_guide/contracts/adapter_contract.md

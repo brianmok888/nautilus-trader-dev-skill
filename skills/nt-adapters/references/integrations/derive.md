@@ -450,8 +450,8 @@ The session key is the secp256k1 private key registered on the wallet for API si
 ### Python v2 live node
 
 Rust-backed Python v2 nodes use `LiveNode.builder(...)` and pass concrete factory
-instances. The execution factory needs `DeriveExecFactoryConfig`, which wraps the trader
-and account identifiers with the underlying `DeriveExecutionClientConfig`.
+instances with the plain `DeriveExecutionClientConfig` (the wrapper config was removed
+upstream in `3907750e2`).
 
 ```python
 from decimal import Decimal
@@ -460,7 +460,6 @@ from nautilus_trader.adapters.derive import DeriveDataClientConfig
 from nautilus_trader.adapters.derive import DeriveDataClientFactory
 from nautilus_trader.adapters.derive import DeriveEnvironment
 from nautilus_trader.adapters.derive import DeriveExecutionClientConfig
-from nautilus_trader.adapters.derive import DeriveExecFactoryConfig
 from nautilus_trader.adapters.derive import DeriveExecutionClientFactory
 from nautilus_trader.common import Environment
 from nautilus_trader.live import LiveNode
@@ -475,27 +474,22 @@ data_config = DeriveDataClientConfig(
 )
 
 exec_config = DeriveExecutionClientConfig(
+    account_id=AccountId("DERIVE-001"),
     environment=DeriveEnvironment.TESTNET,
     max_fee_per_contract=Decimal("1000"),
-)
-
-exec_factory_config = DeriveExecFactoryConfig(
-    trader_id,
-    AccountId("DERIVE-001"),
-    exec_config,
 )
 
 node = (
     LiveNode.builder("DERIVE-001", trader_id, Environment.LIVE)
     .add_data_client(None, DeriveDataClientFactory(), data_config)
-    .add_exec_client(None, DeriveExecutionClientFactory(), exec_factory_config)
+    .add_exec_client(None, DeriveExecutionClientFactory(), exec_config)
     .build()
 )
 ```
 
-Do not pass `DeriveExecutionClientConfig` directly to `add_exec_client`; the Derive execution
-factory requires the wrapped `DeriveExecFactoryConfig` so it can create the
-`ExecutionClientCore` with the correct trader and account identifiers.
+Since the factory-config wrappers collapsed (upstream `3907750e2`), pass the
+`DeriveExecutionClientConfig` directly to `add_exec_client`; the node sources the
+trader ID and the config carries the account ID.
 
 ### Rust data client
 
