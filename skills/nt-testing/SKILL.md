@@ -160,7 +160,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
   migration/reference evidence. This repository's active behavior tests
   target Rust ownership and bounded PyO3 configuration/error boundaries.
-  At the pinned develop `73d4dd5b3` (in-pin since `d2b62d35a7`), change
+  At the pinned develop `8ecab1ce9` (in-pin since `d2b62d35a7`), change
   `e4d3ac7f37` additionally lets
   `pyobject_to_fee_model_any` accept any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs
