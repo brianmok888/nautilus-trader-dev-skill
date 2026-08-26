@@ -276,8 +276,8 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
   `migration_reference/`; implement new orchestration, routed-order,
-  fee, and fill behavior in Rust. At the pinned develop `d2b62d35a7`, change
-  `e4d3ac7f37` additionally accepts any Python object exposing
+  fee, and fill behavior in Rust. At the pinned develop `73d4dd5b3` (in-pin
+  since `d2b62d35a7`), change `e4d3ac7f37` additionally accepts any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs; that
   duck-typed path stays reference-only.
 - Compatibility inventory terms `Python v2 controller subclassing` and

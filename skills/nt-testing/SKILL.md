@@ -15,7 +15,7 @@ surfaces are current; this skill repository still routes new production work to
 Rust and keeps Python execution examples migration/reference-only.
 
 The pinned baseline matches the reviewed `origin/develop` head
-`73d4dd5b3be4cb198bb20c89da6963c85eb24f3a` (verified 2026-08-23). The
+`73d4dd5b3be4cb198bb20c89da6963c85eb24f3a` (verified 2026-08-25). The
 immutable snapshot now contains the contracts that previously differed from
 older pins: at develop commit `45903fc8b925adae6323035fb0b4fb5b49b4f89b` the
 book-depth request toggles landed, and change commit
@@ -160,7 +160,8 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
   migration/reference evidence. This repository's active behavior tests
   target Rust ownership and bounded PyO3 configuration/error boundaries.
-  At the pinned develop `d2b62d35a7`, change `e4d3ac7f37` additionally lets
+  At the pinned develop `73d4dd5b3` (in-pin since `d2b62d35a7`), change
+  `e4d3ac7f37` additionally lets
   `pyobject_to_fee_model_any` accept any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs
   (`BacktestEngineConfig`, `ExecEngineConfig`); treat that capability the

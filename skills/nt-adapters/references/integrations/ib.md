@@ -60,11 +60,11 @@ Interactive Brokers uses different default ports depending on the application an
 
 ### Establish connection to an existing gateway or TWS
 
-When connecting to a pre-existing gateway or TWS, specify the `ibg_host` and `ibg_port` parameters in both the `InteractiveBrokersDataClientConfig` and `InteractiveBrokersExecClientConfig`:
+When connecting to a pre-existing gateway or TWS, specify the `ibg_host` and `ibg_port` parameters in both the `InteractiveBrokersDataClientConfig` and `InteractiveBrokersExecutionClientConfig`:
 
 ```python
 from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersDataClientConfig
-from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecClientConfig
+from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecutionClientConfig
 
 # Example for TWS paper trading (default port 7497)
 data_config = InteractiveBrokersDataClientConfig(
@@ -73,7 +73,7 @@ data_config = InteractiveBrokersDataClientConfig(
     ibg_client_id=1,
 )
 
-exec_config = InteractiveBrokersExecClientConfig(
+exec_config = InteractiveBrokersExecutionClientConfig(
     ibg_host="127.0.0.1",
     ibg_port=7497,
     ibg_client_id=1,
@@ -1158,10 +1158,10 @@ The adapter supports most Interactive Brokers order types:
 #### Basic execution client configuration
 
 ```python
-from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecClientConfig
+from nautilus_trader.adapters.interactive_brokers.config import InteractiveBrokersExecutionClientConfig
 from nautilus_trader.config import RoutingConfig
 
-exec_client_config = InteractiveBrokersExecClientConfig(
+exec_client_config = InteractiveBrokersExecutionClientConfig(
     ibg_host="127.0.0.1",
     ibg_port=7497,  # TWS paper trading port
     ibg_client_id=1,
@@ -1176,7 +1176,7 @@ exec_client_config = InteractiveBrokersExecClientConfig(
 
 ```python
 # Production configuration with dockerized gateway
-production_exec_config = InteractiveBrokersExecClientConfig(
+production_exec_config = InteractiveBrokersExecutionClientConfig(
     ibg_host="127.0.0.1",
     ibg_port=4001,  # IB Gateway live trading port
     ibg_client_id=1,
@@ -1194,7 +1194,7 @@ The `account_id` parameter is crucial and must match the account logged into TWS
 
 ```python
 # Option 1: Specify directly in config
-exec_config = InteractiveBrokersExecClientConfig(
+exec_config = InteractiveBrokersExecutionClientConfig(
     account_id="DU123456",  # Paper trading account
     # ... other parameters
 )
@@ -1202,7 +1202,7 @@ exec_config = InteractiveBrokersExecClientConfig(
 # Option 2: Use environment variable
 import os
 os.environ["TWS_ACCOUNT"] = "DU123456"
-exec_config = InteractiveBrokersExecClientConfig(
+exec_config = InteractiveBrokersExecutionClientConfig(
     account_id=None,  # Will use TWS_ACCOUNT env var
     # ... other parameters
 )
@@ -1578,7 +1578,7 @@ data_client_config = InteractiveBrokersDataClientConfig(
     instrument_provider=instrument_provider_config,
 )
 
-exec_client_config = InteractiveBrokersExecClientConfig(
+exec_client_config = InteractiveBrokersExecutionClientConfig(
     ibg_host="127.0.0.1",
     ibg_port=7497,
     ibg_client_id=2,  # Execution client uses ID 2

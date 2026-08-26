@@ -45,7 +45,7 @@ Current components:
 
 PyO3 surface available from `nautilus_trader.core.nautilus_pyo3.coinbase`:
 
-- `CoinbaseDataClientConfig`, `CoinbaseExecClientConfig`
+- `CoinbaseDataClientConfig`, `CoinbaseExecutionClientConfig`
 - `CoinbaseEnvironment`, `CoinbaseMarginType`
 - `COINBASE` venue constant
 
@@ -145,7 +145,7 @@ environment using the `environment` field in your client configuration.
 The default environment for live trading with real funds.
 
 ```python
-config = CoinbaseExecClientConfig(
+config = CoinbaseExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     # environment=CoinbaseEnvironment.LIVE (default)
@@ -160,7 +160,7 @@ A static-mock test environment for integration plumbing, per the
 [Sandbox docs](https://docs.cdp.coinbase.com/coinbase-app/advanced-trade-apis/sandbox).
 
 ```python
-config = CoinbaseExecClientConfig(
+config = CoinbaseExecutionClientConfig(
     environment=CoinbaseEnvironment.SANDBOX,
     # API credentials are not required by sandbox.
 )
@@ -303,7 +303,7 @@ curl -H "Authorization: Bearer $JWT" \
 
 Coinbase's `POST /orders` endpoint routes to the key's bound portfolio by
 default, so a single-portfolio account does not need to set this field.
-Set it on [`CoinbaseExecClientConfig`](#execution-client-configuration-options)
+Set it on [`CoinbaseExecutionClientConfig`](#execution-client-configuration-options)
 when either is true:
 
 - The account holds multiple portfolios and you want to trade against one
@@ -334,7 +334,7 @@ running the probe binary above and inspecting the portfolio wallet list.
 | Symptom                                                              | Likely cause                                                                                          | Fix                                                                                       |
 |----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | Rejected only for a specific product (e.g. `BTC-USD` with only USDC) | Portfolio is missing a wallet for the product's quote currency. USD and USDC are separate on Coinbase, and the venue routes orders by the submitted `product_id`, not by the canonical alias. | Submit against the product whose quote currency you hold (e.g. `BTC-USDC` for USDC wallets). The adapter resolves the data-side alias internally; no config change needed. Funding the missing wallet via coinbase.com is also an option but unnecessary when only one currency is held. |
-| Every order rejected across all products                             | Key is bound to a non-default portfolio and `retail_portfolio_id` is unset.                           | Set `retail_portfolio_id` on `CoinbaseExecClientConfig` to the target portfolio UUID.     |
+| Every order rejected across all products                             | Key is bound to a non-default portfolio and `retail_portfolio_id` is unset.                           | Set `retail_portfolio_id` on `CoinbaseExecutionClientConfig` to the target portfolio UUID.     |
 | Rejected for `*-USD` products on a non-US account                    | Jurisdictional restriction (e.g. AU accounts cannot trade USD-quoted pairs).                          | Use locally-available quotes (USDC, AUD, EUR, etc.) instead of USD.                       |
 | Rejected right after key rotation                                    | New key was created in a different portfolio than the previous one.                                   | Update `retail_portfolio_id` to match the new key's portfolio, or move funds.             |
 
@@ -350,7 +350,7 @@ FCM order surface).
 
 `CoinbaseExecutionClientFactory` produces a single `CoinbaseExecutionClient`
 type. The product family is selected by the `account_type` field on
-`CoinbaseExecClientConfig`:
+`CoinbaseExecutionClientConfig`:
 
 | `account_type`        | Bootstrap instruments                         | Account state source                                      |
 |-----------------------|-----------------------------------------------|-----------------------------------------------------------|
@@ -465,7 +465,7 @@ for the underlying venue specification.
 Coinbase derivatives trade through the FCM (Futures Commission Merchant)
 venue. The exec client submits orders through the same `POST /orders`
 endpoint used for spot; per-order `leverage` and `margin_type` (`CROSS` or
-`ISOLATED`) defaults come from `CoinbaseExecClientConfig.default_leverage`
+`ISOLATED`) defaults come from `CoinbaseExecutionClientConfig.default_leverage`
 and `default_margin_type`. Margin balances update from both the REST
 `cfm/balance_summary` endpoint (connect-time snapshot, `query_account`,
 and on WebSocket reconnect) and the authenticated `futures_balance_summary`
@@ -703,7 +703,7 @@ Configurations are constructed from Python via the PyO3-exported types:
 
 ```python
 from nautilus_trader.core.nautilus_pyo3 import CoinbaseDataClientConfig
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseExecClientConfig
+from nautilus_trader.core.nautilus_pyo3 import CoinbaseExecutionClientConfig
 from nautilus_trader.core.nautilus_pyo3 import CoinbaseEnvironment
 
 data_config = CoinbaseDataClientConfig(
@@ -712,7 +712,7 @@ data_config = CoinbaseDataClientConfig(
     environment=CoinbaseEnvironment.LIVE,
 )
 
-exec_config = CoinbaseExecClientConfig(
+exec_config = CoinbaseExecutionClientConfig(
     api_key="YOUR_COINBASE_API_KEY",
     api_secret="YOUR_COINBASE_API_SECRET",
     environment=CoinbaseEnvironment.LIVE,

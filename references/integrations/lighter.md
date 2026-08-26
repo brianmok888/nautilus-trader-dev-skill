@@ -599,7 +599,7 @@ same values when all three are available.
 ```rust
 use nautilus_lighter::{
     common::enums::LighterEnvironment,
-    config::{LighterDataClientConfig, LighterExecClientConfig},
+    config::{LighterDataClientConfig, LighterExecutionClientConfig},
 };
 
 let data_config = LighterDataClientConfig {
@@ -607,7 +607,7 @@ let data_config = LighterDataClientConfig {
     ..Default::default()
 };
 
-let exec_config = LighterExecClientConfig::builder()
+let exec_config = LighterExecutionClientConfig::builder()
     .trader_id(trader_id)
     .account_id(account_id)
     .environment(LighterEnvironment::Testnet)

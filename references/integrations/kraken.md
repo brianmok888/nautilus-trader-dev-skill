@@ -370,7 +370,7 @@ live `KrakenExecutionClient` currently routes all orders via REST regardless
 of the knobs below; WebSocket trade routing is only active when the Rust
 execution client (`KrakenSpotExecutionClient`) is in use, either via the
 Rust factory or by constructing the pyo3-exposed
-`nautilus_trader.core.nautilus_pyo3.kraken.KrakenExecClientConfig` directly.
+`nautilus_trader.core.nautilus_pyo3.kraken.KrakenExecutionClientConfig` directly.
 
 ### Order shapes routed via REST
 
@@ -424,14 +424,14 @@ under genuine network failure.
 
 ### Rust-side configuration knobs
 
-The Rust `KrakenExecClientConfig` (and its pyo3 wrapper) exposes:
+The Rust `KrakenExecutionClientConfig` (and its pyo3 wrapper) exposes:
 
 | Option                    | Default | Description                                                      |
 |---------------------------|---------|------------------------------------------------------------------|
 | `use_ws_trade`            | `True`  | Route orders via WS when the trade channel is active.            |
 | `ws_request_timeout_secs` | `5`     | WS round-trip timeout before a synthesised rejection is emitted. |
 
-These are not exposed on the Python live `KrakenExecClientConfig` because
+These are not exposed on the Python live `KrakenExecutionClientConfig` because
 the Python live execution client does not yet honour them.
 
 ## Reconciliation
@@ -540,11 +540,11 @@ order submission. Margin trading is enabled per-execution-client via
 ### Configuration
 
 ```python
-from nautilus_trader.adapters.kraken import KrakenExecClientConfig
+from nautilus_trader.adapters.kraken import KrakenExecutionClientConfig
 from nautilus_trader.model.enums import AccountType
 
 exec_clients = {
-    KRAKEN: KrakenExecClientConfig(
+    KRAKEN: KrakenExecutionClientConfig(
         spot_account_type=AccountType.MARGIN,
         default_leverage=3,             # optional config-level default
         margin_balance_asset="ZGBP",    # optional summary-display asset

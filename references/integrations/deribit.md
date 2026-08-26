@@ -537,7 +537,7 @@ config = TradingNodeConfig(
         ),
     },
     exec_clients={
-        DERIBIT: DeribitExecClientConfig(
+        DERIBIT: DeribitExecutionClientConfig(
             environment=DeribitEnvironment.TESTNET,
             # ... other config
         ),

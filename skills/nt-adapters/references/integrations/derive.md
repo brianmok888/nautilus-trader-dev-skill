@@ -87,7 +87,7 @@ credentials.
 EIP-712 Protocol Constants (`DOMAIN_SEPARATOR`, `ACTION_TYPEHASH`, per-action module
 addresses) for both networks are shipped in `crates/adapters/derive/src/common/consts.rs`
 and tracked against Derive's [Protocol Constants reference](https://docs.derive.xyz/reference/protocol-constants).
-`DeriveExecClientConfig::domain_separator`, `action_typehash`, and `trade_module_address`
+`DeriveExecutionClientConfig::domain_separator`, `action_typehash`, and `trade_module_address`
 accept per-instance overrides that take precedence over the shipped values.
 
 ## Testnet onboarding
@@ -116,7 +116,7 @@ Steps to reach a position where the execution client can submit a signed order:
    non-zero collateral; the API will reject orders until the subaccount has enough margin
    for the requested size.
 6. **Set the environment variables.** Export the three values the client reads in testnet
-   mode (or pass them on `DeriveExecClientConfig`, where the config field wins):
+   mode (or pass them on `DeriveExecutionClientConfig`, where the config field wins):
 
    ```fish
    set -gx DERIVE_TESTNET_WALLET_ADDRESS      "0x..."   # Derive Chain smart-contract wallet
@@ -168,7 +168,7 @@ Mainnet onboarding mirrors testnet against the production dashboard. Use real fu
    `query_account`) that `collaterals_value` and `initial_margin` headroom cover the
    intended order before submitting.
 6. **Set the environment variables.** Export the three mainnet values (or pass them on
-   `DeriveExecClientConfig`, where the config field wins):
+   `DeriveExecutionClientConfig`, where the config field wins):
 
    ```fish
    set -gx DERIVE_WALLET_ADDRESS      "0x..."   # Derive Chain smart-contract wallet
@@ -180,7 +180,7 @@ Mainnet onboarding mirrors testnet against the production dashboard. Use real fu
    the literal to `DeriveEnvironment::Mainnet` for real-funds runs. The
    `node_data_tester` and `node_delta_neutral` examples default to testnet and read
    `DERIVE_ENVIRONMENT=mainnet` to flip. Production deployments select the network via
-   `DeriveDataClientConfig::environment` / `DeriveExecClientConfig::environment`.
+   `DeriveDataClientConfig::environment` / `DeriveExecutionClientConfig::environment`.
 
 ## Capabilities
 
@@ -409,7 +409,7 @@ Class/struct: `DeriveDataClientConfig`.
 
 ### Execution client configuration options
 
-Class/struct: `DeriveExecClientConfig`.
+Class/struct: `DeriveExecutionClientConfig`.
 
 | Option                      | Default   | Description |
 |-----------------------------|-----------|-------------|
@@ -451,7 +451,7 @@ The session key is the secp256k1 private key registered on the wallet for API si
 
 Rust-backed Python v2 nodes use `LiveNode.builder(...)` and pass concrete factory
 instances. The execution factory needs `DeriveExecFactoryConfig`, which wraps the trader
-and account identifiers with the underlying `DeriveExecClientConfig`.
+and account identifiers with the underlying `DeriveExecutionClientConfig`.
 
 ```python
 from decimal import Decimal
@@ -459,7 +459,7 @@ from decimal import Decimal
 from nautilus_trader.adapters.derive import DeriveDataClientConfig
 from nautilus_trader.adapters.derive import DeriveDataClientFactory
 from nautilus_trader.adapters.derive import DeriveEnvironment
-from nautilus_trader.adapters.derive import DeriveExecClientConfig
+from nautilus_trader.adapters.derive import DeriveExecutionClientConfig
 from nautilus_trader.adapters.derive import DeriveExecFactoryConfig
 from nautilus_trader.adapters.derive import DeriveExecutionClientFactory
 from nautilus_trader.common import Environment
@@ -474,7 +474,7 @@ data_config = DeriveDataClientConfig(
     currencies=["ETH", "BTC"],
 )
 
-exec_config = DeriveExecClientConfig(
+exec_config = DeriveExecutionClientConfig(
     environment=DeriveEnvironment.TESTNET,
     max_fee_per_contract=Decimal("1000"),
 )
@@ -493,7 +493,7 @@ node = (
 )
 ```
 
-Do not pass `DeriveExecClientConfig` directly to `add_exec_client`; the Derive execution
+Do not pass `DeriveExecutionClientConfig` directly to `add_exec_client`; the Derive execution
 factory requires the wrapped `DeriveExecFactoryConfig` so it can create the
 `ExecutionClientCore` with the correct trader and account identifiers.
 
@@ -525,10 +525,10 @@ Notable fields:
 ```rust
 use nautilus_derive::{
     common::enums::DeriveEnvironment,
-    config::DeriveExecClientConfig,
+    config::DeriveExecutionClientConfig,
 };
 
-let config = DeriveExecClientConfig {
+let config = DeriveExecutionClientConfig {
     wallet_address: Some("0x...".to_string()),
     session_key: Some("0x...".to_string()),
     subaccount_id: Some(1),

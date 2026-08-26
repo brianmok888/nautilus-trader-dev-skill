@@ -579,9 +579,9 @@ The submit broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecClientConfig
+from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
 
-exec_config = BitmexExecClientConfig(
+exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     submitter_pool_size=3,  # Recommended pool size for redundancy
@@ -647,9 +647,9 @@ The cancel broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecClientConfig
+from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
 
-exec_config = BitmexExecClientConfig(
+exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     canceller_pool_size=3,  # Recommended pool size for redundancy
@@ -721,9 +721,9 @@ Enable the dead man's switch by setting `deadmans_switch_timeout_secs` on the ex
 client config:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecClientConfig
+from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
 
-exec_config = BitmexExecClientConfig(
+exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     deadmans_switch_timeout_secs=60,  # Cancel all orders after 60s of lost connectivity
@@ -836,7 +836,7 @@ A typical BitMEX configuration for live trading includes both testnet and mainne
 
 ```python
 from nautilus_trader.adapters.bitmex.config import BitmexDataClientConfig
-from nautilus_trader.adapters.bitmex.config import BitmexExecClientConfig
+from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
 from nautilus_trader.core.nautilus_pyo3 import BitmexEnvironment
 
 # Using environment variables (recommended)
@@ -851,7 +851,7 @@ mainnet_data_config = BitmexDataClientConfig(
     environment=BitmexEnvironment.MAINNET,
 )
 
-mainnet_exec_config = BitmexExecClientConfig(
+mainnet_exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     environment=BitmexEnvironment.MAINNET,

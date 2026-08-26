@@ -500,7 +500,7 @@ The default of 4 req/s is conservative and works across all public providers.
 Use `base_url_grpc` to override the primary gRPC endpoint:
 
 ```python
-exec_config = DydxExecClientConfig(
+exec_config = DydxExecutionClientConfig(
     base_url_grpc="https://primary-grpc.example.com:443",
     # ...
 )
@@ -671,7 +671,7 @@ config = TradingNodeConfig(
         ),
     },
     exec_clients={
-        DYDX: DydxExecClientConfig(
+        DYDX: DydxExecutionClientConfig(
             wallet_address=None,  # Falls back to DYDX_TESTNET_WALLET_ADDRESS env var
             private_key=None,     # Falls back to DYDX_TESTNET_PRIVATE_KEY env var
             subaccount=0,
@@ -852,7 +852,7 @@ and automatically queries the chain for matching authenticator IDs. No manual ID
 needed.
 
 ```python
-config = DydxExecClientConfig(
+config = DydxExecutionClientConfig(
     wallet_address="dydx1owner...",   # Owner account (holds margin)
     private_key="0xapikey...",         # API Trading Key private key
     # authenticator_ids resolved automatically
@@ -863,7 +863,7 @@ config = DydxExecClientConfig(
 pass them directly to skip auto-resolution:
 
 ```python
-config = DydxExecClientConfig(
+config = DydxExecutionClientConfig(
     wallet_address="dydx1owner...",
     private_key="0xapikey...",
     authenticator_ids=[1, 2],  # Skip auto-resolution

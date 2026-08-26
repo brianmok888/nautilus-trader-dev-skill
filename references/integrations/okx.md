@@ -326,7 +326,7 @@ The adapter selects the trade mode from:
 ```python
 # Simple SPOT trading without leverage (uses 'cash' mode)
 exec_clients={
-    OKX: OKXExecClientConfig(
+    OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT,),
         use_spot_margin=False,  # Default - simple SPOT
         # ... other config
@@ -335,7 +335,7 @@ exec_clients={
 
 # SPOT trading WITH margin/leverage (uses 'isolated' or 'cross' mode)
 exec_clients={
-    OKX: OKXExecClientConfig(
+    OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT,),
         use_spot_margin=True,  # Enable margin trading for SPOT
         margin_mode=OKXMarginMode.ISOLATED,  # Or CROSS for shared margin
@@ -349,7 +349,7 @@ exec_clients={
 ```python
 # Derivatives with isolated margin (default - uses 'isolated' mode)
 exec_clients={
-    OKX: OKXExecClientConfig(
+    OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SWAP,),
         margin_mode=OKXMarginMode.ISOLATED,  # Or omit - ISOLATED is default
         # ... other config
@@ -358,7 +358,7 @@ exec_clients={
 
 # Derivatives with cross margin (uses 'cross' mode)
 exec_clients={
-    OKX: OKXExecClientConfig(
+    OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SWAP,),
         margin_mode=OKXMarginMode.CROSS,  # Share margin across all positions
         # ... other config
@@ -374,7 +374,7 @@ mode per order based on the instrument being traded:
 ```python
 # Mixed SPOT + SWAP configuration
 exec_clients={
-    OKX: OKXExecClientConfig(
+    OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT, OKXInstrumentType.SWAP),
         use_spot_margin=True,           # Applies to SPOT orders only
         margin_mode=OKXMarginMode.CROSS,  # Applies to SWAP orders only

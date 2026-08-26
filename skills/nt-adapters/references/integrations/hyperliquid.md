@@ -616,7 +616,7 @@ subscribe to quotes for any instrument you intend to trade with market orders.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 When using the Rust-native execution client, the slippage buffer is controlled by
-`market_order_slippage_bps` on `HyperliquidExecClientConfig` and can be overridden per-order
+`market_order_slippage_bps` on `HyperliquidExecutionClientConfig` and can be overridden per-order
 via the `market_order_slippage_bps` key in `SubmitOrder.params`. The Python `TradingNode` path
 uses a fixed 50 bps slippage and does not expose this knob on its config.
 :::
@@ -639,7 +639,7 @@ having `price_precision=2`.
 By default, the adapter normalizes all outgoing limit and trigger prices to 5 significant
 figures to prevent order rejections. This means your submitted prices may shift slightly.
 To disable this and take full control of price formatting, set `normalize_prices=False`
-in your `HyperliquidExecClientConfig`.
+in your `HyperliquidExecutionClientConfig`.
 
 If you disable normalization, you can apply the same rounding in your strategy:
 
@@ -904,7 +904,7 @@ value covers both.
 :::tip
 Email-login wallets generate different addresses for mainnet and testnet, so
 the master address may differ. In that case, prefer setting `account_address`
-explicitly in `HyperliquidExecClientConfig` per environment rather than
+explicitly in `HyperliquidExecutionClientConfig` per environment rather than
 relying on the shared environment variable.
 :::
 
@@ -969,7 +969,7 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 "Rust-only" options apply when the execution client is created through the Rust-native
 `HyperliquidExecutionClientFactory`. `market_order_slippage_bps` and
 `outcome_settlement_poll_secs` are not exposed on the Python
-`HyperliquidExecClientConfig` and will be rejected by the config validator if set on
+`HyperliquidExecutionClientConfig` and will be rejected by the config validator if set on
 that path. `max_retries`, `retry_delay_initial_ms`, and `retry_delay_max_ms` are
 declared on the Python config but are not yet forwarded to the Python execution
 client.

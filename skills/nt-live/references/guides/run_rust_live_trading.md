@@ -39,7 +39,7 @@ use nautilus_live::node::LiveNode;
 use nautilus_model::identifiers::{AccountId, TraderId};
 use nautilus_okx::{
     common::enums::OKXInstrumentType,
-    config::{OKXDataClientConfig, OKXExecClientConfig},
+    config::{OKXDataClientConfig, OKXExecutionClientConfig},
     factories::{OKXDataClientFactory, OKXExecutionClientFactory},
 };
 
@@ -50,7 +50,7 @@ let data_config = OKXDataClientConfig::builder()
     .instrument_types(vec![OKXInstrumentType::Swap])
     .build();
 
-let exec_config = OKXExecClientConfig::builder()
+let exec_config = OKXExecutionClientConfig::builder()
     .trader_id(trader_id)
     .account_id(account_id)
     .instrument_types(vec![OKXInstrumentType::Swap])

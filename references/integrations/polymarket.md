@@ -223,7 +223,7 @@ The script will generate and print API credentials, which you should save to the
 These can then be used for Polymarket client configurations:
 
 - `PolymarketDataClientConfig`
-- `PolymarketExecClientConfig`
+- `PolymarketExecutionClientConfig`
 
 ## Configuration
 
@@ -793,7 +793,7 @@ Class: `PolymarketDataClientConfig` in `nautilus_trader.adapters.polymarket.conf
 
 ### Execution client options (Python v2)
 
-Class: `PolymarketExecClientConfig` in `nautilus_trader.adapters.polymarket.config`.
+Class: `PolymarketExecutionClientConfig` in `nautilus_trader.adapters.polymarket.config`.
 
 | Option                                | Default      | Description |
 |---------------------------------------|--------------|-------------|
@@ -844,7 +844,7 @@ handling (`compute_effective_deltas`, `drop_quotes_missing_side`) are Python-onl
 
 ### Execution client options (Rust v2)
 
-Struct: `PolymarketExecClientConfig` in `crates/adapters/polymarket/src/config.rs`.
+Struct: `PolymarketExecutionClientConfig` in `crates/adapters/polymarket/src/config.rs`.
 
 | Option                   | Default                                    | Description |
 |--------------------------|--------------------------------------------|-------------|

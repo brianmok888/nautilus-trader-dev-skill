@@ -207,14 +207,14 @@ Rust adapter estimates commission as `default_taker_fee * qty * price` using
 the quote currency. This applies to USD-M linear contracts only. COIN-M
 inverse contracts use zero commission as a fallback because the linear
 formula does not account for contract size. Configure `default_taker_fee` on
-`BinanceExecClientConfig` to match your fee tier (default: 0.0004 / 0.04%).
+`BinanceExecutionClientConfig` to match your fee tier (default: 0.0004 / 0.04%).
 
 #### Hedge-mode position IDs
 
 When `use_position_ids` is enabled (default), exchange-generated fill reports
 include a `venue_position_id` derived from the instrument and position side
 (e.g. `ETHUSDT-PERP.BINANCE-LONG`). Set `use_position_ids` to false on
-`BinanceExecClientConfig` for virtual positions with `OmsType.HEDGING`.
+`BinanceExecutionClientConfig` for virtual positions with `OmsType.HEDGING`.
 
 :::note
 The status report and fill report are emitted bundled as a single
@@ -654,7 +654,7 @@ For the latest rate limits, query `/api/v3/exchangeInfo` (Spot) or `/fapi/v1/exc
 
 :::note
 The configuration tables below describe the **Python adapter**. The Rust adapter
-uses `BinanceDataClientConfig` and `BinanceExecClientConfig` with different field
+uses `BinanceDataClientConfig` and `BinanceExecutionClientConfig` with different field
 names. See the Rust source at `crates/adapters/binance/src/config.rs` for the
 definitive list of Rust config options.
 :::
@@ -902,7 +902,7 @@ The default environment for live trading with real funds. Uses your main Binance
 account credentials.
 
 ```python
-config = BinanceExecClientConfig(
+config = BinanceExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     account_type=BinanceAccountType.SPOT,
@@ -937,7 +937,7 @@ virtual balances.
 | COIN-M WS      | `demo-dstream.binance.com`    |
 
 ```python
-config = BinanceExecClientConfig(
+config = BinanceExecutionClientConfig(
     api_key="YOUR_DEMO_API_KEY",
     api_secret="YOUR_DEMO_API_SECRET",
     account_type=BinanceAccountType.SPOT,
@@ -967,7 +967,7 @@ endpoints may route through the Demo Trading infrastructure.
 continue to work, but new Futures testing should use `BinanceEnvironment.DEMO`.
 
 ```python
-config = BinanceExecClientConfig(
+config = BinanceExecutionClientConfig(
     api_key="YOUR_TESTNET_API_KEY",
     api_secret="YOUR_TESTNET_API_SECRET",
     account_type=BinanceAccountType.SPOT,
@@ -1053,7 +1053,7 @@ same instrument simultaneously.
 To use hedge mode:
 
 1. Configure hedge mode on Binance before starting the strategy.
-2. Set `use_reduce_only=False` in `BinanceExecClientConfig` (`True` by default).
+2. Set `use_reduce_only=False` in `BinanceExecutionClientConfig` (`True` by default).
 
     ```python
     from nautilus_trader.adapters.binance import BINANCE
@@ -1072,7 +1072,7 @@ To use hedge mode:
             ),
         },
         exec_clients={
-            BINANCE: BinanceExecClientConfig(
+            BINANCE: BinanceExecutionClientConfig(
                 api_key=None,  # 'BINANCE_API_KEY' env var
                 api_secret=None,  # 'BINANCE_API_SECRET' env var
                 account_type=BinanceAccountType.USDT_FUTURES,

@@ -8,7 +8,7 @@ NT v2 compatibility note: legacy Cython/v1 adapter guidance in this whole file i
 ### Configure Existing Adapter
 
 ```python
-from nautilus_trader.adapters.binance.config import BinanceDataClientConfig, BinanceExecClientConfig
+from nautilus_trader.adapters.binance.config import BinanceDataClientConfig, BinanceExecutionClientConfig
 
 data_config = BinanceDataClientConfig(
     api_key="...",
@@ -16,7 +16,7 @@ data_config = BinanceDataClientConfig(
     account_type=BinanceAccountType.USDT_FUTURE,
 )
 
-exec_config = BinanceExecClientConfig(
+exec_config = BinanceExecutionClientConfig(
     api_key="...",
     api_secret="...",
     account_type=BinanceAccountType.USDT_FUTURE,
