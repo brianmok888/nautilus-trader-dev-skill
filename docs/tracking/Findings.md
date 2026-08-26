@@ -168,6 +168,34 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   fix: scope the v1 guide's "Current Rust differences" blocks to the pinned baseline; upstream commit `74d57e7e05` renamed the pair on both the Rust and Python surfaces (tip `2114cf6f76` `python/nautilus_trader/adapters/betfair/__init__.pyi:58-95` uses `stream_heartbeat_secs=5`), so the requirement above is historical for current develop.
   closure: `python3 -m pytest -q tests/test_v2_guidance_hardening.py::test_v1_betfair_guides_scope_heartbeat_claims_to_pinned_baseline` passes; both v1 copies carry pinned-baseline scoping notes citing `74d57e7e05`; `python3 tools/check_legacy_labelling.py` passes.
 
+[NT-2026-08-26-01] [P1] [OPEN] Upstream drift: develop tip advanced 5 commits past the pin (`73d4dd5b3` → `8ecab1ce9`), touching taught Rust surfaces (betfair execution identity, polymarket REST reconciliation, shared execution reconciliation core).
+  file: tools/upstream_baseline.py:4; references/upstream-delta-review.json
+  evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `8ecab1ce90d9790b1e18e162842decbae4d9de57`, 5 commits ahead of pin `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`; per-commit delta review recorded in `references/upstream-delta-review.json` (5 commits, 37 paths; no Rust `examples/` paths changed).
+  fix: move `UPSTREAM_COMMIT` to the reviewed tip, sync the two changed integration mirrors (`betfair.md` 62 lines, `polymarket.md` 11 lines, both layers), refresh pin citations, re-execute G2 evidence at the new pin.
+  closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers and the full suite green.
+
+[NT-2026-08-26-02] [P1] [OPEN] The Betfair v2 Rust-surface tracker (`betfair_v2.md`) is stale against `8ecab1ce9`, which landed exactly the behaviors the tracker exists to track.
+  file: references/integrations/betfair_v2.md:24-27,71-87,125; skills/nt-adapters/references/integrations/betfair_v2.md (mirror)
+  evidence: upstream `8ecab1ce9` "Retain Betfair terminal order identity" routes late fills/voids through retained local order identity, restores closed order identity from cache across reconnects, bounds correlation/customer-refs/dedup/replaced-IDs, resolves replace state across REST/OCM/reconciliation, and reconciles terminal replace/reduction reports without duplicates; `crates/execution/src/reconciliation/orders.rs` changed in the same delta (shared core). The tracker's "Current Rust status" rows (reconciliation scope, post-reconnect halt, external order filtering) and the OCM/reconciliation section describe pre-`8ecab1ce9` behavior and carry no row for terminal order identity retention.
+  fix: re-verify each tracker row against `8ecab1ce9` sources (`crates/adapters/betfair/src/execution.rs`, `stream/ocm.rs`, `crates/execution/src/reconciliation/orders.rs`), update stale rows, add the identity-retention behavior, and refresh both file copies.
+  closure: every tracker row cites verified `8ecab1ce9` behavior; `python3 tools/check_dev_guide_sync.py` and `python3 tools/check_legacy_labelling.py` stay green.
+
+[NT-2026-08-26-03] [P1] [OPEN] Rust-first routing gap: the Betfair v2 guide is unreachable from active guidance — every route lands on the v1 guide.
+  file: references/integrations/index.md:10; skills/nt-adapters/SKILL.md
+  evidence: `references/integrations/index.md:10` (byte-sync-enforced mirror, uneditable) routes Betfair → `betfair.md` (v1 Python-adapter guide, migration/reference-only once the cutover lands); no `skills/**/SKILL.md` references `betfair_v2.md` (`grep -rln betfair_v2 skills/` → empty; only `docs/tracking/Findings.md` and `tests/test_v2_current_develop_overlays.py` mention it). An agent following nt-adapters guidance therefore reads v1 wiring with no pointer to the Rust surface, violating the Rust-first default (master-prompt constraints; `docs/tracking/Handguard.md` invariant #5 spirit).
+  decision (user, 2026-08-26): full cutover — v2 over v1. `betfair_v2.md` becomes the primary Betfair guide; v1 is cleared from active routing and demoted to labelled migration/reference-only. `betfair_v2.md`'s header pre-plans this ("can replace `betfair.md` with small edits instead of a full rewrite").
+  fix: execute the cutover — update `betfair_v2.md` tracker rows against the new pin, stamp `betfair.md` (both layers) with a supersession label routing Rust v2 work to the v2 guide, flip every editable active route (SKILL.md guidance, cross-links) to `betfair_v2.md`; the byte-synced index row stays as-is (sync-enforced) but every skill-layer route that chooses a guide names v2 first.
+  NT v2 compatibility note: v1 routing below is migration audit context; the cutover demotes it to migration/reference-only.
+  closure: every active route reaches `betfair_v2.md` first; `betfair.md` carries the supersession/migration-reference label; `python3 tools/check_legacy_labelling.py`, `python3 tools/check_dev_guide_sync.py`, and routing tests stay green.
+
+[NT-2026-08-26-04] [P2] [CLOSED 2026-08-26] The polymarket mirror is stale against `0541a2189`/`ccc80cdb2`; upstream's guide is already Rust-first, so this is pure mirror drift with no v2 overlay needed.
+  file: references/integrations/polymarket.md; skills/nt-adapters/references/integrations/polymarket.md
+  evidence: upstream `docs/integrations/polymarket.md` states "The adapter is implemented in Rust and exposed to Python" (line 9) and "direct WebSocket, provider, data client, and execution client types are Rust-only" (line 84) — no `polymarket_v2.md` split is warranted; the delta changed 11 lines (order-recovery clarification, REST report binding to account/instrument).
+  fix: fold the mirror refresh into the NT-2026-08-26-01 pin-move segment (byte-sync both layers).
+  closure: `python3 tools/check_dev_guide_sync.py` exits 0 with both mirrors matching the reviewed tip.
+  closure-proof 2026-08-26: both layers carry the upstream `8ecab1ce9` order-recovery wording (base-denominated `LIMIT` validation, "no known client association" fallback) and the authoritative Fees section; `python3 tools/check_dev_guide_sync.py` exits 0. Also fixed pre-existing layer divergence: the skills layer taught `Crypto 0.072` where upstream says `0.07`.
+  2026-08-26 — P2 — MODIFIED: refreshed both polymarket mirrors to the reviewed tip and aligned the Fees section across layers — files: references/integrations/polymarket.md, skills/nt-adapters/references/integrations/polymarket.md
+
 ## Follow-up TODO
 
 - [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).

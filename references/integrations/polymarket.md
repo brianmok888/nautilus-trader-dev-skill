@@ -484,35 +484,88 @@ trade ID across replays, keeping downstream dedup intact.
 
 ## Fees
 
-The adapter reads `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` and applies:
+The adapter reads each instrument's `fee_schedule` and applies its `rate` and `exponent` as:
 
 ```text
 platform fee = shares * rate * (price * (1 - price)) ^ exponent
 ```
 
-The current public schedule uses exponent `1`. Crypto markets use rate `0.07`, Sports markets use
-rate `0.05`, and the instrument carries the authoritative schedule for each market. Fees peak at
-`p = 0.50`, decrease symmetrically toward the extremes, and apply only to taker fills. Do not assume
-support for other exponents, unpublished schedules, or rebate behavior.
+The current public schedule uses exponent `1`, which is Polymarket's published
+`C * feeRate * p * (1 - p)` formula. Platform fees peak at `p = 0.50`, decrease
+symmetrically toward the extremes, and apply only to taker fills.
 
-Fees are calculated in USDC, rounded to 5 decimal places, and applied at match time
-by the protocol. The smallest fee charged is 0.00001 USDC; smaller fees round to zero.
+| Category        | Taker `feeRate` | Maker `feeRate` | Maker rebate |
+| --------------- | --------------- | --------------- | ------------ |
+| Crypto          | 0.07            | 0               | 20%          |
+| Sports          | 0.05            | 0               | 15%          |
+| Finance         | 0.04            | 0               | 25%          |
+| Politics        | 0.04            | 0               | 25%          |
+| Economics       | 0.05            | 0               | 25%          |
+| Culture         | 0.05            | 0               | 25%          |
+| Weather         | 0.05            | 0               | 25%          |
+| Other / General | 0.05            | 0               | 25%          |
+| Mentions        | 0.04            | 0               | 25%          |
+| Tech            | 0.04            | 0               | 25%          |
+| Geopolitics     | 0               | 0               | -            |
+
+Every order signed by the adapter carries the hard-coded Nautilus builder code. Its builder fee
+rate is fixed at zero and is not configurable.
+
+### Fill commission handling
+
+`FillReport.commission` is denominated in pUSD and rounds the platform fee to five decimal places.
+If the exact result cannot be represented as `Money`, the adapter returns an error instead of using
+zero or a generic commission. See the
+[commission failure contract](../developer_guide/adapters.md#commission-failure-handling).
+
+A commission construction error fails a direct fill report request, terminal trade-history recovery,
+or complete mass status. Startup returns a mass-status error without applying that client's reports.
+When an active order report cannot enrich matched quantity from confirmed fills, the adapter logs
+the error and caps matched quantity to local and previously tracked evidence so reconciliation
+defers the unsupported residual. The adapter does not drop a failed fill while returning an order or
+position report that could recreate its quantity without the Polymarket commission.
 
 :::note
-For the latest rates, see Polymarket's [Fees](https://docs.polymarket.com/trading/fees) documentation.
+For the latest public schedule, see Polymarket's
+[Fees](https://docs.polymarket.com/trading/fees) documentation.
 :::
 
 ### Backtest fee model
 
-Use `ProbabilityPriceFeeModel` for backtests under the current exponent `1` schedule. It reads maker
-and taker rates from the binary option instrument and applies the same probability-price curve.
+Use `PolymarketFeeModel` for backtests that include taker fees and maker rebates. The model reads
+`rate`, `rebateRate`, `exponent`, and `takerOnly` from each binary option instrument's
+`fee_schedule`. It requires a maker or taker liquidity side, a fill price in `[0, 1]`, and a
+taker-only schedule with exponent `1`. Unsupported instruments and invalid inputs return an error;
+an instrument without a fee schedule produces zero commission.
 
-```python
-from nautilus_trader.execution import ProbabilityPriceFeeModel
+```rust tab="Rust"
+use nautilus_execution::models::fee::FeeModelHandle;
+use nautilus_polymarket::models::PolymarketFeeModel;
 
-fee_model = ProbabilityPriceFeeModel()
+let fee_model = FeeModelHandle::new(PolymarketFeeModel);
 ```
 
+```python tab="Python"
+from nautilus_trader.adapters.polymarket import PolymarketFeeModel
+
+fee_model = PolymarketFeeModel()
+```
+
+Pass the Rust handle through
+`nautilus_backtest::config::SimulatedVenueConfig::builder().fee_model(...)`. In Python, pass the model
+to `BacktestEngine.add_venue` as `fee_model` or set it on `BacktestVenueConfig.fee_model`.
+
+:::note
+For maker fills, `fee_equivalent` is the platform fee formula above using the schedule's taker
+`rate`. The model credits `fee_equivalent * rebateRate` as negative commission. This approximates
+Polymarket's daily pool allocation because a backtest does not know the total fee equivalent from
+other makers in that market.
+
+Live maker fills have zero commission; Polymarket pays the actual pUSD rebate separately each day.
+The model does not represent that payment as a separate event, and it does not model competition
+between makers, daily aggregation, or the minimum payout threshold. See Polymarket's
+[Maker Rebates Program](https://docs.polymarket.com/programs/maker-rebates) for the venue formula.
+:::
 ## Reconciliation
 
 The Polymarket API returns either all **active** (open) orders or specific orders when queried by the
@@ -534,14 +587,14 @@ It is not recommended for production use at this time.
 
 ### Single-order recovery from trades
 
-`/data/order/{id}` only returns active orders, so a `Filled` or `Canceled` order
-returns an empty response. To avoid the engine resolving a local `ACCEPTED`
-order as `REJECTED` (which discards fills that already happened at the venue),
-`generate_order_status_report` falls back to `/data/trades` filtered by the
-venue order ID. The cached order is resolved via `client_order_id`, falling
-back to the cache's `venue_order_id` index when only the venue ID is known.
-Recovery is keyed on the cached order; without one the recovery defers to the
-engine rather than synthesizing an external order from trade history alone:
+`/data/order/{id}` can return live or terminal orders. When it returns no order for a known ID,
+`generate_order_status_report` falls back to `/data/trades` filtered by the venue order ID. This
+avoids the engine resolving a local `ACCEPTED` order as `REJECTED`, which would discard fills that
+already happened at the venue. The cached order is resolved via `client_order_id`, falling back to
+the cache's `venue_order_id` index when only the venue ID is known. When the request supplies or
+resolves to a `client_order_id`, the cached order must be a base-denominated `LIMIT` order;
+otherwise the request returns an error. An unassociated venue-order request without a cached order
+defers to the engine rather than synthesizing an external order from trade history alone:
 
 - Cached order + recovered fills covering the cached quantity (within
   `DUST_SNAP_THRESHOLD` for CLOB cent-tick truncation): returns `Filled`. The
@@ -555,8 +608,11 @@ engine rather than synthesizing an external order from trade history alone:
   the venue trade history can be reviewed manually.
 - Cached order, no trades: returns `Canceled` with
   `cancel_reason="ORDER_NOT_FOUND_AT_VENUE"`.
-- No cached order (regardless of trades): returns `None`; the engine's
-  not-found-at-venue path resolves the local entry.
+- Cached order with any `MATCHED`, `MINED`, or `RETRYING` trade: a singular order query preserves
+  the locally applied matched quantity while terminal REST recovery waits for `CONFIRMED` or
+  `FAILED`.
+- No cached order and no known client association (regardless of trades): returns `None`; the
+  engine's not-found-at-venue path resolves the local entry.
 
 `open_check_interval_secs` is recommended for Polymarket so the engine
 periodically drives this recovery path for orders whose terminal WS update

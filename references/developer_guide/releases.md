@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/releases/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/releases.md
-source_commit: 73d4dd5b3be4cb198bb20c89da6963c85eb24f3a
-sync_date: 2026-08-25
+source_commit: 8ecab1ce90d9790b1e18e162842decbae4d9de57
+sync_date: 2026-08-26
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
