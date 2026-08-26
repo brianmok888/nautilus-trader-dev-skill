@@ -62,8 +62,11 @@ def test_polymarket_guidance_uses_instrument_fee_schedule_and_probability_model(
     assert "exponent" in text and "1" in text
     assert "other exponents" in text
     assert "rebate behavior" in text
-    assert "PolymarketFeeModel" not in text
-    assert "maker rebate" not in text.lower()
+    # Upstream at 8ecab1ce9 ships a Rust adapter fee model for backtests
+    # (nautilus_polymarket::models::PolymarketFeeModel, reads rate/rebateRate/
+    # exponent/takerOnly). The old prohibition predates that type; the mirror
+    # is sync-enforced to carry the upstream Backtest fee model section.
+    assert "nautilus_polymarket::models::PolymarketFeeModel" in text
     assert "future exponent" not in text.lower()
 
 

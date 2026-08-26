@@ -486,7 +486,9 @@ trade ID across replays, keeping downstream dedup intact.
 
 The adapter reads each instrument's `fee_schedule` and applies its `rate` and `exponent` as:
 
-Read the formula from `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` per instrument — never hardcode venue fee rates or assume a flat fee.
+Read the formula from `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` per instrument — never hardcode venue fee rates or assume a flat fee. For probability-priced assets the shared execution engine applies this as the
+`ProbabilityPriceFeeModel` (`crates/execution/src/models/fee.rs` at the pin); venue
+adapters select it from the instrument's fee schedule rather than reimplementing the curve.
 
 ```text
 platform fee = shares * rate * (price * (1 - price)) ^ exponent
@@ -494,7 +496,7 @@ platform fee = shares * rate * (price * (1 - price)) ^ exponent
 
 The current public schedule uses exponent `1`, which is Polymarket's published
 `C * feeRate * p * (1 - p)` formula. Platform fees peak at `p = 0.50`, decrease
-symmetrically toward the extremes, and apply only to taker fills.
+symmetrically toward the extremes, and apply only to taker fills. Do not assume support for other exponents, unpublished schedules, or rebate behavior.
 
 | Category        | Taker `feeRate` | Maker `feeRate` | Maker rebate |
 | --------------- | --------------- | --------------- | ------------ |

@@ -85,7 +85,7 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Indicator logic** → use `nt-signals`
 
 ## Develop-only `BacktestResult` analysis
-Source: upstream NautilusTrader pin `8ecab1ce90d9790b1e18e162842decbae4d9de57`.
+Source: upstream NautilusTrader pin `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a` (state verified at that pin; kept as historical citation).
 
 Current `origin/develop` commit
 [`501ebe4a8`](https://github.com/nautechsystems/nautilus_trader/commit/501ebe4a8)
