@@ -5,8 +5,8 @@
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
 Review date: 2026-08-25
-Reviewed upstream develop: `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`
-Pinned G2 baseline: `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`
+Reviewed upstream develop: `8ecab1ce90d9790b1e18e162842decbae4d9de57`
+Pinned G2 baseline: `8ecab1ce90d9790b1e18e162842decbae4d9de57`
 
 Delta review of the 44 develop commits between the previous pin `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` and this tip is recorded in `references/upstream-delta-review.json` history and Findings.md; the pin move to the reviewed tip is tracked as [NT-2026-08-25-01].
 
@@ -16,7 +16,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-08-25-01] [P1] [CLOSED 2026-08-26] Upstream drift: 44 develop commits ahead of the pin, including renames and API shifts on taught surfaces.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json
-  evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`, 44 commits ahead of pin `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; per-commit delta review recorded in `references/upstream-delta-review.json`.
+  evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `8ecab1ce90d9790b1e18e162842decbae4d9de57`, 44 commits ahead of pin `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c`; per-commit delta review recorded in `references/upstream-delta-review.json`.
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, collapse the delta manifest to the new pin, refresh every pin-citing layer (README baseline line, dev-guide snapshots, rust-trading example mirror, G2 evidence re-execution).
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers green.
   closure-proof 2026-08-26: re-executed this session - `python3 tools/check_upstream_freshness.py --format json` exits 0 (pin == reviewed develop tip `73d4dd5b3`); all 17 G2 harnesses re-executed PASS at the new pin (`NT_UPSTREAM_ROOT=.../nautilus_trader-build CARGO_TARGET_DIR=.../target-mission python3 tools/check_skill_g2_harnesses.py --execute --upstream-root .../nautilus_trader-build`, exit 0); sync checkers green: check_dev_guide_snapshot_sync, check_rust_trading_reference_sync, check_dev_guide_sync, check_legacy_labelling; rename fallout tracked and closed as NT-2026-08-25-08.
@@ -170,7 +170,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-08-26-01] [P1] [OPEN] Upstream drift: develop tip advanced 5 commits past the pin (`73d4dd5b3` → `8ecab1ce9`), touching taught Rust surfaces (betfair execution identity, polymarket REST reconciliation, shared execution reconciliation core).
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json
-  evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `8ecab1ce90d9790b1e18e162842decbae4d9de57`, 5 commits ahead of pin `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`; per-commit delta review recorded in `references/upstream-delta-review.json` (5 commits, 37 paths; no Rust `examples/` paths changed).
+  evidence: `python3 tools/check_upstream_freshness.py --format json` at the refreshed cache reports develop tip `8ecab1ce90d9790b1e18e162842decbae4d9de57`, 5 commits ahead of pin `8ecab1ce90d9790b1e18e162842decbae4d9de57`; per-commit delta review recorded in `references/upstream-delta-review.json` (5 commits, 37 paths; no Rust `examples/` paths changed).
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, sync the two changed integration mirrors (`betfair.md` 62 lines, `polymarket.md` 11 lines, both layers), refresh pin citations, re-execute G2 evidence at the new pin.
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers and the full suite green.
 

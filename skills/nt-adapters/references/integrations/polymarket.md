@@ -486,6 +486,8 @@ trade ID across replays, keeping downstream dedup intact.
 
 The adapter reads each instrument's `fee_schedule` and applies its `rate` and `exponent` as:
 
+Read the formula from `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` per instrument — never hardcode venue fee rates or assume a flat fee.
+
 ```text
 platform fee = shares * rate * (price * (1 - price)) ^ exponent
 ```
@@ -516,7 +518,7 @@ rate is fixed at zero and is not configurable.
 `FillReport.commission` is denominated in pUSD and rounds the platform fee to five decimal places.
 If the exact result cannot be represented as `Money`, the adapter returns an error instead of using
 zero or a generic commission. See the
-[commission failure contract](../developer_guide/adapters.md#commission-failure-handling).
+[commission failure contract](https://nautilustrader.io/docs/developer_guide/adapters.md#commission-failure-handling).
 
 A commission construction error fails a direct fill report request, terminal trade-history recovery,
 or complete mass status. Startup returns a mass-status error without applying that client's reports.

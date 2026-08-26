@@ -13,7 +13,7 @@ A review is not complete without command evidence. Mark a gate `Pass` only after
 | --- | --- | --- | --- |
 | G0 Scope and ownership | API claims match the pinned developer-guide snapshot. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
 | G1 Legacy labelling | NT v2 compatibility note: legacy/Cython/v1 guidance is migration/reference-only and does not enter production code. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`; evidence: `references/g2-evidence/nt-review.json`. |
+| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `8ecab1ce90d9790b1e18e162842decbae4d9de57`; evidence: `references/g2-evidence/nt-review.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
@@ -67,4 +67,4 @@ Legacy Python review prose, checklists, and examples are physically quarantined 
 
 ## Source-pinned upstream lane
 
-Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a`. Version-scope any newer upstream guidance until the pin advances.
+Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `8ecab1ce90d9790b1e18e162842decbae4d9de57`. Version-scope any newer upstream guidance until the pin advances.

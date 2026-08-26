@@ -486,6 +486,8 @@ trade ID across replays, keeping downstream dedup intact.
 
 The adapter reads each instrument's `fee_schedule` and applies its `rate` and `exponent` as:
 
+Read the formula from `instrument.fee_schedule.rate` and `instrument.fee_schedule.exponent` per instrument — never hardcode venue fee rates or assume a flat fee.
+
 ```text
 platform fee = shares * rate * (price * (1 - price)) ^ exponent
 ```
