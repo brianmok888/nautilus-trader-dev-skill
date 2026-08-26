@@ -76,8 +76,6 @@ def test_live_guide_covers_hosted_async_run_modes() -> None:
 
 def test_betfair_guides_cover_current_replacement_recovery() -> None:
     for path in (
-        "skills/nt-adapters/references/integrations/betfair.md",
-        "references/integrations/betfair.md",
         "skills/nt-adapters/references/integrations/betfair_v2.md",
         "references/integrations/betfair_v2.md",
     ):
@@ -91,8 +89,57 @@ def test_betfair_guides_cover_current_replacement_recovery() -> None:
             "45-second",
             "pending",
             "reconciliation",
+            "10,000",
+            "tracked order",
+            "8ecab1ce9",
         ):
             assert marker in guide, f"{path} lacks Betfair recovery marker {marker}"
+
+def test_betfair_v2_is_primary_and_v1_cleared() -> None:
+    for path in (
+        "skills/nt-adapters/references/integrations/betfair.md",
+        "references/integrations/betfair.md",
+    ):
+        stub = read(path)
+
+        assert "superseded by `betfair_v2.md`" in stub, (
+            f"{path} lacks the v2 supersession pointer"
+        )
+        assert "NT v2 compatibility note" in stub, f"{path} lacks the legacy label"
+        for substantive in (
+            "Recovering an ambiguous modification",
+            "Session management and reconnection",
+            "## Fees",
+        ):
+            assert substantive not in stub, (
+                f"{path} still carries cleared v1 section {substantive!r}"
+            )
+
+    for path in (
+        "skills/nt-adapters/references/integrations/betfair_v2.md",
+        "references/integrations/betfair_v2.md",
+    ):
+        guide = read(path)
+
+        assert "primary Betfair guide" in guide, f"{path} does not declare primary status"
+
+    for path in (
+        "references/integrations/index.md",
+        "skills/nt-adapters/references/integrations/index.md",
+    ):
+        index = read(path)
+        row = next(line for line in index.splitlines() if "betfair_v2.md" in line or "](betfair.md)" in line)
+        assert "](betfair_v2.md)" in row and "](betfair.md)" in row, (
+            f"{path} Betfair row does not route v2 first with the v1 kept as legacy"
+        )
+
+def test_nt_adapters_routes_betfair_v2_first() -> None:
+    skill = read("skills/nt-adapters/SKILL.md")
+
+    assert "betfair_v2.md" in skill, "nt-adapters SKILL does not route the Betfair v2 guide"
+    assert "primary Betfair" in skill or "Betfair work routes" in skill, (
+        "nt-adapters SKILL lacks the v2-first Betfair routing statement"
+    )
 
 
 def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:

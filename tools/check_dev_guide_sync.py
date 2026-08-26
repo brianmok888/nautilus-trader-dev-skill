@@ -116,7 +116,7 @@ RETIRED_UPSTREAM_REFERENCE_FILES = [
 
 CURRENT_INTEGRATION_GUIDES = [
     "architect_ax.md",
-    "betfair.md",
+    "betfair_v2.md",
     "binance.md",
     "bitmex.md",
     "bybit.md",
