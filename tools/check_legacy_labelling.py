@@ -12,17 +12,20 @@ if __package__ in {None, ""}:
 from tools import check_dev_guide_sync as canonical
 
 SCOPED_PATTERNS: Final = (
+    "README.md",
+    "docs/**/*.md",
     "skills/**/*.md",
     "references/**/*.md",
     "templates/**/*.md",
 )
+EXCLUDED_PARTS: Final = (("docs", "tracking"),)
 LEGACY_PATTERNS: Final = (
     re.compile(
         r"(?<![A-Za-z0-9_])(?:Cython|cdef|cpdef|cimport)(?![A-Za-z0-9_])",
         re.IGNORECASE,
     ),
     re.compile(r"(?<![A-Za-z0-9_])\.pyx(?![A-Za-z0-9_])", re.IGNORECASE),
-    re.compile(r"(?<!/api/)(?<![A-Za-z0-9_])v1(?![A-Za-z0-9_.])", re.IGNORECASE),
+    re.compile(r"(?<!/api/)(?<![-A-Za-z0-9_])v1(?![A-Za-z0-9_.])", re.IGNORECASE),
 )
 LABEL_PATTERNS: Final = (
     re.compile(r"\blegacy\s*:", re.IGNORECASE),
@@ -68,9 +71,7 @@ def legacy_labelling_errors(root: Path) -> list[str]:
     canonical._check_unlabelled_tradingnode_guidance(root, canonical_errors)
     canonical._check_unlabelled_legacy_guidance(root, canonical_errors)
     errors = [
-        error
-        for error in canonical_errors
-        if _canonical_error_is_scoped(root, error)
+        error for error in canonical_errors if _canonical_error_is_scoped(root, error)
     ]
     for path in _scoped_markdown(root):
         if canonical._is_current_source_pinned_dev_guide_snapshot(path, root):
@@ -92,26 +93,30 @@ def legacy_labelling_errors(root: Path) -> list[str]:
                 continue
             relative = path.relative_to(root).as_posix()
             error = f"unlabelled legacy/Cython/v1 guidance in {relative}:{index + 1}"
-            if not any(existing.startswith(error.rsplit(":", 1)[0]) for existing in errors):
+            if not any(
+                existing.startswith(error.rsplit(":", 1)[0]) for existing in errors
+            ):
                 errors.append(error)
     errors.extend(_removed_v2_symbol_errors(root))
     return sorted(errors)
+
 
 def _removed_v2_symbol_errors(root: Path) -> list[str]:
     errors: list[str] = []
     for path in _scoped_markdown(root):
         if canonical._is_current_source_pinned_dev_guide_snapshot(path, root):
             continue
-        if "migration_reference/" in path.as_posix() or "legacy_migration/" in path.as_posix():
+        if (
+            "migration_reference/" in path.as_posix()
+            or "legacy_migration/" in path.as_posix()
+        ):
             continue
         lines = path.read_text(encoding="utf-8").splitlines()
         text = "\n".join(lines)
         if canonical._has_file_level_label(text, canonical.LEGACY_LABEL_TERMS):
             continue
         fence_starts = {
-            index
-            for index, line in enumerate(lines)
-            if line.lstrip().startswith("```")
+            index for index, line in enumerate(lines) if line.lstrip().startswith("```")
         }
         for index, line in enumerate(lines):
             if not any(pattern.search(line) for pattern in REMOVED_V2_SYMBOL_PATTERNS):
@@ -130,18 +135,17 @@ def _removed_v2_symbol_errors(root: Path) -> list[str]:
                 (f for f in fence_starts if f <= index),
                 default=None,
             )
-            if (
-                fence_start is not None
-                and any(
-                    pattern.search(context)
-                    for context in lines[max(0, fence_start - LABEL_DISTANCE): fence_start]
-                    for pattern in LABEL_PATTERNS
-                )
+            if fence_start is not None and any(
+                pattern.search(context)
+                for context in lines[max(0, fence_start - LABEL_DISTANCE) : fence_start]
+                for pattern in LABEL_PATTERNS
             ):
                 continue
             relative = path.relative_to(root).as_posix()
             error = f"unlabelled removed-v2-symbol guidance in {relative}:{index + 1}"
-            if not any(existing.startswith(error.rsplit(":", 1)[0]) for existing in errors):
+            if not any(
+                existing.startswith(error.rsplit(":", 1)[0]) for existing in errors
+            ):
                 errors.append(error)
     return errors
 
@@ -163,6 +167,10 @@ def _scoped_markdown(root: Path) -> tuple[Path, ...]:
                 for pattern in SCOPED_PATTERNS
                 for path in root.glob(pattern)
                 if path.is_file()
+                and not any(
+                    path.relative_to(root).parts[: len(excluded)] == excluded
+                    for excluded in EXCLUDED_PARTS
+                )
             }
         )
     )
@@ -172,7 +180,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Reject unlabelled legacy Cython/v1 guidance in shipped Markdown.",
     )
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument(
+        "--root", type=Path, default=Path(__file__).resolve().parents[1]
+    )
     args = parser.parse_args()
 
     root = args.root.resolve()

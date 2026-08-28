@@ -85,7 +85,10 @@ def test_unlabelled_removed_v2_symbols_fail(tmp_path: Path, guidance: str) -> No
     )
 
     assert result.returncode == 1
-    assert f"unlabelled removed-v2-symbol guidance in {path.relative_to(tmp_path)}" in result.stdout
+    assert (
+        f"unlabelled removed-v2-symbol guidance in {path.relative_to(tmp_path)}"
+        in result.stdout
+    )
 
 
 @pytest.mark.parametrize(
@@ -292,7 +295,12 @@ def test_case_and_grammar_variants_of_unlabelled_v1_guidance_fail(
     path.write_text(guidance, encoding="utf-8")
 
     result = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(tmp_path)],
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(tmp_path),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -307,7 +315,12 @@ def test_api_v1_path_does_not_require_a_legacy_label(tmp_path: Path) -> None:
     path.write_text("See /api/v1/orders for the HTTP endpoint.\n", encoding="utf-8")
 
     result = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(tmp_path)],
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(tmp_path),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -320,7 +333,12 @@ def test_missing_scan_root_fails_closed(tmp_path: Path) -> None:
     missing_root = tmp_path / "missing"
 
     result = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"), "--root", str(missing_root)],
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(missing_root),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -328,3 +346,46 @@ def test_missing_scan_root_fails_closed(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "scan root does not exist" in result.stdout
+
+
+def test_active_docs_and_readme_are_scanned(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/active.md").write_text("Use cdef in new active guidance.\n")
+    (tmp_path / "README.md").write_text("Use .pyx for new work.\n")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(tmp_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode == 1
+    assert "unlabelled legacy/Cython/v1 guidance" in output
+    assert "docs/active.md" in output or "README.md" in output
+
+
+def test_tracking_history_is_intentionally_excluded(tmp_path: Path) -> None:
+    tracking = tmp_path / "docs/tracking"
+    tracking.mkdir(parents=True)
+    (tracking / "Findings.md").write_text("Historical cdef audit evidence.\n")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(tmp_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
