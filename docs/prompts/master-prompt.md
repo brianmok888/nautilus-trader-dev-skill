@@ -14,7 +14,7 @@ and record that path during preflight; do not embed a host-specific repository p
 
 - **This prompt hardens and improves `nautilus-trader-dev-skill`.** It does not develop NautilusTrader itself. Do not implement features in, modify, commit to, or prepare changes for the upstream `nautilus_trader` repository.
 - **Upstream NautilusTrader is read-only ground truth.** Inspect its source, documentation, examples, tests, schemas, and toolchain standards only to correct and strengthen this repository's skill sets.
-- **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components. Improving, extending, or rebuilding v1 (Cython / Python `TradingNode`) guidance is out of scope: v1 material is audited only to label it migration/reference-only, supersede it, or replace it with Rust v2 (`LiveNode`/PyO3) guidance.
+- **Only NautilusTrader development skills are in scope.** Audit and harden material that teaches agents to architect, implement, test, integrate, operate, or review NautilusTrader-related components. NT v2 compatibility note: migration/reference-only v1 (Cython / Python live `TradingNode`) terms in this taxonomy are not implementation targets; retained v1 material may only be labelled, superseded, or replaced with Rust v2 (`LiveNode`/PyO3) guidance.
 
 ---
 
@@ -89,10 +89,10 @@ NT v2 compatibility note: Cython, v1, and legacy terms in this mission are
 audit targets or migration/reference-only history. They never authorize a
 production path; new in-scope guidance remains Rust-first and PyO3-oriented.
 
-1. **Rust conversion correctness** — highest. Python/Cython where Rust now exists in NT = P0.
+1. **Rust conversion correctness** — highest. legacy: Python/Cython where Rust now exists in NT = P0.
 2. **NT V2 compliance** — drift from current docs/API = P1.
 3. **Gaps vs nightly/master** — newer NT features not covered = P2.
-4. **Cython / v1 / legacy cleanup** — unlabelled legacy content = P1 (charter violation per `docs/tracking/Handguard.md` invariant #5).
+4. **Legacy: Cython / v1 cleanup** — unlabelled legacy content = P1 (charter violation per `docs/tracking/Handguard.md` invariant #5).
 5. **Cosmetic / docs polish** — lowest.
 
 **Truth hierarchy:** NT source code (`nautilus_core` Rust, `nautilus_trader` Python on `develop`) > nautilustrader.io docs > `references/developer_guide/contracts/` > skill SKILL.md files > other references.
@@ -117,7 +117,7 @@ NT v2 compatibility note: legacy-labelling below is a migration audit control,
 not implementation guidance.
 
 1. **Current findings update** — evidence-backed changes in `docs/tracking/Findings.md`, without session plans or historical reports.
-2. **Legacy lint gate** — `tools/check_legacy_labelling.py` remains green for retained Cython/v1 migration references.
+2. **Legacy lint gate** — `tools/check_legacy_labelling.py` remains green for retained migration/reference-only Cython/v1 migration references.
 3. **Per-skill gate checklist** — G0-G7 readiness cards for all retained NT-development skills, indexed by `docs/tracking/Components.md`.
 4. **Skill repository corrections** — source-backed changes to current skills, references, templates, tests, and validators only.
 5. **Closure summary** — verification evidence, residual NT-development risks, and confirmation that upstream was not modified.
@@ -147,9 +147,9 @@ guidance for new work.
 
 | Category | What to flag | Default severity |
 |---|---|---|
-| Rust conversion gaps | Python/Cython where Rust now exists in NT | P0 |
+| Rust conversion gaps | legacy: Python/Cython where Rust now exists in NT | P0 |
 | V2 compliance violations | API drift, removed/renamed symbols, wrong imports | P1 |
-| Legacy unlabelled content | Cython (`cdef`/`cpdef`/`.pyx`), v1-only API, migration-history without `legacy:` label | P1 |
+| Legacy unlabelled content | legacy: Cython (`cdef`/`cpdef`/`.pyx`), v1-only API, migration-history without `legacy:` label | P1 |
 | Improvement opportunities | Newer NT features not yet covered | P2 |
 
 ### Finding format (every finding)
@@ -227,7 +227,7 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 | Gate | Description | Status | Evidence |
 |------|-------------|--------|----------|
 | G0   | Scope and ownership are explicit | Pass/Pending/Blocked | file:line |
-| G1   | No Cython/v1 references remain unlabelled | Pass/Pending/Blocked | command or file:line |
+| G1   | NT v2 compatibility note: no migration/reference-only Cython/v1 references remain unlabelled | Pass/Pending/Blocked | command or file:line |
 | G2   | Examples compile against the pinned NT V2 baseline | Pass/Pending/Blocked | `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` plus card/evidence checks |
 | G3   | Rust bindings / PyO3 paths match current upstream contracts | Pass/Pending/Blocked | file:line or upstream URL |
 | G4   | Skill-specific functional gates pass | Pass/Pending/Blocked | command or URL |
@@ -310,7 +310,7 @@ Do NOT duplicate content across trackers. One change → one write-target.
 
 - **Skill repository only.** Modify the resolved primary repository; never modify or prepare upstream NautilusTrader changes.
 - **Upstream is evidence, not a deliverable.** Source, docs, examples, tests, and standards from `nautilus_trader` are read-only inputs used to improve this repository's skill artifacts.
-- **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader Rust V2 components. Findings may direct v1 material toward labelling, supersession, or Rust-v2 replacement — never toward v1 improvement or new v1 building.
+- **NT-development scope only.** Every finding, edit, test, and gate must improve skills for developing NautilusTrader Rust V2 components. Legacy: findings may direct v1 material toward labelling, supersession, or Rust-v2 replacement — never toward v1 improvement or new v1 building.
 - **Rust-first default.** All new in-scope guidance routes through `skills/nt-strategy-builder-rust/`. Python `skills/nt-strategy-builder/` is reference-only.
 - **All in-scope legacy content must be labelled.** Per `docs/tracking/Handguard.md` invariant #5.
 - **Applicable sync checkers must stay green.** `check_dev_guide_sync.py`, `check_rust_trading_reference_sync.py`, `check_upstream_freshness.py`.
