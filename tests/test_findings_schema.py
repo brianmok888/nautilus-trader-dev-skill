@@ -119,6 +119,25 @@ def test_findings_schema_rejects_malformed_current_field_lines(
     assert any("malformed field line" in error for error in errors)
 
 
+def test_findings_schema_applies_current_rules_after_migration_date(
+    tmp_path: Path,
+) -> None:
+    ledger = tmp_path / "Findings.md"
+    ledger.write_text(
+        "# Findings\n\n"
+        "[NT-2026-08-29-01] [P1] [CLOSED] Future current-schema finding.\n"
+        "  evidence: reproduced\n"
+        "  fix: repair it\n"
+        "  surprise: rejected\n",
+        encoding="utf-8",
+    )
+
+    errors = validate_findings(ledger)
+
+    assert any("unknown field surprise" in error for error in errors)
+    assert any("missing closure proof" in error for error in errors)
+
+
 def test_findings_schema_rejects_unknown_current_field(tmp_path: Path) -> None:
     ledger = tmp_path / "Findings.md"
     ledger.write_text(

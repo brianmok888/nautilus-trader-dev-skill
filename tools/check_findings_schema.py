@@ -15,7 +15,7 @@ _FIELD = re.compile(r"^  (?P<name>[a-z][a-z0-9-]*): (?P<value>\S.*)$")
 _FIELD_LIKE = re.compile(r"^\s+[a-z][a-z0-9-]*( \d{4}-\d{2}-\d{2})?: \S")
 _CANDIDATE = re.compile(r"^\[[^\]]+\] \[")
 _PATH_LINE = re.compile(r"(?<![\w./-])(?P<path>[A-Za-z0-9._][\w./+-]*?):(?P<line>\d+)(?!\d)")
-_CURRENT_PREFIX = "NT-2026-08-28-"
+_CURRENT_DATE = "2026-08-28"
 _CURRENT_FIELDS = frozenset(
     {"file", "evidence", "fix", "closure", "closure-proof", "acceptance-test", "correction"}
 )
@@ -29,6 +29,10 @@ class Finding:
     title: str
     line: int
     fields: dict[str, str]
+
+
+def _uses_current_schema(identifier: str) -> bool:
+    return identifier.removeprefix("NT-").rsplit("-", 1)[0] >= _CURRENT_DATE
 
 
 def _repo_root(ledger: Path) -> Path:
@@ -74,7 +78,7 @@ def _parse_findings(path: Path) -> tuple[list[Finding], list[str]]:
         field = _FIELD.fullmatch(line)
         if field is not None and current is not None:
             name = field["name"]
-            is_current = current.identifier.startswith(_CURRENT_PREFIX)
+            is_current = _uses_current_schema(current.identifier)
             duplicate = name in current.fields
             if duplicate and is_current:
                 errors.append(
@@ -88,7 +92,7 @@ def _parse_findings(path: Path) -> tuple[list[Finding], list[str]]:
             continue
         if (
             current is not None
-            and current.identifier.startswith(_CURRENT_PREFIX)
+            and _uses_current_schema(current.identifier)
             and _FIELD_LIKE.match(line) is not None
             and field is None
         ):
@@ -112,7 +116,7 @@ def validate_findings(path: Path) -> list[str]:
         else:
             seen[finding.identifier] = finding.line
         required = {"evidence", "fix"}
-        is_current_schema = finding.identifier.startswith("NT-2026-08-28-")
+        is_current_schema = _uses_current_schema(finding.identifier)
         if finding.status == "OPEN":
             required.update({"file", "acceptance-test"})
         elif is_current_schema:
