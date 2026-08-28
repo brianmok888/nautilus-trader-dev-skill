@@ -202,11 +202,19 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
     readme = read("README.md")
     dev = read("skills/nt-dev/SKILL.md")
 
-    for text in [readme, dev]:
-        assert "Python 3.12-3.14" in text
-        assert "repository toolchain is pinned to Rust 1.98.0" in text
-        assert "not a permanent MSRV promise" in text
+    assert "Python 3.12-3.14" in dev
+    assert "repository toolchain is pinned to Rust 1.98.0" in dev
+    assert "not a permanent MSRV promise" in dev
 
-    assert "Current release baseline: NautilusTrader v1.230.0 latest release" not in readme
-    assert "Pinned reproducible baseline" in readme
-    assert "Current develop observation" in readme
+    # README stays descriptive: version/commit pins live in skills and tools,
+    # with the pin location described rather than inlined.
+    for pattern in (
+        "Pinned reproducible baseline",
+        "Current develop observation",
+        "Python 3.12-3.14",
+        "Rust 1.98.0",
+        "Current release baseline",
+    ):
+        assert pattern not in readme
+    assert not re.search(r"\b[0-9a-f]{40}\b", readme)
+    assert "tools/upstream_baseline.py" in readme

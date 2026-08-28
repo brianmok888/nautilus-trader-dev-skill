@@ -6,12 +6,31 @@ A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for dev
 
 ## Overview
 
-NT v2 compatibility note: v1.x release/source labels in this baseline paragraph are release-history identifiers, not guidance to use legacy APIs.
-These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter.
+These skills encode NautilusTrader best practices, correct patterns, and structured workflows for building production-quality trading systems. They are maintained against the official [NautilusTrader Developer Guide](https://nautilustrader.io/docs/latest/developer_guide/) and the GitHub `develop` source tree, with version-sensitive notes called out explicitly where they matter. Guidance is verified against a pinned, reproducible upstream snapshot; the pin itself is defined in `tools/upstream_baseline.py`, and `python3 tools/check_upstream_freshness.py --format json` reports the current delta against upstream. Upstream is read-only ground truth for improving this skill repository.
 
-**Pinned reproducible baseline (verified 2026-08-28):** commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, workspace crates `0.63.0`, source label `v1.231.0`, and Python package `2.0.0rc4`; the repository toolchain is pinned to Rust 1.98.0. This is not a permanent MSRV promise; upstream generally follows the latest stable Rust release. Official Python support is Python 3.12-3.14. The v1.231.0 release remains the release-history baseline, while release notes identify `2.0.0rc1` as the first public candidate and use `2.0.0rcN` for the rolling candidate line.
+## Repository Layout
 
-**Current develop observation (reviewed 2026-08-28):** the reproducible pin equals the reviewed `origin/develop` tip. Future develop-only guidance must name its introducing commit until the next reviewed pin move. Run `python3 tools/check_upstream_freshness.py --format json` for the current delta. Upstream is read-only ground truth for improving this skill repository.
+```
+nautilus-trader-dev-skill/
+├── skills/               # 17 nt-* skills (workflow, domain, dev-guide, learning)
+│   └── nt/SKILL.md       # Entry-point router
+├── references/           # Upstream-derived references and contracts
+│   ├── api_reference/    # Per-module API docs (38 files)
+│   ├── concepts/         # Conceptual guides (20 files)
+│   ├── developer_guide/  # Snapshot guides (24 files) incl. contracts/ (5 canonical contracts)
+│   ├── g2-evidence/      # Durable G2 harness evidence per skill (17 files)
+│   ├── integrations/     # Integration examples
+│   ├── dev_templates/    # Rust benchmark templates (criterion, iai)
+│   └── upstream-delta-review.json  # Reviewed current-develop delta manifest
+├── docs/
+│   ├── prompts/          # Master prompt (detection-only taxonomy, migration/reference-only)
+│   └── tracking/         # Living charters: Handguard (invariants), Structure (wiring),
+│                         # Components (readiness), Findings (evidence), CutoverGateTemplate
+├── tools/                # Sync, freshness, schema, static-quality, and G2 validators
+└── tests/                # Repository behavior, schema, cutover, and evidence gates
+```
+
+Every skill records Rust-readiness evidence through `tools/check_skill_g2_harnesses.py`; durable results live in `references/g2-evidence/`. The canonical static gate is `python3 tools/check_static_quality.py`, run before tests or skill G2 execution.
 
 ## Skills Map
 
@@ -90,7 +109,7 @@ Start with `nt` when you want the skill suite to classify the task and route to 
 | Skill | Description | Key Content |
 |---|---|---|
 | `nt-architect` | Research → component architecture decomposition | Design patterns, data flow planning |
-| `nt-implement` | Templates for all NT component types | Strategy, Actor, Indicator, Adapter, FillModel, Rust+PyO3 |
+| `nt-implement` | Rust-first component implementation | Component patterns, Risk Engine, custom simulation models, adapter contract, Rust+PyO3; migration-labelled Python templates |
 | `nt-review` | Code review for NT conventions | Trading correctness, FFI safety, perf benchmarks |
 | `nt-strategy-builder` | Migration/reference-only Python systems | Historical multi-venue wiring and migration examples |
 | `nt-strategy-builder-rust` | Default production strategy path | Rust `Strategy`, backtest, and `LiveNode` wiring |
@@ -153,9 +172,9 @@ Skills use two reference patterns:
 ## Agent Compatibility
 
 These skills work with:
-- **Claude Code** (Anthropic) — via AGENTS.md per-skill
-- **Gemini CLI** — via AGENTS.md
-- **Codex** (OpenAI) — via AGENTS.md
+- **Claude Code** (Anthropic) — via root `AGENTS.md`, per-directory knowledge bases, and `SKILL.md`
+- **Gemini CLI** — via `AGENTS.md` and `SKILL.md`
+- **Codex** (OpenAI) — via `AGENTS.md` and `SKILL.md`
 - **Hermes Agent** — via SKILL.md + references/
 - **OpenCode** — via SKILL.md + references/
 
@@ -179,8 +198,8 @@ uv run --with pytest pytest tests/test_dev_guide_sync.py -q
 
 The checker validates required local developer-guide pages, source metadata,
 stale reference paths, and high-risk NautilusTrader invariants used by the skill
-suite. The snapshot and Rust-reference commands require a NautilusTrader checkout
-at commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; pass its path with
+suite. The snapshot and Rust-reference commands require a NautilusTrader checkout at
+the pinned upstream commit; pass its path with
 `--upstream-root` when it is not available at the documented default under `/tmp`.
 
 ## Source of Truth
