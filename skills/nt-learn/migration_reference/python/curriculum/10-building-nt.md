@@ -87,6 +87,7 @@ Execution algorithms split orders into smaller pieces:
 ```python
 from nautilus_trader.execution.algorithm import ExecAlgorithm
 
+
 class MyAlgorithm(ExecAlgorithm):
     def on_order(self, order) -> None:
         # Split order into child orders
@@ -112,6 +113,7 @@ For backtesting simulation:
 ```python
 from nautilus_trader.backtest.models import FillModel
 
+
 class MyFillModel(FillModel):
     def is_limit_filled(self, order, price) -> bool:
         # Custom logic for limit order fill probability
@@ -127,11 +129,12 @@ class MyFillModel(FillModel):
 ```python
 from nautilus_trader.analysis.statistic import PortfolioStatistic
 
+
 class SharpeRatio(PortfolioStatistic):
     def calculate_from_returns(self, returns: pd.Series) -> float:
         if returns.empty or returns.std() == 0:
             return 0.0
-        return returns.mean() / returns.std() * (252 ** 0.5)
+        return returns.mean() / returns.std() * (252**0.5)
 ```
 
 Register with: `engine.portfolio.analyzer.register_statistic(SharpeRatio())`

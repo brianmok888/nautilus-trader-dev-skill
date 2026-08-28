@@ -20,7 +20,7 @@ def test_active_serialization_python_fences_parse() -> None:
         ast.parse(fence)
 
 
-def test_end_to_end_guide_uses_resolvable_release_lane() -> None:
+def test_end_to_end_guide_uses_published_release_lane() -> None:
     text = read("docs/end_to_end_guide.md")
     cargo = re.search(r"```toml\n(.*?)```", text, flags=re.DOTALL)
 
@@ -28,6 +28,8 @@ def test_end_to_end_guide_uses_resolvable_release_lane() -> None:
     assert 'nautilus-live = "0.62"' in cargo.group(1)
     assert 'nautilus-okx = "0.62"' in cargo.group(1)
     assert 'nautilus-live = "0.63.0"' not in cargo.group(1)
+    assert "not published on crates.io" in text
+    assert "source-pinned path lane" in text
 
 
 def test_learning_setup_uses_pinned_upstream_bootstrap() -> None:

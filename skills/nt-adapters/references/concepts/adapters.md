@@ -65,7 +65,9 @@ import os
 
 from nautilus_trader.adapters.binance.common.enums import BinanceAccountType
 from nautilus_trader.adapters.binance import get_cached_binance_http_client
-from nautilus_trader.adapters.binance.futures.providers import BinanceFuturesInstrumentProvider
+from nautilus_trader.adapters.binance.futures.providers import (
+    BinanceFuturesInstrumentProvider,
+)
 from nautilus_trader.common.component import LiveClock
 
 
@@ -158,8 +160,10 @@ def on_start(self) -> None:
     # Subscribe to live bars
     self.subscribe_bars(BarType.from_str("BTCUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL"))
 
+
 def on_trade_tick(self, tick: TradeTick) -> None:
     self.log.info(f"Trade: {tick}")
+
 
 def on_bar(self, bar: Bar) -> None:
     self.log.info(f"Bar: {bar}")

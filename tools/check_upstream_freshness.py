@@ -9,7 +9,9 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
 
-DEFAULT_MANIFEST = Path(__file__).resolve().parents[1] / "references/upstream-delta-review.json"
+DEFAULT_MANIFEST = (
+    Path(__file__).resolve().parents[1] / "references/upstream-delta-review.json"
+)
 
 if __package__:
     from .upstream_baseline import (
@@ -178,7 +180,11 @@ def check_ref(upstream_root: Path, pinned_commit: str, ref: str) -> RefFreshness
         return RefFreshness(ref, current_commit, FreshnessStatus.CURRENT, 0, True)
 
     pinned_is_ancestor = _is_ancestor(upstream_root, pinned_commit, current_commit)
-    ahead = _commits_ahead(upstream_root, pinned_commit, current_commit) if pinned_is_ancestor else None
+    ahead = (
+        _commits_ahead(upstream_root, pinned_commit, current_commit)
+        if pinned_is_ancestor
+        else None
+    )
     status = FreshnessStatus.DRIFTED if pinned_is_ancestor else FreshnessStatus.DIVERGED
     changed_commits = (
         _changed_commits(upstream_root, pinned_commit, current_commit)
@@ -199,6 +205,50 @@ def check_ref(upstream_root: Path, pinned_commit: str, ref: str) -> RefFreshness
         changed_commits,
         changed_paths,
     )
+
+
+def _transition_history_error(
+    payload: dict[str, object], upstream_root: Path
+) -> str | None:
+    transitions = payload.get("reviewed_transitions")
+    if transitions is None:
+        return None
+    if not isinstance(transitions, list):
+        return "review manifest reviewed_transitions must be an array"
+    for index, transition in enumerate(transitions):
+        if not isinstance(transition, dict):
+            return f"review manifest reviewed_transitions[{index}] must be an object"
+        start = transition.get("from_commit")
+        end = transition.get("to_commit")
+        commits = transition.get("reviewed_commits")
+        deltas = transition.get("deltas")
+        changed_paths = transition.get("changed_paths")
+        if not isinstance(start, str) or not isinstance(end, str):
+            return f"review manifest reviewed_transitions[{index}] requires commit endpoints"
+        if not isinstance(commits, list) or not all(
+            isinstance(item, str) for item in commits
+        ):
+            return f"review manifest reviewed_transitions[{index}].reviewed_commits must be strings"
+        if not isinstance(deltas, list) or not all(
+            isinstance(item, dict) for item in deltas
+        ):
+            return (
+                f"review manifest reviewed_transitions[{index}].deltas must be objects"
+            )
+        actual_commits = list(_changed_commits(upstream_root, start, end))
+        if commits != actual_commits:
+            return f"review manifest reviewed_transitions[{index}] commit coverage does not match upstream"
+        delta_commits = [item.get("commit") for item in deltas]
+        if delta_commits != actual_commits:
+            return f"review manifest reviewed_transitions[{index}] delta coverage does not match upstream"
+        actual_paths = list(_changed_paths(upstream_root, start, end))
+        if changed_paths != actual_paths:
+            return f"review manifest reviewed_transitions[{index}] changed_paths do not match upstream"
+        if transition.get("commit_count") != len(actual_commits):
+            return f"review manifest reviewed_transitions[{index}] commit_count is incorrect"
+        if transition.get("unique_path_count") != len(actual_paths):
+            return f"review manifest reviewed_transitions[{index}] unique_path_count is incorrect"
+    return None
 
 
 def _manifest_error(
@@ -226,6 +276,9 @@ def _manifest_error(
         return "review manifest requires a resolved develop ref"
     if payload.get("reviewed_commit") != develop.current_commit:
         return "review manifest reviewed_commit does not match the resolved develop ref"
+    history_error = _transition_history_error(payload, upstream_root)
+    if history_error is not None:
+        return history_error
 
     deltas = payload.get("deltas")
     if not isinstance(deltas, list):
@@ -241,8 +294,10 @@ def _manifest_error(
         if not isinstance(subject, str) or not subject:
             return f"review manifest deltas[{index}].subject must be a non-empty string"
         paths = delta.get("upstream_paths")
-        if not isinstance(paths, list) or not paths or not all(
-            isinstance(path, str) and path for path in paths
+        if (
+            not isinstance(paths, list)
+            or not paths
+            or not all(isinstance(path, str) and path for path in paths)
         ):
             return f"review manifest deltas[{index}].upstream_paths must be non-empty strings"
         try:
@@ -256,8 +311,10 @@ def _manifest_error(
             return f"review manifest deltas[{index}].upstream_paths do not match upstream commit"
         affected = delta.get("affected_files")
         rationale = delta.get("no_impact_rationale")
-        has_affected = isinstance(affected, list) and bool(affected) and all(
-            isinstance(path, str) and path for path in affected
+        has_affected = (
+            isinstance(affected, list)
+            and bool(affected)
+            and all(isinstance(path, str) and path for path in affected)
         )
         has_rationale = isinstance(rationale, str) and bool(rationale.strip())
         if has_affected == has_rationale:
@@ -363,7 +420,9 @@ def render_text_report(report: FreshnessReport) -> str:
     )
     if report.manifest_error:
         lines.append(f"Manifest error: {report.manifest_error}")
-    lines.append("This command is read-only and does not update tools/upstream_baseline.py.")
+    lines.append(
+        "This command is read-only and does not update tools/upstream_baseline.py."
+    )
     return "\n".join(lines) + "\n"
 
 

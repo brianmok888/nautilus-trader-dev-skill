@@ -2018,10 +2018,14 @@ class TemplateInstrumentProvider(InstrumentProvider):
     async def load_all_async(self, filters: dict | None = None) -> None:
         raise NotImplementedError("implement `load_all_async` in your adapter subclass")
 
-    async def load_ids_async(self, instrument_ids: list[InstrumentId], filters: dict | None = None) -> None:
+    async def load_ids_async(
+        self, instrument_ids: list[InstrumentId], filters: dict | None = None
+    ) -> None:
         raise NotImplementedError("implement `load_ids_async` in your adapter subclass")
 
-    async def load_async(self, instrument_id: InstrumentId, filters: dict | None = None) -> None:
+    async def load_async(
+        self, instrument_id: InstrumentId, filters: dict | None = None
+    ) -> None:
         raise NotImplementedError("implement `load_async` in your adapter subclass")
 ```
 
@@ -2130,113 +2134,196 @@ class TemplateLiveMarketDataClient(LiveMarketDataClient):
         raise NotImplementedError("implement `_subscribe` in your adapter subclass")
 
     async def _subscribe_instruments(self, command: SubscribeInstruments) -> None:
-        raise NotImplementedError("implement `_subscribe_instruments` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_instruments` in your adapter subclass"
+        )
 
     async def _subscribe_instrument(self, command: SubscribeInstrument) -> None:
-        raise NotImplementedError("implement `_subscribe_instrument` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_instrument` in your adapter subclass"
+        )
 
     async def _subscribe_order_book_deltas(self, command: SubscribeOrderBook) -> None:
-        raise NotImplementedError("implement `_subscribe_order_book_deltas` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_order_book_deltas` in your adapter subclass"
+        )
 
     async def _subscribe_order_book_depth(self, command: SubscribeOrderBook) -> None:
-        raise NotImplementedError("implement `_subscribe_order_book_depth` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_order_book_depth` in your adapter subclass"
+        )
 
     async def _subscribe_quote_ticks(self, command: SubscribeQuoteTicks) -> None:
-        raise NotImplementedError("implement `_subscribe_quote_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_quote_ticks` in your adapter subclass"
+        )
 
     async def _subscribe_trade_ticks(self, command: SubscribeTradeTicks) -> None:
-        raise NotImplementedError("implement `_subscribe_trade_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_trade_ticks` in your adapter subclass"
+        )
 
     async def _subscribe_mark_prices(self, command: SubscribeMarkPrices) -> None:
-        raise NotImplementedError("implement `_subscribe_mark_prices` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_mark_prices` in your adapter subclass"
+        )
 
     async def _subscribe_index_prices(self, command: SubscribeIndexPrices) -> None:
-        raise NotImplementedError("implement `_subscribe_index_prices` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_index_prices` in your adapter subclass"
+        )
 
     async def _subscribe_bars(self, command: SubscribeBars) -> None:
-        raise NotImplementedError("implement `_subscribe_bars` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_bars` in your adapter subclass"
+        )
 
     async def _subscribe_funding_rates(self, command: SubscribeFundingRates) -> None:
-        raise NotImplementedError("implement `_subscribe_funding_rates` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_funding_rates` in your adapter subclass"
+        )
 
-    async def _subscribe_instrument_status(self, command: SubscribeInstrumentStatus) -> None:
-        raise NotImplementedError("implement `_subscribe_instrument_status` in your adapter subclass")
+    async def _subscribe_instrument_status(
+        self, command: SubscribeInstrumentStatus
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_subscribe_instrument_status` in your adapter subclass"
+        )
 
-    async def _subscribe_instrument_close(self, command: SubscribeInstrumentClose) -> None:
-        raise NotImplementedError("implement `_subscribe_instrument_close` in your adapter subclass")
+    async def _subscribe_instrument_close(
+        self, command: SubscribeInstrumentClose
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_subscribe_instrument_close` in your adapter subclass"
+        )
 
     async def _subscribe_option_greeks(self, command: SubscribeOptionGreeks) -> None:
-        raise NotImplementedError("implement `_subscribe_option_greeks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_subscribe_option_greeks` in your adapter subclass"
+        )
 
     async def _unsubscribe(self, command: UnsubscribeData) -> None:
         raise NotImplementedError("implement `_unsubscribe` in your adapter subclass")
 
     async def _unsubscribe_instruments(self, command: UnsubscribeInstruments) -> None:
-        raise NotImplementedError("implement `_unsubscribe_instruments` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_instruments` in your adapter subclass"
+        )
 
     async def _unsubscribe_instrument(self, command: UnsubscribeInstrument) -> None:
-        raise NotImplementedError("implement `_unsubscribe_instrument` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_instrument` in your adapter subclass"
+        )
 
-    async def _unsubscribe_order_book_deltas(self, command: UnsubscribeOrderBook) -> None:
-        raise NotImplementedError("implement `_unsubscribe_order_book_deltas` in your adapter subclass")
+    async def _unsubscribe_order_book_deltas(
+        self, command: UnsubscribeOrderBook
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_order_book_deltas` in your adapter subclass"
+        )
 
-    async def _unsubscribe_order_book_depth(self, command: UnsubscribeOrderBook) -> None:
-        raise NotImplementedError("implement `_unsubscribe_order_book_depth` in your adapter subclass")
+    async def _unsubscribe_order_book_depth(
+        self, command: UnsubscribeOrderBook
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_order_book_depth` in your adapter subclass"
+        )
 
     async def _unsubscribe_quote_ticks(self, command: UnsubscribeQuoteTicks) -> None:
-        raise NotImplementedError("implement `_unsubscribe_quote_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_quote_ticks` in your adapter subclass"
+        )
 
     async def _unsubscribe_trade_ticks(self, command: UnsubscribeTradeTicks) -> None:
-        raise NotImplementedError("implement `_unsubscribe_trade_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_trade_ticks` in your adapter subclass"
+        )
 
     async def _unsubscribe_mark_prices(self, command: UnsubscribeMarkPrices) -> None:
-        raise NotImplementedError("implement `_unsubscribe_mark_prices` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_mark_prices` in your adapter subclass"
+        )
 
     async def _unsubscribe_index_prices(self, command: UnsubscribeIndexPrices) -> None:
-        raise NotImplementedError("implement `_unsubscribe_index_prices` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_index_prices` in your adapter subclass"
+        )
 
     async def _unsubscribe_bars(self, command: UnsubscribeBars) -> None:
-        raise NotImplementedError("implement `_unsubscribe_bars` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_unsubscribe_bars` in your adapter subclass"
+        )
 
-    async def _unsubscribe_funding_rates(self, command: UnsubscribeFundingRates) -> None:
-        raise NotImplementedError("implement `_unsubscribe_funding_rates` in your adapter subclass")
+    async def _unsubscribe_funding_rates(
+        self, command: UnsubscribeFundingRates
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_funding_rates` in your adapter subclass"
+        )
 
-    async def _unsubscribe_instrument_status(self, command: UnsubscribeInstrumentStatus) -> None:
-        raise NotImplementedError("implement `_unsubscribe_instrument_status` in your adapter subclass")
+    async def _unsubscribe_instrument_status(
+        self, command: UnsubscribeInstrumentStatus
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_instrument_status` in your adapter subclass"
+        )
 
-    async def _unsubscribe_instrument_close(self, command: UnsubscribeInstrumentClose) -> None:
-        raise NotImplementedError("implement `_unsubscribe_instrument_close` in your adapter subclass")
+    async def _unsubscribe_instrument_close(
+        self, command: UnsubscribeInstrumentClose
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_instrument_close` in your adapter subclass"
+        )
 
-    async def _unsubscribe_option_greeks(self, command: UnsubscribeOptionGreeks) -> None:
-        raise NotImplementedError("implement `_unsubscribe_option_greeks` in your adapter subclass")
+    async def _unsubscribe_option_greeks(
+        self, command: UnsubscribeOptionGreeks
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_unsubscribe_option_greeks` in your adapter subclass"
+        )
 
     async def _request(self, request: RequestData) -> None:
         raise NotImplementedError("implement `_request` in your adapter subclass")
 
     async def _request_instrument(self, request: RequestInstrument) -> None:
-        raise NotImplementedError("implement `_request_instrument` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_instrument` in your adapter subclass"
+        )
 
     async def _request_instruments(self, request: RequestInstruments) -> None:
-        raise NotImplementedError("implement `_request_instruments` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_instruments` in your adapter subclass"
+        )
 
     async def _request_order_book_deltas(self, request: RequestOrderBookDeltas) -> None:
-        raise NotImplementedError("implement `_request_order_book_deltas` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_order_book_deltas` in your adapter subclass"
+        )
 
     async def _request_order_book_depth(self, request: RequestOrderBookDepth) -> None:
-        raise NotImplementedError("implement `_request_order_book_depth` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_order_book_depth` in your adapter subclass"
+        )
 
-    async def _request_order_book_snapshot(self, request: RequestOrderBookSnapshot) -> None:
-        raise NotImplementedError("implement `_request_order_book_snapshot` in your adapter subclass")
+    async def _request_order_book_snapshot(
+        self, request: RequestOrderBookSnapshot
+    ) -> None:
+        raise NotImplementedError(
+            "implement `_request_order_book_snapshot` in your adapter subclass"
+        )
 
     async def _request_quote_ticks(self, request: RequestQuoteTicks) -> None:
-        raise NotImplementedError("implement `_request_quote_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_quote_ticks` in your adapter subclass"
+        )
 
     async def _request_trade_ticks(self, request: RequestTradeTicks) -> None:
-        raise NotImplementedError("implement `_request_trade_ticks` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_request_trade_ticks` in your adapter subclass"
+        )
 
     async def _request_bars(self, request: RequestBars) -> None:
         raise NotImplementedError("implement `_request_bars` in your adapter subclass")
-
 ```
 
 | Method                             | Description                                             |
@@ -2381,37 +2468,49 @@ class TemplateLiveExecutionClient(LiveExecutionClient):
         self,
         command: GenerateOrderStatusReport,
     ) -> OrderStatusReport | None:
-        raise NotImplementedError("method `generate_order_status_report` must be implemented in the subclass")
+        raise NotImplementedError(
+            "method `generate_order_status_report` must be implemented in the subclass"
+        )
 
     async def generate_order_status_reports(
         self,
         command: GenerateOrderStatusReports,
     ) -> list[OrderStatusReport]:
-        raise NotImplementedError("method `generate_order_status_reports` must be implemented in the subclass")
+        raise NotImplementedError(
+            "method `generate_order_status_reports` must be implemented in the subclass"
+        )
 
     async def generate_fill_reports(
         self,
         command: GenerateFillReports,
     ) -> list[FillReport]:
-        raise NotImplementedError("method `generate_fill_reports` must be implemented in the subclass")
+        raise NotImplementedError(
+            "method `generate_fill_reports` must be implemented in the subclass"
+        )
 
     async def generate_position_status_reports(
         self,
         command: GeneratePositionStatusReports,
     ) -> list[PositionStatusReport]:
-        raise NotImplementedError("method `generate_position_status_reports` must be implemented in the subclass")
+        raise NotImplementedError(
+            "method `generate_position_status_reports` must be implemented in the subclass"
+        )
 
     async def generate_mass_status(
         self,
         lookback_mins: int | None = None,
     ) -> ExecutionMassStatus | None:
-        raise NotImplementedError("method `generate_mass_status` must be implemented in the subclass")
+        raise NotImplementedError(
+            "method `generate_mass_status` must be implemented in the subclass"
+        )
 
     async def _submit_order(self, command: SubmitOrder) -> None:
         raise NotImplementedError("implement `_submit_order` in your adapter subclass")
 
     async def _submit_order_list(self, command: SubmitOrderList) -> None:
-        raise NotImplementedError("implement `_submit_order_list` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_submit_order_list` in your adapter subclass"
+        )
 
     async def _modify_order(self, command: ModifyOrder) -> None:
         raise NotImplementedError("implement `_modify_order` in your adapter subclass")
@@ -2420,10 +2519,14 @@ class TemplateLiveExecutionClient(LiveExecutionClient):
         raise NotImplementedError("implement `_cancel_order` in your adapter subclass")
 
     async def _cancel_all_orders(self, command: CancelAllOrders) -> None:
-        raise NotImplementedError("implement `_cancel_all_orders` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_cancel_all_orders` in your adapter subclass"
+        )
 
     async def _batch_cancel_orders(self, command: BatchCancelOrders) -> None:
-        raise NotImplementedError("implement `_batch_cancel_orders` in your adapter subclass")
+        raise NotImplementedError(
+            "implement `_batch_cancel_orders` in your adapter subclass"
+        )
 ```
 
 | Method                             | Description                                               |

@@ -28,6 +28,8 @@ This card records current router readiness. Re-run cited evidence and use `Pendi
 
 NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode references in this table are migration/reference-only; prefer Rust V2/PyO3 and LiveNode for new work.
 
+For delivery and cutover decisions, complete every applicable standard gate in `docs/tracking/CutoverGateTemplate.md`; `Pending` and `Blocked` remain non-pass states.
+
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
@@ -92,7 +94,7 @@ Migration/reference-only legacy material is physically quarantined under each sk
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `8ecab1ce90d9790b1e18e162842decbae4d9de57`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+The authoritative pinned upstream commit is `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 

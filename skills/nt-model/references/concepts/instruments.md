@@ -48,7 +48,9 @@ audusd = TestInstrumentProvider.default_fx_ccy("AUD/USD")
 Exchange specific instruments can be discovered from live exchange data using an adapters `InstrumentProvider`:
 
 ```python
-from nautilus_trader.adapters.binance.spot.providers import BinanceSpotInstrumentProvider
+from nautilus_trader.adapters.binance.spot.providers import (
+    BinanceSpotInstrumentProvider,
+)
 from nautilus_trader.model import InstrumentId
 
 provider = BinanceSpotInstrumentProvider(client=binance_http_client)
@@ -107,6 +109,7 @@ to take upon receiving an instrument update:
 
 ```python
 from nautilus_trader.model.instruments import Instrument
+
 
 def on_instrument(self, instrument: Instrument) -> None:
     # Take some action on an instrument update
@@ -286,10 +289,14 @@ The `MarginAccount` class calculates margins using the following formulas:
 
 ```python
 # Initial margin calculation
-margin_init = (notional_value / leverage * margin_init) + (notional_value / leverage * taker_fee)
+margin_init = (notional_value / leverage * margin_init) + (
+    notional_value / leverage * taker_fee
+)
 
 # Maintenance margin calculation
-margin_maint = (notional_value / leverage * margin_maint) + (notional_value / leverage * taker_fee)
+margin_maint = (notional_value / leverage * margin_maint) + (
+    notional_value / leverage * taker_fee
+)
 ```
 
 **Key Points**:
@@ -347,8 +354,12 @@ class PerContractFeeModel(FeeModel):
         super().__init__()
         self.commission = commission
 
-    def get_commission(self, Order_order, Quantity_fill_qty, Price_fill_px, Instrument_instrument):
-        total_commission = Money(self.commission * Quantity_fill_qty, self.commission.currency)
+    def get_commission(
+        self, Order_order, Quantity_fill_qty, Price_fill_px, Instrument_instrument
+    ):
+        total_commission = Money(
+            self.commission * Quantity_fill_qty, self.commission.currency
+        )
         return total_commission
 ```
 

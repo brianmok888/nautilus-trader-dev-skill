@@ -45,7 +45,7 @@ config = ExecTesterConfig(
     instrument_id=instrument_id,
     client_id=ClientId("BINANCE"),
     order_qty=Quantity.from_str("0.01"),
-    limit_aggressive=True,       # marketable limit paths crossing the spread
+    limit_aggressive=True,  # marketable limit paths crossing the spread
 )
 
 # `test_modify_rejected` and `test_reject_post_only` are Rust builder fields in

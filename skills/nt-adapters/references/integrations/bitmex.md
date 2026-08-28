@@ -155,10 +155,14 @@ perp_id = InstrumentId.from_str("XBTUSD.BITMEX")  # Bitcoin perpetual (inverse)
 linear_perp_id = InstrumentId.from_str("ETHUSDT.BITMEX")  # Ethereum perpetual (linear)
 
 # Futures contract (June 2024)
-futures_id = InstrumentId.from_str("XBTM24.BITMEX")  # Bitcoin futures expiring June 2024
+futures_id = InstrumentId.from_str(
+    "XBTM24.BITMEX"
+)  # Bitcoin futures expiring June 2024
 
 # Prediction market contracts
-prediction_id = InstrumentId.from_str("P_XBTETFV23.BITMEX")  # Bitcoin ETF SEC approval prediction expiring October 2023
+prediction_id = InstrumentId.from_str(
+    "P_XBTETFV23.BITMEX"
+)  # Bitcoin ETF SEC approval prediction expiring October 2023
 ```
 
 :::note
@@ -310,10 +314,14 @@ order = self.order_factory.limit(
     quantity=qty,
     price=price,  # Required for LIMIT order, but overridden by peg
 )
-self.submit_order(order, params={"peg_price_type": "PrimaryPeg", "peg_offset_value": "0"})
+self.submit_order(
+    order, params={"peg_price_type": "PrimaryPeg", "peg_offset_value": "0"}
+)
 
 # Pegged to mid-price with a -0.5 offset
-self.submit_order(order, params={"peg_price_type": "MidPricePeg", "peg_offset_value": "-0.5"})
+self.submit_order(
+    order, params={"peg_price_type": "MidPricePeg", "peg_offset_value": "-0.5"}
+)
 ```
 
 :::note

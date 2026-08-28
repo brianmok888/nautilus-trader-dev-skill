@@ -215,6 +215,7 @@ from nautilus_trader.indicators import (
     BollingerBands,
 )
 
+
 class MyStrategy(Strategy):
     def __init__(self, config):
         super().__init__(config)
@@ -260,8 +261,8 @@ def on_start(self):
 ema = ExponentialMovingAverage(20)
 ema.update_raw(1.2345)
 ema.update_raw(1.2350)
-print(ema.value)       # Current EMA value
-print(ema.initialized) # True after 20 updates
+print(ema.value)  # Current EMA value
+print(ema.initialized)  # True after 20 updates
 ```
 
 ### Using MovingAverageFactory
@@ -284,9 +285,9 @@ stoch.value_k  # %K line
 stoch.value_d  # %D line
 
 bbands = BollingerBands(20, k=2.0)
-bbands.upper   # Upper band
+bbands.upper  # Upper band
 bbands.middle  # Middle band (MA)
-bbands.lower   # Lower band
+bbands.lower  # Lower band
 
 ichimoku = IchimokuCloud()
 ichimoku.tenkan_sen

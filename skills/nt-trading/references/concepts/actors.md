@@ -25,8 +25,8 @@ from nautilus_trader.common.actor import Actor
 
 
 class MyActorConfig(ActorConfig):
-    instrument_id: InstrumentId   # example value: "ETHUSDT-PERP.BINANCE"
-    bar_type: BarType             # example value: "ETHUSDT-PERP.BINANCE-15-MINUTE[LAST]-INTERNAL"
+    instrument_id: InstrumentId  # example value: "ETHUSDT-PERP.BINANCE"
+    bar_type: BarType  # example value: "ETHUSDT-PERP.BINANCE-15-MINUTE[LAST]-INTERNAL"
     lookback_period: int = 10
 
 
@@ -90,13 +90,16 @@ def on_start(self) -> None:
     # Set a one-time alert
     self.clock.set_alert("my_alert", self.clock.utc_now() + timedelta(minutes=1))
 
+
 def on_stop(self) -> None:
     # Cancel timers to prevent resource leaks across stop/resume cycles
     self.clock.cancel_timer("my_timer")
 
+
 def on_timer(self, event: TimeEvent) -> None:
     if event.name == "my_timer":
         self.log.info("Timer fired!")
+
 
 def on_alert(self, event: TimeEvent) -> None:
     if event.name == "my_alert":
@@ -183,7 +186,7 @@ from nautilus_trader.model import ClientId, InstrumentId
 
 class MyActorConfig(ActorConfig):
     instrument_id: InstrumentId  # example value: "AAPL.XNAS"
-    bar_type: BarType            # example value: "AAPL.XNAS-1-MINUTE-LAST-EXTERNAL"
+    bar_type: BarType  # example value: "AAPL.XNAS-1-MINUTE-LAST-EXTERNAL"
 
 
 class MyActor(Actor):
@@ -196,11 +199,11 @@ class MyActor(Actor):
         self.request_bars(
             bar_type=self.bar_type,
             # Many optional parameters
-            start=None,                # pd.Timestamp | None
-            end=None,                  # pd.Timestamp | None
-            callback=None,             # Callable[[UUID4], None] | None
+            start=None,  # pd.Timestamp | None
+            end=None,  # pd.Timestamp | None
+            callback=None,  # Callable[[UUID4], None] | None
             update_catalog_mode=None,  # UpdateCatalogMode | None
-            params=None,               # dict[str, Any] | None
+            params=None,  # dict[str, Any] | None
         )
 
         # Subscribe to real-time data - will be processed by on_bar() handler
@@ -208,7 +211,7 @@ class MyActor(Actor):
             bar_type=self.bar_type,
             # Many optional parameters
             client_id=None,  # ClientId, optional
-            params=None,     # dict[str, Any], optional
+            params=None,  # dict[str, Any], optional
         )
 
     def on_historical_data(self, data: Data) -> None:

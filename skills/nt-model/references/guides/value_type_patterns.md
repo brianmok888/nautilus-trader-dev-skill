@@ -44,8 +44,8 @@ All values are stored as scaled integers. The `raw` property exposes this:
 
 ```python
 price = Price.from_str("1.23456")
-print(price.raw)        # Scaled integer (e.g., 1234560000 in standard mode)
-print(price.precision)   # 5
+print(price.raw)  # Scaled integer (e.g., 1234560000 in standard mode)
+print(price.precision)  # 5
 ```
 
 The relationship is: `display_value = raw / FIXED_SCALAR`
@@ -68,23 +68,24 @@ Non-negative value for trade sizes, order amounts, and positions.
 from nautilus_trader.model.objects import Quantity
 
 # From float + explicit precision
-qty = Quantity(100.5, precision=1)          # "100.5"
+qty = Quantity(100.5, precision=1)  # "100.5"
 
 # From string (precision inferred from decimal places)
-qty = Quantity.from_str("100.50")           # precision=2
+qty = Quantity.from_str("100.50")  # precision=2
 
 # From integer (precision=0)
-qty = Quantity.from_int(100)                # "100"
+qty = Quantity.from_int(100)  # "100"
 
 # From raw fixed-point value (advanced/internal use)
-qty = Quantity.from_raw(1005000000000, 1)   # "100.5" in standard mode
+qty = Quantity.from_raw(1005000000000, 1)  # "100.5" in standard mode
 
 # From Decimal (precision inferred)
 from decimal import Decimal
+
 qty = Quantity.from_decimal(Decimal("100.50"))  # precision=2
 
 # Zero value
-qty = Quantity.zero(precision=2)            # "0.00"
+qty = Quantity.zero(precision=2)  # "0.00"
 ```
 
 ### Key Properties
@@ -105,17 +106,17 @@ qty1 = Quantity(100, precision=0)
 qty2 = Quantity(50, precision=0)
 
 # Quantity + Quantity -> Quantity (preserves max precision)
-result = qty1 + qty2                # Quantity("150")
+result = qty1 + qty2  # Quantity("150")
 
 # Quantity - Quantity -> Quantity (raises ValueError if result would be negative)
-result = qty1 - qty2                # Quantity("50")
+result = qty1 - qty2  # Quantity("50")
 
 # Quantity * anything -> Decimal (or float if either operand is float)
-result = qty1 * 2                   # Decimal("200")
-result = qty1 * 2.0                 # float 200.0
+result = qty1 * 2  # Decimal("200")
+result = qty1 * 2.0  # float 200.0
 
 # Quantity / anything -> Decimal (or float)
-result = qty1 / qty2                # Decimal("2")
+result = qty1 / qty2  # Decimal("2")
 
 # saturating_sub: subtraction that clamps to zero instead of raising
 result = qty2.saturating_sub(qty1)  # Quantity("0")
@@ -153,6 +154,7 @@ price = Price.from_raw(12345000000000, 4)
 
 # From Decimal (precision inferred)
 from decimal import Decimal
+
 price = Price.from_decimal(Decimal("1.2345"))
 ```
 
@@ -197,6 +199,7 @@ money = Money.from_raw(10005000000000, usd)
 
 # From Decimal + currency
 from decimal import Decimal
+
 money = Money.from_decimal(Decimal("1000.50"), usd)
 ```
 
@@ -214,13 +217,13 @@ usd1 = Money(100, Currency.from_str("USD"))
 usd2 = Money(50, Currency.from_str("USD"))
 
 # Money + Money -> Money (currencies must match)
-result = usd1 + usd2           # Money(150.00, USD)
+result = usd1 + usd2  # Money(150.00, USD)
 
 # Money - Money -> Money (currencies must match, can be negative)
-result = usd2 - usd1           # Money(-50.00, USD)
+result = usd2 - usd1  # Money(-50.00, USD)
 
 # Money * scalar -> Decimal (or float)
-result = usd1 * 2              # Decimal("200.00")
+result = usd1 * 2  # Decimal("200.00")
 ```
 
 Comparing or adding Money with different currencies raises a `Condition` error.
@@ -229,8 +232,8 @@ Comparing or adding Money with different currencies raises a `Condition` error.
 
 ```python
 money = Money(1234567.89, Currency.from_str("USD"))
-str(money)                      # "1234567.89 USD"
-money.to_formatted_str()        # "1_234_567.89 USD"
+str(money)  # "1234567.89 USD"
+money.to_formatted_str()  # "1_234_567.89 USD"
 ```
 
 ## Currency
@@ -244,14 +247,14 @@ from nautilus_trader.model.objects import Currency
 from nautilus_trader.core.rust.model import CurrencyType
 
 # From the built-in internal map (fiat + common crypto)
-usd = Currency.from_str("USD")          # Looks up internal map first
-btc = Currency.from_str("BTC")          # Also in internal map
+usd = Currency.from_str("USD")  # Looks up internal map first
+btc = Currency.from_str("BTC")  # Also in internal map
 
 # Strict mode: returns None if not found (no auto-creation)
 result = Currency.from_str("UNKNOWN", strict=True)  # None
 
 # Non-strict mode (default): unknown codes auto-create as crypto with precision=8
-token = Currency.from_str("MYTOKEN")    # Auto-created, precision=8, type=CRYPTO
+token = Currency.from_str("MYTOKEN")  # Auto-created, precision=8, type=CRYPTO
 
 # From internal map only (returns None if not found)
 eur = Currency.from_internal_map("EUR")
@@ -290,8 +293,8 @@ pre-registered constants:
 from nautilus_trader.model.currencies import USD, EUR, GBP, BTC, ETH
 
 # These are ready to use
-print(USD.precision)    # 2
-print(BTC.precision)    # 8
+print(USD.precision)  # 2
+print(BTC.precision)  # 8
 ```
 
 ### Built-in Fiat Currencies
@@ -428,7 +431,7 @@ When any operand in arithmetic is a `float`, the result is a `float`:
 
 ```python
 qty = Quantity(100, precision=0)
-result = qty * 1.5      # float: 150.0 (not Decimal)
+result = qty * 1.5  # float: 150.0 (not Decimal)
 result = qty * Decimal("1.5")  # Decimal: 150.0
 ```
 
@@ -440,9 +443,9 @@ When adding or subtracting two values with different precisions, the result
 uses the **maximum** precision of the two operands:
 
 ```python
-p1 = Price.from_str("1.23")      # precision=2
-p2 = Price.from_str("0.001")     # precision=3
-result = p1 + p2                  # precision=3, value="1.231"
+p1 = Price.from_str("1.23")  # precision=2
+p2 = Price.from_str("0.001")  # precision=3
+result = p1 + p2  # precision=3, value="1.231"
 ```
 
 ### Quantity cannot go negative
@@ -451,7 +454,7 @@ result = p1 + p2                  # precision=3, value="1.231"
 q1 = Quantity(10, precision=0)
 q2 = Quantity(20, precision=0)
 
-q1 - q2   # ValueError: subtraction would result in negative value
+q1 - q2  # ValueError: subtraction would result in negative value
 q1.saturating_sub(q2)  # Quantity("0") -- safe alternative
 ```
 
@@ -461,6 +464,6 @@ q1.saturating_sub(q2)  # Quantity("0") -- safe alternative
 usd = Money(100, Currency.from_str("USD"))
 eur = Money(100, Currency.from_str("EUR"))
 
-usd + eur   # Raises Condition error: currency != other.currency
+usd + eur  # Raises Condition error: currency != other.currency
 usd == eur  # Raises Condition error: currency != other.currency
 ```

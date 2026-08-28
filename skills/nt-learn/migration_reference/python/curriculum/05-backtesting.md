@@ -100,7 +100,11 @@ Key difference: strategies are referenced by **import path strings**, not instan
 
 ```python
 import pandas as pd
-from nautilus_trader.persistence.wranglers import BarDataWrangler, QuoteTickDataWrangler, TradeTickDataWrangler
+from nautilus_trader.persistence.wranglers import (
+    BarDataWrangler,
+    QuoteTickDataWrangler,
+    TradeTickDataWrangler,
+)
 
 # Bars
 df = pd.read_csv("data.csv", index_col="timestamp", parse_dates=True)
@@ -238,6 +242,7 @@ analyzer = engine.portfolio.analyzer
 
 # Register custom statistics
 from nautilus_trader.analysis.statistic import PortfolioStatistic
+
 analyzer.register_statistic(MyCustomStat())
 ```
 

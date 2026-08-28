@@ -29,8 +29,14 @@ config = TradingNodeConfig(
 ```python
 # NT v2 compatibility note: Python live migration/reference-only configuration.
 config = TradingNodeConfig(
-    data_clients={"MYDEX": MyDEXDataClientConfig(rpc_url="https://...", wallet_address="0x...")},
-    exec_clients={"MYDEX": MyDEXExecClientConfig(rpc_url="https://...", private_key=SecretStr(...))},
+    data_clients={
+        "MYDEX": MyDEXDataClientConfig(rpc_url="https://...", wallet_address="0x...")
+    },
+    exec_clients={
+        "MYDEX": MyDEXExecClientConfig(
+            rpc_url="https://...", private_key=SecretStr(...)
+        )
+    },
     data_client_factories={"MYDEX": MyDEXLiveDataClientFactory},
     exec_client_factories={"MYDEX": MyDEXLiveExecClientFactory},
 )

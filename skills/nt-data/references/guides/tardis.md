@@ -616,7 +616,9 @@ You can also load specific instrument definitions in the usual way:
 from nautilus_trader.config import InstrumentProviderConfig
 
 instrument_ids = [
-    InstrumentId.from_str("BTCUSDT-PERP.BINANCE"),  # Will use the 'binance-futures' exchange
+    InstrumentId.from_str(
+        "BTCUSDT-PERP.BINANCE"
+    ),  # Will use the 'binance-futures' exchange
     InstrumentId.from_str("BTCUSDT.BINANCE"),  # Will use the 'binance' exchange
 ]
 instrument_provider_config = InstrumentProviderConfig(load_ids=instrument_ids)

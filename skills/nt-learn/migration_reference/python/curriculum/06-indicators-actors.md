@@ -59,6 +59,7 @@ def on_start(self) -> None:
     self.register_indicator_for_bars(self.bar_type, self.primary_ema)
     self.subscribe_bars(self.bar_type)
 
+
 def on_bar(self, bar) -> None:
     if not self.primary_ema.initialized:
         return
@@ -79,10 +80,12 @@ Indicators only expose the current value. Track history with a deque:
 ```python
 from collections import deque
 
+
 def on_start(self) -> None:
     self.ema = ExponentialMovingAverage(10)
     self.ema_history = deque(maxlen=100)
     self.register_indicator_for_bars(self.bar_type, self.ema)
+
 
 def on_bar(self, bar) -> None:
     if self.ema.initialized:
@@ -132,9 +135,11 @@ Lightweight notifications with a single primitive value (str, int, float). No cu
 # Publisher (Actor or Strategy)
 self.publish_signal(name="regime", value="trending", ts_event=self.clock.timestamp_ns())
 
+
 # Subscriber (Strategy)
 def on_start(self) -> None:
     self.subscribe_signal("regime")
+
 
 def on_signal(self, signal) -> None:
     match signal.value:
@@ -154,18 +159,22 @@ For complex data with multiple fields. Use `@customdataclass` for serialization 
 from nautilus_trader.core.data import Data
 from nautilus_trader.model.custom import customdataclass
 
+
 @customdataclass
 class RegimeData(Data):
     regime: str
     confidence: float
     transition_prob: float
 
+
 # Publisher
 self.publish_data(DataType(RegimeData), data)
+
 
 # Subscriber
 def on_start(self) -> None:
     self.subscribe_data(DataType(RegimeData))
+
 
 def on_data(self, data) -> None:
     if isinstance(data, RegimeData):
@@ -182,10 +191,12 @@ Any Python object to any topic string.
 from nautilus_trader.common.events import Event
 from dataclasses import dataclass
 
+
 @dataclass
 class MyEvent(Event):
     value: float
     TOPIC: str = "my.custom.topic"
+
 
 # Publisher
 self.msgbus.publish("my.custom.topic", event)
@@ -207,10 +218,12 @@ self.msgbus.subscribe("my.custom.topic", self.on_my_event)
 ```python
 from nautilus_trader.trading import Actor, ActorConfig
 
+
 class RegimeDetectorConfig(ActorConfig, frozen=True):
     instrument_id: InstrumentId
     bar_type: BarType
     lookback: int = 50
+
 
 class RegimeDetector(Actor):
     def __init__(self, config: RegimeDetectorConfig) -> None:
@@ -243,6 +256,7 @@ Then in your strategy:
 ```python
 def on_start(self) -> None:
     self.subscribe_signal("regime")
+
 
 def on_signal(self, signal) -> None:
     if signal.value == "high_vol":

@@ -8,7 +8,10 @@ NT v2 compatibility note: legacy Cython/v1 adapter guidance in this whole file i
 ### Configure Existing Adapter
 
 ```python
-from nautilus_trader.adapters.binance.config import BinanceDataClientConfig, BinanceExecutionClientConfig
+from nautilus_trader.adapters.binance.config import (
+    BinanceDataClientConfig,
+    BinanceExecutionClientConfig,
+)
 
 data_config = BinanceDataClientConfig(
     api_key="...",
@@ -45,6 +48,7 @@ Each adapter follows the same config pattern:
 
 ```python
 from nautilus_trader.adapters.binance.providers import BinanceInstrumentProvider
+
 
 class MyInstrumentProvider(BinanceInstrumentProvider):
     async def load_all_async(self, filters=None):

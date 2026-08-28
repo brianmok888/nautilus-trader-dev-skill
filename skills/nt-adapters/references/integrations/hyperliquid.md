@@ -282,7 +282,7 @@ HyperliquidExecClientConfig(
 Once HIP-3 instruments are loaded, you can filter them with `InstrumentProviderConfig`:
 
 ```python
-instrument_provider=InstrumentProviderConfig(
+instrument_provider = InstrumentProviderConfig(
     load_all=True,
     filters={"market_types": ["perp_hip3"]},
 )
@@ -489,7 +489,7 @@ The instrument provider supports filtering when loading instruments via
 Example loading only perpetual instruments:
 
 ```python
-instrument_provider=InstrumentProviderConfig(
+instrument_provider = InstrumentProviderConfig(
     load_all=True,
     filters={"market_types": ["perp"]},
 )
@@ -645,6 +645,7 @@ If you disable normalization, you can apply the same rounding in your strategy:
 
 ```python
 from decimal import Decimal, ROUND_DOWN
+
 
 def round_to_sig_figs(price: Decimal, sig_figs: int = 5) -> Decimal:
     if price == 0:

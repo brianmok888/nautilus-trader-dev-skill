@@ -17,9 +17,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8ecab1ce90d9790b1e18e162842decbae4d9de57`; current-develop drift is version-scoped in `README.md`. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed the skill domain's scoped examples and owners against `8ecab1ce90d9790b1e18e162842decbae4d9de57`; schema-v2 provenance is recorded in `references/g2-evidence/nt-architect.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed the skill domain's scoped examples and owners against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-architect.json`. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
 | G4 Lane and API shape | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -161,6 +161,8 @@ self.publish_signal(name="regime_state", value="trending", ts_event=ts)
 
 # Subscriber (Strategy)
 self.subscribe_signal("regime_state")
+
+
 def on_signal(self, signal):
     if signal.value == "trending":
         self.enable_trend_following()
@@ -172,12 +174,14 @@ from nautilus_trader.model.custom import customdataclass
 from nautilus_trader.core.data import Data
 from nautilus_trader.model.identifiers import InstrumentId
 
+
 @customdataclass
 class RegimeData(Data):
     instrument_id: InstrumentId = InstrumentId.from_str("BTCUSDT-PERP.BINANCE")
     regime: str = "unknown"
     confidence: float = 0.0
     transition_prob: float = 0.0
+
 
 # Publisher (Actor)
 self.publish_data(
@@ -189,6 +193,8 @@ self.publish_data(
 self.subscribe_data(
     data_type=DataType(RegimeData, metadata={"instrument_id": "BTCUSDT-PERP.BINANCE"}),
 )
+
+
 def on_data(self, data: Data):
     if isinstance(data, RegimeData):
         self.handle_regime(data)
@@ -198,8 +204,11 @@ def on_data(self, data: Data):
 ```python
 from nautilus_trader.core.data import Data
 
+
 class RegimeData(Data):
-    def __init__(self, regime: str, confidence: float, ts_event: int, ts_init: int) -> None:
+    def __init__(
+        self, regime: str, confidence: float, ts_event: int, ts_init: int
+    ) -> None:
         self.regime = regime
         self.confidence = confidence
         self._ts_event = ts_event

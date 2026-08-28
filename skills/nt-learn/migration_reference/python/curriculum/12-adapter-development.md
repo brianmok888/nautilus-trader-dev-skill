@@ -132,11 +132,17 @@ Use the official testing specs:
 ```python
 # Data testing
 DataTesterConfig(client_id, instrument_ids).with_subscribe_trades()
-DataTesterConfig(client_id, instrument_ids).with_subscribe_book_deltas(book_type=BookType.L2_MBP)
+DataTesterConfig(client_id, instrument_ids).with_subscribe_book_deltas(
+    book_type=BookType.L2_MBP
+)
 
 # Execution testing
-ExecTesterConfig(strategy_id, instrument_id, client_id, order_qty).with_enable_limit_buys()
-ExecTesterConfig(strategy_id, instrument_id, client_id, order_qty).with_test_reject_post_only()
+ExecTesterConfig(
+    strategy_id, instrument_id, client_id, order_qty
+).with_enable_limit_buys()
+ExecTesterConfig(
+    strategy_id, instrument_id, client_id, order_qty
+).with_test_reject_post_only()
 ```
 
 ## Exercises

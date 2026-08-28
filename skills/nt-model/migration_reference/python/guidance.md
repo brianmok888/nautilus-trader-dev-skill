@@ -13,7 +13,13 @@ NT v2 compatibility note: legacy Cython/v1 guidance in this file is migration/re
 ### Identifiers
 
 ```python
-from nautilus_trader.model.identifiers import InstrumentId, Venue, Symbol, TraderId, StrategyId
+from nautilus_trader.model.identifiers import (
+    InstrumentId,
+    Venue,
+    Symbol,
+    TraderId,
+    StrategyId,
+)
 
 instrument_id = InstrumentId.from_str("ETHUSDT-PERP.BINANCE")
 venue = Venue("BINANCE")
@@ -48,24 +54,29 @@ total = price * qty  # Returns float
 ### Instruments
 
 ```python
-from nautilus_trader.model.instruments import CurrencyPair, Equity, CryptoPerpetual, FuturesContract
+from nautilus_trader.model.instruments import (
+    CurrencyPair,
+    Equity,
+    CryptoPerpetual,
+    FuturesContract,
+)
 
 # Instruments are typically loaded from adapters or created for backtests
 # Access via cache:
 instrument = self.cache.instrument(instrument_id)
 
 # Key properties:
-instrument.id           # InstrumentId
-instrument.venue        # Venue
-instrument.base_currency    # Currency (for pairs)
-instrument.quote_currency   # Currency
+instrument.id  # InstrumentId
+instrument.venue  # Venue
+instrument.base_currency  # Currency (for pairs)
+instrument.quote_currency  # Currency
 instrument.price_precision  # int
-instrument.size_precision   # int
-instrument.lot_size         # Quantity
-instrument.min_quantity     # Quantity
-instrument.max_quantity     # Quantity
-instrument.min_price        # Price
-instrument.max_price        # Price
+instrument.size_precision  # int
+instrument.lot_size  # Quantity
+instrument.min_quantity  # Quantity
+instrument.max_quantity  # Quantity
+instrument.min_price  # Price
+instrument.max_price  # Price
 
 # Create quantity/price with correct precision:
 qty = instrument.make_qty(1.5)
@@ -98,16 +109,16 @@ SyntheticInstrument is separate from `InstrumentAny` and is not one of these var
 
 ```python
 from nautilus_trader.model.enums import (
-    OrderSide,       # BUY, SELL
-    OrderType,       # MARKET, LIMIT, STOP_MARKET, STOP_LIMIT, etc.
-    TimeInForce,     # GTC, IOC, FOK, GTD, DAY
-    PositionSide,    # LONG, SHORT, FLAT
-    OmsType,         # HEDGING, NETTING
-    AccountType,     # CASH, MARGIN
-    OrderStatus,     # INITIALIZED, SUBMITTED, ACCEPTED, FILLED, CANCELED, etc.
+    OrderSide,  # BUY, SELL
+    OrderType,  # MARKET, LIMIT, STOP_MARKET, STOP_LIMIT, etc.
+    TimeInForce,  # GTC, IOC, FOK, GTD, DAY
+    PositionSide,  # LONG, SHORT, FLAT
+    OmsType,  # HEDGING, NETTING
+    AccountType,  # CASH, MARGIN
+    OrderStatus,  # INITIALIZED, SUBMITTED, ACCEPTED, FILLED, CANCELED, etc.
     BarAggregation,  # TICK, SECOND, MINUTE, HOUR, DAY, etc.
-    PriceType,       # BID, ASK, MID, LAST
-    BookType,        # L1_MBP, L2_MBP, L3_MBO
+    PriceType,  # BID, ASK, MID, LAST
+    BookType,  # L1_MBP, L2_MBP, L3_MBO
 )
 ```
 

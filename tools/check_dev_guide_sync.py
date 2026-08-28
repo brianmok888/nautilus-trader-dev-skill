@@ -63,7 +63,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-08-26"
+CURRENT_SYNC_DATE = "2026-08-28"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.231.0"
 CURRENT_RELEASE_DATE = "2026-08-02"
@@ -161,7 +161,11 @@ INVARIANT_TARGETS = {
         "`Live` / `LIVE`",
     ],
     Path("skills/nt-architect/SKILL.md"): ["message immutability", "crates/adapters/"],
-    Path("skills/nt-implement/SKILL.md"): ["V2 cutover", "crates/adapters/", "no cross-contamination"],
+    Path("skills/nt-implement/SKILL.md"): [
+        "V2 cutover",
+        "crates/adapters/",
+        "no cross-contamination",
+    ],
     Path("skills/nt-backtest/SKILL.md"): ["BacktestEngine"],
     Path("skills/nt-dev/SKILL.md"): ["cargo nextest"],
     Path("skills/nt-dex-adapter/SKILL.md"): ["crates/adapters/"],
@@ -320,7 +324,7 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
         "build()?",
     ],
     Path("references/developer_guide/security.md"): [
-        "TAG=\"v$VERSION\"",
+        'TAG="v$VERSION"',
         "REPO=nautechsystems/nautilus_trader",
         "gh attestation verify",
     ],
@@ -827,7 +831,9 @@ def _contains_terms_in_single_paragraph(text: str, terms: list[str]) -> bool:
 
 
 def _iter_legacy_guidance_files(root: Path) -> list[Path]:
-    files = [root / path for path in LEGACY_GUIDANCE_ROOT_FILES if (root / path).is_file()]
+    files = [
+        root / path for path in LEGACY_GUIDANCE_ROOT_FILES if (root / path).is_file()
+    ]
     for root_name in LEGACY_GUIDANCE_ROOTS:
         base = root / root_name
         if not base.exists():
@@ -840,7 +846,6 @@ def _iter_legacy_guidance_files(root: Path) -> list[Path]:
                 continue
             files.append(path)
     return files
-
 
 
 def _split_guidance_blocks(text: str) -> list[str]:
@@ -1027,7 +1032,9 @@ def _check_unlabelled_legacy_guidance(root: Path, errors: list[str]) -> None:
             context = _block_with_previous_context(blocks, index)
             if _block_has_label(context, LEGACY_LABEL_TERMS):
                 continue
-            errors.append(f"unlabelled legacy/Cython/v1 guidance in {_relative(path, root)}")
+            errors.append(
+                f"unlabelled legacy/Cython/v1 guidance in {_relative(path, root)}"
+            )
             break
 
 
@@ -1063,7 +1070,9 @@ def _check_v2_cutover_language_routing(root: Path, errors: list[str]) -> None:
         stale_rows = [
             line
             for line in _read(readme).splitlines()
-            if re.search(r"\b(Run a backtest|Deploy live trading)\b", line, re.IGNORECASE)
+            if re.search(
+                r"\b(Run a backtest|Deploy live trading)\b", line, re.IGNORECASE
+            )
             and _is_generic_python_builder_route(line)
         ]
         if stale_rows:
@@ -1098,6 +1107,7 @@ def _check_v2_cutover_language_routing(root: Path, errors: list[str]) -> None:
                 "production/performance strategy logic defaults to Python in "
                 "skills/nt-architect/SKILL.md"
             )
+
 
 def _check_entry_skill(root: Path, errors: list[str]) -> None:
     absolute = root / ENTRY_SKILL
@@ -1144,7 +1154,9 @@ def _check_required_guide_files(root: Path, errors: list[str]) -> None:
         if f"target: {CURRENT_TARGET}" not in text:
             errors.append(f"stale target in {relative.as_posix()}")
         if f"legacy_policy: {PINNED_SNAPSHOT_LEGACY_POLICY}" not in metadata:
-            errors.append(f"missing pinned snapshot legacy policy in {relative.as_posix()}")
+            errors.append(
+                f"missing pinned snapshot legacy policy in {relative.as_posix()}"
+            )
 
 
 def _check_source_sync_metadata(
@@ -1283,8 +1295,14 @@ def _check_nt_v2_readiness_gates(root: Path, errors: list[str]) -> None:
         next_heading = re.search(r"\n## (?!#)", section)
         if next_heading:
             section = section[: next_heading.start()]
-        rows = [line.strip() for line in section.splitlines() if line.lstrip().startswith("|")]
-        rows = [row for row in rows if not set(row.replace(" ", "")).issubset({"|", "-"})]
+        rows = [
+            line.strip()
+            for line in section.splitlines()
+            if line.lstrip().startswith("|")
+        ]
+        rows = [
+            row for row in rows if not set(row.replace(" ", "")).issubset({"|", "-"})
+        ]
         if not rows:
             errors.append(f"missing NT V2 readiness table in {relative.as_posix()}")
             continue

@@ -12,6 +12,7 @@ Subclass `Indicator` and implement `handle_bar()`, `update_raw()`, `_reset()`:
 ```python
 from nautilus_trader.indicators import Indicator
 
+
 class MyIndicator(Indicator):
     def __init__(self, period: int):
         super().__init__(params=[period])
@@ -41,6 +42,7 @@ See `templates/legacy_migration/indicator.py` for full template.
 
 ```python
 from nautilus_trader.analysis.statistic import PortfolioStatistic
+
 
 class MyStatistic(PortfolioStatistic):
     def calculate_from_returns(self, returns):

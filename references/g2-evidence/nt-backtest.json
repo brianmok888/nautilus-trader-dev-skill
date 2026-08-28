@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "e16d77875e718670e720c7f179111476876017f7e48add9bba59310b6617c889",
+  "owned_content_sha256": "c390c2469c1bb7eb29b6e4ea244b304a10a3a257a175698d958e5b46ea91898a",
   "schema_version": 2,
   "scope": "upstream:crates/backtest-examples",
   "skill": "nt-backtest",
@@ -16,11 +16,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.929599,
+      "duration_seconds": 247.478586,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "8ecab1ce90d9790b1e18e162842decbae4d9de57",
-  "verified_at": "2026-08-26T07:22:09.550230+00:00"
+  "upstream_commit": "8e51f957c6e31b28de14fbe244b3c048e291ddd7",
+  "verified_at": "2026-08-28T02:08:08.310545+00:00"
 }

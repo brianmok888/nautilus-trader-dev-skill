@@ -37,9 +37,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8ecab1ce90d9790b1e18e162842decbae4d9de57`; current-develop drift is version-scoped in `README.md`. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed the skill domain's scoped examples and owners against `8ecab1ce90d9790b1e18e162842decbae4d9de57`; schema-v2 provenance is recorded in `references/g2-evidence/nt-review.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed the skill domain's scoped examples and owners against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-review.json`. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
 | G4 Lane and API shape | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -152,16 +152,19 @@ Check that lifecycle methods are correctly implemented:
 def __init__(self, config: MyConfig) -> None:
     super().__init__(config)  # Must be first
 
+
 # REQUIRED: Initialize state in on_start, not __init__
 def on_start(self) -> None:
     self.instrument = self.cache.instrument(self.config.instrument_id)
     self.request_bars(self.config.bar_type)  # Historical first
     self.subscribe_bars(self.config.bar_type)  # Then live
 
+
 # REQUIRED: Cleanup in on_stop
 def on_stop(self) -> None:
     self.cancel_all_orders(self.config.instrument_id)
     self.unsubscribe_bars(self.config.bar_type)
+
 
 # REQUIRED: Reset state for reuse
 def on_reset(self) -> None:
@@ -246,11 +249,14 @@ def on_order_rejected(self, event: OrderRejected) -> None:
     self.log.warning(f"Order rejected: {event.reason}")
     self._handle_rejection()
 
+
 def on_order_canceled(self, event: OrderCanceled) -> None:
     self.log.info(f"Order canceled: {event.client_order_id}")
 
+
 def on_order_filled(self, event: OrderFilled) -> None:
     self.log.info(f"Filled: {event.last_qty} @ {event.last_px}")
+
 
 # CORRECT: Cancel before closing
 def _close_position(self) -> None:
@@ -308,9 +314,11 @@ def on_bar(self, bar: Bar) -> None:
     data = requests.get("http://api.example.com")  # BLOCKS!
     model = pickle.load(open("model.pkl", "rb"))  # BLOCKS!
 
+
 # CORRECT: Load in on_start, use cached
 def on_start(self) -> None:
     self.model = self._load_model()
+
 
 def on_bar(self, bar: Bar) -> None:
     result = self.model.predict(features)  # Uses preloaded model
@@ -333,6 +341,7 @@ self.bar_buffer: deque[Bar] = deque(maxlen=100)
 # WRONG: Unbounded growth
 self.all_bars: list[Bar] = []  # Grows forever!
 
+
 # CORRECT: Clear on reset
 def on_reset(self) -> None:
     self.bar_buffer.clear()
@@ -349,6 +358,7 @@ def on_reset(self) -> None:
 ```python
 # CORRECT: Use numpy for vectorized operations
 import numpy as np
+
 closes = np.array([float(b.close) for b in self.bars])
 mean = np.mean(closes)
 
@@ -371,14 +381,19 @@ current_time = self.clock.utc_now()
 
 # WRONG: System time (breaks backtest determinism)
 import datetime
+
 current_time = datetime.datetime.utcnow()
+
 
 # CORRECT: Deterministic behavior
 def _calculate_signal(self, bar: Bar) -> float:
     return self.ema.value - self.sma.value
 
+
 # WRONG: Non-deterministic
 import random
+
+
 def _calculate_signal(self, bar: Bar) -> float:
     return random.random()  # Different each run!
 ```
@@ -393,6 +408,7 @@ class MyStrategy(Strategy):
     def __init__(self, config: MyConfig) -> None:
         super().__init__(config)
         # No hardcoded dependencies
+
 
 # BAD: Hardcoded dependencies
 class MyStrategy(Strategy):
@@ -500,18 +516,18 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 ```python
 # CORRECT: Proper timeout configuration
 config = TradingNodeConfig(
-    timeout_connection=30.0,      # Allow time for venue connection
+    timeout_connection=30.0,  # Allow time for venue connection
     timeout_reconciliation=10.0,  # Allow time for state sync
-    timeout_portfolio=10.0,       # Allow time for portfolio init
-    timeout_disconnection=10.0,   # Allow time for graceful shutdown
+    timeout_portfolio=10.0,  # Allow time for portfolio init
+    timeout_disconnection=10.0,  # Allow time for graceful shutdown
 )
 
 # CORRECT: Execution engine configured for resilience
-exec_engine=LiveExecEngineConfig(
-    reconciliation=True,                     # Enable startup reconciliation
-    inflight_check_interval_ms=2000,         # Check in-flight orders
-    open_check_interval_secs=10.0,           # Poll open orders
-    open_check_lookback_mins=60,             # Don't reduce below 60
+exec_engine = LiveExecEngineConfig(
+    reconciliation=True,  # Enable startup reconciliation
+    inflight_check_interval_ms=2000,  # Check in-flight orders
+    open_check_interval_secs=10.0,  # Poll open orders
+    open_check_lookback_mins=60,  # Don't reduce below 60
     reconciliation_startup_delay_secs=10.0,  # Don't reduce below 10
 )
 ```
@@ -530,9 +546,10 @@ Check for proper handling of execution state:
 # CORRECT: Strategy claims external orders
 config = StrategyConfig(
     external_order_claims=["BTCUSDT-PERP.BINANCE"],  # Claim orders for this instrument
-    manage_contingent_orders=True,                   # Auto-manage OCO/OUO
-    manage_gtd_expiry=True,                          # Handle GTD expirations
+    manage_contingent_orders=True,  # Auto-manage OCO/OUO
+    manage_gtd_expiry=True,  # Handle GTD expirations
 )
+
 
 # CORRECT: Handle reconciliation scenarios in strategy
 def on_start(self) -> None:
@@ -588,12 +605,15 @@ def on_order_rejected(self, event: OrderRejected) -> None:
     self.log.warning(f"Order rejected: {event.reason}")
     self._handle_rejection(event)
 
+
 def on_order_canceled(self, event: OrderCanceled) -> None:
     self._pending_orders.discard(event.client_order_id)
+
 
 def on_order_expired(self, event: OrderExpired) -> None:
     self.log.info(f"Order expired: {event.client_order_id}")
     self._evaluate_resubmission(event)
+
 
 def on_order_filled(self, event: OrderFilled) -> None:
     if event.is_partial:
@@ -638,10 +658,11 @@ NT v2 compatibility note: v1.x live checklist items below are migration/referenc
 # CORRECT: Position limits configured
 config = StrategyConfig(
     max_long_position=100.0,  # Max long quantity
-    max_short_position=100.0, # Max short quantity
-    max_notional_exposure=100_000.0, # Max total notional
-    max_open_orders=10,       # Max concurrent open orders
+    max_short_position=100.0,  # Max short quantity
+    max_notional_exposure=100_000.0,  # Max total notional
+    max_open_orders=10,  # Max concurrent open orders
 )
+
 
 # CORRECT: Circuit breaker logic
 def on_bar(self, bar: Bar) -> None:
@@ -668,7 +689,9 @@ else:
     order_type = OrderType.LIMIT
 
 # CORRECT: Handling exchange-specific fees
-fee_rate = self.instrument.maker_fee_rate if is_maker else self.instrument.taker_fee_rate
+fee_rate = (
+    self.instrument.maker_fee_rate if is_maker else self.instrument.taker_fee_rate
+)
 ```
 
 **Red flags:**

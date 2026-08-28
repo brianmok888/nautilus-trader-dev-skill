@@ -185,7 +185,10 @@ determine how a primary order is split into a series of spawned orders.
 from decimal import Decimal
 from nautilus_trader.model.data import BarType
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
-from nautilus_trader.examples.strategies.ema_cross_twap import EMACrossTWAP, EMACrossTWAPConfig
+from nautilus_trader.examples.strategies.ema_cross_twap import (
+    EMACrossTWAP,
+    EMACrossTWAPConfig,
+)
 
 # Configure your strategy
 config = EMACrossTWAPConfig(
@@ -194,8 +197,8 @@ config = EMACrossTWAPConfig(
     trade_size=Decimal("0.05"),
     fast_ema_period=10,
     slow_ema_period=20,
-    twap_horizon_secs=10.0,   # execution algorithm parameter (total horizon in seconds)
-    twap_interval_secs=2.5,    # execution algorithm parameter (seconds between orders)
+    twap_horizon_secs=10.0,  # execution algorithm parameter (total horizon in seconds)
+    twap_interval_secs=2.5,  # execution algorithm parameter (seconds between orders)
 )
 
 # Instantiate your strategy

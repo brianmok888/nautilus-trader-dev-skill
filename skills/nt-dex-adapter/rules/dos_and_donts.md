@@ -22,6 +22,7 @@ async def load_all_async(self) -> None:
         instrument = self._parse_pool(pool)
         self._instruments[instrument.id] = instrument
 
+
 async def load_ids_async(self, instrument_ids: list[InstrumentId]) -> None:
     """Load specific pools by ID (for targeted reconnects)."""
     for iid in instrument_ids:
@@ -57,7 +58,7 @@ catalog.write_data(trade_ticks)
 # For Uniswap V2-style: x * y = k
 # price = reserve_quote / reserve_base
 ask_price = reserve_quote / reserve_base  # token0/token1 in quote units
-bid_price = ask_price * (1 - fee_rate)    # Effective bid includes fee
+bid_price = ask_price * (1 - fee_rate)  # Effective bid includes fee
 ```
 
 See `migration_reference/python/templates/dex_order_book_builder.py` for a full implementation.
@@ -146,11 +147,13 @@ else:
 async def _update_account_state(self) -> None:
     balances = await self._client.fetch_wallet_balances()
     self.generate_account_state(
-        balances=[AccountBalance(
-            total=Money(balances["USDT"], USDT),
-            locked=Money(0, USDT),
-            free=Money(balances["USDT"], USDT),
-        )],
+        balances=[
+            AccountBalance(
+                total=Money(balances["USDT"], USDT),
+                locked=Money(0, USDT),
+                free=Money(balances["USDT"], USDT),
+            )
+        ],
         margins=[],
         reported=True,
         ts_event=self.clock.timestamp_ns(),
@@ -183,7 +186,7 @@ class MyDEXExecClientConfig(LiveExecClientConfig, frozen=True):
 
 ### Rust Core Patterns (DEX-specific)
 
-**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `8ecab1ce90d9790b1e18e162842decbae4d9de57` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
+**DO** use `get_runtime().spawn()` for production adapter tasks; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules).
 ```rust
 use nautilus_common::live::get_runtime;
 
@@ -234,8 +237,11 @@ fill_price = reserve_quote * price_impact / amount_in
 class Config(LiveExecClientConfig):
     private_key: str
 
+
 # ✅ CORRECT
 from pydantic import SecretStr
+
+
 class Config(LiveExecClientConfig):
     private_key: SecretStr
 ```
@@ -256,7 +262,7 @@ safe_gas_limit = int(estimated_gas * 1.2)
 
 ### Rust Conventions
 
-**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `8ecab1ce90d9790b1e18e162842decbae4d9de57` adapter test modules).
+**DON'T** use `tokio::spawn()` for adapter production tasks; deterministic tests may use it on their own runtime (upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7` adapter test modules).
 ```rust
 // ❌ WRONG — panics from Python threads
 tokio::spawn(async move { ... });

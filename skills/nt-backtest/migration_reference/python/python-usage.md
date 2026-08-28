@@ -90,11 +90,11 @@ engine.trader.generate_positions_report()
 ```python
 BacktestVenueConfig(
     name="SIM",
-    oms_type="HEDGING",       # HEDGING or NETTING
-    account_type="MARGIN",     # CASH or MARGIN
+    oms_type="HEDGING",  # HEDGING or NETTING
+    account_type="MARGIN",  # CASH or MARGIN
     base_currency="USD",
     starting_balances=["1_000_000 USD"],
-    fill_model=FillModel(),    # Optional custom fill model
+    fill_model=FillModel(),  # Optional custom fill model
     # latency_model=LatencyModel(), # Optional latency simulation
 )
 ```

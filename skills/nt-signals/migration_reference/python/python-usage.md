@@ -45,16 +45,21 @@ from nautilus_trader.model.enums import BarAggregation, PriceType
 bar_type = BarType.from_str("ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL")
 
 # Tick bars
-tick_bars = BarSpecification(step=100, aggregation=BarAggregation.TICK, price_type=PriceType.LAST)
+tick_bars = BarSpecification(
+    step=100, aggregation=BarAggregation.TICK, price_type=PriceType.LAST
+)
 
 # Volume bars
-vol_bars = BarSpecification(step=1000, aggregation=BarAggregation.VOLUME, price_type=PriceType.LAST)
+vol_bars = BarSpecification(
+    step=1000, aggregation=BarAggregation.VOLUME, price_type=PriceType.LAST
+)
 ```
 
 ### Custom Data Types
 
 ```python
 from nautilus_trader.model.custom import customdataclass
+
 
 @customdataclass
 class MySignalData:

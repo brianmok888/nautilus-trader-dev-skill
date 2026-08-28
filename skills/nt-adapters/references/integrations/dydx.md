@@ -673,7 +673,7 @@ config = TradingNodeConfig(
     exec_clients={
         DYDX: DydxExecutionClientConfig(
             wallet_address=None,  # Falls back to DYDX_TESTNET_WALLET_ADDRESS env var
-            private_key=None,     # Falls back to DYDX_TESTNET_PRIVATE_KEY env var
+            private_key=None,  # Falls back to DYDX_TESTNET_PRIVATE_KEY env var
             subaccount=0,
             instrument_provider=InstrumentProviderConfig(load_all=True),
             environment=DydxNetwork.TESTNET,
@@ -774,7 +774,7 @@ config = TradingNodeConfig(
     exec_clients={
         DYDX: DydxExecClientConfig(
             wallet_address=None,  # Falls back to env var
-            private_key=None,     # Falls back to env var
+            private_key=None,  # Falls back to env var
             subaccount=0,
             instrument_provider=InstrumentProviderConfig(load_all=True),
             environment=DydxNetwork.MAINNET,
@@ -853,8 +853,8 @@ needed.
 
 ```python
 config = DydxExecutionClientConfig(
-    wallet_address="dydx1owner...",   # Owner account (holds margin)
-    private_key="0xapikey...",         # API Trading Key private key
+    wallet_address="dydx1owner...",  # Owner account (holds margin)
+    private_key="0xapikey...",  # API Trading Key private key
     # authenticator_ids resolved automatically
 )
 ```

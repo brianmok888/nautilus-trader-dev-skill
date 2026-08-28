@@ -53,6 +53,7 @@ a constructor where you can handle initialization. Minimally the base/super clas
 ```python
 from nautilus_trader.trading.strategy import Strategy
 
+
 class MyStrategy(Strategy):
     def __init__(self) -> None:
         super().__init__()  # <-- the superclass must be called to initialize the strategy
@@ -597,8 +598,8 @@ from nautilus_trader.trading.strategy import Strategy
 
 # Configuration definition
 class MyStrategyConfig(StrategyConfig):
-    instrument_id: InstrumentId   # example value: "ETHUSDT-PERP.BINANCE"
-    bar_type: BarType             # example value: "ETHUSDT-PERP.BINANCE-15-MINUTE[LAST]-EXTERNAL"
+    instrument_id: InstrumentId  # example value: "ETHUSDT-PERP.BINANCE"
+    bar_type: BarType  # example value: "ETHUSDT-PERP.BINANCE-15-MINUTE[LAST]-EXTERNAL"
     fast_ema_period: int = 10
     slow_ema_period: int = 20
     trade_size: Decimal
@@ -617,11 +618,13 @@ class MyStrategy(Strategy):
         self.count_of_processed_bars: int = 0
 
     def on_start(self) -> None:
-        self.time_started = self.clock.utc_now()    # Remember time, when strategy started
-        self.subscribe_bars(self.config.bar_type)   # See how configuration data are exposed via `self.config`
+        self.time_started = self.clock.utc_now()  # Remember time, when strategy started
+        self.subscribe_bars(
+            self.config.bar_type
+        )  # See how configuration data are exposed via `self.config`
 
     def on_bar(self, bar: Bar):
-        self.count_of_processed_bars += 1           # Update count of processed bars
+        self.count_of_processed_bars += 1  # Update count of processed bars
 
 
 # Instantiate configuration with specific values. By setting:

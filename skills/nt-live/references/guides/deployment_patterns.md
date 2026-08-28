@@ -218,7 +218,7 @@ and `register_default_client(client)` if `default=True`.
 Use the `"NAME-suffix"` key format for multiple clients from the same adapter:
 
 ```python
-data_clients={
+data_clients = {
     "BINANCE-spot": BinanceLiveDataClientConfig(...),
     "BINANCE-futures": BinanceLiveDataClientConfig(...),
 }
@@ -271,8 +271,8 @@ the primary mechanism for production shutdown.
 ### Programmatic Shutdown
 
 ```python
-node.stop()       # Async stop: disconnects clients, drains queues
-node.dispose()    # Final cleanup: executor, event loop, resources
+node.stop()  # Async stop: disconnects clients, drains queues
+node.dispose()  # Final cleanup: executor, event loop, resources
 ```
 
 ### Timeout Protection in Dispose
@@ -339,7 +339,7 @@ streaming task has its own `_handle_streaming_exception` callback.
 ### Recommended Production Configuration
 
 ```python
-exec_engine=LiveExecEngineConfig(
+exec_engine = LiveExecEngineConfig(
     reconciliation=True,
     reconciliation_lookback_mins=120,
     open_check_interval_secs=10.0,

@@ -78,7 +78,6 @@ from nautilus_trader.config import TradingNodeConfig
 
 config = TradingNodeConfig(
     trader_id="MyTrader-001",
-
     # Component configurations
     cache=CacheConfig(),
     message_bus=MessageBusConfig(),
@@ -86,7 +85,6 @@ config = TradingNodeConfig(
     risk_engine=LiveRiskEngineConfig(),
     exec_engine=LiveExecEngineConfig(),
     portfolio=PortfolioConfig(),
-
     # Client configurations
     data_clients={
         "BINANCE": BinanceDataClientConfig(),
@@ -161,7 +159,6 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 ```python
 config = TradingNodeConfig(
     trader_id="MultiVenue-001",
-
     # Multiple data clients for different market types
     data_clients={
         "BINANCE_SPOT": BinanceDataClientConfig(
@@ -173,7 +170,6 @@ config = TradingNodeConfig(
             testnet=False,
         ),
     },
-
     # Corresponding execution clients
     exec_clients={
         "BINANCE_SPOT": BinanceExecClientConfig(

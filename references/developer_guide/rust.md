@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 8ecab1ce90d9790b1e18e162842decbae4d9de57
-sync_date: 2026-08-26
+source_commit: 8e51f957c6e31b28de14fbe244b3c048e291ddd7
+sync_date: 2026-08-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -297,9 +297,10 @@ Use the shared `FAILED` constant with `CorrectnessResultExt::expect_display` so 
 the standard `Condition failed: ...` prefix. Document the error on `new_checked()` and the panic on
 `new()`.
 
-Types with long constructors dominated by optional fields may also expose a `bon` builder. Put
-`#[bon::bon]` on the inherent implementation and make the builder's finish method delegate to
-`new_checked()`. Keep `new()` and `new_checked()` as the single validation path.
+Types with long constructors dominated by optional fields should expose a `bon` builder instead of
+public positional `new()` and `new_checked()` methods. Put `#[bon::bon]` on the inherent
+implementation and make the builder's finish method delegate to a private validation function or
+perform the validation directly. Keep one validation and defaulting path.
 
 ```rust
 #[builder(start_fn = builder, finish_fn = build)]
@@ -309,7 +310,7 @@ pub fn build_checked(/* same inputs as new_checked */) -> CorrectnessResult<Self
 ```
 
 Required fields remain required in `bon` typestate. Optional fields remain omittable, and `build()`
-returns the same `CorrectnessResult` as `new_checked()`.
+returns the same `CorrectnessResult` as the internal validation path.
 
 ### Conversion patterns
 
@@ -594,7 +595,7 @@ fn test_symbol_is_composite(#[case] input: &str, #[case] expected: bool) {
 ### Test specs
 
 Events with many constructor arguments use a fluent `bon` spec next to the event under
-`events/<event>/spec/`. Gate the module with `#[cfg(any(test, feature = "stubs"))]` so downstream
+`events/<event>/spec/`. Gate the module with `#[cfg(any(test, feature = "test-support"))]` so downstream
 tests can opt in without adding the spec to production builds.
 
 - Derive `bon::Builder` with `finish_fn = into_spec`.

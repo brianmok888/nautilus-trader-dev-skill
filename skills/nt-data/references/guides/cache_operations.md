@@ -22,18 +22,18 @@ by venue, instrument, strategy, account, and order/position status.
 from nautilus_trader.cache.config import CacheConfig
 
 config = CacheConfig(
-    database=None,                    # DatabaseConfig | None -- backing database config
-    encoding="msgpack",               # "msgpack" | "json" -- serialization encoding
-    timestamps_as_iso8601=False,      # True -> ISO 8601 strings; False -> UNIX nanos
-    persist_account_events=True,      # write account events to database
-    buffer_interval_ms=None,          # ms between pipelined/batched transactions (10-1000 recommended)
-    bulk_read_batch_size=None,        # chunk size for MGET (helps with Redis provider limits)
-    use_trader_prefix=True,           # prefix keys with "trader-"
-    use_instance_id=False,            # include trader instance ID in keys
-    flush_on_start=False,             # flush database on startup
-    drop_instruments_on_reset=True,   # clear instrument cache on reset
-    tick_capacity=10_000,             # max deque length for quote/trade ticks per instrument
-    bar_capacity=10_000,              # max deque length for bars per bar type
+    database=None,  # DatabaseConfig | None -- backing database config
+    encoding="msgpack",  # "msgpack" | "json" -- serialization encoding
+    timestamps_as_iso8601=False,  # True -> ISO 8601 strings; False -> UNIX nanos
+    persist_account_events=True,  # write account events to database
+    buffer_interval_ms=None,  # ms between pipelined/batched transactions (10-1000 recommended)
+    bulk_read_batch_size=None,  # chunk size for MGET (helps with Redis provider limits)
+    use_trader_prefix=True,  # prefix keys with "trader-"
+    use_instance_id=False,  # include trader instance ID in keys
+    flush_on_start=False,  # flush database on startup
+    drop_instruments_on_reset=True,  # clear instrument cache on reset
+    tick_capacity=10_000,  # max deque length for quote/trade ticks per instrument
+    bar_capacity=10_000,  # max deque length for bars per bar type
 )
 ```
 
@@ -74,7 +74,7 @@ synthetic_ids = self.cache.synthetic_ids()
 ```python
 # Latest quote tick (index=0 is most recent, negative indexes go back)
 tick = self.cache.quote_tick(instrument_id, index=0)
-ticks = self.cache.quote_ticks(instrument_id)        # full deque as list
+ticks = self.cache.quote_ticks(instrument_id)  # full deque as list
 count = self.cache.quote_tick_count(instrument_id)
 has = self.cache.has_quote_ticks(instrument_id)
 
@@ -149,7 +149,9 @@ All order query methods accept optional filters: `venue`, `instrument_id`, `stra
 
 ```python
 order = self.cache.order(client_order_id)
-orders = self.cache.orders(venue=None, instrument_id=None, strategy_id=None, side=OrderSide.NO_ORDER_SIDE)
+orders = self.cache.orders(
+    venue=None, instrument_id=None, strategy_id=None, side=OrderSide.NO_ORDER_SIDE
+)
 open_orders = self.cache.orders_open(...)
 closed = self.cache.orders_closed(...)
 emulated = self.cache.orders_emulated(...)

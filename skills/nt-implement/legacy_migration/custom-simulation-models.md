@@ -15,6 +15,7 @@ from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.model.orders import Order
 from nautilus_trader.model.instruments import Instrument
 
+
 class VolatilityAdjustedFillModel(FillModel):
     """
     Fill model that adjusts probabilities based on market volatility.
@@ -60,7 +61,10 @@ class VolatilityAdjustedFillModel(FillModel):
     def is_slipped(self) -> bool:
         """Check if slippage occurs based on volatility-adjusted probability."""
         # Higher volatility = more likely slippage
-        adjusted_prob = min(1.0, self.prob_slippage * self._current_volatility * self._volatility_multiplier)
+        adjusted_prob = min(
+            1.0,
+            self.prob_slippage * self._current_volatility * self._volatility_multiplier,
+        )
         return self._random.random() < adjusted_prob
 ```
 
@@ -97,6 +101,7 @@ from nautilus_trader.model.instruments import Instrument
 from nautilus_trader.model.objects import Money, Quantity, Price
 from nautilus_trader.model.enums import PositionSide
 
+
 class RiskAdjustedMarginModel(MarginModel):
     """
     Margin model that applies risk multipliers based on instrument characteristics.
@@ -111,7 +116,9 @@ class RiskAdjustedMarginModel(MarginModel):
         """Initialize with configuration parameters."""
         self.risk_multiplier = Decimal(str(config.config.get("risk_multiplier", 1.0)))
         self.use_leverage = config.config.get("use_leverage", False)
-        self.volatility_buffer = Decimal(str(config.config.get("volatility_buffer", 0.0)))
+        self.volatility_buffer = Decimal(
+            str(config.config.get("volatility_buffer", 0.0))
+        )
 
     def calculate_margin_init(
         self,
@@ -207,6 +214,7 @@ from decimal import Decimal
 from nautilus_trader.analysis.statistic import PortfolioStatistic
 from nautilus_trader.model.position import Position
 from nautilus_trader.model.orders import Order
+
 
 class WinStreakStatistic(PortfolioStatistic):
     """Calculate maximum winning and losing streaks."""

@@ -105,12 +105,12 @@ The Cache is an **in-memory database** that auto-stores everything as it flows t
 
 ```python
 # In any strategy or actor:
-self.cache.instrument(instrument_id)      # Get instrument
-self.cache.bar(bar_type)                  # Most recent bar
-self.cache.bars(bar_type)                 # All cached bars (index 0 = newest)
-self.cache.orders_open()                  # All open orders
-self.cache.positions_open()              # All open positions
-self.cache.account_for_venue(venue)      # Account state
+self.cache.instrument(instrument_id)  # Get instrument
+self.cache.bar(bar_type)  # Most recent bar
+self.cache.bars(bar_type)  # All cached bars (index 0 = newest)
+self.cache.orders_open()  # All open orders
+self.cache.positions_open()  # All open positions
+self.cache.account_for_venue(venue)  # Account state
 ```
 
 Data arrives in Cache **before** reaching strategy callbacks. The default capacity is 10,000 bars per bar type.

@@ -478,7 +478,9 @@ from nautilus_trader.model import ClientId
 
 # In your `on_start` method
 self.subscribe_data(
-    data_type=DataType(BinanceFuturesMarkPriceUpdate, metadata={"instrument_id": self.instrument.id}),
+    data_type=DataType(
+        BinanceFuturesMarkPriceUpdate, metadata={"instrument_id": self.instrument.id}
+    ),
     client_id=ClientId("BINANCE"),
 )
 ```
@@ -1011,7 +1013,7 @@ rates are required, enable per-symbol commission rate queries:
 ```python
 from nautilus_trader.adapters.binance import BinanceInstrumentProviderConfig
 
-instrument_provider=BinanceInstrumentProviderConfig(
+instrument_provider = BinanceInstrumentProviderConfig(
     load_all=True,
     query_commission_rates=True,  # Query accurate rates per symbol
 )
@@ -1039,7 +1041,7 @@ To suppress these warnings:
 ```python
 from nautilus_trader.config import InstrumentProviderConfig
 
-instrument_provider=InstrumentProviderConfig(
+instrument_provider = InstrumentProviderConfig(
     load_all=True,
     log_warnings=False,
 )
@@ -1088,7 +1090,8 @@ To use hedge mode:
 
     ```python
     class EMACrossHedgeMode(Strategy):
-        ...,  # Omitted
+        (...,)  # Omitted
+
         def buy(self) -> None:
             order: MarketOrder = self.order_factory.market(
                 instrument_id=self.instrument_id,

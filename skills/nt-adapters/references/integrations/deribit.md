@@ -628,8 +628,8 @@ config = TradingNodeConfig(
     ...,  # Omitted
     data_clients={
         DERIBIT: DeribitDataClientConfig(
-            api_key=None,           # Uses DERIBIT_API_KEY env var
-            api_secret=None,        # Uses DERIBIT_API_SECRET env var
+            api_key=None,  # Uses DERIBIT_API_KEY env var
+            api_secret=None,  # Uses DERIBIT_API_SECRET env var
             product_types=(DeribitProductType.Future,),
             environment=DeribitEnvironment.MAINNET,
             instrument_provider=InstrumentProviderConfig(load_all=True),

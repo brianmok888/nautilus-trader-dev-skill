@@ -57,8 +57,8 @@ final_size = max(min_qty, min(calculated_size, max_qty))
 **DO** call `request_bars()` (historical) BEFORE `subscribe_bars()` (live) in `on_start`.
 ```python
 def on_start(self) -> None:
-    self.request_bars(self.bar_type)   # ← warmup first
-    self.subscribe_bars(self.bar_type) # ← then live feed
+    self.request_bars(self.bar_type)  # ← warmup first
+    self.subscribe_bars(self.bar_type)  # ← then live feed
 ```
 > Why: Indicators need historical data to initialise before live ticks arrive.
 
@@ -91,8 +91,8 @@ def on_reset(self) -> None:
 
 **DO** use `self.clock.utc_now()` / `self.clock.timestamp_ns()` for all time references.
 ```python
-ts = self.clock.timestamp_ns()   # nanoseconds (Nautilus native)
-dt = self.clock.utc_now()        # datetime (for display)
+ts = self.clock.timestamp_ns()  # nanoseconds (Nautilus native)
+dt = self.clock.utc_now()  # datetime (for display)
 ```
 > Why: `datetime.utcnow()` or `time.time()` break backtest determinism.
 
@@ -102,9 +102,9 @@ dt = self.clock.utc_now()        # datetime (for display)
 
 **DO** enable reconciliation with adequate lookback.
 ```python
-exec_engine=LiveExecEngineConfig(
+exec_engine = LiveExecEngineConfig(
     reconciliation=True,
-    open_check_lookback_mins=60,     # Never reduce below 60
+    open_check_lookback_mins=60,  # Never reduce below 60
     inflight_check_interval_ms=2000,
     reconciliation_startup_delay_secs=10.0,
 )
@@ -154,6 +154,7 @@ def _validate_trade(self, quantity: Quantity) -> bool:
 **DO** use bounded data structures to prevent memory leaks.
 ```python
 from collections import deque
+
 self.bar_buffer: deque[Bar] = deque(maxlen=500)  # ← bounded
 ```
 
@@ -165,14 +166,14 @@ self.bar_buffer: deque[Bar] = deque(maxlen=500)  # ← bounded
 ```python
 dex_fill_model = FillModel(
     prob_fill_on_limit=0.25,  # DEX limit orders rarely fill at exact price
-    prob_slippage=0.70,       # High slippage on AMMs
+    prob_slippage=0.70,  # High slippage on AMMs
     random_seed=42,
 )
 ```
 
 **DO** write DEX pool snapshots / on-chain trade ticks to catalog in the same normalised format as CeFi data.
 ```python
-catalog.write_data([dex_trade_tick])   # TradeTick format works for on-chain swaps
+catalog.write_data([dex_trade_tick])  # TradeTick format works for on-chain swaps
 catalog.write_data([dex_order_book_delta])
 ```
 
@@ -195,11 +196,13 @@ adjusted_risk_budget = self.config.risk_per_trade - gas_estimate_usd / equity
 # ❌ WRONG — blocks the event loop
 def on_bar(self, bar: Bar) -> None:
     data = requests.get("https://api.example.com")  # BLOCKS!
-    model = pickle.load(open("model.pkl", "rb"))     # BLOCKS!
+    model = pickle.load(open("model.pkl", "rb"))  # BLOCKS!
+
 
 # ✅ CORRECT — load in on_start, use preloaded
 def on_start(self) -> None:
     self.model = self._load_model()
+
 
 def on_bar(self, bar: Bar) -> None:
     pred = self.model.predict(self._features(bar))
@@ -223,7 +226,7 @@ self.bar_buffer: deque[Bar] = deque(maxlen=200)
 **DON'T** use raw `float` for price/quantity.
 ```python
 # ❌ WRONG
-qty = Quantity.from_str("1.5")    # May violate precision
+qty = Quantity.from_str("1.5")  # May violate precision
 price = Price.from_str("100.00")  # May violate tick size
 
 # ✅ CORRECT
@@ -237,7 +240,7 @@ price = self.instrument.make_price(100.00)
 ```python
 def on_bar(self, bar: Bar) -> None:
     if not self.ema.initialized or not self.rsi.initialized:
-        return   # ← skip until warmup complete
+        return  # ← skip until warmup complete
 ```
 
 **DON'T** put ML inference in Strategy — always put it in Actor.
@@ -282,8 +285,11 @@ MyExchangeConfig(api_key=SecretStr(os.environ["EXCHANGE_API_KEY"]))
 class MyDEXConfig(LiveExecClientConfig):
     private_key: str  # exposed in logs, repr, etc.
 
+
 # ✅ CORRECT
 from pydantic import SecretStr
+
+
 class MyDEXConfig(LiveExecClientConfig):
     private_key: SecretStr
 ```

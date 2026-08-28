@@ -947,7 +947,9 @@ the full venue catalogue. Instead of loading everything, you provide a function 
 event slugs for the specific markets you need.
 
 ```python
-from nautilus_trader.adapters.polymarket.providers import PolymarketInstrumentProviderConfig
+from nautilus_trader.adapters.polymarket.providers import (
+    PolymarketInstrumentProviderConfig,
+)
 
 # Configure with a slug builder function
 instrument_config = PolymarketInstrumentProviderConfig(
@@ -960,6 +962,7 @@ The callable must have signature `() -> list[str]` and return a list of event sl
 ```python
 # myproject/slugs.py
 from datetime import UTC, datetime, timedelta
+
 
 def build_temperature_slugs() -> list[str]:
     """Build slugs for NYC temperature markets."""
@@ -1048,13 +1051,17 @@ import asyncio
 
 from nautilus_trader.adapters.polymarket import PolymarketDataLoader
 
+
 async def main():
     # Create loader from market slug (recommended)
-    loader = await PolymarketDataLoader.from_market_slug("gta-vi-released-before-june-2026")
+    loader = await PolymarketDataLoader.from_market_slug(
+        "gta-vi-released-before-june-2026"
+    )
 
     # Loader is ready to use with instrument and token_id set
     print(loader.instrument)
     print(loader.token_id)
+
 
 asyncio.run(main())
 ```
@@ -1063,7 +1070,9 @@ For events with multiple markets (e.g., temperature buckets), use `from_event_sl
 
 ```python
 # Returns a list of loaders, one per market in the event
-loaders = await PolymarketDataLoader.from_event_slug("highest-temperature-in-nyc-on-january-26")
+loaders = await PolymarketDataLoader.from_event_slug(
+    "highest-temperature-in-nyc-on-january-26"
+)
 ```
 
 #### Look-ahead protection for resolved markets
@@ -1107,7 +1116,9 @@ for event in events:
     print(f"{event['slug']}: {event['title']}")
 
 # Get all markets within a specific event
-event_markets = await loader.get_event_markets("highest-temperature-in-nyc-on-january-26")
+event_markets = await loader.get_event_markets(
+    "highest-temperature-in-nyc-on-january-26"
+)
 ```
 
 For quick exploration without creating a loader, use the static `query_*` methods
@@ -1168,7 +1179,9 @@ from nautilus_trader.adapters.polymarket import PolymarketDataLoader
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.examples.strategies.ema_cross_long_only import EMACrossLongOnly
-from nautilus_trader.examples.strategies.ema_cross_long_only import EMACrossLongOnlyConfig
+from nautilus_trader.examples.strategies.ema_cross_long_only import (
+    EMACrossLongOnlyConfig,
+)
 from nautilus_trader.model.currencies import pUSD
 from nautilus_trader.model.data import BarType
 from nautilus_trader.model.enums import AccountType
@@ -1176,9 +1189,12 @@ from nautilus_trader.model.enums import OmsType
 from nautilus_trader.model.identifiers import TraderId
 from nautilus_trader.model.objects import Money
 
+
 async def run_backtest():
     # Initialize loader and fetch market data
-    loader = await PolymarketDataLoader.from_market_slug("gta-vi-released-before-june-2026")
+    loader = await PolymarketDataLoader.from_market_slug(
+        "gta-vi-released-before-june-2026"
+    )
     instrument = loader.instrument
 
     # Load historical trades from the Polymarket Data API
@@ -1213,6 +1229,7 @@ async def run_backtest():
     # Display results
     print(engine.trader.generate_account_report(POLYMARKET_VENUE))
 
+
 # Run the backtest
 asyncio.run(run_backtest())
 ```
@@ -1233,7 +1250,7 @@ from nautilus_trader.adapters.polymarket import get_polymarket_instrument_id
 # Create NautilusTrader InstrumentId from Polymarket identifiers
 instrument_id = get_polymarket_instrument_id(
     condition_id="0xcccb7e7613a087c132b69cbf3a02bece3fdcb824c1da54ae79acc8d4a562d902",
-    token_id="8441400852834915183759801017793514978104486628517653995211751018945988243154"
+    token_id="8441400852834915183759801017793514978104486628517653995211751018945988243154",
 )
 ```
 

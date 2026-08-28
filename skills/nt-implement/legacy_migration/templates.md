@@ -130,11 +130,14 @@ Migration templates are physically quarantined in `templates/legacy_migration/`:
 import msgspec
 from pathlib import Path
 
+
 class ModelState(msgspec.Struct):
     """Serializable model state."""
+
     weights: list[float]
     threshold: float
     version: str
+
 
 class RegimeActor(Actor):
     def __init__(self, config: RegimeActorConfig) -> None:
@@ -160,7 +163,7 @@ catalog = ParquetDataCatalog("/path/to/catalog")
 
 # Write data
 catalog.write_data([instrument])  # Instruments
-catalog.write_data(bars)          # Bars, ticks, etc.
+catalog.write_data(bars)  # Bars, ticks, etc.
 
 # Read data
 bars = catalog.bars(bar_types=[bar_type])
@@ -189,6 +192,7 @@ data_config = BacktestDataConfig(
 import onnxruntime as ort
 import numpy as np
 
+
 class MLActor(Actor):
     def __init__(self, config: MLActorConfig) -> None:
         super().__init__(config)
@@ -204,7 +208,9 @@ class MLActor(Actor):
         inputs = {self.input_name: features.astype(np.float32).reshape(1, -1)}
         outputs = self.session.run(None, inputs)
         prediction = outputs[0][0]
-        self.publish_signal(name="prediction", value=float(prediction), ts_event=bar.ts_event)
+        self.publish_signal(
+            name="prediction", value=float(prediction), ts_event=bar.ts_event
+        )
 ```
 
 ### Feature Computation Pipeline
@@ -287,9 +293,15 @@ class MultiTimeframeStrategy(Strategy):
         self.instrument = self.cache.instrument(self.config.instrument_id)
 
         # Define bar types
-        self.bar_type_1m = BarType.from_str(f"{self.config.instrument_id}-1-MINUTE-LAST-EXTERNAL")
-        self.bar_type_5m = BarType.from_str(f"{self.config.instrument_id}-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL")
-        self.bar_type_1h = BarType.from_str(f"{self.config.instrument_id}-1-HOUR-LAST-INTERNAL@1-MINUTE-EXTERNAL")
+        self.bar_type_1m = BarType.from_str(
+            f"{self.config.instrument_id}-1-MINUTE-LAST-EXTERNAL"
+        )
+        self.bar_type_5m = BarType.from_str(
+            f"{self.config.instrument_id}-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL"
+        )
+        self.bar_type_1h = BarType.from_str(
+            f"{self.config.instrument_id}-1-HOUR-LAST-INTERNAL@1-MINUTE-EXTERNAL"
+        )
 
         # Request historical for warmup
         self.request_bars(self.bar_type_1m)
@@ -329,7 +341,9 @@ def _validate_order(self, order_side: OrderSide, quantity: Quantity) -> bool:
         new_position = net_position - float(quantity)
 
     if abs(new_position) > self.config.max_position_size:
-        self.log.warning(f"Order rejected: would exceed max position {self.config.max_position_size}")
+        self.log.warning(
+            f"Order rejected: would exceed max position {self.config.max_position_size}"
+        )
         return False
 
     # Check daily loss limit

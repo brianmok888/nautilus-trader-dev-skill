@@ -13,9 +13,11 @@ Subclass `Strategy` from `nautilus_trader.trading.strategy`:
 from nautilus_trader.trading.strategy import Strategy
 from nautilus_trader.config import StrategyConfig
 
+
 class MyStrategyConfig(StrategyConfig, frozen=True):
     instrument_id: str = None
     bar_type: str = None
+
 
 class MyStrategy(Strategy):
     def __init__(self, config: MyStrategyConfig):
@@ -70,6 +72,7 @@ Subclass `Actor` from `nautilus_trader.trading.actor` for non-trading components
 ```python
 from nautilus_trader.trading.actor import Actor
 from nautilus_trader.config import ActorConfig
+
 
 class MyActor(Actor):
     def __init__(self, config: ActorConfig):

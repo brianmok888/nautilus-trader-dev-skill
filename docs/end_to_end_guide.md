@@ -5,7 +5,7 @@ This guide gives the default NautilusTrader Development Skills workflow for a ne
 All new strategy, integration, and live work follows the Rust-first path in this guide. Python NT material is migration/reference-only unless an upstream contract explicitly requires Python bindings.
 
 **Prerequisites**:
-- Rust 1.98.0 toolchain and Cargo installed for the pinned `8ecab1ce9` develop baseline.
+- Rust 1.98.0 toolchain and Cargo installed for the pinned `8e51f957c` develop baseline.
 - NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
@@ -22,7 +22,7 @@ cargo new my-strategy --bin
 cd my-strategy
 ```
 
-Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. Match versions/features to the upstream baseline used by your skills and pinned repository snapshot.
+Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. The published crates.io lane is `0.62`; the pinned source workspace declares `0.63.0`, which is not published on crates.io. These are intentionally different lanes: use the release snippet below for a standalone project, or use the source-pinned path lane in repository validation when exact API parity with commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7` is required. `cargo info nautilus-live@0.62.0` succeeds while `cargo info nautilus-live@0.63.0` reports no published version.
 
 ```toml
 [dependencies]
@@ -183,6 +183,27 @@ cargo run --release
 The node runs until interrupted or shut down programmatically. Monitor structured logs for adapter connection, instrument discovery, subscriptions, reconciliation, and order lifecycle events.
 
 ---
+
+## Progressive Cutover Gates
+
+Before promoting a strategy or integration, copy the gate card from
+`docs/tracking/CutoverGateTemplate.md` and evaluate every applicable gate:
+
+1. Architecture Consistency
+2. Dependency and Build Health
+3. API and Binding Contract
+4. Correctness Test Pyramid
+5. Performance Regression Control
+6. Resilience and Failure Recovery
+7. Observability and Operability
+8. Security Safety and Governance
+9. Release and Rollback Readiness
+10. Integration and Acceptance
+11. Continuous Improvement
+
+A release is not ready while an applicable gate is `Pending` or `Blocked`.
+Evidence must name the owner, verification date, baseline, next action, and any
+blocker; `N/A` belongs only in Applicability with a source-backed reason.
 
 ## Advanced: Adapter and DEX Work
 

@@ -12,7 +12,11 @@ from tools.check_upstream_freshness import (
     render_json_report,
     render_text_report,
 )
-from tools.upstream_baseline import UPSTREAM_REMOTE_REFS, default_upstream_root
+from tools.upstream_baseline import (
+    UPSTREAM_COMMIT,
+    UPSTREAM_REMOTE_REFS,
+    default_upstream_root,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,10 +29,12 @@ class ReviewManifest(TypedDict):
 def _tracking_commit(path: Path, label: str) -> str:
     prefix = f"{label}: `"
     line = next(
-        line for line in path.read_text(encoding="utf-8").splitlines()
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
         if line.startswith(prefix)
     )
     return line.removeprefix(prefix).removesuffix("`")
+
 
 def test_tracking_metadata_matches_review_manifest() -> None:
     manifest = cast(
@@ -50,16 +56,16 @@ def test_tracking_metadata_matches_review_manifest() -> None:
     components = (REPO_ROOT / "docs/tracking/Components.md").read_text(encoding="utf-8")
     assert f"reviewed exactly through `{reviewed}`" in components
 
+
 def test_components_index_matches_retained_skill_inventory() -> None:
     components = (REPO_ROOT / "docs/tracking/Components.md").read_text(encoding="utf-8")
     indexed = {
-        line.split("`")[1]
-        for line in components.splitlines()
-        if line.startswith("| `")
+        line.split("`")[1] for line in components.splitlines() if line.startswith("| `")
     }
     retained = {path.parent.name for path in (REPO_ROOT / "skills").glob("*/SKILL.md")}
 
     assert indexed == retained
+
 
 def test_only_authoritative_develop_is_a_required_moving_ref() -> None:
     assert UPSTREAM_REMOTE_REFS == ("origin/develop",)
@@ -73,7 +79,8 @@ def test_required_develop_ref_contains_current_nightly_history() -> None:
 
 
 def test_upstream_root_is_portable_and_environment_overridable(
-    tmp_path: Path, monkeypatch,
+    tmp_path: Path,
+    monkeypatch,
 ) -> None:
     monkeypatch.setenv("NT_UPSTREAM_ROOT", str(tmp_path / "custom-upstream"))
 
@@ -95,7 +102,6 @@ def _git(repo: Path, *args: str) -> str:
         text=True,
     )
     return result.stdout.strip()
-
 
 
 def _commit(repo: Path, filename: str, text: str, message: str) -> str:
@@ -134,7 +140,6 @@ def _write_manifest(
     )
 
 
-
 def _make_repo(tmp_path: Path) -> tuple[Path, str, str]:
     repo = tmp_path / "upstream"
     repo.mkdir()
@@ -147,8 +152,9 @@ def _make_repo(tmp_path: Path) -> tuple[Path, str, str]:
     return repo, baseline, current
 
 
-
-def test_report_distinguishes_pinned_baseline_from_current_drift(tmp_path: Path) -> None:
+def test_report_distinguishes_pinned_baseline_from_current_drift(
+    tmp_path: Path,
+) -> None:
     upstream, baseline, current = _make_repo(tmp_path)
 
     report = build_freshness_report(
@@ -240,10 +246,10 @@ def test_review_manifest_requires_impact_or_explicit_no_impact(tmp_path: Path) -
                 "pinned_commit": baseline,
                 "reviewed_commit": current,
                 "deltas": [
-                        {
-                            "commit": current,
-                            "subject": "current",
-                            "upstream_paths": ["guide.md"],
+                    {
+                        "commit": current,
+                        "subject": "current",
+                        "upstream_paths": ["guide.md"],
                     },
                 ],
             },
@@ -315,8 +321,6 @@ def test_review_manifest_rejects_paths_that_do_not_match_upstream_commit(
     assert "upstream_paths do not match upstream commit" in report.manifest_error
 
 
-
-
 def test_json_cli_is_read_only_and_does_not_mutate_baseline(tmp_path: Path) -> None:
     upstream, baseline, _current = _make_repo(tmp_path)
     baseline_file = REPO_ROOT / "tools" / "upstream_baseline.py"
@@ -348,9 +352,9 @@ def test_json_cli_is_read_only_and_does_not_mutate_baseline(tmp_path: Path) -> N
     assert baseline_file.read_text(encoding="utf-8") == before
 
 
-
-
-def test_text_report_names_reproducible_baseline_and_current_drift(tmp_path: Path) -> None:
+def test_text_report_names_reproducible_baseline_and_current_drift(
+    tmp_path: Path,
+) -> None:
     upstream, baseline, current = _make_repo(tmp_path)
     report = build_freshness_report(upstream, baseline, ("develop",))
 
@@ -361,8 +365,6 @@ def test_text_report_names_reproducible_baseline_and_current_drift(tmp_path: Pat
     assert "Current upstream refs" in text
     assert current[:12] in text
     assert "drifted" in text
-
-
 
 
 def test_archival_headers_present_on_prominent_legacy_guides() -> None:
@@ -384,5 +386,27 @@ def test_review_manifest_tracks_latest_reviewed_develop_commit() -> None:
         json.loads((REPO_ROOT / "references/upstream-delta-review.json").read_text()),
     )
 
-    assert manifest["reviewed_commit"] == "8ecab1ce90d9790b1e18e162842decbae4d9de57"
+    assert manifest["reviewed_commit"] == "8e51f957c6e31b28de14fbe244b3c048e291ddd7"
     assert manifest["pinned_commit"] == manifest["reviewed_commit"]
+
+
+def test_current_manifest_preserves_reviewed_transition_history() -> None:
+    root = Path(__file__).resolve().parents[1]
+    payload = json.loads(
+        (root / "references/upstream-delta-review.json").read_text(encoding="utf-8")
+    )
+    transitions = payload.get("reviewed_transitions")
+
+    assert isinstance(transitions, list)
+    transition = next(
+        item
+        for item in transitions
+        if item.get("from_commit") == "8ecab1ce90d9790b1e18e162842decbae4d9de57"
+        and item.get("to_commit") == UPSTREAM_COMMIT
+    )
+    assert transition["commit_count"] == 63
+    assert transition["unique_path_count"] == 543
+    assert len(transition["deltas"]) == 63
+    assert {item["commit"] for item in transition["deltas"]} == set(
+        transition["reviewed_commits"]
+    )

@@ -12,6 +12,7 @@ Subclass `ExecAlgorithm` from `nautilus_trader.execution.algorithm`:
 ```python
 from nautilus_trader.execution.algorithm import ExecAlgorithm
 
+
 class MyExecAlgorithm(ExecAlgorithm):
     def on_start(self):
         pass
@@ -26,7 +27,7 @@ class MyExecAlgorithm(ExecAlgorithm):
 
 Register in config:
 ```python
-exec_algorithms=[MyExecAlgorithm.fully_qualified_name()]
+exec_algorithms = [MyExecAlgorithm.fully_qualified_name()]
 ```
 
 ### Custom Margin/Position Sizing

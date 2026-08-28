@@ -29,10 +29,12 @@ Strategies use a frozen config object for parameters:
 ```python
 from nautilus_trader.trading import Strategy, StrategyConfig
 
+
 class MyConfig(StrategyConfig, frozen=True):
     instrument_id: InstrumentId
     bar_type: BarType
     ema_period: int = 20
+
 
 class MyStrategy(Strategy):
     def __init__(self, config: MyConfig) -> None:
@@ -60,6 +62,7 @@ from nautilus_trader.model import InstrumentId
 from nautilus_trader.model.data import BarType
 from nautilus_trader.trading import StrategyConfig
 
+
 class EMACrossConfig(StrategyConfig, frozen=True):
     instrument_id: InstrumentId
     bar_type: BarType
@@ -74,6 +77,7 @@ class EMACrossConfig(StrategyConfig, frozen=True):
 from nautilus_trader.indicators.average.ema import ExponentialMovingAverage
 from nautilus_trader.model.enums import OrderSide
 from nautilus_trader.trading import Strategy
+
 
 class EMACross(Strategy):
     def __init__(self, config: EMACrossConfig) -> None:
@@ -156,14 +160,16 @@ order = self.order_factory.market(instrument_id, OrderSide.BUY, quantity)
 order = self.order_factory.limit(instrument_id, OrderSide.BUY, quantity, price)
 
 # Stop market
-order = self.order_factory.stop_market(instrument_id, OrderSide.SELL, quantity, trigger_price)
+order = self.order_factory.stop_market(
+    instrument_id, OrderSide.SELL, quantity, trigger_price
+)
 
 # Bracket order (entry + take-profit + stop-loss)
 bracket = self.order_factory.bracket(
     instrument_id=instrument_id,
     order_side=OrderSide.BUY,
     quantity=quantity,
-    entry_trigger_price=entry_price,   # or entry_price for limit entry
+    entry_trigger_price=entry_price,  # or entry_price for limit entry
     sl_trigger_price=stop_price,
     tp_price=take_profit_price,
 )

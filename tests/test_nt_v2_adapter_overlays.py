@@ -51,7 +51,9 @@ def test_g2_guidance_limits_cargo_check_to_compilation_evidence() -> None:
             assert excluded_proof in text, (relative_path, excluded_proof)
 
 
-def test_polymarket_guidance_uses_instrument_fee_schedule_and_probability_model() -> None:
+def test_polymarket_guidance_uses_instrument_fee_schedule_and_probability_model() -> (
+    None
+):
     text = read("references/integrations/polymarket.md")
 
     assert "instrument.fee_schedule.rate" in text
@@ -62,7 +64,7 @@ def test_polymarket_guidance_uses_instrument_fee_schedule_and_probability_model(
     assert "exponent" in text and "1" in text
     assert "other exponents" in text
     assert "rebate behavior" in text
-    # Upstream at 8ecab1ce9 ships a Rust adapter fee model for backtests
+    # Upstream at 8e51f957c ships a Rust adapter fee model for backtests
     # (nautilus_polymarket::models::PolymarketFeeModel, reads rate/rebateRate/
     # exponent/takerOnly). The old prohibition predates that type; the mirror
     # is sync-enforced to carry the upstream Backtest fee model section.

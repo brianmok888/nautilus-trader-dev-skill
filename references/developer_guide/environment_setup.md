@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/environment_setup/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/environment_setup.md
-source_commit: 8ecab1ce90d9790b1e18e162842decbae4d9de57
-sync_date: 2026-08-26
+source_commit: 8e51f957c6e31b28de14fbe244b3c048e291ddd7
+sync_date: 2026-08-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only

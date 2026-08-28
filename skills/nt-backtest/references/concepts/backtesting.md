@@ -114,6 +114,7 @@ def data_generator():
     yield load_chunk_2()
     yield load_chunk_3()
 
+
 engine.add_data_iterator(
     data_name="my_data_stream",
     generator=data_generator(),
@@ -900,8 +901,8 @@ venue_config = BacktestVenueConfig(
     oms_type="NETTING",
     account_type="MARGIN",
     starting_balances=["100_000 USD"],
-    trade_execution=True,      # Required for queue_position
-    queue_position=True,       # Enable queue position tracking
+    trade_execution=True,  # Required for queue_position
+    queue_position=True,  # Enable queue position tracking
 )
 ```
 
@@ -1167,9 +1168,9 @@ venue_config = BacktestVenueConfig(
         fill_model_path="nautilus_trader.backtest.models:FillModel",
         config_path="nautilus_trader.backtest.config:FillModelConfig",
         config={
-            "prob_fill_on_limit": 0.2,    # Chance a limit order fills when price matches
-            "prob_slippage": 0.5,         # Chance of 1-tick slippage (L1 data only)
-            "random_seed": 42,            # Optional: Set for reproducible results
+            "prob_fill_on_limit": 0.2,  # Chance a limit order fills when price matches
+            "prob_slippage": 0.5,  # Chance of 1-tick slippage (L1 data only)
+            "random_seed": 42,  # Optional: Set for reproducible results
         },
     ),
 )
@@ -1244,6 +1245,7 @@ from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.model.book import OrderBook, BookOrder
 from nautilus_trader.model.enums import OrderSide
 from nautilus_trader.core.rust.model import BookType
+
 
 class MyCustomFillModel(FillModel):
     def get_orderbook_for_fill_simulation(
@@ -1454,7 +1456,9 @@ venue_config = BacktestVenueConfig(
     oms_type="NETTING",
     account_type="MARGIN",
     starting_balances=["1_000_000 USD"],
-    margin_model=MarginModelConfig(model_type="standard"),  # Options: 'standard', 'leveraged'
+    margin_model=MarginModelConfig(
+        model_type="standard"
+    ),  # Options: 'standard', 'leveraged'
 )
 ```
 
@@ -1540,13 +1544,16 @@ You can create custom margin models by inheriting from `MarginModel`. Custom mod
 from nautilus_trader.backtest.models import MarginModel
 from nautilus_trader.backtest.config import MarginModelConfig
 
+
 class RiskAdjustedMarginModel(MarginModel):
     def __init__(self, config: MarginModelConfig):
         """Initialize with configuration parameters."""
         self.risk_multiplier = Decimal(str(config.config.get("risk_multiplier", 1.0)))
         self.use_leverage = config.config.get("use_leverage", False)
 
-    def calculate_margin_init(self, instrument, quantity, price, leverage, use_quote_for_inverse=False):
+    def calculate_margin_init(
+        self, instrument, quantity, price, leverage, use_quote_for_inverse=False
+    ):
         notional = instrument.notional_value(quantity, price, use_quote_for_inverse)
         if self.use_leverage:
             adjusted_notional = notional.as_decimal() / leverage
@@ -1555,8 +1562,12 @@ class RiskAdjustedMarginModel(MarginModel):
         margin = adjusted_notional * instrument.margin_init * self.risk_multiplier
         return Money(margin, instrument.quote_currency)
 
-    def calculate_margin_maint(self, instrument, side, quantity, price, leverage, use_quote_for_inverse=False):
-        return self.calculate_margin_init(instrument, quantity, price, leverage, use_quote_for_inverse)
+    def calculate_margin_maint(
+        self, instrument, side, quantity, price, leverage, use_quote_for_inverse=False
+    ):
+        return self.calculate_margin_init(
+            instrument, quantity, price, leverage, use_quote_for_inverse
+        )
 ```
 
 #### Using custom models
@@ -1569,7 +1580,7 @@ from nautilus_trader.backtest.config import MarginModelFactory
 
 config = MarginModelConfig(
     model_type="my_package.my_module:RiskAdjustedMarginModel",
-    config={"risk_multiplier": 1.5, "use_leverage": False}
+    config={"risk_multiplier": 1.5, "use_leverage": False},
 )
 
 custom_model = MarginModelFactory.create(config)
@@ -1608,25 +1619,25 @@ config = BacktestRunConfig(
 **Standard model (traditional brokers):**
 
 ```python
-margin_model=MarginModelConfig(model_type="standard")
+margin_model = MarginModelConfig(model_type="standard")
 ```
 
 **Leveraged model (default):**
 
 ```python
-margin_model=MarginModelConfig(model_type="leveraged")  # Default
+margin_model = MarginModelConfig(model_type="leveraged")  # Default
 ```
 
 **Custom model with configuration:**
 
 ```python
-margin_model=MarginModelConfig(
+margin_model = MarginModelConfig(
     model_type="my_package.my_module:CustomMarginModel",
     config={
         "risk_multiplier": 1.5,
         "use_leverage": False,
         "volatility_threshold": 0.02,
-    }
+    },
 )
 ```
 

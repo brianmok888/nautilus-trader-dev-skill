@@ -25,7 +25,11 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 ```python
 from nautilus_trader.live.node import TradingNode
-from nautilus_trader.config import TradingNodeConfig, LiveExecEngineConfig, LiveRiskEngineConfig
+from nautilus_trader.config import (
+    TradingNodeConfig,
+    LiveExecEngineConfig,
+    LiveRiskEngineConfig,
+)
 
 # NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 

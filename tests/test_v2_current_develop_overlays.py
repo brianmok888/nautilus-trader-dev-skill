@@ -4,8 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+
 def read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
+
 
 def test_lighter_guides_teach_current_tester_startup_convention() -> None:
     for path in (
@@ -19,14 +21,19 @@ def test_lighter_guides_teach_current_tester_startup_convention() -> None:
             "--live-orders",
             "default to a dry build",
         ):
-            assert obsolete not in guide, f"{path} teaches removed tester opt-in {obsolete}"
+            assert obsolete not in guide, (
+                f"{path} teaches removed tester opt-in {obsolete}"
+            )
 
         for current in (
             "module-level constants",
             "dry_run=False",
             "LIGHTER_ENVIRONMENT",
         ):
-            assert current in guide, f"{path} lacks current tester convention marker {current}"
+            assert current in guide, (
+                f"{path} lacks current tester convention marker {current}"
+            )
+
 
 def test_network_config_guides_use_current_field_names() -> None:
     spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
@@ -50,6 +57,7 @@ def test_network_config_guides_use_current_field_names() -> None:
         assert "| `stream_heartbeat_secs` " in guide
         assert "| `stream_heartbeat_timeout_secs` " in guide
 
+
 def test_adapter_spec_covers_fallible_commission_contract() -> None:
     spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
 
@@ -62,6 +70,7 @@ def test_adapter_spec_covers_fallible_commission_contract() -> None:
     ):
         assert marker in spec, f"spec lacks commission contract marker {marker}"
 
+
 def test_live_guide_covers_hosted_async_run_modes() -> None:
     live = read("skills/nt-live/references/guides/run_rust_live_trading.md")
 
@@ -73,6 +82,7 @@ def test_live_guide_covers_hosted_async_run_modes() -> None:
         "e166a5e57c",
     ):
         assert marker in live, f"live guide lacks run-mode marker {marker}"
+
 
 def test_betfair_guides_cover_current_replacement_recovery() -> None:
     for path in (
@@ -91,9 +101,10 @@ def test_betfair_guides_cover_current_replacement_recovery() -> None:
             "reconciliation",
             "10,000",
             "tracked order",
-            "8ecab1ce9",
+            "8e51f957c",
         ):
             assert marker in guide, f"{path} lacks Betfair recovery marker {marker}"
+
 
 def test_betfair_v2_is_primary_and_v1_cleared() -> None:
     for path in (
@@ -121,22 +132,31 @@ def test_betfair_v2_is_primary_and_v1_cleared() -> None:
     ):
         guide = read(path)
 
-        assert "primary Betfair guide" in guide, f"{path} does not declare primary status"
+        assert "primary Betfair guide" in guide, (
+            f"{path} does not declare primary status"
+        )
 
     for path in (
         "references/integrations/index.md",
         "skills/nt-adapters/references/integrations/index.md",
     ):
         index = read(path)
-        row = next(line for line in index.splitlines() if "betfair_v2.md" in line or "](betfair.md)" in line)
+        row = next(
+            line
+            for line in index.splitlines()
+            if "betfair_v2.md" in line or "](betfair.md)" in line
+        )
         assert "](betfair_v2.md)" in row and "](betfair.md)" in row, (
             f"{path} Betfair row does not route v2 first with the v1 kept as legacy"
         )
 
+
 def test_nt_adapters_routes_betfair_v2_first() -> None:
     skill = read("skills/nt-adapters/SKILL.md")
 
-    assert "betfair_v2.md" in skill, "nt-adapters SKILL does not route the Betfair v2 guide"
+    assert "betfair_v2.md" in skill, (
+        "nt-adapters SKILL does not route the Betfair v2 guide"
+    )
     assert "primary Betfair" in skill or "Betfair work routes" in skill, (
         "nt-adapters SKILL lacks the v2-first Betfair routing statement"
     )
@@ -149,7 +169,9 @@ def test_betfair_v2_guides_cover_socket_state_and_targeted_reconnect() -> None:
     ):
         guide = read(path)
 
-        assert "d2b62d35a7" in guide, f"{path} lacks the pinned socket-state source commit"
+        assert "d2b62d35a7" in guide, (
+            f"{path} lacks the pinned socket-state source commit"
+        )
         assert "betfair-data-streams" in guide and "betfair-user-streams" in guide, (
             f"{path} lacks the stable socket endpoint labels"
         )
