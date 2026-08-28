@@ -44,7 +44,9 @@ def test_each_harness_has_a_unique_domain_scope_and_nonempty_steps() -> None:
 
     assert len(scopes) == len(set(scopes))
     assert all(harness.steps for harness in g2.HARNESSES.values())
-    assert all(step.command for harness in g2.HARNESSES.values() for step in harness.steps)
+    assert all(
+        step.command for harness in g2.HARNESSES.values() for step in harness.steps
+    )
 
 
 def test_each_harness_declares_machine_checkable_scope_tokens() -> None:
@@ -138,7 +140,9 @@ def test_ffi_steps_preserve_the_pinned_high_precision_bindings() -> None:
 
 def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
     subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
-    subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
+    subprocess.run(
+        ("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True
+    )
     subprocess.run(("git", "config", "user.name", "G2 Test"), cwd=tmp_path, check=True)
     (tmp_path / "tracked").write_text("clean\n")
     subprocess.run(("git", "add", "tracked"), cwd=tmp_path, check=True)
@@ -155,7 +159,9 @@ def test_dirty_or_wrong_upstream_checkout_fails_closed(tmp_path: Path) -> None:
 
 def test_untracked_upstream_content_fails_closed(tmp_path: Path) -> None:
     subprocess.run(("git", "init", "-q"), cwd=tmp_path, check=True)
-    subprocess.run(("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True)
+    subprocess.run(
+        ("git", "config", "user.email", "g2@example.test"), cwd=tmp_path, check=True
+    )
     subprocess.run(("git", "config", "user.name", "G2 Test"), cwd=tmp_path, check=True)
     (tmp_path / "tracked").write_text("clean\n")
     subprocess.run(("git", "add", "tracked"), cwd=tmp_path, check=True)
@@ -171,7 +177,9 @@ def test_untracked_upstream_content_fails_closed(tmp_path: Path) -> None:
 def test_supported_python_v2_harness_uses_the_pinned_upstream_runtime() -> None:
     harness = g2.HARNESSES["nt-strategy-builder"]
 
-    assert any(step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON for step in harness.steps)
+    assert any(
+        step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON for step in harness.steps
+    )
     assert any(".venv/bin/python" in step.command for step in harness.steps)
 
 
@@ -211,7 +219,9 @@ def test_runner_executes_every_step_for_the_selected_skill(tmp_path: Path) -> No
         summary="Data crate compile",
         allowed_tokens=("nautilus-data", "compileall"),
         steps=(
-            g2.Step(("cargo", "check", "-p", "nautilus-data"), g2.WorkingDirectory.UPSTREAM),
+            g2.Step(
+                ("cargo", "check", "-p", "nautilus-data"), g2.WorkingDirectory.UPSTREAM
+            ),
             g2.Step((sys.executable, "-m", "compileall", "skills/nt-data")),
         ),
     )
@@ -295,7 +305,8 @@ def test_runner_returns_blocked_when_step_executable_is_missing(tmp_path: Path) 
 
 
 def test_nt_implement_run_reports_pending_without_capnp(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     harness = replace(g2.HARNESSES["nt-implement"], evidence_file=None)
 
@@ -318,10 +329,13 @@ def test_nt_implement_run_reports_pending_without_capnp(
 
 
 def test_execute_prints_pending_for_nt_implement_without_capnp(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(g2, "assert_expected_upstream", lambda _root: None)
-    monkeypatch.setattr(g2, "assert_owned_content_tracked", lambda _root, _harness: None)
+    monkeypatch.setattr(
+        g2, "assert_owned_content_tracked", lambda _root, _harness: None
+    )
     monkeypatch.setattr(
         g2,
         "run_harness",
@@ -354,7 +368,9 @@ def test_dry_run_prints_commands_without_executing(
     assert "nautilus-data" in output
 
 
-def test_list_outputs_only_the_eighteen_harnesses(capsys: pytest.CaptureFixture[str]) -> None:
+def test_list_outputs_only_the_eighteen_harnesses(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     exit_code = g2.main(["--list"])
 
     assert exit_code == 0
@@ -372,9 +388,7 @@ def test_each_harness_owns_its_skill_and_nonempty_content() -> None:
 def test_validator_rejects_empty_owned_paths() -> None:
     harness = replace(g2.HARNESSES["nt-data"], owned_paths=())
 
-    errors = g2.validate_harnesses(
-        {"nt-data": harness}, expected_skills={"nt-data"}
-    )
+    errors = g2.validate_harnesses({"nt-data": harness}, expected_skills={"nt-data"})
 
     assert "nt-data has no owned paths" in errors
 
@@ -436,7 +450,9 @@ def test_missing_rust_first_harnesses_have_targeted_executable_checks() -> None:
         "nt-strategy-builder-rust": "test_rust_strategy_skill_example_compiles",
     }
     for skill, token in expected_tokens.items():
-        commands = [argument for step in g2.HARNESSES[skill].steps for argument in step.command]
+        commands = [
+            argument for step in g2.HARNESSES[skill].steps for argument in step.command
+        ]
         assert any(token in argument for argument in commands), (skill, commands)
 
 
@@ -497,7 +513,10 @@ def test_strategy_builder_harness_uses_current_v2_and_static_legacy_checks() -> 
         "-q",
         "skills/nt-strategy-builder/tests",
     ) not in commands
-    assert all("nautilus_trader.backtest.engine" not in " ".join(command) for command in commands)
+    assert all(
+        "nautilus_trader.backtest.engine" not in " ".join(command)
+        for command in commands
+    )
 
 
 def test_current_strategy_builder_card_records_hybrid_v2_evidence() -> None:
@@ -570,7 +589,9 @@ def test_card_evidence_is_not_a_self_certifying_status_check(tmp_path: Path) -> 
     assert "nt-data has no durable evidence artifact configured" in errors
 
 
-def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(tmp_path: Path) -> None:
+def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(
+    tmp_path: Path,
+) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     skill_path.write_text(
@@ -587,10 +608,15 @@ def test_all_pass_gate_rows_reject_the_card_validator_as_evidence(tmp_path: Path
         require_evidence=False,
     )
 
-    assert any("G0 readiness row uses the card validator as evidence" in error for error in errors)
+    assert any(
+        "G0 readiness row uses the card validator as evidence" in error
+        for error in errors
+    )
 
 
-def test_card_validation_rejects_missing_or_invalid_execution_evidence(tmp_path: Path) -> None:
+def test_card_validation_rejects_missing_or_invalid_execution_evidence(
+    tmp_path: Path,
+) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
@@ -664,7 +690,9 @@ def test_card_validation_accepts_blocked_status_with_a_reason(tmp_path: Path) ->
     assert not [error for error in errors if "durable evidence" in error]
 
 
-def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path) -> None:
+def test_card_validation_rejects_mismatched_execution_provenance(
+    tmp_path: Path,
+) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
@@ -702,7 +730,9 @@ def test_card_validation_rejects_mismatched_execution_provenance(tmp_path: Path)
     assert "nt-data durable evidence commands do not match its harness" in errors
 
 
-def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: Path) -> None:
+def test_card_validation_rejects_mismatched_owned_content_provenance(
+    tmp_path: Path,
+) -> None:
     skill_path = tmp_path / "skills/nt-data/SKILL.md"
     skill_path.parent.mkdir(parents=True)
     evidence_path = tmp_path / "references/g2-evidence/nt-data.json"
@@ -724,7 +754,11 @@ def test_card_validation_rejects_mismatched_owned_content_provenance(tmp_path: P
                 "upstream_commit": g2.EXPECTED_UPSTREAM_COMMIT,
                 "upstream_clean": True,
                 "steps": [
-                    {"command": list(step.command), "cwd": step.cwd.value, "returncode": 0}
+                    {
+                        "command": list(step.command),
+                        "cwd": step.cwd.value,
+                        "returncode": 0,
+                    }
                     for step in harness.steps
                 ],
             }
@@ -757,9 +791,7 @@ def test_evidence_schema_has_no_self_referential_repository_commit(
     assert payload["schema_version"] == 2
     assert payload["status"] == "pass"
     assert "repository_commit" not in payload
-    assert payload["owned_content_sha256"] == g2.harness_content_hash(
-        tmp_path, harness
-    )
+    assert payload["owned_content_sha256"] == g2.harness_content_hash(tmp_path, harness)
 
 
 def test_router_harness_requires_subordinate_card_declarations() -> None:
@@ -780,7 +812,9 @@ def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:
 
 def test_implement_g2_validates_capnp_without_compiling_migration_python() -> None:
     harness = g2.HARNESSES["nt-implement"]
-    command_text = " ".join(argument for step in harness.steps for argument in step.command)
+    command_text = " ".join(
+        argument for step in harness.steps for argument in step.command
+    )
 
     assert "fixed-point-schema" in harness.scope
     assert "compileall" not in command_text
@@ -797,7 +831,10 @@ def test_implement_g2_passes_with_standard_capnp() -> None:
     assert payload["status"] == "pass"
     assert "pending_reason" not in payload
     assert payload["steps"]
-    assert any("test_capnp_schema_precision.py" in " ".join(step["command"]) for step in payload["steps"])
+    assert any(
+        "test_capnp_schema_precision.py" in " ".join(step["command"])
+        for step in payload["steps"]
+    )
     assert "| G2 Pinned V2 examples |" in skill_text
     assert "| Pass |" in skill_text
 
@@ -825,25 +862,36 @@ def test_strategy_builder_preflight_fails_closed_for_missing_pyo3_runtime(
 ) -> None:
     upstream = tmp_path / "upstream"
     python_root = upstream / "python"
-    interpreter = python_root / ".venv/bin/python"
+    python_root.mkdir(parents=True)
+    interpreter = upstream / ".venv/bin/python"
     interpreter.parent.mkdir(parents=True)
     interpreter.write_text("", encoding="utf-8")
 
     calls: list[tuple[tuple[str, ...], Path]] = []
 
     def fake_run(
-        command: tuple[str, ...], *, cwd: Path, check: bool, capture_output: bool, text: bool
+        command: tuple[str, ...],
+        *,
+        cwd: Path,
+        check: bool,
+        capture_output: bool,
+        text: bool,
     ) -> subprocess.CompletedProcess[str]:
         calls.append((command, cwd))
         return subprocess.CompletedProcess(command, 1, "", "missing extension")
 
-    with pytest.raises(g2.PythonV2RuntimeError, match="make build-debug-v2") as exc_info:
+    with pytest.raises(
+        g2.PythonV2RuntimeError, match="make sync && make build-debug"
+    ) as exc_info:
         g2.assert_python_v2_runtime(upstream, runner=fake_run)
 
     assert "nautilus_trader._libnautilus.common" in str(exc_info.value)
     assert "--upstream-root" in str(exc_info.value)
     assert calls == [
-        ((str(interpreter), "-c", "import nautilus_trader._libnautilus.common"), python_root)
+        (
+            (str(interpreter), "-c", "import nautilus_trader._libnautilus.common"),
+            python_root,
+        )
     ]
 
 
@@ -863,7 +911,10 @@ def test_check_card_declarations_rejects_invalid_harness_manifest(monkeypatch) -
     [
         ({"upstream_clean": 1}, "upstream_clean must be a boolean"),
         ({"returncode": False}, "returncode must be an integer"),
-        ({"verified_at": None}, "verified_at must be a timezone-aware ISO-8601 timestamp"),
+        (
+            {"verified_at": None},
+            "verified_at must be a timezone-aware ISO-8601 timestamp",
+        ),
         ({"duration_seconds": None}, "duration_seconds must be a nonnegative number"),
     ],
 )

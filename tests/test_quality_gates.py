@@ -150,3 +150,11 @@ def _is_pinned_upstream_snapshot(path: Path, text: str) -> bool:
         and "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only"
         in text
     )
+
+
+def test_static_quality_runner_includes_findings_schema() -> None:
+    text = (REPO_ROOT / "tools/check_static_quality.py").read_text(encoding="utf-8")
+
+    assert "tools/check_findings_schema.py" in text
+    assert "tools/check_legacy_labelling.py" in text
+    assert "--check-cards" in text

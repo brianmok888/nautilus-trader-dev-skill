@@ -163,7 +163,12 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-architect",
         scope="upstream:cross-boundary-core-data-trading-backtest",
         summary="Compile the representative architecture path across component boundaries",
-        allowed_tokens=("nautilus-common", "nautilus-data", "nautilus-trading", "nautilus-backtest"),
+        allowed_tokens=(
+            "nautilus-common",
+            "nautilus-data",
+            "nautilus-trading",
+            "nautilus-backtest",
+        ),
         steps=(
             upstream_step(
                 "cargo",
@@ -205,7 +210,11 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-data",
         scope="upstream:crates/data-persistence-serialization",
         summary="Compile data-engine, catalog persistence, and serialization owners",
-        allowed_tokens=("nautilus-data", "nautilus-persistence", "nautilus-serialization"),
+        allowed_tokens=(
+            "nautilus-data",
+            "nautilus-persistence",
+            "nautilus-serialization",
+        ),
         steps=(
             upstream_step(
                 "cargo",
@@ -332,7 +341,11 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-learn",
         scope="repository:curriculum-commands-and-rust-examples",
         summary="Validate curriculum commands and the Rust examples learners are taught",
-        allowed_tokens=("test_dev_guide_sync.py", "test_template_classification.py", "nautilus-backtest"),
+        allowed_tokens=(
+            "test_dev_guide_sync.py",
+            "test_template_classification.py",
+            "nautilus-backtest",
+        ),
         steps=(
             repository_step(
                 PYTHON,
@@ -402,7 +415,18 @@ HARNESSES: dict[str, Harness] = {
         skill="nt-review",
         scope="repository:review-policy-plus-upstream-safety-owners",
         summary="Run review-policy gates and compile Rust safety/binding owners",
-        allowed_tokens=("test_dev_guide_sync.py", "test_template_classification.py", "test_v2_guidance_hardening.py", "test_v2_strategy_routing_scope.py", "test_v2_dex_template_policy.py", "test_v2_inventory_pins_versions.py", "test_v2_current_develop_overlays.py", "nautilus-core", "nautilus-model", "nautilus-pyo3"),
+        allowed_tokens=(
+            "test_dev_guide_sync.py",
+            "test_template_classification.py",
+            "test_v2_guidance_hardening.py",
+            "test_v2_strategy_routing_scope.py",
+            "test_v2_dex_template_policy.py",
+            "test_v2_inventory_pins_versions.py",
+            "test_v2_current_develop_overlays.py",
+            "nautilus-core",
+            "nautilus-model",
+            "nautilus-pyo3",
+        ),
         steps=(
             repository_step(
                 PYTHON,
@@ -456,7 +480,9 @@ HARNESSES: dict[str, Harness] = {
                 "crates/analysis/Cargo.toml",
                 "--all-targets",
             ),
-            upstream_step("cargo", "check", "-p", "nautilus-indicators", "--all-targets"),
+            upstream_step(
+                "cargo", "check", "-p", "nautilus-indicators", "--all-targets"
+            ),
         ),
         owned_paths=(Path("skills/nt-signals/SKILL.md"),),
         evidence_file=Path("references/g2-evidence/nt-signals.json"),
@@ -598,10 +624,14 @@ def assert_expected_upstream(
             f"Upstream checkout is {actual}, expected {expected_commit}: {upstream_root}"
         )
     if not upstream_is_clean(upstream_root):
-        raise RuntimeError(f"Upstream checkout has uncommitted changes: {upstream_root}")
+        raise RuntimeError(
+            f"Upstream checkout has uncommitted changes: {upstream_root}"
+        )
 
 
-def command_matches_scope(command: tuple[str, ...], allowed_tokens: tuple[str, ...]) -> bool:
+def command_matches_scope(
+    command: tuple[str, ...], allowed_tokens: tuple[str, ...]
+) -> bool:
     return any(token in argument for token in allowed_tokens for argument in command)
 
 
@@ -620,7 +650,9 @@ def validate_harnesses(
     scopes: dict[str, str] = {}
     for key, harness in sorted(harnesses.items()):
         if harness.skill != key:
-            errors.append(f"{key} manifest key does not match harness skill {harness.skill}")
+            errors.append(
+                f"{key} manifest key does not match harness skill {harness.skill}"
+            )
         if not harness.steps:
             errors.append(f"{key} has no validation steps")
         if not harness.allowed_tokens:
@@ -671,9 +703,11 @@ def plan_harnesses(skills: set[str] | None = None) -> list[Harness]:
 Runner = Callable[..., subprocess.CompletedProcess[str]]
 
 
-def assert_python_v2_runtime(upstream_root: Path, *, runner: Runner = subprocess.run) -> None:
+def assert_python_v2_runtime(
+    upstream_root: Path, *, runner: Runner = subprocess.run
+) -> None:
     python_root = upstream_root / "python"
-    interpreter = python_root / ".venv/bin/python"
+    interpreter = upstream_root / ".venv/bin/python"
     try:
         result = runner(
             (str(interpreter), "-c", "import nautilus_trader._libnautilus.common"),
@@ -686,7 +720,7 @@ def assert_python_v2_runtime(upstream_root: Path, *, runner: Runner = subprocess
         raise PythonV2RuntimeError(
             "nt-strategy-builder G2 is blocked: the pinned upstream Python v2 runtime is "
             "not prepared; missing nautilus_trader._libnautilus.common. Prepare a separate "
-            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make build-debug-v2`, "
+            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make sync && make build-debug`, "
             "then pass it with `--upstream-root`. Do not build or install into the source-read-only "
             "pinned cache."
         ) from exc
@@ -694,7 +728,7 @@ def assert_python_v2_runtime(upstream_root: Path, *, runner: Runner = subprocess
         raise PythonV2RuntimeError(
             "nt-strategy-builder G2 is blocked: the pinned upstream Python v2 runtime is "
             "not prepared; missing nautilus_trader._libnautilus.common. Prepare a separate "
-            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make build-debug-v2`, "
+            f"writable checkout at commit {EXPECTED_UPSTREAM_COMMIT} with `make sync && make build-debug`, "
             "then pass it with `--upstream-root`. Do not build or install into the source-read-only "
             "pinned cache."
         )
@@ -712,7 +746,9 @@ def run_harness(
         try:
             assert_python_v2_runtime(upstream_root, runner=runner)
         except PythonV2RuntimeError as exc:
-            return RunResult(skill=harness.skill, status=RunStatus.BLOCKED, error=str(exc))
+            return RunResult(
+                skill=harness.skill, status=RunStatus.BLOCKED, error=str(exc)
+            )
     for step in harness.steps:
         cwd = (
             repo_root
@@ -744,7 +780,9 @@ def run_harness(
                 status=RunStatus.BLOCKED,
                 failed_step=step,
             )
-    write_evidence(harness, root=repo_root, upstream_root=upstream_root, results=evidence_steps)
+    write_evidence(
+        harness, root=repo_root, upstream_root=upstream_root, results=evidence_steps
+    )
     status = (
         RunStatus.PENDING
         if harness.skill == "nt-implement" and shutil.which("capnp") is None
@@ -803,7 +841,9 @@ def validate_readiness_cards(
                     f"{skill} {gate_id} readiness row uses the card validator as evidence"
                 )
         expected_gate_ids = {f"G{index}" for index in range(8)}
-        if set(gate_ids) != expected_gate_ids or len(gate_ids) != len(expected_gate_ids):
+        if set(gate_ids) != expected_gate_ids or len(gate_ids) != len(
+            expected_gate_ids
+        ):
             errors.append(
                 f"{skill} readiness card must declare exactly one row for each G0-G7 gate"
             )
@@ -822,13 +862,17 @@ def validate_readiness_cards(
         if status not in {"Pass", "Pending", "Blocked"}:
             errors.append(f"{skill} G2 readiness row has an invalid status")
         if f"`{evidence_command(skill)}`" not in row:
-            errors.append(f"{skill} G2 readiness row lacks its targeted harness command")
+            errors.append(
+                f"{skill} G2 readiness row lacks its targeted harness command"
+            )
         evidence_file = harnesses[skill].evidence_file
         if evidence_file is None:
             errors.append(f"{skill} has no durable evidence artifact configured")
             continue
         if f"`{evidence_file.as_posix()}`" not in row:
-            errors.append(f"{skill} G2 readiness row lacks its durable evidence artifact")
+            errors.append(
+                f"{skill} G2 readiness row lacks its durable evidence artifact"
+            )
         if not require_evidence or skill in excluded:
             continue
         evidence_path = root / evidence_file
@@ -842,7 +886,10 @@ def validate_readiness_cards(
             continue
         if payload.get("schema_version") != 2:
             errors.append(f"{skill} durable evidence has an unsupported schema")
-        if payload.get("skill") != skill or payload.get("scope") != harnesses[skill].scope:
+        if (
+            payload.get("skill") != skill
+            or payload.get("scope") != harnesses[skill].scope
+        ):
             errors.append(f"{skill} durable evidence does not match its harness")
         evidence_status = payload.get("status")
         if evidence_status not in {"pass", "pending", "blocked"}:
@@ -850,23 +897,35 @@ def validate_readiness_cards(
         if status == "Pass" and evidence_status != "pass":
             errors.append(f"{skill} G2 readiness Pass lacks passing durable evidence")
         if status == "Pending" and evidence_status != "pending":
-            errors.append(f"{skill} G2 readiness Pending lacks pending durable evidence")
+            errors.append(
+                f"{skill} G2 readiness Pending lacks pending durable evidence"
+            )
         if status == "Blocked" and evidence_status != "blocked":
-            errors.append(f"{skill} G2 readiness Blocked lacks blocked durable evidence")
+            errors.append(
+                f"{skill} G2 readiness Blocked lacks blocked durable evidence"
+            )
         if evidence_status == "pending" and not payload.get("pending_reason"):
             errors.append(f"{skill} pending durable evidence lacks a reason")
         if evidence_status == "blocked" and not payload.get("blocked_reason"):
             errors.append(f"{skill} blocked durable evidence lacks a reason")
         if payload.get("upstream_commit") != EXPECTED_UPSTREAM_COMMIT:
-            errors.append(f"{skill} durable evidence does not match the pinned upstream")
+            errors.append(
+                f"{skill} durable evidence does not match the pinned upstream"
+            )
         upstream_clean = payload.get("upstream_clean")
         if type(upstream_clean) is not bool:
             errors.append(f"{skill} durable evidence upstream_clean must be a boolean")
         elif not upstream_clean:
-            errors.append(f"{skill} durable evidence was not produced from a clean upstream")
+            errors.append(
+                f"{skill} durable evidence was not produced from a clean upstream"
+            )
         verified_at = payload.get("verified_at")
         try:
-            timestamp = datetime.fromisoformat(verified_at) if isinstance(verified_at, str) else None
+            timestamp = (
+                datetime.fromisoformat(verified_at)
+                if isinstance(verified_at, str)
+                else None
+            )
         except ValueError:
             timestamp = None
         if timestamp is None or timestamp.tzinfo is None:
@@ -878,7 +937,9 @@ def validate_readiness_cards(
         if payload.get("owned_content_sha256") != harness_content_hash(
             root, harnesses[skill]
         ):
-            errors.append(f"{skill} durable evidence does not match owned skill content")
+            errors.append(
+                f"{skill} durable evidence does not match owned skill content"
+            )
         steps = payload.get("steps")
         if not isinstance(steps, list) or len(steps) != len(harnesses[skill].steps):
             errors.append(f"{skill} durable evidence has incomplete steps")
@@ -888,7 +949,9 @@ def validate_readiness_cards(
                     continue
                 returncode = step.get("returncode")
                 if type(returncode) is not int:
-                    errors.append(f"{skill} durable evidence returncode must be an integer")
+                    errors.append(
+                        f"{skill} durable evidence returncode must be an integer"
+                    )
                 elif returncode != 0:
                     errors.append(f"{skill} durable evidence contains a failed step")
                 duration = step.get("duration_seconds")
@@ -910,12 +973,18 @@ def validate_readiness_cards(
                 (list(step.command), step.cwd.value) for step in harnesses[skill].steps
             ]
             if recorded != expected:
-                errors.append(f"{skill} durable evidence commands do not match its harness")
+                errors.append(
+                    f"{skill} durable evidence commands do not match its harness"
+                )
     return errors
 
 
 def write_evidence(
-    harness: Harness, *, root: Path, upstream_root: Path, results: list[dict[str, object]]
+    harness: Harness,
+    *,
+    root: Path,
+    upstream_root: Path,
+    results: list[dict[str, object]],
 ) -> None:
     if harness.evidence_file is None:
         return
@@ -955,7 +1024,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--check-cards", action="store_true")
     parser.add_argument("--check-card-declarations", action="store_true")
-    parser.add_argument("--exclude-evidence", action="append", choices=sorted(HARNESSES))
+    parser.add_argument(
+        "--exclude-evidence", action="append", choices=sorted(HARNESSES)
+    )
     return parser.parse_args(argv)
 
 

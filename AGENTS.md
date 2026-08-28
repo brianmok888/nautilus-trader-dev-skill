@@ -92,8 +92,8 @@ nautilus-trader-dev-skill/
 │   ├── nt-dex-adapter/           # Custom DEX adapter development
 │   └── nt-review/                # Pre-deployment review
 ├── references/                   # Upstream-derived NT references and contracts
-├── tests/                        # Repository behavior and evidence gates
-├── tools/                        # Sync, freshness, classification, and G2 validators
+├── tests/                        # Repository behavior, schema, cutover, and evidence gates
+├── tools/                        # Sync, freshness, schema, static-quality, and G2 validators
 └── docs/                         # Current guides, prompt, and tracking charters
 ```
 
@@ -135,7 +135,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material bel
 - Preserve user and concurrent-agent changes; do not revert unrelated work.
 - Use test-first development for behavioral changes.
 - Keep files focused and avoid speculative abstractions.
-- Update G2 owned-content hashes when owned skill/test/tool content changes.
+- Regenerate G2 durable evidence when pinned upstream or owned skill/test/tool content changes.
 
 ## Validation
 
