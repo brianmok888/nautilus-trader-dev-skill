@@ -41,7 +41,7 @@ nt-architect → nt-implement → nt-strategy-builder-rust → nt-review
 ### All Skills Share
 - `SKILL.md` — Skill definition (description, when to use, workflow)
 - `templates/` — Classified Python templates; each `.py` file must declare `# TEMPLATE_CLASSIFICATION: ...` in its header
-- `references/` — API reference docs (symlinked from root `references/`)
+- `references/` — API reference docs: symlinked from root `references/` in workflow skills (nt-architect, nt-implement, nt-review); domain skills carry skill-specific reference trees
 - `rules/` — DO/DON'T rulesets (some skills)
 
 ### Template Pattern

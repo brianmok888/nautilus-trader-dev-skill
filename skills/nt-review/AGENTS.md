@@ -6,7 +6,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 **Purpose:** Validate NautilusTrader implementations against conventions, trading correctness, performance, and testability before deployment.
 
-**Entry Point:** `SKILL.md` (955 lines)
+**Entry Point:** `SKILL.md` (72 lines)
 
 ## REVIEW DIMENSIONS (8)
 

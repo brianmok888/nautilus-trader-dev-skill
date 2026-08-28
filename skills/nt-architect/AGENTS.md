@@ -2,7 +2,7 @@
 
 **Purpose:** Translate research outputs (trained ML models + signal logic) into NautilusTrader component architecture before writing any code.
 
-**Entry Point:** `SKILL.md` (347 lines)
+**Entry Point:** `SKILL.md` (91 lines)
 
 ## DESIGN PROCESS (5 Phases)
 

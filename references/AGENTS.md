@@ -19,12 +19,15 @@ references/
 │   ├── live.md        # TradingNode, reconciliation
 │   ├── orders.md      # Order types, lifecycle
 │   └── data.md        # Data types, subscriptions
-├── developer_guide/   # Development guides
+├── developer_guide/   # Development guides (24 files)
+│   ├── contracts/     # Canonical local contracts (5 files)
 │   ├── adapters.md    # Rust-first adapter pattern
 │   ├── rust.md        # Rust conventions
 │   └── ffi.md         # FFI memory contract
+├── g2-evidence/       # Durable G2 harness evidence per skill (17 files)
 ├── integrations/      # Integration examples
-└── dev_templates/     # Development templates
+├── dev_templates/     # Rust benchmark templates (criterion, iai)
+└── upstream-delta-review.json  # Reviewed current-develop delta manifest
 ```
 
 ## WHERE TO LOOK
