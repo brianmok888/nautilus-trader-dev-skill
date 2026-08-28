@@ -7,19 +7,18 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-model
 
-## Develop-only order metadata validation
+## Order metadata validation (develop-line)
 
-Current `origin/develop` commit
-[`d46f56505`](https://github.com/nautechsystems/nautilus_trader/commit/d46f56505)
-adds `OrderInitialized::new_checked`. The fallible constructor rejects a
+Upstream commit
+[`d46f56505`](https://github.com/nautechsystems/nautilus_trader/commit/d46f56505),
+included in the pinned G2 baseline, adds `OrderInitialized::new_checked`. The fallible constructor rejects a
 contingent order without linked order IDs and rejects an execution algorithm
 without its execution spawn ID. `OrderInitialized::new` now delegates to that
 validation and panics on invalid metadata.
 
-This API is newer than the pinned G2 baseline
-`19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. Use `new_checked` when code must
-handle invalid external or persisted order metadata, but gate that code on a
-current-develop dependency until the baseline advances.
+This API is included in the pinned G2 baseline
+`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. Use `new_checked` when code must
+handle invalid external or persisted order metadata.
 
 ## NT V2 Rust readiness gates
 
@@ -31,9 +30,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-model` passed the skill domain's scoped examples and owners against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-model.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-model` passed the skill domain's scoped examples and owners against `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-model.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -80,7 +79,7 @@ Prior Python model examples and extension guidance are quarantined under `migrat
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/rust.md` and the model snapshots under `references/api/model/` as source-pinned upstream material at commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. Version-scope post-pin APIs such as `OrderInitialized::new_checked` until the baseline advances.
+Use `references/developer_guide/rust.md` and the model snapshots under `references/api/model/` as source-pinned upstream material at commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. Version-scope post-pin APIs such as `OrderInitialized::new_checked` until the baseline advances.
 
 Current-develop betting invariant: increasing a same-side `BetPosition` uses a
 stake-weighted average price, not an unweighted mean. Preserve constituent

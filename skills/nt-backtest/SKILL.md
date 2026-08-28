@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -61,7 +61,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`.
 
 ## What This Skill Covers
 
@@ -86,24 +86,24 @@ NautilusTrader **backtesting domain** — backtest engine, simulated exchange, f
 - **Live deployment** → use `nt-live`
 - **Indicator logic** → use `nt-signals`
 
-## Develop-only `BacktestResult` analysis
+## `BacktestResult` analysis (develop-line)
 Source: upstream NautilusTrader pin `73d4dd5b3be4cb198bb20c89da6963c85eb24f3a` (state verified at that pin; kept as historical citation).
 
-Current `origin/develop` commit
-[`501ebe4a8`](https://github.com/nautechsystems/nautilus_trader/commit/501ebe4a8)
-adds `BacktestResult.returns_series`. Rust stores it as an ordered
+Upstream commit
+[`501ebe4a8`](https://github.com/nautechsystems/nautilus_trader/commit/501ebe4a8),
+included in the pinned G2 baseline, adds `BacktestResult.returns_series`. Rust stores it as an ordered
 `BTreeMap<UnixNanos, f64>`; the PyO3 property is `dict[int, float]`, keyed by
 nanosecond timestamps. It supports a result-only tearsheet after the node or
 engine is no longer retained. A cache-backed chart still needs live node state,
 and multi-currency analysis should pass an explicit currency where the
 tearsheet API requires one.
 
-This property is not present at the pinned G2 baseline. Version-gate consumers
-or keep using the pinned result statistics (`stats_pnls`, `stats_returns`, and
-`stats_general`) until the baseline advances.
+The property is present at the pinned G2 baseline `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`.
+The pinned result statistics (`stats_pnls`, `stats_returns`, and
+`stats_general`) remain available.
 
 ## v1.227.0 backtest/matching deltas
-Source: upstream NautilusTrader pin `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`.
+Source: upstream NautilusTrader pin `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 

@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 19df7796fcce341ca6c1f6a503fca2c7bf300e6c
+source_commit: 81eedc7cea29a52c0568f0bfbafd190c2bebe74f
 sync_date: 2026-08-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Coding Standards
 
 ## Code Style

@@ -566,6 +566,36 @@ specific venue they are being routed to.
 These contingency types relate to ContingencyType FIX tag <1385> <https://www.onixs.biz/fix-dictionary/5.0.sp2/tagnum_1385.html>.
 :::
 
+### Strategy-managed contingencies
+
+Upstream commit
+[`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`](https://github.com/nautechsystems/nautilus_trader/commit/81eedc7cea29a52c0568f0bfbafd190c2bebe74f)
+defines precise semantics for `StrategyConfig.manage_contingent_orders`. Enable it to manage open
+OTO, OCO, and OUO relationships for orders that are **not active local**. The strategy sends the
+resulting cancel and quantity-update commands through the normal execution path before it calls
+the specific and aggregate user order-event handlers.
+
+Ownership and scope boundaries:
+
+- The `OrderEmulator` always owns active-local orders; enabling strategy management never makes
+  the strategy and emulator manage the same order.
+- The option adds no native venue support and never submits a non-active-local OTO child: it
+  manages non-active-local orders that are already open. The active-local emulator remains
+  responsible for submitting a child held locally.
+- OTO quantity propagation: before the parent's first fill, parent quantity updates propagate to
+  open, non-active-local children. After filling starts, parent events keep each child quantity
+  equal to the parent's cumulative filled quantity; a child fill or update waits for the next
+  parent event to refresh that target. Parent processing cancels an open child if the parent
+  closes without a fill or the child's cumulative fills meet or exceed the refreshed target.
+- OCO: with strategy management enabled, the strategy requests cancellation for open,
+  non-active-local siblings; otherwise the adapter or venue determines cancellation behavior.
+- OUO: strategy management applies the same update or cancellation behavior to open,
+  non-active-local peers.
+
+These semantics are included in the pinned G2 baseline
+`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. The manual partial-trigger recipe below remains the
+portable fallback when the flag is disabled.
+
 #### One-Triggers-Other (OTO)
 
 An OTO order involves two parts:

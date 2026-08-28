@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/benchmarking/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
-source_commit: 19df7796fcce341ca6c1f6a503fca2c7bf300e6c
+source_commit: 81eedc7cea29a52c0568f0bfbafd190c2bebe74f
 sync_date: 2026-08-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Benchmarking
 
 Use this guide to write, run, and profile NautilusTrader benchmarks. It contains benchmark layout,
@@ -251,6 +250,10 @@ initial identity. Raw output stores each full identity once and binds every samp
 Source identity hashes staged diffs, unstaged diffs, and untracked file contents in addition to the
 revision. Exact event, order, position, and account fingerprints are checked after
 every timed iteration without adding fingerprint work to the duration.
+
+Repeat `--scenario <name>` or `--boundary <name>` on the `compare` command to run a targeted subset.
+Omit both options to run the complete matrix. Raw output stores one full fingerprint for each
+selected scenario and boundary, then binds every timed sample to it by digest.
 
 The JSON output contains every elapsed sample, the observed host state, boundary definitions,
 medians, minimum-to-maximum spread, v2/v1 ratios, and percentage gaps. The driver requires at least

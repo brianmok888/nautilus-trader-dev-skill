@@ -90,3 +90,24 @@ def test_model_and_signal_guidance_cover_current_correctness_fixes() -> None:
     assert "fa507199deb34430a983144e4af028046f2af926" in model_text
     assert "`reset` must preserve configuration" in signal_text
     assert "8003bed6ef75d3cea8271dc368aba2630d7f9db6" in signal_text
+
+def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
+    # Given current-develop strategy-managed contingencies (81eedc7ce)
+    live = read("skills/nt-adapters/references/concepts/live.md")
+    orders = read("skills/nt-trading/references/concepts/orders.md")
+    builder = read("skills/nt-strategy-builder-rust/SKILL.md")
+
+    # When an agent configures or reviews contingent order management
+    # Then the flag scope, ownership boundary, and version pin are explicit
+    for marker in ("manage_contingent_orders", "non-active-local"):
+        assert marker in live
+        assert marker in orders
+        assert marker in builder
+    for marker in (
+        "Strategy-managed contingencies",
+        "OrderEmulator",
+        "cumulative filled",
+        "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
+    ):
+        assert marker in orders
+    assert "81eedc7cea29a52c0568f0bfbafd190c2bebe74f" in builder

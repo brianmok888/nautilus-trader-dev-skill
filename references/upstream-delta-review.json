@@ -1,50 +1,10 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
+  "pinned_commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
   "reviewed_commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
   "reviewed_on": "2026-08-28",
-  "deltas": [
-    {
-      "commit": "4f59edaec47b18f0cae9c1fc3994bdb20dd5f504",
-      "subject": "Adopt Nautilus Engineering pre-commit tooling",
-      "upstream_paths": [
-        ".nautilus-engineering.lock",
-        ".nautilus-engineering/pre-commit/shell.yaml",
-        ".nautilus-engineering/pre-commit/toml.yaml",
-        ".nautilus-engineering/pre-commit/yaml.yaml",
-        ".pre-commit-config.yaml",
-        "scripts/manage-nautilus-engineering-pre-commit.py"
-      ],
-      "no_impact_rationale": "Pre-commit config orchestration only (.nautilus-engineering wrappers, lock, manage script). The .pre-commit-hooks/*.sh hook scripts and contribution semantics cited by skills are unchanged at the tip; no taught contract affected."
-    },
-    {
-      "commit": "8bdb04011825ca58671d2b167c867397fe8fa0b9",
-      "subject": "Refine BacktestEngine version benchmarks",
-      "upstream_paths": [
-        "BENCHMARKING.md",
-        "docs/developer_guide/benchmarking.md",
-        "python/tests/unit/test_benchmark_backtest_versions.py",
-        "scripts/benchmark-backtest-versions.py"
-      ],
-      "no_impact_rationale": "Pinned-snapshot developer-guide benchmarking page is byte-locked by check_dev_guide_snapshot_sync.py; the compare-command subset-flag refinement flows in at the next re-pin. No skill teaches the compare CLI subset flags directly (nt-backtest defers to the pinned reference); no repository change required at this pin."
-    },
-    {
-      "commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
-      "subject": "Fix Strategy contingent order management",
-      "upstream_paths": [
-        "RELEASES.md",
-        "crates/execution/src/order_manager/manager.rs",
-        "crates/trading/src/strategy/mod.rs",
-        "docs/concepts/orders/advanced.md",
-        "docs/how_to/configure_live_trading.md"
-      ],
-      "affected_files": [
-        "skills/nt-trading/references/concepts/orders.md",
-        "skills/nt-adapters/references/concepts/live.md"
-      ]
-    }
-  ],
+  "deltas": [],
   "reviewed_transitions": [
     {
       "from_commit": "8ecab1ce90d9790b1e18e162842decbae4d9de57",
