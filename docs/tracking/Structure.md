@@ -5,7 +5,7 @@
 <!-- Updated when: skill inventory, repository boundaries, or validation wiring changes. -->
 <!-- Does NOT contain: plans, historical attestations, or session state. -->
 
-Review date: 2026-08-10
+Review date: 2026-08-28
 
 ## Repository shape
 
@@ -13,7 +13,7 @@ Review date: 2026-08-10
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
 - **Upstream:** pinned reproducible checkout plus reviewed current-develop delta; read-only evidence
-- **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, and per-skill G2 harness cards
+- **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 
 ## Skill inventory
@@ -54,7 +54,10 @@ Review date: 2026-08-10
 | `tools/check_dev_guide_snapshot_sync.py` | Pinned snapshot integrity |
 | `tools/check_upstream_freshness.py` | Reviewed current-develop freshness |
 | `tools/check_rust_trading_reference_sync.py` | Rust trading contract alignment |
-| `tools/check_legacy_labelling.py` | Migration-only labelling |
+| `tools/check_legacy_labelling.py` | Migration-only labelling across active guidance |
+| `tools/check_findings_schema.py` | Current Findings ID, status, field, and closure schema |
+| `tools/check_static_quality.py` | Canonical deterministic static-quality orchestration |
+| `docs/tracking/CutoverGateTemplate.md` | Standard progressive cutover evidence contract |
 | `tools/check_skill_g2_harnesses.py` | G2 declaration, execution, and evidence validation |
 | `tools/template_classification.py` | Shipped Python classification policy |
 | `tests/test_repository_scope_cleanup.py` | NT-only repository boundary |

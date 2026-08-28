@@ -4,11 +4,11 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-25
-Reviewed upstream develop: `8ecab1ce90d9790b1e18e162842decbae4d9de57`
-Pinned G2 baseline: `8ecab1ce90d9790b1e18e162842decbae4d9de57`
+Review date: 2026-08-28
+Reviewed upstream develop: `8e51f957c6e31b28de14fbe244b3c048e291ddd7`
+Pinned G2 baseline: `8e51f957c6e31b28de14fbe244b3c048e291ddd7`
 
-Delta review of the 44 develop commits between the previous pin `d2b62d35a74f7f9fc4d419c29b5b2b37a71e190c` and this tip is recorded in `references/upstream-delta-review.json` history and Findings.md; the pin move to the reviewed tip is tracked as [NT-2026-08-25-01].
+The 63 develop commits and 543 net changed paths between the previous pin `8ecab1ce90d9790b1e18e162842decbae4d9de57` and the reviewed tip were classified during the 2026-08-28 mission. `references/upstream-delta-review.json` preserves every reviewed transition commit/path classification and separately records the zero current delta after moving the reproducible pin to the reviewed tip.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
@@ -175,13 +175,13 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 at the new pin with all sync checkers and the full suite green.
   closure-proof 2026-08-26: `python3 tools/check_upstream_freshness.py` exit 0 at pin `8ecab1ce9` (pinned == reviewed tip); `check_dev_guide_sync.py`, `check_dev_guide_snapshot_sync.py`, `check_rust_trading_reference_sync.py`, `check_legacy_labelling.py` all exit 0; all 17 G2 harnesses re-executed PASS at `8ecab1ce9` with `--check-cards` and `--check-card-declarations` exit 0 (evidence regenerated in `references/g2-evidence/*.json`, `upstream_commit=8ecab1ce90d9790b1e18e162842decbae4d9de57`); delta-review JSON collapsed to the new pin (deltas=[]). Pin-move commits: 506517b, cdf4ad8, 234556c; mirror/finding follow-ups in NT-02/-03/-04.
 
-[NT-2026-08-26-02] [P1] [CLOSED 2026-08-26] The Betfair v2 Rust-surface tracker (`betfair_v2.md`) is stale against `8ecab1ce9`, which landed exactly the behaviors the tracker exists to track.
+[NT-2026-08-26-02] [P1] [CLOSED 2026-08-26] The Betfair v2 Rust-surface tracker (`betfair_v2.md`) is stale against `8e51f957c`, which landed exactly the behaviors the tracker exists to track.
   file: references/integrations/betfair_v2.md:24-27,71-87,125; skills/nt-adapters/references/integrations/betfair_v2.md (mirror)
-  evidence: upstream `8ecab1ce9` "Retain Betfair terminal order identity" routes late fills/voids through retained local order identity, restores closed order identity from cache across reconnects, bounds correlation/customer-refs/dedup/replaced-IDs, resolves replace state across REST/OCM/reconciliation, and reconciles terminal replace/reduction reports without duplicates; `crates/execution/src/reconciliation/orders.rs` changed in the same delta (shared core). The tracker's "Current Rust status" rows (reconciliation scope, post-reconnect halt, external order filtering) and the OCM/reconciliation section describe pre-`8ecab1ce9` behavior and carry no row for terminal order identity retention.
-  fix: re-verify each tracker row against `8ecab1ce9` sources (`crates/adapters/betfair/src/execution.rs`, `stream/ocm.rs`, `crates/execution/src/reconciliation/orders.rs`), update stale rows, add the identity-retention behavior, and refresh both file copies.
-  closure: every tracker row cites verified `8ecab1ce9` behavior; `python3 tools/check_dev_guide_sync.py` and `python3 tools/check_legacy_labelling.py` stay green.
-  closure-proof 2026-08-26: terminal-order-identity row added citing `crates/adapters/betfair/src/execution.rs` (`OcmState::DEDUP_RETENTION`, most-recent 10,000 closed cached orders seeded into OCM state); reconciliation-scope and post-reconnect rows marked resolved/cutover-done against the upstream `8ecab1ce9` doc; customerOrderRef section carries the tracked-order collision wording. Gates: `check_dev_guide_sync.py`, `check_legacy_labelling.py` exit 0; `tests/test_v2_current_develop_overlays.py` green (cutover commit 990b5a5).
-  2026-08-26 — P1 — MODIFIED: tracker refreshed at 8ecab1ce9 and made the primary guide — files: references/integrations/betfair_v2.md, skills/nt-adapters/references/integrations/betfair_v2.md
+  evidence: upstream `8e51f957c` "Retain Betfair terminal order identity" routes late fills/voids through retained local order identity, restores closed order identity from cache across reconnects, bounds correlation/customer-refs/dedup/replaced-IDs, resolves replace state across REST/OCM/reconciliation, and reconciles terminal replace/reduction reports without duplicates; `crates/execution/src/reconciliation/orders.rs` changed in the same delta (shared core). The tracker's "Current Rust status" rows (reconciliation scope, post-reconnect halt, external order filtering) and the OCM/reconciliation section describe pre-`8e51f957c` behavior and carry no row for terminal order identity retention.
+  fix: re-verify each tracker row against `8e51f957c` sources (`crates/adapters/betfair/src/execution.rs`, `stream/ocm.rs`, `crates/execution/src/reconciliation/orders.rs`), update stale rows, add the identity-retention behavior, and refresh both file copies.
+  closure: every tracker row cites verified `8e51f957c` behavior; `python3 tools/check_dev_guide_sync.py` and `python3 tools/check_legacy_labelling.py` stay green.
+  closure-proof 2026-08-26: terminal-order-identity row added citing `crates/adapters/betfair/src/execution.rs` (`OcmState::DEDUP_RETENTION`, most-recent 10,000 closed cached orders seeded into OCM state); reconciliation-scope and post-reconnect rows marked resolved/cutover-done against the upstream `8e51f957c` doc; customerOrderRef section carries the tracked-order collision wording. Gates: `check_dev_guide_sync.py`, `check_legacy_labelling.py` exit 0; `tests/test_v2_current_develop_overlays.py` green (cutover commit 990b5a5).
+  2026-08-26 — P1 — MODIFIED: tracker refreshed at 8e51f957c and made the primary guide — files: references/integrations/betfair_v2.md, skills/nt-adapters/references/integrations/betfair_v2.md
 
 [NT-2026-08-26-03] [P1] [CLOSED 2026-08-26] Rust-first routing gap: the Betfair v2 guide is unreachable from active guidance — every route lands on the v1 guide.
   file: references/integrations/index.md:10; skills/nt-adapters/SKILL.md
@@ -198,7 +198,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   evidence: upstream `docs/integrations/polymarket.md` states "The adapter is implemented in Rust and exposed to Python" (line 9) and "direct WebSocket, provider, data client, and execution client types are Rust-only" (line 84) — no `polymarket_v2.md` split is warranted; the delta changed 11 lines (order-recovery clarification, REST report binding to account/instrument).
   fix: fold the mirror refresh into the NT-2026-08-26-01 pin-move segment (byte-sync both layers).
   closure: `python3 tools/check_dev_guide_sync.py` exits 0 with both mirrors matching the reviewed tip.
-  closure-proof 2026-08-26: both layers carry the upstream `8ecab1ce9` order-recovery wording (base-denominated `LIMIT` validation, "no known client association" fallback) and the authoritative Fees section; `python3 tools/check_dev_guide_sync.py` exits 0. Also fixed pre-existing layer divergence: the skills layer taught `Crypto 0.072` where upstream says `0.07`.
+  closure-proof 2026-08-26: both layers carry the upstream `8e51f957c` order-recovery wording (base-denominated `LIMIT` validation, "no known client association" fallback) and the authoritative Fees section; `python3 tools/check_dev_guide_sync.py` exits 0. Also fixed pre-existing layer divergence: the skills layer taught `Crypto 0.072` where upstream says `0.07`.
   2026-08-26 — P2 — MODIFIED: refreshed both polymarket mirrors to the reviewed tip and aligned the Fees section across layers — files: references/integrations/polymarket.md, skills/nt-adapters/references/integrations/polymarket.md
 
 ## Follow-up TODO
@@ -252,6 +252,42 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   closure: mirror diff against `git show d2b62d35a7:crates/adapters/okx/examples/node_exec_tester.rs` is empty; `python3 -m pytest -q` exits 0.
 
 ## Closed findings
+
+[NT-2026-08-28-01] [P0] [CLOSED 2026-08-28] Official develop advanced 63 commits and 543 unique paths beyond the reproducible pin.
+  file: tools/upstream_baseline.py; references/upstream-delta-review.json; references/developer_guide/
+  evidence: after `git fetch origin develop`, `python3 tools/check_upstream_freshness.py --format json` reported `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, 63 commits ahead of `8ecab1ce90d9790b1e18e162842decbae4d9de57`, with the reviewed manifest stale; the independent upstream reviewer classified all 63 commits and aggregate 543 paths.
+  fix: preserve the complete 63-commit transition classification, advance the pin to the reviewed tip, refresh changed developer-guide and Rust reference mirrors, synchronize pin metadata, and regenerate all G2 evidence against the new baseline.
+  closure: `references/upstream-delta-review.json` retains all 63 reviewed commits and 543 net changed paths; `python3 tools/check_upstream_freshness.py --format json` validates that history and reports `status: current`, zero current changed commits/paths, and `manifest_reviewed: true`; `python3 tools/check_dev_guide_snapshot_sync.py` passes.
+
+[NT-2026-08-28-02] [P1] [CLOSED 2026-08-28] NT v2 compatibility note: the mission prompt's migration/reference-only taxonomy violated the canonical legacy-labelling contract.
+  file: docs/prompts/master-prompt.md:17,92-95,120,150-152,230,313
+  evidence: `python3 tools/check_dev_guide_sync.py` failed on Python live `TradingNode` and legacy/Cython/v1 detection-only terms in the prompt that mandates the same check remain green.
+  fix: mark detection-only taxonomy blocks with canonical NT v2 compatibility and migration/reference-only labels, then include active docs in the dedicated lint scope.
+  closure: `python3 tools/check_dev_guide_sync.py` and `python3 tools/check_legacy_labelling.py` pass; focused legacy regression tests cover the prompt and active-doc surfaces.
+
+[NT-2026-08-28-03] [P1] [CLOSED 2026-08-28] Skill gate commands used a non-portable pytest console-script invocation.
+  file: skills/*/SKILL.md (82 commands across 16 skill packages)
+  evidence: the representative `uv run pytest -q ...` command failed collection with `ModuleNotFoundError: No module named 'tools'`; `uv run python -m pytest -q ...` passed 50 tests.
+  fix: replace all bare `uv run pytest` guidance in skill files with module-safe `uv run python -m pytest` and add a repository regression guard.
+  closure: `tests/test_command_portability.py` passes and a representative four-file command passes exactly as documented.
+
+[NT-2026-08-28-04] [P1] [CLOSED 2026-08-28] Current findings accepted malformed or incomplete entries without a schema gate.
+  file: docs/tracking/Findings.md; tools/check_findings_schema.py
+  evidence: the 54-entry ledger had no parser or validator; historical entries used five field variants and no command rejected invalid IDs, priorities, statuses, duplicates, or incomplete current entries.
+  fix: add a deterministic schema validator with explicit historical compatibility, strict 2026-08-28+ rules, fixture tests, and static-quality integration.
+  closure: `python3 tools/check_findings_schema.py` and `tests/test_findings_schema.py` pass; malformed IDs, duplicate IDs, missing open acceptance tests, and missing current closure proof fail.
+
+[NT-2026-08-28-05] [P2] [CLOSED 2026-08-28] Legacy terminology lint omitted active root and docs guidance.
+  file: tools/check_legacy_labelling.py:14-21
+  evidence: a temporary `docs/active.md` containing unlabelled `cdef` exited zero because scanning covered only `skills`, `references`, and `templates`.
+  fix: scan `README.md` and `docs/**/*.md`, exclude `docs/tracking` history intentionally, and avoid treating hyphenated semantic metadata such as `regime-v1` as legacy API guidance.
+  closure: focused fixtures prove unlabelled active docs fail, labelled migration text passes, and tracking history remains excluded; the full-tree lint passes.
+
+[NT-2026-08-28-06] [P1] [CLOSED 2026-08-28] Progressive cutover decisions lacked one complete standard gate-card contract.
+  file: docs/tracking/CutoverGateTemplate.md; docs/end_to_end_guide.md; skills/*/SKILL.md
+  evidence: all 17 skills exposed compact G0-G7 readiness rows, but no artifact covered the required 11 cross-cutting architecture-through-continuous-improvement gates with objective, applicability, evidence, status, owner, verification date, next action, and blocker fields.
+  fix: add the standard template, wire every skill and the end-to-end guide to it, index it in Components, and enforce coverage by tests.
+  closure: `tests/test_progressive_gate_cards.py` passes and `python3 tools/check_skill_g2_harnesses.py --check-card-declarations` confirms all 17 existing G0-G7 cards remain valid.
 
 [NT-2026-08-16-01] [P0] [CLOSED] Rust conversion correctness: custom-data guidance falsely describes current custom data as Python-only and recommends Python by default.
   file: skills/nt-signals/references/guides/custom_data_patterns.md:302
@@ -359,6 +395,12 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
+2026-08-28 — P0 — MODIFIED: advanced the reproducible pin to reviewed develop `8e51f957c` with the complete 63-commit/543-path transition classification preserved in the delta manifest and every pin-derived layer refreshed (developer-guide snapshots, adapter integration mirrors, curriculum pins, rust_trading example mirror, crates-lane guidance, and all 17 G2 evidence files re-executed at the new baseline) — files: tools/upstream_baseline.py, tools/check_upstream_freshness.py, tools/check_dev_guide_sync.py, tests/test_upstream_freshness.py, references/upstream-delta-review.json, references/developer_guide/, references/g2-evidence/, references/integrations/, skills/**, README.md, docs/end_to_end_guide.md, tests/test_active_doc_examples.py, tests/test_exec_spec_current_overlay.py, tests/test_nt_v2_adapter_overlays.py, tests/test_v2_current_develop_overlays.py
+2026-08-28 — P1 — MODIFIED: NT v2 compatibility note: labelled the master prompt's detection-only Cython/v1 taxonomy as migration/reference-only and aligned the prompt with the canonical legacy-labelling contract its own mandates enforce — files: docs/prompts/master-prompt.md
+2026-08-28 — P1 — MODIFIED: replaced every non-portable `uv run pytest` gate command with module-safe `uv run python -m pytest` across all 17 skill cards and added a repository portability guard — files: skills/*/SKILL.md, tests/test_command_portability.py
+2026-08-28 — P1 — MODIFIED: added the deterministic Findings schema validator (strict 2026-08-28+ entry rules with historical compatibility) and the canonical static-quality orchestrator wiring schema, labelling, lane, template-classification, and card checks — files: tools/check_findings_schema.py, tools/check_static_quality.py, tests/test_findings_schema.py, tests/test_quality_gates.py, AGENTS.md, tools/check_skill_g2_harnesses.py, tests/test_skill_g2_harnesses.py
+2026-08-28 — P2 — MODIFIED: widened the legacy-terminology lint to README and active docs (docs/tracking history intentionally excluded) without flagging hyphenated semantic metadata — files: tools/check_legacy_labelling.py, tests/test_legacy_labelling.py
+2026-08-28 — P1 — MODIFIED: standardized the progressive cutover decision record with one complete gate-card template and end-to-end promotion guidance — files: docs/tracking/CutoverGateTemplate.md, tests/test_progressive_gate_cards.py, docs/end_to_end_guide.md
 2026-08-25 — P1 — MODIFIED: moved the pinned baseline to develop `73d4dd5b3` (44-commit delta reviewed and recorded), refreshed the three drift-affected developer-guide snapshots and the rust_trading examples mirror, and updated every pin-citing layer while preserving historical overlay citations — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, tests/test_pressure_review_regressions.py
 2026-08-25 — P1 — MODIFIED: extended the legacy-labelling gate with removed-v2-symbol detection (fence-aware labels, migration_reference exemption), labelled 22 retained v1 concept/integration mirrors, corrected renamed config guidance (LiveExecutionEngineConfig / DataClientConfig / ExecutionClientConfig), and labelled v1-only fences with current Rust contract pointers — files: tools/check_legacy_labelling.py, tests/test_legacy_labelling.py, references/concepts/*.md, references/integrations/*.md, skills/nt-{adapters,backtest,model,signals,testing,trading}/**, tools/run_pinned_v2_pytest.py
 2026-08-22 — P2 — MODIFIED: moved the pinned G2 baseline to develop 98e6c39d8 (Betfair socket-state reporting and reconnect control), relabeled the betfair_v2 overlay as in-pin behavior, reset the delta manifest, and re-executed all 17 G2 harnesses — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, docs/tracking/Findings.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, references/integrations/betfair_v2.md, tests/test_exec_spec_current_overlay.py
