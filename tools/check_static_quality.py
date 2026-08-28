@@ -8,6 +8,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CHECKS = (
     ("tools/check_dev_guide_sync.py",),
     ("tools/check_dev_guide_snapshot_sync.py",),
+    ("tools/check_rust_trading_reference_sync.py",),
+    ("tools/check_upstream_freshness.py", "--format", "json"),
     ("tools/check_legacy_labelling.py",),
     ("tools/check_findings_schema.py",),
     ("tools/markdown_lane_contract.py", "--check"),

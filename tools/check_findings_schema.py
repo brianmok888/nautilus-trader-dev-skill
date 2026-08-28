@@ -12,6 +12,13 @@ _HEADER = re.compile(
     r"(?P<title>\S.*)$"
 )
 _FIELD = re.compile(r"^  (?P<name>[a-z][a-z0-9-]*): (?P<value>\S.*)$")
+_FIELD_LIKE = re.compile(r"^\s+[a-z][a-z0-9-]*( \d{4}-\d{2}-\d{2})?: \S")
+_CANDIDATE = re.compile(r"^\[[^\]]+\] \[")
+_PATH_LINE = re.compile(r"(?<![\w./-])(?P<path>[A-Za-z0-9._][\w./+-]*?):(?P<line>\d+)(?!\d)")
+_CURRENT_PREFIX = "NT-2026-08-28-"
+_CURRENT_FIELDS = frozenset(
+    {"file", "evidence", "fix", "closure", "closure-proof", "acceptance-test", "correction"}
+)
 
 
 @dataclass(frozen=True)
@@ -24,13 +31,31 @@ class Finding:
     fields: dict[str, str]
 
 
+def _repo_root(ledger: Path) -> Path:
+    for ancestor in ledger.resolve().parents:
+        if (ancestor / ".git").exists():
+            return ancestor
+    return ledger.resolve().parent
+
+
+def _citation_is_valid(root: Path, citation: re.Match[str]) -> bool:
+    path = root / citation["path"]
+    if not path.is_file():
+        return False
+    try:
+        line_count = len(path.read_text(encoding="utf-8", errors="replace").splitlines())
+    except OSError:
+        return False
+    return 1 <= int(citation["line"]) <= max(line_count, 1)
+
+
 def _parse_findings(path: Path) -> tuple[list[Finding], list[str]]:
     lines = path.read_text(encoding="utf-8").splitlines()
     findings: list[Finding] = []
     errors: list[str] = []
     current: Finding | None = None
     for line_number, line in enumerate(lines, 1):
-        if line.startswith("[") and "] [P" in line:
+        if _CANDIDATE.match(line):
             match = _HEADER.fullmatch(line)
             if match is None:
                 errors.append(f"line {line_number}: invalid finding header")
@@ -48,7 +73,30 @@ def _parse_findings(path: Path) -> tuple[list[Finding], list[str]]:
             continue
         field = _FIELD.fullmatch(line)
         if field is not None and current is not None:
-            current.fields[field["name"]] = field["value"]
+            name = field["name"]
+            is_current = current.identifier.startswith(_CURRENT_PREFIX)
+            duplicate = name in current.fields
+            if duplicate and is_current:
+                errors.append(
+                    f"line {line_number}: duplicate field {name} in {current.identifier}"
+                )
+            current.fields.setdefault(name, field["value"])
+            if not duplicate and is_current and name not in _CURRENT_FIELDS:
+                errors.append(
+                    f"line {line_number}: unknown field {name} in {current.identifier}"
+                )
+            continue
+        if (
+            current is not None
+            and current.identifier.startswith(_CURRENT_PREFIX)
+            and _FIELD_LIKE.match(line) is not None
+            and field is None
+        ):
+            errors.append(
+                f"line {line_number}: malformed field line in {current.identifier}"
+            )
+    if not findings:
+        errors.append("ledger contains no findings")
     return findings, errors
 
 
@@ -74,6 +122,18 @@ def validate_findings(path: Path) -> list[str]:
             errors.append(
                 f"line {finding.line}: {finding.identifier} missing {', '.join(missing)}"
             )
+        if is_current_schema and "file" in finding.fields:
+            citations = list(_PATH_LINE.finditer(finding.fields["file"]))
+            if not citations:
+                errors.append(
+                    f"line {finding.line}: {finding.identifier} file field has no path:line citation"
+                )
+            else:
+                root = _repo_root(path)
+                if not any(_citation_is_valid(root, c) for c in citations):
+                    errors.append(
+                        f"line {finding.line}: {finding.identifier} file field cites no resolvable repository path:line"
+                    )
         if (
             is_current_schema
             and finding.status.startswith("CLOSED")

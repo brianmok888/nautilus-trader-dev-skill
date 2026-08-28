@@ -254,7 +254,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 ## Closed findings
 
 [NT-2026-08-28-01] [P0] [CLOSED 2026-08-28] Official develop advanced 63 commits and 543 unique paths beyond the reproducible pin.
-  file: tools/upstream_baseline.py; references/upstream-delta-review.json; references/developer_guide/
+  file: tools/upstream_baseline.py:4; references/upstream-delta-review.json:5; references/developer_guide/adapters.md:1
   evidence: after `git fetch origin develop`, `python3 tools/check_upstream_freshness.py --format json` reported `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, 63 commits ahead of `8ecab1ce90d9790b1e18e162842decbae4d9de57`, with the reviewed manifest stale; the independent upstream reviewer classified all 63 commits and aggregate 543 paths.
   fix: preserve the complete 63-commit transition classification, advance the pin to the reviewed tip, refresh changed developer-guide and Rust reference mirrors, synchronize pin metadata, and regenerate all G2 evidence against the new baseline.
   closure: `references/upstream-delta-review.json` retains all 63 reviewed commits and 543 net changed paths; `python3 tools/check_upstream_freshness.py --format json` validates that history and reports `status: current`, zero current changed commits/paths, and `manifest_reviewed: true`; `python3 tools/check_dev_guide_snapshot_sync.py` passes.
@@ -266,13 +266,13 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   closure: `python3 tools/check_dev_guide_sync.py` and `python3 tools/check_legacy_labelling.py` pass; focused legacy regression tests cover the prompt and active-doc surfaces.
 
 [NT-2026-08-28-03] [P1] [CLOSED 2026-08-28] Skill gate commands used a non-portable pytest console-script invocation.
-  file: skills/*/SKILL.md (82 commands across 16 skill packages)
+  file: skills/nt-review/SKILL.md:19; skills/nt-testing/SKILL.md:79; tests/test_command_portability.py:1
   evidence: the representative `uv run pytest -q ...` command failed collection with `ModuleNotFoundError: No module named 'tools'`; `uv run python -m pytest -q ...` passed 50 tests.
-  fix: replace all bare `uv run pytest` guidance in skill files with module-safe `uv run python -m pytest` and add a repository regression guard.
+  fix: replace all bare `uv run pytest` guidance in the 17 top-level skill cards with module-safe `uv run python -m pytest` and add a repository regression guard scoped to those cards.
   closure: `tests/test_command_portability.py` passes and a representative four-file command passes exactly as documented.
 
 [NT-2026-08-28-04] [P1] [CLOSED 2026-08-28] Current findings accepted malformed or incomplete entries without a schema gate.
-  file: docs/tracking/Findings.md; tools/check_findings_schema.py
+  file: tools/check_findings_schema.py:8; tests/test_findings_schema.py:1; docs/tracking/Findings.md:15
   evidence: the 54-entry ledger had no parser or validator; historical entries used five field variants and no command rejected invalid IDs, priorities, statuses, duplicates, or incomplete current entries.
   fix: add a deterministic schema validator with explicit historical compatibility, strict 2026-08-28+ rules, fixture tests, and static-quality integration.
   closure: `python3 tools/check_findings_schema.py` and `tests/test_findings_schema.py` pass; malformed IDs, duplicate IDs, missing open acceptance tests, and missing current closure proof fail.
@@ -284,7 +284,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   closure: focused fixtures prove unlabelled active docs fail, labelled migration text passes, and tracking history remains excluded; the full-tree lint passes.
 
 [NT-2026-08-28-06] [P1] [CLOSED 2026-08-28] Progressive cutover decisions lacked one complete standard gate-card contract.
-  file: docs/tracking/CutoverGateTemplate.md; docs/end_to_end_guide.md; skills/*/SKILL.md
+  file: docs/tracking/CutoverGateTemplate.md:1; docs/end_to_end_guide.md:16; skills/nt-review/SKILL.md:19
   evidence: all 17 skills exposed compact G0-G7 readiness rows, but no artifact covered the required 11 cross-cutting architecture-through-continuous-improvement gates with objective, applicability, evidence, status, owner, verification date, next action, and blocker fields.
   fix: add the standard template, wire every skill and the end-to-end guide to it, index it in Components, and enforce coverage by tests.
   closure: `tests/test_progressive_gate_cards.py` passes and `python3 tools/check_skill_g2_harnesses.py --check-card-declarations` confirms all 17 existing G0-G7 cards remain valid.
@@ -401,6 +401,7 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
 2026-08-28 — P1 — MODIFIED: added the deterministic Findings schema validator (strict 2026-08-28+ entry rules with historical compatibility) and the canonical static-quality orchestrator wiring schema, labelling, lane, template-classification, and card checks — files: tools/check_findings_schema.py, tools/check_static_quality.py, tests/test_findings_schema.py, tests/test_quality_gates.py, AGENTS.md, tools/check_skill_g2_harnesses.py, tests/test_skill_g2_harnesses.py
 2026-08-28 — P2 — MODIFIED: widened the legacy-terminology lint to README and active docs (docs/tracking history intentionally excluded) without flagging hyphenated semantic metadata — files: tools/check_legacy_labelling.py, tests/test_legacy_labelling.py
 2026-08-28 — P1 — MODIFIED: standardized the progressive cutover decision record with one complete gate-card template and end-to-end promotion guidance — files: docs/tracking/CutoverGateTemplate.md, tests/test_progressive_gate_cards.py, docs/end_to_end_guide.md
+2026-08-28 — P1 — MODIFIED: resolved the independent post-fix review (3 P1 + 1 P2): schema candidate detection no longer pre-filters on `] [P` so malformed IDs/priorities/statuses are rejected, current entries reject duplicate/unknown/malformed fields, empty ledgers fail, current `file:` fields must cite at least one resolvable repository path:line (existence + line-range checked), the static-quality orchestrator now binds rust_trading_reference_sync and upstream_freshness with structural test coverage of the declared validator set, and all 2026-08-28 finding citations were narrowed to concrete path:line references (P2: portability-guard claim scoped to the 17 top-level skill cards) — files: tools/check_findings_schema.py, tools/check_static_quality.py, tests/test_findings_schema.py, tests/test_quality_gates.py, docs/tracking/Findings.md
 2026-08-25 — P1 — MODIFIED: moved the pinned baseline to develop `73d4dd5b3` (44-commit delta reviewed and recorded), refreshed the three drift-affected developer-guide snapshots and the rust_trading examples mirror, and updated every pin-citing layer while preserving historical overlay citations — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, tests/test_pressure_review_regressions.py
 2026-08-25 — P1 — MODIFIED: extended the legacy-labelling gate with removed-v2-symbol detection (fence-aware labels, migration_reference exemption), labelled 22 retained v1 concept/integration mirrors, corrected renamed config guidance (LiveExecutionEngineConfig / DataClientConfig / ExecutionClientConfig), and labelled v1-only fences with current Rust contract pointers — files: tools/check_legacy_labelling.py, tests/test_legacy_labelling.py, references/concepts/*.md, references/integrations/*.md, skills/nt-{adapters,backtest,model,signals,testing,trading}/**, tools/run_pinned_v2_pytest.py
 2026-08-22 — P2 — MODIFIED: moved the pinned G2 baseline to develop 98e6c39d8 (Betfair socket-state reporting and reconnect control), relabeled the betfair_v2 overlay as in-pin behavior, reset the delta manifest, and re-executed all 17 G2 harnesses — files: tools/upstream_baseline.py, README.md, docs/tracking/Components.md, docs/tracking/Findings.md, references/upstream-delta-review.json, references/developer_guide/*.md, skills/**, references/integrations/betfair_v2.md, tests/test_exec_spec_current_overlay.py

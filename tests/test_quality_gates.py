@@ -158,3 +158,29 @@ def test_static_quality_runner_includes_findings_schema() -> None:
     assert "tools/check_findings_schema.py" in text
     assert "tools/check_legacy_labelling.py" in text
     assert "--check-cards" in text
+
+
+def test_static_quality_runner_covers_binding_deterministic_validators() -> None:
+    from tools.check_static_quality import CHECKS
+
+    declared = {command[0] for command in CHECKS}
+    required = {
+        "tools/check_dev_guide_sync.py",
+        "tools/check_dev_guide_snapshot_sync.py",
+        "tools/check_rust_trading_reference_sync.py",
+        "tools/check_upstream_freshness.py",
+        "tools/check_legacy_labelling.py",
+        "tools/check_findings_schema.py",
+        "tools/markdown_lane_contract.py",
+        "tools/template_classification.py",
+    }
+
+    assert required <= declared
+    assert all((REPO_ROOT / command[0]).is_file() for command in CHECKS)
+    freshness = next(command for command in CHECKS if command[0].endswith("upstream_freshness.py"))
+
+    assert freshness == (
+        "tools/check_upstream_freshness.py",
+        "--format",
+        "json",
+    )
