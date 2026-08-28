@@ -587,6 +587,6 @@ Rust adapter code must include:
 - `references/examples/` — Per-adapter runnable examples
 - `references/integrations/` — Per-adapter integration docs
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `81eedc7cec`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `81eedc7cea`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

@@ -2100,7 +2100,7 @@
             "python/tests/unit/test_benchmark_backtest_versions.py",
             "scripts/benchmark-backtest-versions.py"
           ],
-          "no_impact_rationale": "Pinned-snapshot developer-guide benchmarking page is byte-locked by check_dev_guide_snapshot_sync.py; the compare-command subset-flag refinement flows in at the next re-pin. No skill teaches the compare CLI subset flags directly (nt-backtest defers to the pinned reference); no repository change required at this pin."
+          "no_impact_rationale": "Pinned-snapshot developer-guide benchmarking page is byte-locked by check_dev_guide_snapshot_sync.py and therefore refreshed by this re-pin. No skill teaches the compare CLI subset flags directly (nt-backtest defers to the pinned reference), so no additional skill-guidance change is required."
         },
         {
           "commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",

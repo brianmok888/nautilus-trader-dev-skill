@@ -91,6 +91,22 @@ def test_model_and_signal_guidance_cover_current_correctness_fixes() -> None:
     assert "`reset` must preserve configuration" in signal_text
     assert "8003bed6ef75d3cea8271dc368aba2630d7f9db6" in signal_text
 
+
+def test_current_baseline_abbreviation_is_consistent() -> None:
+    # Given user-facing references to the current pinned develop baseline
+    documents = (
+        read("docs/end_to_end_guide.md"),
+        read("skills/nt-dev/SKILL.md"),
+        read("skills/nt-testing/SKILL.md"),
+        read("skills/nt-adapters/SKILL.md"),
+        read("skills/nt-adapters/references/integrations/betfair.md"),
+        read("skills/nt-adapters/references/integrations/betfair_v2.md"),
+    )
+
+    # Then every abbreviated citation uses the resolvable 10-character prefix
+    assert all("81eedc7cea" in document for document in documents)
+
+
 def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
     # Given current-develop strategy-managed contingencies (81eedc7ce)
     live = read("skills/nt-adapters/references/concepts/live.md")

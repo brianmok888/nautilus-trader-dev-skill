@@ -8,9 +8,9 @@ Python-adapter wiring content that lived here was cleared; it is migration/refer
 history, never a production path.
 
 - All current Betfair work: [`betfair_v2.md`](betfair_v2.md) — the Rust adapter surface
-  (`crates/adapters/betfair`), tracked against the pinned baseline `81eedc7cec`.
+  (`crates/adapters/betfair`), tracked against the pinned baseline `81eedc7cea`.
 - NT v2 compatibility note: the upstream-maintained v1 Python wiring doc remains readable
   in the read-only pinned upstream snapshot at `docs/integrations/betfair.md`
-  (commit `81eedc7cec`); it is evidence, not active guidance.
+  (commit `81eedc7cea`); it is evidence, not active guidance.
 - NT v2 compatibility note: v1 → v2 migration material lives under
   `skills/nt-strategy-builder/migration_reference/python/` (migration/reference-only).

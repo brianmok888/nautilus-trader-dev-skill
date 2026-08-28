@@ -5,7 +5,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 The Betfair Rust adapter is in active parity work. This page is the **primary Betfair guide**
 (user-directed cutover, 2026-08-26): active Betfair routing resolves here first. The
 upstream-maintained v1 wiring doc remains readable in the read-only pinned snapshot
-(`docs/integrations/betfair.md` at commit `81eedc7cec`); the repo-local copy was cleared to a
+(`docs/integrations/betfair.md` at commit `81eedc7cea`); the repo-local copy was cleared to a
 labelled supersession stub in [betfair.md](betfair.md).
 
 This page mirrors the main section order from [Betfair](betfair.md). When the Rust adapter becomes
@@ -15,7 +15,7 @@ rewrite.
 ## Scope
 
 - Source of truth for this page: `crates/adapters/betfair`
-- Superseded v1 copy: [betfair.md](betfair.md) (cleared stub; upstream v1 doc at the pinned snapshot `81eedc7cec`)
+- Superseded v1 copy: [betfair.md](betfair.md) (cleared stub; upstream v1 doc at the pinned snapshot `81eedc7cea`)
 - Purpose of this page: track the current Rust surface and the current Rust-vs-v1 differences
 
 ## Current Rust status
