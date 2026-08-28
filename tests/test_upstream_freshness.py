@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from itertools import pairwise
 from pathlib import Path
 from typing import TypedDict, cast
 
@@ -398,15 +399,19 @@ def test_current_manifest_preserves_reviewed_transition_history() -> None:
     transitions = payload.get("reviewed_transitions")
 
     assert isinstance(transitions, list)
-    transition = next(
-        item
-        for item in transitions
-        if item.get("from_commit") == "8ecab1ce90d9790b1e18e162842decbae4d9de57"
-        and item.get("to_commit") == UPSTREAM_COMMIT
+    assert transitions
+    assert transitions[0]["from_commit"] == (
+        "8ecab1ce90d9790b1e18e162842decbae4d9de57"
     )
-    assert transition["commit_count"] == 63
-    assert transition["unique_path_count"] == 543
-    assert len(transition["deltas"]) == 63
-    assert {item["commit"] for item in transition["deltas"]} == set(
-        transition["reviewed_commits"]
-    )
+    assert transitions[-1]["to_commit"] == UPSTREAM_COMMIT
+
+    for previous, current in pairwise(transitions):
+        assert previous["to_commit"] == current["from_commit"]
+
+    for transition in transitions:
+        assert transition["commit_count"] == len(transition["reviewed_commits"])
+        assert transition["unique_path_count"] == len(transition["changed_paths"])
+        assert len(transition["deltas"]) == transition["commit_count"]
+        assert {item["commit"] for item in transition["deltas"]} == set(
+            transition["reviewed_commits"]
+        )
