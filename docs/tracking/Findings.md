@@ -5,14 +5,21 @@
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
 Review date: 2026-08-28
-Reviewed upstream develop: `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`
+Reviewed upstream develop: `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`
 Pinned G2 baseline: `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`
 
-The review manifest preserves both 2026-08-28 transitions: 63 commits and 543 net changed paths from `8ecab1ce90d9790b1e18e162842decbae4d9de57` to `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, then 10 commits and 45 net changed paths to `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. `references/upstream-delta-review.json` records every transition commit/path classification and a zero current delta at the reviewed pin.
+The review manifest preserves all three 2026-08-28 transitions: 63 commits and 543 net changed paths from `8ecab1ce90d9790b1e18e162842decbae4d9de57` to `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, then 10 commits and 45 net changed paths to `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`, then 3 commits and 15 net changed paths to `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. `references/upstream-delta-review.json` records every transition commit/path classification and the current reviewed delta. The reproducible pin stays at `19df7796` this cycle; guidance newer than the pin is recorded as develop-only overlays.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
 ## Open findings
+
+[NT-2026-08-28-11] [P1] [OPEN] Strategy-managed contingent order semantics are missing or stale in skills after upstream `81eedc7ce`.
+  file: skills/nt-adapters/references/concepts/live.md:374; skills/nt-trading/references/concepts/orders.md:550; skills/nt-strategy-builder-rust/SKILL.md:3
+  evidence: upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` rewrites the `StrategyConfig.manage_contingent_orders` description to "Manage open, non-active-local OTO, OCO, and OUO relationships" with `OrderEmulator` retaining active-local orders (docs/how_to/configure_live_trading.md, docs/concepts/orders/advanced.md "Strategy-managed contingencies"); `live.md:374` still carries the superseded "automatically manages" wording, `orders.md` contingency sections omit the strategy-managed path (OTO child quantity propagation and cancel rules, OCO sibling cancellation, OUO update scope), and the production Rust strategy skill never mentions the flag.
+  fix: correct the `live.md` row to the upstream scope wording; add a develop-only overlay section to `nt-trading/references/concepts/orders.md` (house style per nt-model "Develop-only order metadata validation") documenting the strategy-managed contingency semantics with the `81eedc7ce` citation; add the flag to `nt-strategy-builder-rust` configuration guidance with the pinned-baseline version boundary.
+  acceptance-test: a new deterministic policy test asserts the three skills cite `manage_contingent_orders` with the develop commit and non-active-local scope wording, and `nt-adapters` live config rows match the upstream `81eedc7ce` description; `python3 tools/check_upstream_freshness.py --format json` stays green with reviewed tip `81eedc7ce`.
+  closure: all three files updated with `81eedc7ce` citations and focused validators plus repository policy checks green.
 
 [NT-2026-08-28-07] [P1] [CLOSED 2026-08-28] Upstream currency: the reproducible pin and reviewed delta stopped 10 commits before current `origin/develop`.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json:1843
