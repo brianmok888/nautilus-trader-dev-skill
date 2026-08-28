@@ -15,9 +15,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | NT v2 compatibility note: No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder-rust` passed the skill domain's scoped examples and owners against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder-rust` passed the skill domain's scoped examples and owners against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -33,7 +33,7 @@ Implement every new strategy with Rust `StrategyCore`, `StrategyConfig`, `DataAc
 
 ## PyO3 control-plane lane
 
-Use PyO3 only to expose typed strategy configuration, instantiate and register the Rust strategy, control node lifecycle, and inspect outputs. Python must not own market-data handlers, strategy state transitions, order submission, position management, or risk authority.
+Use PyO3 only to expose typed strategy configuration, instantiate and register the Rust strategy, control node lifecycle, and inspect outputs. Python must not own market-data handlers, strategy state transitions, order submission, position management, or risk authority. If a PyO3 strategy factory participates in `LiveNodeBuilder`, it must not re-enter the same active builder; propagate the re-entry error, verify callback failures restore the builder, and never rely on process-abort behavior.
 
 ## Migration/reference lane
 
@@ -41,7 +41,7 @@ Existing Python strategy material belongs under `migration_reference/` and is us
 
 ## Source-pinned upstream lane
 
-Validate strategy APIs and registration patterns against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; treat later upstream examples as version-scoped evidence.
+Validate strategy APIs and registration patterns against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; treat later upstream examples as version-scoped evidence.
 
 ## What This Skill Covers
 
@@ -213,7 +213,7 @@ impl DataActor for MyStrategy {
    Register the strategy config as importable so node config can load it.
 5. **Register with a node**:
    - `BacktestEngine` — `engine.add_strategy(your_strategy)?` (Rust API).
-   - `LiveNode` — native Rust uses `node.add_strategy(your_strategy)?`. The upstream-only `add_builtin_strategy(...)` PyO3 helper is feature-gated to bundled example strategies and is not a general extension path. For custom production strategies, keep native Rust registration or expose a purpose-built owning-crate PyO3 registration surface. The legacy Python-live node is not a Rust-strategy target.
+   - `LiveNode` — native Rust uses `node.add_strategy(your_strategy)?`. The upstream-only `add_builtin_strategy(...)` PyO3 helper is feature-gated to bundled example strategies and is not a general extension path. For custom production strategies, keep native Rust registration or expose a purpose-built owning-crate PyO3 registration surface. A `LiveNodeBuilder` callback cannot re-enter the same active builder; expose that as a recoverable PyO3 error and test retry after a callback failure. The legacy Python-live node is not a Rust-strategy target.
 6. **Test in Rust** before wiring Python:
    ```bash
    cargo nextest run -p <your_crate> --all-features --cargo-profile nextest

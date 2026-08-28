@@ -387,7 +387,7 @@ def test_review_manifest_tracks_latest_reviewed_develop_commit() -> None:
         json.loads((REPO_ROOT / "references/upstream-delta-review.json").read_text()),
     )
 
-    assert manifest["reviewed_commit"] == "8e51f957c6e31b28de14fbe244b3c048e291ddd7"
+    assert manifest["reviewed_commit"] == "19df7796fcce341ca6c1f6a503fca2c7bf300e6c"
     assert manifest["pinned_commit"] == manifest["reviewed_commit"]
 
 

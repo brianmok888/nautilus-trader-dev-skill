@@ -678,7 +678,9 @@ instrument references) and returns a Nautilus domain type wrapped in `Result`.
 
 **Standard patterns:**
 
-- Handle string-to-numeric conversions with proper error context using `.parse::<f64>()` and `anyhow::Context`.
+- Deserialize prices, quantities, money, fees, and other discrete values as `Decimal`; never route them through `f64`.
+- Choose domain precision from the field contract: preserve meaningful venue scale with `Price::from_decimal` or `Quantity::from_decimal`, normalize documented non-semantic padding with `Decimal::normalize`, and use `Price::from_decimal_dp` or `Quantity::from_decimal_dp` when instrument or currency precision governs. Do not infer precision from incidental payload formatting.
+- Keep `.parse::<f64>()` only for fields whose venue contract is genuinely floating-point rather than discrete.
 - Check for empty strings before parsing optional fields - venues often return `""` instead of omitting fields.
 - Map venue enums to Nautilus enums explicitly with `match` statements rather than implementing automatic conversions that could hide mapping errors.
 - Accept instrument references when precision or other metadata is required for constructing Nautilus types (quantities, prices).

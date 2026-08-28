@@ -6,7 +6,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Non-negotiable repository and skill invariants. -->
 <!-- Does NOT contain: closures, plans, historical attestations, or per-skill detail. -->
 
-Review date: 2026-08-10
+Review date: 2026-08-28
 
 ## Scope authority
 
@@ -25,10 +25,12 @@ NT v2 compatibility note: Cython/v1 and legacy Python live terms below are migra
 
 6. **Version-sensitive claims MUST cite inspected upstream source or official documentation.** No fabricated identifiers, paths, or behavior claims.
 7. **Pinned and current-develop APIs MUST not be conflated.** Post-pin behavior requires a version-scoped overlay.
-8. **G2 Pass requires executable evidence and a matching owned-content hash.** Missing prerequisites yield Pending or Blocked, never an invented Pass.
-9. **Tests MUST fail closed when their required pinned runtime is unavailable.** Static repository checks may use host Python only through an explicit allowlist.
+8. **Rust adapter precision MUST follow the field contract.** Incidental payload formatting cannot determine discrete precision; documented padding may be normalized, while instrument or currency precision remains authoritative where specified.
+9. **Rust live reconciliation and lifecycle tests MUST assert semantic state.** Cover builder re-entry, same-position fills, quantity-free close-all restoration, ordering, and duplicate-side-effect freedom; do not substitute transient event counts for behavior.
+10. **G2 Pass requires executable evidence and a matching owned-content hash.** Missing prerequisites yield Pending or Blocked, never an invented Pass.
+11. **Tests MUST fail closed when their required pinned runtime is unavailable.** Static repository checks may use host Python only through an explicit allowlist.
 
 ## Repository hygiene
 
-10. **Current repository docs MUST describe current behavior.** Completed plans, session handoffs, generated agent state, and external attestations do not belong in the tracked tree.
-11. **Changes MUST preserve unrelated user work and MUST pass the complete validation matrix before completion is claimed.**
+12. **Current repository docs MUST describe current behavior.** Completed plans, session handoffs, generated agent state, and external attestations do not belong in the tracked tree.
+13. **Changes MUST preserve unrelated user work and MUST pass the complete validation matrix before completion is claimed.**

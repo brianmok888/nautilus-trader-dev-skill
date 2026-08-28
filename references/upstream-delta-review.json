@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "8e51f957c6e31b28de14fbe244b3c048e291ddd7",
-  "reviewed_commit": "8e51f957c6e31b28de14fbe244b3c048e291ddd7",
+  "pinned_commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
+  "reviewed_commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
   "reviewed_on": "2026-08-28",
   "deltas": [],
   "reviewed_transitions": [
@@ -1838,6 +1838,232 @@
         "scripts/ci/test-check-nightly-merge-status.bash",
         "scripts/ci/test-nightly-merge-workflow.bash",
         "tools.toml"
+      ]
+    },
+    {
+      "from_commit": "8e51f957c6e31b28de14fbe244b3c048e291ddd7",
+      "to_commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
+      "reviewed_on": "2026-08-28",
+      "commit_count": 10,
+      "unique_path_count": 45,
+      "reviewed_commits": [
+        "57ce1a80263fd014f1f5e3a7a7f7de82bb869322",
+        "d96c6efa08dfd0f701537bbdded2f5cb948f9910",
+        "efa34ce479a001b471482e085ef88c460209121c",
+        "f4a6e629c20d9c77f76e819d1766aadf6b9d1d18",
+        "be369b4b303dc2be3a2f4363c28e0c51c369bb75",
+        "91163e6e106bb3685b0beae5aeaea69bc0e726e6",
+        "d1012b9e20941110f9eee4048e0dee130bf55c4f",
+        "af0e5d1d341c49be7d446176b84866d4118b7caa",
+        "255070d66dc8aeff7dfb235d3f36d9ddc7a56a59",
+        "19df7796fcce341ca6c1f6a503fca2c7bf300e6c"
+      ],
+      "deltas": [
+        {
+          "commit": "57ce1a80263fd014f1f5e3a7a7f7de82bb869322",
+          "subject": "Restore Binance Futures close-all reconciliation",
+          "upstream_paths": [
+            "crates/adapters/binance/src/futures/execution.rs",
+            "crates/adapters/binance/src/futures/http/models.rs",
+            "crates/adapters/binance/tests/futures/exec_client.rs",
+            "crates/live/tests/manager.rs"
+          ],
+          "affected_files": [
+            "skills/nt-adapters/SKILL.md",
+            "skills/nt-live/SKILL.md",
+            "skills/nt-testing/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "Adds concrete Rust execution-client reconciliation requirements for quantity-free Binance Futures close-all orders: pair open-order and position reports, restore side-aware quantities, and keep direct tests."
+        },
+        {
+          "commit": "d96c6efa08dfd0f701537bbdded2f5cb948f9910",
+          "subject": "Tighten Polymarket reconciliation regression coverage (#4855)",
+          "upstream_paths": [
+            "crates/adapters/polymarket/src/execution/reconciliation.rs",
+            "crates/adapters/polymarket/src/execution/responses.rs",
+            "crates/adapters/polymarket/src/http/data_api.rs"
+          ],
+          "affected_files": [
+            "skills/nt-adapters/SKILL.md",
+            "skills/nt-testing/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "Strengthens Rust adapter reconciliation coverage for valid, skipped, incomplete, and malformed Polymarket fill/report data; current generic uncertainty guidance covers the contract, but review/test checklists should name completeness and malformed-data paths."
+        },
+        {
+          "commit": "efa34ce479a001b471482e085ef88c460209121c",
+          "subject": "Stabilize OKX task lifecycle tests",
+          "upstream_paths": [
+            "crates/adapters/okx/src/data.rs",
+            "crates/adapters/okx/src/execution.rs",
+            "crates/adapters/okx/test_data/http_place_algo_order_timeout.json",
+            "crates/adapters/okx/tests/exec_client.rs",
+            "crates/adapters/okx/tests/http.rs",
+            "crates/adapters/okx/tests/websocket.rs"
+          ],
+          "affected_files": [
+            "skills/nt-adapters/SKILL.md",
+            "skills/nt-testing/SKILL.md"
+          ],
+          "reason": "Confirms Rust adapter lifecycle tests should await exact task completion/cancellation instead of sleeps; current deterministic async testing guidance already covers this behavior, so no prose correction is required."
+        },
+        {
+          "commit": "f4a6e629c20d9c77f76e819d1766aadf6b9d1d18",
+          "subject": "Prevent LiveNodeBuilder re-entry panics",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/live/src/python/node.rs"
+          ],
+          "affected_files": [
+            "skills/nt-live/SKILL.md",
+            "skills/nt-strategy-builder-rust/SKILL.md",
+            "skills/nt-testing/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "Changes the PyO3 LiveNodeBuilder boundary: Python factory re-entry is rejected instead of aborting. Guidance needs a single-use builder/factory contract and a regression expectation."
+        },
+        {
+          "commit": "be369b4b303dc2be3a2f4363c28e0c51c369bb75",
+          "subject": "Fix LiveNode position fill reconciliation",
+          "upstream_paths": [
+            "crates/execution/src/reconciliation/orders.rs",
+            "crates/execution/src/reconciliation/tests.rs",
+            "crates/live/src/execution/client.rs",
+            "crates/live/src/execution/manager.rs",
+            "crates/live/src/node/mod.rs",
+            "crates/live/tests/manager.rs"
+          ],
+          "affected_files": [
+            "skills/nt-live/SKILL.md",
+            "skills/nt-testing/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "Corrects Rust LiveNode fill reconciliation so position reports are applied when instrument and position IDs resolve; guidance needs explicit same-position fill/restart coverage."
+        },
+        {
+          "commit": "91163e6e106bb3685b0beae5aeaea69bc0e726e6",
+          "subject": "Standardize adapter decimal precision",
+          "upstream_paths": [
+            "crates/adapters/bybit/src/common/parse.rs",
+            "crates/adapters/coinbase/src/http/parse.rs",
+            "crates/adapters/derive/src/execution.rs",
+            "crates/adapters/derive/src/http/parse.rs",
+            "crates/adapters/derive/src/websocket/dispatch.rs",
+            "crates/adapters/hyperliquid/src/common/models.rs",
+            "docs/developer_guide/adapters.md"
+          ],
+          "affected_files": [
+            "references/developer_guide/adapters.md",
+            "skills/nt-adapters/SKILL.md",
+            "skills/nt-review/SKILL.md",
+            "skills/nt-testing/SKILL.md"
+          ],
+          "reason": "Adds an official Rust adapter precision contract: choose scale from field semantics, normalize non-semantic padding, use explicit instrument/currency dp where governed, and never infer discrete precision from incidental payload formatting."
+        },
+        {
+          "commit": "d1012b9e20941110f9eee4048e0dee130bf55c4f",
+          "subject": "Share the execution event emitter sender across clones (#4874)",
+          "upstream_paths": [
+            "Cargo.lock",
+            "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+            "crates/live/Cargo.toml",
+            "crates/live/src/execution/emitter.rs"
+          ],
+          "affected_files": [
+            "skills/nt-live/SKILL.md",
+            "skills/nt-implement/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "ExecutionEventEmitter clones now share one Arc-backed mpsc sender. Existing architecture guidance does not teach emitter construction; record as reviewed internal implementation with no API correction."
+        },
+        {
+          "commit": "af0e5d1d341c49be7d446176b84866d4118b7caa",
+          "subject": "Optimize ExecutionEngine position updates",
+          "upstream_paths": [
+            "crates/common/src/cache/mod.rs",
+            "crates/common/src/cache/tests.rs",
+            "crates/event_store/src/replay.rs",
+            "crates/execution/src/engine/mod.rs",
+            "crates/execution/tests/exec_engine.rs"
+          ],
+          "affected_files": [
+            "skills/nt-live/SKILL.md",
+            "skills/nt-testing/SKILL.md",
+            "skills/nt-review/SKILL.md"
+          ],
+          "reason": "Optimizes Rust ExecutionEngine position updates and removes transient position-open events in same-fill open-close paths; reviewers/tests should assert lifecycle semantics rather than implementation event-count assumptions."
+        },
+        {
+          "commit": "255070d66dc8aeff7dfb235d3f36d9ddc7a56a59",
+          "subject": "Adopt Nautilus Engineering sync foundation",
+          "upstream_paths": [
+            ".github/CODEOWNERS",
+            ".gitignore",
+            ".nautilus-engineering.lock",
+            ".nautilus-engineering/pre-commit/sync.yaml",
+            ".pre-commit-config.yaml",
+            "scripts/check-nautilus-engineering-sync.bash",
+            "scripts/manage-nautilus-engineering-pre-commit.py"
+          ],
+          "no_impact_rationale": "Repository pre-commit/toolchain synchronization only; it does not change a taught NautilusTrader runtime, adapter, PyO3, or testing contract."
+        },
+        {
+          "commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
+          "subject": "Fix Polymarket historical trade error handling",
+          "upstream_paths": [
+            "crates/adapters/polymarket/src/data/requests.rs",
+            "crates/adapters/polymarket/tests/data_client.rs"
+          ],
+          "no_impact_rationale": "CI test selection and CODEOWNERS changes only; no taught NautilusTrader API or Rust V2 behavior changes."
+        }
+      ],
+      "changed_paths": [
+        ".github/CODEOWNERS",
+        ".gitignore",
+        ".nautilus-engineering.lock",
+        ".nautilus-engineering/pre-commit/sync.yaml",
+        ".pre-commit-config.yaml",
+        "Cargo.lock",
+        "RELEASES.md",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/src/futures/http/models.rs",
+        "crates/adapters/binance/tests/futures/exec_client.rs",
+        "crates/adapters/bybit/src/common/parse.rs",
+        "crates/adapters/coinbase/src/http/parse.rs",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/derive/src/http/parse.rs",
+        "crates/adapters/derive/src/websocket/dispatch.rs",
+        "crates/adapters/hyperliquid/src/common/models.rs",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/adapters/okx/src/data.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/test_data/http_place_algo_order_timeout.json",
+        "crates/adapters/okx/tests/exec_client.rs",
+        "crates/adapters/okx/tests/http.rs",
+        "crates/adapters/okx/tests/websocket.rs",
+        "crates/adapters/polymarket/src/data/requests.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/http/data_api.rs",
+        "crates/adapters/polymarket/tests/data_client.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/src/reconciliation/orders.rs",
+        "crates/execution/src/reconciliation/tests.rs",
+        "crates/execution/tests/exec_engine.rs",
+        "crates/live/Cargo.toml",
+        "crates/live/src/execution/client.rs",
+        "crates/live/src/execution/emitter.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/node/mod.rs",
+        "crates/live/src/python/node.rs",
+        "crates/live/tests/manager.rs",
+        "docs/developer_guide/adapters.md",
+        "scripts/check-nautilus-engineering-sync.bash",
+        "scripts/manage-nautilus-engineering-pre-commit.py"
       ]
     }
   ]

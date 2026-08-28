@@ -5,14 +5,38 @@
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
 Review date: 2026-08-28
-Reviewed upstream develop: `8e51f957c6e31b28de14fbe244b3c048e291ddd7`
-Pinned G2 baseline: `8e51f957c6e31b28de14fbe244b3c048e291ddd7`
+Reviewed upstream develop: `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`
+Pinned G2 baseline: `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`
 
-The 63 develop commits and 543 net changed paths between the previous pin `8ecab1ce90d9790b1e18e162842decbae4d9de57` and the reviewed tip were classified during the 2026-08-28 mission. `references/upstream-delta-review.json` preserves every reviewed transition commit/path classification and separately records the zero current delta after moving the reproducible pin to the reviewed tip.
+The review manifest preserves both 2026-08-28 transitions: 63 commits and 543 net changed paths from `8ecab1ce90d9790b1e18e162842decbae4d9de57` to `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, then 10 commits and 45 net changed paths to `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. `references/upstream-delta-review.json` records every transition commit/path classification and a zero current delta at the reviewed pin.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
 ## Open findings
+
+[NT-2026-08-28-07] [P1] [CLOSED 2026-08-28] Upstream currency: the reproducible pin and reviewed delta stopped 10 commits before current `origin/develop`.
+  file: tools/upstream_baseline.py:4; references/upstream-delta-review.json:1843
+  evidence: pre-fix freshness reported pin/review at `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, resolved develop `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`, 10 commits and 45 changed paths, and a stale manifest; the new transition records all 10 commits and 45 paths.
+  fix: advanced `UPSTREAM_COMMIT`, refreshed all pin-derived snapshots and citations, preserved the reviewed transition, and re-executed durable G2 evidence.
+  closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 with pin, review, and `origin/develop` equal to `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`.
+
+[NT-2026-08-28-08] [P1] [CLOSED 2026-08-28] Rust adapter correctness: local guidance omitted the current field-contract rule for decimal precision.
+  file: references/developer_guide/adapters.md:474; skills/nt-adapters/SKILL.md:36
+  evidence: upstream commit `91163e6e106bb3685b0beae5aeaea69bc0e726e6` adds `Price::from_decimal`, `Quantity::from_decimal`, `Decimal::normalize`, explicit instrument/currency precision, and a warning not to infer scale from incidental payload formatting.
+  fix: refreshed the pinned adapter guide and taught adapter authors, reviewers, and tests to choose precision from the field contract with trailing-zero variant coverage.
+  closure: `python3 tools/check_dev_guide_snapshot_sync.py` matches the current upstream body; `python3 tools/check_static_quality.py` is green and manual skill-surface QA confirms the field-contract decision tree.
+
+[NT-2026-08-28-09] [P1] [CLOSED 2026-08-28] Rust live correctness: production guidance omitted current builder re-entry and reconciliation regression contracts.
+  file: skills/nt-live/SKILL.md:19; skills/nt-strategy-builder-rust/SKILL.md:36
+  evidence: upstream commits `f4a6e629c20d9c77f76e819d1766aadf6b9d1d18`, `be369b4b303dc2be3a2f4363c28e0c51c369bb75`, and `57ce1a80263fd014f1f5e3a7a7f7de82bb869322` respectively reject Python factory re-entry through `LiveNodeBuilder`, apply same-position fill reports, and restore side-aware quantity-free close-all quantities.
+  fix: added bounded PyO3 builder-state guidance plus Rust live/reviewer/test requirements for same-position fill and quantity-free close-all reconciliation.
+  closure: `python3 tools/check_static_quality.py` is green and manual skill-surface QA confirms the builder re-entry, same-position fill, and quantity-free close-all contracts across live, strategy, testing, and review guidance.
+
+[NT-2026-08-28-10] [P2] [CLOSED 2026-08-28] Rust execution testing: review guidance could encourage brittle transient event-count assertions.
+  file: skills/nt-review/SKILL.md:42; skills/nt-testing/SKILL.md:69
+  evidence: upstream commit `af0e5d1d341c49be7d446176b84866d4118b7caa` optimizes `ExecutionEngine` position updates, including same-fill open/close handling where transient position-open events are not emitted.
+  fix: required lifecycle-semantics assertions and rejected event-count assumptions unless event cardinality itself is the contract.
+  closure: `python3 tools/check_static_quality.py` is green and manual skill-surface QA confirms explicit final-state, ordering, and duplicate-side-effect guidance.
 
 [NT-2026-08-25-01] [P1] [CLOSED 2026-08-26] Upstream drift: 44 develop commits ahead of the pin, including renames and API shifts on taught surfaces.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json
@@ -203,7 +227,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 ## Follow-up TODO
 
-- [ ] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses (target re-run date: 2026-09-21).
+- [x] [NT-2026-08-21-07] Move the G2 pin to the reviewed develop tip and re-execute all 17 harnesses. Closed 2026-08-28: the pin, review, and `origin/develop` all equal `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; all 17 harnesses re-executed and `python3 tools/check_skill_g2_harnesses.py --check-cards` is green. Next scheduled re-run: 2026-09-28.
 
 [NT-2026-08-23-09] [P1] [CLOSED] Active Rust actor and fill-model examples used non-compiling publication and custom-model contracts.
   file: skills/nt-architect/SKILL.md; skills/nt-backtest/SKILL.md
@@ -255,7 +279,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-08-28-01] [P0] [CLOSED 2026-08-28] Official develop advanced 63 commits and 543 unique paths beyond the reproducible pin.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json:5; references/developer_guide/adapters.md:1
-  evidence: after `git fetch origin develop`, `python3 tools/check_upstream_freshness.py --format json` reported `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, 63 commits ahead of `8ecab1ce90d9790b1e18e162842decbae4d9de57`, with the reviewed manifest stale; the independent upstream reviewer classified all 63 commits and aggregate 543 paths.
+  evidence: after `git fetch origin develop`, `python3 tools/check_upstream_freshness.py --format json` reported `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`, 63 commits ahead of `8ecab1ce90d9790b1e18e162842decbae4d9de57`, with the reviewed manifest stale; the independent upstream reviewer classified all 63 commits and aggregate 543 paths.
   fix: preserve the complete 63-commit transition classification, advance the pin to the reviewed tip, refresh changed developer-guide and Rust reference mirrors, synchronize pin metadata, and regenerate all G2 evidence against the new baseline.
   closure: `references/upstream-delta-review.json` retains all 63 reviewed commits and 543 net changed paths; `python3 tools/check_upstream_freshness.py --format json` validates that history and reports `status: current`, zero current changed commits/paths, and `manifest_reviewed: true`; `python3 tools/check_dev_guide_snapshot_sync.py` passes.
 

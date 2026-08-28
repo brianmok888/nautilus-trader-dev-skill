@@ -12,7 +12,7 @@ Review date: 2026-08-28
 - **Mission:** reusable NautilusTrader development skills only
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
-- **Upstream:** pinned reproducible checkout plus reviewed current-develop delta; read-only evidence
+- **Upstream:** pinned reproducible checkout at `19df7796fcce341ca6c1f6a503fca2c7bf300e6c` plus preserved reviewed transition history; read-only evidence
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 
@@ -42,7 +42,7 @@ Review date: 2026-08-28
 
 1. `tools/upstream_baseline.py` defines the reproducible pin.
 2. `references/upstream-delta-review.json` records reviewed post-pin changes.
-3. `references/developer_guide/contracts/` holds canonical local contracts.
+3. `references/developer_guide/contracts/` holds canonical local contracts; the adapter snapshot carries field-contract precision rules and the Rust skills carry LiveNode reconciliation/lifecycle acceptance criteria.
 4. `references/g2-evidence/` records per-skill executable evidence and owned-content hashes.
 5. `docs/tracking/` records current invariants, structure, components, and findings.
 

@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -32,6 +32,8 @@ Adapter gates: Rust owns HTTP/WebSocket networking, request signing, parsing, no
 ## Rust production lane
 
 Rust owns production adapter behavior: HTTP/WebSocket transport, authentication and signing, protocol parsing, normalization into Nautilus model types, rate and inflight limits, subscription and order state, reconnect/replay, and ambiguous-outcome reconciliation. Build adapter crates in dependency order, keep fixed-point and timestamp conversion at parser boundaries, and prove readiness with unit/spec tests plus parser fuzzing where inputs are untrusted.
+
+Choose price and quantity precision from the venue field contract. Preserve meaningful venue-declared scale with `Price::from_decimal` or `Quantity::from_decimal`; call `Decimal::normalize` only when documented trailing zeros are non-semantic padding; use `Price::from_decimal_dp` or `Quantity::from_decimal_dp` when instrument or currency precision governs. Never infer discrete precision from incidental payload formatting or route discrete wire values through `f64`.
 
 ```rust
 use nautilus_common::enums::Environment;
@@ -72,7 +74,7 @@ Quarantined Python examples and prior Python adapter guidance live under `migrat
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 
 ## What This Skill Covers
 
@@ -529,6 +531,7 @@ follows Nautilus runtime expectations.
 - Cover ambiguous outcome failures in adapter tests: do not emit terminal reject
   events for unknown submit/cancel/modify/batch outcomes unless the venue reports
   an explicit per-order rejection.
+- Cover reconciliation with complete, incomplete, skipped, and malformed venue reports. For side-aware quantity-free close-all orders, pair open-order and position reports and restore a quantity only from the matching position side; an unresolved in-scope instrument or position is an error, not a silent drop.
 - Rust unit tests in `#[cfg(test)] mod tests` within source files
 - Integration tests in `tests/` directory
 
@@ -584,6 +587,6 @@ Rust adapter code must include:
 - `references/examples/` — Per-adapter runnable examples
 - `references/integrations/` — Per-adapter integration docs
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `8e51f957c`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `19df7796c`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

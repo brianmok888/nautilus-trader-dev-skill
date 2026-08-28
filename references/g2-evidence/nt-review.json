@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "fcd0b3a0d32acb991d5c69dfec09649b733354d1b91c036846e3714f7f73817a",
+  "owned_content_sha256": "4ebe45bbf588ecf50b20424be301015dea12d70a8f1c10773e91d27fc618d397",
   "schema_version": 2,
   "scope": "repository:review-policy-plus-upstream-safety-owners",
   "skill": "nt-review",
@@ -20,7 +20,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.676551,
+      "duration_seconds": 3.046419,
       "returncode": 0
     },
     {
@@ -38,11 +38,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.31143,
+      "duration_seconds": 121.523446,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "8e51f957c6e31b28de14fbe244b3c048e291ddd7",
-  "verified_at": "2026-08-28T09:30:05.505041+00:00"
+  "upstream_commit": "19df7796fcce341ca6c1f6a503fca2c7bf300e6c",
+  "verified_at": "2026-08-28T10:55:48.600400+00:00"
 }

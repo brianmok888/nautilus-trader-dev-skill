@@ -19,6 +19,8 @@ NT v2 compatibility note: Python live `TradingNode` examples are legacy/referenc
 - SQL/catalog migration: regenerate or migrate persisted SQL/catalog state before in-place V2 upgrades and smoke replay after migration.
 - deferred V2 limits must be documented as explicit live-readiness gaps, not silently accepted.
 - shared adapter task tracking, when upstream support exists for the adapter, must track spawned tasks through terminal events and abort outstanding tasks during stop/drop.
+- `LiveNodeBuilder` is active while PyO3 factory callbacks run. Treat re-entry from a factory into the same builder as an explicit error; after a callback error, verify the builder restores a valid retryable state, while consuming build failures remain consumed.
+- Rust live reconciliation must apply a resolved same-position fill report and must pair side-aware quantity-free close-all open-order reports with matching position reports before restoring quantity. Test restart/reconnect paths, unresolved identifiers, and duplicate-report idempotence.
 - Rust live crates that contain unsafe code must enable `#![deny(unsafe_op_in_unsafe_fn)]` at crate root and wrap each unsafe operation in an explicit `unsafe {}` block with a local safety reason.
 
 
@@ -32,9 +34,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -48,7 +50,7 @@ Live gates: `LiveNode` is the default for Rust-backed production live work; Pyth
 
 ## Rust production lane
 
-Build live systems around Rust `LiveNode`, Rust adapters, and Rust-owned execution, risk, reconciliation, and lifecycle state. Startup, shutdown, reconnect, task tracking, and fail-closed behavior must remain deterministic and must be proven with targeted live-runtime tests and the required cargo gates.
+Build live systems around Rust `LiveNode`, Rust adapters, and Rust-owned execution, risk, reconciliation, and lifecycle state. Startup, shutdown, reconnect, task tracking, and fail-closed behavior must remain deterministic and must be proven with targeted live-runtime tests and the required cargo gates. Reconciliation acceptance must cover same-position fill application and side-aware quantity-free close-all restoration, not only report generation.
 
 ### Develop/nightly-only actor and strategy state persistence
 
@@ -92,7 +94,7 @@ time replaces a single aggregate dispatch-time assumption.
 
 ## PyO3 control-plane lane
 
-Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness.
+Use PyO3 only for typed live configuration, Rust component registration, lifecycle commands, and read-only operational inspection. Python callbacks must not become authoritative for order flow, risk checks, adapter connectivity, reconciliation, or node liveness. A `LiveNodeBuilder` factory callback must not re-enter the same builder; surface the active-builder error across PyO3, restore the builder after callback errors, and test that no process abort occurs.
 
 ## Migration/reference lane
 
@@ -100,7 +102,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`.
 
 ## What This Skill Covers
 

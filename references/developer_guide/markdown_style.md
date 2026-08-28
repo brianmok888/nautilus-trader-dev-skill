@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/markdown_style/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/markdown_style.md
-source_commit: 8e51f957c6e31b28de14fbe244b3c048e291ddd7
+source_commit: 19df7796fcce341ca6c1f6a503fca2c7bf300e6c
 sync_date: 2026-08-28
 target: NautilusTrader develop developer guide source snapshot
 confidence: high

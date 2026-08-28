@@ -15,7 +15,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 | --- | --- | --- | --- |
 | G0 Scope and ownership | API claims match the pinned developer-guide snapshot. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
 | G1 Legacy labelling | NT v2 compatibility note: legacy/Cython/v1 guidance is migration/reference-only and does not enter production code. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `8e51f957c6e31b28de14fbe244b3c048e291ddd7`; evidence: `references/g2-evidence/nt-review.json`. |
+| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`; evidence: `references/g2-evidence/nt-review.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
@@ -38,6 +38,8 @@ Review behavior before style. Classify findings as **Blocker** (unsafe or incorr
 - Require `#![deny(unsafe_op_in_unsafe_fn)]`, `// SAFETY:` justification, tests for unsafe paths, `#[repr(C)]`, panic containment, and matching allocation/drop contracts.
 - Reject `.unwrap()` in production, accidental clones/allocations in hot paths, blocking handlers, and runtime spawning that bypasses the project runtime.
 - Audit fixed-point precision, conversion bounds, deterministic ordering, secret handling, and error propagation.
+- For adapter discrete values, reject precision inferred from incidental payload formatting. Trace the field contract through `Decimal`, use `Decimal::normalize` only for documented non-semantic padding, and apply instrument or currency precision where authoritative; require trailing-zero parser variants.
+- For live execution, require same-position fill and side-aware quantity-free close-all reconciliation coverage. Assert lifecycle semantics, final state, ordering, and duplicate-side-effect freedom rather than transient event counts.
 
 **Performance and evidence**
 - Require representative benchmarks for hot paths, setup outside timing loops, `black_box`, and before/after measurements for optimization claims.
@@ -58,7 +60,7 @@ Also reject Python v2 config stub/readback drift, stale Generated Python artifac
 
 ## PyO3 control-plane lane
 
-Review PyO3 as a thin control plane over Rust-owned state. There are no active Python examples in this root skill. Confirm `#[pyclass]` and `#[pymethods]` registration, explicit conversions, stable exceptions, GIL-safe access, deterministic cleanup, and documentation of ownership.
+Review PyO3 as a thin control plane over Rust-owned state. There are no active Python examples in this root skill. Confirm `#[pyclass]` and `#[pymethods]` registration, explicit conversions, stable exceptions, GIL-safe access, deterministic cleanup, and documentation of ownership. A Python factory must not re-enter the same active `LiveNodeBuilder`; verify the explicit re-entry error, active state, and builder restoration after callback errors.
 
 Require subclassable PyO3 stubs to match actual Rust virtual/dispatch behavior. Prefer direct owned `Py<T>` handles; require rationale for `Arc<Py<T>>`, weak references for back-references, and traversal/clear support for traceable cycles. Reject Python callback attachment from Tokio worker tasks; use the supported live-runner/channel route. No binding may expose independent order, risk, reconciliation, or adapter-liveness authority.
 
@@ -69,4 +71,4 @@ Legacy Python review prose, checklists, and examples are physically quarantined 
 
 ## Source-pinned upstream lane
 
-Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `8e51f957c6e31b28de14fbe244b3c048e291ddd7`. Version-scope any newer upstream guidance until the pin advances.
+Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`. Version-scope any newer upstream guidance until the pin advances.
