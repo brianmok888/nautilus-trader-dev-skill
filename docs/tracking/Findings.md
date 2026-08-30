@@ -14,6 +14,13 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 ## Open findings
 
+[NT-2026-08-30-01] [P1] [CLOSED 2026-08-30] Prompt governance audit: the master prompt coupled impact priority to evidence state, prescribed free-form `.txt` evidence receipts with no secret-safety contract, and defined no spec-delta or verifier-owned legacy-receipt protocol.
+  file: docs/prompts/master-prompt.md:95; docs/prompts/master-prompt.md:212; docs/prompts/master-prompt.md:255
+  evidence: the cross-repository governance audit (reference improvements shipped as Nautilus-Daedalus `ebc8971f`) found the prompt lowering finding priority when evidence was missing, accepting unversioned `.txt` receipts that could commit raw credentials, and requiring no deterministic `spec-deltas` on implementation manifests; all five baseline pressure scenarios (no-impact spec delta, legacy receipts, unverified P0, secret-bearing output, machine-checkable contract) failed against the pre-change prompt.
+  fix: separate impact priority (P0/P1/P2) from evidence state (verified/verified-manual/unverified) with the rule that missing evidence never lowers impact; replace `.txt` receipts with schema-version-1 secret-safe JSON receipts under `docs/tracking/receipts/` validated by `python3 tools/check_governance_receipts.py`; define verifier-owned Phase 3 receipts for legacy implementations; bootstrap `docs/specs/` subordinate to executable truth and require deterministic `spec-deltas` including `spec-deltas: []`; align `AGENTS.md`.
+  acceptance-test: `python3 -m pytest -q tests/test_master_prompt_governance.py tests/test_governance_receipts.py`; `python3 tools/check_governance_receipts.py`; `python3 tools/check_findings_schema.py`.
+  closure: full suite 531 passed / 3 skipped with Ruff and Pyright clean; both representative receipts validate; the same five pressure scenarios now pass 5/5.
+
 [NT-2026-08-28-13] [P1] [CLOSED 2026-08-28] Post-ship review: eight guidance and evidence surfaces cited the invalid pin abbreviation `81eedc7cec`.
   file: docs/end_to_end_guide.md:8; skills/nt-dev/SKILL.md:20; skills/nt-testing/SKILL.md:82; skills/nt-adapters/SKILL.md:20; skills/nt-adapters/references/integrations/betfair.md:11; skills/nt-adapters/references/integrations/betfair_v2.md:8
   evidence: the independent code-quality review found `81eedc7cec` — not a prefix of the pinned commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` — in eight user-facing surfaces, making the cited baseline unresolvable.

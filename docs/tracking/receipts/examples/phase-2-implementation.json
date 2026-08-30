@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "examples",
+  "receipt": "phase-2-implementation",
+  "finding_id": "NT-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "none",
+  "command": "python3 -m pytest -q tests/test_master_prompt_governance.py",
+  "exit_code": 0,
+  "output_sha256": "b0faf1be420e7483f6fc71ca94a381f40221aad77b2313f04bc11b9d0d147c02",
+  "output_excerpt": "3 passed in 0.21s\n",
+  "redactions": [],
+  "recorded_at": "2026-08-29T16:00:00Z"
+}

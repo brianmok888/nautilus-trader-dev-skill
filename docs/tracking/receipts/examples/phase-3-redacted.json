@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "mission": "examples",
+  "receipt": "phase-3-redacted",
+  "finding_id": "NT-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "unverified",
+  "severity": "P0",
+  "command": "curl -H 'Authorization: Bearer [REDACTED]' https://example.invalid/status",
+  "exit_code": 1,
+  "output_sha256": "2d707473c4aed7479fb606bef91ca4e3c44463364572582e3bae56818568ce14",
+  "output_excerpt": "[OMITTED: sensitive output retained outside git]",
+  "redactions": [
+    "Authorization header value",
+    "sensitive response body"
+  ],
+  "recorded_at": "2026-08-29T16:05:00Z"
+}

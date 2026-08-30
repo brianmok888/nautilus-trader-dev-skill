@@ -95,7 +95,7 @@ production path; new in-scope guidance remains Rust-first and PyO3-oriented.
 4. **Legacy: Cython / v1 cleanup** — unlabelled legacy content = P1 (charter violation per `docs/tracking/Handguard.md` invariant #5).
 5. **Cosmetic / docs polish** — lowest.
 
-**Truth hierarchy:** NT source code (`nautilus_core` Rust, `nautilus_trader` Python on `develop`) > nautilustrader.io docs > `references/developer_guide/contracts/` > skill SKILL.md files > other references.
+**Truth hierarchy:** NT source code (`nautilus_core` Rust, `nautilus_trader` Python on `develop`) > nautilustrader.io docs > current skill content, executable validators, and tests > approved stable behavior specifications under `docs/specs/` > `references/developer_guide/contracts/` > other references. The approved spec bootstrap is governed by `docs/specs/README.md`; specs document approved stable behavior without overriding current executable repository truth.
 
 **Source URLs:**
 - https://nautilustrader.io/docs/nightly/
@@ -207,9 +207,14 @@ work.
 - This prevents future unlabelled legacy guidance from sneaking back in.
 
 After the last implementation segment, produce one implementation manifest:
-changed paths by finding ID, tests and manual exercises run, actual results,
-review findings resolved, tracker updates, upstream status, and any authorized
-commit hashes. Present it to the user and **STOP**. Ask exactly:
+changed paths by Finding ID, tests and manual exercises run, actual results,
+review findings resolved, tracker updates, upstream status, any authorized
+commit hashes, and a top-level YAML `spec-deltas` field. Use `spec-deltas: []`
+when no approved stable behavior specification changes. Otherwise, list exact
+`file`, `operation`, `section`, and `summary` entries using the deterministic
+`add`, `amend`, and `remove` contract in `docs/specs/README.md`. A missing field
+or unresolved target blocks Phase 3 approval. Present the manifest to the user
+and **STOP**. Ask exactly:
 
 > Approve Phase 3 post-implementation verification and validation? This permits
 > read-only inspection and non-destructive validation only; it does not permit
@@ -245,18 +250,46 @@ implementation artifacts.
    feedback; any fix requires returning to Phase 2 and repeating this approval
    gate after a new manifest.
 6. Classify every Finding ID as `Verified`, `Deficient`, `Missing`, or
-   `Not verifiable`, with file/symbol references and fresh command evidence.
+   `Not verifiable`, with file/symbol references and a receipt (rules below).
+
+Receipts (machine-checkable evidence):
+- Store schema version 1 JSON at
+  `docs/tracking/receipts/<mission-stem>/<receipt-id>.json`. Each object contains
+  exactly `schema_version`, `mission`, `receipt`, `finding_id`, `owner_stage`,
+  `evidence_state`, `severity`, `command`, `exit_code`, `output_sha256`,
+  `output_excerpt`, `redactions`, and `recorded_at`. Validate the complete tree
+  with `python3 tools/check_governance_receipts.py` before any `Approved` verdict.
+- Phase 2 owns implementation receipts with `owner_stage: phase-2`. Phase 3
+  never rewrites them; it writes separate verifier-owned receipts with
+  `owner_stage: phase-3` for fresh reruns. For a legacy or externally
+  implemented mission with no Phase 2 receipts, Phase 3 may create
+  verifier-owned receipts and proceed when fresh evidence covers every Finding
+  ID. Record missing historical implementation provenance as an evidence
+  limitation, not an entry deadlock.
+- Receipts are fresh by definition: rerun from the current tree; recorded
+  Phase 2 output is context, never a receipt. A manual result uses
+  `evidence_state: verified-manual` and records bounded steps and observation in
+  the same JSON contract.
+- Finding impact (`P0`, `P1`, `P2`, or `none`) and evidence state (`verified`,
+  `verified-manual`, or `unverified`) are independent. Never lower a finding's P0/P1/P2 impact because evidence is missing. An unverified P0/P1 remains P0/P1,
+  rejects the gate, and stays open until fresh evidence resolves it.
+- Never store raw credentials, tokens, cookies, private keys, database passwords,
+  credential-bearing URLs, or unbounded output. Redact commands and bounded
+  excerpts before storage, list each rule in `redactions`, and compute
+  `output_sha256` only from the normalized redacted `output_excerpt`. If no safe
+  excerpt can be retained, store and hash the fixed omission marker documented
+  in `docs/tracking/receipts/README.md`; keep raw output outside git.
 
 **Gate verdict:**
-- `Approved` only when every original finding is verified, mandatory validation
-  is green, user-facing behavior is exercised, upstream is unchanged, and no
-  unresolved P0/P1 finding remains.
+- `Approved` only when every original finding is receipt-verified, mandatory
+  validation is green, user-facing behavior is exercised, upstream is
+  unchanged, and no unresolved P0/P1 finding remains.
 - Otherwise `Rejected`: record deficiencies in `docs/tracking/Findings.md`,
   return to Phase 2, and **STOP**. Do not enter later phases, commit, merge, push,
   release, or publish.
 
 Final output before continuing:
-- Per-finding verdicts and evidence
+- Per-finding verdicts, independent impact/evidence classifications, and validated JSON receipt paths
 - Commands rerun and actual results
 - Manual exercise and independent-review results
 - Tracker files updated, if any
@@ -309,8 +342,9 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 **Invoke:** `/skill:requesting-code-review` for independent post-fix review.
 
 1. Reconcile the post-fix tree against the Phase 3 verdict and original findings ledger by stable Finding ID. Confirm every verified finding is `CLOSED`; keep residuals `OPEN` with follow-up TODOs in `docs/tracking/Findings.md`.
-2. Regenerate each affected gate card from the accepted Phase 3 evidence. Do not rerun unchanged passing commands; run only gate-specific checks not already covered or checks invalidated by reconciliation edits.
-3. Invoke independent reconciliation review. Resolve all P0/P1 findings before shipping; any implementation fix returns to Phase 2 and requires a new Phase 3 approval. If review cannot run, record the infrastructure failure and keep shipping `Blocked`.
+2. Apply the approved implementation manifest's `spec-deltas` entries in listed order using `docs/specs/README.md`. Missing, duplicate, or unresolved targets block closure; `spec-deltas: []` makes no spec edit.
+3. Regenerate each affected gate card from the accepted Phase 3 evidence. Do not rerun unchanged passing commands; run only gate-specific checks not already covered or checks invalidated by reconciliation edits.
+4. Invoke independent reconciliation review. Resolve all P0/P1 findings before shipping; any implementation fix returns to Phase 2 and requires a new Phase 3 approval. If review cannot run, record the infrastructure failure and keep shipping `Blocked`.
 
 ---
 

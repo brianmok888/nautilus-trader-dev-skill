@@ -136,6 +136,8 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material bel
 - Use test-first development for behavioral changes.
 - Keep files focused and avoid speculative abstractions.
 - Regenerate G2 durable evidence when pinned upstream or owned skill/test/tool content changes.
+- Approved stable behavior specifications live under `docs/specs/`; executable skill content, validators, and tests remain primary local truth. Every implementation manifest declares deterministic `spec-deltas` as defined in `docs/specs/README.md`, including `spec-deltas: []` when no spec change applies.
+- Governance evidence receipts are versioned, secret-safe JSON under `docs/tracking/receipts/`. Impact priority and evidence state are independent.
 
 ## Validation
 
@@ -149,6 +151,7 @@ python3 tools/check_rust_trading_reference_sync.py
 python3 tools/check_legacy_labelling.py
 python3 tools/check_upstream_freshness.py --format json
 python3 tools/check_skill_g2_harnesses.py --check-cards
+python3 tools/check_governance_receipts.py
 git diff --check
 ```
 
