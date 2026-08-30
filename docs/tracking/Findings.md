@@ -4,13 +4,29 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-28
-Reviewed upstream develop: `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`
+Review date: 2026-08-30
+Reviewed upstream develop: `65a168ea14976bf936d30ab67e1187db8f5703d0`
 Pinned G2 baseline: `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`
 
-The review manifest preserves all three 2026-08-28 transitions: 63 commits and 543 net changed paths from `8ecab1ce90d9790b1e18e162842decbae4d9de57` to `8e51f957c6e31b28de14fbe244b3c048e291ddd7`, then 10 commits and 45 net changed paths to `19df7796fcce341ca6c1f6a503fca2c7bf300e6c`, then 3 commits and 15 net changed paths to `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. `references/upstream-delta-review.json` records every transition commit/path classification and a zero current delta at the reviewed pin. The reproducible pin and reviewed delta advanced to `81eedc7ce` this cycle; former develop-only overlays (`nt-model`, `nt-data`, `nt-backtest`) are re-labelled as develop-line content now included at the pin.
+The review manifest preserves four contiguous transitions. The newest transition reviews 26 commits and 411 net changed paths from the pinned `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` through current develop `65a168ea14976bf936d30ab67e1187db8f5703d0`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop changes affect upstream engineering policy, adapter internals, model and engine optimizations, and documentation quality, but they do not change a Rust V2/PyO3/LiveNode contract currently taught by this repository; no new correction finding was opened from this transition.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
+
+## Current audit result
+
+[NT-2026-08-30-02] [P1] [CLOSED 2026-08-30] G2 evidence health: refreshing the reviewed upstream delta changed owned-content hashes through shared reference symlinks, leaving durable evidence stale for `nt-architect`, `nt-implement`, and `nt-review`.
+  file: references/upstream-delta-review.json:5; references/g2-evidence/nt-architect.json:2; references/g2-evidence/nt-implement.json:2; references/g2-evidence/nt-review.json:2
+  evidence: Phase 2 re-executed all three affected G2 harnesses against a disposable writable checkout of pinned commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; every repository and Cargo step returned 0.
+  fix: refreshed the three durable JSON evidence files with current owned-content hashes and fresh successful execution metadata.
+  acceptance-test: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0; `python3 -m pytest -q tests/test_skill_g2_harnesses.py tests/test_progressive_gate_cards.py` reports 57 passed.
+  closure: validated Phase 2 receipt `docs/tracking/receipts/harden-nt-v2-20260830/phase-2-g2-evidence-refreshed.json`; the disposable upstream worktree is clean at the pinned commit.
+
+NT v2 compatibility note: the 2026-08-30 source audit found zero new findings in every required category; all Cython and v1 mentions below describe migration/reference-only content:
+
+- P0 Rust conversion gaps: 0
+- P1 V2 API, symbol, and import violations: 0
+- P1 unlabelled migration/reference-only Cython or v1 content: 0
+- P2 current-upstream coverage opportunities requiring a repository change: 0
 
 ## Open findings
 

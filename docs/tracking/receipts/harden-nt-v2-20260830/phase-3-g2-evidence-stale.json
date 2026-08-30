@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260830",
+  "receipt": "phase-3-g2-evidence-stale",
+  "finding_id": "NT-2026-08-30-02",
+  "owner_stage": "phase-3",
+  "evidence_state": "unverified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q",
+  "exit_code": 1,
+  "output_sha256": "87dc608472ae036ea414b9d63ea0ece90101eaf35a0eef4f8892db387345fa75",
+  "output_excerpt": "FAILED tests/test_skill_g2_harnesses.py::test_current_readiness_evidence_matches_owned_content\nnt-architect, nt-implement, and nt-review durable evidence does not match owned skill content\n1 failed, 530 passed, 3 skipped in 26.67s\n",
+  "redactions": [],
+  "recorded_at": "2026-08-30T01:17:59Z"
+}

@@ -387,8 +387,14 @@ def test_review_manifest_tracks_latest_reviewed_develop_commit() -> None:
         json.loads((REPO_ROOT / "references/upstream-delta-review.json").read_text()),
     )
 
-    assert manifest["reviewed_commit"] == "81eedc7cea29a52c0568f0bfbafd190c2bebe74f"
-    assert manifest["pinned_commit"] == manifest["reviewed_commit"]
+    assert manifest["reviewed_commit"] == subprocess.run(
+        ["git", "rev-parse", "origin/develop"],
+        cwd=default_upstream_root(),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert manifest["pinned_commit"] == UPSTREAM_COMMIT
 
 
 def test_current_manifest_preserves_reviewed_transition_history() -> None:
@@ -403,7 +409,7 @@ def test_current_manifest_preserves_reviewed_transition_history() -> None:
     assert transitions[0]["from_commit"] == (
         "8ecab1ce90d9790b1e18e162842decbae4d9de57"
     )
-    assert transitions[-1]["to_commit"] == UPSTREAM_COMMIT
+    assert transitions[-1]["to_commit"] == payload["reviewed_commit"]
 
     for previous, current in pairwise(transitions):
         assert previous["to_commit"] == current["from_commit"]

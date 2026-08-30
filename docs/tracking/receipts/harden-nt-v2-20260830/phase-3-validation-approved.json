@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260830",
+  "receipt": "phase-3-validation-approved",
+  "finding_id": "NT-2026-08-30-02",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && <mandatory-phase-3-validators> && <manual-freshness-cli-qa>",
+  "exit_code": 0,
+  "output_sha256": "38c087e7d6715417e93ce7b4c72a936d7e475cb2bb06146935b5a041adb14d80",
+  "output_excerpt": "Complete Phase 3 gate: 531 passed, 3 skipped in 25.02s\nDeveloper guide sync, snapshot sync, Rust trading sync, legacy labelling, freshness, G2 cards, receipts, findings schema, and git diff checks: exit 0\nFreshness manifest reviewed through 65a168ea14976bf936d30ab67e1187db8f5703d0; pinned source checkout and disposable evidence worktree clean at 81eedc7cea29a52c0568f0bfbafd190c2bebe74f\nManual CLI QA: help exit 0; JSON happy path reviewed=True status=drifted ahead=26; invalid format exit 2\n",
+  "redactions": [
+    "Collapsed repeated public validator commands into <mandatory-phase-3-validators> and manual commands into <manual-freshness-cli-qa>; no result content was removed."
+  ],
+  "recorded_at": "2026-08-30T01:42:29Z"
+}
