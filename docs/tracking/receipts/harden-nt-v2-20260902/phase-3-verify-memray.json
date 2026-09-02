@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-memray",
+  "finding_id": "NT-2026-09-02-06",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c memray skills/nt-testing/references/guides/testing.md",
+  "exit_code": 0,
+  "output_sha256": "1aef92c470f74ca53167c3025ff14fd1885c6339becdd5642a9be564bf8dc169",
+  "output_excerpt": "memray token count: 8",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

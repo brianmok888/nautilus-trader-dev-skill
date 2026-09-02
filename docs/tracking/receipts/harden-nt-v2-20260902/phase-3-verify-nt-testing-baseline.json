@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-nt-testing-baseline",
+  "finding_id": "NT-2026-09-02-05",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"verified 2026-09-02\" skills/nt-testing/SKILL.md && python3 tools/check_upstream_freshness.py --format json",
+  "exit_code": 0,
+  "output_sha256": "3fee3451978d0dc80468133eb029026270a4e2aa54a3330475087a1907fd9992",
+  "output_excerpt": "verified-stamp count: 1\nfreshness exit 0; pinned_commit == reviewed tip",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

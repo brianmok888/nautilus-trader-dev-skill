@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-dex-task-ownership",
+  "finding_id": "NT-2026-09-02-03",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -cE \"TaskGroup|TaskSpawner|TaskSlot\" skills/nt-dex-adapter/SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "8cd48471307b7516290a8a7744a8a1e173ba8d21404dc28a64cd5383fc396c23",
+  "output_excerpt": "nt-dex-adapter/SKILL.md standardized-lifecycle token count: 4",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

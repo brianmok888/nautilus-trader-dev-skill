@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-polymarket-copy",
+  "finding_id": "NT-2026-09-02-04",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -nE \"nautilus_trader[polymarket]|two Polymarket implementations\" references/integrations/polymarket.md | grep -vc legacy",
+  "exit_code": 0,
+  "output_sha256": "eaf85cc45f1ef97177b9d7368b88581444005ff88acdfcb579835d2276353c40",
+  "output_excerpt": "active false claims: 0",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

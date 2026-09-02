@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-nt-live-add-actor",
+  "finding_id": "NT-2026-09-02-01",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c add_actor skills/nt-live/references/concepts/rust.md && ! grep -nE \"Python can register only|only bundled examples\" skills/nt-live/references/concepts/rust.md && grep -c \"not a first-class extension API\" skills/nt-live/references/concepts/rust.md",
+  "exit_code": 0,
+  "output_sha256": "78196097d05752b66fa22aa06d4230d36a780f9bbd4b8e655e6a6016b8f5cf33",
+  "output_excerpt": "add_actor occurrences: 6\nobsolete restriction hits: 0\n\"not a first-class extension API\" occurrences: 1 (intentional, scoped to add_builtin_* at rust.md:264)",
+  "redactions": [
+    "Corrected per independent phase-3 review: the earlier ledger closure-proof wording overclaimed zero hits for the built-in-scoped phrase; receipt now records the precise per-pattern counts."
+  ],
+  "recorded_at": "2026-09-02T06:35:12Z"
+}

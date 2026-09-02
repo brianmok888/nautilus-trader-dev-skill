@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-nt-review-quarantine",
+  "finding_id": "NT-2026-09-02-12",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -n \"v1.223.0\" skills/nt-review/AGENTS.md | grep -vcE \"legacy: migration|NT v2 compatibility\" && python3 tools/check_legacy_labelling.py",
+  "exit_code": 0,
+  "output_sha256": "d8fb34dc9a8a20fba148dee981b81d901539b751b8930b5117dca6cdab64b0ff",
+  "output_excerpt": "unlabelled v1.223.0 lines: 0\nLegacy labelling check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

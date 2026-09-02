@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-pin-move",
+  "finding_id": "NT-2026-09-02-10",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "86e02808bd7170dc622f4b19c274e07c8f5f8064d54629007a0dc43641d7ff13",
+  "output_excerpt": "freshness exit 0 (pinned_commit 4692bac35 == reviewed tip, manifest_reviewed true)\nsnapshot sync exit 0; check-cards exit 0",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

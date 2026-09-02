@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-g2-evidence",
+  "finding_id": "NT-2026-09-02-09",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --check-cards && python3 tools/check_skill_g2_harnesses.py --check-card-declarations && python3 -m pytest -q",
+  "exit_code": 0,
+  "output_sha256": "6c40ce78ca0578e67798d2469d6be60dffb941200c198771fc679b2c7bcf33ff",
+  "output_excerpt": "check-cards exit 0; check-card-declarations exit 0\nfull suite: 531 passed, 3 skipped",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}

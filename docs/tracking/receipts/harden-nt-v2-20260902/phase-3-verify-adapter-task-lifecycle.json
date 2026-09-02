@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-verify-adapter-task-lifecycle",
+  "finding_id": "NT-2026-09-02-02",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -cE \"TaskGroup|TaskSpawner|TaskSlot\" skills/nt-adapters/SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "abec29d91583a782de48670c4cb0bce72bfa38e7dcdbc0e6e264f73cac0dc4e1",
+  "output_excerpt": "nt-adapters/SKILL.md standardized-lifecycle token count: 7",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:34:01Z"
+}
