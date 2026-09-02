@@ -54,6 +54,20 @@ Cargo's build cache is keyed by the exact combination of features, profiles, and
 These targets share the same feature set and profile, allowing cargo to reuse compiled artifacts between linting and testing without rebuilds.
 The `nextest` profile is used to align with the workflow of the majority of core maintainers who use cargo-nextest for running tests.
 
+### Strict Clippy audit (candidate report)
+
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `4692bac35`,
+`scripts/clippy-strict-audit.py`) reports candidate violations of the configured
+strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
+`indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,
+`todo`, `unimplemented`, `exit`, `panic_in_result_fn`, and
+`unchecked_time_subtraction` — across the standard feature/profile combination.
+Unlike `cargo-clippy`, it never fails on findings: it is a report for
+hardening candidates. Run it when touching fallibility- or panic-sensitive
+paths, and treat new hits in changed code as review input rather than CI
+failure. `make clippy-pedantic-crate-<crate>` audits pedantic and panic-prone
+lints for a single crate.
+
 ### Documentation builds
 
 Documentation is built separately using `make docs-rust`, which runs:
