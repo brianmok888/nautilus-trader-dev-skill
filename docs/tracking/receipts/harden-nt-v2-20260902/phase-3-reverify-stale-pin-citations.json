@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-3-reverify-stale-pin-citations",
+  "finding_id": "NT-2026-09-02-13",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "git diff --name-only 5d79eb1..0740b6b; grep active 81eedc7c citations; python3 -m pytest -q tests/test_current_develop_guidance.py; python3 tools/check_skill_g2_harnesses.py --execute --skill nt; python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations; python3 -m pytest -q; run mandatory AGENTS.md validators",
+  "exit_code": 0,
+  "output_sha256": "ada15a38e60b4cd23962d747ccae901ba027d4aa766f4d8402b02d38fab6fdd8",
+  "output_excerpt": "updated delta: 6 files, all mapped to NT-2026-09-02-13\nactive old-pin citations: 0\ntargeted guidance test: 7 passed\nnt G2 real-surface execution: PASS (141 router tests passed)\ncheck-cards and declarations: exit 0\nfull suite: 531 passed, 3 skipped\nall mandatory validators: exit 0\npinned and evidence worktrees: clean at 4692bac35",
+  "redactions": [
+    "Condensed the exact active-citation grep and host-specific upstream-root path in command; output_excerpt records observed results."
+  ],
+  "recorded_at": "2026-09-02T07:38:41Z"
+}

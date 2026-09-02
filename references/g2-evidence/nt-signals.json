@@ -14,7 +14,7 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 27.199431,
+      "duration_seconds": 26.373974,
       "returncode": 0
     },
     {
@@ -26,11 +26,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 26.840439,
+      "duration_seconds": 26.995574,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
-  "verified_at": "2026-09-02T05:37:56.174711+00:00"
+  "verified_at": "2026-09-02T08:32:35.296519+00:00"
 }

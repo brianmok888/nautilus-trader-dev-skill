@@ -12,7 +12,7 @@
         "tests/test_strategy_builder_v2_contract.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.000239,
+      "duration_seconds": 1.357107,
       "returncode": 0
     },
     {
@@ -25,11 +25,11 @@
         "tests/unit/live/test_live_configs.py"
       ],
       "cwd": "upstream-python",
-      "duration_seconds": 96.12494,
+      "duration_seconds": 103.878849,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
-  "verified_at": "2026-09-02T06:07:14.679397+00:00"
+  "verified_at": "2026-09-02T08:34:24.500737+00:00"
 }
