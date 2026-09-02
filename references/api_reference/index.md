@@ -1,20 +1,11 @@
-# Python API
+# Python API (legacy v1 snapshot)
 
-Welcome to the Python API reference for NautilusTrader!
-
-The API reference provides detailed technical documentation for the NautilusTrader framework,
-including its modules, classes, methods, and functions. The reference is automatically generated
-from the latest NautilusTrader source code using [Sphinx](https://www.sphinx-doc.org/en/master/).
-
-Please note that there are separate references for different versions of NautilusTrader:
-
-- **Latest**: This API reference is built from the head of the `develop` branch and represents the latest stable release.
-- **Nightly**: This API reference is built from the head of the `nightly` branch and represents bleeding edge and experimental changes/features currently in development.
-
-You can select the desired API reference from the **Versions** top left drop down menu.
-
-Use the right navigation sidebar to explore the available modules and their contents.
-You can click on any item to view its detailed documentation, including parameter descriptions, and return value explanations.
+NT v2 compatibility note: this API reference tree is a legacy v1 Python-layout snapshot retained
+migration/reference-only. NautilusTrader V2 exposes Python APIs through flat PyO3 re-export
+surfaces (`nautilus_trader/<pkg>/__init__.pyi`) generated from the Rust crates; the deep
+`nautilus_trader.<pkg>.<module>` paths documented here do not resolve in the current pinned
+package. Use the pinned upstream `docs/developer_guide/` and `crates/` sources for current
+APIs, and treat every page below as historical reference.
 
 ## Why Python?
 

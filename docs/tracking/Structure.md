@@ -12,7 +12,7 @@ Review date: 2026-08-28
 - **Mission:** reusable NautilusTrader development skills only
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
-- **Upstream:** pinned reproducible checkout at `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` plus preserved reviewed transition history; read-only evidence
+- **Upstream:** pinned reproducible checkout at `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` plus preserved reviewed transition history; read-only evidence
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 
@@ -44,7 +44,8 @@ Review date: 2026-08-28
 2. `references/upstream-delta-review.json` records reviewed post-pin changes.
 3. `references/developer_guide/contracts/` holds canonical local contracts; the adapter snapshot carries field-contract precision rules and the Rust skills carry LiveNode reconciliation/lifecycle acceptance criteria.
 4. `references/g2-evidence/` records per-skill executable evidence and owned-content hashes.
-5. `docs/tracking/` records current invariants, structure, components, and findings.
+5. `references/api_reference/` is a legacy v1 Python-layout API snapshot labelled migration/reference-only on every page (NT-2026-09-02-11); its deep `nautilus_trader.<pkg>.<module>` paths predate the V2 flat PyO3 re-export surfaces and do not resolve in the pinned package. Current APIs: pinned upstream `docs/developer_guide/` and `crates/`.
+6. `docs/tracking/` records current invariants, structure, components, and findings.
 
 ## Validation surfaces
 
