@@ -221,8 +221,10 @@ and
 
 ### Running Rust components
 
-Rust strategies and actors use direct native registration. Python can register
-only bundled examples compiled behind the examples feature.
+Rust strategies and actors use direct native registration. Python registers
+constructed instances and config-driven components on `LiveNode` through the
+first-class registration surface; only the bundled Rust examples remain behind
+the examples feature.
 
 #### Pure Rust
 
@@ -238,6 +240,22 @@ node.run().await?;
 
 See [Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) for a
 full walkthrough.
+
+#### Python registration on LiveNode
+
+`LiveNode` exposes first-class registration for Python components: constructed
+instances via `node.add_actor(actor)` / `node.add_strategy(strategy)`, and
+config-driven construction via `node.add_actor_from_config(config)` /
+`node.add_strategy_from_config(config)` (pinned `4692bac35`,
+`python/nautilus_trader/live/__init__.pyi`). Instance registration requires the
+node to be idle: actors and strategies are added before running the node, and
+registration preserves config-created component IDs while rejecting duplicates.
+
+```python
+node.add_actor(actor)                 # constructed Python actor instance
+node.add_actor_from_config(config)    # ImportableActorConfig-driven
+node.add_strategy_from_config(config) # ImportableStrategyConfig-driven
+```
 
 #### Bundled examples from Python
 
@@ -264,9 +282,10 @@ Built-in actor configs (via `add_builtin_actor(type_name, config)`):
 |----------------------------|-----------------------|
 | `BookImbalanceActorConfig` | `BookImbalanceActor`  |
 
-Custom components are implemented in Rust and registered directly with
-`node.add_strategy(strategy)?` or `node.add_actor(actor)?`. The bundled Python
-methods are not a general extension path.
+Custom Rust components are registered directly with
+`node.add_strategy(strategy)?` or `node.add_actor(actor)?`. Custom Python
+components use the first-class instance and config registration surface above;
+the bundled `add_builtin_*` methods are not a general extension path.
 
 #### Plugin loading (planned)
 
