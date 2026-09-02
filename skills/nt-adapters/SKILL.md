@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -74,7 +74,7 @@ Quarantined Python examples and prior Python adapter guidance live under `migrat
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 
 ## What This Skill Covers
 
@@ -499,19 +499,45 @@ account channels on a timer, and cancel the refresh loop with `CancellationToken
 
 ### Task Management
 
-```rust
-// Use the Nautilus runtime for live DataClient/ExecutionClient trait paths
-get_runtime().spawn(async move { ... });
+Classify every production task by its owner before choosing storage and
+shutdown (pinned `4692bac35`, `docs/developer_guide/adapters.md` "Task
+management"; `crates/live/src/task.rs`):
 
-// Graceful shutdown via CancellationToken
-let token = CancellationToken::new();
-get_runtime().spawn(async move {
-    tokio::select! {
-        _ = work() => {},
-        _ = token.cancelled() => {},
-    }
-});
+| Ownership | Use | Required behavior |
+| --- | --- | --- |
+| Session-scoped | Stream consumers, keepalives, health polls, refresh loops, reconnect drivers | One session `TaskGroup` owns the task from successful admission through disconnect or failed startup |
+| Command-scoped | Work spawned by synchronous data requests or execution commands | A separate command `TaskGroup` owns the task without tying its outcome to the transport session |
+| Explicitly singular | One transport loop or disconnect operation whose identity is owning state | Store one named `TaskSlot` handle; same bounded join, forced abort, and failure reporting rules |
+| Handler-local | Retry futures, send workers, child work joined inside one handler | The handler drains the work before it exits and exposes failure to its owner |
+
+Use separate session and command groups even under one timeout policy: a
+disconnect ends the session while an accepted command may still need
+reconciliation. Keep any protocol exception (typed fan-out results, keyed
+timeouts) local with a stated reason and a tested shutdown path.
+
+```rust
+use nautilus_live::task::TaskGroup;
+
+// One generation of related unit-output tasks per owner
+let session_tasks = TaskGroup::new();
+
+// Admission closes once shutdown begins; later spawns return TaskSpawnError
+session_tasks.spawn(async move { /* stream consumer */ })?;
+
+// Children spawned from inside an admitted task stay in the same generation
+let spawner = session_tasks.spawner()?;
+spawner.spawn(async move { /* keepalive */ })?;
+
+// Bounded, observable shutdown: begin, then drain within graceful + forced bounds
+session_tasks.begin_shutdown();
+session_tasks.finish_shutdown(graceful_timeout, abort_timeout).await?;
 ```
+
+`CancellationToken` (from `TaskGroup::cancellation_token()` or
+`TaskSpawner::cancellation_token()`) remains the shutdown signal inside the
+lifecycle; it does not itself confer task ownership. Dropping a group requests
+forced cancellation but cannot asynchronously prove termination — always run
+the bounded shutdown to observe task failures.
 
 **Critical**: Never use get_runtime().block_on() inside trait method implementations.
 Never use `get_runtime().block_on()` inside live `DataClient` or
@@ -587,6 +613,6 @@ Rust adapter code must include:
 - `references/examples/` — Per-adapter runnable examples
 - `references/integrations/` — Per-adapter integration docs
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `81eedc7cea`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `4692bac35`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

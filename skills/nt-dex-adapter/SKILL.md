@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No migration/reference-only Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -50,7 +50,7 @@ clients. Do not copy them into a new adapter. Active Python remains limited to
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 
@@ -225,7 +225,21 @@ See `rules/dos_and_donts.md` for the full ruleset.
 - ❌ Do not use `Arc<PyObject>` for ordinary callbacks — prefer direct `PyObject`/`Py<T>` with `clone_py_object()`; justify any exception and audit cycles, weakrefs, cleanup, and PyO3 GC hooks when applicable
 - ❌ Don't treat AMM spot price as fill price without modelling slippage
 
-Runtime-spawn rule source (upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
+Runtime-spawn rule source (upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
+
+### DEX task ownership (standardized lifecycle)
+
+Own DEX background work with the standardized Nautilus task lifecycle (pinned
+`4692bac35`, `crates/live/src/task.rs`; see `nt-adapters` "Task Management" for
+the full ownership table): one session `TaskGroup` for the WebSocket stream,
+keepalive, and receipt-monitoring loop; a separate command `TaskGroup` for
+work spawned by execution commands so a disconnect never reclassifies an
+accepted command's outcome; `TaskSlot`/`SharedTaskSlot` for an explicitly
+singular transport loop or disconnect operation. Spawn children through
+`TaskSpawner` so they stay in the same generation, use the group's
+`CancellationToken` as the shutdown signal, and finish with bounded
+`finish_shutdown(graceful_timeout, abort_timeout)` so reconciliation and
+shutdown failures are observed, not dropped.
 
 ## Compliance Checklist
 
