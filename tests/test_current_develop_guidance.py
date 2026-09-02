@@ -108,7 +108,7 @@ def test_current_baseline_abbreviation_is_consistent() -> None:
 
 
 def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
-    # Given current-develop strategy-managed contingencies (81eedc7ce)
+    # Given current-develop strategy-managed contingencies (4692bac35)
     live = read("skills/nt-adapters/references/concepts/live.md")
     orders = read("skills/nt-trading/references/concepts/orders.md")
     builder = read("skills/nt-strategy-builder-rust/SKILL.md")

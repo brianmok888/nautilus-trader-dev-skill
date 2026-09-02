@@ -140,6 +140,16 @@ Mission-infrastructure findings outside the four audit categories: NT-2026-09-02
   closure-proof: the v1.223.0/v1.224.0 material in `skills/nt-review/AGENTS.md` sits under explicit NT v2 compatibility notes and `legacy: migration/reference-only` labels; `python3 tools/check_legacy_labelling.py` passes (AGENTS.md files are outside its scan scope, verified manually).
   correction: 2026-09-02 — [content] — MODIFIED: nt-review checklist v1 items moved to labelled legacy history with V2 replacements; v1.223.0/v1.224.0 change sections labelled — files: skills/nt-review/AGENTS.md
 
+[NT-2026-09-02-13] [P1] [CLOSED 2026-09-02] V2 compliance: two active-content citations still referenced the superseded pin `81eedc7c` because the refresh matched only the 10-character prefix `81eedc7cea`.
+  file: skills/nt/SKILL.md:37
+  evidence: the Phase 5 independent reconciliation review found the nt router G2 evidence row citing `81eedc7ce` and the test comment at `tests/test_current_develop_guidance.py:111` citing `(81eedc7ce)`; repo-wide sweep confirmed these were the only active-content occurrences outside receipts, manifest transition history, and this ledger.
+  fix: repoint both citations to `4692bac35` and re-execute the `nt` G2 harness so its durable evidence matches the changed owned content.
+  acceptance-test: repo-wide grep for `81eedc7c` excluding receipts, manifest transition history, and this ledger returns zero active-content hits; `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0.
+  closure: `python3 tools/check_skill_g2_harnesses.py --execute --skill nt` PASS with refreshed evidence; `--check-cards` exit 0; `python3 -m pytest -q tests/test_current_develop_guidance.py` 7 passed.
+  closure-proof: stale active-content citation count after fix: 0; nt harness re-executed PASS at 4692bac35 with evidence refreshed.
+  correction: 2026-09-02 — [content] — MODIFIED: repointed the two missed old-pin citations and refreshed nt G2 evidence — files: skills/nt/SKILL.md, tests/test_current_develop_guidance.py, references/g2-evidence/nt.json
+
+
 [NT-2026-08-30-01] [P1] [CLOSED 2026-08-30] Prompt governance audit: the master prompt coupled impact priority to evidence state, prescribed free-form `.txt` evidence receipts with no secret-safety contract, and defined no spec-delta or verifier-owned legacy-receipt protocol.
   file: docs/prompts/master-prompt.md:95; docs/prompts/master-prompt.md:212; docs/prompts/master-prompt.md:255
   evidence: the cross-repository governance audit (reference improvements shipped as Nautilus-Daedalus `ebc8971f`) found the prompt lowering finding priority when evidence was missing, accepting unversioned `.txt` receipts that could commit raw credentials, and requiring no deterministic `spec-deltas` on implementation manifests; all five baseline pressure scenarios (no-impact spec delta, legacy receipts, unverified P0, secret-bearing output, machine-checkable contract) failed against the pre-change prompt.

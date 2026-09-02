@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-stale-pin-citations",
+  "finding_id": "NT-2026-09-02-13",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -rn 81eedc7c --include=*.md --include=*.py . | grep -vE \"receipts/|upstream-delta-review|Findings.md|Components.md\" | wc -l && python3 tools/check_skill_g2_harnesses.py --execute --skill nt && python3 tools/check_skill_g2_harnesses.py --check-cards && python3 -m pytest -q tests/test_current_develop_guidance.py",
+  "exit_code": 0,
+  "output_sha256": "9b6958fe12a5fc7ff41b2b7582dbb747337f2e65b6572bd21e5b13250d7cbc82",
+  "output_excerpt": "stale active citations after fix: 0\nnt harness: PASS, evidence refreshed\ncheck-cards: exit 0\ntest_current_develop_guidance: 7 passed",
+  "redactions": [],
+  "recorded_at": "2026-09-02T06:40:15Z"
+}
