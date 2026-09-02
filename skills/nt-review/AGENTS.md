@@ -111,10 +111,14 @@ Quick check + Conventions + Trading Correctness + Performance + Testability + (i
 - **Indicative:** "Returns the client" ✅
 - **Imperative:** "Return the client" ❌
 
-### v1.223.0 Rust Breaking Change
+NT v2 compatibility note: the v1.223.0 and v1.224.0 change sections below are
+migration/reference-only history; verify current Rust V2 behavior against the pinned
+upstream `crates/` sources before applying any item.
+
+### v1.223.0 Rust Breaking Change (legacy: migration/reference-only)
 `AddAssign`/`SubAssign` removed from `Price`/`Quantity`/`Money`. Use `x = x + y` not `x += y`.
 
-### v1.224.0 Changes
+### v1.224.0 Changes (legacy: migration/reference-only)
 - `fill_limit_at_touch` → `fill_limit_inside_spread`; `BestPriceFillModel` fills inside spread by default
 - Coinbase International adapter (`COINBASE_INTX`) fully removed
 - `InstrumentProvider` only needs `load_all_async`; `load_ids_async`/`load_async` have defaults
@@ -133,9 +137,12 @@ NT v2 compatibility note: v1.x checklist items below are migration/reference-onl
 - [ ] All order lifecycle events handled (reject, cancel, expire, partial fill)
 - [ ] Reconnection logic in adapters with exponential backoff
 - [ ] Position limits and circuit breaker configured
-- [ ] v1.223.0: `trade_execution` default `True`; set `False` for bar-only
-- [ ] v1.223.0: `Quantity - Quantity` returns `Quantity`; `ValueError` if < 0
-- [ ] v1.223.0: dYdX v3 adapter removed; use `nautilus_trader.adapters.dydx`
+
+NT v2 compatibility note: the v1.223.0 checklist entries below are migration/reference-only history superseded by the current Rust V2 items above.
+
+- legacy: migration/reference-only — v1.223.0 `trade_execution` default `True` / set `False` for bar-only — V2: execution behavior is configured through the Rust execution engine and venue configs, not a strategy-level `trade_execution` flag.
+- legacy: migration/reference-only — v1.223.0 `Quantity - Quantity` returns `Quantity`; `ValueError` if < 0 — V2: quantity arithmetic is enforced by the Rust model types in `crates/model`.
+- legacy: migration/reference-only — v1.223.0 dYdX v3 adapter removed; use `nautilus_trader.adapters.dydx` — V2: the maintained dYdX adapter is the Rust implementation under `crates/adapters/dydx` exposed at `nautilus_trader.adapters.dydx`.
 
 ## PERFORMANCE CHECKLIST
 
