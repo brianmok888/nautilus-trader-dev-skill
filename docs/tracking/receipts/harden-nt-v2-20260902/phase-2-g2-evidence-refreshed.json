@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-g2-evidence-refreshed",
+  "finding_id": "NT-2026-09-02-09",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --execute --upstream-root <disposable-4692bac35-worktree> [--skill ...] && python3 tools/check_skill_g2_harnesses.py --check-cards && python3 tools/check_skill_g2_harnesses.py --check-card-declarations && python3 -m pytest -q",
+  "exit_code": 0,
+  "output_sha256": "398d25144d69f9e2ef35018c651656109d2f160d2f52e778c4e317992117b27b",
+  "output_excerpt": "G2 harness execution: 17/17 PASS (nt, nt-adapters, nt-architect, nt-backtest, nt-data, nt-dev, nt-dex-adapter, nt-implement, nt-learn, nt-live, nt-model, nt-review, nt-signals, nt-strategy-builder, nt-strategy-builder-rust, nt-testing, nt-trading)\ncheck-cards: exit 0\ncheck-card-declarations: exit 0\nfull suite: 531 passed, 3 skipped in 31.85s\nDisposable upstream worktree: clean at 4692bac35",
+  "redactions": [
+    "Replaced the host-specific disposable upstream worktree path in command with <disposable-4692bac35-worktree>."
+  ],
+  "recorded_at": "2026-09-02T06:15:01Z"
+}

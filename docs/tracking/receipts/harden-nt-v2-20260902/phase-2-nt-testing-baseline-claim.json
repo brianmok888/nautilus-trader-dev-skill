@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-nt-testing-baseline-claim",
+  "finding_id": "NT-2026-09-02-05",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -n \"verified 2026-09-02\" skills/nt-testing/SKILL.md && python3 tools/check_upstream_freshness.py --format json",
+  "exit_code": 0,
+  "output_sha256": "1d2f924dcce24f5a0c185329fe4fa724f72c6b3e1a28298497add0647621e9c7",
+  "output_excerpt": "skills/nt-testing/SKILL.md:18:`4692bac35bb11a25eeebb8d7af4d51c55afe53ec` (verified 2026-09-02 via\nfreshness exit 0; manifest_reviewed true",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

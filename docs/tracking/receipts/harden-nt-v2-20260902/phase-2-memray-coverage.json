@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-memray-coverage",
+  "finding_id": "NT-2026-09-02-06",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c memray skills/nt-testing/references/guides/testing.md && python3 tools/check_legacy_labelling.py",
+  "exit_code": 0,
+  "output_sha256": "81d194116cf0332a785330b6299bc57b3885c38c196e81d3d714dc85b3d4d04d",
+  "output_excerpt": "memray token count: 8\nLegacy labelling check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

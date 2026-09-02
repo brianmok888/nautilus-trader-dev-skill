@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "406c79c60685c1f8285337140678d4be1770edf30bc00c1164e800ecd9636512",
+  "owned_content_sha256": "df9130da2d1967ad1595f3d20687128c51afb489197c46240e1c22c55eab7984",
   "schema_version": 2,
   "scope": "upstream:crates/model-all-targets",
   "skill": "nt-model",
@@ -14,11 +14,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 44.151102,
+      "duration_seconds": 56.000151,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
-  "verified_at": "2026-08-28T18:56:46.759116+00:00"
+  "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
+  "verified_at": "2026-09-02T05:31:54.421603+00:00"
 }

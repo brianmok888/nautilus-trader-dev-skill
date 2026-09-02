@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "e416d29737236f8cd5d7a3119bbc4ed12d2994ba57981ef3537d64e35bf98cc5",
+  "owned_content_sha256": "061e4e32468944f803029363835fe198a7ed935a91bc694b290ad45a3ec1f807",
   "schema_version": 2,
   "scope": "upstream:cross-boundary-core-data-trading-backtest",
   "skill": "nt-architect",
@@ -20,11 +20,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 73.304292,
+      "duration_seconds": 45.104343,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
-  "verified_at": "2026-08-30T01:28:13.197975+00:00"
+  "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
+  "verified_at": "2026-09-02T05:09:17.275792+00:00"
 }

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-api-reference-labels",
+  "finding_id": "NT-2026-09-02-11",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -rLn \"NT v2 compatibility\" references/api_reference --include=*.md | wc -l && python3 tools/check_legacy_labelling.py && python3 tools/check_dev_guide_sync.py",
+  "exit_code": 0,
+  "output_sha256": "bba6d22b5bcc36e0fded90559627a6a6815286561bd43a4b59425a6e77aeb8d4",
+  "output_excerpt": "unlabelled pages: 0\nLegacy labelling check passed.\nDeveloper guide sync checks passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

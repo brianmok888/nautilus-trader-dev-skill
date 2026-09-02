@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-adapter-task-lifecycle",
+  "finding_id": "NT-2026-09-02-02",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -cE \"TaskGroup|TaskSpawner|TaskSlot\" skills/nt-adapters/SKILL.md && python3 tools/check_legacy_labelling.py",
+  "exit_code": 0,
+  "output_sha256": "1ffd93f98f68bd5702e7772e0ab3e8f5b979c7097844f3053b2541a6745b259a",
+  "output_excerpt": "nt-adapters/SKILL.md standardized-lifecycle token count: 7\nLegacy labelling check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

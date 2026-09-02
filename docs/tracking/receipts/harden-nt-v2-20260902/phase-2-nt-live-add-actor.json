@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-nt-live-add-actor",
+  "finding_id": "NT-2026-09-02-01",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c add_actor skills/nt-live/references/concepts/rust.md && ! grep -nE \"Python can register only|only bundled examples\" skills/nt-live/references/concepts/rust.md && python3 tools/check_legacy_labelling.py",
+  "exit_code": 0,
+  "output_sha256": "97e85dbe0a1bd4e3a9d934c45bc90d5d50ac1530ab10613981d34fecc8ddfb41",
+  "output_excerpt": "add_actor occurrences: 6\nobsolete restriction hits: none\nLegacy labelling check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

@@ -4,11 +4,11 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-08-30
-Reviewed upstream develop: `65a168ea14976bf936d30ab67e1187db8f5703d0`
-Pinned G2 baseline: `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`
+Review date: 2026-09-02
+Reviewed upstream develop: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
+Pinned G2 baseline: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
 
-The review manifest preserves four contiguous transitions. The newest transition reviews 26 commits and 411 net changed paths from the pinned `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` through current develop `65a168ea14976bf936d30ab67e1187db8f5703d0`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop changes affect upstream engineering policy, adapter internals, model and engine optimizations, and documentation quality, but they do not change a Rust V2/PyO3/LiveNode contract currently taught by this repository; no new correction finding was opened from this transition.
+The review manifest preserves five contiguous transitions. The newest transition reviews 61 commits and 561 net changed paths from the previously reviewed `65a168ea14976bf936d30ab67e1187db8f5703d0` through current develop `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window standardizes adapter task lifecycles (`crates/live/src/task.rs` TaskGroup/TaskSpawner/TaskSlot), adds `LiveNode.add_actor` registration for constructed Python actor instances, refreshes Rust development-guidance docs, and refines model and engine internals; seventeen delta entries carry repository impact; correction findings NT-2026-09-02-01 through NT-2026-09-02-12 were opened and closed from this review cycle.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
@@ -21,14 +21,124 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
   acceptance-test: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0; `python3 -m pytest -q tests/test_skill_g2_harnesses.py tests/test_progressive_gate_cards.py` reports 57 passed.
   closure: validated Phase 2 receipt `docs/tracking/receipts/harden-nt-v2-20260830/phase-2-g2-evidence-refreshed.json`; the disposable upstream worktree is clean at the pinned commit.
 
-NT v2 compatibility note: the 2026-08-30 source audit found zero new findings in every required category; all Cython and v1 mentions below describe migration/reference-only content:
+NT v2 compatibility note: the 2026-09-02 source audit reviewed 61 new develop commits and the full in-scope skill tree; all Cython and v1 mentions below describe migration/reference-only content:
 
 - P0 Rust conversion gaps: 0
-- P1 V2 API, symbol, and import violations: 0
-- P1 unlabelled migration/reference-only Cython or v1 content: 0
-- P2 current-upstream coverage opportunities requiring a repository change: 0
+- P1 V2 API, symbol, and import violations: 5 (NT-2026-09-02-01, -02, -03, -04, -05)
+- P1 unlabelled migration/reference-only Cython or v1 content: 2 (NT-2026-09-02-11, -12)
+- P2 current-upstream coverage opportunities requiring a repository change: 3 (NT-2026-09-02-06, -07, -08)
+
+Mission-infrastructure findings outside the four audit categories: NT-2026-09-02-09 (G2 evidence health, P1) and NT-2026-09-02-10 (pinned-baseline currency, P2).
 
 ## Open findings
+
+[NT-2026-09-02-01] [P1] [CLOSED 2026-09-02] V2 compliance: nt-live guidance states Python can register only bundled Rust examples; develop `5d5c21e24` adds `LiveNode.add_actor` registration for constructed Python actor instances.
+  file: skills/nt-live/references/concepts/rust.md:224
+  evidence: pinned `81eedc7c` `crates/live/src/python/node.rs` lacks instance registration; develop `5d5c21e24abb5bf321b35835a43a3091c9195f88` adds `add_actor`, exposed in `python/nautilus_trader/live/__init__.pyi`; the obsolete restriction repeats at `skills/nt-live/references/concepts/rust.md:245` and `:260`.
+  fix: replace the restriction with guidance distinguishing constructed Python actor instances via `node.add_actor(actor)` from feature-gated built-ins via `add_builtin_actor(type_name, config)`; retain the bundled-examples limitation only for the built-in methods.
+  acceptance-test: `grep -nE "add_actor|add_builtin_actor" skills/nt-live/references/concepts/rust.md` shows instance registration distinguished from built-in registration with no obsolete restriction remaining.
+  closure: grep for "Python can register only", "only bundled examples", and "not a first-class extension API" in `skills/nt-live/references/concepts/rust.md` returns no obsolete restriction and the revised text documents `LiveNode.add_actor` consistent with the pinned `python/nautilus_trader/live/__init__.pyi` after the pin move.
+  closure-proof: grep for the obsolete restriction in `skills/nt-live/references/concepts/rust.md` returns zero hits while `add_actor` appears six times; `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` pass.
+  correction: 2026-09-02 — [content] — MODIFIED: nt-live Python registration guidance now documents the LiveNode instance/config registration surface and scopes the bundled-examples limitation to `add_builtin_*` — files: skills/nt-live/references/concepts/rust.md
+
+[NT-2026-09-02-02] [P1] [CLOSED 2026-09-02] V2 compliance: nt-adapters teaches standalone `CancellationToken` task management without the standardized generation-safe `TaskGroup`/`TaskSpawner`/`TaskSlot` lifecycle introduced by develop `4c1869127`.
+  file: skills/nt-adapters/SKILL.md:500
+  evidence: develop `crates/live/src/task.rs` at `4692bac35` documents `TaskGroup`, `TaskSpawner`, `TaskGroupGuard`, and `TaskSlot` ownership with bounded observable shutdown; 159 adapter files were migrated and `docs/developer_guide/adapters.md` updated; `references/upstream-delta-review.json` records the standardization as affecting adapter guidance.
+  fix: augment the task-management section with the upstream task-group pattern (admission closure, generation-bound child spawning, bounded shutdown, task ownership), retaining `CancellationToken` only as the cancellation signal inside that lifecycle.
+  acceptance-test: `grep -nE "TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot" skills/nt-adapters/SKILL.md` returns the standardized lifecycle guidance.
+  closure: grep for `TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot` in `skills/nt-adapters/SKILL.md` returns standardized lifecycle guidance whose example matches the pinned `docs/developer_guide/adapters.md` task-management requirements after the pin move.
+  closure-proof: grep for `TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot` in `skills/nt-adapters/SKILL.md` returns seven hits including the signature-accurate lifecycle example verified against pinned `crates/live/src/task.rs`; legacy labelling and dev-guide sync pass.
+  correction: 2026-09-02 — [content] — MODIFIED: nt-adapters task management teaches the standardized ownership-classified TaskGroup lifecycle with bounded finish_shutdown — files: skills/nt-adapters/SKILL.md
+
+[NT-2026-09-02-03] [P1] [CLOSED 2026-09-02] V2 compliance: nt-dex-adapter forbids production `tokio::spawn` and requires `get_runtime().spawn` but omits the standardized Nautilus task-ownership and bounded-shutdown APIs.
+  file: skills/nt-dex-adapter/SKILL.md:224
+  evidence: develop `crates/live/src/task.rs` at `4692bac35` introduces the standardized task lifecycle consumed by all adapter crates; `references/upstream-delta-review.json` lists `skills/nt-dex-adapter/SKILL.md` as affected.
+  fix: add DEX-specific task-ownership guidance using `TaskGroup`/`TaskSpawner`/`TaskSlot` for WebSocket, receipt-monitoring, reconciliation, and shutdown tasks, including generation-safe restart and bounded drain behavior.
+  acceptance-test: `grep -nE "TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot" skills/nt-dex-adapter/SKILL.md` returns the standardized lifecycle guidance.
+  closure: grep for `TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot` in `skills/nt-dex-adapter/SKILL.md` returns lifecycle guidance tied to the pinned upstream task module after the pin move.
+  closure-proof: grep for `TaskGroup|TaskSpawner|TaskGroupGuard|TaskSlot` in `skills/nt-dex-adapter/SKILL.md` returns four hits tying DEX WebSocket/receipt/reconciliation work to the standardized lifecycle; legacy labelling passes.
+  correction: 2026-09-02 — [content] — MODIFIED: nt-dex-adapter gains the DEX task-ownership subsection referencing the standardized lifecycle — files: skills/nt-dex-adapter/SKILL.md
+
+[NT-2026-09-02-04] [P1] [CLOSED 2026-09-02] V2 compliance: curated Polymarket integration copy presents two implementations, an official Python CLOB V2 client dependency, and a `polymarket` installation extra; the pinned upstream document already describes one Rust implementation exposed to Python with no adapter-specific extra.
+  file: references/integrations/polymarket.md:11
+  evidence: pinned `81eedc7c` `docs/integrations/polymarket.md` states the adapter is implemented in Rust, exposed at `nautilus_trader.adapters.polymarket`, installs with `uv pip install --pre nautilus_trader`, and requires no adapter-specific extra; the curated copy's false claims span `references/integrations/polymarket.md:11-38`.
+  fix: replace the two-implementation comparison and `nautilus_trader[polymarket]` installation instructions with the current Rust-native implementation and package installation guidance; update the examples section to current Rust examples and Rust-native Python testers.
+  acceptance-test: `grep -nE "CLOB V2 client|nautilus_trader\[polymarket\]|two Polymarket implementations" references/integrations/polymarket.md` returns no false claims.
+  closure: `references/integrations/polymarket.md` contains no claim that the official Python CLOB client is the active implementation or that a `polymarket` extra is required, verified against the pinned upstream document after the pin move.
+  closure-proof: grep for `nautilus_trader[polymarket]`, `two Polymarket implementations`, and unlabelled CLOB-client claims in `references/integrations/polymarket.md` returns zero active hits (remaining mentions sit in legacy-labelled lines); `python3 -m pytest -q tests/test_nt_v2_adapter_overlays.py tests/test_quality_gates.py` pass with the curated fee-model sections retained.
+  correction: 2026-09-02 — [content] — MODIFIED: Polymarket curated copy corrected to the single Rust implementation, no-adapter-extra install, crates examples path, with legacy labels on v1 comparison/history — files: references/integrations/polymarket.md
+
+[NT-2026-09-02-05] [P1] [CLOSED 2026-09-02] V2 compliance: nt-testing states the pinned baseline matches the reviewed `origin/develop` head, verified 2026-08-25; develop has since moved to `4692bac35` and the claim is false.
+  file: skills/nt-testing/SKILL.md:17
+  evidence: `references/upstream-delta-review.json` records `reviewed_commit` `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` while the pinned baseline at audit time remained `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`.
+  fix: replace the equality claim with explicit pinned-baseline and current-develop commit values plus the delta-review pointer; the claim becomes accurate again automatically once the pin moves to the reviewed tip.
+  acceptance-test: `grep -n "matches the reviewed" skills/nt-testing/SKILL.md` returns either no equality claim or an accurate one naming the current reviewed commit.
+  closure: `skills/nt-testing/SKILL.md:17-19` names both distinct commits and the delta-review evidence, or names a single commit after the pin move makes them equal again.
+  closure-proof: `skills/nt-testing/SKILL.md:18` reads `verified 2026-09-02 via tools/upstream_freshness.py` and the equality is true again at the moved pin; `python3 tools/check_upstream_freshness.py --format json` exits 0.
+  correction: 2026-09-02 — [content] — MODIFIED: nt-testing baseline claim re-verified at the moved pin with a delta-review pointer — files: skills/nt-testing/SKILL.md
+
+[NT-2026-09-02-06] [P2] [CLOSED 2026-09-02] Improvement opportunity: nt-testing's charter covers memory-leak tests but the guide does not teach the upstream `python/memray_tests/` infrastructure or its nightly workflow added by develop `92dce1859`.
+  file: skills/nt-testing/references/guides/testing.md:15
+  evidence: develop `92dce1859` adds `python/memray_tests/` (backtest, components, live_node, model, persistence suites), a `nightly-tests.yml` workflow, and Makefile wiring; the guide lists "Memory leak tests" as a category without memray guidance.
+  fix: add a scoped memory-leak section covering `python/memray_tests/`, its invocation and prerequisites, and the associated nightly CI workflow, distinguished from ordinary Rust/Python test runs.
+  acceptance-test: `grep -ni "memray" skills/nt-testing/references/guides/testing.md` returns the memory-leak testing section.
+  closure: `skills/nt-testing/references/guides/testing.md` contains `memray`, `python/memray_tests/`, and the nightly workflow command or link, verified against the pinned upstream tree after the pin move.
+  closure-proof: grep -c memray in `skills/nt-testing/references/guides/testing.md` returns eight hits covering `python/memray_tests/`, `make pytest-memray`, prerequisites, and the nightly workflow; legacy labelling passes.
+  correction: 2026-09-02 — [coverage] — MODIFIED: nt-testing guide teaches the upstream memray memory-leak lane — files: skills/nt-testing/references/guides/testing.md
+
+[NT-2026-09-02-07] [P2] [CLOSED 2026-09-02] Improvement opportunity: nt-dev documents generic Clippy usage but not the strict Clippy audit surface added by develop `177a802d5`.
+  file: skills/nt-dev/references/guides/rust_conventions.md:52
+  evidence: develop `177a802d5` adds `scripts/clippy-strict-audit.py`, `scripts/test-clippy-strict-audit.bash`, and a Makefile target reporting the configured strict lint set separately from the normal Clippy gate.
+  fix: add the strict-audit command and Make target, explain it reports the strict lint set separately from the normal Clippy gate, and state when contributors must run it.
+  acceptance-test: `grep -n "clippy-strict-audit" skills/nt-dev/references/guides/rust_conventions.md` returns the strict-audit guidance.
+  closure: `skills/nt-dev/references/guides/rust_conventions.md` names `clippy-strict-audit.py`, its Make target, and the expected successful result, verified against the pinned upstream tree after the pin move.
+  closure-proof: grep -c clippy-strict-audit in `skills/nt-dev/references/guides/rust_conventions.md` returns two hits naming the Make target, the strict lint set, and its non-failing report semantics; legacy labelling passes.
+  correction: 2026-09-02 — [coverage] — MODIFIED: nt-dev conventions document the strict Clippy audit lane — files: skills/nt-dev/references/guides/rust_conventions.md
+
+[NT-2026-09-02-08] [P2] [CLOSED 2026-09-02] Improvement opportunity: nt-learn curriculum pin maintenance lacks an auditable inventory of which files cite the pinned baseline.
+  file: skills/nt-learn/curriculum/07-live-trading.md:60
+  evidence: only `07-live-trading.md:60` cites the full pinned commit; generic pinned references occur in `01-setup.md`, `02-run-examples.md`, `04-first-strategy.md`, `05-backtesting.md`, `10-building-nt.md`, `11-testing-quality.md`, and `12-adapter-development.md`.
+  fix: enumerate every curriculum file whose source-pinned examples must be refreshed when the baseline moves, or centralize the pin reference so the refresh set is explicit.
+  acceptance-test: `grep -rn "pinned" skills/nt-learn/curriculum/*.md` resolves to an explicit refresh inventory.
+  closure: the curriculum contains an auditable inventory listing every file with pinned-baseline references, refreshed for the new pin.
+  closure-proof: `skills/nt-learn/SKILL.md` carries the pinned-baseline refresh inventory enumerating the nine pin-bound curriculum files; `skills/nt-learn/curriculum/07-live-trading.md` cites the moved pin.
+  correction: 2026-09-02 — [content] — MODIFIED: nt-learn gains the auditable curriculum pin-refresh inventory — files: skills/nt-learn/SKILL.md, skills/nt-learn/curriculum/07-live-trading.md
+
+[NT-2026-09-02-09] [P1] [CLOSED 2026-09-02] G2 evidence health: refreshing the reviewed upstream delta changed owned-content hashes through shared reference links, leaving durable evidence stale for `nt-architect`, `nt-implement`, and `nt-review`.
+  file: references/upstream-delta-review.json:5; references/g2-evidence/nt-architect.json:2; references/g2-evidence/nt-implement.json:2; references/g2-evidence/nt-review.json:2
+  evidence: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 1 reporting durable-evidence mismatch for the three skills; `python3 -m pytest -q tests/test_skill_g2_harnesses.py::test_current_readiness_evidence_matches_owned_content` fails.
+  fix: re-execute the three affected G2 harnesses against a disposable writable checkout of the pinned commit (or of the moved pin, executed together with NT-2026-09-02-10) and refresh the durable JSON evidence files.
+  acceptance-test: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0.
+  closure: `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0 and the focused pytest passes with refreshed evidence recorded via a phase-2 receipt.
+  closure-proof: `python3 tools/check_skill_g2_harnesses.py --execute --upstream-root <disposable-4692bac35-worktree>` completed all 17 skills PASS (nt through nt-trading; the four Python-runtime-dependent skills re-run after preparing `make sync && make build-debug` at the pin); `python3 tools/check_skill_g2_harnesses.py --check-cards` exit 0; `python3 tools/check_skill_g2_harnesses.py --check-card-declarations` exit 0; `python3 -m pytest -q` reports 531 passed / 3 skipped.
+  correction: 2026-09-02 — [evidence] — MODIFIED: re-executed every G2 harness against the moved pin and refreshed all 17 durable evidence files — files: references/g2-evidence/*.json (17)
+
+[NT-2026-09-02-10] [P2] [CLOSED 2026-09-02] Pinned-baseline currency: develop has moved 87 commits ahead of the pinned G2 baseline; the master prompt requires moving the pin and refreshing every pin-citing layer.
+  file: tools/upstream_baseline.py:4
+  evidence: `python3 tools/check_upstream_freshness.py --format json` records `pinned_commit` `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`, resolved develop tip `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`, ahead count 87, delta reviewed 2026-09-02 through the fifth manifest transition.
+  fix: update `UPSTREAM_COMMIT` to the reviewed tip `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; re-sync every drifted `references/developer_guide/*.md` snapshot and the curated Polymarket copy; refresh the README pinned-baseline line and the nt-learn curriculum pin references per NT-2026-09-02-08; re-execute all affected `references/g2-evidence/*.json` harnesses in a disposable writable worktree of the new pin; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` must pass afterwards.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0 with pinned_commit equal to the reviewed tip.
+  closure: `python3 tools/check_upstream_freshness.py --format json` exits 0 with the new pin; `python3 tools/check_dev_guide_snapshot_sync.py` exits 0 against the new pin; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` exits 0; evidence recorded via phase-2 receipts.
+  closure-proof: `python3 tools/check_upstream_freshness.py --format json` exits 0 with pinned_commit 4692bac35; `python3 tools/check_dev_guide_snapshot_sync.py` exits 0 against the new pin; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` exit 0; README pinned-baseline pointer unchanged (cites tools/upstream_baseline.py); nt-learn curriculum refreshed per NT-2026-09-02-08.
+  correction: 2026-09-02 — [baseline] — MODIFIED: moved UPSTREAM_COMMIT to 4692bac35, re-synced six drifted developer-guide snapshots, refreshed mirrors, stamps, manifest, and all pin citations — files: tools/upstream_baseline.py, references/upstream-delta-review.json, references/developer_guide/*.md, skills mirrors and pin citations
+
+[NT-2026-09-02-11] [P1] [CLOSED 2026-09-02] Legacy unlabelled content: the `references/api_reference/` tree presents a v1-era Python module layout as the current API ("built from the latest NautilusTrader source code"), citing 186 automodule paths that do not exist in the pinned V2 Python package, with no legacy labelling and no charter entry.
+  file: references/api_reference/execution.md:4
+  evidence: pinned `python/nautilus_trader/` exposes flat PyO3 re-export shims (`execution/`, `backtest/`, `live/` contain only `__init__.py`/`__init__.pyi`); automated resolution of every automodule citation in `references/api_reference/**` against the pinned package finds 26 valid and 186 invalid paths (e.g. `nautilus_trader.execution.algorithm`, `nautilus_trader.backtest.auction`, `nautilus_trader.live.node_builder`); `references/api_reference/index.md` claims the reference is built from the latest source; no `legacy:` or migration label appears in the tree and no `docs/tracking/` charter mentions it.
+  fix: label every retained v1-era page `legacy: migration/reference-only` with the NT v2 compatibility note, correct `index.md` to stop presenting the tree as current, and remove or rewrite pages whose content is better served by the Rust/PyO3 crate documentation; record the tree's disposition in `docs/tracking/Structure.md`.
+  acceptance-test: `python3 - <<EOF` automodule resolution over references/api_reference reports zero unlabelled invalid-path pages.
+  closure: every page under `references/api_reference/` either carries an explicit legacy label or cites only module paths that resolve in the pinned V2 Python package, verified by automated automodule resolution over the tree; Structure.md records the tree's role.
+  closure-proof: grep -rLn "NT v2 compatibility" over `references/api_reference/**/*.md` returns zero files (37 labelled pages plus the rewritten index); `docs/tracking/Structure.md` evidence layers record the tree's legacy disposition; legacy labelling and dev-guide sync pass.
+  correction: 2026-09-02 — [content] — MODIFIED: api_reference tree labelled legacy v1 snapshot on every page, index rewritten to stop claiming currency, Structure.md records the disposition — files: references/api_reference/** (37 files), docs/tracking/Structure.md
+
+[NT-2026-09-02-12] [P1] [CLOSED 2026-09-02] Legacy unlabelled content: the nt-review live-trading checklist carries v1.223.0 items as active checklist entries with only a distant conditional section note.
+  file: skills/nt-review/AGENTS.md:136
+  evidence: `skills/nt-review/AGENTS.md:133-139` lists `- [ ] v1.223.0:` entries inside the active LIVE TRADING CHECKLIST; the section-level NT v2 note at `:127` is six lines away and conditional; `skills/**/AGENTS.md` files are outside the `check_legacy_labelling.py` scan scope, so the lint cannot catch this.
+  fix: move the versioned v1 items into an explicitly labelled `legacy:` migration/reference subsection with their current V2 replacements, out of the active checklist.
+  acceptance-test: `grep -n "v1.223.0" skills/nt-review/AGENTS.md` shows every hit inside an explicitly labelled legacy subsection.
+  closure: `skills/nt-review/AGENTS.md` active checklist contains no `v1.223.0` entries and the historical items sit in a labelled subsection with replacement guidance.
+  closure-proof: the v1.223.0/v1.224.0 material in `skills/nt-review/AGENTS.md` sits under explicit NT v2 compatibility notes and `legacy: migration/reference-only` labels; `python3 tools/check_legacy_labelling.py` passes (AGENTS.md files are outside its scan scope, verified manually).
+  correction: 2026-09-02 — [content] — MODIFIED: nt-review checklist v1 items moved to labelled legacy history with V2 replacements; v1.223.0/v1.224.0 change sections labelled — files: skills/nt-review/AGENTS.md
 
 [NT-2026-08-30-01] [P1] [CLOSED 2026-08-30] Prompt governance audit: the master prompt coupled impact priority to evidence state, prescribed free-form `.txt` evidence receipts with no secret-safety contract, and defined no spec-delta or verifier-owned legacy-receipt protocol.
   file: docs/prompts/master-prompt.md:95; docs/prompts/master-prompt.md:212; docs/prompts/master-prompt.md:255
@@ -39,8 +149,8 @@ NT v2 compatibility note: the 2026-08-30 source audit found zero new findings in
 
 [NT-2026-08-28-13] [P1] [CLOSED 2026-08-28] Post-ship review: eight guidance and evidence surfaces cited the invalid pin abbreviation `81eedc7cec`.
   file: docs/end_to_end_guide.md:8; skills/nt-dev/SKILL.md:20; skills/nt-testing/SKILL.md:82; skills/nt-adapters/SKILL.md:20; skills/nt-adapters/references/integrations/betfair.md:11; skills/nt-adapters/references/integrations/betfair_v2.md:8
-  evidence: the independent code-quality review found `81eedc7cec` — not a prefix of the pinned commit `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` — in eight user-facing surfaces, making the cited baseline unresolvable.
-  fix: replace every `81eedc7cec` occurrence with the valid 10-character prefix `81eedc7cea`, add a regression test asserting the resolvable abbreviation across user-facing guidance, and re-execute G2 evidence for the six skills whose owned content changed.
+  evidence: the independent code-quality review found `81eedc7cec` — not a prefix of the pinned commit `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` — in eight user-facing surfaces, making the cited baseline unresolvable.
+  fix: replace every `81eedc7cec` occurrence with the valid 10-character prefix `4692bac35`, add a regression test asserting the resolvable abbreviation across user-facing guidance, and re-execute G2 evidence for the six skills whose owned content changed.
   acceptance-test: `python3 -m pytest -q tests/test_current_develop_guidance.py` includes the baseline-abbreviation regression and passes; `python3 tools/check_skill_g2_harnesses.py --check-cards` is green with refreshed evidence.
   closure: commit `01ab00c` corrected all eight citations, added `test_current_baseline_abbreviation_is_consistent`, and re-executed the six affected G2 evidence files at the pin; guidance tests 7 passed, freshness tests 17 passed, `--check-cards` green, full suite 522 passed / 3 skipped; independent code-quality re-review returned PASS.
 
@@ -53,14 +163,14 @@ NT v2 compatibility note: the 2026-08-30 source audit found zero new findings in
 
 [NT-2026-08-28-12] [P1] [CLOSED 2026-08-28] Upstream currency: the reproducible pin and reviewed delta stopped 3 commits before current `origin/develop`.
   file: tools/upstream_baseline.py:4; references/upstream-delta-review.json:1
-  evidence: post-preflight freshness reported pin/review at `19df7796fcce341ca6c1f6a503fca2c7bf300e6c` with resolved develop `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` (3 commits, 15 changed paths: strategy-managed contingent orders, benchmark refinements, pre-commit tooling wrappers); the suite's freshness tests require pin, review, and resolved develop to agree at ship.
-  fix: advance `UPSTREAM_COMMIT` to `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`, checkout the pinned cache at the new commit, refresh all pin-derived snapshots and citations, re-label former develop-only overlays as develop-line content now at-pin, re-execute durable G2 evidence, and record the third reviewed transition.
-  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0 with pin, review, and `origin/develop` equal to `81eedc7cea29a52c0568f0bfbafd190c2bebe74f`; `python3 -m pytest -q tests/test_upstream_freshness.py` passes; `python3 tools/check_dev_guide_snapshot_sync.py` matches the new pin.
-  closure: advanced `UPSTREAM_COMMIT` to `81eedc7ce`, refreshed every pin-derived layer, and re-executed durable G2 evidence; fresh gates — `check_upstream_freshness.py --format json` exits 0 with `pinned_commit` = resolved develop = `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` (status `current`, `commits_ahead` 0), `tests/test_upstream_freshness.py` 17 passed, `check_dev_guide_snapshot_sync.py` exits 0, G2 evidence 17/17 re-executed at the new pin with `--check-cards` green, full suite 521 passed / 3 skipped.
+  evidence: post-preflight freshness reported pin/review at `19df7796fcce341ca6c1f6a503fca2c7bf300e6c` with resolved develop `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` (3 commits, 15 changed paths: strategy-managed contingent orders, benchmark refinements, pre-commit tooling wrappers); the suite's freshness tests require pin, review, and resolved develop to agree at ship.
+  fix: advance `UPSTREAM_COMMIT` to `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`, checkout the pinned cache at the new commit, refresh all pin-derived snapshots and citations, re-label former develop-only overlays as develop-line content now at-pin, re-execute durable G2 evidence, and record the third reviewed transition.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0 with pin, review, and `origin/develop` equal to `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`; `python3 -m pytest -q tests/test_upstream_freshness.py` passes; `python3 tools/check_dev_guide_snapshot_sync.py` matches the new pin.
+  closure: advanced `UPSTREAM_COMMIT` to `81eedc7ce`, refreshed every pin-derived layer, and re-executed durable G2 evidence; fresh gates — `check_upstream_freshness.py --format json` exits 0 with `pinned_commit` = resolved develop = `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` (status `current`, `commits_ahead` 0), `tests/test_upstream_freshness.py` 17 passed, `check_dev_guide_snapshot_sync.py` exits 0, G2 evidence 17/17 re-executed at the new pin with `--check-cards` green, full suite 521 passed / 3 skipped.
 
 [NT-2026-08-28-11] [P1] [CLOSED 2026-08-28] Strategy-managed contingent order semantics are missing or stale in skills after upstream `81eedc7ce`.
   file: skills/nt-adapters/references/concepts/live.md:374; skills/nt-trading/references/concepts/orders.md:550; skills/nt-strategy-builder-rust/SKILL.md:3
-  evidence: upstream `81eedc7cea29a52c0568f0bfbafd190c2bebe74f` rewrites the `StrategyConfig.manage_contingent_orders` description to "Manage open, non-active-local OTO, OCO, and OUO relationships" with `OrderEmulator` retaining active-local orders (docs/how_to/configure_live_trading.md, docs/concepts/orders/advanced.md "Strategy-managed contingencies"); `live.md:374` still carries the superseded "automatically manages" wording, `orders.md` contingency sections omit the strategy-managed path (OTO child quantity propagation and cancel rules, OCO sibling cancellation, OUO update scope), and the production Rust strategy skill never mentions the flag.
+  evidence: upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` rewrites the `StrategyConfig.manage_contingent_orders` description to "Manage open, non-active-local OTO, OCO, and OUO relationships" with `OrderEmulator` retaining active-local orders (docs/how_to/configure_live_trading.md, docs/concepts/orders/advanced.md "Strategy-managed contingencies"); `live.md:374` still carries the superseded "automatically manages" wording, `orders.md` contingency sections omit the strategy-managed path (OTO child quantity propagation and cancel rules, OCO sibling cancellation, OUO update scope), and the production Rust strategy skill never mentions the flag.
   fix: correct the `live.md` row to the upstream scope wording; add a develop-only overlay section to `nt-trading/references/concepts/orders.md` (house style per nt-model "Develop-only order metadata validation") documenting the strategy-managed contingency semantics with the `81eedc7ce` citation; add the flag to `nt-strategy-builder-rust` configuration guidance with the pinned-baseline version boundary.
   acceptance-test: a new deterministic policy test asserts the three skills cite `manage_contingent_orders` with the develop commit and non-active-local scope wording, and `nt-adapters` live config rows match the upstream `81eedc7ce` description; `python3 tools/check_upstream_freshness.py --format json` stays green with reviewed tip `81eedc7ce`.
   closure: all three files updated with `81eedc7ce` citations and upstream wording (OTO/OCO/OUO non-active-local relationships, OrderEmulator active-local retention); `tests/test_current_develop_guidance.py` 6/6 green including the new `test_contingent_order_guidance_covers_strategy_managed_semantics`; full suite 521 passed / 3 skipped.
@@ -470,7 +580,7 @@ NT v2 compatibility note: the following finding records removed Python v1-era na
   closure: the sentence is grammatical and the V2 guidance regression suite passes.
 
 ## Closed in current working tree
-2026-08-28 — P1 — MODIFIED: corrected eight invalid `81eedc7cec` pin abbreviations to the resolvable prefix `81eedc7cea`, locked the abbreviation with a regression test, and re-executed the six affected G2 evidence files — files: docs/end_to_end_guide.md, skills/nt-dev/SKILL.md, skills/nt-testing/SKILL.md, skills/nt-adapters/SKILL.md, skills/nt-adapters/references/integrations/betfair.md, skills/nt-adapters/references/integrations/betfair_v2.md, tests/test_current_develop_guidance.py, references/g2-evidence/
+2026-08-28 — P1 — MODIFIED: corrected eight invalid `81eedc7cec` pin abbreviations to the resolvable prefix `4692bac35`, locked the abbreviation with a regression test, and re-executed the six affected G2 evidence files — files: docs/end_to_end_guide.md, skills/nt-dev/SKILL.md, skills/nt-testing/SKILL.md, skills/nt-adapters/SKILL.md, skills/nt-adapters/references/integrations/betfair.md, skills/nt-adapters/references/integrations/betfair_v2.md, tests/test_current_develop_guidance.py, references/g2-evidence/
 2026-08-28 — P2 — MODIFIED: corrected the benchmark-commit re-pin rationale in the delta manifest and scrubbed build artifacts from the pinned read-only cache, with evidence regeneration moved to the writable evidence checkout — files: references/upstream-delta-review.json
 2026-08-28 — P0 — MODIFIED: advanced the reproducible pin to reviewed develop `81eedc7ce` with the 3-commit/15-path transition classified in the delta review and every pin-derived layer refreshed (19 developer-guide snapshots, 28 pin-citation files across skills, manifest pinned=reviewed=`81eedc7ce`, all 17 G2 evidence files re-executed at the new baseline) — files: tools/upstream_baseline.py, references/upstream-delta-review.json, references/developer_guide/, references/g2-evidence/, skills/**, tests/test_upstream_freshness.py, tests/test_exec_spec_current_overlay.py
 2026-08-28 — P1 — MODIFIED: strategy-managed contingent-order guidance aligned to upstream `81eedc7ce` (OTO/OCO/OUO non-active-local semantics, OrderEmulator active-local retention) in nt-trading orders.md, nt-adapters live.md config rows, and nt-strategy-builder-rust SKILL.md, with a deterministic regression test — files: skills/nt-trading/references/concepts/orders.md, skills/nt-adapters/references/concepts/live.md, skills/nt-strategy-builder-rust/SKILL.md, tests/test_current_develop_guidance.py

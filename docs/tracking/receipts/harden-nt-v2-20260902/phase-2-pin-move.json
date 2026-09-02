@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-pin-move",
+  "finding_id": "NT-2026-09-02-10",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations",
+  "exit_code": 0,
+  "output_sha256": "b6b4fbbd9ca21309fbf599b71ca6fb590a13e6f6e9c27b38e2f6722400feb6a4",
+  "output_excerpt": "freshness: exit 0 (pinned_commit == reviewed tip 4692bac35, manifest_reviewed true)\nsnapshot sync: bodies match pinned upstream\ncheck-cards: exit 0; check-card-declarations: exit 0\npin-citing layers refreshed: baseline, manifest, 19 snapshots, mirrors, curriculum, trackers",
+  "redactions": [
+    "Replaced the host-specific disposable upstream worktree path in command with <disposable-4692bac35-worktree>."
+  ],
+  "recorded_at": "2026-09-02T06:15:01Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-clippy-strict-audit",
+  "finding_id": "NT-2026-09-02-07",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c clippy-strict-audit skills/nt-dev/references/guides/rust_conventions.md",
+  "exit_code": 0,
+  "output_sha256": "c983d6f44428cd7d47d7d55904cc4820b326a9da9a6bdf0fca86203285e99e73",
+  "output_excerpt": "clippy-strict-audit token count: 2",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}

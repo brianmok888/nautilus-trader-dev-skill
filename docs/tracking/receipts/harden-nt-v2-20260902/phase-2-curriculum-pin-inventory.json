@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260902",
+  "receipt": "phase-2-curriculum-pin-inventory",
+  "finding_id": "NT-2026-09-02-08",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"Pinned-baseline refresh inventory\" skills/nt-learn/SKILL.md && grep -n \"4692bac35\" skills/nt-learn/curriculum/07-live-trading.md",
+  "exit_code": 0,
+  "output_sha256": "77d4b45efe1b8ae6a82e94d61c30375762f546a2d0aeadcbcb3ea31a7dc1c7a4",
+  "output_excerpt": "inventory section count: 1\ncurriculum pin citation refreshed to 4692bac35",
+  "redactions": [],
+  "recorded_at": "2026-09-02T05:09:44Z"
+}
