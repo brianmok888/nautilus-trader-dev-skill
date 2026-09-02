@@ -8,17 +8,10 @@ traders to speculate on event outcomes by buying and selling outcome tokens.
 NautilusTrader provides a venue integration for data and execution via Polymarket's Central Limit
 Order Book (CLOB) API.
 
-Today the repository exposes two Polymarket implementations:
-
-- The Python adapter in `nautilus_trader.adapters.polymarket`, which uses the
-  [official Python CLOB V2 client library](https://github.com/Polymarket/py-clob-client-v2).
-- The Rust-native adapter surface in `nautilus_trader.polymarket`, which NautilusTrader is
-  consolidating toward.
-
-:::warning
-The two implementations overlap heavily, but they do not behave identically in every area.
-This guide calls out the current differences where they matter.
-:::
+The adapter is implemented in Rust and exposed to Python at
+`nautilus_trader.adapters.polymarket`; data, execution, signing, and WebSocket
+operations therefore have the same behavior from Rust and Python (pinned
+`4692bac35`, `docs/integrations/polymarket.md`).
 
 NautilusTrader supports multiple Polymarket signature types for order signing, which gives
 flexibility for different wallet configurations while NautilusTrader handles signing and order
@@ -26,21 +19,25 @@ preparation.
 
 ## Installation
 
-To install NautilusTrader with Polymarket support:
+The Python package includes the Polymarket adapter; no adapter-specific extra is required.
+
+To install the latest pre-release build:
 
 ```bash
-uv pip install "nautilus_trader[polymarket]"
+uv pip install --pre nautilus_trader
 ```
 
-To build from source with all extras (including Polymarket):
+To build the Python package from source, run from the repository root:
 
 ```bash
-uv sync --all-extras
+make build-debug
 ```
 
 ## Examples
 
-You can find live example scripts [here](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/polymarket/).
+The maintained examples are available in
+[`crates/adapters/polymarket/examples`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/polymarket/examples)
+with Rust example testers run through the standard adapter test lanes.
 
 ## Binary options
 
@@ -79,10 +76,16 @@ Most users will define a configuration for a live trading node (as below),
 and won't need to work with these lower-level components directly.
 :::
 
-### Python and Rust implementations
+### Implementation surface
 
-The current docs cover both the Python adapter and the Rust-native adapter surface.
-The table below shows the main differences that affect behavior today.
+NT v2 compatibility note: the "Python and Rust implementations" comparison below is
+legacy migration/reference-only history from the v1 two-implementation era; the current
+adapter is one Rust implementation exposed to Python at `nautilus_trader.adapters.polymarket`
+with identical behavior from both languages. Venue-behavior facts in the table (post-only TIF
+rules, batch caps, endpoint usage) remain accurate.
+
+legacy: migration/reference-only — the table recorded v1-era differences between the
+former Python adapter and the Rust surface.
 
 | Area                | Python adapter                                                                | Rust adapter                                                  | Notes |
 |---------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------|-------|
@@ -358,7 +361,7 @@ Polymarket's public documentation describes successful
 [`POST /order`](https://docs.polymarket.com/api-reference/trade/post-a-new-order) responses
 with `success`, `orderID`, `status`, and `errorMsg`, and documents
 [API errors](https://docs.polymarket.com/resources/error-codes) as structured error responses.
-It does not document statusless `py-clob-client` exceptions or transport failures as
+It does not document statusless client exceptions or transport failures as
 venue rejections.
 
 The adapter rejects only when the response proves the order was not accepted, such as
@@ -428,7 +431,7 @@ precision requirements**:
 
 :::note
 
-- The tick size precision hierarchy is defined in the [`py-clob-client-v2` `ROUNDING_CONFIG`](https://github.com/Polymarket/py-clob-client-v2/blob/main/py_clob_client_v2/order_builder/builder.py).
+- legacy: migration/reference-only — the tick size precision hierarchy was originally documented from the v1 [`py-clob-client-v2` `ROUNDING_CONFIG`](https://github.com/Polymarket/py-clob-client-v2/blob/main/py_clob_client_v2/order_builder/builder.py); the Rust adapter enforces the same hierarchy natively.
 - Market order precision limits (2 decimals for the size field, plus tick-derived bounds
   for the computed amount) come from the same `ROUNDING_CONFIG` and are enforced by
   `OrderBuilder.get_market_order_amounts` before signing.
@@ -815,7 +818,6 @@ For the latest rate limit details, see the official Polymarket documentation:
 
 The following limitations are currently known:
 
-- Python order signing via `py-clob-client-v2` is slow and can take around one second per order.
 - Reduce-only orders are not supported.
 - Batch submit (`POST /orders`) accepts at most 15 orders per request; the adapter splits larger `SubmitOrderList` commands into sequential 15-order chunks.
 
@@ -974,7 +976,10 @@ def build_temperature_slugs() -> list[str]:
     return slugs
 ```
 
-See `examples/live/polymarket/slug_builders.py` for more examples including crypto UpDown markets.
+See the pinned upstream
+[`crates/adapters/polymarket/examples`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/polymarket/examples)
+for current Rust examples; the historical Python `slug_builders.py` examples
+from `examples/live/polymarket/` are legacy migration/reference-only.
 
 ## Historical data loading
 
