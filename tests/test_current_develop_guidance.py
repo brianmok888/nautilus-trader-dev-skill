@@ -104,7 +104,7 @@ def test_current_baseline_abbreviation_is_consistent() -> None:
     )
 
     # Then every abbreviated citation uses the resolvable 10-character prefix
-    assert all("81eedc7cea" in document for document in documents)
+    assert all("4692bac35" in document for document in documents)
 
 
 def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
@@ -123,7 +123,7 @@ def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
         "Strategy-managed contingencies",
         "OrderEmulator",
         "cumulative filled",
-        "81eedc7cea29a52c0568f0bfbafd190c2bebe74f",
+        "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
     ):
         assert marker in orders
-    assert "81eedc7cea29a52c0568f0bfbafd190c2bebe74f" in builder
+    assert "4692bac35bb11a25eeebb8d7af4d51c55afe53ec" in builder

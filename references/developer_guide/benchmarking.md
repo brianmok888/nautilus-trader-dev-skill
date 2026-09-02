@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/benchmarking/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
-source_commit: 81eedc7cea29a52c0568f0bfbafd190c2bebe74f
-sync_date: 2026-08-28
+source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
+sync_date: 2026-09-02
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only

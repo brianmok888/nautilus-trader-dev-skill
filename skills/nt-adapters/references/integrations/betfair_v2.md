@@ -5,7 +5,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 The Betfair Rust adapter is in active parity work. This page is the **primary Betfair guide**
 (user-directed cutover, 2026-08-26): active Betfair routing resolves here first. The
 upstream-maintained v1 wiring doc remains readable in the read-only pinned snapshot
-(`docs/integrations/betfair.md` at commit `81eedc7cea`); the repo-local copy was cleared to a
+(`docs/integrations/betfair.md` at commit `4692bac35`); the repo-local copy was cleared to a
 labelled supersession stub in [betfair.md](betfair.md).
 
 This page mirrors the main section order from [Betfair](betfair.md). When the Rust adapter becomes
@@ -15,7 +15,7 @@ rewrite.
 ## Scope
 
 - Source of truth for this page: `crates/adapters/betfair`
-- Superseded v1 copy: [betfair.md](betfair.md) (cleared stub; upstream v1 doc at the pinned snapshot `81eedc7cea`)
+- Superseded v1 copy: [betfair.md](betfair.md) (cleared stub; upstream v1 doc at the pinned snapshot `4692bac35`)
 - Purpose of this page: track the current Rust surface and the current Rust-vs-v1 differences
 
 ## Current Rust status
@@ -122,7 +122,7 @@ is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
 session logic above and is included in the pinned baseline `d2b62d35a7` (upstream commit
-`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`): the data and execution clients publish transport state on the stable
+`4692bac35bb11a25eeebb8d7af4d51c55afe53ec`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
 as `SocketStateChanged` on `events.system.SocketStateChanged`), register targeted
 reconnects through the `SocketReconnectRegistry` with authentication and subscription

@@ -569,7 +569,7 @@ These contingency types relate to ContingencyType FIX tag <1385> <https://www.on
 ### Strategy-managed contingencies
 
 Upstream commit
-[`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`](https://github.com/nautechsystems/nautilus_trader/commit/81eedc7cea29a52c0568f0bfbafd190c2bebe74f)
+[`4692bac35bb11a25eeebb8d7af4d51c55afe53ec`](https://github.com/nautechsystems/nautilus_trader/commit/4692bac35bb11a25eeebb8d7af4d51c55afe53ec)
 defines precise semantics for `StrategyConfig.manage_contingent_orders`. Enable it to manage open
 OTO, OCO, and OUO relationships for orders that are **not active local**. The strategy sends the
 resulting cancel and quantity-update commands through the normal execution path before it calls
@@ -593,7 +593,7 @@ Ownership and scope boundaries:
   non-active-local peers.
 
 These semantics are included in the pinned G2 baseline
-`81eedc7cea29a52c0568f0bfbafd190c2bebe74f`. The manual partial-trigger recipe below remains the
+`4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. The manual partial-trigger recipe below remains the
 portable fallback when the flag is disabled.
 
 #### One-Triggers-Other (OTO)
