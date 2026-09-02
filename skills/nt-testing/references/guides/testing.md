@@ -123,6 +123,26 @@ Fuzzing introduces unstructured or malicious data to the system to verify it fai
 
 When building or modifying core types, write property tests to cover the mathematical boundaries.
 
+## Memory leak tests
+
+Memory leak tests track Python-side allocations across backtests, components,
+LiveNode runs, model operations, and persistence with
+[Memray](https://bloomberg.github.io/memray/) (pinned `4692bac35`).
+
+- **Location:** `python/memray_tests/` with suites `test_backtest.py`,
+  `test_components.py`, `test_live_node.py`, `test_model.py`, and
+  `test_persistence.py`.
+- **Invocation:** `make pytest-memray` from the repository root (depends on
+  `build-debug`; runs `cd python && VIRTUAL_ENV= uv run --no-sync pytest -qq -rfE memray_tests/`).
+- **Prerequisites:** the `memray` and `pytest-memray>=1.10.0` dev dependencies
+  (Linux/macOS only) and a debug build of the compiled extension.
+- **CI:** the nightly workflow (`.github/workflows/nightly-tests.yml`, daily
+  12:00 UTC) runs the `python-memray` job with a dedicated cargo target dir.
+
+This is a separate lane from ordinary Python test runs: treat a memray failure
+as a leak or retained-reference regression, not a functional test failure, and
+reproduce locally with `make pytest-memray` before fixing.
+
 Performance tests help evolve performance-critical components.
 
 Run tests with [pytest](https://docs.pytest.org), our primary test runner.
