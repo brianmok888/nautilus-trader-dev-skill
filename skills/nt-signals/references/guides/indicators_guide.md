@@ -10,13 +10,15 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
-All indicators live in `nautilus_trader.indicators` and inherit from the `Indicator` base class
-(`nautilus_trader.indicators.base.Indicator`). Indicators are Cython-compiled for performance.
-Every indicator exposes:
+All indicators are implemented in Rust under `crates/indicators/src/` and re-exported to Python
+via PyO3 as `@typing.final` classes in the flat `nautilus_trader.indicators` module. The v1
+guide's Cython-compiled classes and the Python `nautilus_trader.indicators.base.Indicator`
+base class are historical; the authoring surface is the Rust `Indicator` trait
+(`crates/indicators/src/indicator.rs`). Every Python-visible indicator exposes:
 
 - `has_inputs: bool` -- whether any data has been received
 - `initialized: bool` -- whether the warmup period is satisfied
-- `handle_bar(bar)` / `handle_quote_tick(tick)` / `handle_trade_tick(tick)` -- typed update methods
+- `handle_bar(bar)` / `handle_quote_tick(tick)` / `handle_trade_tick(tick)` -- typed update methods (Rust trait handlers: `handle_bar` / `handle_quote` / `handle_trade`)
 - `update_raw(...)` -- direct numeric update (no data object required)
 - `reset()` -- reset all state
 
@@ -97,6 +99,19 @@ Additional Rust-only averages: `average::lr` (linear regression MA), `average::v
 | `VolumeWeightedAveragePrice` | (none) | `value` | Intraday VWAP, auto-resets on new day | `average::vwap` |
 | `KlingerVolumeOscillator` | `fast_period, slow_period, signal_period, ma_type=EXP` | `value` | Compares volume to price movement for reversal prediction | `momentum::kvo` |
 | `Pressure` | `period, ma_type=EXP, atr_floor=0` | `value, value_cumulative` | Relative volume needed to move price across ATR | `momentum::pressure` |
+
+---
+
+## Book and Candle Descriptors
+
+| Class | Params | Output | Description | Rust path |
+|---|---|---|---|---|
+| `BookImbalanceRatio` | (none) | `value` | Best-bid/best-ask size ratio from the order book top; updates via `handle_book(book)` or `update(best_bid, best_ask)` | `book::imbalance` |
+| `FuzzyCandle` | `direction, size, body_size, upper_wick_size, lower_wick_size` | descriptor fields | Candle descriptor value emitted by `FuzzyCandlesticks` | `volatility::fuzzy` |
+| `CandleDirection` | (enum: `Bull`/`None`/`Bear`) | - | Direction category used by `FuzzyCandle` | `volatility::fuzzy` |
+| `CandleSize` | (enum: `None`..`ExtremelyLarge`) | - | Size category used by `FuzzyCandle` | `volatility::fuzzy` |
+| `CandleBodySize` | (enum: `None`..`Trend`) | - | Body-size category used by `FuzzyCandle` | `volatility::fuzzy` |
+| `CandleWickSize` | (enum: `None`/`Small`/`Medium`/`Large`) | - | Upper/lower wick-size category used by `FuzzyCandle` | `volatility::fuzzy` |
 
 ---
 
@@ -356,10 +371,12 @@ crates/indicators/src/
                         # bb, bias, dm, ichimoku, kvo, obv, pressure, psl, swings, vhf
   ratio/                # efficiency_ratio, spread_analyzer
   volatility/           # atr, dc, kc, kp, rvi, vr, fuzzy
+  book/                 # imbalance
   python/               # PyO3 bindings
 ```
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 The Rust crate is `nautilus-indicators` and the Python bindings are generated via PyO3
-in the `python/` subdirectory, making both the Cython and Rust versions available.
+in the `python/` subdirectory. There is no Cython build at the pinned upstream: Rust with
+PyO3 bindings is the only indicator implementation.

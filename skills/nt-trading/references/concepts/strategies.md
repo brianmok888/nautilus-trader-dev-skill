@@ -144,6 +144,7 @@ from nautilus_trader.model.events import OrderEmulated
 from nautilus_trader.model.events import OrderEvent
 from nautilus_trader.model.events import OrderExpired
 from nautilus_trader.model.events import OrderFilled
+from nautilus_trader.model.events import OrderFillVoided
 from nautilus_trader.model.events import OrderInitialized
 from nautilus_trader.model.events import OrderModifyRejected
 from nautilus_trader.model.events import OrderPendingCancel
@@ -170,6 +171,7 @@ def on_order_modify_rejected(self, event: OrderModifyRejected) -> None:
 def on_order_cancel_rejected(self, event: OrderCancelRejected) -> None:
 def on_order_updated(self, event: OrderUpdated) -> None:
 def on_order_filled(self, event: OrderFilled) -> None:
+def on_order_fill_voided(self, event: OrderFillVoided) -> None:  # Applied fill partly or fully voided
 def on_order_event(self, event: OrderEvent) -> None:  # All order event messages are eventually passed to this handler
 ```
 

@@ -117,8 +117,8 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 - Configuring and launching live trading nodes
 - `NautilusKernel` boot sequence and system setup
-- Engine configuration (`TradingNodeConfig`)
-- Component lifecycle management (INITIALIZED → RUNNING → STOPPED → DISPOSED)
+- Engine configuration (`LiveNodeConfig`)
+- Component lifecycle management (PRE_INITIALIZED → READY → RUNNING → STOPPED → DISPOSED, with DEGRADED and FAULTED states)
 - Logging setup and monitoring
 - Clock configuration and timer management
 - Deployment and production readiness
@@ -194,7 +194,6 @@ let data_config = OKXDataClientConfig {
 };
 
 let exec_config = OKXExecutionClientConfig {
-    trader_id,
     account_id,
     instrument_types: vec![OKXInstrumentType::Swap],
     ..Default::default()
@@ -229,6 +228,36 @@ let mut node = LiveNode::builder(trader_id, Environment::Live)?
     .with_delay_post_stop_secs(5)
     .build()?;
 ```
+
+### Builder wiring surface
+
+Beyond clients and logging, `LiveNodeBuilder` (`crates/live/src/node/builder.rs`) configures
+engines, persistence, and external wiring before `build()`:
+
+| Method | Purpose |
+|---|---|
+| `with_cache_config(CacheConfig)` | Cache behavior and capacities |
+| `with_cache_database_factory(Box<dyn CacheDatabaseFactory>)` | Attach a backing cache database (Rust; PyO3 takes a typed backing config such as `RedisCacheConfig`) |
+| `with_msgbus_config(MessageBusConfig)` | Message bus encoding/stream settings |
+| `with_portfolio_config(PortfolioConfig)` | Portfolio configuration |
+| `with_streaming_config(StreamingConfig)` | External streaming configuration |
+| `with_data_engine_config(LiveDataEngineConfig)` | Data engine configuration |
+| `with_risk_engine_config(LiveRiskEngineConfig)` | Risk engine configuration |
+| `with_exec_engine_config(LiveExecutionEngineConfig)` | Execution engine configuration |
+| `with_logging(LoggerConfig)` | Logging configuration |
+| `with_controller(ImportableControllerConfig)` | Trader controller |
+| `with_reconciliation(bool)` / `with_reconciliation_lookback_mins(u32)` | Startup reconciliation |
+| `with_clock_factory` | Deterministic clock injection for tests |
+| `add_data_client` / `add_exec_client` (and `_with_routing` variants) | Venue clients and routing |
+| `add_simulated_exec_client` | Add a simulated execution client (sandbox-style fills) |
+| `with_event_store` / `with_external_msgbus_egress` / `with_external_msgbus_factory` / `with_external_ingress` | Event store and external bus wiring |
+
+The Python `LiveNodeBuilder` exposes matching `with_load_state`/`with_save_state`/`with_instance_id`
+style options through PyO3 (`python/nautilus_trader/live/__init__.pyi`).
+
+Built nodes run with `run()` or, for host-driven signal handling, `run_with_mode(NodeRunMode::Hosted)`
+(`crates/live/src/node/mod.rs:977`). `NodeRunMode::Owned` (default) installs the node's own
+`SIGINT`/`SIGTERM` handlers; `NodeRunMode::Hosted` leaves signal handling to the host application.
 
 ### Add Strategies and Run
 
@@ -269,6 +298,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 The node runs until interrupted (Ctrl+C) or shut down programmatically.
+
+### Live task lifecycle (TaskGroup, TaskSpawner, TaskSlot)
+
+The live crate tracks spawned tasks with structured cancellation primitives in
+`crates/live/src/task.rs` ("async task ownership and bounded shutdown for live components").
+Live components use these for tracked ownership - for example the PyO3 node wrapper and adapter
+clients such as Derive and Kraken - and adapter/component code that spawns long-lived work
+should follow the same pattern so shutdown stays deterministic:
+
+- **`TaskGroup`**: an open task generation. `spawner()` returns a `TaskSpawner` bound to the
+  current open generation and errors once shutdown has begun. `begin_shutdown()` closes
+  admission and cancels the current generation; `abort()` additionally requests immediate
+  forced cancellation. `drain()` awaits the closed generation within graceful and forced bounds.
+  `start_generation()` opens a fresh generation after a previous one closes (used for
+  restart-style workflows). Dropping a `TaskGroup` aborts it (closes admission and requests forced cancellation).
+- **`TaskSpawner`**: a spawn capability handed to component code. `spawn(future)` registers the
+  future before it can be polled and errors when the spawner no longer belongs to the open
+  generation. `cancellation_token()` returns a non-authoritative cancellation signal derived
+  from the generation's token.
+- **`TaskSlot<T>` / `SharedTaskSlot<T>`**: single-task holders for exactly-one-task lifecycles
+  (for example, one connection task per slot). `spawn()` stores the handle before the future
+  polls, `insert()` adopts an existing `JoinHandle`, and `abort()` requests cancellation. The
+  `Shared*` variant is `Send + Sync` and supports `try_insert_slot` for ownership handoff.
+- **`TaskGroupGuard`**: closes its groups and runs a synchronous rollback closure when dropped
+  while armed; `disarm()` cancels that rollback.
+
+Shutdown ordering: `LiveNodeConfig.timeout_shutdown` bounds pending-task cancellation during
+shutdown; `delay_post_stop` bounds residual event processing after the trader stops. Prefer
+these structured primitives over bare `tokio::spawn` in live component code, so every spawned
+task is tracked to a terminal event and aborted during stop/drop.
 
 ### Current v2 LiveNode deltas
 
@@ -319,16 +378,25 @@ Most adapters include runnable `node_data_tester.rs` and `node_exec_tester.rs` e
 | Betfair | `crates/adapters/betfair/examples/` |
 | Binance | `crates/adapters/binance/examples/` |
 | BitMEX | `crates/adapters/bitmex/examples/` |
+| Blockchain | `crates/adapters/blockchain/examples/` |
 | Bybit | `crates/adapters/bybit/examples/` |
+| Coinbase | `crates/adapters/coinbase/examples/` |
 | Databento | `crates/adapters/databento/examples/` |
 | Deribit | `crates/adapters/deribit/examples/` |
+| Derive | `crates/adapters/derive/examples/` |
 | dYdX | `crates/adapters/dydx/examples/` |
 | Hyperliquid | `crates/adapters/hyperliquid/examples/` |
+| Interactive Brokers | `crates/adapters/interactive_brokers/examples/` |
 | Kraken | `crates/adapters/kraken/examples/` |
+| Lighter | `crates/adapters/lighter/examples/` |
 | OKX | `crates/adapters/okx/examples/` |
 | Polymarket | `crates/adapters/polymarket/examples/` |
 | Sandbox | `crates/adapters/sandbox/examples/` |
 | Tardis | `crates/adapters/tardis/examples/` |
+
+Pinned example coverage varies: Blockchain, Databento, and Tardis ship only `node_data_tester.rs`;
+Sandbox ships `databento_cme.rs`; Binance ships `futures`/`spot` example directories. All other
+adapters above ship both testers, and several add `node_delta_neutral.rs`/`node_greeks.rs` variants.
 
 ### Reconciliation
 
@@ -370,7 +438,7 @@ impl MyInfraComponent {
 
 ### Component Lifecycle
 
-Components follow strict state machine: `INITIALIZED → RUNNING → STOPPED → DISPOSED`. State transitions are enforced — calling `start()` on a `RUNNING` component raises an error. Always check state before operations.
+Components follow a strict state machine: `PRE_INITIALIZED → READY → RUNNING → STOPPED → DISPOSED`, with additional `DEGRADED` and `FAULTED` states (`ComponentState` in `crates/common/src/enums.rs`). State transitions are enforced — calling `start()` on a `RUNNING` component raises an error. Always check state before operations.
 
 ### Logging Patterns
 
@@ -389,6 +457,9 @@ Components follow strict state machine: `INITIALIZED → RUNNING → STOPPED →
 ### Production Readiness
 
 - Enable reconciliation for live trading
+- Set `LiveNodeConfig.shutdown_on_error=true` so a Rust `log::error!` requests node shutdown
+  (the trigger follows the normal stop path, is cleared and re-armed on each run, and observes
+  Rust log records, not Python `logging.error` calls — `crates/live/src/node/config.rs`)
 - Configure appropriate rate limits
 - Set up file logging for production
 - Use health checks and monitoring

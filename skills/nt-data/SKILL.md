@@ -51,7 +51,7 @@ Source: [`references/developer_guide/rust.md`](../../references/developer_guide/
 
 NautilusTrader **data infrastructure domain** — data engines, persistence, serialization, and caching.
 
-**Python modules**: `data/` (engine, client, messages), `persistence/`, `serialization/`, `cache/`
+**Python modules**: `data/` (engine, client, messages), `persistence/`, `serialization/`, `common/` (cache: `Cache`, `CacheConfig`)
 **Rust crates**: `nautilus_data`, `nautilus_persistence`, `nautilus_serialization`
 
 ## When To Use
@@ -89,6 +89,12 @@ New production work follows the Rust or bounded PyO3 sections below.
 - Rust cache accessors use scoped borrow wrappers. Use `order_owned` when an
   owned snapshot must cross a boundary, and `try_order` or `try_order_owned`
   when missing order state is an error.
+- Cache backing stores live in `nautilus_trader.infrastructure` (Rust:
+  `crates/infrastructure/src/{redis,sql}`). `PostgresCacheConfig` and
+  `RedisCacheConfig` configure durable cache backing; `RedisMessageBusBacking`/
+  `RedisMessageBusConfig` configure Redis-backed message buses. There is no
+  `nautilus_trader.cache` Python module at the pinned tree -- `Cache` and
+  `CacheConfig` are exported from `nautilus_trader.common`.
 
 ## Rust Usage
 
@@ -118,8 +124,9 @@ seam under `crates/persistence/`.
 ### Custom Arrow Schemas in Rust
 
 Register custom schemas, encoders, and decoders with
-`nautilus_model::data::register_arrow`, then create `CustomData`/`CustomDataBatch`
-and persist through `ParquetDataCatalog::write_custom_data_batch`. Built-in Arrow
+`nautilus_model::data::register_arrow`, then create `CustomData` values and
+persist through `ParquetDataCatalog::write_custom_data_batch(Vec<CustomData>)`
+(Rust) or `ParquetDataCatalog.write_custom_data(...)` (PyO3). Built-in Arrow
 serializers may remain where upstream owns them, but custom registration belongs
 to `nautilus_model::data`. Prove an unregistered write fails explicitly, then
 round-trip payloads, metadata, `ts_event`, and `ts_init`.
@@ -147,9 +154,28 @@ round-trip payloads, metadata, `ts_event`, and `ts_init`.
 
 ### Data Wrangler Conventions
 
-- Wranglers convert external DataFrames to NT data types
-- Input DataFrames should have timestamp index or column
-- Use `BarDataWrangler`, `QuoteTickDataWrangler`, `TradeTickDataWrangler`
+- Wranglers convert external data to NT data types via the bytes-based
+  `process_record_batch_bytes(data: bytes)` API
+- Construct with `(instrument_id, price_precision, size_precision)`; precisions
+  are required (no inference)
+- Use `BarDataWrangler`, `QuoteTickDataWrangler`, `TradeTickDataWrangler`,
+  `OrderBookDeltaDataWrangler`, `OrderBookDepth10DataWrangler` (flat exports of
+  `nautilus_trader.persistence`)
+- The legacy DataFrame-based `process(pd.DataFrame)` framing is documented in the
+  serialization patterns guide (`serialization_patterns.md` in this skill's guides tree)
+
+### Streaming Feather Writer
+
+`StreamingFeatherWriter` (flat export of `nautilus_trader.persistence`) streams
+cache data to rotating Feather files: construct with
+`(path, cache, clock, ...)` and optional `rotation_mode` (int; 3 = no rotation,
+2 = scheduled dates, 1 = interval, 0 = size), `max_file_size`,
+`rotation_interval_ns`, `rotation_time_ns`, `rotation_timezone`,
+`flush_interval_ms`, and `replace`. `subscribe()` starts cache-driven writes,
+`close()` finalizes the file. `StreamingConfig` carries the equivalent catalog
+path (`catalog_path`, `fs_protocol`, `flush_interval_ms`, `replace_existing`,
+`rotation_mode: str`, `max_file_size`, `rotation_interval_ns`, `schedule_ns`)
+for engine-level streaming configuration.
 
 ### Cache Configuration
 

@@ -51,7 +51,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 | Data catalog          | ✓                  | ✓              | ✓                        |
 | Indicators            | ✓                  | ✓              | ✓                        |
 | Exec algorithms       | TWAP               | TWAP           | TWAP                     |
-| Controller            | ✓                  | -              | -                        |
+| Controller            | ✓                  | -              | ✓                        |
 | Tearsheets            | ✓                  | -              | -                        |
 | Config serialization  | ✓                  | -              | -                        |
 
@@ -65,22 +65,31 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 | Betfair             | ✓                  | ✓       | ✓       |
 | Binance             | ✓                  | ✓       | ✓       |
 | BitMEX              | ✓                  | ✓       | ✓       |
+| Blockchain          | -                  | ✓       | ✓       |
 | Bybit               | ✓                  | ✓       | ✓       |
+| Coinbase            | ✓                  | ✓       | ✓       |
 | Databento           | ✓                  | ✓       | ✓       |
 | Deribit             | ✓                  | ✓       | ✓       |
+| Derive              | -                  | ✓       | ✓       |
 | dYdX                | ✓                  | ✓       | ✓       |
 | Hyperliquid         | ✓                  | ✓       | ✓       |
-| Interactive Brokers | ✓                  | -       | -       |
+| Interactive Brokers | ✓                  | ✓       | ✓       |
 | Kraken              | ✓                  | ✓       | ✓       |
+| Lighter             | -                  | ✓       | ✓       |
 | OKX                 | ✓                  | ✓       | ✓       |
 | Polymarket          | ✓                  | ✓       | ✓       |
 | Sandbox             | ✓                  | ✓       | ✓       |
 | Tardis              | ✓                  | ✓       | ✓       |
 
+NT v2 compatibility note: the v2 Rust/PyO3 status above reflects the pinned baseline: all 19
+adapter crates ship Rust modules and PyO3 factory exports (Blockchain, Derive, and Lighter have
+no v1 Cython predecessor - migration context; Blockchain is data-only at the pin per the
+upstream `ADAPTERS.md` capability table).
+
 ### Choosing a path
 
-- **v1 legacy** is the most complete today. Use it if you need the
-  Controller, tearsheets, Interactive Brokers, or config serialization.
+- **v1 legacy** is the most complete today. Use it if you need
+  tearsheets or config serialization.
 - **v2 Rust** gives native performance without a Python runtime. Use it for
   latency-sensitive deployments or teams that prefer a compiled language when
   the required engine, adapter, and test coverage exist; do not assume complete

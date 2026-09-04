@@ -271,24 +271,23 @@ To update the pinned uv version, change `required-version` in both `pyproject.to
 
 ## Builds
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+The Python package and the standalone Nautilus CLI are separate build artifacts. `make build-debug`
+and `make build` install the Python package into the root `.venv`; neither command updates the
+`nautilus` binary in Cargo's binary directory.
 
-Following any changes to `.rs`, `.pyx` or `.pxd` files, you can re-compile by running:
+NT v2 compatibility note: legacy v1 referenced `.pyx`/`.pxd` sources and a `build.py` driver for
+compilation (migration/reference-only context); current: both targets run `maturin develop` from
+the `python/` directory after `.rs` and Python package changes (`Makefile` `build`/`build-debug`
+targets).
 
-```bash tab="uv"
-uv run --no-sync python build.py
-```
-
-```bash tab="make"
-make build
-```
-
-If you're developing and iterating frequently, then compiling in debug mode is often sufficient and *significantly* faster than a fully optimized build.
-To compile in debug mode, use:
+After changing Rust bindings or Python package code, use a debug build for normal development. It
+skips release optimization and LTO, which reduces build time and peak memory use:
 
 ```bash
 make build-debug
 ```
+
+Use `make build` when you need an optimized build.
 
 ## Cap'n Proto
 

@@ -69,7 +69,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 | Scenario | Approach |
 |---|---|
 | Replay historical data, no live connection | `BacktestEngine` + `ParquetDataCatalog` |
-| Test strategy on live data without real orders | Rust/v2 `LiveNode` paper mode; legacy Python-live `TradingNode` only for migration/reference |
+| Test strategy on live data without real orders | Rust/v2 `LiveNode` paper mode (`LiveNodeBuilder::add_simulated_exec_client` with e.g. the sandbox adapter); legacy Python-live `TradingNode` only for migration/reference |
 | Deploy to production with CeFi exchange | Rust/v2 `LiveNode` + standard adapter (default); legacy Python-live `TradingNode` only for migration/reference |
 | Deploy with custom DEX venue | Rust/v2 `LiveNode` + `nt-dex-adapter` factory (default); legacy Python-live `TradingNode` only for migration/reference |
 | Multi-venue arb or signal aggregation | Rust/v2 `LiveNode` (default) or `BacktestEngine`; legacy Python-live `TradingNode` only for migration/reference |
@@ -137,8 +137,8 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 
 When wiring any custom adapter into `TradingNode` or `BacktestEngine`, verify these invariants:
 
-- Adapter implementation reached at least phases 1-4 before live order flow is enabled.
-- Data and execution factories expose canonical static `create(loop, name, config, msgbus, cache, clock)` signatures.
+- Adapter implementation reached at least Phases 0-4 (scope through execution) before live order flow is enabled.
+- Data and execution factories are v2 trait objects: `DataClientFactory::create(name, config, cache: CacheView, clock)` and `ExecutionClientFactory::create(trader_id, name, config, cache: CacheView)`, registered via `LiveNodeBuilder::add_data_client`/`add_exec_client` (the v1 Python static `create(loop, name, config, msgbus, cache, clock)` signature is migration/reference-only).
 - Provider + data + execution method contracts are complete (no placeholder methods).
 - Reconciliation/report paths are enabled and validated before production mode.
 - Adapter tests include provider/data/execution/factory integration coverage using realistic fixture payloads.
@@ -170,7 +170,7 @@ Key additions that affect strategy and execution wiring:
 
 | Feature | Description |
 |---|---|
-| `strategy.market_exit(instrument_id)` | New convenience method for full market exit with configurable `market_exit_time_in_force` and `market_exit_reduce_only` options |
+| `strategy.market_exit()` | New convenience method for full market exit (no instrument argument; TIF/reduce-only are config-driven) with configurable `market_exit_time_in_force` and `market_exit_reduce_only` options |
 | `StrategyConfig.manage_stop` | Automatically flattens position with market order on strategy stop |
 | `PerpetualContract` instrument | New instrument type for asset-class-agnostic perpetual swaps (use instead of `CryptoPerpetual` where applicable) |
 | `BacktestDataConfig.optimize_file_loading` | New parameter for optimized Parquet file loading in large backtests |

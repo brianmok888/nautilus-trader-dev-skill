@@ -51,7 +51,6 @@ let data_config = OKXDataClientConfig::builder()
     .build();
 
 let exec_config = OKXExecutionClientConfig::builder()
-    .trader_id(trader_id)
     .account_id(account_id)
     .instrument_types(vec![OKXInstrumentType::Swap])
     .build();
@@ -152,7 +151,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Owned and hosted run modes (Python `LiveNode`)
 
 NT v2 compatibility note: upstream commit `e166a5e57c` finalized two run modes for the Python
-`LiveNode` and is included in the pinned baseline `d2b62d35a7`; older pins through `6e59fd74ea`
+`LiveNode` and is included in the pinned baseline `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`;
+older pins through `6e59fd74ea`
 still exposed the historical `start`/`poll` entry points.
 
 - `run()`: the node owns the calling thread and installs its own `SIGINT`/`SIGTERM` handling. Use

@@ -13,9 +13,11 @@ and runtime lifecycle.
 ## Core Architecture
 
 - `nautilus_model` owns identifiers, instruments, orders, events, prices, and quantities.
-- `nautilus_common` owns shared runtime infrastructure and state services.
+- `nautilus_common` owns shared runtime infrastructure and state services, including the
+  actor framework (`DataActor` and friends under `crates/common/src/actor`).
 - `nautilus_data` owns data-engine processing and requests.
-- `nautilus_trading` owns actors, strategies, and execution algorithms.
+- `nautilus_trading` owns strategies and execution algorithms, and re-exports the
+  `nautilus_common` actor framework (it does not own it).
 - `nautilus_backtest` and `nautilus_live` provide runtime wiring while preserving component
   ownership.
 

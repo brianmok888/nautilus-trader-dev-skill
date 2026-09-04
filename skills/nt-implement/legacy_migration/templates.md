@@ -28,7 +28,7 @@
 > - **Rust `InstrumentProvider` trait**: New crate-level trait formalizes adapter patterns at `crates/common/src/providers.rs`.
 
 > **New in v1.223.0 (2026-02-21)** — Key API additions to use in new implementations:
-> - **`strategy.market_exit(instrument_id)`** — Convenience method to fully close a position with a market order. Hooks: `on_market_exit()`, `post_market_exit()`. Check: `is_exiting()`. Config: `market_exit_interval_ms` (100), `market_exit_max_attempts` (100), `market_exit_time_in_force`, `market_exit_reduce_only` (True).
+> - **`strategy.market_exit()`** - Convenience method to fully close a position with a market order (no instrument argument; TIF/reduce-only are config-driven). Hooks: `on_market_exit()`, `post_market_exit()`. Check: `is_exiting()`. Config: `market_exit_interval_ms` (100), `market_exit_max_attempts` (100), `market_exit_time_in_force`, `market_exit_reduce_only` (True).
 > - **`StrategyConfig.manage_stop = True`** — Automatically calls `market_exit()` when the strategy is stopped.
 > - **`PerpetualContract`** — New instrument type for asset-class-agnostic perpetual swaps. Prefer over `CryptoPerpetual` for new implementations.
 > - **`request_funding_rates()` / `FundingRateUpdate`** — New data request method and data type for funding rate streams.

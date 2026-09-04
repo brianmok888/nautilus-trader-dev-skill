@@ -1,5 +1,16 @@
 # Bybit Options Data Collector
 
+:::note[Migration-only example]
+NT v2 compatibility note: this README documents a v1 Python example script
+(`bybit_options_data_collector.py` / `BybitOptionsDataCollectorConfig`) that
+does not exist at the pinned upstream; neither the script nor the config class
+survived the v1 -> v2 cutover. Do not treat it as a current runnable path; this README is
+migration reference only.
+For current options tooling, see the pinned Rust examples under
+`crates/adapters/bybit/examples/`: `node_option_chain.rs` (option chain
+loading) and `node_greeks.rs` (Greeks data collection).
+:::
+
 This script discovers all available options for a given underlying asset (e.g., BTC) on Bybit,
 subscribes to their quote and orderbook data, and stores the data in parquet files.
 

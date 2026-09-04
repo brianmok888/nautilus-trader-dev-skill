@@ -31,9 +31,11 @@ Validate each component before proceeding to the next.
 
 ## v1.223.0 API ADDITIONS (2026-02-21)
 
+Legacy/migration note: the v1.223/v1.224 tables below are historical Python-changelog records, not current API guidance; verify every symbol against the pinned v2 tree before use.
+
 | Feature | Usage |
 |---------|-------|
-| `strategy.market_exit(instrument_id)` | Fully close position with market order |
+| `strategy.market_exit()` | Fully close position with market order (config-driven TIF/reduce-only) |
 | `StrategyConfig.manage_stop = True` | Auto-calls `market_exit()` on strategy stop |
 | `PerpetualContract` | Prefer over `CryptoPerpetual` for new implementations |
 | `request_funding_rates()` / `FundingRateUpdate` | Funding rate data streams |
@@ -47,8 +49,6 @@ Validate each component before proceeding to the next.
 | `InstrumentProvider` defaults | Only `load_all_async` required; `load_ids_async`/`load_async` have defaults |
 | `fill_limit_at_touch` → `fill_limit_inside_spread` | Renamed; `BestPriceFillModel` fills inside spread by default |
 | Coinbase International adapter removed | `COINBASE_INTX` deleted; use different venue |
-| WS `connect()` needs `loop_=self._loop` | All adapter WebSocket connections |
-| `OrderBook.get_target_px_for_quantity()` | New method for book impact analysis |
 | Binance Ed25519 Spot/Margin | Now raises `ValueError`; Futures soft-deprecated |
 | Hyperliquid `builder_fee_refresh_mins` | Config removed |
 
@@ -80,21 +80,24 @@ Validate each component before proceeding to the next.
 
 ## ADAPTER CANONICAL CONTRACT
 
-**7-Phase Implementation Sequence:**
-1. Rust core infrastructure (HTTP/WS clients, types, config)
-2. Instrument definitions (parsing, normalization)
-3. Market data (quotes, trades, order books)
-4. Order execution (submit, modify, cancel)
-5. Advanced features (account events, position tracking)
-6. Configuration and factories
-7. Testing and documentation
+**Ten-Phase Implementation Sequence (Phase 0-9):**
+1. Phase 0: Define scope - capability matrix, venue constraints, protocol boundaries, initial slice
+2. Phase 1: Build the protocol core - HTTP/WS clients, models, parsing, protocol tests
+3. Phase 2: Implement instruments - parsing, loading, symbol mapping, updates
+4. Phase 3: Implement market data - public streams, historical requests, order books
+5. Phase 4: Implement execution - account bootstrap, reconciliation, order flow
+6. Phase 5: Add optional venue capabilities - advanced order types, batch operations, venue data
+7. Phase 6: Complete factories and projection - configs, Rust factories, PyO3 registration
+8. Phase 7: Prove conformance - unit, integration, mock-transport tests
+9. Phase 8: Measure performance and robustness
+10. Phase 9: Finish documentation and operations
 
-**Required Python interfaces:**
-- `InstrumentProvider`: `load_all_async`, `load_ids_async`, `load_async`
-- `LiveDataClient`: `_connect`, `_disconnect`, `_subscribe`, `_unsubscribe`, `_request`
-- `LiveExecutionClient`: submit/modify/cancel + reconciliation report generators
+**Required Rust traits:**
+- `InstrumentProvider`: `load_all(filters)`, `load_ids(instrument_ids, filters)`, `load(instrument_id, filters)`
+- `DataClient` / `ExecutionClient`: full trait implementations for market data and order execution plus reconciliation report generation
+- Factories: `DataClientFactory::create(name, config, cache: CacheView, clock)` and `ExecutionClientFactory::create(trader_id, name, config, cache: CacheView)`, registered via `LiveNodeBuilder::add_data_client` / `add_exec_client`
 
-**Factory signature:** `create(loop, name, config, msgbus, cache, clock)`
+(The v1 Python `LiveDataClient`/`LiveExecutionClient` class families and the `create(loop, name, config, msgbus, cache, clock)` factory signature are migration/reference-only.)
 
 **Testing doctrine:**
 - Real captured payload fixtures (not invented schemas)

@@ -19,7 +19,7 @@ Add the following to your `Cargo.toml`. The `streaming` and
 [dependencies]
 nautilus-backtest = { version = "0.62", features = ["streaming"] }
 nautilus-execution = "0.62"
-nautilus-model = { version = "0.62", features = ["stubs"] }
+nautilus-model = { version = "0.62", features = ["test-support"] }
 nautilus-persistence = "0.62"
 nautilus-trading = { version = "0.62", features = ["examples"] }
 
@@ -152,9 +152,10 @@ use nautilus_backtest::config::{
     BacktestDataConfig, BacktestRunConfig, BacktestVenueConfig, NautilusDataType,
 };
 use nautilus_model::enums::{AccountType, BookType, OmsType};
+use ustr::Ustr;
 
 let venue_config = BacktestVenueConfig::builder()
-    .name("SIM")
+    .name(Ustr::from("SIM"))
     .oms_type(OmsType::Hedging)
     .account_type(AccountType::Margin)
     .book_type(BookType::L1_MBP)

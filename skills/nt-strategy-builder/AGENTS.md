@@ -46,19 +46,22 @@ Existing Python system being migrated?
 
 ## ADAPTER WIRING CONTRACT (2026)
 
-- Enable live order flow only after adapter phases 1-4 are complete
-- Require canonical factory signatures for data/exec wiring
+- Enable live order flow only after adapter Phases 0-4 are complete
+- Require the v2 trait-object factory contract for data/exec wiring (registered via `LiveNodeBuilder`)
 - Verify reconciliation/report generation paths before production mode
 - Block deploy when provider/data/exec contracts are incomplete
 
 ## SIMULATION MODELS
 
 ```python
+# Fill models import from nautilus_trader.execution; the base FillModel takes
+# no constructor arguments at v2 - use the concrete model constructors.
+
 # DEX-realistic
-FillModel(prob_fill_on_limit=0.3, prob_slippage=0.7)
+DefaultFillModel(prob_fill_on_limit=0.3, prob_slippage=0.7)
 
 # CeFi-realistic
-FillModel(prob_fill_on_limit=0.5, prob_slippage=0.2)
+DefaultFillModel(prob_fill_on_limit=0.5, prob_slippage=0.2)
 ```
 
 ## CRITICAL DON'Ts

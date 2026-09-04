@@ -73,14 +73,14 @@ def on_bar(self, bar: Bar) -> None:
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 Use the `CacheConfig` class to configure the `Cache` behavior and capacity.
-You can provide this configuration either to a `BacktestEngine` or a `TradingNode`, depending on your [environment context](architecture.md#environment-contexts).
+You can provide this configuration either to a `BacktestEngine` or a `LiveNode`, depending on your [environment context](architecture.md#environment-contexts).
 
 Here's a basic example of configuring the `Cache`:
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
-from nautilus_trader.config import CacheConfig, BacktestEngineConfig, TradingNodeConfig
+from nautilus_trader.config import CacheConfig, BacktestEngineConfig, LiveNodeConfig
 
 # For backtesting
 engine_config = BacktestEngineConfig(
@@ -93,7 +93,7 @@ engine_config = BacktestEngineConfig(
 # NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 # For live trading
-node_config = TradingNodeConfig(
+node_config = LiveNodeConfig(
     cache=CacheConfig(
         tick_capacity=10_000,
         bar_capacity=5_000,
@@ -114,19 +114,25 @@ The `CacheConfig` class supports these parameters:
 from nautilus_trader.config import CacheConfig
 
 cache_config = CacheConfig(
-    database: DatabaseConfig | None = None,  # Database configuration for persistence
-    encoding: str = "msgpack",               # Data encoding format ('msgpack' or 'json')
+    encoding: str = "json",                  # Data encoding format ('json' or 'msgpack')
     timestamps_as_iso8601: bool = False,     # Store timestamps as ISO8601 strings
     buffer_interval_ms: int | None = None,   # Buffer interval for batch operations
     bulk_read_batch_size: int | None = None, # Batch size for bulk reads (e.g., MGET)
     use_trader_prefix: bool = True,          # Use trader prefix in keys
     use_instance_id: bool = False,           # Include instance ID in keys
-    flush_on_start: bool = False,            # Clear database on startup
+    flush_on_start: bool = False,            # Clear database backing on startup
     drop_instruments_on_reset: bool = True,  # Clear instruments on reset
     tick_capacity: int = 10_000,             # Maximum ticks stored per instrument
     bar_capacity: int = 10_000,              # Maximum bars stored per each bar-type
+    persist_account_events: bool = True,     # Persist account events to backing database
+    save_market_data: bool = False,          # Persist market data to disk
 )
 ```
+
+`CacheConfig` no longer carries a `database` parameter at the pinned baseline; backing
+connection settings live on the concrete backing config (`RedisCacheConfig`/
+`PostgresCacheConfig`) attached through the node builder (see
+[Database configuration](#database-configuration) below).
 
 :::note
 Each bar type maintains its own separate capacity. For example, if you're using both 1-minute and 5-minute bars, each stores up to `bar_capacity` bars.
@@ -135,26 +141,76 @@ When `bar_capacity` is reached, the `Cache` automatically removes the oldest dat
 
 ### Database configuration
 
-For persistence between system restarts, you can configure a database backend.
+Configure a database backing to recover successfully persisted, supported cache records
+(general data, currencies, instruments, accounts, orders, positions) after a restart.
+Startup does not restore bounded market-data histories or the running process.
 
 When is it useful to use persistence?
 
-- **Long-running systems**: If you want your data to survive system restarts, upgrading, or unexpected failures, having a database configuration helps to pick up exactly where you left off.
-- **Historical insights**: When you need to preserve past trading data for detailed post-analysis or audits.
-- **Multi-node or distributed setups**: If multiple services or nodes need to access the same state, a persistent store helps ensure shared and consistent data.
+- **Long-running systems**: If you want recoverable state to survive system restarts, upgrades, or
+  unexpected failures, a backing helps the node rebuild cache state on startup.
+- **Historical insights**: Persisted records support post-analysis and audits.
+
+A backing is a recovery mechanism, not a complete event archive or a synchronized distributed
+cache. Each node owns its in-memory cache; pointing multiple nodes at the same database namespace
+does not keep those caches coherent.
+
+`CacheConfig` controls cache behavior; connection settings belong to the concrete backing config,
+`RedisCacheConfig` or `PostgresCacheConfig` (both from `nautilus_trader.infrastructure`).
+
+Python attaches the backing through the node builder, and the node constructs and owns the
+adapter when it starts:
 
 ```python
-from nautilus_trader.config import DatabaseConfig
+from nautilus_trader.common import Environment
+from nautilus_trader.infrastructure import RedisCacheConfig
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
 
-config = CacheConfig(
-    database=DatabaseConfig(
-        type="redis",  # Database type
-        host="localhost",  # Database host
-        port=6379,  # Database port
-        timeout=2,  # Connection timeout (seconds)
-    ),
+node = (
+    LiveNode.builder("LiveNode", TraderId("TRADER-001"), Environment.LIVE)
+    .with_cache_database_factory(RedisCacheConfig(host="localhost", port=6379))
+    .build()
 )
+
+try:
+    node.run()
+finally:
+    node.dispose()
 ```
+
+Pass `PostgresCacheConfig` instead to back cache data with Postgres. Postgres does not support
+actor or strategy state persistence, so do not combine it with `load_state` or `save_state`.
+
+Rust-native callers build a concrete database config and use the `CacheDatabaseFactory` trait,
+then attach the adapter to the node before startup:
+
+```rust
+use nautilus_common::cache::database::CacheDatabaseFactory;
+use nautilus_infrastructure::redis::cache::RedisCacheConfig;
+
+let database = RedisCacheConfig {
+    host: Some("localhost".to_string()),
+    port: Some(6379),
+    ..Default::default()
+};
+let cache_database = database
+    .create(trader_id, instance_id, config.clone())
+    .await?;
+
+let mut node = LiveNode::build("LiveNode".to_string(), Some(node_config))?;
+node.set_cache_database(cache_database)?;
+node.run().await?;
+```
+
+With the default `LiveExecutionEngineConfig.load_cache = true`, the node restores persisted cache
+state and rebuilds derived indexes before connecting clients or reconciling execution state.
+Setting `CacheConfig.flush_on_start = true` clears the backing instead.
+
+:::warning
+Always dispose the node. `dispose()` closes the backing, which flushes writes still held in the
+buffer when `CacheConfig.buffer_interval_ms` is set. Returning straight from `run()` can drop them.
+:::
 
 ## Using the cache
 
@@ -254,7 +310,7 @@ update_count = self.cache.book_update_count(
 #### Price access
 
 ```python
-from nautilus_trader.core.rust.model import PriceType
+from nautilus_trader.model import PriceType
 
 # Get current price by type; Returns Price or None.
 price = self.cache.price(
@@ -266,7 +322,7 @@ price = self.cache.price(
 #### Bar types
 
 ```python
-from nautilus_trader.core.rust.model import PriceType, AggregationSource
+from nautilus_trader.model import PriceType, AggregationSource
 
 # Get all available bar types for an instrument; Returns list[BarType].
 bar_types = self.cache.bar_types(
@@ -529,7 +585,9 @@ self.cache.add(key="my_key", value=b"some binary data")
 stored_data = self.cache.get("my_key")  # Returns bytes or None
 ```
 
-For more complex use cases, the `Cache` can store custom data objects that inherit from the `nautilus_trader.core.Data` base class.
+For more complex use cases, the `Cache` can store custom data objects: wrap them as
+`CustomData` (`nautilus_trader.model.CustomData(data_type, data)`), which the PyO3 layer
+serializes through `nautilus_trader.common.CustomData(data_type, value, ts_event, ts_init)`.
 
 :::warning
 The `Cache` is not designed to be a full database replacement. For large datasets or complex querying needs, consider using a dedicated database system.

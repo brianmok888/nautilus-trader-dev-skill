@@ -47,7 +47,7 @@ they want X. Keep these distinct:
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 When one type needs to reference another, link to it instead of inlining. For
-example, a how-to guide that configures `TradingNodeConfig` should link to the
+example, a how-to guide that configures `LiveNodeConfig` should link to the
 API reference for field definitions rather than listing them again.
 
 ## Language and tone
@@ -95,6 +95,18 @@ API reference for field definitions rather than listing them again.
 - Use backticks for inline code, method names, class names, and configuration options.
 - Use code blocks for multi-line examples.
 - When referencing code locations, use `file_path::function_name` or `file_path::ClassName` rather than line numbers, which become stale as code changes.
+
+## Markdown linting
+
+Markdown follows the shared baseline in `docs/developer_guide/markdown_style.md`. Keep local
+repository copies of that document byte-for-byte identical to the maintained source, and put
+repository-specific additions in a separate local guide.
+
+The toolchain enforces the baseline:
+
+- `make check-markdown` runs `markdownlint-cli2` with `.markdownlint.jsonc` and checks table
+  delimiter padding with `scripts/check-markdown-tables.py`.
+- The `markdownlint-cli2` version is pinned in `.nautilus-engineering/tools.toml`.
 
 ## Headings
 

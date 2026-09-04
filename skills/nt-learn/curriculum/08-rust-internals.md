@@ -27,10 +27,10 @@ starting point for every change:
 | --- | --- |
 | `core` | timestamps, UUIDs, runtime primitives |
 | `model` | identifiers, fixed-point values, instruments, data, orders, events |
-| `common` | cache, message bus, clocks, component infrastructure |
+| `common` | cache, message bus, clocks, component infrastructure, actor framework (`DataActor`) |
 | `data` | data engines, clients, aggregation |
 | `execution` | execution engine, clients, OMS behavior |
-| `trading` | actors, strategies, execution algorithms |
+| `trading` | strategies, execution algorithms (re-exports the `common` actor framework) |
 | `backtest` | simulated exchange, matching, fill models |
 | `live` / `system` | live-node ownership and orchestration |
 | `persistence` / `serialization` | durable and wire representations |

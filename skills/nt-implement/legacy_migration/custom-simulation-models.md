@@ -9,9 +9,11 @@
 
 Implement custom fill simulation for backtesting. Controls order queue position and execution probability.
 
+NT v2 compatibility note: fill models import from `nautilus_trader.execution` (not `nautilus_trader.backtest.models`, which no longer exists); the base `FillModel.__init__()` takes no arguments at v2, so constructor-kwargs subclassing below is v1-only. For probabilistic fills use the concrete `DefaultFillModel(prob_fill_on_limit, prob_slippage, random_seed)` / `BestPriceFillModel` / `ProbabilisticFillModel` constructors and attach per venue via `BacktestVenueConfig(fill_model=...)`. For custom venue/account simulation extend `SimulationModule` (Rust trait `crates/backtest/src/modules/mod.rs`; Python base class from `nautilus_trader.backtest`) attached via `BacktestVenueConfig(modules=[...])`.
+
 ```python
 from decimal import Decimal
-from nautilus_trader.backtest.models import FillModel
+from nautilus_trader.execution import FillModel
 from nautilus_trader.model.orders import Order
 from nautilus_trader.model.instruments import Instrument
 
@@ -68,35 +70,39 @@ class VolatilityAdjustedFillModel(FillModel):
         return self._random.random() < adjusted_prob
 ```
 
-**Usage in backtest:**
+**Usage in backtest (v2-current recipe):**
 
 ```python
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.backtest.config import BacktestEngineConfig
+from nautilus_trader.backtest import BacktestVenueConfig
+from nautilus_trader.execution import DefaultFillModel
 
-fill_model = VolatilityAdjustedFillModel(
-    base_prob_fill_on_limit=0.3,
-    base_prob_slippage=0.2,
-    volatility_multiplier=1.5,
+fill_model = DefaultFillModel(
+    prob_fill_on_limit=0.3,
+    prob_slippage=0.2,
     random_seed=42,
 )
 
-engine = BacktestEngine(
-    config=BacktestEngineConfig(
-        trader_id="TESTER-001",
-        fill_model=fill_model,
-    )
+venue_config = BacktestVenueConfig(
+    name="SIM",
+    oms_type="NETTING",
+    account_type="CASH",
+    starting_balances=["10_000 USD"],
+    fill_model=fill_model,
 )
 ```
+
+(NT v2 compatibility note: the v1 pattern passed `fill_model` to `BacktestEngineConfig` - migration reference; at v2 fill models attach per venue via `BacktestVenueConfig.fill_model`.)
 
 ### Custom MarginModel
 
 Implement custom margin calculation for different venue types.
 
+NT v2 compatibility note: removed at v2: Python `MarginModel` subclassing and `MarginModelConfig` no longer exist (margin models are Rust account types in `crates/model/src/accounts/margin_model.rs`; `BacktestVenueConfig.margin_model` takes the Rust model). The example below is v1-only history. For custom simulation extending beyond fills/margins, implement a `SimulationModule` (Rust trait or the `nautilus_trader.backtest.SimulationModule` Python base class) and attach it via `BacktestVenueConfig(modules=[...])`.
+
 ```python
 from decimal import Decimal
-from nautilus_trader.backtest.models import MarginModel
-from nautilus_trader.backtest.config import MarginModelConfig
+from nautilus_trader.backtest.models import MarginModel  # v1-only module path
+from nautilus_trader.backtest.config import MarginModelConfig  # v1-only module path
 from nautilus_trader.model.instruments import Instrument
 from nautilus_trader.model.objects import Money, Quantity, Price
 from nautilus_trader.model.enums import PositionSide
@@ -184,10 +190,10 @@ class RiskAdjustedMarginModel(MarginModel):
         return Money(margin, instrument.quote_currency)
 ```
 
-**Usage in backtest config:**
+**Usage in backtest config (NT v2 compatibility note: v1-only; `MarginModelConfig` removed at v2 - migration reference):**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig, MarginModelConfig
+from nautilus_trader.backtest.config import BacktestVenueConfig, MarginModelConfig  # v1-only module path
 
 venue_config = BacktestVenueConfig(
     name="SIM",

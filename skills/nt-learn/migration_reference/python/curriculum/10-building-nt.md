@@ -1,4 +1,4 @@
-NT v2 compatibility note: this file is a migration/reference-only Python curriculum snapshot. Do not use it for new work; the active curriculum is Rust-first.
+NT v2 compatibility note: this file is a migration/reference-only Python curriculum snapshot. Do not use it for new work; the active curriculum is Rust-first. For the authoritative v1-to-v2 migration guide, see `MIGRATION_V2.md` at the root of the pinned upstream checkout.
 
 # Stage 10: Building NT
 

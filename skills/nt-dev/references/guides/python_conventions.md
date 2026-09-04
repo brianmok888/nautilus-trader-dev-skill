@@ -43,11 +43,14 @@ def get_instrument(self, id: InstrumentId) -> Instrument | None:
 def get_instrument(self, id: InstrumentId) -> Optional[Instrument]:
 ```
 
-**Generic types**: Use `TypeVar` for reusable components:
+**Generic types**: Use Python 3.12 (PEP 695) type parameter syntax for reusable functions and classes (the project requires Python >=3.12):
 
 ```python
-T = TypeVar("T")
-class ThrottledEnqueuer(Generic[T]):
+class Registry[T]:
+    def register(self, value: T) -> None: ...
+
+    def first(self, values: list[T]) -> T:
+        return values[0]
 ```
 
 ### Docstrings

@@ -55,7 +55,7 @@ Implement NautilusTrader components with Rust-first patterns and physically
 quarantined migration references. This skill covers:
 
 - **Rust components**: Strategy, Actor, Indicator, custom data, execution algorithms, and adapters
-- **Rust simulation models**: FillModel, MarginModel, and portfolio statistics
+- **Rust simulation models**: fill models (`nautilus_trader.execution`), `SimulationModule`, and portfolio statistics
 - **Rust+PyO3 bindings**: bounded configuration and inspection around Rust ownership
 
 ## Risk Engine
@@ -76,19 +76,19 @@ NautilusTrader adapters follow a **Rust-first** layered architecture:
 - **Rust core** (`crates/adapters/your_adapter/`): networking, parsing, state, and execution
 - **PyO3 control plane** (`src/python/`): validated configuration and read-only inspection
 
-Canonical reference adapters: **OKX**, **BitMEX**, **Bybit**
+Canonical reference adapters (pinned developer guide): **Bybit** (multi-product HTTP/WS, options data), **OKX** (public/private/business WebSockets), **Binance** (spot/futures product splits, SBE market data), **Kraken** (spot and futures submodules), **Lighter** (L2 signing, fuzzing, execution state), **Derive** (JSON-RPC, EIP-712 signing). Use them selectively; layouts reflect different venue protocols and product families.
 
 **Official ten-phase dependency structure:**
-1. Phase 1: Define scope
-2. Phase 2: Build the protocol core
-3. Phase 3: Implement instruments
-4. Phase 4: Implement market data
-5. Phase 5: Implement execution
-6. Phase 6: Add optional venue capabilities
-7. Phase 7: Complete factories and projection
-8. Phase 8: Prove conformance
-9. Phase 9: Measure performance and robustness
-10. Phase 10: Finish documentation and operations
+1. Phase 0: Define scope
+2. Phase 1: Build the protocol core
+3. Phase 2: Implement instruments
+4. Phase 3: Implement market data
+5. Phase 4: Implement execution
+6. Phase 5: Add optional venue capabilities
+7. Phase 6: Complete factories and projection
+8. Phase 7: Prove conformance
+9. Phase 8: Measure performance and robustness
+10. Phase 9: Finish documentation and operations
 
 These phases describe dependencies, not release gates. Keep the capability matrix current, allow a
 market-data-only adapter to omit execution, and prove one product end to end before expanding.
@@ -206,6 +206,8 @@ New production work follows the Rust or bounded PyO3 sections below.
 Python production guidance is physically quarantined as migration/reference-only.
 See [Custom Simulation Models migration reference](legacy_migration/custom-simulation-models.md).
 New production work follows the Rust or bounded PyO3 sections below.
+
+Current v2 extension point: `SimulationModule` (Rust trait in `crates/backtest/src/modules/mod.rs`, also a subclassable Python base class exported from `nautilus_trader.backtest` alongside `SimulationModuleContext`). Implement `pre_process(data)`, `process(ts_now, context)` returning account-balance adjustments (`list[Money] | None` in Python) or `None` when not ready, and `acknowledge(outcomes)`; `log_diagnostics()` and `reset()` are optional. Attach modules per venue via `BacktestVenueConfig(modules=[...])`. Built-ins: `CfdSwapModule`, `FXRolloverInterestModule`. This supersedes v1 Python `FillModel`/`MarginModel` subclassing for custom venue simulation; use concrete fill models (`DefaultFillModel`, `BestPriceFillModel`, `ProbabilisticFillModel`, ... from `nautilus_trader.execution`) for probabilistic fills.
 
 ## Rust+PyO3 Implementation Patterns
 

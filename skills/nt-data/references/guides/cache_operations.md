@@ -4,36 +4,36 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Overview
 
-The `Cache` class (`nautilus_trader.cache.cache.Cache`) is the central in-memory store for all
-market and execution data in NautilusTrader. Strategies and actors access it through the read-only
-`CacheFacade` base class, which is available as `self.cache` in any strategy or actor.
+The `Cache` class (`nautilus_trader.common.Cache`) is the central in-memory store for all
+market and execution data in NautilusTrader. Strategies and actors access it directly through
+`self.cache` (a `Cache` instance) in any strategy or actor.
 
-The cache holds instruments, orders, positions, accounts, ticks, bars, order books, greeks, yield
-curves, and arbitrary key-value pairs. It maintains a rich set of indexes that enable fast filtering
+The cache holds instruments, orders, positions, accounts, ticks, bars, order books, and arbitrary
+key-value pairs. It maintains a rich set of indexes that enable fast filtering
 by venue, instrument, strategy, account, and order/position status.
 
 ---
 
 ## Cache Configuration (CacheConfig)
 
-**Module**: `nautilus_trader.cache.config`
+**Module**: `nautilus_trader.common`
 
 ```python
-from nautilus_trader.cache.config import CacheConfig
+from nautilus_trader.common import CacheConfig
 
 config = CacheConfig(
-    database=None,  # DatabaseConfig | None -- backing database config
-    encoding="msgpack",  # "msgpack" | "json" -- serialization encoding
-    timestamps_as_iso8601=False,  # True -> ISO 8601 strings; False -> UNIX nanos
-    persist_account_events=True,  # write account events to database
+    encoding=None,  # SerializationEncoding | None -- serialization encoding
+    timestamps_as_iso8601=None,  # True -> ISO 8601 strings; False -> UNIX nanos
     buffer_interval_ms=None,  # ms between pipelined/batched transactions (10-1000 recommended)
-    bulk_read_batch_size=None,  # chunk size for MGET (helps with Redis provider limits)
+    bulk_read_batch_size=None,  # chunk size for bulk reads (helps with Redis provider limits)
     use_trader_prefix=True,  # prefix keys with "trader-"
     use_instance_id=False,  # include trader instance ID in keys
-    flush_on_start=False,  # flush database on startup
+    flush_on_start=False,  # flush backing store on startup
     drop_instruments_on_reset=True,  # clear instrument cache on reset
     tick_capacity=10_000,  # max deque length for quote/trade ticks per instrument
     bar_capacity=10_000,  # max deque length for bars per bar type
+    save_market_data=None,  # persist market data (ticks/bars) to the backing store
+    persist_account_events=None,  # write account events to the backing store
 )
 ```
 
@@ -56,12 +56,11 @@ instrument = self.cache.instrument(instrument_id)
 # All instrument IDs, optionally filtered by venue
 ids = self.cache.instrument_ids(venue=None)
 
-# All instruments, optionally filtered by venue and/or underlying
-instruments = self.cache.instruments(venue=None, underlying=None)
+# All instruments, optionally filtered by venue
+instruments = self.cache.instruments(venue=None)
 
 # Synthetic instruments
 synthetic = self.cache.synthetic(instrument_id)
-synthetics = self.cache.synthetics()
 synthetic_ids = self.cache.synthetic_ids()
 ```
 
@@ -73,15 +72,15 @@ synthetic_ids = self.cache.synthetic_ids()
 
 ```python
 # Latest quote tick (index=0 is most recent, negative indexes go back)
-tick = self.cache.quote_tick(instrument_id, index=0)
-ticks = self.cache.quote_ticks(instrument_id)  # full deque as list
-count = self.cache.quote_tick_count(instrument_id)
+tick = self.cache.quote(instrument_id, index=0)
+ticks = self.cache.quotes(instrument_id)  # full series as list
+count = self.cache.quote_count(instrument_id)
 has = self.cache.has_quote_ticks(instrument_id)
 
 # Trade ticks -- same pattern
-tick = self.cache.trade_tick(instrument_id, index=0)
-ticks = self.cache.trade_ticks(instrument_id)
-count = self.cache.trade_tick_count(instrument_id)
+tick = self.cache.trade(instrument_id, index=0)
+ticks = self.cache.trades(instrument_id)
+count = self.cache.trade_count(instrument_id)
 has = self.cache.has_trade_ticks(instrument_id)
 ```
 
@@ -109,22 +108,30 @@ has = self.cache.has_order_book(instrument_id)
 from nautilus_trader.model.enums import PriceType
 
 price = self.cache.price(instrument_id, PriceType.MID)
-prices_dict = self.cache.prices(PriceType.BID)  # {InstrumentId: Price}
 
 xrate = self.cache.get_xrate(venue, from_currency, to_currency, PriceType.MID)
+mark_xrate = self.cache.get_mark_xrate(from_currency, to_currency)
 ```
 
 ### Crypto-Specific Data
 
 ```python
-mark = self.cache.mark_price(instrument_id, index=0)
+mark = self.cache.mark_price(instrument_id)
 marks = self.cache.mark_prices(instrument_id)
 
-idx = self.cache.index_price(instrument_id, index=0)
+idx = self.cache.index_price(instrument_id)
 idxs = self.cache.index_prices(instrument_id)
 
-fr = self.cache.funding_rate(instrument_id, index=0)
+fr = self.cache.funding_rate(instrument_id)
 frs = self.cache.funding_rates(instrument_id)
+
+# Counts and presence checks
+mark_count = self.cache.mark_price_count(instrument_id)
+index_count = self.cache.index_price_count(instrument_id)
+funding_count = self.cache.funding_rate_count(instrument_id)
+has_marks = self.cache.has_mark_prices(instrument_id)
+has_index = self.cache.has_index_prices(instrument_id)
+has_funding = self.cache.has_funding_rates(instrument_id)
 ```
 
 ---
@@ -135,10 +142,6 @@ frs = self.cache.funding_rates(instrument_id)
 account = self.cache.account(account_id)
 account = self.cache.account_for_venue(venue)
 aid = self.cache.account_id(venue)
-all_accounts = self.cache.accounts()
-
-# Map a venue to an account (e.g. for multi-venue brokers like IB)
-self.cache.set_account_id_for_venue(venue, account_id)
 ```
 
 ---
@@ -150,7 +153,7 @@ All order query methods accept optional filters: `venue`, `instrument_id`, `stra
 ```python
 order = self.cache.order(client_order_id)
 orders = self.cache.orders(
-    venue=None, instrument_id=None, strategy_id=None, side=OrderSide.NO_ORDER_SIDE
+    venue=None, instrument_id=None, strategy_id=None, account_id=None, side=None
 )
 open_orders = self.cache.orders_open(...)
 closed = self.cache.orders_closed(...)
@@ -221,56 +224,48 @@ self.cache.is_position_open(position_id)
 self.cache.is_position_closed(position_id)
 
 # Snapshots
-snapshot_ids = self.cache.position_snapshot_ids(instrument_id=None, account_id=None)
 snapshots = self.cache.position_snapshots(position_id=None, account_id=None)
+snapshot_bytes = self.cache.position_snapshot_bytes(position_id)
+self.cache.snapshot_position(position)
 ```
 
 ---
 
 ## General Key-Value Store
 
-The cache provides an arbitrary bytes key-value store for persisting custom strategy/actor state:
+The cache provides a general key-value store for persisting custom strategy/actor state.
+Values are byte payloads represented as sequences of ints at the Python boundary:
 
 ```python
-self.cache.add("my_key", b"serialized_value")
-value: bytes = self.cache.get("my_key")
+self.cache.add("my_key", [0, 1, 2])  # Sequence[int] (byte payload)
+value = self.cache.get("my_key")  # list[int] | None
 ```
 
-When a backing database is configured, these values are persisted through the `CacheDatabaseFacade`.
+When a backing store is configured, these values are persisted through the
+infrastructure backing store (see below).
 
 ---
 
-## CacheDatabaseFacade (Persistence Layer)
+## Durable Backing Stores (`nautilus_trader.infrastructure`)
 
-**Module**: `nautilus_trader.cache.facade`
+**Module**: `nautilus_trader.infrastructure`
 
-The `CacheDatabaseFacade` is the abstract base class for all cache database adapters. It defines
-the contract for load and store operations. The concrete implementation shipped with NautilusTrader
-is `CachePostgresAdapter` in `nautilus_trader.cache.adapter`.
+Durable cache backing at the pinned tree is provided by the `nautilus_infrastructure`
+crate (Rust: `crates/infrastructure/src/{redis,sql}`) and exposed to Python through
+`nautilus_trader.infrastructure`:
 
-### Key abstract methods
+- `PostgresCacheConfig(host, port, username, password, database)` -- PostgreSQL cache
+  backing. The SQL implementation lives in `crates/infrastructure/src/sql/`
+  (`pg.rs`, `cache.rs`), including bulk loaders such as `load_all()`,
+  `load_currencies()`, `load_instruments()`, `load_synthetics()`, and `load_orders()`.
+- `RedisCacheConfig` -- Redis cache backing (`crates/infrastructure/src/redis/cache.rs`).
+- `RedisMessageBusConfig` / `RedisMessageBusBacking` / `RedisMessageBusFactory` --
+  Redis-backed message bus (publish/stream/close; `crates/infrastructure/src/redis/msgbus.rs`).
+- `PostgresConnectOptions` -- explicit Postgres connection options
+  (`host`, `port`, `user`, `password`, `database`).
 
-| Category | Methods |
-|----------|---------|
-| Lifecycle | `close()`, `flush()` |
-| Load bulk | `load_all()`, `load()`, `load_currencies()`, `load_instruments()`, `load_synthetics()`, `load_accounts()`, `load_orders()`, `load_positions()` |
-| Load single | `load_currency(code)`, `load_instrument(id)`, `load_synthetic(id)`, `load_account(id)`, `load_order(id)`, `load_position(id)` |
-| Load state | `load_actor(component_id)`, `load_strategy(strategy_id)` |
-| Load index | `load_index_order_position()`, `load_index_order_client()` |
-| Add | `add(key, value)`, `add_currency()`, `add_instrument()`, `add_synthetic()`, `add_account()`, `add_order()`, `add_position()` |
-| Update | `update_account()`, `update_order()`, `update_position()`, `update_actor()`, `update_strategy()` |
-| Delete | `delete_order()`, `delete_position()`, `delete_account_event()`, `delete_actor()`, `delete_strategy()` |
-| Snapshot | `snapshot_order_state()`, `snapshot_position_state()` |
-| Index | `index_venue_order_id()`, `index_order_position()` |
-
-### Postgres Adapter
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-`CachePostgresAdapter` connects to PostgreSQL via the Rust `PostgresCacheDatabase` (pyo3 binding).
-It transforms Cython objects to pyo3 representations before writing, and vice-versa on load. It
-supports loading/storing: currencies, instruments, orders, accounts, quotes, trades, bars, signals,
-custom data, and order/position snapshots.
+Whether market data is written through to the backing store is controlled by
+`CacheConfig.save_market_data`; account events by `CacheConfig.persist_account_events`.
 
 ---
 
@@ -286,46 +281,50 @@ During backtesting, the engine populates the cache differently:
    clock advances. The deque capacity (`tick_capacity`, `bar_capacity`) limits memory usage.
 3. **Orders/Positions**: Created during the backtest as the strategy submits orders. The simulated
    exchange fills orders and the execution engine updates the cache.
-4. **No database backing**: Backtests typically run with `database=None` (no persistence). All
+4. **No durable backing**: Backtests typically run without a backing store configured. All
    state lives purely in memory and is discarded after the run.
 
 ### Live
 
 In live trading, the cache is populated from two sources:
 
-1. **Database restore**: On startup, `cache_all()` loads currencies, instruments, accounts, orders,
-   and positions from the backing database. Then `build_index()` reconstructs all the in-memory
-   indexes. Finally `check_integrity()` verifies consistency.
+1. **Backing-store restore**: On startup, the infrastructure backing store (Postgres or Redis;
+   see above) loads persisted currencies, instruments, accounts, orders, and positions into the
+   cache and its in-memory indexes are rebuilt from the loaded records.
 2. **Live data feeds**: As market data and execution events arrive, the cache is updated in real
-   time. Changes are simultaneously written through to the `CacheDatabaseFacade` for persistence.
+   time. Changes are simultaneously written through to the configured backing store (market data
+   only when `CacheConfig.save_market_data` is enabled).
 3. **Reconciliation**: The execution engine reconciles cached order/position state against the
    venue's reported state during startup.
 
-### Cache Startup Sequence
+### Backing-Store Restore Sequence (Rust)
+
+The Rust backing stores (`crates/infrastructure/src/{sql,redis}/cache.rs`)
+restore state on startup through typed bulk loaders, conceptually:
 
 ```
-cache_all()         # Load all data from database
-  -> cache_currencies()
-  -> cache_instruments()
-  -> cache_synthetics()
-  -> cache_accounts()
-  -> cache_orders()
-  -> cache_order_lists()   # Rebuilt from cached orders
-  -> cache_positions()
-build_index()       # Rebuild all in-memory indexes
-check_integrity()   # Validate bidirectional consistency
+load_all()           # Load all general state from the backing store
+  -> load_currencies()
+  -> load_instruments()
+  -> load_synthetics()
+  -> load_orders()
+  -> load_positions()
+# loaded records repopulate the in-memory indexes
 ```
 
 ---
 
-## Greeks and Yield Curves
+## Option Greeks and Pools
+
+Option greeks are a model data type at the pinned tree (`model.OptionGreeks`):
+actors and strategies subscribe with `subscribe_option_greeks(...)` and receive
+them via `on_option_greeks`; pricing uses the `GreeksCalculator` helper
+(`instrument_greeks(...)`). AMM pool state has typed cache lookups:
 
 ```python
-self.cache.add_greeks(greeks_object)
-greeks = self.cache.greeks(instrument_id)
-
-self.cache.add_yield_curve(yield_curve_object)
-curve = self.cache.yield_curve("curve_name")
+pool = self.cache.pool(instrument_id)
+profiler = self.cache.pool_profiler(instrument_id)
 ```
 
-These are stored as opaque Python objects keyed by instrument ID or curve name.
+The legacy `add_greeks`/`greeks`/`add_yield_curve`/`yield_curve` opaque-object
+store no longer exists.

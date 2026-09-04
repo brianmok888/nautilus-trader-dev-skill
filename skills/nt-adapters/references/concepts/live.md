@@ -59,140 +59,173 @@ key concepts and settings involved for live configuration.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 
-### `TradingNodeConfig`
+### `LiveNodeConfig`
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: Python live/integration-specific TradingNodeConfig is migration/reference-only; use LiveNodeConfig for Rust v2/Rust-backed work.
 
-
-The main configuration class for live trading systems is `TradingNodeConfig`,
-which inherits from `NautilusKernelConfig` and provides live-specific config options:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
+The main configuration class for live trading systems is `LiveNodeConfig`
+(re-exported from `nautilus_trader.live` and `nautilus_trader.config`;
+`crates/live/src/node/config.rs`). It carries the trader/environment identity,
+lifecycle timeouts, logging, and the optional cache/message-bus/portfolio/engine
+sub-configs. Client factories and configs are registered on the
+`LiveNodeBuilder`, not in this struct:
 
 ```python
-from nautilus_trader.config import TradingNodeConfig
+from nautilus_trader.live import LiveNodeConfig
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-
-config = TradingNodeConfig(
-    trader_id="MyTrader-001",
+config = LiveNodeConfig(
+    trader_id=TraderId("MyTrader-001"),
+    load_state=True,
+    save_state=True,
     # Component configurations
     cache=CacheConfig(),
-    message_bus=MessageBusConfig(),
+    msgbus=MessageBusConfig(),
     data_engine=LiveDataEngineConfig(),
     risk_engine=LiveRiskEngineConfig(),
-    exec_engine=LiveExecEngineConfig(),
+    exec_engine=LiveExecutionEngineConfig(),
     portfolio=PortfolioConfig(),
-    # Client configurations
-    data_clients={
-        "BINANCE": BinanceDataClientConfig(),
-    },
-    exec_clients={
-        "BINANCE": BinanceExecClientConfig(),
-    },
 )
+```
+
+```rust
+use nautilus_live::node::{Environment, LiveNode};
+
+// data_config / exec_config are the pinned venue config structs
+// (e.g. BinanceDataClientConfig, BinanceExecutionClientConfig).
+let node = LiveNode::builder(trader_id, Environment::Live)?
+    .add_data_client(None, Box::new(BinanceDataClientFactory), Box::new(data_config))?
+    .add_exec_client(None, Box::new(BinanceExecutionClientFactory), Box::new(exec_config))?
+    .build()?;
 ```
 
 #### Core configuration parameters
 
-| Setting                  | Default      | Description                                 |
-|--------------------------|--------------|---------------------------------------------|
-| `trader_id`              | "TRADER-001" | Unique trader identifier (name-tag format). |
-| `instance_id`            | `None`       | Optional unique instance identifier.        |
-| `timeout_connection`     | 30.0         | Connection timeout in seconds.              |
-| `timeout_reconciliation` | 10.0         | Reconciliation timeout in seconds.          |
-| `timeout_portfolio`      | 10.0         | Portfolio initialization timeout.           |
-| `timeout_disconnection`  | 10.0         | Disconnection timeout.                      |
-| `timeout_post_stop`      | 5.0          | Post-stop cleanup timeout.                  |
+| Setting                        | Default      | Description                                                                 |
+|--------------------------------|--------------|-----------------------------------------------------------------------------|
+| `trader_id`                    | "TRADER-001" | Unique trader identifier (name-tag format).                                 |
+| `instance_id`                  | `None`       | Optional unique instance identifier.                                        |
+| `load_state`                   | `False`      | Load actor/strategy state from the database on start.                       |
+| `save_state`                   | `False`      | Save actor/strategy state to the database on stop.                          |
+| `shutdown_on_error`            | `False`      | Request node shutdown when a Rust error log is emitted.                     |
+| `timeout_connection_secs`      | 60.0         | Connection timeout in seconds.                                              |
+| `timeout_reconciliation_secs`  | 30.0         | Reconciliation timeout in seconds.                                          |
+| `timeout_portfolio_secs`       | 10.0         | Portfolio initialization timeout.                                           |
+| `timeout_disconnection_secs`   | 10.0         | Disconnection timeout.                                                      |
+| `delay_post_stop_secs`         | 10.0         | Delay after stopping the node to await residual events.                     |
+| `timeout_shutdown_secs`        | 5.0          | Timeout to await pending task cancellation during shutdown.                 |
+
+The Rust `LiveNodeBuilder` exposes the same timeouts as builder methods (for
+example `with_delay_post_stop_secs`); there is no `timeout_post_stop` field at
+the pin.
 
 #### Cache database configuration
 
-Configure data persistence with a backing database:
+`CacheConfig` (pinned `crates/common/src/cache/config.rs`) controls serialization
+behavior only (encoding, timestamps, buffering, key prefixes); it has no
+`database` field. The backing database is wired through the builder so the node
+constructs and owns the adapter at start, honoring `load_state`/`save_state`:
 
 ```python
-from nautilus_trader.config import CacheConfig
-from nautilus_trader.config import DatabaseConfig
+from nautilus_trader.common import CacheConfig
 
 cache_config = CacheConfig(
-    database=DatabaseConfig(
-        host="localhost",
-        port=6379,
-        username="nautilus",
-        password="pass",
-        timeout=2.0,
-    ),
     encoding="msgpack",  # or "json"
     timestamps_as_iso8601=True,
     buffer_interval_ms=100,
-    flush_on_start=False,
 )
 ```
 
+```rust
+use nautilus_live::node::LiveNodeBuilder;
+
+// Install the cache database backing from a factory.
+let node: LiveNodeBuilder = node.with_cache_database_factory(cache_db_factory);
+```
+
+NT v2 compatibility note: v1 `CacheConfig(database=DatabaseConfig(...))` wiring is
+migration/reference-only; `DatabaseConfig` does not exist at the pin. Use
+`LiveNodeBuilder::with_cache_database_factory`.
+
 #### MessageBus configuration
 
-Configure message routing and external streaming:
+Configure message routing and external streaming. The pinned `MessageBusConfig`
+(`crates/common/src/msgbus/config.rs`) has no `database` parameter; external
+streaming is installed through the builder:
 
 ```python
-from nautilus_trader.config import MessageBusConfig
-from nautilus_trader.config import DatabaseConfig
+from nautilus_trader.common import MessageBusConfig
 
 message_bus_config = MessageBusConfig(
-    database=DatabaseConfig(timeout=2),
     timestamps_as_iso8601=True,
     use_instance_id=False,
-    types_filter=[QuoteTick, TradeTick],  # Filter specific message types
+    types_filter=["QuoteTick", "TradeTick"],  # type names NOT published externally
     stream_per_topic=False,
     autotrim_mins=30,  # Automatic message trimming
     heartbeat_interval_secs=1,
 )
 ```
 
+```rust
+use nautilus_live::node::LiveNodeBuilder;
+
+// Serialized message bus publications plus configured ingress.
+let node: LiveNodeBuilder = node
+    .with_msgbus_config(message_bus_config)
+    .with_external_msgbus_egress(external_egress)  // or .with_external_msgbus_factory(factory)
+    .with_external_ingress(external_ingress);
+```
+
+`types_filter` takes a sequence of serializable type-name strings (Rust
+`Vec<String>`) that are **not** published externally, not type objects.
+`MessageBusConfig.external_streams` lists the external stream keys the bus
+listens to for republishing deserialized payloads internally.
+
+NT v2 compatibility note: v1 `MessageBusConfig(database=DatabaseConfig(...))`
+wiring is migration/reference-only.
+
 ### Multi-venue configuration
 
-Live trading systems often connect to multiple venues. Here's an example of configuring both spot and futures markets for Binance:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
+Live trading systems often connect to multiple venues. Register each client on
+the `LiveNode` builder with an explicit name; venue configs split products with
+`product_type` (Binance uses `BinanceProductType`, not the v1 `BinanceAccountType`):
 
 ```python
-config = TradingNodeConfig(
-    trader_id="MultiVenue-001",
-    # Multiple data clients for different market types
-    data_clients={
-        "BINANCE_SPOT": BinanceDataClientConfig(
-            account_type=BinanceAccountType.SPOT,
-            testnet=False,
-        ),
-        "BINANCE_FUTURES": BinanceDataClientConfig(
-            account_type=BinanceAccountType.USDT_FUTURES,
-            testnet=False,
-        ),
-    },
-    # Corresponding execution clients
-    exec_clients={
-        "BINANCE_SPOT": BinanceExecClientConfig(
-            account_type=BinanceAccountType.SPOT,
-            testnet=False,
-        ),
-        "BINANCE_FUTURES": BinanceExecClientConfig(
-            account_type=BinanceAccountType.USDT_FUTURES,
-            testnet=False,
-        ),
-    },
-)
+from nautilus_trader.adapters.binance import BinanceDataClientConfig, BinanceProductType
 ```
+
+```rust
+use nautilus_live::node::{Environment, LiveNode};
+
+let mut builder = LiveNode::builder(trader_id, Environment::Live)?;
+
+// Spot market data and execution
+builder = builder
+    .add_data_client(Some("BINANCE_SPOT".to_string()), Box::new(BinanceDataClientFactory), Box::new(spot_data_config))?
+    .add_exec_client(Some("BINANCE_SPOT".to_string()), Box::new(BinanceExecutionClientFactory), Box::new(spot_exec_config))?;
+
+// USD-M futures market data and execution
+builder = builder
+    .add_data_client(Some("BINANCE_FUTURES".to_string()), Box::new(BinanceDataClientFactory), Box::new(futures_data_config))?
+    .add_exec_client(Some("BINANCE_FUTURES".to_string()), Box::new(BinanceExecutionClientFactory), Box::new(futures_exec_config))?;
+
+let node = builder.build()?;
+```
+
+where `spot_data_config` is `BinanceDataClientConfig` with
+`product_type=BinanceProductType.SPOT` and `futures_data_config` uses
+`product_type=BinanceProductType.USD_M` (Python constructors accept the same
+kwargs; select test networks with `environment=BinanceEnvironment.TESTNET`).
 
 ### ExecutionEngine configuration
 
-The `LiveExecEngineConfig` sets up the live execution engine, managing order processing, execution events, and reconciliation with trading venues.
+The `LiveExecutionEngineConfig` sets up the live execution engine, managing order processing, execution events, and reconciliation with trading venues.
 The following outlines the main configuration options.
 
 By configuring these parameters thoughtfully, you can ensure that your trading system operates efficiently,
 handles orders correctly, and remains resilient in the face of potential issues, such as lost events or conflicting data/information.
 
-For full details see the `LiveExecEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecengineconfig).
+For full details see the `LiveExecutionEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecutionengineconfig).
 
 #### Reconciliation
 
@@ -345,8 +378,7 @@ Each loop delegates to the cache APIs described in [Purging cached state](https:
 
 | Setting                          | Default  | Description                                                                                          |
 |----------------------------------|----------|------------------------------------------------------------------------------------------------------|
-| `qsize`                          | 100,000  | Sets the size of internal queue buffers, managing the flow of data within the engine.                |
-| `graceful_shutdown_on_exception` | False    | If the system should perform a graceful shutdown when an unexpected exception occurs during message queue processing (does not include user actor/strategy exceptions). |
+| `qsize`                          | 100,000  | Sets the size of internal queue buffers, managing the flow of data within the engine. (The per-engine `graceful_shutdown_on_exception` option was removed; configure node-level shutdown via `LiveNodeConfig.shutdown_on_error`.) |
 
 ### Strategy configuration
 
@@ -477,7 +509,7 @@ They exist solely to align position discrepancies and should not be managed by u
 To detect external orders in your strategy, check `order.strategy_id.value == "EXTERNAL"`. These orders are included in portfolio calculations and position tracking like any other order.
 :::
 
-For a full list of live trading options see the `LiveExecEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecengineconfig).
+For a full list of live trading options see the `LiveExecutionEngineConfig` [API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#class-liveexecutionengineconfig).
 
 ### Reconciliation procedure
 

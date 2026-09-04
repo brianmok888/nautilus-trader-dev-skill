@@ -12,7 +12,7 @@ NautilusTrader uses a three-branch model:
 - **`nightly`**: pre-release testing; publishes alpha wheels and CLI binaries.
 - **`master`**: stable releases; triggers the full release pipeline.
 
-Pushing to `master` automatically tags the version from `pyproject.toml`, creates a draft GitHub
+Pushing to `master` automatically tags the version from `python/pyproject.toml`, creates a draft GitHub
 release, uploads release assets, publishes Cargo crates to crates.io, publishes wheels and sdist to
 PyPI, publishes the GitHub release, builds Docker images, and triggers a docs rebuild.
 
@@ -81,12 +81,12 @@ Keep these sequencing rules intact when editing `.github/workflows/build.yml`:
 
 The project maintains two version numbers:
 
-| File                     | Scope          | Example   |
-|--------------------------|----------------|-----------|
-| `pyproject.toml`         | Python package | `1.223.0` |
-| `Cargo.toml` (workspace) | Rust crates    | `0.55.0`  |
+| File                      | Scope          | Example    |
+|--------------------------|----------------|------------|
+| `python/pyproject.toml`   | Python package | `2.0.0rc4` |
+| `Cargo.toml` (workspace)  | Rust crates    | `0.63.0`   |
 
-These are bumped independently. The Python version drives the release tag (`v1.223.0`).
+These are bumped independently. The Python version drives the release tag (`v2.0.0rc4`).
 
 ## Crates.io publishing
 
@@ -122,7 +122,7 @@ crate versions, wrong trusted-publishing repositories, and checksum or sparse-in
 ### Pre-release (on `develop`)
 
 - [ ] Finalize `RELEASES.md`: review all items, remove empty sections
-- [ ] Ensure versions are set in `pyproject.toml` and `Cargo.toml` workspace
+- [ ] Ensure versions are set in `python/pyproject.toml` and the `Cargo.toml` workspace
 - [ ] Ensure crates.io Trusted Publishing is configured for every crate that CI publishes:
   `bash scripts/ci/check-crates-io-trusted-publishing.sh`
 - [ ] Ensure all CI checks pass on `develop`
@@ -148,7 +148,7 @@ crate versions, wrong trusted-publishing repositories, and checksum or sparse-in
 - [ ] Update the release date in `RELEASES.md` for the published version
 - [ ] Add horizontal separator `---` below the completed release
 - [ ] Add the next version template at the top of `RELEASES.md` (see below)
-- [ ] Bump `pyproject.toml` version to the next release number
+- [ ] Bump the `python/pyproject.toml` version to the next release number
 - [ ] Bump crate versions in tutorial and how-to `Cargo.toml` snippets
   (`docs/concepts/rust.md`, `docs/how_to/run_rust_backtest.md`,
   `docs/how_to/run_rust_live_trading.md`)

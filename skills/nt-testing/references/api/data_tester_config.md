@@ -2,13 +2,15 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # DataTesterConfig API Reference
 
-Extracted from the Data Testing Spec. Both Python (`nautilus_trader.test_kit.strategies.tester_data`)
-and Rust (`nautilus_testkit::testers`) provide the `DataTester`.
+Extracted from the Data Testing Spec. Python (`nautilus_trader.testkit`) exports only
+`DataTesterConfig`; the `DataTester` actor itself is Rust-only
+(`nautilus_testkit::testers::DataTester`). From Python, register the built-in actor
+by name on the node.
 
 ## Python: DataTesterConfig
 
 ```python
-from nautilus_trader.test_kit.strategies.tester_data import DataTester, DataTesterConfig
+from nautilus_trader.testkit import DataTesterConfig
 ```
 
 ## Rust: DataTesterConfig
@@ -23,7 +25,7 @@ use nautilus_testkit::testers::{DataTester, DataTesterConfig};
 
 ```python
 DataTesterConfig(
-    instrument_ids=[instrument_id],   # list[InstrumentId], required
+    instrument_ids=[instrument_id],   # list[InstrumentId], defaults to None (empty)
     ...
 )
 ```
@@ -42,7 +44,7 @@ DataTesterConfig::builder()
 
 | Parameter                    | Type              | Default         | Affects groups |
 |------------------------------|-------------------|-----------------|----------------|
-| `instrument_ids`             | list[InstrumentId]| *required*      | All            |
+| `instrument_ids`             | list[InstrumentId]| None (empty)   | All            |
 | `client_id`                  | ClientId?         | None            | All            |
 | `bar_types`                  | list[BarType]?    | None            | 5              |
 | `subscribe_book_deltas`      | bool              | False           | 2              |
@@ -135,18 +137,17 @@ An adapter that passes groups 1–4 is considered **baseline data compliant**.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
-from nautilus_trader.live.node import TradingNode
-from nautilus_trader.test_kit.strategies.tester_data import DataTester, DataTesterConfig
+from nautilus_trader.live import LiveNode
+from nautilus_trader.testkit import DataTesterConfig
 
 # NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-node = TradingNode(config=config_node)
-tester = DataTester(config=config_tester)
-node.trader.add_actor(tester)
+node = LiveNode.builder("DATA-TESTER-001", TRADER_ID, Environment.LIVE).build()
+node.add_builtin_actor("DataTester", config_tester)
 # Register adapter factories, build, and run
 ```
 
-Reference: `examples/live/{adapter}/{adapter}_data_tester.py`
+Reference: `examples/live/{adapter}/data_tester.py`
 
 ### Rust
 

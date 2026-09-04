@@ -58,6 +58,7 @@ Instead, it logs a clear, explanatory error.
   - `CANCELED`
   - `EXPIRED`
   - `FILLED`
+  - `VOIDED`
 
 ### Order state flow
 
@@ -89,6 +90,7 @@ flowchart TB
         Canceled
         Expired
         Filled
+        Voided
     end
 
     Initialized -->|"Emulation trigger"| Emulated
@@ -117,6 +119,8 @@ flowchart TB
     PartiallyFilled --> Filled
     PartiallyFilled --> Canceled
     Accepted --> Expired
+    Filled -->|"Applied fill voided"| Voided
+    PartiallyFilled -->|"Applied fill voided"| Voided
 ```
 
 ### Order status definitions
@@ -137,6 +141,7 @@ flowchart TB
 | `PENDING_CANCEL`   | Order is pending a cancellation request on the venue.                                     |
 | `PARTIALLY_FILLED` | Order has been partially filled on the venue.                                             |
 | `FILLED`           | Order has been completely filled (terminal).                                              |
+| `VOIDED`           | An applied fill on the order was partly or fully voided (terminal).                        |
 
 ## Execution instructions
 
@@ -691,6 +696,32 @@ the system places the child orders. The take-profit closes the position if the m
 
 Bracket orders can be easily created using the [OrderFactory](https://nautilustrader.io/docs/latest/api_reference/common/#class-orderfactory),
 which supports various order types, parameters, and instructions.
+
+**Rust lane (v2):** `OrderFactory::bracket` is a builder-style method
+(`crates/trading/src/strategy/api.rs:516`). Chain the setters and finish with `.call()`,
+which returns the order list as `Vec<OrderAny>` (entry, stop-loss, take-profit):
+
+```rust
+let orders = self
+    .order()
+    .bracket()
+    .instrument_id(InstrumentId::from("BTCUSDT.BINANCE"))
+    .order_side(OrderSide::Buy)
+    .quantity(Quantity::from("1.0"))
+    .tp_price(Price::from("110.00"))
+    .sl_trigger_price(Price::from("90.00"))
+    .call();
+// orders[0] = entry MARKET, orders[1] = stop-loss STOP_MARKET, orders[2] = take-profit LIMIT
+```
+
+Optional fields use `maybe_`-prefixed setters (e.g. `.maybe_entry_price(...)`);
+defaults include `entry_order_type = OrderType::Market`,
+`sl_order_type = OrderType::StopMarket`, `time_in_force = TimeInForce::Gtc`, and
+`contingency_type = ContingencyType::Ouo`.
+
+**Python reference (v1 migration-reference-only):** the same builder form is
+`factory.bracket()...call()`; the pinned Python trading surface
+(`nautilus_trader.trading`) does not expose `bracket`.
 
 :::warning
 You should be aware of the margin requirements of positions, as bracketing a position will consume

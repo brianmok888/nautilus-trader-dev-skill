@@ -19,34 +19,34 @@ not move execution authority into Python.
 
 ## Official Ten-Phase Sequence
 
-### Phase 1: Define scope
+### Phase 0: Define scope
 Record products, environments, capabilities, restrictions, gaps, and the smallest end-to-end slice.
 
-### Phase 2: Build the protocol core
+### Phase 1: Build the protocol core
 Implement Rust HTTP/WebSocket, credentials/signing, shared types, parsing, retry, and lifecycle.
 
-### Phase 3: Implement instruments
+### Phase 2: Implement instruments
 Implement identity, precision, provider loading, caching, and updates.
 
-### Phase 4: Implement market data
+### Phase 3: Implement market data
 Add requests/subscriptions, books, malformed input, unsubscribe, and reconnect behavior.
 
-### Phase 5: Implement execution
+### Phase 4: Implement execution
 Establish account state and reconciliation before commands; cover ambiguous outcomes and reports.
 
-### Phase 6: Add optional venue capabilities
+### Phase 5: Add optional venue capabilities
 Add advanced orders or product slices only after the base lifecycle is stable.
 
-### Phase 7: Complete factories and projection
+### Phase 6: Complete factories and projection
 Finalize Rust configs/factories, `CacheView`, clock inputs, registry wiring, and optional PyO3.
 
-### Phase 8: Prove conformance
+### Phase 7: Prove conformance
 Run deterministic integration/spec scenarios plus controlled-venue acceptance and recovery paths.
 
-### Phase 9: Measure performance and robustness
+### Phase 8: Measure performance and robustness
 Benchmark confirmed hot paths and fuzz all untrusted boundaries with strong invariants.
 
-### Phase 10: Finish documentation and operations
+### Phase 9: Finish documentation and operations
 Reconcile capabilities and document limits, reconciliation, environments, testers, and diagnosis.
 
 ## Rust Tester References

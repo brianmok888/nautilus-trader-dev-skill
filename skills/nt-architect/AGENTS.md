@@ -28,10 +28,12 @@ Research Element
 
 ### Signal vs Custom Data
 
+NT v2 compatibility note: the v1 `@customdataclass` decorator is legacy; migration reference only.
+
 | Mechanism | When | API |
 |-----------|------|-----|
 | `publish_signal()` | Primitive values (str, float, int, bool, bytes) | Lightweight, no class needed |
-| `publish_data()` | Structured complex values with `@customdataclass` | Auto-generated constructor |
+| `publish_data()` | Structured complex values | Publishes a `DataType` + `CustomData` payload (v2 pattern); the v1 `@customdataclass` decorator is legacy-only |
 | Manual `Data` subclass | Full control over `ts_event`/`ts_init` | Explicit property implementation |
 
 ### Common Topologies
@@ -51,7 +53,7 @@ Actors monitor trading activity through current message-bus order-event handlers
 | State Type | Location | Access |
 |------------|----------|--------|
 | Orders, Positions, Instruments, Accounts | Cache | `self.cache.*` |
-| Market Data | Cache | `self.cache.quote_tick()`, `self.cache.bar()` |
+| Market Data | Cache | `self.cache.quote()`, `self.cache.quotes()`, `self.cache.bar()` |
 | Model State (weights, params) | Actor attribute | `self.model` loaded in `on_start` |
 | Regime/Signal State | Actor attribute | `self.current_regime` |
 | Strategy-specific State | Strategy attribute | `self.is_position_open` |
@@ -66,9 +68,9 @@ Actors monitor trading activity through current message-bus order-event handlers
 
 ## ADAPTER CONSTRAINTS (if architecture includes adapter)
 
-- Preserve 7-phase dependency order in design doc
-- Rust core owns networking/parsing; Python layer owns Nautilus integration
-- Include explicit method families: InstrumentProvider, LiveDataClient, LiveExecutionClient
+- Preserve the ten-phase dependency order (Phase 0 "Define scope" through Phase 9 "Finish documentation and operations") in the design doc
+- The entire adapter is an end-to-end Rust crate under `crates/adapters/<venue>/` (HTTP/WS clients, instruments, data, execution, factories); Python is at most an optional bounded PyO3 control-plane projection
+- Contract against the Rust traits: `InstrumentProvider` (`load_all`/`load_ids`), `DataClient`, `ExecutionClient`, plus `DataClientFactory`/`ExecutionClientFactory` registered via `LiveNodeBuilder::add_data_client`/`add_exec_client` (v1 Python `LiveDataClient`/`LiveExecutionClient` class families are legacy; NT v2 compatibility note: those class families are migration reference)
 - Record runtime rules: `get_runtime().spawn()`, no blocking hot handlers, direct `PyObject`/`Py<T>` for ordinary callbacks; justify and cycle-audit any `Arc<Py<T>>`
 - Map phases to concrete test artifacts per milestone
 

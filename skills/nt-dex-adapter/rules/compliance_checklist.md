@@ -28,8 +28,8 @@ Python-only live adapters are migration/reference-only and cannot receive APPROV
 
 ### InstrumentProvider
 
-- [ ] `load_all_async()` implemented and fetches from chain/RPC
-- [ ] `load_ids_async(instrument_ids)` implemented
+- [ ] `load_all(filters)` implemented and fetches from chain/RPC
+- [ ] `load_ids(instrument_ids, filters)` implemented
 - [ ] `get_all()` returns `dict[InstrumentId, Instrument]`
 - [ ] `find(instrument_id)` returns `Instrument | None`
 - [ ] Instrument IDs formatted as `{SYMBOL}.{VENUE}`
@@ -39,7 +39,7 @@ Python-only live adapters are migration/reference-only and cannot receive APPROV
 
 ### LiveMarketDataClient
 
-- [ ] `_connect()` calls `load_all_async()` on instrument provider
+- [ ] `_connect()` calls `load_all(filters)` on the instrument provider
 - [ ] `_disconnect()` cancels polling tasks / closes WS connections
 - [ ] `_subscribe_quote_ticks(instrument_id)` implemented
 - [ ] `_subscribe_trade_ticks(instrument_id)` implemented

@@ -13,11 +13,11 @@ as scaled integers internally (`raw` field), avoiding floating-point rounding is
 
 | Type             | Module                               | Signed | Has Currency | Range                                |
 |------------------|--------------------------------------|--------|--------------|--------------------------------------|
-| `Quantity`       | `nautilus_trader.model.objects`       | No     | No           | [0, 34_028_236_692_093]              |
-| `Price`          | `nautilus_trader.model.objects`       | Yes    | No           | [-17_014_118_346_046, 17_014_118_346_046] |
-| `Money`          | `nautilus_trader.model.objects`       | Yes    | Yes          | [-17_014_118_346_046, 17_014_118_346_046] |
-| `Currency`       | `nautilus_trader.model.objects`       | N/A    | N/A          | N/A                                  |
-| `AccountBalance` | `nautilus_trader.model.objects`       | N/A    | Yes          | N/A                                  |
+| `Quantity`       | `nautilus_trader.model`              | No     | No           | [0, 34_028_236_692_093]              |
+| `Price`          | `nautilus_trader.model`              | Yes    | No           | [-17_014_118_346_046, 17_014_118_346_046] |
+| `Money`          | `nautilus_trader.model`              | Yes    | Yes          | [-17_014_118_346_046, 17_014_118_346_046] |
+| `Currency`       | `nautilus_trader.model`              | N/A    | N/A          | N/A                                  |
+| `AccountBalance` | `nautilus_trader.model`              | N/A    | Yes          | N/A                                  |
 
 ## Precision Handling
 
@@ -31,7 +31,7 @@ NautilusTrader supports two precision modes, determined at compile time via the 
 Check the active mode at runtime:
 
 ```python
-from nautilus_trader.model.objects import HIGH_PRECISION, FIXED_PRECISION, FIXED_SCALAR
+from nautilus_trader.model import HIGH_PRECISION, FIXED_PRECISION, FIXED_SCALAR
 
 print(f"High precision: {HIGH_PRECISION}")
 print(f"Fixed precision: {FIXED_PRECISION}")
@@ -55,7 +55,7 @@ The `raw` value must be a valid multiple of the scale factor for the given preci
 
 ### Precision Bytes
 
-The `FIXED_PRECISION_BYTES` constant indicates how many bytes are used for precision
+The `PRECISION_BYTES` constant indicates how many bytes are used for precision
 storage in the underlying Rust types.
 
 ## Quantity
@@ -65,7 +65,7 @@ Non-negative value for trade sizes, order amounts, and positions.
 ### Construction Patterns
 
 ```python
-from nautilus_trader.model.objects import Quantity
+from nautilus_trader.model import Quantity
 
 # From float + explicit precision
 qty = Quantity(100.5, precision=1)  # "100.5"
@@ -96,7 +96,7 @@ qty = Quantity.zero(precision=2)  # "0.00"
 ### Conversion Methods
 
 - `as_decimal()` -- returns Python `Decimal`
-- `as_double()` -- returns `float` (alias for `as_f64_c()`)
+- `as_double()` -- returns `float`
 - `to_formatted_str()` -- returns underscore-separated string (e.g., "1_000_000.50")
 
 ### Arithmetic
@@ -117,13 +117,12 @@ result = qty1 * 2.0  # float 200.0
 
 # Quantity / anything -> Decimal (or float)
 result = qty1 / qty2  # Decimal("2")
-
-# saturating_sub: subtraction that clamps to zero instead of raising
-result = qty2.saturating_sub(qty1)  # Quantity("0")
 ```
 
-**Important**: Subtraction raises `ValueError` if the result would be negative.
-Use `saturating_sub()` for clamped subtraction.
+**Important**: Subtraction (`__sub__`) raises `ValueError` if the result would be
+negative. For clamping subtraction use `saturating_sub(other)`, which returns the
+zero-clamped `Quantity` result (pinned `python/nautilus_trader/model/__init__.pyi:6190`;
+Rust `crates/model/src/types/quantity.rs:334`).
 
 ### Constraints
 
@@ -138,7 +137,7 @@ Signed value for market prices, quotes, and price levels. Can be negative (e.g.,
 ### Construction Patterns
 
 ```python
-from nautilus_trader.model.objects import Price
+from nautilus_trader.model import Price
 
 # From float + explicit precision
 price = Price(1.2345, precision=4)
@@ -174,7 +173,7 @@ Comparisons work across Price, Quantity, and Decimal types by converting to Deci
 ### Key Differences from Quantity
 
 - **Signed**: Can represent negative values (range includes negatives)
-- **No saturating_sub**: Subtraction always produces a result (can be negative)
+- **Subtraction always produces a result** (can be negative, unlike Quantity)
 - Range: `PRICE_MIN` to `PRICE_MAX`
 
 ## Money
@@ -184,7 +183,7 @@ A Price-like value paired with a Currency denomination.
 ### Construction Patterns
 
 ```python
-from nautilus_trader.model.objects import Money, Currency
+from nautilus_trader.model import Money, Currency
 
 usd = Currency.from_str("USD")
 
@@ -243,21 +242,17 @@ Represents a medium of exchange with a fixed decimal precision.
 ### Construction
 
 ```python
-from nautilus_trader.model.objects import Currency
-from nautilus_trader.core.rust.model import CurrencyType
+from nautilus_trader.model import Currency, CurrencyType
 
-# From the built-in internal map (fiat + common crypto)
-usd = Currency.from_str("USD")  # Looks up internal map first
-btc = Currency.from_str("BTC")  # Also in internal map
+# Look up a pre-registered currency (fiat + common crypto in the internal map)
+usd = Currency.from_str("USD")
+btc = Currency.from_str("BTC")
 
-# Strict mode: returns None if not found (no auto-creation)
-result = Currency.from_str("UNKNOWN", strict=True)  # None
+# Strict mode: raises for unknown codes (no auto-creation)
+result = Currency.from_str("UNKNOWN", strict=True)  # ValueError
 
 # Non-strict mode (default): unknown codes auto-create as crypto with precision=8
 token = Currency.from_str("MYTOKEN")  # Auto-created, precision=8, type=CRYPTO
-
-# From internal map only (returns None if not found)
-eur = Currency.from_internal_map("EUR")
 
 # Manual construction
 custom = Currency(
@@ -285,16 +280,18 @@ custom = Currency(
 
 ## Currency Registry and Custom Currencies
 
-The system maintains a global currency map in Rust, pre-populated with common fiat
-and crypto currencies. The `nautilus_trader.model.currencies` module provides
-pre-registered constants:
+The system maintains a single global currency map in Rust (the same map the PyO3
+bindings use), pre-populated with common fiat and crypto currencies. There is no
+separate `currencies` module of constants: obtain registered currencies with
+`Currency.from_str`:
 
 ```python
-from nautilus_trader.model.currencies import USD, EUR, GBP, BTC, ETH
+from nautilus_trader.model import Currency
 
-# These are ready to use
-print(USD.precision)  # 2
-print(BTC.precision)  # 8
+usd = Currency.from_str("USD")
+print(usd.precision)  # 2
+btc = Currency.from_str("BTC")
+print(btc.precision)  # 8
 ```
 
 ### Built-in Fiat Currencies
@@ -309,14 +306,12 @@ CRV, and many more (50+ crypto currencies pre-registered).
 
 ### Registering Custom Currencies
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-Custom currencies must be registered in **both** the Cython and pyo3 maps:
+Register custom currencies in the global internal map with
+`Currency.register(currency, overwrite=False)` (a no-op if the code already exists
+and `overwrite` is `False`):
 
 ```python
-from nautilus_trader.model.currencies import register_currency
-from nautilus_trader.model.objects import Currency
-from nautilus_trader.core.rust.model import CurrencyType
+from nautilus_trader.model import Currency, CurrencyType
 
 custom = Currency(
     code="XCOIN",
@@ -326,10 +321,8 @@ custom = Currency(
     currency_type=CurrencyType.CRYPTO,
 )
 
-# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-# Registers in both Cython and pyo3 internal maps
-register_currency(custom, overwrite=False)
+# Registers in the Rust internal map shared with the PyO3 bindings
+Currency.register(custom, overwrite=False)
 ```
 
 ## AccountBalance
@@ -339,7 +332,7 @@ Represents an account balance with total, locked, and free amounts.
 ### Construction
 
 ```python
-from nautilus_trader.model.objects import AccountBalance, Money, Currency
+from nautilus_trader.model import AccountBalance, Money, Currency
 
 usd = Currency.from_str("USD")
 
@@ -373,28 +366,27 @@ restored = AccountBalance.from_dict(d)
 
 ## Rust to Python Conversion Patterns
 
-### Low-level: from_raw_c
+### Raw reconstruction: from_raw
 
-Used internally when converting from pyo3 Rust objects to preserve exact precision:
-
-```python
-# Inside from_pyo3_c methods:
-price = Price.from_raw_c(pyo3_obj.price_increment.raw, pyo3_obj.price_precision)
-qty = Quantity.from_raw_c(pyo3_obj.lot_size.raw, pyo3_obj.lot_size.precision)
-money = Money.from_str_c(str(pyo3_obj.max_notional))
-```
-
-The `from_raw_c` pattern avoids float conversion entirely, preserving the exact
-fixed-point representation across the Rust/Python boundary.
-
-### Currency conversion
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+The Python value types are the PyO3 bindings over the Rust types, so there is no
+per-object conversion layer. Use `from_raw` when reconstructing from raw
+fixed-point fields (for example when parsing adapter payloads) to avoid float
+conversion entirely:
 
 ```python
-# Rust pyo3 Currency -> Cython Currency (via code string lookup)
-cython_currency = Currency.from_str_c(pyo3_instrument.quote_currency.code)
+price = Price.from_raw(12345000000000, 4)
+qty = Quantity.from_raw(1005000000000, 1)
+money = Money.from_raw(123456789, usd)
 ```
+
+`from_raw(raw, precision)` preserves the exact fixed-point representation across
+the Rust/Python boundary; `from_str` parses the canonical string form.
+
+### Currency lookup
+
+Currency objects cross the boundary directly; look up registered currencies by
+code with `Currency.from_str(code)` (auto-creating unknown codes as crypto unless
+`strict=True`).
 
 ### Decimal bridge
 
@@ -402,7 +394,7 @@ Rust uses `rust_decimal::Decimal` for margin/fee fields. These convert through
 Python's `Decimal`:
 
 ```python
-margin_init = Decimal(pyo3_instrument.margin_init)  # rust Decimal -> str -> py Decimal
+margin_init = equity.margin_init  # decimal.Decimal (Rust rust_decimal crossed to Python Decimal)
 ```
 
 ## Rust Type Equivalents
@@ -420,8 +412,7 @@ The Rust side also provides:
 - `FIXED_PRECISION` and `FIXED_SCALAR` constants
 - `price_new()`, `quantity_new()`, `money_new()` -- FFI constructors
 - `price_from_raw()`, `quantity_from_raw()`, `money_from_raw()` -- raw constructors
-- `currency_register()`, `currency_from_cstr()`, `currency_exists()` -- registry functions
-- `quantity_saturating_sub()` -- clamped subtraction
+- `currency_register()`, `currency_to_cstr()`, `currency_code_to_cstr()` -- registry/conversion functions
 
 ## Common Patterns and Gotchas
 
@@ -455,7 +446,6 @@ q1 = Quantity(10, precision=0)
 q2 = Quantity(20, precision=0)
 
 q1 - q2  # ValueError: subtraction would result in negative value
-q1.saturating_sub(q2)  # Quantity("0") -- safe alternative
 ```
 
 ### Money currency enforcement

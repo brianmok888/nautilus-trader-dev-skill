@@ -57,46 +57,42 @@ The use cases for the instruments available from an `InstrumentProvider` are eit
 
 ### Research and backtesting
 
-Here is an example of discovering the current instruments for the Binance Futures testnet:
+This example loads one Binance USD-M instrument through the public Python API
+(pinned projection: `load_binance_instruments` from `nautilus_trader.adapters.binance`):
 
 ```python
 import asyncio
-import os
 
-from nautilus_trader.adapters.binance.common.enums import BinanceAccountType
-from nautilus_trader.adapters.binance import get_cached_binance_http_client
-from nautilus_trader.adapters.binance.futures.providers import (
-    BinanceFuturesInstrumentProvider,
-)
-from nautilus_trader.common.component import LiveClock
+from nautilus_trader.adapters.binance import BinanceDataClientConfig
+from nautilus_trader.adapters.binance import BinanceEnvironment
+from nautilus_trader.adapters.binance import BinanceInstrumentProviderConfig
+from nautilus_trader.adapters.binance import BinanceProductType
+from nautilus_trader.adapters.binance import load_binance_instruments
 
 
-async def main():
-    clock = LiveClock()
-
-    client = get_cached_binance_http_client(
-        clock=clock,
-        account_type=BinanceAccountType.USDT_FUTURES,
-        api_key=os.getenv("BINANCE_FUTURES_TESTNET_API_KEY"),
-        api_secret=os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET"),
-        is_testnet=True,
+async def main() -> None:
+    config = BinanceDataClientConfig(
+        product_type=BinanceProductType.USD_M,
+        environment=BinanceEnvironment.LIVE,
+        instrument_provider=BinanceInstrumentProviderConfig(
+            load_all=False,
+            load_ids=["BTCUSDT-PERP.BINANCE"],
+        ),
     )
+    instruments = await load_binance_instruments(config)
 
-    provider = BinanceFuturesInstrumentProvider(
-        client=client,
-        account_type=BinanceAccountType.USDT_FUTURES,
-    )
-
-    await provider.load_all_async()
-
-    # Access loaded instruments
-    instruments = provider.list_all()
-    print(f"Loaded {len(instruments)} instruments")
+    for instrument in instruments:
+        print(instrument.id)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+NT v2 compatibility note: the v1 discovery path (v1
+`get_cached_binance_http_client`, `BinanceFuturesInstrumentProvider`, and
+`load_all_async`) is migration/reference-only; the pinned surface is the flat
+`load_binance_instruments(config)` projection shown above.
 
 ### Live trading
 

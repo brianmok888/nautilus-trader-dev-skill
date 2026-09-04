@@ -13,9 +13,9 @@ Curated DEX-specific rules. For general NautilusTrader adapter rules, see `nt-re
 
 ### Instrument Discovery
 
-**DO** implement both `load_all_async()` and `load_ids_async()` on your `InstrumentProvider`.
+**DO** implement `load_all(filters)` and `load_ids(instrument_ids, filters)` on your `InstrumentProvider`.
 ```python
-async def load_all_async(self) -> None:
+async def load_all(self, filters: dict | None = None) -> None:
     """Fetch all pools/markets from on-chain registry."""
     pools = await self._client.fetch_all_pools()
     for pool in pools:
@@ -23,7 +23,7 @@ async def load_all_async(self) -> None:
         self._instruments[instrument.id] = instrument
 
 
-async def load_ids_async(self, instrument_ids: list[InstrumentId]) -> None:
+async def load_ids(self, instrument_ids: list[InstrumentId], filters: dict | None = None) -> None:
     """Load specific pools by ID (for targeted reconnects)."""
     for iid in instrument_ids:
         pool = await self._client.fetch_pool(iid.symbol.value)

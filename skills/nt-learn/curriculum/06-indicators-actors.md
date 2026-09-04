@@ -33,7 +33,8 @@ execution-authoritative messages.
 ## Source-Pinned Reference
 
 Study `skills/nt-trading/references/examples/rust_trading/examples/actors/imbalance/` for actor
-structure and tests. Treat its owning crate and version as part of the example contract.
+structure and tests. Treat its owning crate and version as part of the example contract. For a
+guided actor walkthrough, see the pinned upstream how-to `docs/how_to/write_rust_actor.md`.
 
 ## Exercises
 

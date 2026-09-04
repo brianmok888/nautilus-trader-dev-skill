@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
     let catalog_path = temp_dir.path().to_str().unwrap().to_string();
     let catalog = ParquetDataCatalog::new(temp_dir.path(), None, None, None, None);
     catalog.write_instruments(vec![instrument])?;
-    catalog.write_to_parquet(quotes, None, None, None)?;
+    catalog.write_to_parquet(&quotes, None, None, None)?;
 
     println!("Wrote {num_quotes} quotes to catalog: {catalog_path}");
 
@@ -106,20 +106,20 @@ fn main() -> anyhow::Result<()> {
         .account_type(AccountType::Margin)
         .book_type(BookType::L1_MBP)
         .starting_balances(vec!["1_000_000 USD".to_string()])
-        .build();
+        .build()?;
 
     let data_config = BacktestDataConfig::builder()
         .data_type(NautilusDataType::QuoteTick)
         .catalog_path(catalog_path)
         .instrument_id(instrument_id)
-        .build();
+        .build()?;
 
     let run_config = BacktestRunConfig::builder()
         .id("ema-cross-run".to_string())
         .venues(vec![venue_config])
         .data(vec![data_config])
         .chunk_size(100) // Stream in chunks of 100
-        .build();
+        .build()?;
 
     // Build and run the backtest
     let mut node = BacktestNode::new(vec![run_config])?;

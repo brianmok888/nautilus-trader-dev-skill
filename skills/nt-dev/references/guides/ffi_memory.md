@@ -101,25 +101,42 @@ Instead, use the **type-specific** drop helper for your element type (e.g., `vec
 `vec_drop_book_orders`). If no helper exists for your type, add one following the pattern in
 `crates/core/src/ffi/cvec.rs`.
 
-## Box-backed `*_API` wrappers (owned Rust objects)
+## Opaque owning pointers (`*mut T` via `Box::into_raw`)
+
+NT v2 compatibility note: the boxed by-value wrapper structs of the v1 Cython era are legacy
+(migration reference only); the pinned Rust crates use opaque owning pointers instead.
 
 When the Rust core needs to hand a *complex* value (for example an
 `OrderBook`, `SyntheticInstrument`, or `TimeEventAccumulator`) to foreign
-code it allocates the value on the heap with `Box::new` and returns a
-small `repr(C)` wrapper whose only field is that `Box`.
+code it allocates the value on the heap and returns an opaque owning
+`*mut T` produced by `Box::into_raw`. Model objects whose layout is not
+`repr(C)` cross the ABI this way: the generated header forward-declares the
+type, so foreign callers handle the object only through exported functions.
+Pure accessors take `&T` or `&mut T` references, and every constructor must
+have a matching `unsafe extern "C"` drop function that reconstructs the `Box`
+with `Box::from_raw`:
 
 ```rust
-#[repr(C)]
-pub struct OrderBook_API(Box<OrderBook>);
-
 #[unsafe(no_mangle)]
-pub extern "C" fn orderbook_new(id: InstrumentId, book_type: BookType) -> OrderBook_API {
-    OrderBook_API(Box::new(OrderBook::new(id, book_type)))
+pub extern "C" fn orderbook_new(id: InstrumentId, book_type: BookType) -> *mut OrderBook {
+    Box::into_raw(Box::new(OrderBook::new(id, book_type)))
 }
 
+/// # Safety
+///
+/// `book` must be a live owning pointer returned by [`orderbook_new`], and must not
+/// be used after this call.
+///
+/// # Panics
+///
+/// Panics if `book` is null.
 #[unsafe(no_mangle)]
-pub extern "C" fn orderbook_drop(book: OrderBook_API) {
-    drop(book); // frees the heap allocation
+pub unsafe extern "C" fn orderbook_drop(book: *mut OrderBook) {
+    abort_on_panic(|| {
+        assert!(!book.is_null(), "`book` was NULL");
+        // SAFETY: Caller guarantees `book` was allocated by `orderbook_new`
+        drop(unsafe { Box::from_raw(book) }); // Memory freed here
+    });
 }
 ```
 

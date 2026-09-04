@@ -67,8 +67,8 @@ Source: [`references/developer_guide/rust.md`](../../references/developer_guide/
 
 NautilusTrader **backtesting domain** — backtest engine, simulated exchange, fill models, and matching logic.
 
-**Python modules**: `backtest/`, `backtest/models/`, `execution/matching_core` (simulated exchange context)
-**Rust crates**: `nautilus_backtest`, `nautilus_execution` (matching subset)
+**Python modules**: `backtest/`, `execution/` (both flat at the pinned tree)
+**Rust crates**: `nautilus_backtest`, `nautilus_execution` (matching engine incl. the Rust-only `matching_core` module)
 
 ## When To Use
 
@@ -136,7 +136,7 @@ Add to your `Cargo.toml`:
 [dependencies]
 nautilus-backtest = { version = "0.62", features = ["streaming"] }
 nautilus-execution = "0.62"
-nautilus-model = { version = "0.62", features = ["stubs"] }
+nautilus-model = { version = "0.62", features = ["test-support"] }
 nautilus-persistence = "0.62"
 nautilus-trading = { version = "0.62", features = ["examples"] }
 
@@ -153,9 +153,10 @@ Drop `streaming`, `nautilus-persistence`, `tempfile`, `ustr` if only using the l
 | Flag | Crate | Effect |
 |---|---|---|
 | `high-precision` | `nautilus-model` | 16-digit fixed precision (default 9). Required for crypto. |
-| `stubs` | `nautilus-model` | Test instrument stubs (`audusd_sim`, etc.) |
+| `test-support` | `nautilus-model` | Test support (pulls in `rstest`). The `stubs` module (`audusd_sim`, etc.) is compiled unconditionally -- no feature flag. |
 | `examples` | `nautilus-trading` | Example strategies (`EmaCross`, `GridMarketMaker`) |
 | `streaming` | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode` |
+| `defi` | `nautilus-backtest` | DeFi data support (`nautilus-model/defi`, 18-decimal wei precision, implies `high-precision`). With the feature enabled, `add_data` transparently registers a DeFi data client when a batch contains `Data::Defi` items. |
 
 ### BacktestEngine (Low-Level API)
 
@@ -227,7 +228,7 @@ use ustr::Ustr;
 // 1. Write data to catalog
 let catalog = ParquetDataCatalog::new(catalog_path, None, None, None, None);
 catalog.write_instruments(vec![instrument])?;
-catalog.write_to_parquet(quotes, None, None, None)?;
+catalog.write_to_parquet(&quotes, None, None, None)?;
 
 // 2. Configure the run (configs use builder pattern)
 let venue_config = BacktestVenueConfig::builder()
@@ -236,19 +237,24 @@ let venue_config = BacktestVenueConfig::builder()
     .account_type(AccountType::Margin)
     .book_type(BookType::L1_MBP)
     .starting_balances(vec!["1_000_000 USD".to_string()])
-    .build();
+    .build()?;
 
 let data_config = BacktestDataConfig::builder()
     .data_type(NautilusDataType::QuoteTick)
     .catalog_path(catalog_path.to_string())
     .instrument_id(instrument_id)
-    .build();
+    .build()?;
 
 let run_config = BacktestRunConfig::builder()
+    .id("ema-cross-run".to_string())
     .venues(vec![venue_config])
     .data(vec![data_config])
     .maybe_chunk_size(Some(100))
-    .build();
+    .build()?;
+
+// `BacktestRunConfig.id` defaults to a random UUID4; `get_engine_mut` is a
+// plain map lookup by that id, so set an explicit `.id(...)` when you need to
+// fetch the engine afterwards.
 
 // 3. Build, add strategies, run
 let mut node = BacktestNode::new(vec![run_config])?;
@@ -270,6 +276,44 @@ Actors register with `add_actor` (same pattern as strategies):
 let actor = SpreadMonitor::new(instrument_id);
 engine.add_actor(actor)?;
 ```
+
+### Simulation Modules
+
+Venue-level simulation logic beyond the core matching loop plugs in through the
+`modules` field of `SimulatedVenueConfig` (`Vec<SimulationModuleHandle>`, empty
+by default). A module implements the `SimulationModule` trait
+(`crates/backtest/src/modules/mod.rs`): `pre_process` filters/adapts market
+data before the matching engine sees it, `process` returns a batch of account
+balance adjustments at the current timestamp, and `acknowledge` confirms the
+ordered application outcomes of each completed batch.
+
+Shipped modules:
+
+- `FXRolloverInterestModule` -- FX rollover interest from OECD-style records
+  (`InterestRateRecord { location, time, value }`; e.g. `"AUS"`, `"2024-01"`, `5.25`).
+- `CfdSwapModule` -- CFD swap adjustments from `CfdSwapRate` records plus a
+  rollover time and triple-roll weekday.
+
+```rust
+use nautilus_backtest::modules::{
+    fx_rollover::InterestRateRecord, FXRolloverInterestModule, SimulationModuleHandle,
+};
+
+let rollover = FXRolloverInterestModule::new(vec![InterestRateRecord {
+    location: "AUS".to_string(),
+    time: "2024-01".to_string(),
+    value: 5.25,
+}])?;
+
+let venue = SimulatedVenueConfig::builder()
+    .venue(Venue::from("SIM"))
+    // ... other venue settings ...
+    .modules(vec![SimulationModuleHandle::new(rollover)])
+    .build()?;
+```
+
+Python-authored modules are supported through the PyO3 `SimulationModule`/
+`PythonSimulationModule` bridge (`crates/backtest/src/python/modules.rs`).
 
 ## Rust Extension (PyO3 Path)
 

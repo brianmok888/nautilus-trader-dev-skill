@@ -114,7 +114,7 @@ let config = ExecTesterConfig::builder()
 PyO3 tests verify binding registration, configuration round trips, error translation, ownership, and callback routing. They may exercise Python-visible configuration and observation surfaces, but production behavior must be asserted against Rust-owned state and Rust test harnesses. Isolate interpreter-terminating paths and never treat importability or method presence as execution readiness.
 
 The public V2 projection is `from nautilus_trader.testkit import ExecTesterConfig`;
-do not import the compatibility root `nautilus_trader.core.nautilus_pyo3`.
+do not import the private compiled root `nautilus_trader._libnautilus`.
 
 Current-develop overlay (`949207b053b040feaff273dff9ad36b796a0e2a9ea`): every public PyO3
 actor `subscribe_*` and `unsubscribe_*` entry point calls `ensure_registered()` before mutating
@@ -221,34 +221,32 @@ NautilusTrader's test suite covers seven categories:
 ### Primary commands
 
 ```bash
-# NT v2 compatibility note: v1 legacy Python tests
+# Python tests (single python/tests suite; requires a built extension)
 make pytest
-# or
-uv run --active --no-sync pytest --new-first --failed-first
-
-# Rust-backed PyO3 Python tests
-make pytest-v2
 
 # Rust tests
 make cargo-test
 # or
-cargo nextest run --workspace --features "python,ffi,high-precision,defi" --cargo-profile nextest
+cargo nextest run --workspace --features "arrow,ffi,python,high-precision,streaming,defi" --cargo-profile nextest
 
 # Optional feature coverage
 make cargo-test EXTRA_FEATURES="capnp"
 
-# Performance tests
-make test-performance
+# Registered Rust benchmark set
+make cargo-ci-benches
 ```
 
 ### Makefile targets
 
 ```bash
-make test          # Full test suite
-make pre-commit    # Format + lint + all checks
-make format        # Auto-format (ruff, rustfmt)
-make lint          # Lint only (no format changes)
-make cargo-test    # Rust-only test suite
+make pytest         # Python test suite (cd python && uv run --no-sync pytest tests/)
+make build-debug    # Build and install the Python extension in debug mode
+make cargo-test     # Rust-only test suite
+make cargo-ci-benches # Benches for crates in the CI performance workflow
+make check-code     # clippy on lib/test targets and ruff --fix
+make clippy         # clippy linter (check only, workspace lints)
+make format         # Auto-format Rust (nightly) and Python code
+make pre-commit     # Run all pre-commit hooks on all files
 ```
 
 ## Test Style
@@ -297,6 +295,15 @@ fn fuzz_parse_trade(data: &[u8]) {
     let _ = parse_trade(data); // Must return Err, not panic
 }
 ```
+
+Adapter fuzz binaries are registered in each adapter package behind its `fuzz` feature.
+Run all registered targets for one adapter from the repository root:
+
+```bash
+scripts/fuzz-adapter.sh derive
+```
+
+The workspace pins `libfuzzer-sys`, and `nautilus-live` owns the shared libFuzzer integration.
 
 ## Data Testing Spec
 
@@ -403,7 +410,7 @@ them.
 
 | Category | Size | Storage | Access |
 |----------|------|---------|--------|
-| **Small data** | < 1 MB | `tests/test_data/<source>/` | Always available |
+| **Small data** | < 1 MB | `test_data/<source>/` | Always available |
 | **Large data** | > 1 MB | R2 bucket (Parquet) | Downloaded on first use |
 | **User-fetched** | Any | Local only | Requires vendor account |
 
@@ -429,7 +436,7 @@ tests must skip cleanly when local user-fetched data is absent.
 
 ### Large Data: Checksums
 
-`tests/test_data/large/checksums.json` records SHA-256 for each file. The `ensure_test_data_exists()` helper:
+`test_data/large/checksums.json` records SHA-256 for each file. The `ensure_test_data_exists()` helper:
 1. Checks if file exists locally
 2. Downloads from R2 if missing
 3. Verifies SHA-256 checksum
@@ -441,7 +448,7 @@ When schema changes invalidate Parquet files:
 
 ```bash
 # Regenerate from source
-uv run --active --no-sync pytest tests/test_data_curation/ -v
+scripts/curate-dataset.sh <slug> <filename> <download-url> <licence>
 
 # Verify new checksums
 sha256sum /tmp/<output_file>
@@ -460,7 +467,7 @@ sha256sum /tmp/<output_file>
 
 - Tests run on every PR and push
 - Rust tests use `make cargo-test` / `cargo nextest ... --cargo-profile nextest`
-- Python tests use `pytest tests/ -n auto`
+- Python tests use `make pytest` (single `python/tests/` suite)
 - Pre-commit hooks run: `ruff format`, `ruff check`, `rustfmt`, `clippy`
 
 ### Local CI Parity

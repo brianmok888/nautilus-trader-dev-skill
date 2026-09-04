@@ -37,7 +37,7 @@ while zero-cost abstractions and the absence of a garbage collector deliver C-li
   - `python`: enables Python bindings.
   - `extension-module`: builds a Python extension module (always include `python`).
   - `ffi`: enables C FFI bindings.
-  - `stubs`: exposes testing stubs.
+  - `test-support`: exposes testing stubs and test specs.
 
 ## Build configurations
 
@@ -48,8 +48,8 @@ Cargo's build cache is keyed by the exact combination of features, profiles, and
 
 | Target                      | Features                         | Profile   | `--all-targets` | `--no-deps` | Purpose        |
 |-----------------------------|----------------------------------|-----------|-----------------|-------------|----------------|
-| `cargo-test`                | `ffi,python,high-precision,defi` | `nextest` | ✓ (implicit)    | n/a         | Run tests.     |
-| `cargo-clippy` (pre-commit) | `ffi,python,high-precision,defi` | `nextest` | ✓               | n/a         | Lint all code. |
+| `cargo-test`                | `arrow,ffi,python,high-precision,streaming,defi` | `nextest` | ✓ (implicit)    | n/a         | Run tests.     |
+| `cargo-clippy` (pre-commit) | `arrow,ffi,python,high-precision,streaming,defi` | `nextest` | ✓               | n/a         | Lint all code. |
 
 These targets share the same feature set and profile, allowing cargo to reuse compiled artifacts between linting and testing without rebuilds.
 The `nextest` profile is used to align with the workflow of the majority of core maintainers who use cargo-nextest for running tests.
@@ -86,6 +86,25 @@ This uses the nightly toolchain and `--all-features` rather than the aligned fea
 | `build-debug` | Includes `extension-module` + subset | `dev`     | Requires different features for PyO3 extension module. |
 
 Python extension building intentionally uses different features (`extension-module` is required) and will trigger rebuilds. This is expected and unavoidable.
+
+The `maturin` version used for extension builds is held back by a pinned `exclude-newer-package`
+entry in `python/pyproject.toml` until maturin 1.15.0 clears the global release cooldown.
+
+### FFI ABI verification (cbindgen)
+
+Only `nautilus-core` and `nautilus-model` expose an `ffi` feature. Check both crates directly when
+changing their C ABI:
+
+```bash
+cargo check -q -p nautilus-core --features ffi
+cargo check -q -p nautilus-model --features ffi,python,high-precision
+```
+
+The crate-local `cbindgen.toml` files define the header layout for native consumers. Do not add an
+`ffi` feature or `src/ffi` module to another workspace crate.
+
+Run `make check-cbindgen-abi` to generate both headers, verify their public names and compatibility
+enum values, and compile a C11 consumer against them. The scheduled nightly tests run this check.
 
 ### Rebuild triggers to avoid
 
@@ -197,62 +216,52 @@ The `check_logging_macro_usage.sh` pre-commit hook enforces fully qualified logg
 
 ### Error handling
 
-Use structured error handling patterns consistently:
+Choose the error type at the API boundary:
 
-1. **Primary Pattern**: Use `anyhow::Result<T>` for fallible functions:
+| Boundary                              | Return type                         |
+| ------------------------------------- | ----------------------------------- |
+| Reusable library or domain API.       | A typed `Result<T, E>`.             |
+| Application or adapter orchestration. | `anyhow::Result<T>`.                |
+| Public input validation.              | `CorrectnessResult<T>` when suited. |
 
-   ```rust
-   pub fn calculate_balance(&mut self) -> anyhow::Result<Money> {
-       // Implementation
-   }
-   ```
+- Define a typed error with `thiserror` when callers inspect or recover from the failure.
+- Bind error patterns and closures as `e`, not `err` or `error`.
+- Use `anyhow::bail!` for an early return from an `anyhow::Result` function. Use
+  `anyhow::anyhow!` when an error value is required, such as inside `ok_or_else`.
+- Start `.context()` messages with lowercase text so chained errors read naturally. Preserve the
+  capitalization of a leading proper noun or acronym.
+- Do not use `", got"` in an error or assertion. Use `", was"`, `", received"`, or `", found"`
+  according to the context.
 
-2. **Custom Error Types**: Use `thiserror` for domain-specific errors:
-
-   ```rust
-   #[derive(Error, Debug)]
-   pub enum NetworkError {
-       #[error("Connection failed: {0}")]
-       ConnectionFailed(String),
-       #[error("Timeout occurred")]
-       Timeout,
-   }
-   ```
-
-3. **Error Propagation**: Use the `?` operator for clean error propagation.
-
-4. **Error Creation**: Prefer `anyhow::bail!` for early returns with errors:
-
-   ```rust
-   // Preferred - using bail! for early returns
-   pub fn process_value(value: i32) -> anyhow::Result<i32> {
-       if value < 0 {
-           anyhow::bail!("Value cannot be negative: {value}");
-       }
-       Ok(value * 2)
-   }
-
-   // Instead of - verbose return statement
-   if value < 0 {
-       return Err(anyhow::anyhow!("Value cannot be negative: {value}"));
-   }
-   ```
-
-   **Note**: Use `anyhow::bail!` for early returns, but `anyhow::anyhow!` in closure contexts like `ok_or_else()` where early returns aren't possible.
-
-5. **Error Context**: Use lowercase for `.context()` messages to support error chaining (except proper nouns/acronyms):
-
-   ```rust
-   // Good - lowercase chains naturally
-   parse_timestamp(value).context("failed to parse timestamp")?;
-
-   // Exception - proper nouns stay capitalized
-   connect().context("BitMEX websocket did not become active")?;
-   ```
+```rust
+parse_timestamp(value).context("failed to parse timestamp")?;
+connect().context("BitMEX websocket did not become active")?;
+```
 
 :::info[Automated enforcement]
-The `check_error_conventions.sh` and `check_anyhow_usage.sh` pre-commit hooks enforce these error handling patterns.
+The `check_error_conventions.sh` and `check_anyhow_usage.sh` pre-commit hooks enforce these error
+handling patterns. In particular, `check_anyhow_usage.sh` only permits importing
+`anyhow::Context` (`use anyhow::bail!`, `use anyhow::Result`, and friends must be fully
+qualified) and requires `anyhow::bail!(...)` over `return Err(anyhow::anyhow!(...))`.
 :::
+
+### Panic policy
+
+Panics are valid for internal invariant violations that callers cannot reasonably recover from.
+Keep an API infallible when returning `Result` would only require callers to handle a programming
+defect. Use an always-on assertion for an invariant that protects soundness or prevents unsafe code
+from continuing with invalid state.
+
+Return `Result` at boundaries that accept untrusted input or can fail because of configuration,
+I/O, external data, task cancellation, or resource lifecycle. These are operational failures even
+when a specific call site expects them never to occur. For validated values, follow the
+`new()` and `new_checked()` constructor pattern: expose a fallible path for untrusted values and use
+the convenience wrapper where its caller contract permits a panic. Document reachable panics in
+public Rust APIs, and make each panic message name the violated invariant.
+
+Treat findings for these lints from `make clippy-strict-audit` as review prompts:
+`clippy::panic`, `clippy::unwrap_used`, and `clippy::expect_used`. The audit also reports
+`clippy::panic_in_result_fn`, which the required workspace Clippy gate already enforces.
 
 ### Async patterns
 
@@ -315,6 +324,32 @@ Adapter crates (under `crates/adapters/`) require special handling for spawning 
 :::info[Automated enforcement]
 The `check_tokio_usage.sh` pre-commit hook enforces these adapter runtime patterns automatically.
 :::
+
+### Runtime ownership and cache access
+
+#### Cache order access
+
+`Cache` hides its `SharedCell` order storage behind lifetime-scoped accessors. Use `order_ref()` or
+`try_order_ref()` for scoped reads, `order_mut()` for an exclusive write borrow, and `order_owned()`
+or `try_order_owned()` when a snapshot must cross a boundary. The `try_*` forms return
+`OrderLookupError` when the order is absent.
+
+`order_mut()` requires `&mut Cache`, so adapter-facing `CacheView` code cannot mutate orders. Drop an
+`OrderRef` or `OrderRefMut` before dispatching events or taking a borrow that can re-enter the same
+order, then look up the order again for post-event state.
+
+#### Runtime invariants
+
+The actor registry, component registry, and message bus use `thread_local!` storage. Objects
+registered on one thread are not visible from another. `LiveNodeHandle` is the intended
+cross-thread control surface.
+
+Keep an `ActorRef` within one synchronous scope. Do not store it in a struct, hold it across
+`.await`, or send it to another thread. Capture the actor ID in long-lived callbacks and look up the
+actor each time the callback runs.
+
+The component registry rejects aliased mutable access with a scoped borrow guard. Do not make
+component lifecycle operations re-entrant.
 
 ### Attribute patterns
 
@@ -507,6 +542,18 @@ impl<T: AsRef<str>> From<T> for Symbol {
 **Design note**: The `From` impl may panic on invalid input. This is intentional for API ergonomics. Use `FromStr` / `.parse()` when error handling is needed. The `From` impl provides convenience for cases where the input is known to be valid.
 
 **Constraint**: This pattern cannot be used for types that implement `AsRef<str>` themselves (e.g., string wrapper types), as it would conflict with the blanket `impl<T> From<T> for T`. For such types, provide separate `From<&str>` and `From<String>` impls instead.
+
+### Domain numeric types
+
+Preserve discrete financial values as decimals from ingestion:
+
+| Value                                    | Type and construction                                    |
+| ---------------------------------------- | -------------------------------------------------------- |
+| Price or quantity.                       | `Price::from_decimal_dp` or `Quantity::from_decimal_dp`. |
+| Money, fee, margin, or balance.          | `Decimal`, then `Money::from_decimal` or `Money::zero`.  |
+| Continuous signal ratio or timing curve. | `f64` when decimal precision has no domain meaning.      |
+
+Do not route wire values through `f64` constructors.
 
 ### Constants and naming conventions
 
@@ -838,7 +885,7 @@ For modules with feature flags, document them clearly:
 //! - `ffi`: Enables the C foreign function interface (FFI) from [cbindgen](https://github.com/mozilla/cbindgen).
 //! - `python`: Enables Python bindings from [PyO3](https://pyo3.rs).
 //! - `extension-module`: Builds as a Python extension module (used with `python`).
-//! - `stubs`: Enables type stubs for use in testing scenarios.
+//! - `test-support`: Enables testing stubs and test specs.
 ```
 
 #### Field documentation
@@ -1033,8 +1080,8 @@ For events with many constructor arguments, the canonical test builder is a
 fluent spec defined alongside the event under `events/<event>/spec/<name>.rs`
 (see `crates/model/src/events/order/spec/filled.rs` for the reference
 implementation). Gate the spec module with
-`#[cfg(any(test, feature = "stubs"))]` so it is available to in-crate tests
-and to downstream crates that opt in with the `stubs` feature, but compiled
+`#[cfg(any(test, feature = "test-support"))]` so it is available to in-crate tests
+and to downstream crates that opt in with the `test-support` feature, but compiled
 out of production builds. Specs must not be referenced from production code.
 
 Why a custom spec instead of `derive_builder::Builder` with `builder(default)`:

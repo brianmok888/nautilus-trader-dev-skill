@@ -8,12 +8,10 @@ trades, open interest, funding rates, options chains and liquidations data for l
 NautilusTrader provides an integration with the Tardis API and data formats, enabling access.
 The capabilities of this adapter include:
 
-- `TardisCSVDataLoader`: Reads Tardis-format CSV files and converts them into Nautilus data, with support for both bulk loading and memory-efficient streaming.
-- `TardisMachineClient`: Supports live streaming and historical replay of data from the Tardis Machine WebSocket server - converting messages into Nautilus data.
-- `TardisHttpClient`: Requests instrument definition metadata from the Tardis HTTP API, parsing it into Nautilus instrument definitions.
-- `TardisDataClient`: Provides a live data client for subscribing to data streams from a Tardis Machine WebSocket server.
-- `TardisInstrumentProvider`: Provides instrument definitions from Tardis through the HTTP instrument metadata API.
-- **Data pipeline functions**: Enables replay of historical data from Tardis Machine and writes it to the Nautilus Parquet format, including direct catalog integration for data management (see below).
+- CSV loading and streaming functions (`load_tardis_*` / `stream_tardis_*`) read Tardis-format files into Nautilus data in bulk or bounded chunks.
+- `run_tardis_machine_replay` replays historical data from Tardis Machine and writes Nautilus Parquet catalog files.
+- `TardisDataClientConfig` and `TardisDataClientFactory` connect a Nautilus node to a configured historical replay or real-time Tardis Machine stream.
+- Python and Rust expose `TardisMachineClient` and `TardisHttpClient` for lower-level access to normalized streams and instrument metadata.
 
 :::info
 A Tardis API key is required for the adapter to operate correctly. See also [environment variables](#environment-variables).
@@ -346,100 +344,110 @@ Loading mixed-instrument CSV files is challenging due to precision requirements 
 
 ### Loading CSV Data in Python
 
-You can load Tardis-format CSV data in Python using the `TardisCSVDataLoader`.
-When loading data, you can optionally specify the instrument ID but must specify both the price precision, and size precision.
-Providing the instrument ID improves loading performance, while specifying the precisions is required, as they cannot be inferred from the text data alone.
+You can load Tardis-format CSV data in Python using the module-level `load_tardis_*` functions.
+When loading data, you can optionally specify the instrument ID, price precision, and size
+precision. Providing the instrument ID improves loading performance. Price and size precision are
+inferred from the CSV when omitted, but explicit values are recommended for deterministic output,
+especially with large files.
 
 To load the data, create a script similar to the following:
 
 ```python
-from nautilus_trader.adapters.tardis import TardisCSVDataLoader
+from pathlib import Path
+
+from nautilus_trader.adapters.tardis import load_tardis_deltas
 from nautilus_trader.model import InstrumentId
 
-
 instrument_id = InstrumentId.from_str("BTC-PERPETUAL.DERIBIT")
-loader = TardisCSVDataLoader(
+deltas = load_tardis_deltas(
+    filepath=Path("YOUR_CSV_DATA_PATH"),
     price_precision=1,
     size_precision=0,
     instrument_id=instrument_id,
 )
-
-filepath = Path("YOUR_CSV_DATA_PATH")
-limit = None
-
-deltas = loader.load_deltas(filepath, limit)
 ```
 
 ### Loading CSV Data in Rust
 
-You can load Tardis-format CSV data in Rust using the loading functions found [here](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/adapters/tardis/src/csv/mod.rs).
-When loading data, you can optionally specify the instrument ID but must specify both the price precision and size precision.
-Providing the instrument ID improves loading performance, while specifying the precisions is required, as they cannot be inferred from the text data alone.
+You can load Tardis-format CSV data in Rust using the loading functions in
+`crates/adapters/tardis/src/csv/mod.rs`. When loading data, you can optionally specify the
+instrument ID, price precision, and size precision. Providing the instrument ID improves loading
+performance. Price and size precision are inferred from the CSV when omitted, but explicit values
+are recommended for deterministic output.
 
-For a complete example, see the [example binary here](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/adapters/tardis/bin/example_csv.rs).
+For a complete example, see `crates/adapters/tardis/bin/example_csv.rs`.
 
 To load the data, you can use code similar to the following:
 
 ```rust
 use std::path::Path;
 
-use nautilus_tardis;
 use nautilus_model::identifiers::InstrumentId;
+use nautilus_tardis::csv::load_deltas;
 
-#[tokio::main]
-async fn main() {
-    // You must specify precisions and the CSV filepath
-    let price_precision = 1;
-    let size_precision = 0;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Optionally specify precisions and the CSV filepath
+    let price_precision = Some(1);
+    let size_precision = Some(0);
     let filepath = Path::new("YOUR_CSV_DATA_PATH");
 
     // Optionally specify an instrument ID and/or limit
     let instrument_id = InstrumentId::from("BTC-PERPETUAL.DERIBIT");
     let limit = None;
 
-    // Consider propagating any parsing error depending on your workflow
-    let _deltas = tardis::csv::load_deltas(
+    let _deltas = load_deltas(
         filepath,
         price_precision,
         size_precision,
         Some(instrument_id),
         limit,
-    )
-    .unwrap();
+    )?;
+    Ok(())
 }
 ```
 
-## Streaming Tardis CSV Data
+## Streaming Tardis CSV data
 
-For memory-efficient processing of large CSV files, the Tardis integration provides streaming capabilities that load and process data in configurable chunks rather than loading entire files into memory at once. This is particularly useful for processing multi-gigabyte CSV files without exhausting system memory.
+For memory-efficient processing of large CSV files, the Tardis integration can load and process
+data in configurable chunks rather than loading entire files into memory at once. This is useful for
+processing multi-gigabyte CSV files without exhausting system memory.
 
-The streaming functionality is available for all supported Tardis data types:
+Python provides streaming functions for the following CSV data:
 
-- Order book deltas (`stream_deltas`).
-- Quote ticks (`stream_quotes`).
-- Trade ticks (`stream_trades`).
-- Order book depth snapshots (`stream_depth10`).
+- Order book deltas (`stream_tardis_deltas` and `stream_tardis_batched_deltas`).
+- Order book depth snapshots (`stream_tardis_depth10_from_snapshot5` and
+  `stream_tardis_depth10_from_snapshot25`).
+- Quote ticks (`stream_tardis_quotes`).
+- Trade ticks (`stream_tardis_trades`).
+- Funding rates (`stream_tardis_funding_rates`).
+- Options chain rows (`stream_tardis_options_chain`).
 
-### Streaming CSV Data in Python
+Rust exposes the equivalent `stream_*` functions.
 
-The `TardisCSVDataLoader` provides streaming methods that yield chunks of data as iterators. Each method accepts a `chunk_size` parameter that controls how many records are read from the CSV file per chunk:
+### Streaming CSV data in Python
+
+The module-level `stream_tardis_*` functions return iterators of bounded chunks. Each function
+accepts a `chunk_size` parameter that controls how many records are read per chunk:
 
 ```python
-from nautilus_trader.adapters.tardis import TardisCSVDataLoader
+from pathlib import Path
+
+from nautilus_trader.adapters.tardis import stream_tardis_trades
 from nautilus_trader.model import InstrumentId
 
 instrument_id = InstrumentId.from_str("BTC-PERPETUAL.DERIBIT")
-loader = TardisCSVDataLoader(
+filepath = Path("large_trades_file.csv")
+
+trades = stream_tardis_trades(
+    filepath=filepath,
+    chunk_size=100_000,
     price_precision=1,
     size_precision=0,
     instrument_id=instrument_id,
 )
 
-filepath = Path("large_trades_file.csv")
-chunk_size = 100_000  # Process 100,000 records per chunk (default)
-
 # Stream trade ticks in chunks
-for chunk in loader.stream_trades(filepath, chunk_size):
+for chunk in trades:
     print(f"Processing chunk with {len(chunk)} trades")
     # Process each chunk - only this chunk is in memory
     for trade in chunk:
@@ -447,58 +455,75 @@ for chunk in loader.stream_trades(filepath, chunk_size):
         pass
 ```
 
-### Streaming Order Book Data
+### Streaming order book data
 
 For order book data, streaming is available for both deltas and depth snapshots:
 
 ```python
+from pathlib import Path
+
+from nautilus_trader.adapters.tardis import stream_tardis_deltas
+from nautilus_trader.adapters.tardis import stream_tardis_depth10_from_snapshot5
+
+
+filepath = Path("book_snapshot_5.csv")
+
 # Stream order book deltas
-for chunk in loader.stream_deltas(filepath):
+for chunk in stream_tardis_deltas(filepath):
     print(f"Processing {len(chunk)} deltas")
     # Process delta chunk
 
-# Stream depth10 snapshots (specify levels: 5 or 25)
-for chunk in loader.stream_depth10(filepath, levels=5):
+# Stream depth10 snapshots from snapshot_5 files
+for chunk in stream_tardis_depth10_from_snapshot5(filepath):
     print(f"Processing {len(chunk)} depth snapshots")
     # Process depth chunk
 ```
 
-### Streaming Quote Data
+### Streaming quote data
 
 Quote data can be streamed similarly:
 
 ```python
+from pathlib import Path
+
+from nautilus_trader.adapters.tardis import stream_tardis_quotes
+
+
+filepath = Path("quotes.csv")
+
 # Stream quote ticks
-for chunk in loader.stream_quotes(filepath):
+for chunk in stream_tardis_quotes(filepath):
     print(f"Processing {len(chunk)} quotes")
     # Process quote chunk
 ```
 
-### Memory Efficiency Benefits
+### Memory use
 
-The streaming approach provides significant memory efficiency advantages:
+Streaming bounds the number of parsed records retained at one time:
 
-- **Controlled Memory Usage**: Only one chunk is loaded in memory at a time.
-- **Scalable Processing**: Can process files larger than available RAM.
-- **Configurable Chunk Sizes**: Tune `chunk_size` based on your system's memory and performance requirements (default 100,000).
+- **Controlled memory use**: Only one chunk is loaded in memory at a time.
+- **Large file processing**: The iterator can process files larger than available RAM.
+- **Configurable chunk sizes**: Tune `chunk_size` based on your system's memory and performance
+  requirements (default 100,000).
 
 :::warning
-When using streaming with precision inference (not providing explicit precisions), the inferred precision may differ from bulk loading the entire file.
-This is because precision inference works within chunk boundaries, and different chunks may contain values with different precision requirements.
-For deterministic precision behavior, provide explicit `price_precision` and `size_precision` parameters when calling streaming methods.
+When using streaming with precision inference, the inferred precision may differ from bulk loading
+the entire file. Precision inference works within chunk boundaries, and different chunks may contain
+values with different precision requirements. For deterministic precision behavior, provide
+explicit `price_precision` and `size_precision` parameters.
 :::
 
-### Streaming CSV Data in Rust
+### Streaming CSV data in Rust
 
 The underlying streaming functionality is implemented in Rust and can be used directly:
 
 ```rust
 use std::path::Path;
-use nautilus_tardis::csv::{stream_deltas, stream_trades};
-use nautilus_model::identifiers::InstrumentId;
 
-#[tokio::main]
-async fn main() {
+use nautilus_model::identifiers::InstrumentId;
+use nautilus_tardis::csv::stream_trades;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let filepath = Path::new("large_trades_file.csv");
     let chunk_size = 100_000;
     let price_precision = Some(1);
@@ -512,20 +537,15 @@ async fn main() {
         price_precision,
         size_precision,
         instrument_id,
-    ).unwrap();
+    )?;
 
-    for chunk_result in stream {
-        match chunk_result {
-            Ok(chunk) => {
-                println!("Processing chunk with {} trades", chunk.len());
-                // Process chunk
-            }
-            Err(e) => {
-                eprintln!("Error processing chunk: {}", e);
-                break;
-            }
-        }
+    for chunk in stream {
+        let chunk = chunk?;
+        println!("Processing chunk with {} trades", chunk.len());
+        // Process chunk
     }
+
+    Ok(())
 }
 ```
 

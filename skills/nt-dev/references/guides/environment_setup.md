@@ -14,7 +14,7 @@ NautilusTrader uses increasingly more [Rust](https://www.rust-lang.org), so Rust
 ([installation guide](https://www.rust-lang.org/tools/install)).
 
 [Cap'n Proto](https://capnproto.org/) is required for serialization schema compilation. The required
-version is specified in `tools.toml` in the repository root. Ubuntu's default package
+version is specified in `.nautilus-engineering/tools.toml`. Ubuntu's default package
 is typically too old, so you may need to install from source (see below).
 
 :::info
@@ -58,7 +58,7 @@ cargo install cargo-binstall --locked
 make install-tools
 ./scripts/install-capnp.sh
 
-uv sync --all-groups --all-extras
+make sync
 source .venv/bin/activate
 
 export PYO3_PYTHON="$PWD/.venv/bin/python"
@@ -83,7 +83,7 @@ from this guide.
 Follow the [installation guide](https://nautilustrader.io/docs/latest/getting_started/installation/) to set up the project with a modification to the final command to install development and test dependencies:
 
 ```bash tab="uv"
-uv sync --active --all-groups --all-extras
+make sync
 ```
 
 ```bash tab="make"
@@ -108,15 +108,18 @@ make install-tools
 
 This installs:
 
-- **Cargo CLIs** pinned in `Cargo.toml` under `[workspace.metadata.tools]`: `cargo-audit`,
-  `cargo-deny`, `cargo-edit`, `cargo-fuzz`, `cargo-llvm-cov`, `cargo-machete`, `cargo-nextest`,
-  `cargo-vet`, `flamegraph`, `lychee`.
-- **Prebuilt binaries** pinned in `tools.toml`: `prek` (pre-commit runner) and `osv-scanner`
-  (vulnerability scanner).
-- **uv**, synced to the version required by `pyproject.toml`.
+- **Shared Cargo CLIs** pinned in `.nautilus-engineering/tools.toml`: `cargo-audit`, `cargo-deny`,
+  `cargo-edit`, `cargo-llvm-cov`, `cargo-nextest`, and `cargo-vet`.
+- **NautilusTrader Cargo CLIs** pinned in `Cargo.toml` under `[workspace.metadata.tools]`:
+  `cargo-codspeed`, `cargo-fuzz`, `cargo-hawk`, `cargo-machete`, `cbindgen`, `flamegraph`, and
+  `lychee`.
+- **Prebuilt binaries** pinned in `.nautilus-engineering/tools.toml`: `prek` (pre-commit runner) and
+  `osv-scanner` (vulnerability scanner).
+- **uv**, installed at the shared pinned version. The supported local uv minor series is defined in
+  `python/pyproject.toml`.
 
-Cap'n Proto is also pinned in `tools.toml` but installs separately; see the [Cap'n Proto](#capn-proto)
-section below.
+Cap'n Proto is also pinned in `.nautilus-engineering/tools.toml` but installs separately; see the
+[Cap'n Proto](#capn-proto) section below.
 
 Fuzz targets also require a Rust nightly toolchain at runtime because `cargo-fuzz` uses
 `libfuzzer-sys` and unstable compiler flags:
@@ -143,17 +146,18 @@ The repository manifests are the canonical source for dependency and tool versio
 current version numbers into docs, runner images, or scripts unless there is no manifest-backed way
 to read them.
 
-| Source file or section                       | Defines                                               |
-|----------------------------------------------|-------------------------------------------------------|
-| `rust-toolchain.toml`                        | Rust toolchain.                                       |
-| `Cargo.toml` and `Cargo.lock`                | Rust workspace dependencies and exact resolution.     |
-| `Cargo.toml` `[workspace.metadata.tools]`    | Cargo-installable development tools.                  |
-| `pyproject.toml` and `python/pyproject.toml` | Python dependencies, supported Python range, and uv.  |
-| `uv.lock` and `python/uv.lock`               | Exact Python dependency resolutions.                  |
-| `tools.toml`                                 | External CLIs and binaries without a native manifest. |
+| Source file or section                    | Defines                                                  |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `rust-toolchain.toml`                     | Rust toolchain.                                          |
+| `Cargo.toml` and `Cargo.lock`             | Rust workspace dependencies and exact resolution.        |
+| `Cargo.toml` `[workspace.metadata.tools]` | NautilusTrader-specific Cargo tools.                     |
+| `python/pyproject.toml`                   | Python dependencies and supported Python and uv ranges.  |
+| `python/uv.lock`                          | Exact Python dependency resolution.                      |
+| `.nautilus-engineering/tools.toml`        | Shared engineering tools.                                |
+| `tools.toml`                              | NautilusTrader-specific tools without a native manifest. |
 
-The external tool pins in `tools.toml` include `prek`, `pip-audit`, `pypi-attestations`,
-`maturin`, `osv-scanner`, and `capnp`.
+The shared catalog includes uv, `prek`, `pip-audit`, `osv-scanner`, Cap'n Proto, and common Cargo
+tools. The local catalog retains the docs.rs nightly, Miri toolchain, and `pypi-attestations` pins.
 
 The Makefile reads these via `scripts/cargo-tool-version.sh`, `scripts/tool-version.sh`, and
 `scripts/uv-version.sh`, so bumping a version in the source file is the only required version
@@ -184,7 +188,7 @@ Make sure the Rust compiler reports **zero errors** -- broken builds slow everyo
 ### 4. Configure environment variables
 
 **Required for Rust/PyO3 (Linux and macOS)**: When using Python installed via `uv` on Linux or
-macOS, set the following environment variables from the repository root after `uv sync`:
+macOS, set the following environment variables from the repository root after `make sync`:
 
 ```bash
 # Set the Python executable path for PyO3
@@ -218,27 +222,29 @@ echo "PYTHONHOME: $PYTHONHOME"
 ## Dependency management
 
 Python dependencies are managed by [uv](https://docs.astral.sh/uv). The `[tool.uv]` section in
-`pyproject.toml` enforces three supply chain safety settings:
+`python/pyproject.toml` enforces three supply chain safety settings:
 
 - **`required-version`**: all developers and CI use the same uv version. The version is extracted
   by `scripts/uv-version.sh` for Makefile, CI, and Docker builds. If your local uv drifts off the
   pin, `uv lock`/`uv sync` will fail with `Required uv version ... does not match the running
   version ...`. Run `make update-uv` to install the pinned version (or follow uv's own
   `uv self update <version>` hint).
-- **`exclude-newer = "3 days"`**: `uv lock` ignores package versions published within the last
-  3 days. This gives the community time to detect and quarantine compromised releases before they
+- **`exclude-newer = "7 days"`**: `uv lock` ignores package versions published within the last
+  7 days. This gives the community time to detect and quarantine compromised releases before they
   enter the lockfile. The value accepts an RFC 3339 timestamp (`"2026-03-30T00:00:00Z"`), a friendly
-  duration (`"3 days"`, `"1 week"`, `"24 hours"`), or an ISO 8601 duration (`"P3D"`, `"P1W"`,
-  `"PT24H"`). uv 0.11.8+ stores the friendly/ISO form as `exclude-newer-span` inside `uv.lock` and
-  emits a sentinel `exclude-newer` timestamp alongside it for backwards compatibility; both
-  lockfiles in this repo use that format.
-- **`no-build-package`**: explicit list of every third-party package locked in `uv.lock`. `uv`
+  duration (`"7 days"`, `"1 week"`, `"24 hours"`), or an ISO 8601 duration (`"P7D"`, `"P1W"`,
+  `"PT24H"`). uv 0.11.8+ stores the friendly/ISO form as `exclude-newer-span` inside `python/uv.lock` and
+  emits a sentinel `exclude-newer` timestamp alongside it for backwards
+  compatibility. `python/uv.lock` uses that format. A pinned `exclude-newer-package`
+  entry in `python/pyproject.toml` (currently `maturin`, awaiting maturin 1.15.0 clearing the
+  global release cooldown) overrides the global cooldown for that single package.
+- **`no-build-package`**: explicit list of every third-party package locked in `python/uv.lock`. `uv`
   refuses to build any of them from source. In normal operation uv prefers wheels, so the setting
   is a no-op; it triggers only if a listed package stops publishing wheels for the target platform,
   in which case `uv lock` fails rather than silently building from an sdist. The local workspace
   package is intentionally not in the list because it must be built by the workspace's own build
-  backend. The list is kept in sync with `uv.lock` by `scripts/check-no-build-packages.sh`,
-  which also runs as a pre-commit hook on changes to `uv.lock` or `pyproject.toml`.
+  backend. The list is kept in sync with `python/uv.lock` by `scripts/check-no-build-packages.sh`,
+  which also runs as a pre-commit hook on changes to `python/uv.lock` or `python/pyproject.toml`.
 
 ### Bypassing the cooldown
 
@@ -260,40 +266,34 @@ uv lock --exclude-newer-package "somepackage=false"
 uv lock --exclude-newer "0 seconds"
 ```
 
-The CLI flag overrides the `pyproject.toml` value for that invocation only. The config remains
+The CLI flag overrides the `python/pyproject.toml` value for that invocation only. The config remains
 unchanged for subsequent runs.
 
 ### Updating uv
 
-To update the pinned uv version, change `required-version` in both `pyproject.toml` and
-`python/pyproject.toml`, then update the `rev` in `.pre-commit-config.yaml` to match. Run
-`make update-uv` to install the new pinned version locally.
+To support a new uv minor series, change `required-version` in `python/pyproject.toml`. To update the
+exact project version within that range, update Nautilus Engineering's `[uv].version`, sync the
+shared catalog, then update the `rev` in `.pre-commit-config.yaml` to match. Run `make update-uv`
+to install the project version locally.
 
 ## Builds
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+The Python package and the standalone Nautilus CLI are separate build artifacts. `make build-debug`
+and `make build` install the Python package into the root `.venv`.
 
-Following any changes to `.rs`, `.pyx` or `.pxd` files, you can re-compile by running:
-
-```bash tab="uv"
-uv run --no-sync python build.py
-```
-
-```bash tab="make"
-make build
-```
-
-If you're developing and iterating frequently, then compiling in debug mode is often sufficient and *significantly* faster than a fully optimized build.
-To compile in debug mode, use:
+After changing Rust bindings or Python package code, use a debug build for normal development. It
+skips release optimization and LTO, which reduces build time and peak memory use:
 
 ```bash
 make build-debug
 ```
 
+Use `make build` when you need an optimized build.
+
 ## Cap'n Proto
 
 [Cap'n Proto](https://capnproto.org/) is required for serialization schema compilation.
-The required version is defined in `tools.toml` in the repository root.
+The required version is defined in `.nautilus-engineering/tools.toml`.
 
 Install the correct version for your platform:
 
@@ -321,7 +321,7 @@ sudo ldconfig
 choco install capnproto
 ```
 
-Verify the installed version matches `tools.toml`:
+Verify the installed version matches `.nautilus-engineering/tools.toml`:
 
 ```bash
 capnp --version

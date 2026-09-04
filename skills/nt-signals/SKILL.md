@@ -49,7 +49,7 @@ Source: [`references/developer_guide/rust.md`](../../references/developer_guide/
 
 NautilusTrader **signals and analysis domain** — indicators, custom data types, bar aggregation, portfolio statistics, and reporting.
 
-**Python modules**: `indicators/`, `data/aggregation`, flat `model` PyO3 exports, `model/data`, `model/book`, `analysis/`
+**Python modules**: flat `nautilus_trader.indicators`, `nautilus_trader.model`, `nautilus_trader.data`, `nautilus_trader.analysis`
 **Rust crates**: `nautilus_indicators`, `nautilus_analysis`, `nautilus_model` (data subset)
 
 ## When To Use
@@ -99,6 +99,18 @@ buffer. Source: upstream develop commit
 use nautilus_indicators::average::ema::ExponentialMovingAverage;
 use nautilus_indicators::momentum::rsi::RelativeStrengthIndex;
 use nautilus_analysis::analyzer::PortfolioAnalyzer;
+```
+
+Use `MovingAverageFactory::create` (pinned source
+`crates/indicators/src/average/mod.rs`) to obtain any built-in moving average
+as a `Box<dyn MovingAverage + Send + Sync>` from a `MovingAverageType` and
+period; the factory is Rust-only and is not exposed to Python.
+
+```rust
+use nautilus_indicators::average::{MovingAverageFactory, MovingAverageType};
+
+let ma = MovingAverageFactory::create(MovingAverageType::Exponential, 20);
+// ma: Box<dyn MovingAverage + Send + Sync>
 ```
 
 ## Rust Extension
@@ -176,20 +188,47 @@ Portfolio statistics can also be implemented in Rust for performance. See `crate
 - Use `#[getter]` for read-only properties
 - Wrap FFI functions in `abort_on_panic(|| { ... })` — panics must never unwind across FFI
 
+## Tearsheets and Themes
+
+The current V2 Python reporting surface lives in `nautilus_trader.analysis`
+(pinned source `analysis/tearsheet.py`, `analysis/themes.py`,
+`analysis/config.py`):
+
+- `create_tearsheet(engine_or_result, ...)` renders a tearsheet from a
+  `BacktestEngine` or `BacktestResult`; the `output_path` extension selects
+  interactive HTML or static image formats.
+- `create_tearsheet_from_stats(stats_pnls, stats_returns, stats_general, returns, ...)`
+  renders from precomputed statistics for offline analysis.
+- `register_chart(name, func=None)` registers a custom chart (usable as a
+  decorator); `get_chart(name)` and `list_charts()` read the chart registry.
+- `register_theme(name, template, colors)` registers a custom Plotly theme;
+  `get_theme(name)` and `list_themes()` read the theme registry.
+- `TearsheetConfig` (in `analysis/config.py`) customizes output; install the
+  `visualization` extra for tearsheet dependencies.
+
 ## Coding Conventions
 
-### Python Indicator Conventions
+### Indicator Conventions
+
+Author new indicators in Rust: implement the `Indicator` trait (pinned source
+`crates/indicators/src/indicator.rs`) with `name`, `has_inputs`, `initialized`,
+`reset`, and the typed handlers `handle_bar` / `handle_quote` / `handle_trade`
+(`handle_delta` / `handle_deltas` / `handle_depth` / `handle_book` for
+order-book inputs). Add PyO3 wrappers under `crates/indicators/src/python/`
+when the indicator must be Python-visible; see `Rust Extension` above.
+
+Legacy v1 Python-authoring bullets, retained for migration reference only
+(`handle_quote_tick` / `handle_trade_tick` remain the Python-visible method
+names on built-in PyO3 indicators):
 
 - **Type hints**: Required on all indicator methods
-- **Name attribute**: Every indicator must have a unique `_name` using `params_init` or `_name_not_ratio`
-- **Value access**: Use `handle_bar` / `handle_quote_tick` / `handle_trade_tick` as appropriate
+- **Value access**: Use `handle_bar` / `handle_quote_tick` / `handle_trade_tick` as appropriate on the PyO3 surface
 - **Reset**: Implement `reset()` to clear internal state
-- **Partial**: Implement `handle_partial()` if indicator supports partial candles
 
 ### Rust Indicator Conventions
 
 - Use `#[pyclass]` with `#[pymethods]` for PyO3 exposure
-- Implement the indicator trait for `handle_bar`, `handle_quote_tick`, etc.
+- Implement the `Indicator` trait handlers `handle_bar` / `handle_quote` / `handle_trade` (and `handle_delta` / `handle_deltas` / `handle_depth` / `handle_book` for order-book inputs)
 - Keep state serializable for `on_save`/`on_load`
 
 ## Key Conventions
@@ -198,7 +237,7 @@ Portfolio statistics can also be implemented in Rust for performance. See `crate
 
 - Match NT convention: `ExponentialMovingAverage` not `EMA` (class name)
 - Short names used in `name` property (auto-derived)
-- Parameters passed to `super().__init__(params=[...])` for serialization
+- Rust `Indicator::name()` returns the indicator name string; Python exposes it as the `name` property
 
 ### Registration Pattern
 
@@ -206,8 +245,8 @@ Always register indicators via `self.register_indicator_for_bars()` or `self.reg
 
 ### Custom Data Serialization
 
-- Register current Python types with `nautilus_trader.model.register_custom_data_class`
-- Provide deterministic `to_dict` and `from_dict` callbacks for JSON/message use
+- Register current Python types with `nautilus_trader.model.register_custom_data_class(MySignal)` (single class argument)
+- Provide a `to_json` instance method and a `from_json(data)` classmethod for JSON/message use
 - Provide explicit `encode_record_batch_py` and `decode_record_batch_py` callbacks for catalog persistence; Arrow schemas are not auto-generated
 - Define stable Unix-nanosecond `ts_event` and `ts_init` fields in the type contract
 

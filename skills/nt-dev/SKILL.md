@@ -86,7 +86,7 @@ NautilusTrader **developer workflow** — environment setup, coding standards, t
 
 ```bash
 # 1. Install all dependencies (dev + test)
-uv sync --active --all-groups --all-extras
+make sync
 # Or: make install
 
 # 2. Debug build (faster iteration)
@@ -111,7 +111,7 @@ changing setup instructions.
 For current NautilusTrader core development:
 
 ```bash
-uv sync --active --all-groups --all-extras
+make sync
 make install-tools
 prek install
 ```
@@ -163,7 +163,7 @@ make pre-commit     # Run full pre-commit suite
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new Rust-backed work.
 
-After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` or `make build-debug`.
+After any changes to `.rs` files, rebuild with `make build` or `make build-debug`.
 
 ### IDE Configuration
 
@@ -177,11 +177,11 @@ After any changes to `.rs`, `.pyx`, or `.pxd` files, rebuild with `make build` o
   crate, MSRV, and Python version ranges when this repo tracks source snapshots.
 - Do not copy current version numbers into docs, runner images, or scripts when
   the manifest can be read instead. Treat `rust-toolchain.toml`, `Cargo.toml`,
-  `pyproject.toml`, lockfiles, and `tools.toml` as the version sources.
-- `pyproject.toml` pins uv through `required-version` and enforces the
-  `exclude-newer = "3 days"` cooldown; read the actual pin with
+  `python/pyproject.toml`, `python/uv.lock`, and `tools.toml` as the version sources.
+- `python/pyproject.toml` pins uv through `required-version` and enforces the
+  `exclude-newer = "7 days"` cooldown; read the actual pin with
   `scripts/uv-version.sh` instead of duplicating it in guidance.
-- `[tool.uv].no-build-package` pins third-party packages to wheels; update it with `scripts/check-no-build-packages.sh` when `uv.lock` or `pyproject.toml` changes.
+- `[tool.uv].no-build-package` pins third-party packages to wheels; update it with `scripts/check-no-build-packages.sh` when `python/uv.lock` or `python/pyproject.toml` changes.
 - Bypass cooldown only for justified urgent updates: `uv lock --exclude-newer "0 seconds"`.
 - Workspace deps: use `serde = { workspace = true }` for shared deps.
 
@@ -378,7 +378,7 @@ make cargo-ci-benches
 
 - **Python** (`python/tests/`): pytest-style free functions, no test classes. Use `@pytest.fixture`, `@pytest.mark.parametrize`.
 - **Rust**: Use `unwrap`/`expect` freely in tests. Do not capture log output to assert on messages.
-- **Waiting for async**: Use `await eventually(...)` and `wait_until_async(...)` instead of arbitrary sleeps.
+- **Waiting for async**: In Rust tests use `wait_until_async(...)` from `nautilus_common::testing` instead of arbitrary sleeps.
 - **Mocks**: Prefer hand-written stubs over `MagicMock`. Never mock the object under test.
 
 ### Property-Based Testing (proptest)
@@ -409,6 +409,15 @@ make cargo-ci-benches                                  # CI benches
 
 **Flamegraph**: `cargo flamegraph --bench <name> -p <crate> --profile bench`
 
+**CI registration**: add the crate to `CI_BENCH_CRATES` in the workspace `Makefile`; add
+deterministic Criterion targets to `CODSPEED_BENCH_TARGETS` (never iai, `iter_custom`,
+`with_filter`, OS-dependent, or concurrent benches).
+
+**v1-vs-v2 comparison**: `scripts/benchmark-backtest-versions.py compare` runs a wall-clock
+comparison between the released v1 Cython engine and the v2 PyO3 engine in isolated release
+environments (see `references/developer_guide/benchmarking.md`). NT v2 compatibility note:
+the v1 Cython side of the comparison is migration context only.
+
 Current-develop overlay (`f3a0bed303bc8a6d9f83138742d085966ffd47d0`): backtest performance
 claims must use a workload from `crates/backtest/benches/engine/canonical.rs`. Record the canonical
 workload identifier and parameters, the release profile and target CPU, the baseline comparison,
@@ -416,7 +425,7 @@ and the exact command. A one-off benchmark without this matrix is exploratory ev
 
 ### Data Type Testing
 
-New data types need tests at all layers: DataEngine, DataActor (Rust), PyO3 dispatch, Python Actor, Backtest client, Adapter spec. See `references/developer_guide/testing.md` and `references/developer_guide/contracts/testing_policy.md` for the full test layer matrix.
+New data types need tests at all layers: DataEngine, DataActor (Rust), PyO3 dispatch, Python Actor, Adapter spec. See `references/developer_guide/testing.md` and `references/developer_guide/contracts/testing_policy.md` for the full test layer matrix.
 
 ## FFI & Memory
 
@@ -427,9 +436,9 @@ New data types need tests at all layers: DataEngine, DataActor (Rust), PyO3 disp
 3. **Never call drop helper twice** (double-free) and **never forget it** (memory leak)
 4. **No generic `cvec_drop`** — always use type-specific helpers (`vec_drop_book_levels`, etc.)
 5. **PyCapsule with destructor**: Always use `PyCapsule::new_with_destructor`, never `PyCapsule::new(..., None)`
-6. **Box-backed `*_API` wrappers**: Every `*_new` must have a matching `*_drop`. Validate params before allocation.
+6. **Opaque owning pointers**: every `*_new` returns `*mut T` via `Box::into_raw` and must have a matching `unsafe extern "C"` `*_drop` (with `# Safety` docs) that reconstructs the `Box`. Validate params before allocation.
 7. **Typed CVec wrappers and Send**: never mark raw `CVec` as `Send`; wrap the
-   concrete payload (for example a transparent `DataFfiCVec`) and document the
+   concrete payload in a typed wrapper and document the
    invariant before an unsafe `Send` impl.
 8. **Rust-owned CVec capsules with explicit drop**: use only type-specific
    named capsules and type-specific drop functions, validate `len <= cap`, and
@@ -459,7 +468,7 @@ let capsule = PyCapsule::new_with_destructor(py, ptr, None, |ptr, _| {
 
 | Category | Size | Storage | Availability |
 |----------|------|---------|-------------|
-| **Small** | < 1 MB | Checked into `tests/test_data/<source>/` | Always |
+| **Small** | < 1 MB | Checked into `test_data/<source>/` | Always |
 | **Large** | > 1 MB | R2 bucket as Parquet | Downloaded on first use |
 | **User-fetched** | Any | Local only | Manual download with user's credentials |
 
@@ -504,14 +513,14 @@ User-fetched datasets: commit manifest + metadata only. Tests skip cleanly when 
 
 ### Versioning
 
-- Python package version in the pinned upstream `pyproject.toml` — drives the release tag
+- Python package version in the pinned upstream `python/pyproject.toml` — drives the release tag
 - Rust workspace version in the pinned upstream `Cargo.toml` — independent; do not copy a remembered value
 
 ### Release Checklist
 
 **Pre-release (on `develop`)**:
 - [ ] Finalize `RELEASES.md`
-- [ ] Verify versions in `pyproject.toml` and `Cargo.toml`
+- [ ] Verify versions in `python/pyproject.toml` and `Cargo.toml`
 - [ ] All CI passes
 
 **Release**:
@@ -525,7 +534,7 @@ User-fetched datasets: commit manifest + metadata only. Tests skip cleanly when 
 - [ ] Update release date in `RELEASES.md`
 - [ ] Add `---` separator
 - [ ] Add next version template
-- [ ] Bump `pyproject.toml` version
+- [ ] Bump `python/pyproject.toml` version
 
 ### Release Notes Sections
 

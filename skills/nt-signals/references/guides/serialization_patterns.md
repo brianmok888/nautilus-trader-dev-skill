@@ -1,0 +1,1 @@
+../../../nt-data/references/guides/serialization_patterns.md

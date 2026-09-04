@@ -24,6 +24,20 @@ config = TradingNodeConfig(
 )
 ```
 
+## Legacy Python timeout configuration (migration/reference-only)
+
+v1 configured the four connection timeouts on the Python node config; the same fields live on the Rust `LiveNodeConfig` at v2.
+
+```python
+# NT v2 compatibility note: v1-only snippet; v2 uses Rust LiveNodeConfig timeouts. Python live migration/reference-only.
+config = TradingNodeConfig(
+    timeout_connection=30.0,
+    timeout_reconciliation=10.0,
+    timeout_portfolio=10.0,
+    timeout_disconnection=10.0,
+)
+```
+
 ## Legacy Python live configuration for custom DEX migration
 
 ```python

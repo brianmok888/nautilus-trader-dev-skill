@@ -18,7 +18,7 @@ class MyFillModel(FillModel):
     # Override fill probability/slippage methods as needed
 ```
 
-See `templates/legacy_migration/fill_model.py` for full template.
+See `templates/fill_model.py` for full template.
 
 ### Custom Fee Models
 

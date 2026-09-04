@@ -82,10 +82,10 @@ NautilusTrader **adapter domain** — exchange/data provider integrations with
 Rust-owned networking, parsing, state, and engine integration plus a bounded
 PyO3 configuration/inspection surface.
 
-**Python modules**: `adapters/*`, `adapters/_template/`, and PyO3 exports where an adapter is Rust/v2-only.
+**Python packages**: flat `nautilus_trader/adapters/<venue>/__init__.py` projections that re-export PyO3 bindings from `nautilus_trader._libnautilus.<venue>` (out-of-tree Python adapters are not a defined surface at the pin).
 **Rust crates**: adapter crates plus `nautilus_network` and `nautilus_cryptography`.
 
-**Current official integrations (GitHub `develop` snapshot)**: AX, Betfair, Binance, BitMEX, Bybit, Coinbase, Databento, Deribit, Derive, dYdX, Hyperliquid, Interactive Brokers, Kraken, Lighter, OKX, Polymarket, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
+**Current official integrations (GitHub `develop` snapshot)**: AX, Betfair, Binance, BitMEX, Blockchain, Bybit, Coinbase, Databento, Deribit, Derive, dYdX, Hyperliquid, Interactive Brokers, Kraken, Lighter, OKX, Polymarket, Sandbox, Tardis. Local reference snapshots may include non-upstream or retired adapters; do not treat those as current official support without checking the integration index.
 
 ## When To Use
 
@@ -199,18 +199,24 @@ crates/adapters/your_adapter/
 └── Cargo.toml
 ```
 
-### Python Layer Structure
+### Python Layer (v2 projection)
 
-```
-nautilus_trader/adapters/your_adapter/
-├── __init__.py
-├── config.py                # DataClientConfig, ExecClientConfig, InstrumentProviderConfig
-├── factories.py             # DataClientFactory, ExecClientFactory
-├── providers.py             # InstrumentProvider
-├── data.py                  # DataClient / MarketDataClient
-├── execution.py             # ExecutionClient
-└── http/                    # HTTP client wrapper (if needed)
-```
+The Python layer is a thin projection of the Rust crate, not an implementation surface:
+
+- Bind configs, factories, and selected low-level APIs in the adapter crate's
+  `src/python/mod.rs` module (`m.add_class::<YourDataClientConfig>()?`), then register
+  factory and config extractors with `get_global_pyo3_registry()`
+  (`register_factory_extractor` / `register_exec_factory_extractor` /
+  `register_config_extractor`).
+- The public package `python/nautilus_trader/adapters/<venue>/` is a flat
+  `__init__.py` that star-imports the generated bindings
+  (`from nautilus_trader._libnautilus.<venue> import *`) and lists re-exports in
+  `__all__`; regenerate the `.pyi` stubs with `make py-stubs`, never edit them by
+  hand. Venue helper modules are rare (only Binance ships `instruments.py`).
+- The public Python API does not define an out-of-tree Python adapter surface; the
+  v1 per-module layout (`config.py`, `factories.py`, `providers.py`, `data.py`,
+  `execution.py`) survives only in migrated v1 code. See the pinned developer guide
+  "Repository and Python wiring" for the full discoverability table.
 
 ## Adapter Implementation Sequence
 
@@ -218,12 +224,12 @@ Follow the official dependency structure below. The phases organize work; they a
 gates. A market-data-only adapter can omit execution, and a product can complete the sequence before
 another product begins. Keep the capability matrix current throughout.
 
-### Phase 1: Define scope
+### Phase 0: Define scope
 
 Record products, environments, account modes, data types, order/report capabilities, venue
 restrictions, protocol boundaries, known gaps, and the smallest end-to-end slice and test plan.
 
-### Phase 2: Build the protocol core
+### Phase 1: Build the protocol core
 
 Add the Rust crate and implement environments, URLs, credentials, signing, shared types, HTTP and
 WebSocket models, deterministic parsers/serializers, retry classification, authentication,
@@ -239,46 +245,46 @@ heartbeats, and transport lifecycle.
   command is idempotent or the venue proves it was not processed; leave order
   state open for reconciliation instead of emitting a terminal rejection.
 
-### Phase 3: Implement instruments
+### Phase 2: Implement instruments
 
 Implement bidirectional symbol identity, every supported instrument family, definition loading and
 caching, fresh requests, and supported definition updates with complete precision and contract data.
 
-### Phase 4: Implement market data
+### Phase 3: Implement market data
 
 Build one public stream and instrument first, then add advertised requests/subscriptions while
 preserving venue time, correlation, order-book boundaries, unsubscribe, malformed-input, and
 reconnect behavior.
 
-### Phase 5: Implement execution
+### Phase 4: Implement execution
 
 Establish account identity, initial state, private streams, and reconciliation before order flow;
 then add submit, cancel, modify, report generation, deduplication, event ordering, and ambiguous
 outcome handling.
 
-### Phase 6: Add optional venue capabilities
+### Phase 5: Add optional venue capabilities
 
 Add advanced orders, batches, product-specific data, or split clients only after the base lifecycle
 is stable, and give each capability independent fixtures, acceptance cases, and limitations.
 
-### Phase 7: Complete factories and projection
+### Phase 6: Complete factories and projection
 
 Finalize typed configs, defaults, secret redaction, Rust factories, `CacheView` and clock inputs,
 PyO3 registry projection, public package exposure, generated stubs, and boundary tests as applicable.
 
-### Phase 8: Prove conformance
+### Phase 7: Prove conformance
 
 Run deterministic functional/integration scenarios plus applicable data and execution acceptance
 tests on testnet or a controlled account. Exercise connection failure, reconnect, shutdown, rate
 limits, and recovery, and document every skipped specification case.
 
-### Phase 9: Measure performance and robustness
+### Phase 8: Measure performance and robustness
 
 Benchmark confirmed end-to-end hot paths, then applicable signing/authentication/codecs. Fuzz every
 untrusted parser, decoder, normalizer, signer, and encoder with realistic corpora and strong
 invariants.
 
-### Phase 10: Finish documentation and operations
+### Phase 9: Finish documentation and operations
 
 Reconcile the capability matrix and document credentials, configuration, limits, reconciliation,
 environment differences, tester entry points, generated output, examples, known gaps, and
@@ -322,7 +328,7 @@ data/execution completeness independently.
 # Per-adapter credentials follow this pattern
 {VENUE}_API_KEY=xxx
 {VENUE}_API_SECRET=xxx
-{VENUE}_PASSPHRASE=xxx  # OKX, Bybit
+{VENUE}_PASSPHRASE=xxx  # OKX only (api_passphrase); most venues key/secret only
 ```
 
 ## Rust Extension
@@ -364,39 +370,70 @@ pub struct WebSocketClient {
 
 ```rust
 // crates/adapters/your_adapter/src/factories.rs
+use std::{cell::RefCell, rc::Rc};
+
+use nautilus_common::{
+    cache::CacheView,
+    clients::{DataClient, ExecutionClient},
+    clock::Clock,
+    factories::{ClientConfig, DataClientFactory, ExecutionClientFactory},
+};
+use nautilus_model::identifiers::TraderId;
+
 #[derive(Debug)]
 pub struct YourDataClientFactory;
 
-#[async_trait]
 impl DataClientFactory for YourDataClientFactory {
-    async fn create(
+    fn create(
         &self,
-        name: String,
+        name: &str,
         config: &dyn ClientConfig,
-    ) -> anyhow::Result<DataClient> {
+        cache: CacheView,
+        clock: Rc<RefCell<dyn Clock>>,
+    ) -> anyhow::Result<Box<dyn DataClient>> {
         // Downcast the venue config and construct the live data client.
         todo!("construct {name} from the typed config")
+    }
+
+    fn name(&self) -> &str {
+        // The venue string, e.g. "BINANCE".
+        todo!()
+    }
+
+    fn config_type(&self) -> &str {
+        "YourDataClientConfig"
     }
 }
 
 #[derive(Debug)]
 pub struct YourExecutionClientFactory;
 
-#[async_trait]
 impl ExecutionClientFactory for YourExecutionClientFactory {
-    async fn create(
+    fn create(
         &self,
-        name: String,
+        trader_id: TraderId,
+        name: &str,
         config: &dyn ClientConfig,
-    ) -> anyhow::Result<ExecutionClient> {
+        cache: CacheView,
+    ) -> anyhow::Result<Box<dyn ExecutionClient>> {
         // Downcast the venue config and construct the live execution client.
-        todo!("construct {name} from the typed config")
+        // trader_id comes from the owning node.
+        todo!("construct {name} for {trader_id} from the typed config")
+    }
+
+    fn name(&self) -> &str {
+        // The venue string, e.g. "BINANCE".
+        todo!()
+    }
+
+    fn config_type(&self) -> &str {
+        "YourExecutionClientConfig"
     }
 }
 
 let mut node = LiveNode::builder(trader_id, Environment::Live)?
-    .add_data_client(data_config, Box::new(YourDataClientFactory))
-    .add_exec_client(exec_config, Box::new(YourExecutionClientFactory))
+    .add_data_client(None, Box::new(YourDataClientFactory), Box::new(data_config))?
+    .add_exec_client(None, Box::new(YourExecutionClientFactory), Box::new(exec_config))?
     .build()?;
 ```
 
@@ -564,9 +601,9 @@ follows Nautilus runtime expectations.
 ### Adapter Naming
 
 - Crate: `nautilus-{venue}` (e.g., `nautilus-binance`)
-- Config: `{Venue}Config`, `{Venue}DataClientConfig`, `{Venue}ExecClientConfig`
+- Config: `{Venue}Config`, `{Venue}DataClientConfig`, `{Venue}ExecutionClientConfig`
 - Client: `{Venue}HttpClient`, `{Venue}WebSocketClient`
-- Factory: `{Venue}DataClientFactory`, `{Venue}ExecClientFactory`
+- Factory: `{Venue}DataClientFactory`, `{Venue}ExecutionClientFactory`
 
 ### Factory Pattern
 

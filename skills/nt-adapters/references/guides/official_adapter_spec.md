@@ -73,25 +73,24 @@ crates/adapters/your_adapter/
 
 ### Python layer (`nautilus_trader/adapters/your_adapter`)
 
-The Python layer provides the integration interface through these components:
+The Python layer is a thin projection of the Rust crate (configs, factories,
+status, and selected low-level APIs exposed through PyO3); the data/execution
+clients, provider, and networking stay in Rust:
 
-1. **Instrument Provider**: Supplies instrument definitions via `InstrumentProvider`.
-2. **Data Client**: Handles market data feeds and historical data requests via `LiveDataClient` and `LiveMarketDataClient`.
-3. **Execution Client**: Manages order execution via `LiveExecutionClient`.
-4. **Factories**: Converts venue-specific data to Nautilus domain models.
-5. **Configuration**: User-facing configuration classes for client settings.
+1. **Instrument Provider**: Loads instruments through the Rust
+   `InstrumentProvider` trait (e.g. `load_binance_instruments` in Python).
+2. **Data Client**: Handles market data feeds and historical data requests via the Rust `DataClient` trait.
+3. **Execution Client**: Manages order execution via the Rust `ExecutionClient` trait.
+4. **Factories**: Rust `DataClientFactory`/`ExecutionClientFactory` impls registered with the PyO3 registry.
+5. **Configuration**: Rust config structs projected as frozen `#[pyclass]` objects.
 
-Typical Python structure:
+Pinned Python package structure (flat re-export projection; the v1 per-module
+layout is migration reference only):
 
 ```
 nautilus_trader/adapters/your_adapter/
-├── config.py     # Configuration classes
-├── constants.py  # Adapter constants
-├── data.py       # LiveDataClient/LiveMarketDataClient
-├── execution.py  # LiveExecutionClient
-├── factories.py  # Instrument factories
-├── providers.py  # InstrumentProvider
-└── __init__.py   # Package initialization
+├── __init__.py   # `from nautilus_trader._libnautilus.<venue> import *` + __all__
+└── __init__.pyi  # Generated stubs (make py-stubs)
 ```
 
 ## Adapter implementation sequence
@@ -127,7 +126,7 @@ Instruments are the foundation: both data and execution clients depend on them.
 | 2.2  | Instrument provider        | Implement `InstrumentProvider` to load, filter, and cache instruments.                       |
 | 2.3  | Symbol mapping             | Handle venue-specific symbol formats and Nautilus `InstrumentId` conversion.                 |
 
-**Milestone**: `InstrumentProvider.load_all_async()` returns valid Nautilus instruments.
+**Milestone**: `InstrumentProvider.load_all()` returns valid Nautilus instruments. (NT v2 note: the pinned Rust trait method is `load_all`; the Python `load_all_async` spelling is v1 migration reference.)
 
 ### Phase 3: Market data
 
@@ -171,7 +170,7 @@ Wire everything together for production usage.
 
 | Step | Component                  | Description                                                                                  |
 |------|----------------------------|----------------------------------------------------------------------------------------------|
-| 6.1  | Configuration classes      | Create `DataClientConfig` and `ExecutionClientConfig` subclasses.                         |
+| 6.1  | Configuration structs      | Define Rust `DataClientConfig`/`ExecutionClientConfig` structs with `bon::Builder` + `#[pyclass(from_py_object)]` (NT v2 note: not Pydantic subclasses; see Configuration below). |
 | 6.2  | Factory functions          | Implement factory functions to instantiate clients from configuration.                       |
 | 6.3  | Environment variables      | Support credential resolution from environment variables.                                    |
 
@@ -1480,7 +1479,7 @@ Structs holding references to lower-level components follow these conventions:
 | `cmd_rx`      | `UnboundedReceiver<HandlerCommand>`                 | Command channel from client (handler side). |
 | `out_tx`      | `UnboundedSender<{Venue}WsMessage>`                 | Output channel to client (handler side). |
 | `out_rx`      | `Option<Arc<UnboundedReceiver<{Venue}WsMessage>>>`  | Output channel from handler (client side). |
-| `task_handle` | `Option<Arc<JoinHandle<()>>>`                       | Handler task handle. |
+| `task_handle` | `Option<Arc<JoinHandle<()>>>`                       | Handler task handle (explicitly singular ownership; the pinned task lifecycle provides `TaskSlot` for this pattern). |
 
 **Example:**
 
@@ -1656,61 +1655,104 @@ Use the following conventions when mirroring upstream schemas in Rust.
 
 ## Task management
 
-### Spawning async tasks (`spawn_task`)
+### Task ownership classification
 
-Data and execution clients spawn background tasks for WebSocket stream processing,
-periodic polling, and order submission. Wrap all spawned work with a `spawn_task()`
-method that provides error logging and handle tracking:
+Classify every production task by its owner before choosing its storage and shutdown
+path (pinned `docs/developer_guide/adapters.md` "Task management";
+`crates/live/src/task.rs`):
+
+| Ownership           | Use                                                                                         | Required behavior                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Session-scoped      | Stream consumers, keepalives, health polls, refresh loops, and reconnect drivers.           | One session group owns the task from successful admission through disconnect or failed startup.    |
+| Command-scoped      | Work spawned by synchronous data requests or execution commands.                            | A separate command group owns the task without tying its outcome to the transport session.         |
+| Explicitly singular | One transport loop or disconnect operation whose identity is part of the owning state.      | Store one named handle and apply the same bounded join, forced abort, and failure reporting rules. |
+| Handler-local       | Retry futures, send workers, and child work created and joined inside one handler.          | The handler drains the work before it exits and exposes failure to its owner.                      |
+| Protocol exception  | Typed fan-out results, keyed timeouts, or work whose local join preserves protocol meaning. | Keep the exception local, state why a shared group would lose meaning, and test its shutdown path. |
+
+Use separate session and command groups even when both groups have the same timeout
+policy. A disconnect ends the session, while an accepted command can still need
+reconciliation or an explicit ambiguous outcome. Do not let transport shutdown
+silently reclassify that command result.
+
+### Task admission with `TaskGroup` and `TaskSpawner`
+
+Do not hand-roll `spawn_task()` + `JoinHandle` vectors. `TaskGroup` (and its
+`TaskSpawner` handles for child work) owns admission, storage, and shutdown:
 
 ```rust
-fn spawn_task<F>(&self, description: &'static str, fut: F)
-where
-    F: Future<Output = anyhow::Result<()>> + Send + 'static,
-{
-    let runtime = get_runtime();
-    let handle = runtime.spawn(async move {
-        if let Err(e) = fut.await {
-            log::warn!("{description} failed: {e:?}");
-        }
-    });
+use nautilus_live::task::TaskGroup;
 
-    let mut tasks = self.pending_tasks.lock().expect(MUTEX_POISONED);
-    tasks.retain(|handle| !handle.is_finished());
-    tasks.push(handle);
-}
+// One generation of related unit-output tasks per owner
+let session_tasks = TaskGroup::new();
+
+// Admission closes once shutdown begins; later spawns return TaskSpawnError
+session_tasks.spawn(async move { /* stream consumer */ })?;
+
+// Children spawned from inside an admitted task stay in the same generation
+let spawner = session_tasks.spawner()?;
+spawner.spawn(async move { /* keepalive */ })?;
 ```
 
-Store task handles in `pending_tasks: Mutex<Vec<JoinHandle<()>>>`. Each call to
-`spawn_task` prunes finished handles before pushing the new one, preventing unbounded
-growth. On disconnect, abort all remaining handles.
+Keep the synchronous boundary small: validate the command and clone every input
+before constructing the future. Do not capture a `RefCell` borrow, cache guard,
+clock borrow, or reference to the command in work that outlives the trait call.
+Give each task one owner responsible for joining or aborting it, a stable
+description for failure logs, a cancellation path, and owned inputs that do not
+retain `RefCell` or engine borrows. When a long-lived task creates children,
+capture a `TaskSpawner` from the owning group; a spawner from an older generation
+cannot register work in the replacement generation.
+
+For explicitly singular work (one transport loop, one disconnect operation), store
+one named `TaskSlot` handle instead of a group; the same bounded join, forced
+abort, and failure reporting rules apply.
+
+### Shut down and reopen task generations
+
+Task shutdown has separate synchronous and asynchronous phases:
+
+1. `stop`, `reset`, and `dispose` call `begin_shutdown`. This closes admission and
+   cancels the current generation without blocking the runtime.
+1. `disconnect`, or the next asynchronous `connect`, closes the generation's
+   transports in their required protocol order and calls `finish_shutdown` with
+   bounded graceful and forced intervals. `finish_shutdown` drains tasks
+   registered by an allowed race, reports unexpected cancellations and join
+   failures, aborts unfinished work after the graceful interval, and awaits the
+   forced abort within its second bound.
+1. `start_generation` reopens the group only after the prior generation drains.
+
+```rust
+session_tasks.begin_shutdown();
+session_tasks.finish_shutdown(graceful_timeout, abort_timeout).await?;
+```
+
+When `connect` fails after creating a transport or admitting a task, apply the
+same sequence before returning the startup error. Make repeated `begin_shutdown`
+and `finish_shutdown` calls safe.
 
 ### Never use `block_on` in trait methods
 
-The live runner calls sync `ExecutionClient` and `DataClient` trait methods from within a
-tokio runtime. Using `runtime.block_on()` in these methods panics with
-*"Cannot start a runtime from within a runtime"*. Use `spawn_task` instead:
+The live runner calls sync `ExecutionClient` and `DataClient` trait methods from
+within a tokio runtime. Calling `block_on` there can panic because a runtime is
+already active. Spawn work into the owning `TaskGroup` and return immediately:
 
 ```rust
-// Wrong: panics at runtime
-fn query_order(&self, cmd: &QueryOrder) -> anyhow::Result<()> {
-    get_runtime().block_on(async { self.http_client.get_order(&id).await })
-}
+fn spawn_request<F>(&self, description: &'static str, future: F)
+where
+    F: Future<Output = anyhow::Result<()>> + Send + 'static,
+{
+    let future = async move {
+        if let Err(e) = future.await {
+            log::warn!("{description} failed: {e:?}");
+        }
+    };
 
-// Correct: clone what you need, spawn, return immediately
-fn query_order(&self, cmd: &QueryOrder) -> anyhow::Result<()> {
-    let http_client = self.http_client.clone();
-    let emitter = self.emitter.clone();
-
-    self.spawn_task("query_order", async move {
-        let report = http_client.get_order(&id).await?;
-        emitter.send_order_status_report(report);
-        Ok(())
-    });
-    Ok(())
+    if let Err(e) = self.command_tasks.spawn(future) {
+        log::warn!("Skipping {description} after shutdown began: {e}");
+    }
 }
 ```
 
-`block_on` is valid in contexts that run outside a tokio runtime:
+`block_on` remains valid in contexts that run outside a tokio runtime:
 
 | Context                      | Why safe                                       |
 |------------------------------|------------------------------------------------|
@@ -1720,11 +1762,12 @@ fn query_order(&self, cmd: &QueryOrder) -> anyhow::Result<()> {
 | `block_in_place` wrapper    | Moves the thread out of the worker pool first   |
 | Test code with own runtime  | `Runtime::new()` creates an isolated runtime    |
 
-### Graceful shutdown with `CancellationToken`
+### Shutdown signalling with `CancellationToken`
 
-Use `tokio_util::sync::CancellationToken` to coordinate shutdown across multiple spawned
-tasks. The client creates a token at construction and passes clones to each spawned task.
-Tasks select on the token alongside their primary work:
+`CancellationToken` (from `TaskGroup::cancellation_token()` or
+`TaskSpawner::cancellation_token()`) remains the shutdown signal inside the
+lifecycle; it does not itself confer task ownership. Tasks select on the token
+alongside their primary work:
 
 ```rust
 tokio::select! {
@@ -1733,15 +1776,11 @@ tokio::select! {
 }
 ```
 
-On disconnect, the client cancels the token, which signals all tasks to exit their loops.
-This complements the handler-level `signal: Arc<AtomicBool>` pattern: `AtomicBool` gates
-the handler's I/O loop, while `CancellationToken` coordinates shutdown of tasks the client
-spawned outside the handler (polling loops, reconciliation tasks, stream consumers).
-
-Reset the token on reconnect by replacing it with a fresh `CancellationToken::new()` so
-subsequent tasks are not born cancelled.
-
----
+Derive the token from the owning group or spawner and let `begin_shutdown` cancel
+their parent. Obtain the replacement token only after `finish_shutdown` drains
+every handle and `start_generation` reopens the group. Reusing a cancelled token
+makes replacement tasks exit immediately, while replacing it before the drain
+lets old work cross the reconnect boundary.
 
 ## Testing
 
@@ -1957,7 +1996,7 @@ tests/integration_tests/adapters/your_adapter/
 **Guidelines:**
 
 - Exercise the adapter's Python surface (instrument providers, data/execution clients, factories) inside `tests/integration_tests/adapters/<adapter>/`.
-- Mock the PyO3 boundary (`nautilus_pyo3` shims, stubbed Rust clients) so tests stay fast while verifying that configuration, factory wiring, and error handling match the exported Rust API.
+- Mock the PyO3 boundary (projection shims, stubbed Rust clients) so tests stay fast while verifying that configuration, factory wiring, and error handling match the exported Rust API. (NT v2 note: `nautilus_trader.core.nautilus_pyo3` is v1 migration reference only; the pinned imports are the flat `nautilus_trader.adapters.<venue>` projections.)
 - Mirror the Rust integration coverage: when the Rust suite adds a new behaviour (e.g., reconnection replay, error propagation), assert the Python layer performs the same sequence (connect/disconnect, submit/amend/cancel translations, venue ID hand-off, failure handling). BitMEX's Python tests provide the target level of detail.
 
 ---
@@ -2549,7 +2588,57 @@ class TemplateLiveExecutionClient(LiveExecutionClient):
 
 ### Configuration
 
-Configuration classes hold adapter-specific settings like API keys and connection details.
+Configuration structs hold adapter-specific settings like API keys and connection
+details. At V2 they are Rust structs in the adapter crate with `bon::Builder`,
+serde defaults, and a `#[pyclass(from_py_object)]` Python projection - not
+Python/Pydantic classes. Pinned pattern (see
+`crates/adapters/binance/src/config.rs`):
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, bon::Builder)]
+#[serde(default, deny_unknown_fields)]
+#[cfg_attr(
+    feature = "python",
+    pyo3::pyclass(module = "nautilus_trader.adapters.template", from_py_object)
+)]
+#[cfg_attr(
+    feature = "python",
+    pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.adapters.template")
+)]
+pub struct TemplateDataClientConfig {
+    /// Environment (live or testnet).
+    #[builder(default = TemplateEnvironment::Live)]
+    pub environment: TemplateEnvironment,
+    /// API key.
+    pub api_key: Option<String>,
+    /// API secret.
+    pub api_secret: Option<String>,
+    /// Optional base URL override.
+    pub base_url_http: Option<String>,
+    /// Instrument loading configuration.
+    #[builder(default)]
+    pub instrument_provider: TemplateInstrumentProviderConfig,
+}
+
+#[cfg(feature = "python")]
+nautilus_core::impl_pyo3_config_getters!(TemplateDataClientConfig {
+    environment: TemplateEnvironment,
+    api_key: Option<String>,
+    api_secret: Option<String>,
+    base_url_http: Option<String>,
+    instrument_provider: TemplateInstrumentProviderConfig,
+});
+```
+
+`ExecutionClientConfig` structs follow the same pattern
+(`TemplateExecutionClientConfig`). Python receives frozen `#[pyclass]` objects
+through the generated projection; `nautilus_trader.live.DataClientConfig` and
+`nautilus_trader.live.ExecutionClientConfig` are the shared base configs
+re-exported from `nautilus_trader.config`.
+
+NT v2 compatibility note: v1 Pydantic subclassing below is
+migration/reference-only; the pinned surface is not subclassable (frozen PyO3
+`#[pyclass]`, Rust `bon::Builder` structs):
 
 ```python
 from nautilus_trader.config import DataClientConfig

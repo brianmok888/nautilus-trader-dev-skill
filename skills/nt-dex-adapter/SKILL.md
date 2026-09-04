@@ -70,7 +70,8 @@ DEX adapter readiness requires:
 
 - provider/data/execution methods aligned to current Nautilus command/request
   object signatures;
-- `InstrumentProvider.load_all_async()` implemented, with targeted load methods
+- `InstrumentProvider.load_all(filters)` implemented, with targeted load methods
+  `load_ids(instrument_ids, filters)` / `load(instrument_id, filters)`
   overridden only for DEX-specific semantics or efficiency;
 - data connect lifecycle: bootstrap instruments, cache instruments, emit
   instruments, prepare WebSocket cache, then connect subscriptions;
@@ -107,12 +108,12 @@ DEX adapter readiness requires:
 
 This maps directly to the canonical adapter implementation pattern. Complete each phase fully before moving to the next.
 
-### Phase 1: Define scope
+### Phase 0: Define scope
 
 Record chains, products, environments, account modes, data/order/report capabilities, protocol
 boundaries, reorg/finality assumptions, unsupported operations, and the smallest end-to-end slice.
 
-### Phase 2: Build the protocol core
+### Phase 1: Build the protocol core
 
 Add the Rust crate; implement RPC/WebSocket environments, credentials, wallet signing, shared
 types, deterministic parsers/serializers, retry classification, authentication, heartbeat, and
@@ -134,7 +135,14 @@ the transaction lifecycle survives restart. Reconcile the persisted state before
 orders. Unit tests use deterministic mocked RPC responses for reservation and state transitions;
 fork tests are separate environment-gated evidence and never default CI.
 
-### Phase 3: Implement instruments
+Reuse the upstream `nautilus-blockchain` crate (`crates/adapters/blockchain/`)
+rather than reimplementing EVM plumbing: it ships chain definitions (Ethereum, BSC,
+Polygon, Arbitrum, Base) under `rpc/chains/`, Hypersync streaming under
+`hypersync/`, contract ABIs under `contracts/`, and the execution client under
+`execution/`. See `references/integrations/blockchain.md` for the DeFi model
+primitives and configuration surface.
+
+### Phase 2: Implement instruments
 
 Implement pool/market discovery, bidirectional symbol identity, every supported instrument family,
 token/currency mapping, complete precision and contract fields, cache boundaries, and definition
@@ -143,42 +151,42 @@ same-token pools and fee tiers remain distinct; token-pair-only IDs are valid on
 guarantees uniqueness. Map the AMM swap fee tier to `taker_fee`; LP economics are not trader
 `maker_fee`.
 
-### Phase 4: Implement market data
+### Phase 3: Implement market data
 
 Start with one public stream and instrument. Add AMM quote synthesis or CLOB deltas, trades,
 historical requests, unsubscribe, malformed-input, reorg, reconnect, and event-ordering behavior.
 
-### Phase 5: Implement execution
+### Phase 4: Implement execution
 
 Establish wallet/account identity, private state, receipt monitoring, and reconciliation before
 order flow. Then add submit/cancel/modify, unknown-transaction outcomes, fill deduplication, and
 order/fill/position/mass-status reports.
 
-### Phase 6: Add optional venue capabilities
+### Phase 5: Add optional venue capabilities
 
 Add batch transactions, conditional orders, gas sponsorship, bridges, product-specific data, or
 split clients only after the base lifecycle is stable, with independent fixtures and limitations.
 
-### Phase 7: Complete factories and projection
+### Phase 6: Complete factories and projection
 
 Finalize typed configs, secret redaction, Rust `InstrumentProvider`, data and execution client
 factories, `CacheView` and clock inputs, and registration through `LiveNodeBuilder`. Add bounded
 PyO3 projection only when supported.
 
-### Phase 8: Prove conformance
+### Phase 7: Prove conformance
 
 Run deterministic functional/integration scenarios plus applicable DataTester and ExecTester
 acceptance on a local fork, testnet, or controlled account. Exercise connection failure,
 reconnect, shutdown, rate limits, reorgs, uncertain transactions, and recovery; document every
 skipped case.
 
-### Phase 9: Measure performance and robustness
+### Phase 8: Measure performance and robustness
 
 Benchmark confirmed hot paths, then signing, hashing, authentication, and codecs. Fuzz every
 untrusted parser, decoder, normalizer, signer, and encoder using realistic corpora and strong
 invariants.
 
-### Phase 10: Finish documentation and operations
+### Phase 9: Finish documentation and operations
 
 Reconcile the capability matrix and document RPC requirements, credentials, gas/nonce policy,
 limits, reconciliation, finality, environment differences, tester entry points, generated output,
@@ -262,7 +270,7 @@ Required checks before claiming adapter readiness:
 ## Modern Tooling Standards
 - **Dependencies**: Use `uv` for managing the adapter dev environment.
 - **Serialization**: For internal data passing, `msgspec` structs are faster than standard classes.
-- **Visualization (migration/reference-only)**: Inspect recorded data with `TearsheetConfig` and `create_tearsheet`; install the `visualization` extra.
+- **Visualization (current V2 Python)**: Inspect recorded data with `TearsheetConfig` and `create_tearsheet` / `create_tearsheet_from_stats` from `nautilus_trader.analysis`; install the `visualization` extra.
 
 ## Testing Strategy
 
@@ -280,9 +288,11 @@ Load these for detailed API information (relative to nt-implement skill folder):
 - `references/developer_guide/adapters.md` — Rust-first adapter development guide
 - `references/developer_guide/rust.md` — Rust conventions, async runtime patterns
 - `references/developer_guide/ffi.md` — FFI memory contract, CVec, abort_on_panic
-- `references/api_reference/live.md` — LiveMarketDataClient, LiveExecutionClient APIs
+- `crates/common/src/clients/`: Current Rust `DataClient` / `ExecutionClient` trait bases for live clients
+- `references/api_reference/live.md`: LiveMarketDataClient, LiveExecutionClient APIs (legacy v1 snapshot)
 - `references/integrations/dydx.md` — On-chain CLOB reference adapter (v4)
 - `references/integrations/hyperliquid.md` — DEX perp reference adapter
+- `references/integrations/blockchain.md`: `nautilus-blockchain` crate (`crates/adapters/blockchain/`): DeFi primitives, chains, contracts, execution
 - `crates/adapters/<adapter>/` — Canonical Rust adapter crate layout; follow the wiring checklist in `references/developer_guide/adapters.md` and expose only the required Python projection under `python/nautilus_trader/adapters/<adapter>/`
 
 ## Next Steps

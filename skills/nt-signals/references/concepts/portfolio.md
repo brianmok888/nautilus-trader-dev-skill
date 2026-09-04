@@ -112,49 +112,83 @@ time, including *during* a backtest, or live trading session.
 
 ## Custom statistics
 
-Custom portfolio statistics can be defined by inheriting from the `PortfolioStatistic`
-base class, and implementing any of the `calculate_` methods.
+The current V2 path for custom statistics is the Rust `PortfolioStatistic` trait
+(pinned source `crates/analysis/src/statistic.rs`): implement `name()` and the
+`calculate_` method matching the input data (`calculate_from_returns`,
+`calculate_from_realized_pnls`, `calculate_from_orders`,
+`calculate_from_positions`), then register the type with
+`PortfolioAnalyzer::register_statistic(Arc::new(...))`. The analyzer accepts
+`Arc<dyn PortfolioStatistic<Item = f64> + Send + Sync>` (pinned source
+`crates/analysis/src/analyzer.rs`), and built-in examples live in
+`crates/analysis/src/statistics/` (Sharpe ratio, Sortino, max drawdown, etc.).
 
-For example, the following is the implementation for the built-in `WinRate` statistic:
+For example, a custom win-rate statistic:
 
-```python
-import pandas as pd
-from typing import Any
-from nautilus_trader.analysis.statistic import PortfolioStatistic
+```rust
+use std::sync::Arc;
 
+use nautilus_analysis::analyzer::PortfolioAnalyzer;
+use nautilus_analysis::statistic::PortfolioStatistic;
 
-class WinRate(PortfolioStatistic):
-    """
-    Calculates the win rate from a realized PnLs series.
-    """
+#[derive(Debug, Default)]
+struct SessionWinRate;
 
-    def calculate_from_realized_pnls(self, realized_pnls: pd.Series) -> Any | None:
-        # Preconditions
-        if realized_pnls is None or realized_pnls.empty:
-            return 0.0
+impl PortfolioStatistic for SessionWinRate {
+    type Item = f64;
 
-        # Calculate statistic
-        winners = [x for x in realized_pnls if x > 0.0]
-        losers = [x for x in realized_pnls if x <= 0.0]
+    fn name(&self) -> String {
+        "Session Win Rate".to_string()
+    }
 
-        return len(winners) / float(max(1, (len(winners) + len(losers))))
+    fn calculate_from_realized_pnls(&self, realized_pnls: &[f64]) -> Option<f64> {
+        if realized_pnls.is_empty() {
+            return Some(f64::NAN);
+        }
+        let winners = realized_pnls.iter().filter(|&&pnl| pnl > 0.0).count();
+        Some(winners as f64 / realized_pnls.len() as f64)
+    }
+}
+
+// Register with the portfolio analyzer
+analyzer.register_statistic(Arc::new(SessionWinRate));
 ```
 
-These statistics can then be registered with a traders `PortfolioAnalyzer`.
-
-```python
-stat = WinRate()
-
-# Register with the portfolio analyzer
-engine.portfolio.analyzer.register_statistic(stat)
-```
-
-See the [`PortfolioAnalyzer` API Reference](https://nautilustrader.io/docs/latest/api_reference/analysis/#class-portfolioanalyzer) for all available methods.
+Legacy v1 Python pattern (migration/reference-only): the removed
+`nautilus_trader.analysis.statistic` module allowed defining statistics by
+inheriting from a Python `PortfolioStatistic` base class and implementing any of
+the `calculate_` methods. The quarantined v1 source is kept at
+`migration_reference/python/python/analysis/statistic.py`.
 
 :::tip
-Ensure your statistic is robust to degenerate inputs such as `None`, empty series, or insufficient data.
+Ensure your statistic is robust to degenerate inputs such as empty slices or insufficient data.
 Return `None` for unknown/incalculable values, or a reasonable default like `0.0` when semantically appropriate (e.g., win rate with no trades).
 :::
+
+## Portfolio snapshots
+
+`PortfolioSnapshot` (pinned source `crates/model/src/events/portfolio/snapshot.rs`)
+is a point-in-time mark-to-market event for a single account. Unlike `AccountState`,
+which fires only on balance or margin changes, a snapshot folds open-position
+valuations into the totals: per-currency `unrealized_pnls`, session
+`realized_pnls`, mark-to-market `total_equity`, and optionally
+`base_currency_equity`, plus staleness diagnostics (`is_stale`, `stale_instruments`,
+`stale_currencies`, `unpriced_instruments`).
+
+Emission is configured through `PortfolioConfig` (pinned source
+`crates/portfolio/src/config.rs`):
+
+- `equity_curve` (default `true`) records one snapshot at account registration, at
+  every UTC midnight (including while flat), and at shutdown.
+- `snapshot_interval_ms` (default `None`) opts into a fine-grained stream: while
+  the account holds at least one open position, an additional snapshot is emitted
+  at this cadence.
+
+Snapshots are published on the message bus under `events.portfolio.{account_id}`;
+subscribe to that topic to consume the equity-curve stream. Totals span every
+venue the account holds positions on, so multi-venue accounts produce a single
+account-wide snapshot. `Portfolio::build_snapshot(account_id)` builds a snapshot
+on demand, and `Portfolio::snapshots(account_id)` reads the recorded buffer
+(pinned source `crates/portfolio/src/portfolio.rs`).
 
 ## Backtest analysis
 

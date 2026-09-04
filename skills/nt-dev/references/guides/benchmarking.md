@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Benchmarking
 
 This document is the practitioner reference for writing and running
@@ -55,8 +57,11 @@ path = "benches/foo_iai.rs"
 harness = false
 ```
 
-To opt into the nightly CI performance workflow, add the crate to the
-`cargo-ci-benches` recipe in the workspace `Makefile`.
+To opt into the nightly CI performance workflow, register the benchmark and add its crate to
+`CI_BENCH_CRATES` in the workspace `Makefile` when the list does not already include it. Add a
+deterministic Criterion target to `CODSPEED_BENCH_TARGETS` when CPU simulation preserves what the
+benchmark intends to measure. Do not add iai, Criterion's `iter_custom` or `with_filter` APIs,
+OS-dependent work, or concurrent wall-clock benchmarks to the CodSpeed subset.
 
 ---
 
@@ -206,6 +211,67 @@ use `panic = "abort"` and are built via `[profile.release]`).
 > `release` and sets `debug = "full"`, preserving full optimisation *and*
 > debug symbols so tools like `cargo flamegraph` or `perf` produce
 > human-readable stack traces.
+
+---
+
+## Comparing the v1 and v2 backtest engines
+
+Use `scripts/benchmark-backtest-versions.py` for a wall-clock comparison between the released v1
+Cython engine and the v2 PyO3 engine. The driver owns one shared scenario matrix and normalizes the
+small API differences at runtime. It rejects a run before timing unless both environments use the
+expected package version, backend, source revision, Python version, and precision mode. For v2, it
+also requires the requested source revision to be embedded in the loaded extension. NT v2
+compatibility note: the v1 Cython engine side is legacy migration context.
+
+Run the comparison on a quiet host. These commands create isolated release environments and a
+detached v1 worktree without changing the current branch:
+
+```bash
+COMPARE_ROOT=$(mktemp -d /tmp/nautilus-backtest-compare.XXXXXX)
+git worktree add --detach "$COMPARE_ROOT/v1" v1.231.0
+
+uv venv --python /usr/bin/python3.12 "$COMPARE_ROOT/env-v1"
+(
+    cd "$COMPARE_ROOT/v1"
+    uvx --from uv==0.11.33 uv build --wheel --python /usr/bin/python3.12 \
+        --out-dir "$COMPARE_ROOT/wheels-v1"
+)
+V1_WHEEL=$(find "$COMPARE_ROOT/wheels-v1" -type f -name 'nautilus_trader-*.whl')
+UV_LINK_MODE=copy uv pip install --no-cache \
+    --python "$COMPARE_ROOT/env-v1/bin/python" "$V1_WHEEL"
+
+uv venv --python /usr/bin/python3.12 "$COMPARE_ROOT/env-v2"
+uv pip install --python "$COMPARE_ROOT/env-v2/bin/python" maturin==1.14.1 patchelf
+(
+    cd python
+    CARGO_BUILD_JOBS=16 "$COMPARE_ROOT/env-v2/bin/maturin" build --release \
+        --out "$COMPARE_ROOT/wheels-v2"
+)
+V2_WHEEL=$(find "$COMPARE_ROOT/wheels-v2" -type f -name 'nautilus_trader-*.whl')
+UV_LINK_MODE=copy uv pip install --no-cache \
+    --python "$COMPARE_ROOT/env-v2/bin/python" "$V2_WHEEL"
+
+V1_COMMIT=$(git -C "$COMPARE_ROOT/v1" rev-parse HEAD)
+V2_COMMIT=$(git rev-parse HEAD)
+python3.12 scripts/benchmark-backtest-versions.py compare \
+    --v1-python "$COMPARE_ROOT/env-v1/bin/python" \
+    --v1-artifact "$V1_WHEEL" \
+    --v1-source "$COMPARE_ROOT/v1" \
+    --v1-commit "$V1_COMMIT" \
+    --v2-python "$COMPARE_ROOT/env-v2/bin/python" \
+    --v2-artifact "$V2_WHEEL" \
+    --v2-source "$PWD" \
+    --v2-commit "$V2_COMMIT" \
+    --sessions 5 \
+    --output "$COMPARE_ROOT/results.json"
+```
+
+The driver runs each boundary in both environments back-to-back and reverses or rotates the case
+order across sessions. `run_preloaded` times only `BacktestEngine.run()` after fixture creation,
+engine construction, and data registration. `load_build_run` includes instrument and data fixture
+creation, engine construction, data registration, and `run()`. The coordinator proves that each
+loaded extension byte-matches the corresponding wheel member before the run and rechecks the full
+identities after it.
 
 ---
 

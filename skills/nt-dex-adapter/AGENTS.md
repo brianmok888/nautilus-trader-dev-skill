@@ -28,17 +28,20 @@ Build production-grade Rust DEX adapters with Rust clients and factories wired t
 | Orders | REST | Signed transaction |
 | Fills | Exchange-reported | Tx output amount |
 
-## 7-PHASE IMPLEMENTATION
+## 10-PHASE IMPLEMENTATION
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
-1. **Rust Core** — HTTP JSON-RPC client, WebSocket, wallet signing
-2. **Instrument Discovery** — Pool/market addresses → Nautilus instruments
-3. **Market Data** — QuoteTick synthesis, TradeTick from on-chain
-4. **Order Execution** — Build + sign + submit tx
-5. **Account Events** — Balance, position tracking
-6. **Config & Factory** — Rust `LiveNodeBuilder` data/execution client factories; keep the Python factory template `legacy:` migration-only
-7. **Testing** — Unit + integration + compliance
+1. **Define Scope**: Chains, products, environments, capabilities, protocol boundaries
+2. **Build the Protocol Core**: Rust crate, RPC/WebSocket environments, wallet signing, shared types; apply the current-develop blockchain execution overlay (`nautilus-blockchain` crate)
+3. **Implement Instruments**: Pool/market addresses → Nautilus instruments
+4. **Implement Market Data**: QuoteTick synthesis, TradeTick from on-chain
+5. **Implement Execution**: Build + sign + submit tx, receipt monitoring, reconciliation
+6. **Add Optional Venue Capabilities**: Batch transactions, conditional orders, gas sponsorship, bridges
+7. **Complete Factories and Projection**: Rust `LiveNodeBuilder` data/execution client factories; keep the Python factory template `legacy:` migration-only
+8. **Prove Conformance**: Deterministic scenarios plus DataTester/ExecTester acceptance
+9. **Measure Performance and Robustness**: Benchmarks, fuzz untrusted parsers
+10. **Finish Documentation and Operations**: Capability matrix, ops runbook, safe recovery
 
 ## ADAPTER CANONICAL CONTRACT (2026)
 

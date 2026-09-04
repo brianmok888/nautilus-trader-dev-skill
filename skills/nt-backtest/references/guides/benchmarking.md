@@ -1,40 +1,45 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Benchmarking
 
-This guide explains how NautilusTrader measures Rust performance, when to
-use each tool and the conventions you should follow when adding new benches.
+Use this guide to write, run, and profile NautilusTrader benchmarks. It contains benchmark layout,
+examples, local commands, and the measurement procedure for published results.
+
+For benchmark scope, evidence requirements, and CI policy, see
+[`/BENCHMARKING.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/BENCHMARKING.md) at the repository root.
 
 ---
 
 ## Tooling overview
 
-NautilusTrader relies on **two complementary benchmarking frameworks**:
+Select a tool based on the work and result:
 
-| Framework | What is it? | What it measures | When to prefer it |
-|-----------|-------------|------------------|-------------------|
-| [**Criterion**](https://docs.rs/criterion/latest/criterion/) | Statistical benchmark harness that produces detailed HTML reports and performs outlier detection. | Wall-clock run time with confidence intervals. | End-to-end scenarios, anything slower than ≈100 ns, visual comparisons. |
-| [**iai**](https://docs.rs/iai/latest/iai/) | Deterministic micro-benchmark harness that counts retired CPU instructions via hardware counters. | Exact instruction counts (noise-free). | Ultra-fast functions, CI gating via instruction diff. |
+| Tool                                                      | What it measures                          | Use it for                                                |
+| --------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| [Criterion](https://docs.rs/criterion/latest/criterion/)  | Wall-clock time with confidence intervals | Operations above roughly 100 ns and elapsed time          |
+| [iai](https://docs.rs/iai/latest/iai/)                    | Retired CPU instructions under Cachegrind | Small, deterministic operations and change detection      |
+| [CodSpeed](https://codspeed.io/docs/instruments/cpu)      | Simulated CPU cost and cache behavior     | Stable pull request comparisons of deterministic CPU work |
+| [flamegraph](https://github.com/flamegraph-rs/flamegraph) | Sampled call-stack profile                | Locating work inside a representative slow path           |
 
-Most hot code paths benefit from **both** kinds of measurements.
-
-:::note
-iai is deterministic (immune to system noise) but results are machine-specific. Use it for regression detection within CI, not for cross-machine comparisons.
-:::
+Criterion reports user-visible elapsed time. iai produces stable counts for the same binary,
+toolchain, and inputs without requiring host noise controls. Compare iai results only under the
+same code generation assumptions, and use Criterion when elapsed time is the required result.
 
 ---
 
 ## Directory layout
 
-Each crate keeps its performance tests in a local `benches/` folder:
+Each crate keeps its benchmarks in a local `benches/` folder:
 
 ```text
 crates/<crate_name>/
 └── benches/
-    ├── foo_criterion.rs   # Criterion group(s)
-    └── foo_iai.rs         # iai micro benches
+    ├── foo_criterion.rs
+    └── foo_iai.rs
 ```
 
-`Cargo.toml` must list every benchmark explicitly so `cargo bench` discovers
-them:
+Register each benchmark explicitly in the crate's `Cargo.toml` so
+`cargo bench` discovers it:
 
 ```toml
 [[bench]]
@@ -48,30 +53,54 @@ path = "benches/foo_iai.rs"
 harness = false
 ```
 
+To opt into the nightly CI performance workflow, register the benchmark and add its crate to
+`CI_BENCH_CRATES` in the workspace `Makefile` when the list does not already include it. Add a
+deterministic Criterion target to `CODSPEED_BENCH_TARGETS` when CPU simulation preserves what the
+benchmark intends to measure. Do not add iai, Criterion's `iter_custom` or `with_filter` APIs,
+OS-dependent work, or concurrent wall-clock benchmarks to the CodSpeed subset.
+
 ---
 
 ## Writing Criterion benchmarks
 
-1. Perform **all expensive set-up outside** the timing loop (`b.iter`).
-2. Wrap inputs/outputs in `black_box` to prevent the optimizer from removing
-   work.
-3. Group related cases with `benchmark_group!` and set `throughput` or
-   `sample_size` when the defaults aren't ideal.
+1. **Set up outside the timing loop.** All work that doesn't change between
+   iterations belongs in the surrounding code or in `iter_batched_ref`'s
+   setup closure, not in the body passed to `iter`.
+2. **Wrap inputs in `black_box`** so the optimizer doesn't fold them away.
+3. **Use `iter_batched_ref` for mutating benches.** It excludes input
+   `Drop` from the timed region, which otherwise dominates the measurement
+   on benches that own large structures.
+4. **Add `Throughput::Elements(n)`** to size-parameterized groups so
+   Criterion reports per-element throughput.
+5. **Comment intent.** State what the benchmark is measuring (the hot path,
+   the worst case, the cache-cold case) so a future reader understands
+   what regressing it would mean.
 
 ```rust
 use std::hint::black_box;
 
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 
-fn bench_my_algo(c: &mut Criterion) {
-    let data = prepare_data(); // Heavy set-up done once
+const SIZES: &[usize] = &[10, 100, 1_000];
 
-    c.bench_function("my_algo", |b| {
-        b.iter(|| my_algo(black_box(&data)));
-    });
+fn bench_my_op(c: &mut Criterion) {
+    let mut group = c.benchmark_group("module/my_op");
+
+    for &n in SIZES {
+        group.throughput(Throughput::Elements(n as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+            b.iter_batched_ref(
+                || populate(n),
+                |state| state.run(black_box(n)),
+                BatchSize::SmallInput,
+            );
+        });
+    }
+
+    group.finish();
 }
 
-criterion_group!(benches, bench_my_algo);
+criterion_group!(benches, bench_my_op);
 criterion_main!(benches);
 ```
 
@@ -79,9 +108,8 @@ criterion_main!(benches);
 
 ## Writing iai benchmarks
 
-`iai` requires functions that take **no parameters** and return a value (which
-can be ignored). Keep them as small as possible so the measured instruction
-count is meaningful.
+`iai` requires functions that take no parameters. Use it for small, pure operations so the measured
+instruction count stays focused on the intended work.
 
 ```rust
 use std::hint::black_box;
@@ -95,86 +123,247 @@ fn bench_add() -> i64 {
 iai::main!(bench_add);
 ```
 
+Allocations, randomness, and system calls add their own instructions to the result. Keep variable
+setup outside the measured function and compare counts produced by the same toolchain and target.
+
 ---
 
 ## Running benches locally
 
-- **Single crate**: `cargo bench -p nautilus-core`.
-- **Single benchmark module**: `cargo bench -p nautilus-core --bench time`.
-- **CI performance benches**: `make cargo-ci-benches` (runs the crates included
-  in the CI performance workflow one at a time to avoid the mixed-panic-strategy
-  linker issue).
+| Goal                               | Command                                                               |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| All benches in one crate           | `cargo bench -p nautilus-execution`                                   |
+| One core bench module              | `cargo bench -p nautilus-execution --bench matching_core`             |
+| One engine bench module            | `cargo bench -p nautilus-execution --bench matching_engine`           |
+| One core benchmark name pattern    | `cargo bench -p nautilus-execution --bench matching_core -- iterate`  |
+| One engine benchmark name pattern  | `cargo bench -p nautilus-execution --bench matching_engine -- submit` |
+| Quick smoke run (low sample count) | `cargo bench ... -- --quick`                                          |
+| All nightly registered benches     | `make cargo-ci-benches`                                               |
+| Build the CodSpeed subset          | `make cargo-codspeed-build`                                           |
+| Check the built CodSpeed subset    | `make cargo-codspeed-run`                                             |
 
-Criterion writes HTML reports to `target/criterion/`; open `target/criterion/report/index.html` in your browser.
+Criterion writes HTML reports to `target/criterion/`. Open
+`target/criterion/report/index.html`. The report includes per-bench violin
+plots, confidence intervals, and comparisons against the previous run's
+saved baseline.
 
-### Generating a flamegraph
+`make install-tools` installs the pinned `cargo-codspeed` version. A local CodSpeed run checks that
+the selected benchmark targets build and register, but it does not upload measurements. The
+`codspeed-benchmarks` job in `.github/workflows/performance.yml` measures and uploads the results.
 
-`cargo-flamegraph` lets you see a sampled call-stack profile of a single
-benchmark. On Linux it uses `perf`, and on macOS it uses `DTrace`.
+### Canonical backtest workloads
 
-1. Install `cargo-flamegraph` once per machine (it installs a `cargo flamegraph`
-   subcommand automatically).
+The canonical backtest cases use the first 10,000 rows of the checked-in
+`test_data/btc-perp-20211231-20220201_1m.csv` file. A shared fixture drives replay-only, scheduled
+market-order, passive limit-order, and bar-EMA scenarios. The correctness test and both timed paths
+use the same fixture loader and exact result fingerprints.
+
+Run the semantic check first:
+
+```bash
+CARGO_BUILD_JOBS=16 cargo test --locked -p nautilus-backtest \
+    --test canonical_backtest_workloads
+```
+
+Then run Criterion in test mode to confirm that every affected benchmark case executes without
+collecting samples:
+
+```bash
+CARGO_BUILD_JOBS=16 cargo bench --locked -p nautilus-backtest \
+    --bench engine -- canonical --test
+```
+
+The `run_preloaded` cases load the CSV and build the engine outside the returned `iter_custom`
+duration. The `load_build_run` cases include CSV loading, engine setup, data registration, and
+`BacktestEngine::run`. Both exclude result projection and fingerprint verification from the
+reported duration, while still checking the result after every measured iteration.
+
+See [`crates/backtest/benches/BENCHMARKS.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/backtest/benches/BENCHMARKS.md) for the
+published baseline, measurement record, and current profile target.
+
+### Compare v1 and v2 backtest engines
+
+Use `scripts/benchmark-backtest-versions.py` for a wall-clock comparison between the released v1
+Cython engine and the v2 PyO3 engine. The driver owns one shared scenario matrix and normalizes the
+small API differences at runtime. It rejects a run before timing unless both environments use the
+expected package version, backend, source revision, Python version, and precision mode. For v2, it
+also requires the requested source revision to be embedded in the loaded extension. NT v2
+compatibility note: the v1 Cython engine side is legacy migration context.
+
+Run the comparison on a quiet host. These commands create isolated release environments and a
+detached v1 worktree without changing the current branch:
+
+```bash
+COMPARE_ROOT=$(mktemp -d /tmp/nautilus-backtest-compare.XXXXXX)
+git worktree add --detach "$COMPARE_ROOT/v1" v1.231.0
+
+uv venv --python /usr/bin/python3.12 "$COMPARE_ROOT/env-v1"
+(
+    cd "$COMPARE_ROOT/v1"
+    uvx --from uv==0.11.33 uv build --wheel --python /usr/bin/python3.12 \
+        --out-dir "$COMPARE_ROOT/wheels-v1"
+)
+V1_WHEEL=$(find "$COMPARE_ROOT/wheels-v1" -type f -name 'nautilus_trader-*.whl')
+UV_LINK_MODE=copy uv pip install --no-cache \
+    --python "$COMPARE_ROOT/env-v1/bin/python" "$V1_WHEEL"
+
+uv venv --python /usr/bin/python3.12 "$COMPARE_ROOT/env-v2"
+uv pip install --python "$COMPARE_ROOT/env-v2/bin/python" maturin==1.14.1 patchelf
+(
+    cd python
+    CARGO_BUILD_JOBS=16 "$COMPARE_ROOT/env-v2/bin/maturin" build --release \
+        --out "$COMPARE_ROOT/wheels-v2"
+)
+V2_WHEEL=$(find "$COMPARE_ROOT/wheels-v2" -type f -name 'nautilus_trader-*.whl')
+UV_LINK_MODE=copy uv pip install --no-cache \
+    --python "$COMPARE_ROOT/env-v2/bin/python" "$V2_WHEEL"
+
+V1_COMMIT=$(git -C "$COMPARE_ROOT/v1" rev-parse HEAD)
+V2_COMMIT=$(git rev-parse HEAD)
+python3.12 scripts/benchmark-backtest-versions.py compare \
+    --v1-python "$COMPARE_ROOT/env-v1/bin/python" \
+    --v1-artifact "$V1_WHEEL" \
+    --v1-source "$COMPARE_ROOT/v1" \
+    --v1-commit "$V1_COMMIT" \
+    --v2-python "$COMPARE_ROOT/env-v2/bin/python" \
+    --v2-artifact "$V2_WHEEL" \
+    --v2-source "$PWD" \
+    --v2-commit "$V2_COMMIT" \
+    --sessions 5 \
+    --output "$COMPARE_ROOT/results.json"
+```
+
+The driver runs each boundary in both environments back-to-back and reverses or rotates the case
+order across sessions. `run_preloaded` times only `BacktestEngine.run()` after fixture creation,
+engine construction, and data registration. `load_build_run` includes instrument and data fixture
+creation, engine construction, data registration, and `run()`. The coordinator proves that each
+loaded extension byte-matches the corresponding wheel member before the run and rechecks the full
+identities after it. After every timed sample, its worker repeats the complete wheel, extension,
+source, and runtime identity proof and checks its canonical digest against the coordinator's
+initial identity. Raw output stores each full identity once and binds every sample to it by digest.
+Source identity hashes staged diffs, unstaged diffs, and untracked file contents in addition to the
+revision. Exact event, order, position, and account fingerprints are checked after
+every timed iteration without adding fingerprint work to the duration.
+
+Repeat `--scenario <name>` or `--boundary <name>` on the `compare` command to run a targeted subset.
+Omit both options to run the complete matrix. Raw output stores one full fingerprint for each
+selected scenario and boundary, then binds every timed sample to it by digest.
+
+The JSON output contains every elapsed sample, the observed host state, boundary definitions,
+medians, minimum-to-maximum spread, v2/v1 ratios, and percentage gaps. The driver requires at least
+three full sessions. It records CPU governor and `perf_event_paranoid` values but does not change
+host controls.
+
+---
+
+## Measure Criterion for publication
+
+Use the `bench-lto` profile for Criterion results that will be reported or published. The profile
+inherits from `release`, preserves full debug symbols, enables fat LTO, and uses one code generation
+unit. The default `bench` profile keeps full debug symbols without LTO and is better suited to local
+iteration.
+
+1. Quiesce the machine. On Linux, set the CPU governor to `performance` when you administer the
+   host and can restore its prior state:
+
+   ```bash
+   sudo cpupower frequency-set -g performance
+   ```
+
+1. On Linux, disable ASLR for the benchmark process and run the selected benchmark with
+   `bench-lto`:
+
+   ```bash
+   setarch "$(uname -m)" -R cargo bench --profile bench-lto -p <crate> --bench <name>
+   ```
+
+1. Run multiple full sessions and report whether each case uses its best or median result.
+
+1. Record the CPU model, kernel or operating system, Rust toolchain, and build profile with the
+   results:
+
+   ```text
+   Hardware: <CPU model>, <kernel or operating system>
+   Toolchain: <rustc version>
+   Profile: bench-lto (release + lto = "fat" + codegen-units = 1, debug = full)
+   ```
+
+For deeper analysis, control hyper-threading and dynamic frequency scaling in firmware. Published
+results must record those controls when they differ from the normal host state.
+
+iai runs under Cachegrind's virtual CPU model, so host quiescence, frequency scaling, and ASLR do
+not affect its instruction counts. Run iai without the Criterion noise controls.
+
+---
+
+## Generating a flamegraph
+
+`cargo-flamegraph` produces a sampled call-stack profile for one bench. Use it
+when a benchmark regresses and the responsible inner call is unclear.
+
+1. Install once per machine:
 
    ```bash
    cargo install flamegraph
    ```
 
-2. Run a specific bench with the symbol-rich `bench` profile.
+2. Run a specific bench with the `bench` profile:
 
    ```bash
-   # example: the matching benchmark in nautilus-common
    cargo flamegraph --bench matching -p nautilus-common --profile bench
    ```
 
-3. Open the generated `flamegraph.svg` in your browser and zoom into hot paths.
+3. Open `flamegraph.svg` in a browser and zoom into hot paths.
 
-#### Linux
+### Linux
 
-On Linux, `perf` must be available. On Debian/Ubuntu, you can install it with:
+`perf` must be available. On Debian/Ubuntu:
 
 ```bash
 sudo apt install linux-tools-common linux-tools-$(uname -r)
 ```
 
-If you see an error mentioning `perf_event_paranoid` you need to relax the
-kernel's perf restrictions for the current session (root required):
+If `perf_event_paranoid` blocks the run:
 
 ```bash
 sudo sh -c 'echo 1 > /proc/sys/kernel/perf_event_paranoid'
 ```
 
-A value of `1` is typically enough; set it back to `2` (default) or make
-the change permanent via `/etc/sysctl.conf` if desired.
+A value of `1` is usually enough. Set it back to `2` (default) afterwards
+or persist via `/etc/sysctl.conf`.
 
-#### macOS
+### macOS
 
-On macOS, `DTrace` requires root permissions, so you must run `cargo flamegraph`
-with `sudo`.
+`DTrace` requires root, so `cargo flamegraph` must be run with `sudo`.
 
 :::warning
-Running with `sudo` creates files in `target/` owned by root, causing permission errors with subsequent `cargo` commands. You may need to remove root-owned files manually or run `sudo cargo clean`.
+Running with `sudo` creates files in `target/` owned by root, causing
+permission errors with subsequent `cargo` commands. You may need to remove
+root-owned files manually or run `sudo cargo clean`.
 :::
 
 ```bash
 sudo cargo flamegraph --bench matching -p nautilus-common --profile bench
 ```
 
-Because `[profile.bench]` keeps full debug symbols the SVG will show readable
-function names without bloating production binaries (which still use
-`panic = "abort"` and are built via `[profile.release]`).
+The `bench` profile keeps full debug symbols, so flamegraphs render with
+readable function names without bloating production binaries (which still
+use `panic = "abort"` and are built via `[profile.release]`).
 
 > **Note** Benchmark binaries are compiled with the custom `[profile.bench]`
-> defined in the workspace `Cargo.toml`.  That profile inherits from
-> `release-debugging`, preserving full optimisation *and* debug symbols so that
-> tools like `cargo flamegraph` or `perf` produce human-readable stack traces.
+> defined in the workspace `Cargo.toml`. That profile inherits from
+> `release` and sets `debug = "full"`, preserving full optimisation *and*
+> debug symbols so tools like `cargo flamegraph` or `perf` produce
+> human-readable stack traces.
 
 ---
 
 ## Templates
 
-Ready-to-copy starter files live in [`docs/dev_templates/`](https://nautilustrader.io/docs/latest/dev_templates/):
+Starter files live in [`docs/dev_templates/`](https://nautilustrader.io/docs/latest/dev_templates/):
 
 - **Criterion**: [`criterion_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/criterion_template.rs/)
 - **iai**: [`iai_template.rs`](https://nautilustrader.io/docs/latest/dev_templates/iai_template.rs/)
 
-Copy the template into `benches/`, adjust imports and names, and start measuring!
+Copy the template into the target crate's `benches/`, adjust imports and
+group names, register in `Cargo.toml`, and start measuring.

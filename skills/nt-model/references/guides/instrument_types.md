@@ -5,36 +5,41 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 Complete catalog of all instrument types in NautilusTrader with fields, creation patterns,
 and Rust equivalents.
 
-## Instrument Hierarchy
+## Instrument Model
+
+The Python surface is flat: there is no Python `Instrument` base class and no
+per-type submodules. Every instrument type is a concrete class exported
+directly from `nautilus_trader.model`:
 
 ```
-Data (core base)
- +-- Instrument (base class for all tradable instruments)
- |    +-- Equity
- |    +-- CurrencyPair
- |    +-- Commodity
- |    +-- IndexInstrument
- |    +-- FuturesContract
- |    +-- FuturesSpread
- |    +-- CryptoFuture
- |    +-- CryptoPerpetual
- |    +-- PerpetualContract
- |    +-- OptionContract
- |    +-- OptionSpread
- |    +-- CryptoOption
- |    +-- BinaryOption
- |    +-- Cfd
- |    +-- BettingInstrument
- +-- SyntheticInstrument (separate from Instrument, derives from Data directly)
+BettingInstrument      FuturesContract
+BinaryOption           FuturesSpread
+Cfd                    IndexInstrument
+Commodity              OptionContract
+CryptoFuture           OptionSpread
+CryptoFuturesSpread    PerpetualContract
+CryptoOption           TokenizedAsset
+CryptoOptionSpread
+CryptoPerpetual
+CurrencyPair
+Equity
+SyntheticInstrument (formula-derived; not a tradable instrument)
 ```
 
-`SyntheticInstrument` is **not** a subclass of `Instrument`. It extends `Data` directly
-and has its own formula-based pricing model backed by a Rust core.
+`SyntheticInstrument` is not part of the tradable instrument family; it has its own
+formula-based pricing model backed by a Rust core.
 
-## Base Instrument Fields
+On the Rust side, `InstrumentAny` (`crates/model/src/instruments/any.rs:33`) is an
+`enum_dispatch` enum over the 18 tradable instrument types, and the `Instrument`
+trait (`crates/model/src/instruments/mod.rs`) defines the shared surface
+(`base_currency()`, `settlement_currency()`, `cost_currency()`, `activation_ns()`,
+`expiration_ns()`, and more). `InstrumentAny` is Rust-side only -- it is not exposed
+to Python.
 
-All `Instrument` subclasses inherit these from the base class
-(`nautilus_trader.model.instruments.base.Instrument`):
+## Common Instrument Fields
+
+All concrete instrument classes expose these common fields as constructor
+parameters and/or read-only properties:
 
 ### Required fields
 
@@ -57,7 +62,7 @@ All `Instrument` subclasses inherit these from the base class
 | `ts_event`          | `uint64`        | UNIX timestamp (nanoseconds) when event occurred         |
 | `ts_init`           | `uint64`        | UNIX timestamp (nanoseconds) when object initialized     |
 
-### Optional fields (base)
+### Optional fields
 
 | Field              | Type       | Description                         |
 |--------------------|------------|-------------------------------------|
@@ -72,31 +77,34 @@ All `Instrument` subclasses inherit these from the base class
 | `tick_scheme_name` | `str`      | Name of a registered tick scheme    |
 | `info`             | `dict`     | Additional instrument information   |
 
-### Key base properties and methods
+### Key common properties and methods
 
-- `symbol` -- the ticker symbol portion of the instrument ID
-- `venue` -- the venue portion of the instrument ID
+- `type_name` -- class name string for the instrument type
+- `instrument_id` -- the `InstrumentId`; use `instrument_id.symbol` and
+  `instrument_id.venue` for the symbol and venue portions
 - `make_price(value)` -- round a value to the instrument's price precision
 - `make_qty(value, round_down=False)` -- round a value to the instrument's size precision
-- `notional_value(quantity, price)` -- calculate notional value
-- `is_spread()` -- whether the instrument has multiple legs
-- `get_base_currency()` -- base currency (if applicable, e.g., CurrencyPair)
-- `get_settlement_currency()` -- currency used to settle trades
-- `get_cost_currency()` -- currency used for PnL calculations
-- `next_bid_price(value, num_ticks)` / `next_ask_price(value, num_ticks)` -- tick-scheme aware price stepping
+- `notional_value(quantity, price, use_quote_for_inverse=False)` -- calculate notional value
+- `next_bid_price(value, num_ticks)` / `next_ask_price(value, num_ticks)` -- tick-scheme
+  aware price stepping (returns `None` past the tick scheme bounds)
+- `next_bid_prices(value, num_ticks)` / `next_ask_prices(value, num_ticks)` -- batch
+  tick-stepped prices as `Decimal` lists
+- `settlement_currency` -- property on instrument classes that define one
+  (e.g., `CryptoPerpetual`, `CryptoFuture`, `PerpetualContract`)
 
 ## Individual Instrument Types
 
 ### Equity
-**Module**: `nautilus_trader.model.instruments.equity`
+**Class**: `nautilus_trader.model.Equity`
 **Asset class**: `EQUITY` | **Instrument class**: `SPOT`
 
-Additional required: `currency`, `price_increment`, `lot_size`
+Additional required: `currency`, `price_increment`; optional: `lot_size` (pinned
+`lot_size` property returns `Quantity | None`, `python/nautilus_trader/model/__init__.pyi:304`)
 Additional optional: `isin` (ISIN code), `max_quantity`, `min_quantity`
 Fixed: `size_precision=0`, `size_increment=1`, `multiplier=1`, `is_inverse=False`
 
 ### CurrencyPair
-**Module**: `nautilus_trader.model.instruments.currency_pair`
+**Class**: `nautilus_trader.model.CurrencyPair`
 **Asset class**: auto-detected (`CRYPTOCURRENCY` if either currency is crypto, else `FX`)
 **Instrument class**: `SPOT`
 
@@ -106,7 +114,7 @@ Key property: `base_currency` -- the base currency of the pair
 Fixed: `is_inverse=False`
 
 ### Commodity
-**Module**: `nautilus_trader.model.instruments.commodity`
+**Class**: `nautilus_trader.model.Commodity`
 **Asset class**: caller-specified | **Instrument class**: `SPOT`
 
 Additional required: `asset_class`, `quote_currency`, `price_increment`, `size_increment`
@@ -114,7 +122,7 @@ Additional optional: `lot_size`, all quantity/notional/price limits
 Fixed: `is_inverse=False`
 
 ### IndexInstrument
-**Module**: `nautilus_trader.model.instruments.index`
+**Class**: `nautilus_trader.model.IndexInstrument`
 **Asset class**: `INDEX` | **Instrument class**: `SPOT`
 
 A spot/cash index. Not directly tradable; used as a reference price.
@@ -122,48 +130,64 @@ Additional required: `currency`, `price_increment`, `size_increment`, `size_prec
 Fixed: `is_inverse=False`, `multiplier=1`, `margin_init=0`, `margin_maint=0`
 
 ### FuturesContract
-**Module**: `nautilus_trader.model.instruments.futures_contract`
+**Class**: `nautilus_trader.model.FuturesContract`
 **Asset class**: caller-specified | **Instrument class**: `FUTURE`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `multiplier`, `lot_size`, `underlying` (str), `activation_ns`, `expiration_ns`
 Additional optional: `exchange` (MIC code)
-Properties: `activation_utc`, `expiration_utc` (as `pd.Timestamp`)
+Properties: `activation_ns`, `expiration_ns` (UNIX nanoseconds)
 Fixed: `size_precision=0`, `size_increment=1`, `is_inverse=False`
 
 ### FuturesSpread
-**Module**: `nautilus_trader.model.instruments.futures_spread`
+**Class**: `nautilus_trader.model.FuturesSpread`
 **Asset class**: caller-specified | **Instrument class**: `FUTURES_SPREAD`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `multiplier`, `lot_size`, `underlying`, `strategy_type` (str), `activation_ns`, `expiration_ns`
 Additional optional: `exchange`
-Note: Supports negative prices. Overrides `legs()` to return leg instrument IDs from generic spread ID parsing.
+Note: Supports negative prices.
 
 ### CryptoPerpetual
-**Module**: `nautilus_trader.model.instruments.crypto_perpetual`
+**Class**: `nautilus_trader.model.CryptoPerpetual`
 **Asset class**: `CRYPTOCURRENCY` | **Instrument class**: `SWAP`
 
 Additional required: `base_currency`, `quote_currency`, `settlement_currency`, `is_inverse`, `price_increment`, `size_increment`
 Additional optional: `multiplier`, `lot_size`, all quantity/notional/price limits
-Key properties: `is_quanto` (auto-calculated when settlement != base and settlement != quote)
-Overrides: `get_settlement_currency()`, `get_cost_currency()`, `notional_value()`
+Key properties: `is_quanto` (auto-calculated when settlement != base and settlement != quote), `settlement_currency`
+Notional value: `notional_value(quantity, price, use_quote_for_inverse=False)` handles quanto and inverse settlement
 
 ### CryptoFuture
-**Module**: `nautilus_trader.model.instruments.crypto_future`
+**Class**: `nautilus_trader.model.CryptoFuture`
 **Asset class**: `CRYPTOCURRENCY` | **Instrument class**: `FUTURE`
 
 Additional required: `underlying` (Currency), `quote_currency`, `settlement_currency`, `is_inverse`, `activation_ns`, `expiration_ns`, `price_increment`, `size_increment`
 Additional optional: `multiplier`, `lot_size`, all quantity/notional/price limits
-Properties: `activation_utc`, `expiration_utc`
+Properties: `activation_ns`, `expiration_ns`
+
+### CryptoFuturesSpread
+**Class**: `nautilus_trader.model.CryptoFuturesSpread`
+**Asset class**: `CRYPTOCURRENCY` | **Instrument class**: `FUTURES_SPREAD`
+
+Additional required: `underlying` (Currency), `quote_currency`, `settlement_currency`, `is_inverse`, `strategy_type` (str), `activation_ns`, `expiration_ns`, `price_increment`, `size_increment`
+Additional optional: `multiplier`, `lot_size`, all quantity/notional/price limits
+Note: Supports negative prices.
 
 ### CryptoOption
-**Module**: `nautilus_trader.model.instruments.crypto_option`
+**Class**: `nautilus_trader.model.CryptoOption`
 **Asset class**: `CRYPTOCURRENCY` | **Instrument class**: `OPTION`
 
 Additional required: `underlying` (Currency), `quote_currency`, `settlement_currency`, `is_inverse`, `option_kind` (PUT/CALL), `strike_price`, `activation_ns`, `expiration_ns`, `price_increment`, `size_increment`
 Additional optional: `multiplier`, `lot_size`, all limits
 
+### CryptoOptionSpread
+**Class**: `nautilus_trader.model.CryptoOptionSpread`
+**Asset class**: `CRYPTOCURRENCY` | **Instrument class**: `OPTION_SPREAD`
+
+Additional required: `underlying` (Currency), `quote_currency`, `settlement_currency`, `is_inverse`, `strategy_type` (str), `activation_ns`, `expiration_ns`, `price_increment`, `size_increment`
+Additional optional: `multiplier`, `lot_size`, all limits
+Note: Supports negative prices.
+
 ### PerpetualContract
-**Module**: `nautilus_trader.model.instruments.perpetual_contract`
+**Class**: `nautilus_trader.model.PerpetualContract`
 **Asset class**: caller-specified (any) | **Instrument class**: `SWAP`
 
 Asset-class agnostic perpetual swap (FX, equities, commodities, indexes, crypto).
@@ -171,7 +195,7 @@ Additional required: `underlying` (str), `asset_class`, `quote_currency`, `settl
 Additional optional: `base_currency`, `multiplier`, `lot_size`, all limits
 
 ### OptionContract
-**Module**: `nautilus_trader.model.instruments.option_contract`
+**Class**: `nautilus_trader.model.OptionContract`
 **Asset class**: caller-specified | **Instrument class**: `OPTION`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `multiplier`, `lot_size`, `underlying`, `option_kind` (PUT/CALL), `strike_price`, `activation_ns`, `expiration_ns`
@@ -179,29 +203,37 @@ Additional optional: `exchange`
 Note: Supports negative prices.
 
 ### OptionSpread
-**Module**: `nautilus_trader.model.instruments.option_spread`
+**Class**: `nautilus_trader.model.OptionSpread`
 **Asset class**: caller-specified | **Instrument class**: `OPTION_SPREAD`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `multiplier`, `lot_size`, `underlying`, `strategy_type`, `activation_ns`, `expiration_ns`
 Additional optional: `exchange`
-Note: Supports negative prices. Overrides `legs()` for generic spread ID parsing.
+Note: Supports negative prices.
 
 ### BinaryOption
-**Module**: `nautilus_trader.model.instruments.binary_option`
+**Class**: `nautilus_trader.model.BinaryOption`
 **Asset class**: caller-specified | **Instrument class**: `OPTION`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `size_increment`, `activation_ns`, `expiration_ns`
 Additional optional: `outcome` (str), `description` (str), `max_quantity`, `min_quantity`
 
 ### Cfd
-**Module**: `nautilus_trader.model.instruments.cfd`
+**Class**: `nautilus_trader.model.Cfd`
 **Asset class**: auto-detected (like CurrencyPair) | **Instrument class**: `CFD`
 
 Additional required: `quote_currency`, `price_increment`, `size_increment`
 Additional optional: `base_currency`, `lot_size`, all limits
 
+### TokenizedAsset
+**Class**: `nautilus_trader.model.TokenizedAsset`
+**Asset class**: caller-specified | **Instrument class**: `SPOT`
+
+Additional required: `base_currency`, `quote_currency`, `price_increment`, `size_increment`
+Additional optional: `multiplier`, `lot_size`, all limits
+Key properties: `base_currency`, `is_quanto`
+
 ### BettingInstrument
-**Module**: `nautilus_trader.model.instruments.betting`
+**Class**: `nautilus_trader.model.BettingInstrument`
 **Asset class**: `ALTERNATIVE` | **Instrument class**: `SPORTS_BETTING`
 
 Unique fields: `venue_name`, `event_type_id`, `event_type_name`, `competition_id`, `competition_name`, `event_id`, `event_name`, `event_country_code`, `event_open_date`, `betting_type`, `market_id`, `market_name`, `market_start_time`, `market_type`, `selection_id`, `selection_name`, `selection_handicap`
@@ -209,8 +241,8 @@ The instrument ID is auto-generated from venue + market/selection data.
 
 ## SyntheticInstrument (Special)
 
-**Module**: `nautilus_trader.model.instruments.synthetic`
-**Extends**: `Data` (NOT `Instrument`)
+**Class**: `nautilus_trader.model.SyntheticInstrument`
+**Not** part of the tradable `InstrumentAny` family (Rust-side only)
 
 Derives prices from component instruments using a mathematical formula.
 The ID is always `{symbol}.SYNTH`.
@@ -262,23 +294,18 @@ values = {
 equity = Equity.from_dict(values)
 ```
 
-### From pyo3 (Rust to Python conversion)
+### From Rust
 
-Each instrument has `from_pyo3()` for converting Rust pyo3 objects:
-
-```python
-# Typically used internally by the framework
-cython_equity = Equity.from_pyo3(pyo3_equity)
-```
-
-The conversion uses `from_raw_c` for Price/Quantity to avoid precision loss.
+No per-object conversion API exists: the classes exported from `nautilus_trader.model`
+are the PyO3 bindings over the Rust instrument structs (a single compiled surface).
+When reconstructing value types from raw fields, use `Price.from_raw(raw, precision)`
+and `Quantity.from_raw(raw, precision)`, which preserve the exact fixed-point
+representation without float conversion.
 
 ### Manual construction
 
 ```python
-from nautilus_trader.model.instruments import Equity
-from nautilus_trader.model.identifiers import InstrumentId, Symbol
-from nautilus_trader.model.objects import Currency, Price, Quantity
+from nautilus_trader.model import Equity, InstrumentId, Symbol, Currency, Price, Quantity
 
 equity = Equity(
     instrument_id=InstrumentId.from_str("AAPL.XNAS"),
@@ -292,19 +319,6 @@ equity = Equity(
 )
 ```
 
-### Batch conversion from Rust
-
-```python
-from nautilus_trader.model.instruments.base import instruments_from_pyo3
-
-# NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-# Convert a list of pyo3 Rust instrument objects to Cython objects
-cython_instruments = instruments_from_pyo3(pyo3_instrument_list)
-```
-
-This function dispatches based on pyo3 type to the correct `from_pyo3_c()` method.
-
 ## Rust Equivalents
 
 Each Python instrument has a corresponding Rust struct in `crates/model/src/instruments/`:
@@ -316,7 +330,9 @@ Each Python instrument has a corresponding Rust struct in `crates/model/src/inst
 | `Cfd`                | `instruments::cfd`                  | `Cfd`                  |
 | `Commodity`          | `instruments::commodity`            | `Commodity`            |
 | `CryptoFuture`       | `instruments::crypto_future`        | `CryptoFuture`         |
+| `CryptoFuturesSpread`| `instruments::crypto_futures_spread`| `CryptoFuturesSpread`  |
 | `CryptoOption`       | `instruments::crypto_option`        | `CryptoOption`         |
+| `CryptoOptionSpread` | `instruments::crypto_option_spread` | `CryptoOptionSpread`   |
 | `CryptoPerpetual`    | `instruments::crypto_perpetual`     | `CryptoPerpetual`      |
 | `CurrencyPair`       | `instruments::currency_pair`        | `CurrencyPair`         |
 | `Equity`             | `instruments::equity`               | `Equity`               |
@@ -327,22 +343,18 @@ Each Python instrument has a corresponding Rust struct in `crates/model/src/inst
 | `OptionSpread`       | `instruments::option_spread`        | `OptionSpread`         |
 | `PerpetualContract`  | `instruments::perpetual_contract`   | `PerpetualContract`    |
 | `SyntheticInstrument`| `instruments::synthetic`            | `SyntheticInstrument`  |
+| `TokenizedAsset`     | `instruments::tokenized_asset`      | `TokenizedAsset`       |
 
 The Rust side also defines:
-- `InstrumentAny` enum (`instruments::any`) -- an `enum_dispatch` wrapper over all instrument types
+- `InstrumentAny` enum (`instruments::any`) -- an `enum_dispatch` wrapper over the 18
+  tradable instrument types (Rust-side only, not exposed to Python)
 - `validate_instrument_common()` -- shared validation logic for all instruments
 - `TickSchemeRule` trait and `FixedTickScheme` -- tick stepping logic
 - Stubs module (`instruments::stubs`) for test fixtures (behind `test` or `stubs` feature flag)
 
 ## Expiring Instruments
 
-The base module defines sets of instrument classes that expire:
-
-```python
-EXPIRING_INSTRUMENT_CLASSES = {FUTURE, FUTURES_SPREAD, OPTION, OPTION_SPREAD}
-ENGINE_EXPIRING_INSTRUMENT_CLASSES = {FUTURE, FUTURES_SPREAD, OPTION, OPTION_SPREAD}
-NEGATIVE_PRICE_INSTRUMENT_CLASSES = (OPTION, FUTURES_SPREAD, OPTION_SPREAD)
-```
-
-These are used by the backtest engine for automatic contract expiration handling
-and to allow negative price validation where appropriate.
+Instrument classes that expire carry `activation_ns` and `expiration_ns`
+(Unix-nanosecond) fields on the flat `nautilus_trader.model` classes. The Rust
+side models expiry through the instrument definitions in `crates/model/src/instruments/`;
+no Python-side instrument-class set constants are exported at the pinned baseline.

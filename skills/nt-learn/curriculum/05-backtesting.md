@@ -14,6 +14,7 @@ component ownership.
 
 - Engine example: `skills/nt-backtest/references/examples/rust_backtest/engine_ema_cross.rs`
 - Node example: `skills/nt-backtest/references/examples/rust_backtest/node_ema_cross.rs`
+- Pinned upstream how-to: `docs/how_to/run_rust_backtest.md`
 
 Choose the engine surface for direct programmatic orchestration and the node surface for
 configuration-driven wiring. Keep strategy logic and model ownership identical to live deployment.

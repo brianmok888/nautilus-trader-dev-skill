@@ -29,7 +29,7 @@ nautilus-backtest = { version = "0.62", features = ["streaming"] }
 nautilus-common = "0.62"
 nautilus-execution = "0.62"
 nautilus-live = "0.62"
-nautilus-model = { version = "0.62", features = ["stubs"] }
+nautilus-model = "0.62"
 nautilus-persistence = "0.62"
 nautilus-trading = { version = "0.62", features = ["examples"] }
 
@@ -50,10 +50,13 @@ ustr = "1"
 | Flag | Crate | Effect |
 |------|-------|--------|
 | `high-precision` | `nautilus-model` | 16-digit precision (required for crypto) |
-| `stubs` | `nautilus-model` | Test instrument stubs (`audusd_sim`, etc.) |
 | `examples` | `nautilus-trading` | Example strategies (`EmaCross`, `GridMarketMaker`) |
 | `streaming` | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode` |
 | `defi` | `nautilus-model` | DeFi data types (implies `high-precision`) |
+
+There is no `stubs` cargo feature. Test instrument stubs (`audusd_sim()` and
+friends) live in `nautilus_model::stubs`, compiled under `test-support` (or in
+tests) per `crates/model/src/lib.rs`.
 
 Rust toolchain: follow the checked-out `rust-toolchain.toml`; source-aligned
 work as of 2026-08-22 uses Rust 1.98.0. Older 1.97.x release/docs
@@ -209,12 +212,23 @@ Key differences from actor:
 ### BacktestEngine (low-level)
 
 ```rust
-use nautilus_backtest::{config::BacktestEngineConfig, engine::BacktestEngine};
+use nautilus_backtest::{
+    config::{BacktestEngineConfig, SimulatedVenueConfig},
+    engine::BacktestEngine,
+};
 
 let mut engine = BacktestEngine::new(BacktestEngineConfig::default())?;
 
-// Add venue, instrument, data
-engine.add_venue(Venue::from("SIM"), OmsType::Hedging, ...)?;
+// Add venue (single SimulatedVenueConfig argument), instrument, data
+engine.add_venue(
+    SimulatedVenueConfig::builder()
+        .venue(Venue::from("SIM"))
+        .oms_type(OmsType::Hedging)
+        .account_type(AccountType::Margin)
+        .book_type(BookType::L1_MBP)
+        .starting_balances(vec![Money::from("1_000_000 USD")])
+        .build()?,
+)?;
 engine.add_instrument(&instrument)?;
 engine.add_data(quotes, None, true, true);
 
@@ -278,10 +292,13 @@ Key requirements:
 |---------|----------|
 | `on_start` | Actor/strategy started |
 | `on_stop` | Actor/strategy stopped |
+| `on_data` | `CustomData` |
+| `on_signal` | `Signal` |
 | `on_quote` | `QuoteTick` |
 | `on_trade` | `TradeTick` |
 | `on_bar` | `Bar` |
 | `on_book_deltas` | `OrderBookDeltas` |
+| `on_book_depth` | `OrderBookDepth10` |
 | `on_book` | `OrderBook` (at interval) |
 | `on_instrument` | `InstrumentAny` |
 | `on_mark_price` | `MarkPriceUpdate` |
@@ -290,9 +307,30 @@ Key requirements:
 | `on_option_greeks` | `OptionGreeks` |
 | `on_option_chain` | `OptionChainSlice` |
 | `on_instrument_status` | `InstrumentStatus` |
+| `on_instrument_close` | `InstrumentClose` |
+| `on_block` | `Block` (DeFi) |
+| `on_pool` | `Pool` (DeFi) |
+| `on_pool_swap` | `PoolSwap` (DeFi) |
+| `on_pool_liquidity_update` | `PoolLiquidityUpdate` (DeFi) |
+| `on_pool_fee_collect` | `PoolFeeCollect` (DeFi) |
+| `on_pool_flash` | `PoolFlash` (DeFi) |
+| `on_historical_data` | `CustomData` (scalar or batch list) |
+| `on_historical_book_deltas` | `[OrderBookDelta]` batch |
+| `on_historical_book_depth` | `[OrderBookDepth10]` batch |
+| `on_historical_quotes` | `[QuoteTick]` batch |
+| `on_historical_trades` | `[TradeTick]` batch |
+| `on_historical_bars` | `[Bar]` batch |
+| `on_historical_mark_prices` | `[MarkPriceUpdate]` batch |
+| `on_historical_index_prices` | `[IndexPriceUpdate]` batch |
+| `on_historical_funding_rates` | `[FundingRateUpdate]` batch |
 | `on_order_filled` | `OrderFilled` |
 | `on_order_canceled` | `OrderCanceled` |
 | `on_time_event` | `TimeEvent` |
+
+These are the `DataActor` trait handlers owned by `nautilus_common`
+(`crates/common/src/actor/data_actor.rs` in the pinned checkout); the DeFi rows
+require the `defi` cargo feature. For a guided walkthrough of the engine and node
+backtest flows, see the pinned upstream how-to `docs/how_to/run_rust_backtest.md`.
 
 ## Exercises
 

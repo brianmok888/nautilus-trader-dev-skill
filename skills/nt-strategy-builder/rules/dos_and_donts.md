@@ -102,7 +102,9 @@ dt = self.clock.utc_now()  # datetime (for display)
 
 **DO** enable reconciliation with adequate lookback.
 ```python
-exec_engine = LiveExecEngineConfig(
+from nautilus_trader.live import LiveExecutionEngineConfig
+
+exec_engine = LiveExecutionEngineConfig(
     reconciliation=True,
     open_check_lookback_mins=60,  # Never reduce below 60
     inflight_check_interval_ms=2000,
@@ -112,15 +114,17 @@ exec_engine = LiveExecEngineConfig(
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
-**DO** configure all connection timeouts on `TradingNodeConfig`.
-```python
-config = TradingNodeConfig(
-    timeout_connection=30.0,
-    timeout_reconciliation=10.0,
-    timeout_portfolio=10.0,
-    timeout_disconnection=10.0,
-)
+**DO** configure all connection timeouts on the Rust v2 `LiveNodeConfig`.
+```rust
+let config = LiveNodeConfig {
+    timeout_connection: Duration::from_secs(30),
+    timeout_reconciliation: Duration::from_secs(10),
+    timeout_portfolio: Duration::from_secs(10),
+    timeout_disconnection: Duration::from_secs(10),
+    ..Default::default()
+};
 ```
+> Why: The four connection/initialization timeouts live on the Rust `LiveNodeConfig` at v2; the v1 Python-node timeout snippet now lives only in `migration_reference/python/venue-and-simulation-examples.md`.
 
 **DO** handle all order lifecycle events.
 ```python
@@ -162,9 +166,11 @@ self.bar_buffer: deque[Bar] = deque(maxlen=500)  # ← bounded
 
 ### DEX-Specific DOs
 
-**DO** customise `FillModel` for DEX realism in backtests.
+**DO** customise fill models for DEX realism in backtests (fill models import from `nautilus_trader.execution`; the base `FillModel` takes no constructor arguments at v2 - use the concrete model constructors).
 ```python
-dex_fill_model = FillModel(
+from nautilus_trader.execution import DefaultFillModel
+
+dex_fill_model = DefaultFillModel(
     prob_fill_on_limit=0.25,  # DEX limit orders rarely fill at exact price
     prob_slippage=0.70,  # High slippage on AMMs
     random_seed=42,
@@ -264,8 +270,6 @@ MyExchangeConfig(api_key="sk_live_abc123")
 
 # ✅ CORRECT
 MyExchangeConfig(api_key=os.environ["EXCHANGE_API_KEY"])
-# or
-MyExchangeConfig(api_key=SecretStr(os.environ["EXCHANGE_API_KEY"]))
 ```
 
 **DON'T** skip order rejection and expiry handling.
@@ -279,19 +283,17 @@ MyExchangeConfig(api_key=SecretStr(os.environ["EXCHANGE_API_KEY"]))
 **DON'T** poll the chain in `on_bar` / `on_quote_tick` handlers.
 > Chain calls are blocking and slow — drive chain polling from a dedicated Actor using `self.clock.set_timer()`.
 
-**DON'T** store private keys as plain `str` in config.
+**DON'T** hardcode or log private keys in config.
 ```python
-# ❌ WRONG
-class MyDEXConfig(LiveExecClientConfig):
-    private_key: str  # exposed in logs, repr, etc.
+# ❌ WRONG - key material hardcoded and exposed in logs, repr, etc.
+config = MyDEXClientConfig(private_key="0xabc123...")
 
 
-# ✅ CORRECT
-from pydantic import SecretStr
-
-
-class MyDEXConfig(LiveExecClientConfig):
-    private_key: SecretStr
+# ✅ CORRECT - v2 adapter config fields are plain `str` sourced from the
+# environment (the pinned config base is `ExecutionClientConfig`, a frozen
+# pyclass exposing only `instrument_provider` and `routing`; adapter secrets
+# are redacted at the Rust boundary, and pydantic SecretStr does not exist at v2)
+config = MyDEXClientConfig(private_key=os.environ["DEX_PRIVATE_KEY"])
 ```
 
 **DON'T** ignore transaction receipt errors during execution.

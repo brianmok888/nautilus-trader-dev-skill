@@ -3,20 +3,39 @@
 ## Current Python registration surface
 
 The V2 PyO3 model module exports `register_custom_data_class` from
-`nautilus_trader.model`. Register a Python class by supplying JSON callbacks; add
-Arrow record-batch callbacks only when the type must persist through the catalog.
-Registration is process-global, so perform it once during application startup.
+`nautilus_trader.model`. Registration takes a single class argument: the class
+must provide a `to_json` instance method and a `from_json(data)` classmethod,
+plus `encode_record_batch_py` / `decode_record_batch_py` for Arrow
+record-batch persistence (these may raise for message-bus-only types, but must
+exist before catalog persistence is used). Registration is process-global, so
+perform it once during application startup.
 
 ```python
+import json
+
 from nautilus_trader.model import register_custom_data_class
 
-register_custom_data_class(
-    MySignal,
-    to_dict=lambda value: value.to_dict(),
-    from_dict=MySignal.from_dict,
-    encode_record_batch_py=encode_signal_batch,
-    decode_record_batch_py=decode_signal_batch,
-)
+class MySignal:
+    ts_event = 0
+    ts_init = 0
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, data):
+        instance = cls()
+        instance.__dict__.update(data)
+        return instance
+
+    def encode_record_batch_py(self, items):
+        raise NotImplementedError("Arrow encoding is not configured")
+
+    @classmethod
+    def decode_record_batch_py(cls, metadata, batch):
+        raise NotImplementedError("Arrow decoding is not configured")
+
+register_custom_data_class(MySignal)
 ```
 
 `encode_record_batch_py` receives a list of instances plus schema metadata and
@@ -60,7 +79,7 @@ when the type must also flow through Python consumers.
 ## Required data contract
 
 A custom signal type needs stable `ts_event` and `ts_init` Unix-nanosecond fields,
-a deterministic `to_dict`, and a matching `from_dict`. Include every routing key
+a deterministic `to_json`, and a matching `from_json(data)` classmethod. Include every routing key
 (such as `instrument_id`) in the serialized form and round-trip it back to the
 Nautilus model type. Test JSON and Arrow round trips separately; do not treat one
 as proof of the other.
