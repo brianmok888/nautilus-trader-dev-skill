@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _HEADER = re.compile(
-    r"^\[(?P<id>NT-\d{4}-\d{2}-\d{2}-\d{2})\] "
+    r"^\[(?P<id>NT-\d{4}-\d{2}-\d{2}-\d{2,3})\] "
     r"\[(?P<priority>P[0-2])\] "
     r"\[(?P<status>OPEN|CLOSED(?: \d{4}-\d{2}-\d{2})?)\] "
     r"(?P<title>\S.*)$"

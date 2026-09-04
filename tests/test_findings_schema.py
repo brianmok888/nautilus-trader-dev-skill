@@ -49,6 +49,23 @@ def _write_cited(tmp_path: Path, name: str) -> None:
     (tmp_path / name).write_text("line0\n", encoding="utf-8")
 
 
+def test_findings_schema_accepts_three_digit_sequences(tmp_path: Path) -> None:
+    ledger = tmp_path / "Findings.md"
+    ledger.write_text(
+        """# Findings
+
+[NT-2026-09-04-100] [P1] [OPEN] Full-tree audit sequence beyond 99.
+  file: a.md:1
+  evidence: reproduced
+  fix: repair it
+  acceptance-test: command exits zero
+""",
+        encoding="utf-8",
+    )
+    _write_cited(tmp_path, "a.md")
+
+    assert validate_findings(ledger) == []
+
 def test_findings_schema_rejects_malformed_priority_that_bypasses_prefilter(
     tmp_path: Path,
 ) -> None:
