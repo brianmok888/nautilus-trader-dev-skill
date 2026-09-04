@@ -504,7 +504,7 @@ HARNESSES: dict[str, Harness] = {
                 "tests/test_strategy_builder_v2_contract.py",
             ),
             upstream_python_step(
-                ".venv/bin/python",
+                "../.venv/bin/python",
                 "-m",
                 "pytest",
                 "-q",

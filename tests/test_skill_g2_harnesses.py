@@ -180,7 +180,7 @@ def test_supported_python_v2_harness_uses_the_pinned_upstream_runtime() -> None:
     assert any(
         step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON for step in harness.steps
     )
-    assert any(".venv/bin/python" in step.command for step in harness.steps)
+    assert any("../.venv/bin/python" in step.command for step in harness.steps)
 
 
 def test_learning_example_command_has_no_stray_positional_package() -> None:
@@ -848,7 +848,7 @@ def test_strategy_builder_uses_documented_python_v2_working_directory() -> None:
 
     assert upstream_step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON
     assert upstream_step.command == (
-        ".venv/bin/python",
+        "../.venv/bin/python",
         "-m",
         "pytest",
         "-q",
@@ -964,3 +964,14 @@ def test_durable_evidence_rejects_wrong_json_types(
     errors = g2.validate_readiness_cards(tmp_path, {"nt-data": harness})
 
     assert any(expected_error in error for error in errors)
+
+
+def test_strategy_builder_upstream_step_resolves_root_venv() -> None:
+    steps = g2.HARNESSES["nt-strategy-builder"].steps
+    upstream_steps = [s for s in steps if s.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON]
+    assert upstream_steps, "nt-strategy-builder must exercise the upstream venv"
+    for step in upstream_steps:
+        assert step.command[0].startswith("../.venv/bin/"), (
+            "upstream-python steps run with cwd=<upstream>/python, so the interpreter "
+            "must resolve the root-level UV_PROJECT_ENVIRONMENT venv"
+        )
