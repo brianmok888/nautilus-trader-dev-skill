@@ -1,9 +1,11 @@
 # Objects
 
+Owning Rust crate: `crates/model/src/types/`
+
 ```{eval-rst}
-.. automodule:: nautilus_trader.model.objects
+.. automodule:: nautilus_trader.model
+   :no-index:
    :show-inheritance:
-   :inherited-members:
-   :members:
+   :members: Currency, CurrencyType, Money, Price, Quantity
    :member-order: bysource
 ```

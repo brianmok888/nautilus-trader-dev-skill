@@ -1,9 +1,7 @@
-# Persistence
-
-Owning Rust crate: `crates/persistence/`
+# Sandbox
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.persistence
+.. automodule:: nautilus_trader.adapters.sandbox
    :show-inheritance:
    :inherited-members:
    :members:

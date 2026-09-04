@@ -1,9 +1,7 @@
-# Persistence
-
-Owning Rust crate: `crates/persistence/`
+# Hyperliquid
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.persistence
+.. automodule:: nautilus_trader.adapters.hyperliquid
    :show-inheritance:
    :inherited-members:
    :members:

@@ -1,5 +1,3 @@
-NT v2 compatibility note: this page is a legacy v1 Python API snapshot retained migration/reference-only; the cited `nautilus_trader.*` submodule layout predates the V2 Rust/PyO3 flat re-export surfaces. Current APIs are documented in the pinned upstream `docs/developer_guide/` and `crates/` sources.
-
 # Adapters
 
 ```{eval-rst}
@@ -13,13 +11,19 @@ NT v2 compatibility note: this page is a legacy v1 Python API snapshot retained 
    :titlesonly:
    :hidden:
 
+   architect_ax.md
    betfair.md
    binance.md
+   bitmex.md
    bybit.md
    databento.md
+   deribit.md
    dydx.md
+   hyperliquid.md
    interactive_brokers.md
+   kraken.md
    okx.md
    polymarket.md
+   sandbox.md
    tardis.md
 ```

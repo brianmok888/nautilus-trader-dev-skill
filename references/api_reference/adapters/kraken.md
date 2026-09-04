@@ -1,9 +1,7 @@
-# Persistence
-
-Owning Rust crate: `crates/persistence/`
+# Kraken
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.persistence
+.. automodule:: nautilus_trader.adapters.kraken
    :show-inheritance:
    :inherited-members:
    :members:

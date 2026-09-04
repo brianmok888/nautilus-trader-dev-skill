@@ -1,9 +1,7 @@
-# Persistence
-
-Owning Rust crate: `crates/persistence/`
+# BitMEX
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.persistence
+.. automodule:: nautilus_trader.adapters.bitmex
    :show-inheritance:
    :inherited-members:
    :members:

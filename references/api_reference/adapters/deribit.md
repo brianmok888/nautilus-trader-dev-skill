@@ -1,9 +1,7 @@
-# Persistence
-
-Owning Rust crate: `crates/persistence/`
+# Deribit
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.persistence
+.. automodule:: nautilus_trader.adapters.deribit
    :show-inheritance:
    :inherited-members:
    :members:

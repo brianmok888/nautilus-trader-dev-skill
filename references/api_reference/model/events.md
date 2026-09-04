@@ -1,31 +1,11 @@
-NT v2 compatibility note: this page is a legacy v1 Python API snapshot retained migration/reference-only; the cited `nautilus_trader.*` submodule layout predates the V2 Rust/PyO3 flat re-export surfaces. Current APIs are documented in the pinned upstream `docs/developer_guide/` and `crates/` sources.
-
 # Events
 
-```{eval-rst}
-.. automodule:: nautilus_trader.model.events
-```
+Owning Rust crate: `crates/model/src/events/`
 
 ```{eval-rst}
-.. automodule:: nautilus_trader.model.events.account
+.. automodule:: nautilus_trader.model
+   :no-index:
    :show-inheritance:
-   :inherited-members:
-   :members:
-   :member-order: bysource
-```
-
-```{eval-rst}
-.. automodule:: nautilus_trader.model.events.order
-   :show-inheritance:
-   :inherited-members:
-   :members:
-   :member-order: bysource
-```
-
-```{eval-rst}
-.. automodule:: nautilus_trader.model.events.position
-   :show-inheritance:
-   :inherited-members:
-   :members:
+   :members: AccountState, OrderAccepted, OrderCancelRejected, OrderCanceled, OrderDenied, OrderEmulated, OrderExpired, OrderFillVoided, OrderFilled, OrderInitialized, OrderModifyRejected, OrderPendingCancel, OrderPendingUpdate, OrderRejected, OrderReleased, OrderSnapshot, OrderSubmitted, OrderTriggered, OrderUpdated, PortfolioSnapshot, PositionAdjusted, PositionChanged, PositionClosed, PositionOpened, PositionSnapshot
    :member-order: bysource
 ```
