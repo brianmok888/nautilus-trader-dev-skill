@@ -42,6 +42,12 @@ REMOVED_V2_SYMBOL_PATTERNS: Final = (
         r"(?<![A-Za-z0-9_])(?:LiveExecEngineConfig|LiveExecClientConfig|LiveDataClientConfig|LiveExecFactoryConfig|LiveDataFactoryConfig|FillModelConfig|ImportableFillModelConfig|DeriveExecClientConfig|DeriveDataClientConfig)(?![A-Za-z0-9_])",
     ),
     re.compile(
+        r"(?<![A-Za-z0-9_])(?:[A-Za-z]+LiveDataClientFactory|[A-Za-z]+LiveExecClientFactory|TardisCSVDataLoader|HistoricInteractiveBrokersClient|IBMarketDataTypeEnum|AxExecClientConfig|get_log_guard|get_target_px_for_quantity|DataFfiCVec|FixedPrecisionBytes|from_internal_map|params_init)(?![A-Za-z0-9_])",
+    ),
+    re.compile(
+        r"(?<![A-Za-z0-9_])nautilus_pyo3(?![A-Za-z0-9_])",
+    ),
+    re.compile(
         r"\bfrom\s+nautilus_trader\.(?:backtest\.(?:engine|models|config)"
         r"|core\.(?:rust\.model[A-Za-z0-9_.]*|data[A-Za-z0-9_.]*|message[A-Za-z0-9_.]*)"
         r"|common\.(?:actor|component|providers)"

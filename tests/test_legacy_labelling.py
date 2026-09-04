@@ -389,3 +389,36 @@ def test_tracking_history_is_intentionally_excluded(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0
+
+def test_removed_v2_symbols_from_2026_09_04_wave_are_flagged(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    markers = (
+        "OKXLiveDataClientFactory",
+        "BybitLiveExecClientFactory",
+        "nautilus_trader.core.nautilus_pyo3",
+        "TardisCSVDataLoader",
+        "HistoricInteractiveBrokersClient",
+        "get_log_guard",
+    )
+    for index, marker in enumerate(markers):
+        (tmp_path / "docs" / f"guide{index}.md").write_text(
+            f"# Guide\n\nCurrent wiring uses {marker} as shown.\n",
+            encoding="utf-8",
+        )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+            "--root",
+            str(tmp_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    output = result.stdout + result.stderr
+
+    for index, marker in enumerate(markers):
+        assert f"docs/guide{index}.md" in output, marker
+    assert "Legacy labelling check failed" in output
