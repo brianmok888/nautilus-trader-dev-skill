@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-25",
+  "finding_id": "NT-2026-09-04-25",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "! grep -rq markers SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "f3e869f21850b3e597c3767054e8a4795ee88ffa19dbc20f31c9806b9bf92436",
+  "output_excerpt": "grep: SKILL.md: No such file or directory",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}

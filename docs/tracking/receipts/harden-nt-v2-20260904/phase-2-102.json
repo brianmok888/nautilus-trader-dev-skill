@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-102",
+  "finding_id": "NT-2026-09-04-102",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "! grep -rq get_log_guard nt-live",
+  "exit_code": 0,
+  "output_sha256": "a1925a910a74c03f369cefe4c03d4bbb9b41e572f1387f1aa3e7d24a16024874",
+  "output_excerpt": "grep: nt-live: No such file or directory",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}

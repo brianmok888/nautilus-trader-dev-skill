@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-61",
+  "finding_id": "NT-2026-09-04-61",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_dev_guide_sync.py",
+  "exit_code": 0,
+  "output_sha256": "428eb0fd62c4d888a91d56303aa8e1936fb2b0d7cf57c41bb37e129528353db3",
+  "output_excerpt": "Developer guide sync checks passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}

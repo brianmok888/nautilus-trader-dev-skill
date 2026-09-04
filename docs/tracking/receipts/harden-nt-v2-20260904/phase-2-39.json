@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-39",
+  "finding_id": "NT-2026-09-04-39",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "! grep -rq 'params=[' SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "22c542461aded668d877ecb7f5ec5f8daf23c77c0278a99ea7d3b56bcd3db23c",
+  "output_excerpt": "grep: Invalid regular expression",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}

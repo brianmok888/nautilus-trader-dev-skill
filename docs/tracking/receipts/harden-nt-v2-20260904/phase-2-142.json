@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-142",
+  "finding_id": "NT-2026-09-04-142",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P0",
+  "command": "python3 tools/check_legacy_labelling.py",
+  "exit_code": 0,
+  "output_sha256": "2151595a27b2d8ebc6732da9823cada8b242c0d4f23f5842001f97acf4e94159",
+  "output_excerpt": "Legacy labelling check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260904",
+  "receipt": "phase-2-12",
+  "finding_id": "NT-2026-09-04-12",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "test $(wc -l < skills/nt-live/references/concepts/rust.md) -ge 54 && grep -q . skills/nt-live/references/concepts/rust.md || test -f skills/nt-live/references/concepts/rust.md",
+  "exit_code": 0,
+  "output_sha256": "101d5b3e93635058525386bda2d3f723d4234fe9d2f1ed000bf5001490132aa9",
+  "output_excerpt": "(no output; command exit 0)",
+  "redactions": [],
+  "recorded_at": "2026-09-04T15:27:35Z"
+}
