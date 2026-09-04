@@ -91,8 +91,8 @@ The dYdX v4 adapter includes multiple components which can be used together or s
 - `DydxInstrumentProvider`: Instrument parsing and loading functionality.
 - `DydxDataClient`: Market data feed manager.
 - `DydxExecutionClient`: Account management and trade execution gateway.
-- `DydxLiveDataClientFactory`: Factory for dYdX v4 data clients (used by the trading node builder).
-- `DydxLiveExecClientFactory`: Factory for dYdX v4 execution clients (used by the trading node builder).
+- `DydxDataClientFactory`: Factory for dYdX v4 data clients (used by the trading node builder).
+- `DydxExecutionClientFactory`: Factory for dYdX v4 execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -103,7 +103,7 @@ and won't need to work with these lower level components directly.
 A dYdX v4 trading account (sub-account 0) is created only after the wallet's first deposit or trade.
 Until then, every gRPC/Indexer query returns `NOT_FOUND`, so `DydxExecutionClient.connect()` fails.
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 Before starting a live `TradingNode`, send any positive amount of USDC or other supported collateral
 from the same wallet on the same network (mainnet/testnet). Once the transaction has finalised
@@ -118,7 +118,7 @@ from the same wallet on the same network (mainnet/testnet). Once the transaction
 
 **Fix:**
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 1. Deposit any positive amount of USDC to sub-account 0 on the correct network.
 2. Wait for finality (roughly 30 seconds on mainnet, longer on testnet).
@@ -585,15 +585,13 @@ and risk management within a single wallet.
 
 Specify the subaccount number in the execution client config:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
 ```python
-config = TradingNodeConfig(
-    exec_clients={
-        "DYDX": DydxExecClientConfig(
-            subaccount=0,  # Default subaccount
-        ),
-    },
+from nautilus_trader.adapters.dydx import DydxExecutionClientConfig
+from nautilus_trader.model import AccountId
+
+exec_config = DydxExecutionClientConfig(
+    account_id=AccountId("DYDX-001"),
+    subaccount_number=0,  # Default subaccount
 )
 ```
 
@@ -659,7 +657,7 @@ Set `environment=DydxNetwork.TESTNET` on both data and execution clients:
 ```python
 from nautilus_trader.adapters.dydx import DydxNetwork
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+# NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -746,63 +744,42 @@ wallet credentials.
 
 ### Basic setup
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
-Configure a live `TradingNode` to include dYdX data and execution clients:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Configure a live node to include dYdX data and execution clients (see the shared
+[Live node wiring](index.md#live-node-wiring) pattern):
 
 ```python
 from nautilus_trader.adapters.dydx import DydxDataClientConfig
-from nautilus_trader.adapters.dydx import DydxExecClientConfig
+from nautilus_trader.adapters.dydx import DydxDataClientFactory
+from nautilus_trader.adapters.dydx import DydxExecutionClientConfig
+from nautilus_trader.adapters.dydx import DydxExecutionClientFactory
 from nautilus_trader.adapters.dydx import DydxNetwork
-from nautilus_trader.adapters.dydx.constants import DYDX
-from nautilus_trader.config import InstrumentProviderConfig
-from nautilus_trader.config import TradingNodeConfig
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        DYDX: DydxDataClientConfig(
-            wallet_address=None,  # Falls back to env var
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.MAINNET,
-        ),
-    },
-    exec_clients={
-        DYDX: DydxExecClientConfig(
-            wallet_address=None,  # Falls back to env var
-            private_key=None,     # Falls back to env var
-            subaccount=0,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.MAINNET,
-        ),
-    },
+data_config = DydxDataClientConfig(
+    network=DydxNetwork.MAINNET,
 )
-```
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+exec_config = DydxExecutionClientConfig(
+    account_id=AccountId("DYDX-001"),
+    wallet_address=None,  # Falls back to env var
+    private_key=None,     # Falls back to env var
+    subaccount_number=0,
+    network=DydxNetwork.MAINNET,
+)
 
-Then, create a `TradingNode` and register the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.dydx import DydxLiveDataClientFactory
-from nautilus_trader.adapters.dydx import DydxLiveExecClientFactory
-from nautilus_trader.adapters.dydx.constants import DYDX
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-node = TradingNode(config=config)
-
-node.add_data_client_factory(DYDX, DydxLiveDataClientFactory)
-node.add_exec_client_factory(DYDX, DydxLiveExecClientFactory)
-
-node.build()
+node = (
+    LiveNode.builder("DYDX-001", trader_id, Environment.LIVE)
+    .add_data_client(None, DydxDataClientFactory(), data_config)
+    .add_exec_client(None, DydxExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ### API credentials

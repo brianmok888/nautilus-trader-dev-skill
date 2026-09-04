@@ -24,9 +24,9 @@ used together or separately depending on the use case.
 - `KrakenInstrumentProvider`: Instrument parsing and loading functionality.
 - `KrakenDataClient`: Market data feed manager.
 - `KrakenExecutionClient`: Account management and trade execution gateway.
-- `KrakenLiveDataClientFactory`: Factory for Kraken data clients (used by the
+- `KrakenDataClientFactory`: Factory for Kraken data clients (used by the
   trading node builder).
-- `KrakenLiveExecClientFactory`: Factory for Kraken execution clients (used by
+- `KrakenExecutionClientFactory`: Factory for Kraken execution clients (used by
   the trading node builder).
 
 :::note
@@ -216,7 +216,7 @@ is authenticated. Set them in `KrakenDataClientConfig` or via
 `KRAKEN_SPOT_API_KEY` and `KRAKEN_SPOT_API_SECRET`:
 
 ```python
-from nautilus_trader.adapters.kraken.config import KrakenDataClientConfig
+from nautilus_trader.adapters.kraken import KrakenDataClientConfig
 
 config = KrakenDataClientConfig(
     api_key="YOUR_KEY",
@@ -227,7 +227,7 @@ config = KrakenDataClientConfig(
 Then subscribe with `book_type=BookType.L3_MBO`:
 
 ```python
-from nautilus_trader.model.enums import BookType
+from nautilus_trader.model import BookType
 
 await client.subscribe_book_deltas(
     instrument_id=instrument_id,
@@ -363,14 +363,11 @@ time rather than silently coercing them.
 
 ## Order routing (Spot)
 
-The Rust Spot execution client routes `submit_order`, `modify_order`,
-`cancel_order`, and `submit_order_list` through Kraken's authenticated
-WebSocket v2 trade channel by default, with REST as the fallback. The Python
-live `KrakenExecutionClient` currently routes all orders via REST regardless
-of the knobs below; WebSocket trade routing is only active when the Rust
-execution client (`KrakenSpotExecutionClient`) is in use, either via the
-Rust factory or by constructing the pyo3-exposed
-`nautilus_trader.core.nautilus_pyo3.kraken.KrakenExecutionClientConfig` directly.
+The Spot execution client routes order submission, modification, cancellation,
+and batch cancellation through Kraken's authenticated WebSocket v2 trade
+channel by default. It falls back to REST when the WebSocket is inactive. Set
+`use_ws_trade=False` on `KrakenExecutionClientConfig` to route these operations
+through REST.
 
 ### Order shapes routed via REST
 
@@ -541,15 +538,17 @@ order submission. Margin trading is enabled per-execution-client via
 
 ```python
 from nautilus_trader.adapters.kraken import KrakenExecutionClientConfig
-from nautilus_trader.model.enums import AccountType
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import AccountType
 
-exec_clients = {
-    KRAKEN: KrakenExecutionClientConfig(
-        spot_account_type=AccountType.MARGIN,
-        default_leverage=3,             # optional config-level default
-        margin_balance_asset="ZGBP",    # optional summary-display asset
-    ),
-}
+exec_config = KrakenExecutionClientConfig(
+    account_id=AccountId.from_str("KRAKEN-001"),
+    api_key="YOUR_API_KEY",
+    api_secret="YOUR_API_SECRET",
+    spot_account_type=AccountType.MARGIN,
+    default_leverage=3,  # Optional config-level default
+    margin_balance_asset="ZGBP",  # Optional summary-display asset
+)
 ```
 
 `margin_balance_asset` controls only the denomination of the account-summary
@@ -743,7 +742,7 @@ from nautilus_trader.adapters.kraken import KRAKEN
 from nautilus_trader.adapters.kraken import KrakenEnvironment
 from nautilus_trader.adapters.kraken import KrakenProductType
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+# NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work.
 
 config = TradingNodeConfig(
     ...,  # Omitted
@@ -764,93 +763,78 @@ config = TradingNodeConfig(
 
 ### Production configuration
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-The most common use case is to configure a live `TradingNode` to include Kraken
-data and execution clients. Add a `KRAKEN` section to your client
-configuration(s):
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Use `KrakenDataClientConfig` with `KrakenDataClientFactory`, and use
+`KrakenExecutionClientConfig` with `KrakenExecutionClientFactory`. The Python
+examples show the complete `LiveNode.builder(...)` configuration for data and
+execution clients (see the shared [Live node wiring](index.md#live-node-wiring)
+pattern):
 
 ```python
-from nautilus_trader.adapters.kraken import KRAKEN
+from nautilus_trader.adapters.kraken import KrakenDataClientConfig
+from nautilus_trader.adapters.kraken import KrakenDataClientFactory
 from nautilus_trader.adapters.kraken import KrakenEnvironment
+from nautilus_trader.adapters.kraken import KrakenExecutionClientConfig
+from nautilus_trader.adapters.kraken import KrakenExecutionClientFactory
 from nautilus_trader.adapters.kraken import KrakenProductType
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        KRAKEN: {
-            "environment": KrakenEnvironment.LIVE,
-            "product_types": (KrakenProductType.SPOT,),
-        },
-    },
-    exec_clients={
-        KRAKEN: {
-            "environment": KrakenEnvironment.LIVE,
-            "product_types": (KrakenProductType.SPOT,),
-        },
-    },
+data_config = KrakenDataClientConfig(
+    product_type=KrakenProductType.SPOT,
+    environment=KrakenEnvironment.LIVE,
+)
+
+exec_config = KrakenExecutionClientConfig(
+    account_id=AccountId.from_str("KRAKEN-001"),
+    api_key="YOUR_API_KEY",
+    api_secret="YOUR_API_SECRET",
+    product_type=KrakenProductType.SPOT,
+    environment=KrakenEnvironment.LIVE,
+)
+
+node = (
+    LiveNode.builder("KRAKEN-001", trader_id, Environment.LIVE)
+    .add_data_client(None, KrakenDataClientFactory(), data_config)
+    .add_exec_client(None, KrakenExecutionClientFactory(), exec_config)
+    .build()
 )
 ```
 
 ### Dual-product configuration (Spot + Futures)
 
-When trading both Spot and Futures markets, include both product types:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Each client handles one product type (`product_type`). When trading both Spot
+and Futures markets, configure separate Spot and Futures clients, each with its
+own `product_type`, and pass the matching `client_id` when a strategy
+subscribes or submits orders:
 
 ```python
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        KRAKEN: {
-            "environment": KrakenEnvironment.LIVE,
-            "product_types": (KrakenProductType.SPOT, KrakenProductType.FUTURES),
-        },
-    },
-    exec_clients={
-        KRAKEN: {
-            "environment": KrakenEnvironment.LIVE,
-            "product_types": (KrakenProductType.SPOT, KrakenProductType.FUTURES),
-        },
-    },
+spot_exec_config = KrakenExecutionClientConfig(
+    account_id=AccountId.from_str("KRAKEN-SPOT-001"),
+    api_key="YOUR_SPOT_API_KEY",
+    api_secret="YOUR_SPOT_API_SECRET",
+    product_type=KrakenProductType.SPOT,
+    environment=KrakenEnvironment.LIVE,
 )
-```
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.kraken import KRAKEN
-from nautilus_trader.adapters.kraken import KrakenLiveDataClientFactory
-from nautilus_trader.adapters.kraken import KrakenLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(KRAKEN, KrakenLiveDataClientFactory)
-node.add_exec_client_factory(KRAKEN, KrakenLiveExecClientFactory)
-
-# Finally build the node
-node.build()
+futures_exec_config = KrakenExecutionClientConfig(
+    account_id=AccountId.from_str("KRAKEN-FUTURES-001"),
+    api_key="YOUR_FUTURES_API_KEY",
+    api_secret="YOUR_FUTURES_API_SECRET",
+    product_type=KrakenProductType.FUTURES,
+    environment=KrakenEnvironment.LIVE,
+)
 ```
 
 ### API credentials
 
-There are two options for supplying your credentials to the Kraken clients.
-Either pass the corresponding `api_key` and `api_secret` values to the
-configuration objects, or set the following environment variables:
+Pass the corresponding `api_key` and `api_secret` values to the configuration
+objects. Live-node configuration objects do not read credential environment
+variables automatically. For Spot L3 data, pass them to `KrakenDataClientConfig`
+as well; public market data does not require credentials.
 
 | Environment Variable             | Description                              |
 |----------------------------------|------------------------------------------|

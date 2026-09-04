@@ -14,13 +14,12 @@ with Hyperliquid's REST and WebSocket APIs without requiring external client lib
 
 The Hyperliquid adapter includes multiple components:
 
-- `HyperliquidHttpClient`: Low-level HTTP API connectivity.
-- `HyperliquidWebSocketClient`: Low-level WebSocket API connectivity.
-- `HyperliquidInstrumentProvider`: Instrument parsing and loading functionality.
+- `HyperliquidHttpClient`: HTTP API connectivity, instrument loading and parsing, and reconciliation reports.
+- `HyperliquidWebSocketClient`: WebSocket API connectivity for Rust callers.
 - `HyperliquidDataClient`: Market data feed manager.
 - `HyperliquidExecutionClient`: Account management and trade execution gateway.
-- `HyperliquidLiveDataClientFactory`: Factory for Hyperliquid data clients (used by the trading node builder).
-- `HyperliquidLiveExecClientFactory`: Factory for Hyperliquid execution clients (used by the trading node builder).
+- `HyperliquidDataClientFactory`: Factory for Hyperliquid data clients (used by the live node builder).
+- `HyperliquidExecutionClientFactory`: Factory for Hyperliquid execution clients (used by the live node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as shown below)
@@ -237,56 +236,25 @@ pre-IPO tokens (SpaceX, OpenAI).
 HIP-3 instruments are excluded by default. To load them, include
 `HyperliquidProductType.PERP_HIP3` in the requested product types.
 
-For direct instrument provider usage:
+HIP-3 instruments load automatically in a live node. The instrument provider itself is
+Rust-internal and not exposed to Python. For direct `HyperliquidHttpClient` usage, the HIP-3 perp
+dexes are excluded unless you opt in through `load_instrument_definitions`:
 
 ```python
-from nautilus_trader.adapters.hyperliquid.enums import HyperliquidProductType
-from nautilus_trader.adapters.hyperliquid.providers import HyperliquidInstrumentProvider
-
-provider = HyperliquidInstrumentProvider(
-    client=client,
-    product_types=[
-        HyperliquidProductType.PERP,
-        HyperliquidProductType.SPOT,
-        HyperliquidProductType.PERP_HIP3,
-    ],
-)
-```
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-For live `TradingNode` usage, pass the same `product_types` through the Hyperliquid
-client config:
-
-```python
-from nautilus_trader.adapters.hyperliquid import HyperliquidDataClientConfig
-from nautilus_trader.adapters.hyperliquid import HyperliquidExecClientConfig
 from nautilus_trader.adapters.hyperliquid import HyperliquidEnvironment
-from nautilus_trader.adapters.hyperliquid import HyperliquidProductType
+from nautilus_trader.adapters.hyperliquid import HyperliquidHttpClient
 
-HyperliquidDataClientConfig(
-    product_types=(
-        HyperliquidProductType.PERP,
-        HyperliquidProductType.PERP_HIP3,
-    ),
-)
-
-HyperliquidExecClientConfig(
-    product_types=(
-        HyperliquidProductType.PERP,
-        HyperliquidProductType.PERP_HIP3,
-    ),
+client = HyperliquidHttpClient.from_env(HyperliquidEnvironment.MAINNET)
+instruments = await client.load_instrument_definitions(
+    include_spot=True,
+    include_perps=True,
+    include_perps_hip3=True,
+    include_outcomes=False,
 )
 ```
 
-Once HIP-3 instruments are loaded, you can filter them with `InstrumentProviderConfig`:
-
-```python
-instrument_provider=InstrumentProviderConfig(
-    load_all=True,
-    filters={"market_types": ["perp_hip3"]},
-)
-```
+The data client exposes no per-dex filter; strategies select the markets they trade by
+`instrument_id`.
 
 ### Differences from standard perpetuals
 
@@ -396,8 +364,8 @@ side-token inventory off-book:
 
 ```python
 from decimal import Decimal
-from nautilus_trader.core.nautilus_pyo3 import HyperliquidEnvironment
-from nautilus_trader.core.nautilus_pyo3 import HyperliquidHttpClient
+from nautilus_trader.adapters.hyperliquid import HyperliquidEnvironment
+from nautilus_trader.adapters.hyperliquid import HyperliquidHttpClient
 
 client = HyperliquidHttpClient.from_env(HyperliquidEnvironment.MAINNET)
 
@@ -525,7 +493,7 @@ that thin the venue-side book aggregation. The adapter forwards them when
 passed through `subscribe_params` on book deltas and depth subscriptions:
 
 ```python
-from nautilus_trader.model.data import BookType
+from nautilus_trader.model import BookType
 
 self.subscribe_order_book_deltas(
     instrument_id=instrument_id,
@@ -551,9 +519,9 @@ Subscribe from an actor or strategy with `DataType(HyperliquidAllMids)`.
 For HIP-3 dex-specific streams, pass the venue dex in `metadata["dex"]`:
 
 ```python
-from nautilus_trader.adapters.hyperliquid.constants import HYPERLIQUID_CLIENT_ID
-from nautilus_trader.adapters.hyperliquid.data import HyperliquidAllMids
-from nautilus_trader.model.data import DataType
+from nautilus_trader.adapters.hyperliquid import HYPERLIQUID_CLIENT_ID
+from nautilus_trader.adapters.hyperliquid import HyperliquidAllMids
+from nautilus_trader.model import DataType
 
 self.subscribe_data(
     data_type=DataType(HyperliquidAllMids, metadata={"dex": "hyperliquid"}),
@@ -613,12 +581,9 @@ Market orders require cached quote data. The adapter uses the best ask (for buys
 significant figures, which is a Hyperliquid API requirement for all limit prices. Ensure you
 subscribe to quotes for any instrument you intend to trade with market orders.
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-When using the Rust-native execution client, the slippage buffer is controlled by
-`market_order_slippage_bps` on `HyperliquidExecutionClientConfig` and can be overridden per-order
-via the `market_order_slippage_bps` key in `SubmitOrder.params`. The Python `TradingNode` path
-uses a fixed 50 bps slippage and does not expose this knob on its config.
+The slippage buffer is controlled by `market_order_slippage_bps` on
+`HyperliquidExecutionClientConfig` and can be overridden per-order via the
+`market_order_slippage_bps` key in `SubmitOrder.params`.
 :::
 
 :::note
@@ -942,7 +907,6 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 |---------------------|---------|-------------------------------------------------|
 | `environment`       | `None`  | Environment enum (`MAINNET` or `TESTNET`).      |
 | `base_url_ws`       | `None`  | Override for the WebSocket base URL.            |
-| `product_types`     | `None`  | Optional product types to load, for example `PERP_HIP3` for HIP-3 perps. |
 | `http_timeout_secs` | `10`    | Timeout (seconds) applied to REST calls.        |
 | `proxy_url`         | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
 
@@ -955,64 +919,53 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 | `account_address`              | `None`  | Main account address for agent wallet trading; loaded from `HYPERLIQUID_ACCOUNT_ADDRESS`. |
 | `environment`                  | `None`  | Environment enum (`MAINNET` or `TESTNET`); resolves to `MAINNET` when unset.              |
 | `base_url_ws`                  | `None`  | Override for the WebSocket base URL.                                                      |
-| `product_types`                | `None`  | Optional product types to load, for example `PERP_HIP3` for HIP-3 perps.                  |
-| `max_retries`                  | `None`  | Maximum retry attempts for submit, cancel, or modify order requests. Rust-only.           |
-| `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries. Rust-only.                                  |
-| `retry_delay_max_ms`           | `None`  | Maximum delay (milliseconds) between retries. Rust-only.                                  |
+| `max_retries`                  | `None`  | Maximum retry attempts for submit, cancel, or modify order requests.                      |
+| `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries.                                             |
+| `retry_delay_max_ms`           | `None`  | Maximum delay (milliseconds) between retries.                                             |
 | `http_timeout_secs`            | `10`    | Timeout (seconds) applied to REST calls.                                                  |
 | `normalize_prices`             | `True`  | Normalize order prices to 5 significant figures before submission.                        |
-| `market_order_slippage_bps`    | `50`    | Slippage buffer (bps) applied to MARKET and stop trigger derivations. Rust-only.          |
-| `outcome_settlement_poll_secs` | `0`     | HIP-4 `outcomeMeta` settlement poll interval (seconds). Rust-only; venue `Settlement` fills cover settlement, so polling is disabled by default. |
+| `market_order_slippage_bps`    | `50`    | Slippage buffer (bps) applied to MARKET and stop trigger derivations.                     |
+| `include_builder_attribution`  | `None`  | Opt in to the builder code attribution signature flag.                                   |
+| `ws_post_timeout_secs`         | `None`  | Timeout (seconds) waiting for a WebSocket post response.                                  |
 | `proxy_url`                    | `None`  | Optional proxy URL for HTTP and WebSocket transports.                                     |
 
 :::note
-"Rust-only" options apply when the execution client is created through the Rust-native
-`HyperliquidExecutionClientFactory`. `market_order_slippage_bps` and
-`outcome_settlement_poll_secs` are not exposed on the Python
-`HyperliquidExecutionClientConfig` and will be rejected by the config validator if set on
-that path. `max_retries`, `retry_delay_initial_ms`, and `retry_delay_max_ms` are
-declared on the Python config but are not yet forwarded to the Python execution
-client.
+`market_order_slippage_bps`, `include_builder_attribution`, and `ws_post_timeout_secs` are
+optional execution tuning options on `HyperliquidExecutionClientConfig`.
 :::
 
 ### Configuration example
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
 ```python
-from nautilus_trader.adapters.hyperliquid import HYPERLIQUID
 from nautilus_trader.adapters.hyperliquid import HyperliquidDataClientConfig
-from nautilus_trader.adapters.hyperliquid import HyperliquidExecClientConfig
-from nautilus_trader.adapters.hyperliquid import HyperliquidProductType
-from nautilus_trader.config import InstrumentProviderConfig
-from nautilus_trader.config import TradingNodeConfig
+from nautilus_trader.adapters.hyperliquid import HyperliquidDataClientFactory
+from nautilus_trader.adapters.hyperliquid import HyperliquidEnvironment
+from nautilus_trader.adapters.hyperliquid import HyperliquidExecutionClientConfig
+from nautilus_trader.adapters.hyperliquid import HyperliquidExecutionClientFactory
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-config = TradingNodeConfig(
-    data_clients={
-        HYPERLIQUID: HyperliquidDataClientConfig(
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            product_types=(
-                HyperliquidProductType.PERP,
-                HyperliquidProductType.PERP_HIP3,
-            ),
-            environment=HyperliquidEnvironment.TESTNET,
-        ),
-    },
-    exec_clients={
-        HYPERLIQUID: HyperliquidExecClientConfig(
-            private_key=None,  # Loads from HYPERLIQUID_TESTNET_PK env var
-            vault_address=None,  # Optional: loads from HYPERLIQUID_TESTNET_VAULT
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            product_types=(
-                HyperliquidProductType.PERP,
-                HyperliquidProductType.PERP_HIP3,
-            ),
-            environment=HyperliquidEnvironment.TESTNET,
-            normalize_prices=True,  # Rounds prices to 5 significant figures
-        ),
-    },
+data_config = HyperliquidDataClientConfig(
+    environment=HyperliquidEnvironment.TESTNET,
+)
+
+exec_config = HyperliquidExecutionClientConfig(
+    account_id=AccountId("HYPERLIQUID-001"),
+    private_key=None,  # Loads from HYPERLIQUID_TESTNET_PK env var
+    vault_address=None,  # Optional: loads from HYPERLIQUID_TESTNET_VAULT
+    environment=HyperliquidEnvironment.TESTNET,
+    normalize_prices=True,  # Rounds prices to 5 significant figures
+)
+
+node = (
+    LiveNode.builder("HYPERLIQUID-001", trader_id, Environment.LIVE)
+    .add_data_client(None, HyperliquidDataClientFactory(), data_config)
+    .add_exec_client(None, HyperliquidExecutionClientFactory(), exec_config)
+    .build()
 )
 ```
 
@@ -1021,31 +974,6 @@ When `environment=HyperliquidEnvironment.TESTNET`, the adapter automatically use
 environment variables (`HYPERLIQUID_TESTNET_PK` and `HYPERLIQUID_TESTNET_VAULT`) instead of
 mainnet variables.
 :::
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.hyperliquid import HYPERLIQUID
-from nautilus_trader.adapters.hyperliquid import HyperliquidLiveDataClientFactory
-from nautilus_trader.adapters.hyperliquid import HyperliquidLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(HYPERLIQUID, HyperliquidLiveDataClientFactory)
-node.add_exec_client_factory(HYPERLIQUID, HyperliquidLiveExecClientFactory)
-
-# Finally build the node
-node.build()
-```
 
 ## Contributing
 

@@ -11,15 +11,17 @@ order execution on both spot (Cash) and CFM derivatives (Margin) accounts
 through a shared execution client, with the account type selected by the
 factory (see [Execution scope](#execution-scope)).
 
-NT v2 compatibility note: Python live/integration-specific TradingNode and the missing Python live-node integration are migration/reference-only; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: Python live/integration-specific TradingNode (and any claim of a missing Python live-node integration) is migration/reference-only; the pinned projection exports configs and factories - use LiveNode for Rust v2/Rust-backed work.
 
 :::note
-NT v2 compatibility note: missing Python live-node integration is migration/reference-only context; use Rust `LiveNode`/PyO3 entry points for new work.
+NT v2 compatibility note: the v1 Python `TradingNode` integration is
+migration/reference-only; wire the PyO3-exported factories into a
+Rust `LiveNode` (or `LiveNode.builder`) for new work.
 
 This adapter is Rust-only and is consumed by the v2 system (and the Rust
-`LiveNode`). It does not ship a Python live-node integration;
-only configuration and enum types are exported through PyO3 so v2 Python
-entry points can construct them.
+`LiveNode`). Its Python surface is the flat PyO3 projection
+(`nautilus_trader.adapters.coinbase`): configuration and enum types plus the
+client factories, so v2 entry points can construct and register them.
 :::
 
 ## Overview
@@ -27,9 +29,10 @@ entry points can construct them.
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 The Coinbase adapter is implemented in Rust and consumed by the v2 system.
-The adapter does not ship a Python live-node integration; only
-configuration and enum types are exported through PyO3 so v2 entry points can
-construct them from Python.
+Its Python surface is the flat PyO3 projection
+(`nautilus_trader.adapters.coinbase`), which exports the configuration and
+enum types plus the client factories so v2 entry points can construct and
+register them from Python.
 
 Current components:
 
@@ -43,9 +46,10 @@ Current components:
 | `CoinbaseExecutionClient`          | Built  | Rust execution client (spot or CFM derivatives; REST orders + WS streams). |
 | `CoinbaseExecutionClientFactory`   | Built  | Execution client factory; spot vs CFM derivatives is selected by `account_type` on the config. |
 
-PyO3 surface available from `nautilus_trader.core.nautilus_pyo3.coinbase`:
+PyO3 surface available from `nautilus_trader.adapters.coinbase`:
 
 - `CoinbaseDataClientConfig`, `CoinbaseExecutionClientConfig`
+- `CoinbaseDataClientFactory`, `CoinbaseExecutionClientFactory`
 - `CoinbaseEnvironment`, `CoinbaseMarginType`
 - `COINBASE` venue constant
 
@@ -502,7 +506,8 @@ from the REST `cfm/positions` (list) and `cfm/positions/{product_id}`
 (single) endpoints and are post-filtered to the bootstrap instrument cache.
 Open orders and historical fills are reconciled from REST via
 `generate_order_status_report(s)` and `generate_fill_reports` on connect
-and on the standard reconciliation interval set by `LiveExecEngineConfig`.
+and on the standard reconciliation interval set by
+`LiveExecutionEngineConfig`.
 
 #### Fill deduplication
 
@@ -702,9 +707,9 @@ fill deltas remain correct.
 Configurations are constructed from Python via the PyO3-exported types:
 
 ```python
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseDataClientConfig
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseExecutionClientConfig
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseEnvironment
+from nautilus_trader.adapters.coinbase import CoinbaseDataClientConfig
+from nautilus_trader.adapters.coinbase import CoinbaseExecutionClientConfig
+from nautilus_trader.adapters.coinbase import CoinbaseEnvironment
 
 data_config = CoinbaseDataClientConfig(
     api_key="YOUR_COINBASE_API_KEY",
@@ -719,8 +724,33 @@ exec_config = CoinbaseExecutionClientConfig(
 )
 ```
 
-The v2 system instantiates the Rust factories directly from these configs;
-no Python factory wiring is required.
+Register both clients on a live node by passing the PyO3-exported factory
+instances to the node builder (NT v2 compatibility note: the v1 `TradingNodeConfig(data_clients={...})`
+flow is migration/reference-only):
+
+```python
+from nautilus_trader.adapters.coinbase import CoinbaseDataClientConfig
+from nautilus_trader.adapters.coinbase import CoinbaseDataClientFactory
+from nautilus_trader.adapters.coinbase import CoinbaseEnvironment
+from nautilus_trader.adapters.coinbase import CoinbaseExecutionClientConfig
+from nautilus_trader.adapters.coinbase import CoinbaseExecutionClientFactory
+from nautilus_trader.live import Environment, LiveNode
+
+node = (
+    LiveNode.builder("COINBASE", trader_id, Environment.LIVE)
+    .add_data_client(
+        None,
+        CoinbaseDataClientFactory(),
+        CoinbaseDataClientConfig(environment=CoinbaseEnvironment.LIVE),
+    )
+    .add_exec_client(
+        None,
+        CoinbaseExecutionClientFactory(),
+        CoinbaseExecutionClientConfig(environment=CoinbaseEnvironment.LIVE),
+    )
+    .build()
+)
+```
 
 ## Known limitations
 

@@ -48,8 +48,8 @@ The OKX adapter includes multiple components, which can be used separately or to
 - `OKXInstrumentProvider`: Instrument parsing and loading functionality.
 - `OKXDataClient`: Market data feed manager.
 - `OKXExecutionClient`: Account management and trade execution gateway.
-- `OKXLiveDataClientFactory`: Factory for OKX data clients (used by the trading node builder).
-- `OKXLiveExecClientFactory`: Factory for OKX execution clients (used by the trading node builder).
+- `OKXDataClientFactory`: Factory for OKX data clients (used by the trading node builder).
+- `OKXExecutionClientFactory`: Factory for OKX execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as shown below),
@@ -661,7 +661,7 @@ config = TradingNodeConfig(
         ),
     },
     exec_clients={
-        OKX: OKXExecClientConfig(
+        OKX: OKXExecutionClientConfig(
             instrument_types=(OKXInstrumentType.OPTION,),
             instrument_families=("BTC-USD", "ETH-USD"),
             margin_mode=OKXMarginMode.CROSS,
@@ -696,7 +696,7 @@ config = TradingNodeConfig(
         ),
     },
     exec_clients={
-        OKX: OKXExecClientConfig(
+        OKX: OKXExecutionClientConfig(
             instrument_types=(OKXInstrumentType.EVENTS,),
             instrument_families=("BTC-ABOVE-DAILY",),
             margin_mode=OKXMarginMode.CROSS,
@@ -795,7 +795,7 @@ export OKX_API_PASSPHRASE="your_demo_passphrase"
 Set `environment=OKXEnvironment.DEMO` in your client configuration:
 
 ```python
-from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
+from nautilus_trader.adapters.okx import OKXEnvironment
 
 # NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
@@ -898,18 +898,25 @@ The OKX data client provides the following configuration options:
 | `contract_types`                   | `None`                      | Contract styles to load.                     |
 | `instrument_families`              | `None`                      | Families or event `seriesId` values.         |
 | `base_url_http`                    | `None`                      | Override for the OKX REST endpoint.          |
-| `base_url_ws`                      | `None`                      | Override for the market data WebSocket URL.  |
+| `base_url_ws_public`               | `None`                      | Override for the public market data WebSocket URL. |
+| `base_url_ws_business`             | `None`                      | Override for the business WebSocket URL.     |
 | `api_key`                          | `None`                      | Falls back to `OKX_API_KEY` when unset.      |
 | `api_secret`                       | `None`                      | Falls back to `OKX_API_SECRET` when unset.   |
 | `api_passphrase`                   | `None`                      | Falls back to `OKX_API_PASSPHRASE`.          |
 | `environment`                      | `None`                      | Environment enum (`LIVE` or `DEMO`).         |
+| `region`                           | `None`                      | Regional endpoint selection (`OKXRegion`).   |
 | `http_timeout_secs`                | `60`                        | REST market data request timeout.            |
 | `max_retries`                      | `3`                         | Retry attempts for recoverable REST errors.  |
 | `retry_delay_initial_ms`           | `1,000`                     | Initial delay before retrying.               |
 | `retry_delay_max_ms`               | `10,000`                    | Maximum exponential backoff delay.           |
 | `update_instruments_interval_mins` | `60`                        | Background instrument refresh interval.      |
 | `vip_level`                        | `None`                      | Enables higher-depth books by VIP tier.      |
+| `load_spreads`                     | `False`                     | Load spread data for instruments.            |
+| `book_stale_check_interval_secs`   | `5`                         | Interval for order book staleness checks.    |
+| `book_stale_threshold_secs`        | `30`                        | Staleness threshold for order books.         |
+| `book_snapshot_timeout_secs`       | `3`                         | Timeout awaiting order book snapshots.       |
 | `proxy_url`                        | `None`                      | Optional HTTP and WebSocket proxy URL.       |
+| `transport_backend`                | default                     | Transport backend selection.                 |
 
 `instrument_families` is required for `OPTION`, optional for `FUTURES`, `SWAP`, and
 `EVENTS`, and ignored for `SPOT` and `MARGIN`. For `EVENTS`, pass OKX `seriesId`
@@ -921,81 +928,75 @@ The OKX execution client provides the following configuration options:
 
 | Option                            | Default                     | Description                                 |
 |-----------------------------------|-----------------------------|---------------------------------------------|
+| `account_id`                      | `OKX-001`                   | Account ID for the execution client.        |
 | `instrument_types`                | `(OKXInstrumentType.SPOT,)` | Tradable OKX instrument types.              |
 | `contract_types`                  | `None`                      | Tradable contract styles to load.           |
 | `instrument_families`             | `None`                      | Families or event `seriesId` values.        |
 | `base_url_http`                   | `None`                      | Override for the OKX trading REST endpoint. |
-| `base_url_ws`                     | `None`                      | Override for the private WebSocket URL.     |
+| `base_url_ws_private`             | `None`                      | Override for the private WebSocket URL.     |
+| `base_url_ws_business`            | `None`                      | Override for the business WebSocket URL.    |
+| `region`                          | `None`                      | Regional endpoint selection (`OKXRegion`). |
 | `api_key`                         | `None`                      | Falls back to `OKX_API_KEY` when unset.     |
 | `api_secret`                      | `None`                      | Falls back to `OKX_API_SECRET` when unset.  |
 | `api_passphrase`                  | `None`                      | Falls back to `OKX_API_PASSPHRASE`.         |
 | `environment`                     | `None`                      | Environment enum (`LIVE` or `DEMO`).        |
 | `margin_mode`                     | `None`                      | Margin mode (`ISOLATED` or `CROSS`).        |
-| `use_spot_margin`                 | `False`                     | Enables spot-style margin or leverage.      |
 | `http_timeout_secs`               | `60`                        | REST trading request timeout.               |
-| `use_fills_channel`               | `False`                     | Subscribes to fills channel (VIP5+).        |
 | `use_mm_mass_cancel`              | `False`                     | Uses the market-maker bulk cancel endpoint. |
 | `max_retries`                     | `3`                         | Retry attempts for recoverable REST errors. |
 | `retry_delay_initial_ms`          | `1,000`                     | Initial delay before retrying.              |
 | `retry_delay_max_ms`              | `10,000`                    | Maximum exponential backoff delay.          |
-| `use_spot_cash_position_reports`  | `False`                     | Generates SPOT cash positions from wallet.  |
+| `load_spreads`                    | `False`                     | Load spread data for instruments.           |
+| `auth_timeout_secs`               | `None`                      | WebSocket authentication timeout.           |
 | `proxy_url`                       | `None`                      | Optional HTTP and WebSocket proxy URL.      |
+| `transport_backend`               | default                     | Transport backend selection.                |
 
 `instrument_families` has the same meaning for execution clients as it does for data
 clients.
 
-Below is an example configuration for a live trading node using OKX data and execution clients:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Rust-backed Python v2 nodes use `LiveNode.builder(...)` and pass concrete
+factory instances with the plain config structs (NT v2 compatibility note: the v1
+`TradingNodeConfig(data_clients=..., exec_clients=...)` +
+`node.add_data_client_factory(...)` flow is migration/reference-only; the v1
+`.factories` submodule and `nautilus_trader.live.node` import path no longer
+exist):
 
 ```python
-from nautilus_trader.adapters.okx import OKX
-from nautilus_trader.adapters.okx import OKXDataClientConfig, OKXExecClientConfig
-from nautilus_trader.adapters.okx.factories import (
-    OKXLiveDataClientFactory,
-    OKXLiveExecClientFactory,
-)
-from nautilus_trader.config import InstrumentProviderConfig, TradingNodeConfig
-from nautilus_trader.core.nautilus_pyo3 import OKXContractType
-from nautilus_trader.core.nautilus_pyo3 import OKXEnvironment
-from nautilus_trader.core.nautilus_pyo3 import OKXInstrumentType
-from nautilus_trader.core.nautilus_pyo3 import OKXMarginMode
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.adapters.okx import OKXDataClientConfig
+from nautilus_trader.adapters.okx import OKXDataClientFactory
+from nautilus_trader.adapters.okx import OKXEnvironment
+from nautilus_trader.adapters.okx import OKXExecutionClientConfig
+from nautilus_trader.adapters.okx import OKXExecutionClientFactory
+from nautilus_trader.adapters.okx import OKXInstrumentType
+from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.model import AccountId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    ...,
-    data_clients={
-        OKX: OKXDataClientConfig(
-            api_key=None,  # Will use OKX_API_KEY env var
-            api_secret=None,  # Will use OKX_API_SECRET env var
-            api_passphrase=None,  # Will use OKX_API_PASSPHRASE env var
-            base_url_http=None,
-            environment=OKXEnvironment.LIVE,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            instrument_types=(OKXInstrumentType.SWAP,),
-            contract_types=(OKXContractType.LINEAR,),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecClientConfig(
-            api_key=None,
-            api_secret=None,
-            api_passphrase=None,
-            base_url_http=None,
-            base_url_ws=None,
-            environment=OKXEnvironment.LIVE,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            instrument_types=(OKXInstrumentType.SWAP,),
-            contract_types=(OKXContractType.LINEAR,),
-        ),
-    },
+data_config = OKXDataClientConfig(
+    api_key=None,  # Falls back to OKX_API_KEY env var
+    api_secret=None,  # Falls back to OKX_API_SECRET env var
+    api_passphrase=None,  # Falls back to OKX_API_PASSPHRASE env var
+    base_url_http=None,
+    environment=OKXEnvironment.LIVE,
+    instrument_types=(OKXInstrumentType.SWAP,),
 )
-node = TradingNode(config=config)
-node.add_data_client_factory(OKX, OKXLiveDataClientFactory)
-node.add_exec_client_factory(OKX, OKXLiveExecClientFactory)
-node.build()
+
+exec_config = OKXExecutionClientConfig(
+    account_id=AccountId("OKX-001"),
+    api_key=None,
+    api_secret=None,
+    api_passphrase=None,
+    base_url_http=None,
+    base_url_ws_private=None,
+    environment=OKXEnvironment.LIVE,
+    instrument_types=(OKXInstrumentType.SWAP,),
+)
+
+node = (
+    LiveNode.builder("OKX", trader_id, Environment.LIVE)
+    .add_data_client(None, OKXDataClientFactory(), data_config)
+    .add_exec_client(None, OKXExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ## Contributing

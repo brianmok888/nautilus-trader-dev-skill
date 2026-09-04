@@ -145,8 +145,8 @@ Script source:
 
 ```python
 # Python (PyO3 binding) - reads the same env vars as the Rust bin
-from nautilus_trader.core.nautilus_pyo3 import revoke_lighter_integrator
-from nautilus_trader.core.nautilus_pyo3 import LighterEnvironment
+from nautilus_trader.adapters.lighter import LighterEnvironment
+from nautilus_trader.adapters.lighter import revoke_lighter_integrator
 
 await revoke_lighter_integrator()                            # mainnet (default)
 await revoke_lighter_integrator(LighterEnvironment.TESTNET)  # testnet

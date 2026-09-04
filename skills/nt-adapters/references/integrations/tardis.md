@@ -8,9 +8,9 @@ trades, open interest, funding rates, options chains and liquidations data for l
 NautilusTrader provides an integration with the Tardis API and data formats, enabling access.
 The capabilities of this adapter include:
 
-- `TardisCSVDataLoader`: Reads Tardis-format CSV files and converts them into Nautilus data, with support for both bulk loading and memory-efficient streaming.
+- **CSV loader functions**: `load_tardis_*` / `stream_tardis_*` read Tardis-format CSV files and convert them into Nautilus data, with support for both bulk loading and memory-efficient streaming (the v1 `TardisCSVDataLoader` class is migration/reference-only).
 - `TardisMachineClient`: Supports live streaming and historical replay of data from the Tardis Machine WebSocket server - converting messages into Nautilus data.
-- `TardisHttpClient`: Requests instrument definition metadata from the Tardis HTTP API, parsing it into Nautilus instrument definitions.
+- `TardisHttpClient` (Rust only): Requests instrument definition metadata from the Tardis HTTP API, parsing it into Nautilus instrument definitions; not part of the Python projection at the pin.
 - `TardisDataClient`: Provides a live data client for subscribing to data streams from a Tardis Machine WebSocket server.
 - `TardisInstrumentProvider`: Provides instrument definitions from Tardis through the HTTP instrument metadata API.
 - **Data pipeline functions**: Enables replay of historical data from Tardis Machine and writes it to the Nautilus Parquet format, including direct catalog integration for data management (see below).
@@ -156,7 +156,7 @@ The following environment variables are used by Tardis and NautilusTrader.
 - `TM_API_KEY`: API key for the Tardis Machine.
 - `TARDIS_API_KEY`: API key for NautilusTrader Tardis clients.
 - `TARDIS_MACHINE_WS_URL` (optional): WebSocket URL for the `TardisMachineClient` in NautilusTrader.
-- `TARDIS_BASE_URL` (optional): Base URL for the `TardisHttpClient` in NautilusTrader.
+- `TARDIS_BASE_URL` (optional): v1 only; the pinned Rust `TardisHttpClient` reads its URL override directly and the Python projection does not expose the client.
 - `NAUTILUS_PATH` (optional): Parent directory containing the `catalog/` subdirectory for writing replay data in the Nautilus catalog format.
 
 ## Running Tardis Machine historical replays
@@ -347,29 +347,38 @@ Loading mixed-instrument CSV files is challenging due to precision requirements 
 
 ### Loading CSV Data in Python
 
-You can load Tardis-format CSV data in Python using the `TardisCSVDataLoader`.
-When loading data, you can optionally specify the instrument ID but must specify both the price precision, and size precision.
-Providing the instrument ID improves loading performance, while specifying the precisions is required, as they cannot be inferred from the text data alone.
+You can load Tardis-format CSV data in Python using the flat loader functions
+(`load_tardis_trades`, `load_tardis_quotes`, `load_tardis_deltas`,
+`load_tardis_depth10_from_snapshot25` / `load_tardis_depth10_from_snapshot5`,
+`load_tardis_funding_rates`, `load_tardis_options_chain`).
+When loading data, you can optionally specify the instrument ID but must specify
+both the price precision and size precision. Providing the instrument ID
+improves loading performance, while specifying the precisions is required, as
+they cannot be inferred from the text data alone.
 
 To load the data, create a script similar to the following:
 
 ```python
-from nautilus_trader.adapters.tardis import TardisCSVDataLoader
+from nautilus_trader.adapters.tardis import load_tardis_deltas
 from nautilus_trader.model import InstrumentId
 
-
 instrument_id = InstrumentId.from_str("BTC-PERPETUAL.DERIBIT")
-loader = TardisCSVDataLoader(
-    price_precision=1,
-    size_precision=0,
-    instrument_id=instrument_id,
-)
 
 filepath = Path("YOUR_CSV_DATA_PATH")
 limit = None
 
-deltas = loader.load_deltas(filepath, limit)
+deltas = load_tardis_deltas(
+    filepath,
+    price_precision=1,
+    size_precision=0,
+    instrument_id=instrument_id,
+    limit=limit,
+)
 ```
+
+NT v2 compatibility note: the v1 `TardisCSVDataLoader` class (and the v1
+`TardisHttpClient`) are migration/reference-only; the pinned projection exports
+the `load_tardis_*` / `stream_tardis_*` functions shown here.
 
 ### Loading CSV Data in Rust
 
@@ -423,24 +432,25 @@ The streaming functionality is available for all supported Tardis data types:
 
 ### Streaming CSV Data in Python
 
-The `TardisCSVDataLoader` provides streaming methods that yield chunks of data as iterators. Each method accepts a `chunk_size` parameter that controls how many records are read from the CSV file per chunk:
+The `stream_tardis_*` functions yield chunks of data as iterators. Each function accepts a `chunk_size` parameter that controls how many records are read from the CSV file per chunk:
 
 ```python
-from nautilus_trader.adapters.tardis import TardisCSVDataLoader
+from nautilus_trader.adapters.tardis import stream_tardis_trades
 from nautilus_trader.model import InstrumentId
 
 instrument_id = InstrumentId.from_str("BTC-PERPETUAL.DERIBIT")
-loader = TardisCSVDataLoader(
-    price_precision=1,
-    size_precision=0,
-    instrument_id=instrument_id,
-)
 
 filepath = Path("large_trades_file.csv")
 chunk_size = 100_000  # Process 100,000 records per chunk (default)
 
 # Stream trade ticks in chunks
-for chunk in loader.stream_trades(filepath, chunk_size):
+for chunk in stream_tardis_trades(
+    filepath,
+    chunk_size=chunk_size,
+    price_precision=1,
+    size_precision=0,
+    instrument_id=instrument_id,
+):
     print(f"Processing chunk with {len(chunk)} trades")
     # Process each chunk - only this chunk is in memory
     for trade in chunk:
@@ -448,33 +458,37 @@ for chunk in loader.stream_trades(filepath, chunk_size):
         pass
 ```
 
+
 ### Streaming Order Book Data
 
 For order book data, streaming is available for both deltas and depth snapshots:
 
 ```python
+from nautilus_trader.adapters.tardis import stream_tardis_batched_deltas
+from nautilus_trader.adapters.tardis import stream_tardis_depth
+
 # Stream order book deltas
-for chunk in loader.stream_deltas(filepath):
+for chunk in stream_tardis_batched_deltas(filepath):
     print(f"Processing {len(chunk)} deltas")
     # Process delta chunk
 
-# Stream depth10 snapshots (specify levels: 5 or 25)
-for chunk in loader.stream_depth10(filepath, levels=5):
+# Stream depth snapshots
+for chunk in stream_tardis_depth(filepath):
     print(f"Processing {len(chunk)} depth snapshots")
     # Process depth chunk
 ```
-
 ### Streaming Quote Data
 
 Quote data can be streamed similarly:
 
 ```python
+from nautilus_trader.adapters.tardis import stream_tardis_quotes
+
 # Stream quote ticks
-for chunk in loader.stream_quotes(filepath):
+for chunk in stream_tardis_quotes(filepath):
     print(f"Processing {len(chunk)} quotes")
     # Process quote chunk
 ```
-
 ### Memory Efficiency Benefits
 
 The streaming approach provides significant memory efficiency advantages:
@@ -532,10 +546,13 @@ async fn main() {
 
 ## Requesting instrument definitions
 
-You can request instrument definitions in both Python and Rust using the `TardisHttpClient`.
+You can request instrument definitions in Rust using the `TardisHttpClient`.
 This client interacts with the [Tardis instruments metadata API](https://docs.tardis.dev/api/instruments-metadata-api) to request and parse instrument metadata into Nautilus instruments.
 
-The `TardisHttpClient` constructor accepts optional parameters for `api_key`, `base_url`, and `timeout_secs` (default is 60 seconds).
+NT v2 compatibility note: the Python `TardisHttpClient` below is
+migration/reference-only; the pinned Python projection does not export it (the
+Rust `TardisHttpClient` in `crates/adapters/tardis/src/http/client.rs` remains
+the supported surface).
 
 The client provides methods to retrieve either a specific `instrument`, or all `instruments` available on a particular exchange.
 Ensure that you use Tardis’s lower-kebab casing convention when referring to a [Tardis-supported exchange](https://api.tardis.dev/v1/exchanges).
@@ -544,9 +561,9 @@ Ensure that you use Tardis’s lower-kebab casing convention when referring to a
 A Tardis API key is required to access the instruments metadata API.
 :::
 
-### Requesting Instruments in Python
+### Requesting Instruments in Python (v1 migration reference)
 
-To request instrument definitions in Python, create a script similar to the following:
+To request instrument definitions in Python (v1), create a script similar to the following:
 
 ```python
 import asyncio
@@ -661,25 +678,46 @@ It supports subscriptions to the following data types:
 - `Bar` (trade bars with [Tardis-supported bar aggregations](#bars))
 - `FundingRateUpdate` (from derivative_ticker messages)
 
+Register the Tardis data client on a live node with the PyO3 factory (NT v2 compatibility note: the v1
+`TradingNodeConfig(data_clients={...})` flow is migration/reference-only;
+Tardis is a data-only integration at the pin):
+
+```python
+from nautilus_trader.adapters.tardis import TardisDataClientConfig
+from nautilus_trader.adapters.tardis import TardisDataClientFactory
+from nautilus_trader.live import Environment, LiveNode
+
+node = (
+    LiveNode.builder("TARDIS", trader_id, Environment.LIVE)
+    .add_data_client(
+        None,
+        TardisDataClientFactory(),
+        TardisDataClientConfig(api_key=None),  # Falls back to TARDIS_API_KEY
+    )
+    .build()
+)
+```
+
 ### Data WebSockets
 
-The main `TardisMachineClient` data WebSocket manages all stream subscriptions received during the initial connection phase,
-up to the duration specified by `ws_connection_delay_secs`. For any additional subscriptions made
-after this period, a new `TardisMachineClient` is created. This approach optimizes performance by
-allowing the main WebSocket to handle potentially hundreds of subscriptions in a single stream if
-they are provided at startup.
+The main `TardisMachineClient` data WebSocket manages all stream subscriptions received during the initial connection phase. For any additional subscriptions made after this period, a new `TardisMachineClient` is created. This approach optimizes performance by allowing the main WebSocket to handle potentially hundreds of subscriptions in a single stream if they are provided at startup.
 
-When an initial subscription delay is set with `ws_connection_delay_secs`, unsubscribing from any
-of these streams will not actually remove the subscription from the Tardis Machine stream, as selective
-unsubscription is not supported by Tardis. However, the component will still unsubscribe from message
+NT v2 compatibility note: the v1 `ws_connection_delay_secs` initial-delay knob
+and its selective-unsubscription behavior described below are migration/reference-only;
+the pinned `TardisDataClientConfig` (`crates/adapters/tardis/src/config.rs`) has no
+such field (api_key, tardis_ws_url, proxy_url, normalize_symbols,
+book_snapshot_output, extract_bbo_as_quotes, options, stream_options).
+
+With an initial delay (v1 spelling `ws_connection_delay_secs`), unsubscribing from any
+of these streams would not actually remove the subscription from the Tardis Machine stream, as selective unsubscription is not supported by Tardis. However, the component would still unsubscribe from message
 bus publishing as expected.
 
-All subscriptions made after any initial delay will behave normally, fully unsubscribing from the
+All subscriptions made after any initial delay behaved normally, fully unsubscribing from the
 Tardis Machine stream when requested.
 
 :::tip
-If you anticipate frequent subscription and unsubscription of data, it is recommended to set
-`ws_connection_delay_secs` to zero. This will create a new client for each initial subscription,
+If you anticipate frequent subscription and unsubscription of data, it was recommended in v1 to set
+`ws_connection_delay_secs` to zero. This would create a new client for each initial subscription,
 allowing them to be later closed individually upon unsubscription.
 :::
 

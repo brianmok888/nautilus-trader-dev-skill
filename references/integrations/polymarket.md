@@ -1,6 +1,6 @@
 # Polymarket
 
-> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+NT v2 compatibility note: legacy v1 Python examples and `TradingNode` references in this file are retained for migration/reference-only context; current guidance uses the flat `nautilus_trader.adapters.polymarket` surface at the pinned revision.
 
 Founded in 2020, Polymarket is a decentralized prediction market platform that enables
 traders to speculate on event outcomes by buying and selling outcome tokens.
@@ -61,15 +61,16 @@ Polymarket offers resources for different audiences:
 ## Overview
 
 This guide assumes a trader is setting up for both live market data feeds and trade execution.
-The Polymarket integration adapter includes multiple components, which can be used together or
-separately depending on the use case.
+The pinned adapter (Rust, exposed to Python at `nautilus_trader.adapters.polymarket`) exposes these public components:
 
-- `PolymarketWebSocketClient`: Low-level WebSocket API connectivity (built on top of the Nautilus `WebSocketClient` written in Rust).
-- `PolymarketInstrumentProvider`: Instrument parsing and loading functionality for `BinaryOption` instruments.
-- `PolymarketDataClient`: A market data feed manager.
-- `PolymarketExecutionClient`: A trade execution gateway.
-- `PolymarketLiveDataClientFactory`: Factory for Polymarket data clients (used by the trading node builder).
-- `PolymarketLiveExecClientFactory`: Factory for Polymarket execution clients (used by the trading node builder).
+- `PolymarketDataClientConfig` and `PolymarketExecutionClientConfig`: Live client configuration.
+- `PolymarketInstrumentProviderConfig`: Instrument selection and market filters.
+- `PolymarketDataClientFactory` and `PolymarketExecutionClientFactory`: Live node client factories.
+- `PolymarketDataLoader`: Historical market and trade data loading for backtests.
+- `PolymarketFeeModel`: Backtest fee model for taker fees and maker rebates.
+- `PolymarketRtdsCryptoPrice`, `PolymarketRtdsCryptoTwap`, and `PolymarketRtdsEquityPrice`: RTDS custom data types.
+- `PolymarketUpDownEventSlugConfig`: Up/down market event-slug derivation.
+- `POLYMARKET`, `POLYMARKET_VENUE`, and `POLYMARKET_CLIENT_ID`: Public venue identifiers.
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -660,6 +661,42 @@ subscribes dynamically as new instruments are requested.
 The client manages multiple WebSocket connections internally when the subscription count grows past
 the configured per-connection cap.
 
+#### RTDS custom data
+
+The data client also supports Polymarket's real-time data (RTDS) crypto, crypto TWAP, and equity
+topics. Subscribe through generic custom data with a required, non-empty `symbol` metadata value.
+TWAP subscriptions also require `window_seconds` equal to `30` or `60`:
+
+```python
+from nautilus_trader.adapters.polymarket import POLYMARKET_CLIENT_ID
+from nautilus_trader.adapters.polymarket import PolymarketRtdsCryptoPrice
+from nautilus_trader.adapters.polymarket import PolymarketRtdsCryptoTwap
+from nautilus_trader.adapters.polymarket import PolymarketRtdsEquityPrice
+from nautilus_trader.model import DataType
+
+crypto_type = DataType(
+    PolymarketRtdsCryptoPrice.__name__,
+    metadata={"symbol": "btcusdt"},
+)
+equity_type = DataType(
+    PolymarketRtdsEquityPrice.__name__,
+    metadata={"symbol": "AAPL"},
+)
+twap_type = DataType(
+    PolymarketRtdsCryptoTwap.__name__,
+    metadata={"symbol": "BTC/USD", "window_seconds": 60},
+)
+
+strategy.subscribe_data(crypto_type, client_id=POLYMARKET_CLIENT_ID)
+strategy.subscribe_data(equity_type, client_id=POLYMARKET_CLIENT_ID)
+strategy.subscribe_data(twap_type, client_id=POLYMARKET_CLIENT_ID)
+```
+
+Symbol matching is case-insensitive, and published symbols are lowercase. Crypto RTDS uses the
+`crypto_prices` topic; equity RTDS uses `equity_prices`. Crypto TWAP uses
+`crypto_prices_twap_thirty` or `crypto_prices_twap_sixty` and requires the frame's `window_s` to
+match the subscription.
+
 ### Runtime instrument loading
 
 Polymarket lists thousands of active markets and new markets appear throughout the day, so preloading
@@ -823,13 +860,17 @@ The following limitations are currently known:
 
 ## Configuration
 
-The Python adapter (`nautilus_trader.adapters.polymarket`) and the Rust-native adapter
-(`nautilus_trader.polymarket`) expose different config surfaces. The tables below document
-both adapters in full.
+The pinned tree exposes a single Polymarket adapter surface: the Rust adapter projected to
+Python as the flat `nautilus_trader.adapters.polymarket` package (documented in the Rust v2
+tables below). NT v2 compatibility note: the legacy v1 pure-Python adapter tables are
+retained for migration reference.
 
-### Data client options (Python v2)
+NT v2 compatibility note: legacy v1 tables below document the removed pure-Python adapter;
+prefer the pinned flat Rust-projection configs.
 
-Class: `PolymarketDataClientConfig` in `nautilus_trader.adapters.polymarket.config`.
+### Data client options (legacy v1 Python adapter)
+
+Class: `PolymarketDataClientConfig` in `nautilus_trader.adapters.polymarket.config` (v1).
 
 | Option                                | Default      | Description |
 |---------------------------------------|--------------|-------------|
@@ -853,9 +894,10 @@ Class: `PolymarketDataClientConfig` in `nautilus_trader.adapters.polymarket.conf
 | `auto_load_debounce_ms`               | `100`        | Debounce window (milliseconds) for coalescing concurrent runtime instrument loads. |
 | `instrument_config`                   | `None`       | Optional `PolymarketInstrumentProviderConfig` for instrument loading. |
 
-### Execution client options (Python v2)
+### Execution client options (legacy v1 Python adapter)
+NT v2 compatibility note: legacy v1 Python adapter table; migration reference only.
 
-Class: `PolymarketExecutionClientConfig` in `nautilus_trader.adapters.polymarket.config`.
+Class: `PolymarketExecutionClientConfig` in `nautilus_trader.adapters.polymarket.config` (v1).
 
 | Option                                | Default      | Description |
 |---------------------------------------|--------------|-------------|
@@ -935,51 +977,59 @@ single-order path still retries on transient failures.
 
 ### Instrument provider configuration options
 
-The instrument provider config is passed via the `instrument_config` parameter on the data client config.
+The instrument provider config is passed via the `instrument_config` parameter on the data client
+config.
 
-| Option               | Default | Description                                                                                    |
-|----------------------|---------|------------------------------------------------------------------------------------------------|
-| `load_all`           | `False` | Load all venue instruments on start. Auto-set to `True` when `event_slug_builder` is provided. |
-| `event_slug_builder` | `None`  | Fully qualified path to a callable returning event slugs (e.g., `"mymodule:build_slugs"`).     |
+`load_ids` is the only reconciliation scope. When that set is non-empty, unmapped records
+outside it are expected absences. When `load_ids` is unset or empty, every unmapped open
+order and position is in scope and fails the report request. `event_slugs`, `market_slugs`,
+`series_ids`, `filters`, and `event_slug_builder` discover instruments; they do not classify
+unmapped records. A node that scopes discovery with those fields and still wants scoped
+reconciliation must also set `load_ids`.
+
+| Option               | Default | Description                                              |
+|----------------------|---------|----------------------------------------------------------|
+| `load_all`           | `False` | Load the full venue catalogue at startup.                |
+| `load_ids`           | `None`  | Load exact Nautilus instrument IDs.                      |
+| `filters`            | `None`  | Validated Gamma market keyset filters.                   |
+| `event_slugs`        | `None`  | Resolve all markets for the listed events at bootstrap.  |
+| `market_slugs`       | `None`  | Load the listed Gamma market slugs at bootstrap.         |
+| `event_slug_builder` | `None`  | Rust-backed Up/Down event-slug generator.                |
+| `series_ids`         | `None`  | Load markets for the listed Gamma series at bootstrap.   |
+| `log_warnings`       | `True`  | Emit provider warnings.                                  |
+| `use_gamma_markets`  | `False` | Reserved compatibility field with no additional effect.  |
 
 #### Event slug builder
 
-The `event_slug_builder` feature enables efficient loading of niche markets without downloading
-the full venue catalogue. Instead of loading everything, you provide a function that returns
-event slugs for the specific markets you need.
+The adapter treats Python as a configuration, factory, and user strategy boundary.
+Provider, data, and execution operations run in Rust. `event_slug_builder` therefore accepts a
+Rust-backed `PolymarketUpDownEventSlugConfig`; it does not accept Python callable paths.
+
+Use this for predictable Polymarket Up/Down event slugs without downloading the full venue
+catalogue. The builder emits slugs with the pattern
+`{asset}-updown-{interval_mins}m-{unix_timestamp}` for the configured window of aligned periods.
 
 ```python
-from nautilus_trader.adapters.polymarket.providers import PolymarketInstrumentProviderConfig
+from nautilus_trader.adapters.polymarket import PolymarketInstrumentProviderConfig
+from nautilus_trader.adapters.polymarket import PolymarketUpDownEventSlugConfig
 
-# Configure with a slug builder function
 instrument_config = PolymarketInstrumentProviderConfig(
-    event_slug_builder="myproject.slugs:build_temperature_slugs",
+    event_slug_builder=PolymarketUpDownEventSlugConfig(
+        assets=["btc"],
+        interval_mins=5,
+        periods=3,
+        start_offset_periods=0,
+    ),
 )
 ```
 
-The callable must have signature `() -> list[str]` and return a list of event slugs:
-
-```python
-# myproject/slugs.py
-from datetime import UTC, datetime, timedelta
-
-def build_temperature_slugs() -> list[str]:
-    """Build slugs for NYC temperature markets."""
-    slugs = []
-    today = datetime.now(tz=UTC).date()
-
-    for i in range(7):
-        date = today + timedelta(days=i)
-        slug = f"highest-temperature-in-nyc-on-{date.strftime('%B-%d').lower()}"
-        slugs.append(slug)
-
-    return slugs
-```
+For custom event patterns, pass explicit `event_slugs`, pass direct `market_slugs`, scope by
+`series_ids`, or add a Rust filter or builder. The adapter rejects Python callable
+`event_slug_builder` values so adapter operations do not cross into Python during live trading.
 
 See the pinned upstream
 [`crates/adapters/polymarket/examples`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/polymarket/examples)
-for current Rust examples; the historical Python `slug_builders.py` examples
-from `examples/live/polymarket/` are legacy migration/reference-only.
+for current Rust examples.
 
 ## Historical data loading
 
@@ -1162,32 +1212,37 @@ data source if you need full coverage of a heavily traded market.
 
 ### Complete backtest example
 
-See `examples/backtest/polymarket_simple_quoter.py` for a full example:
+Use the Rust-backed `PolymarketDataLoader` for public discovery and historical trades, and pass
+`PolymarketFeeModel` as the venue fee model for taker fees and maker rebates:
 
 ```python
 import asyncio
-from decimal import Decimal
+from datetime import UTC, datetime, timedelta
 
 from nautilus_trader.adapters.polymarket import POLYMARKET_VENUE
 from nautilus_trader.adapters.polymarket import PolymarketDataLoader
-from nautilus_trader.backtest.config import BacktestEngineConfig
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.examples.strategies.ema_cross_long_only import EMACrossLongOnly
-from nautilus_trader.examples.strategies.ema_cross_long_only import EMACrossLongOnlyConfig
-from nautilus_trader.model.currencies import pUSD
-from nautilus_trader.model.data import BarType
-from nautilus_trader.model.enums import AccountType
-from nautilus_trader.model.enums import OmsType
-from nautilus_trader.model.identifiers import TraderId
-from nautilus_trader.model.objects import Money
+from nautilus_trader.adapters.polymarket import PolymarketFeeModel
+from nautilus_trader.backtest import BacktestEngine
+from nautilus_trader.backtest import BacktestEngineConfig
+from nautilus_trader.model import AccountType
+from nautilus_trader.model import Money
+from nautilus_trader.model import OmsType
+from nautilus_trader.model import TraderId
+
 
 async def run_backtest():
-    # Initialize loader and fetch market data
-    loader = await PolymarketDataLoader.from_market_slug("gta-vi-released-before-june-2026")
+    # Create a loader from a market slug and select its outcome token by index
+    loader = await PolymarketDataLoader.from_market_slug(
+        "will-jd-vance-win-the-2028-us-presidential-election",
+        token_index=0,
+    )
     instrument = loader.instrument
+    currency = instrument.currency  # BinaryOption collateral currency
 
     # Load historical trades from the Polymarket Data API
-    trades = await loader.load_trades()
+    end = datetime.now(tz=UTC)
+    start = end - timedelta(days=1)
+    trades = await loader.load_trades(start=start, end=end, limit=1_000)
 
     # Configure and run backtest
     config = BacktestEngineConfig(trader_id=TraderId("BACKTESTER-001"))
@@ -1197,50 +1252,33 @@ async def run_backtest():
         venue=POLYMARKET_VENUE,
         oms_type=OmsType.NETTING,
         account_type=AccountType.CASH,
-        base_currency=pUSD,
-        starting_balances=[Money(10_000, pUSD)],
+        starting_balances=[Money(10_000, currency)],
+        fee_model=PolymarketFeeModel(),
     )
 
     engine.add_instrument(instrument)
     engine.add_data(trades)
 
-    bar_type = BarType.from_str(f"{instrument.id}-100-TICK-LAST-INTERNAL")
-    strategy_config = EMACrossLongOnlyConfig(
-        instrument_id=instrument.id,
-        bar_type=bar_type,
-        trade_size=Decimal("20"),
-    )
-
-    strategy = EMACrossLongOnly(config=strategy_config)
-    engine.add_strategy(strategy=strategy)
+    # Add your strategy here, then run the backtest
+    # engine.add_strategy(strategy)
     engine.run()
 
     # Display results
-    print(engine.trader.generate_account_report(POLYMARKET_VENUE))
+    print(engine.generate_account_report(POLYMARKET_VENUE))
+    print(engine.generate_order_fills_report())
+    print(engine.generate_positions_report())
 
-# Run the backtest
-asyncio.run(run_backtest())
+
+if __name__ == "__main__":
+    asyncio.run(run_backtest())
 ```
 
-**Run the complete example**:
-
-```bash
-python examples/backtest/polymarket_simple_quoter.py
-```
-
-### Helper functions
-
-The adapter provides utility functions for working with Polymarket identifiers:
-
-```python
-from nautilus_trader.adapters.polymarket import get_polymarket_instrument_id
-
-# Create NautilusTrader InstrumentId from Polymarket identifiers
-instrument_id = get_polymarket_instrument_id(
-    condition_id="0xcccb7e7613a087c132b69cbf3a02bece3fdcb824c1da54ae79acc8d4a562d902",
-    token_id="8441400852834915183759801017793514978104486628517653995211751018945988243154"
-)
-```
+:::note
+`PolymarketFeeModel` reads `rate`, `rebateRate`, `exponent`, and `takerOnly` from each binary
+option instrument's `fee_schedule`. For maker fills the model credits
+`fee_equivalent * rebateRate` as negative commission. Live maker fills have zero commission;
+Polymarket pays the actual pUSD rebate separately each day.
+:::
 
 ## Contributing
 

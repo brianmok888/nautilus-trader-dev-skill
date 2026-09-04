@@ -167,8 +167,8 @@ subscription methods. Import the required types:
 ```python
 from nautilus_trader.adapters.databento import DATABENTO_CLIENT_ID
 from nautilus_trader.model import BarType
-from nautilus_trader.model.enums import BookType
-from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.model import BookType
+from nautilus_trader.model import InstrumentId
 ```
 
 :::
@@ -307,7 +307,7 @@ self.subscribe_data(
 )
 
 # Subscribe to instrument status updates
-from nautilus_trader.model.data import InstrumentStatus
+from nautilus_trader.model import InstrumentStatus
 self.subscribe_data(
     data_type=DataType(InstrumentStatus, metadata={"instrument_id": instrument_id}),
     client_id=DATABENTO_CLIENT_ID,
@@ -542,8 +542,8 @@ register automatically when you import the adapter package.
 
 ```python
 from nautilus_trader.adapters.databento import DatabentoDataLoader
-from nautilus_trader.model.identifiers import InstrumentId
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
+from nautilus_trader.model import InstrumentId
+from nautilus_trader.persistence import ParquetDataCatalog
 
 catalog = ParquetDataCatalog.from_env()
 loader = DatabentoDataLoader()
@@ -699,9 +699,9 @@ catalog.write_data(trades)
 Always load instruments before market data:
 
 ```python
-from nautilus_trader.adapters.databento.loaders import DatabentoDataLoader
-from nautilus_trader.model.identifiers import InstrumentId
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
+from nautilus_trader.adapters.databento import DatabentoDataLoader
+from nautilus_trader.model import InstrumentId
+from nautilus_trader.persistence import ParquetDataCatalog
 
 catalog = ParquetDataCatalog.from_env()
 loader = DatabentoDataLoader()
@@ -848,17 +848,17 @@ and `DatabentoDataClient` for historical requests.
 
 ## Configuration
 
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 Add a `DATABENTO` section to your `TradingNode` client configuration:
 
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 ```python
 from nautilus_trader.adapters.databento import DATABENTO
 from nautilus_trader.live.node import TradingNode
 
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+# NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 config = TradingNodeConfig(
     data_clients={
@@ -874,26 +874,28 @@ config = TradingNodeConfig(
 )
 ```
 
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-Create the `TradingNode` and register the factory:
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+Use `DatabentoDataClientConfig` with `DatabentoDataClientFactory` (see the shared
+[Live node wiring](index.md#live-node-wiring) pattern):
 
 ```python
-from nautilus_trader.adapters.databento.factories import DatabentoLiveDataClientFactory
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.adapters.databento import DatabentoDataClientConfig
+from nautilus_trader.adapters.databento import DatabentoDataClientFactory
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-# Create the live trading node with the configuration
-node = TradingNode(config=config)
+data_config = DatabentoDataClientConfig(
+    api_key="YOUR_DATABENTO_API_KEY",
+    publishers_filepath="publishers.json",
+)
 
-# Register the client factory with the node
-node.add_data_client_factory(DATABENTO, DatabentoLiveDataClientFactory)
-
-# Build the node
-node.build()
+node = (
+    LiveNode.builder("DATABENTO-001", trader_id, Environment.LIVE)
+    .add_data_client(None, DatabentoDataClientFactory(), data_config)
+    .build()
+)
 ```
 
 ### Configuration parameters

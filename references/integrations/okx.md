@@ -50,8 +50,8 @@ The OKX adapter includes multiple components, which can be used separately or to
 - `OKXInstrumentProvider`: Instrument parsing and loading functionality.
 - `OKXDataClient`: Market data feed manager.
 - `OKXExecutionClient`: Account management and trade execution gateway.
-- `OKXLiveDataClientFactory`: Factory for OKX data clients (used by the trading node builder).
-- `OKXLiveExecClientFactory`: Factory for OKX execution clients (used by the trading node builder).
+- `OKXDataClientFactory`: Factory for OKX data clients (used by the trading node builder).
+- `OKXExecutionClientFactory`: Factory for OKX execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as shown below),
@@ -650,7 +650,7 @@ pipeline.
 
 Options require the `instrument_families` config parameter to scope which underlyings to load:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 > Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
@@ -668,7 +668,7 @@ Use `OKXInstrumentType.EVENTS` in the data or execution client config. The
 `instrument_families` is omitted, the adapter requests the event contract series list
 first, then requests instruments for each series.
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 > Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
@@ -896,7 +896,7 @@ For active OKX data and execution wiring, use the upstream Rust `LiveNode`
 examples. The former copyable Python live-node configuration is quarantined by
 the migration-reference pointer below.
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 > Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 

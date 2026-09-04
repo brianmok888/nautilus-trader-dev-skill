@@ -11,6 +11,7 @@ The following integrations are currently supported:
 | [Binance](https://binance.com)                                               | `BINANCE`             | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](binance.md)      |
 | [Coinbase](https://coinbase.com)                                             | `COINBASE`            | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)   | [Guide](coinbase.md)     |
 | [BitMEX](https://www.bitmex.com)                                             | `BITMEX`              | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](bitmex.md)       |
+| [Blockchain](blockchain.md)                                                 | `BLOCKCHAIN`          | DeFi Data Provider      | ![status](https://img.shields.io/badge/stable-green)    | [Guide](blockchain.md)   |
 | [Bybit](https://www.bybit.com)                                               | `BYBIT`               | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](bybit.md)        |
 | [Databento](https://databento.com)                                           | `DATABENTO`           | Data Provider           | ![status](https://img.shields.io/badge/stable-green)    | [Guide](databento.md)    |
 | [Deribit](https://www.deribit.com)                                           | `DERIBIT`             | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](deribit.md)      |
@@ -20,12 +21,59 @@ The following integrations are currently supported:
 | [Interactive Brokers](https://www.interactivebrokers.com)                    | `INTERACTIVE_BROKERS` | Brokerage (multi-venue) | ![status](https://img.shields.io/badge/stable-green)    | [Guide](ib.md)           |
 | [Kraken](https://kraken.com)                                                 | `KRAKEN`              | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](kraken.md)       |
 | [Lighter](https://lighter.xyz)                                             | `LIGHTER`             | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/beta-yellow)     | [Guide](lighter.md)     |
+| [Lighter on Robinhood](https://robinhoodchain.lighter.xyz)                  | `LIGHTER_ROBINHOOD`   | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](lighter.md)     |
 | [OKX](https://okx.com)                                                       | `OKX`                 | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](okx.md)          |
 | [Polymarket](https://polymarket.com)                                         | `POLYMARKET`          | Prediction Market (DEX) | ![status](https://img.shields.io/badge/stable-green)    | [Guide](polymarket.md)   |
 | [Tardis](https://tardis.dev)                                                 | `TARDIS`              | Crypto Data Provider    | ![status](https://img.shields.io/badge/stable-green)    | [Guide](tardis.md)       |
 
 - **ID**: The default client ID for the integrations adapter clients.
 - **Type**: The type of integration (often the venue type).
+
+## Live node wiring
+
+Every Rust-backed integration page below registers its adapter clients through the shared
+`LiveNode.builder(...)` API (the current v2 wiring). NT v2 compatibility note: legacy Python
+`TradingNode` snippets, where retained anywhere, are migration context only. The pattern,
+shown with the Derive adapter (see [derive.md](derive.md) for the full example):
+
+```python
+from decimal import Decimal
+
+from nautilus_trader.adapters.derive import DeriveDataClientConfig
+from nautilus_trader.adapters.derive import DeriveDataClientFactory
+from nautilus_trader.adapters.derive import DeriveEnvironment
+from nautilus_trader.adapters.derive import DeriveExecutionClientConfig
+from nautilus_trader.adapters.derive import DeriveExecutionClientFactory
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import TraderId
+
+trader_id = TraderId("TESTER-001")
+
+data_config = DeriveDataClientConfig(
+    environment=DeriveEnvironment.TESTNET,
+    currencies=["ETH", "BTC"],
+)
+
+exec_config = DeriveExecutionClientConfig(
+    account_id=AccountId("DERIVE-001"),
+    environment=DeriveEnvironment.TESTNET,
+    max_fee_per_contract=Decimal("1000"),
+)
+
+node = (
+    LiveNode.builder("DERIVE-001", trader_id, Environment.LIVE)
+    .add_data_client(None, DeriveDataClientFactory(), data_config)
+    .add_exec_client(None, DeriveExecutionClientFactory(), exec_config)
+    .build()
+)
+```
+
+Swap in each venue's flat `nautilus_trader.adapters.<venue>` exports: the pinned adapter package
+exposes `{Venue}DataClientConfig`/`{Venue}ExecutionClientConfig` and
+`{Venue}DataClientFactory`/`{Venue}ExecutionClientFactory`. Pass the config directly to
+`add_data_client`/`add_exec_client`; pass `None` as the client name to use the adapter default.
 
 ## Status
 

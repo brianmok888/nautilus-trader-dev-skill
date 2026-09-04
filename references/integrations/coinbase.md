@@ -11,7 +11,7 @@ order execution on both spot (Cash) and CFM derivatives (Margin) accounts
 through a shared execution client, with the account type selected by the
 factory (see [Execution scope](#execution-scope)).
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 NT v2 compatibility note: legacy Python TradingNode absence is migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
 :::note
@@ -23,7 +23,7 @@ entry points can construct them.
 
 ## Overview
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
 NT v2 compatibility note: legacy Python TradingNode absence is migration/reference-only; prefer Rust v2/PyO3 and LiveNode for new work.
 The Coinbase adapter is implemented in Rust and consumed by the v2 system.
@@ -43,7 +43,7 @@ Current components:
 | `CoinbaseExecutionClient`          | Built  | Rust execution client (spot or CFM derivatives; REST orders + WS streams). |
 | `CoinbaseExecutionClientFactory`   | Built  | Execution client factory; spot vs CFM derivatives is selected by `account_type` on the config. |
 
-PyO3 surface available from `nautilus_trader.core.nautilus_pyo3.coinbase`:
+Public Python surface available from `nautilus_trader.adapters.coinbase`:
 
 - `CoinbaseDataClientConfig`, `CoinbaseExecutionClientConfig`
 - `CoinbaseEnvironment`, `CoinbaseMarginType`
@@ -699,12 +699,13 @@ fill deltas remain correct.
 | `default_leverage`       | `None`  | Default leverage applied to derivatives orders. Ignored on Cash.                                         |
 | `retail_portfolio_id`    | `None`  | CDP retail portfolio UUID. Required when the API key is bound to a non-default portfolio (the venue rejects orders with `account is not available` otherwise). See [Portfolios](#portfolios). |
 
-Configurations are constructed from Python via the PyO3-exported types:
+Configurations are constructed from the adapter's public Python module:
 
 ```python
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseDataClientConfig
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseExecutionClientConfig
-from nautilus_trader.core.nautilus_pyo3 import CoinbaseEnvironment
+from nautilus_trader.adapters.coinbase import CoinbaseDataClientConfig
+from nautilus_trader.adapters.coinbase import CoinbaseEnvironment
+from nautilus_trader.adapters.coinbase import CoinbaseExecutionClientConfig
+from nautilus_trader.model import AccountId
 
 data_config = CoinbaseDataClientConfig(
     api_key="YOUR_COINBASE_API_KEY",
@@ -713,6 +714,7 @@ data_config = CoinbaseDataClientConfig(
 )
 
 exec_config = CoinbaseExecutionClientConfig(
+    account_id=AccountId("COINBASE-001"),
     api_key="YOUR_COINBASE_API_KEY",
     api_secret="YOUR_COINBASE_API_SECRET",
     environment=CoinbaseEnvironment.LIVE,

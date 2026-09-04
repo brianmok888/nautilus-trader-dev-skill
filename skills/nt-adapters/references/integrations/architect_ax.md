@@ -26,8 +26,8 @@ depending on the use case.
 - `AxInstrumentProvider`: Instrument parsing and loading functionality.
 - `AxDataClient`: A market data feed manager.
 - `AxExecutionClient`: An account management and trade execution gateway.
-- `AxLiveDataClientFactory`: Factory for AX data clients (used by the trading node builder).
-- `AxLiveExecClientFactory`: Factory for AX execution clients (used by the trading node builder).
+- `AxDataClientFactory`: Factory for AX data clients (used by the trading node builder).
+- `AxExecutionClientFactory`: Factory for AX execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -135,20 +135,11 @@ export AX_API_SECRET="your-sandbox-api-secret"
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        AX: AxDataClientConfig(
-            environment=AxEnvironment.SANDBOX,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        AX: AxExecClientConfig(
-            environment=AxEnvironment.SANDBOX,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
+data_config = AxDataClientConfig(
+    environment=AxEnvironment.SANDBOX,
+)
+exec_config = AxExecutionClientConfig(
+    environment=AxEnvironment.SANDBOX,
 )
 ```
 
@@ -157,7 +148,7 @@ config = TradingNodeConfig(
 For live trading with real funds. Requires a verified AX Exchange account.
 
 ```python
-config = AxExecClientConfig(
+config = AxExecutionClientConfig(
     environment=AxEnvironment.PRODUCTION,
 )
 ```
@@ -344,7 +335,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 from nautilus_trader.adapters.architect_ax import AX
 from nautilus_trader.adapters.architect_ax import AxDataClientConfig
 from nautilus_trader.adapters.architect_ax import AxEnvironment
-from nautilus_trader.adapters.architect_ax import AxExecClientConfig
+from nautilus_trader.adapters.architect_ax import AxExecutionClientConfig
 from nautilus_trader.config import InstrumentProviderConfig
 from nautilus_trader.config import TradingNodeConfig
 
@@ -352,44 +343,32 @@ from nautilus_trader.config import TradingNodeConfig
 
 config = TradingNodeConfig(
     ...,  # Omitted
-    data_clients={
-        AX: AxDataClientConfig(
-            environment=AxEnvironment.SANDBOX,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        AX: AxExecClientConfig(
-            environment=AxEnvironment.SANDBOX,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
+data_config = AxDataClientConfig(
+    environment=AxEnvironment.SANDBOX,
+)
+exec_config = AxExecutionClientConfig(
+    environment=AxEnvironment.SANDBOX,
 )
 ```
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Rust-backed Python v2 nodes use `LiveNode.builder(...)` with concrete factory
+instances (the v1 `TradingNodeConfig(data_clients={...})` +
+`node.add_data_client_factory(...)` flow is migration/reference-only):
 
 ```python
-from nautilus_trader.adapters.architect_ax import AX
-from nautilus_trader.adapters.architect_ax import AxLiveDataClientFactory
-from nautilus_trader.adapters.architect_ax import AxLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.adapters.architect_ax import AxDataClientConfig
+from nautilus_trader.adapters.architect_ax import AxDataClientFactory
+from nautilus_trader.adapters.architect_ax import AxEnvironment
+from nautilus_trader.adapters.architect_ax import AxExecutionClientConfig
+from nautilus_trader.adapters.architect_ax import AxExecutionClientFactory
+from nautilus_trader.live import Environment, LiveNode
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(AX, AxLiveDataClientFactory)
-node.add_exec_client_factory(AX, AxLiveExecClientFactory)
-
-# Finally build the node
-node.build()
+node = (
+    LiveNode.builder("AX", trader_id, Environment.LIVE)
+    .add_data_client(None, AxDataClientFactory(), data_config)
+    .add_exec_client(None, AxExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ### API credentials

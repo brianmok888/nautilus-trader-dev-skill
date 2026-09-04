@@ -27,8 +27,8 @@ on the use case.
 - `BitmexInstrumentProvider`: Instrument parsing and loading functionality.
 - `BitmexDataClient`: A market data feed manager.
 - `BitmexExecutionClient`: An account management and trade execution gateway.
-- `BitmexLiveDataClientFactory`: Factory for BitMEX data clients (used by the trading node builder).
-- `BitmexLiveExecClientFactory`: Factory for BitMEX execution clients (used by the trading node builder).
+- `BitmexDataClientFactory`: Factory for BitMEX data clients (used by the trading node builder).
+- `BitmexExecutionClientFactory`: Factory for BitMEX execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -587,7 +587,7 @@ The submit broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -655,7 +655,7 @@ The cancel broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -729,7 +729,7 @@ Enable the dead man's switch by setting `deadmans_switch_timeout_secs` on the ex
 client config:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -843,9 +843,9 @@ The BitMEX execution client provides the following configuration options:
 A typical BitMEX configuration for live trading includes both testnet and mainnet options:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexDataClientConfig
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
-from nautilus_trader.core.nautilus_pyo3 import BitmexEnvironment
+from nautilus_trader.adapters.bitmex import BitmexDataClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexEnvironment
 
 # Using environment variables (recommended)
 testnet_data_config = BitmexDataClientConfig(
@@ -863,6 +863,33 @@ mainnet_exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
     environment=BitmexEnvironment.MAINNET,
+)
+```
+
+Register both clients on a live node with the PyO3 factories (NT v2 compatibility note: the v1
+`TradingNodeConfig(data_clients={...})` flow is migration/reference-only):
+
+```python
+from nautilus_trader.adapters.bitmex import BitmexDataClientConfig
+from nautilus_trader.adapters.bitmex import BitmexDataClientFactory
+from nautilus_trader.adapters.bitmex import BitmexEnvironment
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientFactory
+from nautilus_trader.live import Environment, LiveNode
+
+node = (
+    LiveNode.builder("BITMEX", trader_id, Environment.LIVE)
+    .add_data_client(
+        None,
+        BitmexDataClientFactory(),
+        BitmexDataClientConfig(environment=BitmexEnvironment.MAINNET),
+    )
+    .add_exec_client(
+        None,
+        BitmexExecutionClientFactory(),
+        BitmexExecutionClientConfig(environment=BitmexEnvironment.MAINNET),
+    )
+    .build()
 )
 ```
 

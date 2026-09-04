@@ -22,8 +22,8 @@ on the use case.
 - `BybitInstrumentProvider`: Instrument parsing and loading functionality.
 - `BybitDataClient`: A market data feed manager.
 - `BybitExecutionClient`: An account management and trade execution gateway.
-- `BybitLiveDataClientFactory`: Factory for Bybit data clients (used by the trading node builder).
-- `BybitLiveExecClientFactory`: Factory for Bybit execution clients (used by the trading node builder).
+- `BybitDataClientFactory`: Factory for Bybit data clients (used by the trading node builder).
+- `BybitExecutionClientFactory`: Factory for Bybit execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -775,10 +775,15 @@ The product types for each client must be specified in the configurations.
 | `product_types`                  | `None`  | Sequence of `BybitProductType` values to enable; loads all products when `None`. |
 | `environment`                    | `None`  | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `base_url_http`                  | `None`  | Override for the REST base URL. |
+| `base_url_ws_public`             | `None`  | Override for the public WebSocket base URL. |
+| `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
+| `http_timeout_secs`              | `None`  | HTTP request timeout (seconds). |
+| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
+| `instrument_status_poll_secs`    | `None`  | Interval (seconds) for polling instrument status changes. |
+| `transport_backend`              | default | Transport backend selection. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
 | `update_instruments_interval_mins` | `60`  | Interval (minutes) between instrument catalogue refreshes. |
 | `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `bars_timestamp_on_close`        | `True`  | Timestamp bars on the close (`True`) or open (`False`) of the interval. |
 | `max_retries`                    | `None`  | Maximum retry attempts for REST/WebSocket recovery. |
 | `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
 | `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
@@ -795,86 +800,59 @@ The product types for each client must be specified in the configurations.
 | `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
 | `base_url_ws_trade`              | `None`  | Override for the trade WebSocket base URL. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
-| `use_gtd`                        | `False` | Remap GTD orders to GTC when `True` (Bybit lacks native GTD support). |
-| `use_ws_execution_fast`          | `False` | Subscribe to the low-latency execution stream. |
-| `use_http_batch_api`             | `False` | Use Bybit's HTTP batch trading API (deprecated). |
 | `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions when `True`. |
 | `auto_repay_spot_borrows`        | `True`  | Automatically repay Spot margin borrows after BUY orders fully fill (Spot only). |
-| `repay_queue_interval_secs`      | `1.0`   | Interval (seconds) between processing repayment queues for spot borrows. |
-| `ignore_uncached_instrument_executions`    | `False` | Ignore execution messages for instruments not yet cached. |
 | `max_retries`                    | `None`  | Maximum retry attempts for order submission/cancel/modify calls. |
 | `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
 | `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
 | `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `ws_trade_timeout_secs`          | `5.0`   | Timeout (seconds) waiting for trade WebSocket acknowledgements. |
-| `ws_auth_timeout_secs`           | `5.0`   | Timeout (seconds) waiting for auth WebSocket acknowledgements. |
-| `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings. |
-| `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode. See [Hedge mode](#hedge-mode-bothsides). |
+| `heartbeat_interval_secs`         | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
+| `auth_timeout_secs`               | `None`  | Timeout (seconds) waiting for auth WebSocket acknowledgements. |
+| `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings (Rust struct). |
+| `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode (Rust struct). See [Hedge mode](#hedge-mode-bothsides). |
 | `margin_mode`                    | `None`  | Margin mode setting for the account. |
+| `auto_repay_spot_borrows`         | `None`  | Automatically repay Spot borrow balances. |
+| `account_id`                      | `None`  | Optional account ID for the execution client. |
+
+NT v2 compatibility note: the v1 `use_gtd`, `use_ws_execution_fast`, `use_http_batch_api`, `repay_queue_interval_secs`, `ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are pinned fields (Bybit has no passphrase field; only OKX uses `api_passphrase`).
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-The most common use case is to configure a live `TradingNode` to include Bybit
-data and execution clients. To achieve this, add a `BYBIT` section to your client
-configuration(s):
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+The most common use case is to register Bybit data and execution clients on a
+live node. Rust-backed Python v2 nodes use `LiveNode.builder(...)` with concrete
+factory instances (the v1 `TradingNodeConfig(data_clients={...})` +
+`node.add_data_client_factory(...)` flow is migration/reference-only):
 
 ```python
-from nautilus_trader.adapters.bybit import BYBIT
+from nautilus_trader.adapters.bybit import BybitDataClientConfig
+from nautilus_trader.adapters.bybit import BybitDataClientFactory
 from nautilus_trader.adapters.bybit import BybitEnvironment
+from nautilus_trader.adapters.bybit import BybitExecutionClientConfig
+from nautilus_trader.adapters.bybit import BybitExecutionClientFactory
 from nautilus_trader.adapters.bybit import BybitProductType
-from nautilus_trader.live.node import TradingNode
-from nautilus_trader.live.node import TradingNodeConfig
+from nautilus_trader.live import Environment, LiveNode
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        BYBIT: {
-            "api_key": "YOUR_BYBIT_API_KEY",
-            "api_secret": "YOUR_BYBIT_API_SECRET",
-            "base_url_http": None,  # Override with custom endpoint
-            "environment": BybitEnvironment.MAINNET,
-            "product_types": [BybitProductType.LINEAR],
-        },
-    },
-    exec_clients={
-        BYBIT: {
-            "api_key": "YOUR_BYBIT_API_KEY",
-            "api_secret": "YOUR_BYBIT_API_SECRET",
-            "base_url_http": None,  # Override with custom endpoint
-            "environment": BybitEnvironment.MAINNET,
-            "product_types": [BybitProductType.LINEAR],
-        },
-    },
+data_config = BybitDataClientConfig(
+    api_key="YOUR_BYBIT_API_KEY",
+    api_secret="YOUR_BYBIT_API_SECRET",
+    base_url_http=None,  # Override with custom endpoint
+    environment=BybitEnvironment.MAINNET,
+    product_types=[BybitProductType.LINEAR],
 )
-```
+exec_config = BybitExecutionClientConfig(
+    api_key="YOUR_BYBIT_API_KEY",
+    api_secret="YOUR_BYBIT_API_SECRET",
+    base_url_http=None,  # Override with custom endpoint
+    environment=BybitEnvironment.MAINNET,
+    product_types=[BybitProductType.LINEAR],
+)
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.bybit import BYBIT
-from nautilus_trader.adapters.bybit import BybitLiveDataClientFactory
-from nautilus_trader.adapters.bybit import BybitLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(BYBIT, BybitLiveDataClientFactory)
-node.add_exec_client_factory(BYBIT, BybitLiveExecClientFactory)
-
-# Finally build the node
-node.build()
+node = (
+    LiveNode.builder("BYBIT", trader_id, Environment.LIVE)
+    .add_data_client(None, BybitDataClientFactory(), data_config)
+    .add_exec_client(None, BybitExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ### API credentials

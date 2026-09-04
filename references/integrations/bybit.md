@@ -22,8 +22,8 @@ on the use case.
 - `BybitInstrumentProvider`: Instrument parsing and loading functionality.
 - `BybitDataClient`: A market data feed manager.
 - `BybitExecutionClient`: An account management and trade execution gateway.
-- `BybitLiveDataClientFactory`: Factory for Bybit data clients (used by the trading node builder).
-- `BybitLiveExecClientFactory`: Factory for Bybit execution clients (used by the trading node builder).
+- `BybitDataClientFactory`: Factory for Bybit data clients (used by the trading node builder).
+- `BybitExecutionClientFactory`: Factory for Bybit execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -514,7 +514,7 @@ from nautilus_trader.adapters.bybit import BybitMarginAction
 from nautilus_trader.adapters.bybit import BybitMarginBorrowResult
 from nautilus_trader.adapters.bybit import BybitMarginRepayResult
 from nautilus_trader.adapters.bybit import BybitMarginStatusResult
-from nautilus_trader.model.data import DataType
+from nautilus_trader.model import DataType
 
 
 class MyStrategy(Strategy):
@@ -812,69 +812,40 @@ The product types for each client must be specified in the configurations.
 | `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode. See [Hedge mode](#hedge-mode-bothsides). |
 | `margin_mode`                    | `None`  | Margin mode setting for the account. |
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-The most common use case is to configure a live `TradingNode` to include Bybit
-data and execution clients. To achieve this, add a `BYBIT` section to your client
-configuration(s):
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
+`BybitExecutionClientFactory`. The current Python examples show the complete
+`LiveNode.builder(...)` configuration for data and execution clients (see the shared
+[Live node wiring](index.md#live-node-wiring) pattern):
 
 ```python
-from nautilus_trader.adapters.bybit import BYBIT
+from nautilus_trader.adapters.bybit import BybitDataClientConfig
+from nautilus_trader.adapters.bybit import BybitDataClientFactory
 from nautilus_trader.adapters.bybit import BybitEnvironment
+from nautilus_trader.adapters.bybit import BybitExecutionClientConfig
+from nautilus_trader.adapters.bybit import BybitExecutionClientFactory
 from nautilus_trader.adapters.bybit import BybitProductType
-from nautilus_trader.live.node import TradingNode
-from nautilus_trader.live.node import TradingNodeConfig
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        BYBIT: {
-            "api_key": "YOUR_BYBIT_API_KEY",
-            "api_secret": "YOUR_BYBIT_API_SECRET",
-            "base_url_http": None,  # Override with custom endpoint
-            "environment": BybitEnvironment.MAINNET,
-            "product_types": [BybitProductType.LINEAR],
-        },
-    },
-    exec_clients={
-        BYBIT: {
-            "api_key": "YOUR_BYBIT_API_KEY",
-            "api_secret": "YOUR_BYBIT_API_SECRET",
-            "base_url_http": None,  # Override with custom endpoint
-            "environment": BybitEnvironment.MAINNET,
-            "product_types": [BybitProductType.LINEAR],
-        },
-    },
+data_config = BybitDataClientConfig(
+    product_types=[BybitProductType.LINEAR],
+    environment=BybitEnvironment.MAINNET,
 )
-```
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+exec_config = BybitExecutionClientConfig(
+    product_types=[BybitProductType.LINEAR],
+    environment=BybitEnvironment.MAINNET,
+)
 
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.bybit import BYBIT
-from nautilus_trader.adapters.bybit import BybitLiveDataClientFactory
-from nautilus_trader.adapters.bybit import BybitLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(BYBIT, BybitLiveDataClientFactory)
-node.add_exec_client_factory(BYBIT, BybitLiveExecClientFactory)
-
-# Finally build the node
-node.build()
+node = (
+    LiveNode.builder("BYBIT-001", trader_id, Environment.LIVE)
+    .add_data_client(None, BybitDataClientFactory(), data_config)
+    .add_exec_client(None, BybitExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ### API credentials

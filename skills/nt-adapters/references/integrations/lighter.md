@@ -145,8 +145,8 @@ Script source:
 
 ```python
 # Python (PyO3 binding) - reads the same env vars as the Rust bin
-from nautilus_trader.core.nautilus_pyo3 import revoke_lighter_integrator
-from nautilus_trader.core.nautilus_pyo3 import LighterEnvironment
+from nautilus_trader.adapters.lighter import revoke_lighter_integrator
+from nautilus_trader.adapters.lighter import LighterEnvironment
 
 await revoke_lighter_integrator()  # mainnet (default)
 await revoke_lighter_integrator(LighterEnvironment.TESTNET)  # testnet
@@ -573,14 +573,16 @@ same values when all three are available.
 | `http_timeout_secs`                | `60`      | HTTP request timeout in seconds.                     |
 | `ws_timeout_secs`                  | `30`      | WebSocket connect timeout in seconds.                |
 | `update_instruments_interval_mins` | `60`      | Instrument metadata refresh interval in minutes.     |
+| `rest_quota_per_min`               | `None`    | REST request quota per minute.                       |
 | `transport_backend`                | Default   | WebSocket transport backend.                         |
+| `deployment`                       | `Lighter` | `LighterDeployment::Lighter` or `Robinhood` deployment selection. |
+| `venue`                            | `None`    | Custom venue identity when running separate Lighter-protocol endpoints. |
 
 ### Execution client configuration options
 
 | Option                      | Default   | Description                                                |
 |-----------------------------|-----------|------------------------------------------------------------|
-| `trader_id`                 | Required  | Nautilus trader identifier.                                |
-| `account_id`                | Required  | Nautilus account identifier for the venue.                 |
+| `account_id`                | Required  | Nautilus account identifier for the venue (issuer must equal the resolved venue). |
 | `account_index`             | `None`    | Lighter account index.                                     |
 | `api_key_index`             | `None`    | Lighter API key slot.                                      |
 | `private_key`               | `None`    | Hex private key for auth and L2 transaction signing.       |
@@ -590,9 +592,16 @@ same values when all three are available.
 | `environment`               | `Mainnet` | `LighterEnvironment::Mainnet` or `Testnet`.                |
 | `http_timeout_secs`         | `60`      | HTTP request timeout in seconds.                           |
 | `ws_timeout_secs`           | `30`      | WebSocket connect timeout in seconds.                      |
-| `active_markets`            | `[]`      | Lighter market IDs to poll during unscoped reconciliation. |
 | `market_order_slippage_bps` | `50`      | Slippage cap (bps) for `MARKET` / `STOP_MARKET` / `MIT`.   |
+| `rest_quota_per_min`        | `None`    | REST request quota per minute.                             |
+| `sendtx_quota_per_min`      | `None`    | Transaction send quota per minute.                         |
 | `transport_backend`         | Default   | WebSocket transport backend.                               |
+| `deployment`                | `Lighter` | `LighterDeployment::Lighter` or `Robinhood` deployment selection. |
+| `venue`                     | `None`    | Custom venue identity when running separate Lighter-protocol endpoints. |
+
+The trader ID is not an execution config field; it comes from the owning node
+via the execution factory's `create(trader_id, name, config, cache)`. The v1
+`trader_id` / `active_markets` config fields are migration/reference-only.
 
 ### Configuration example
 
@@ -608,17 +617,63 @@ let data_config = LighterDataClientConfig {
 };
 
 let exec_config = LighterExecutionClientConfig::builder()
-    .trader_id(trader_id)
     .account_id(account_id)
     .environment(LighterEnvironment::Testnet)
-    .active_markets(vec![0])
     .build();
 ```
 
 The execution config above resolves credentials from the matching testnet environment variables.
 Set `account_index`, `api_key_index`, and `private_key` directly to override environment lookup.
-Set `active_markets` to the venue market IDs that should be checked for open orders during
-cold-start reconciliation.
+
+### Basic setup
+
+Register Lighter data and execution clients on a live node with the PyO3
+factories (NT v2 compatibility note: the v1 `TradingNodeConfig(data_clients={...})` flow is
+migration/reference-only):
+
+```python
+from nautilus_trader.adapters.lighter import LighterDataClientConfig
+from nautilus_trader.adapters.lighter import LighterDataClientFactory
+from nautilus_trader.adapters.lighter import LighterExecutionClientConfig
+from nautilus_trader.adapters.lighter import LighterExecutionClientFactory
+from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.model import AccountId
+
+node = (
+    LiveNode.builder("LIGHTER", trader_id, Environment.LIVE)
+    .add_data_client(
+        None,
+        LighterDataClientFactory(),
+        LighterDataClientConfig(),  # environment/deployment defaults: Mainnet/Lighter
+    )
+    .add_exec_client(
+        None,
+        LighterExecutionClientFactory(),
+        LighterExecutionClientConfig(account_id=AccountId("LIGHTER-001")),
+    )
+    .build()
+)
+```
+
+For Lighter on Robinhood, pass `deployment=LighterDeployment.ROBINHOOD` on both
+configs and register the explicit `LIGHTER_ROBINHOOD` client (see
+[Deployment selection](#deployment-selection-lighter-vs-lighter-on-robinhood)).
+
+### Deployment selection (Lighter vs Lighter on Robinhood)
+
+Use `LighterDeployment::Lighter` or `LighterDeployment::Robinhood` to select the
+protocol deployment; `LighterEnvironment::Mainnet` or `Testnet` selects its
+environment. The deployment and environment together control the default URLs,
+chain ID, settlement currency, default venue, and attribution policy. Robinhood
+Testnet and Lighter Testnet both use chain ID 300, so the adapter does not infer
+deployment behavior from the numeric chain ID.
+
+For Lighter on Robinhood, `LIGHTER_ROBINHOOD` is the venue and the explicit
+client ID to register. The shared factory name remains `LIGHTER` for
+compatibility; when routing a Robinhood client by `ClientId`, register it as
+`LIGHTER_ROBINHOOD`. The execution `account_id` issuer must equal the resolved
+venue (for example `LIGHTER_ROBINHOOD-001`). Set `venue` on both configs when
+separate Lighter-protocol endpoints must have distinct Nautilus identities.
 
 ## Official documentation
 

@@ -708,7 +708,7 @@ catalog.write_data(trades)
 Always load instruments before market data:
 
 ```python
-from nautilus_trader.adapters.databento.loaders import DatabentoDataLoader
+from nautilus_trader.adapters.databento import DatabentoDataLoader
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.persistence.catalog import ParquetDataCatalog
 
@@ -868,67 +868,50 @@ Add a `DATABENTO` section to your `TradingNode` client configuration:
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 
+Rust-backed Python v2 nodes use `LiveNode.builder(...)` with the concrete
+factory instance (the v1 `TradingNodeConfig(data_clients={...})` +
+`node.add_data_client_factory(...)` flow is migration/reference-only):
+
 ```python
-from nautilus_trader.adapters.databento import DATABENTO
-from nautilus_trader.live.node import TradingNode
+import os
+from pathlib import Path
 
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
+from nautilus_trader.adapters.databento import DatabentoDataClientConfig
+from nautilus_trader.adapters.databento import DatabentoDataClientFactory
+from nautilus_trader.live import Environment, LiveNode
 
+data_config = DatabentoDataClientConfig(
+    api_key=os.environ["DATABENTO_API_KEY"],
+    publishers_filepath=Path("publishers.json"),
+    use_exchange_as_venue=False,
+)
 
-config = TradingNodeConfig(
-    data_clients={
-        DATABENTO: {
-            "api_key": None,  # 'DATABENTO_API_KEY' env var
-            "http_gateway": None,  # Override for the default HTTP historical gateway
-            "live_gateway": None,  # Override for the default raw TCP real-time gateway
-            "instrument_provider": InstrumentProviderConfig(load_all=True),
-            "instrument_ids": None,  # Nautilus instrument IDs to load on start
-            "parent_symbols": None,  # Databento parent symbols to load on start
-        },
-    },
+node = (
+    LiveNode.builder("DATABENTO", trader_id, Environment.LIVE)
+    .add_data_client(None, DatabentoDataClientFactory(), data_config)
+    .build()
 )
 ```
 
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-
-Create the `TradingNode` and register the factory:
-
-NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-
-```python
-from nautilus_trader.adapters.databento.factories import DatabentoLiveDataClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
-
-
-# Create the live trading node with the configuration
-node = TradingNode(config=config)
-
-# Register the client factory with the node
-node.add_data_client_factory(DATABENTO, DatabentoLiveDataClientFactory)
-
-# Build the node
-node.build()
-```
+Download the canonical
+[`publishers.json`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/adapters/databento/publishers.json)
+and point `publishers_filepath` at the local copy.
 
 ### Configuration parameters
 
-| Option                    | Default | Description                                                                                                          |
-|---------------------------|---------|----------------------------------------------------------------------------------------------------------------------|
-| `api_key`                 | `None`  | Databento API secret. Falls back to the `DATABENTO_API_KEY` environment variable when `None`.                        |
-| `http_gateway`            | `None`  | Historical HTTP gateway override for testing custom endpoints.                                                       |
-| `live_gateway`            | `None`  | Raw TCP real-time gateway override, typically for testing only.                                                       |
-| `use_exchange_as_venue`   | `True`  | Use the exchange MIC for Nautilus venues (e.g., `XCME`). `False` retains the default GLBX mapping.                   |
-| `timeout_initial_load`    | `15.0`  | Seconds to wait for instrument definitions per dataset before proceeding.                                            |
-| `mbo_subscriptions_delay` | `3.0`   | Seconds to buffer before enabling MBO/L3 streams so initial snapshots replay in order.                               |
-| `bars_timestamp_on_close` | `True`  | Timestamp bars on the close (`ts_event`/`ts_init`). `False` timestamps on the open.                                 |
-| `reconnect_timeout_mins`  | `10`    | Minutes to attempt reconnection before giving up. `None` retries indefinitely. See [Connection stability](#connection-stability). |
-| `venue_dataset_map`       | `None`  | Optional Nautilus venue to Databento dataset code mapping.                                                            |
-| `parent_symbols`          | `None`  | Optional `{dataset: {parent symbols}}` to preload definition trees (e.g., `{"GLBX.MDP3": {"ES.FUT", "ES.OPT"}}`).   |
-| `instrument_ids`          | `None`  | Nautilus `InstrumentId` values to preload definitions for at startup.                                                |
+| Option                    | Default  | Description                                                                                     |
+|---------------------------|----------|-------------------------------------------------------------------------------------------------|
+| `api_key`                 | Required | Databento API key.                                                                              |
+| `publishers_filepath`     | Required | Local path to Databento publisher metadata (`publishers.json`).                                 |
+| `use_exchange_as_venue`   | `False`  | Use exchange MIC venues for GLBX instruments.                                                   |
+| `bars_timestamp_on_close` | `True`   | Timestamp bars on close instead of the interval open.                                           |
+| `venue_dataset_map`       | `None`   | Override venue-to-dataset mappings from publisher data.                                         |
+| `reconnect_timeout_mins`  | `10`     | Rust struct field: minutes to attempt reconnection before giving up. `None` retries indefinitely. See [Connection stability](#connection-stability). |
+
+NT v2 compatibility note: the v1 `http_gateway`, `live_gateway`,
+`instrument_ids`, `parent_symbols`, `timeout_initial_load`, and
+`mbo_subscriptions_delay` config keys are migration/reference-only; none are
+pinned `DatabentoDataClientConfig` fields.
 
 :::tip
 Use environment variables for credentials.

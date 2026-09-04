@@ -82,6 +82,29 @@ Inherits from `BaseContract` to use Multicall3 for efficient batch operations. F
 | `pool_filters`                  | `DexPoolFilters()` | Filtering rules applied when selecting DEX pools to monitor. |
 | `postgres_cache_database_config`| `None`  | Optional `PostgresConnectOptions` enabling on-disk caching of decoded pool state. |
 | `proxy_url`                     | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
+| `transport_backend`             | `None`  | Optional transport backend selection. |
+
+Register the Blockchain data client on a live node with the PyO3 factory
+(`Chain` is constructed from a `Blockchain` enum value and chain ID):
+
+```python
+from nautilus_trader.adapters.blockchain import BlockchainDataClientConfig
+from nautilus_trader.adapters.blockchain import BlockchainDataClientFactory
+from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.model import Blockchain, Chain, DexType
+
+data_config = BlockchainDataClientConfig(
+    chain=Chain(Blockchain.ETHEREUM, 1),
+    dex_ids=[DexType.UNISWAP_V3],
+    http_rpc_url="https://eth.llamarpc.com",
+)
+
+node = (
+    LiveNode.builder("BLOCKCHAIN", trader_id, Environment.LIVE)
+    .add_data_client(None, BlockchainDataClientFactory(), data_config)
+    .build()
+)
+```
 
 ## Contributing
 

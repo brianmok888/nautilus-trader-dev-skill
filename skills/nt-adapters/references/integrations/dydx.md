@@ -91,8 +91,8 @@ The dYdX v4 adapter includes multiple components which can be used together or s
 - `DydxInstrumentProvider`: Instrument parsing and loading functionality.
 - `DydxDataClient`: Market data feed manager.
 - `DydxExecutionClient`: Account management and trade execution gateway.
-- `DydxLiveDataClientFactory`: Factory for dYdX v4 data clients (used by the trading node builder).
-- `DydxLiveExecClientFactory`: Factory for dYdX v4 execution clients (used by the trading node builder).
+- `DydxDataClientFactory`: Factory for dYdX v4 data clients (used by the trading node builder).
+- `DydxExecutionClientFactory`: Factory for dYdX v4 execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -497,18 +497,20 @@ The default of 4 req/s is conservative and works across all public providers.
 
 ### Multiple gRPC URL fallback
 
-Use `base_url_grpc` to override the primary gRPC endpoint:
+Use the Rust config's `grpc_endpoint` to override the primary gRPC endpoint
+(the Rust `DydxExecutionClientConfig` also accepts a `grpc_urls` list for
+explicit multi-URL fallback):
 
-```python
-exec_config = DydxExecutionClientConfig(
-    base_url_grpc="https://primary-grpc.example.com:443",
-    # ...
-)
+```rust
+let exec_config = DydxExecutionClientConfig::builder()
+    .grpc_endpoint("https://primary-grpc.example.com:443".to_string())
+    .build()?;
 ```
 
-When `base_url_grpc` is unset, the adapter uses the default public nodes for the
-selected network with built-in fallback across the public validator list. Explicit
-multi-URL fallback via user config is not currently exposed on the Python config.
+When `grpc_endpoint` is unset, the adapter uses the default public nodes for the
+selected network with built-in fallback across the public validator list. The
+Python config projection exposes `network` (plus credentials and proxy), not the
+per-endpoint overrides.
 
 ## Price and size quantization
 
@@ -585,15 +587,10 @@ and risk management within a single wallet.
 
 Specify the subaccount number in the execution client config:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
 ```python
-config = TradingNodeConfig(
-    exec_clients={
-        "DYDX": DydxExecClientConfig(
-            subaccount=0,  # Default subaccount
-        ),
-    },
+exec_config = DydxExecutionClientConfig(
+    account_id=AccountId("DYDX-001"),
+    subaccount_number=0,  # Default subaccount
 )
 ```
 
@@ -606,7 +603,7 @@ clients for different subaccounts to implement strategy segregation or risk isol
 
 The dYdX testnet (`dydx-testnet-4`) is a full replica of mainnet for testing strategies
 without risking real funds. All default testnet endpoints are resolved automatically when
-`environment=DydxNetwork.TESTNET`.
+`network=DydxNetwork.TESTNET`.
 
 ### 1. Create a testnet wallet
 
@@ -654,38 +651,29 @@ export DYDX_TESTNET_PRIVATE_KEY="0x..."  # hex-encoded, 0x prefix optional
 
 ### 4. Configure the trading node
 
-Set `environment=DydxNetwork.TESTNET` on both data and execution clients:
+Set `network=DydxNetwork.TESTNET` on both data and execution clients:
 
 ```python
 from nautilus_trader.adapters.dydx import DydxNetwork
+from nautilus_trader.model import AccountId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        DYDX: DydxDataClientConfig(
-            wallet_address=None,  # Falls back to DYDX_TESTNET_WALLET_ADDRESS env var
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.TESTNET,
-        ),
-    },
-    exec_clients={
-        DYDX: DydxExecutionClientConfig(
-            wallet_address=None,  # Falls back to DYDX_TESTNET_WALLET_ADDRESS env var
-            private_key=None,  # Falls back to DYDX_TESTNET_PRIVATE_KEY env var
-            subaccount=0,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.TESTNET,
-        ),
-    },
+data_config = DydxDataClientConfig(
+    network=DydxNetwork.TESTNET,
+)
+exec_config = DydxExecutionClientConfig(
+    account_id=AccountId("DYDX-001"),
+    wallet_address=None,  # Falls back to DYDX_TESTNET_WALLET_ADDRESS env var
+    private_key=None,  # Falls back to DYDX_TESTNET_PRIVATE_KEY env var
+    subaccount_number=0,
+    network=DydxNetwork.TESTNET,
 )
 ```
 
 ### Testnet endpoints
 
-Default testnet endpoints are used automatically. Override via `base_url_http`,
-`base_url_ws`, or `base_url_grpc` (execution only) on the respective config if needed.
+Default testnet endpoints are used automatically. Override via the Rust
+config's `base_url_http`/`base_url_ws` (data) or `http_endpoint`/`ws_endpoint`/
+`grpc_endpoint` (execution) if needed.
 
 | Service   | Default URL                                          |
 |-----------|------------------------------------------------------|
@@ -697,8 +685,9 @@ Default testnet endpoints are used automatically. Override via `base_url_http`,
 
 ### Mainnet endpoints
 
-Default mainnet endpoints are used automatically. Override via `base_url_http`,
-`base_url_ws`, or `base_url_grpc` (execution only) on the respective config if needed.
+Default mainnet endpoints are used automatically. Override via the Rust
+config's `base_url_http`/`base_url_ws` (data) or `http_endpoint`/`ws_endpoint`/
+`grpc_endpoint` (execution) if needed.
 
 | Service   | Default URL                                         |
 |-----------|-----------------------------------------------------|
@@ -716,99 +705,79 @@ wallet credentials.
 
 | Option                    | Default   | Description                                                                                 |
 |---------------------------|-----------|---------------------------------------------------------------------------------------------|
-| `wallet_address`          | `None`    | Legacy Python config field. The public data client does not use wallet credentials.         |
-| `environment`             | `None`    | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`.                                             |
-| `bars_timestamp_on_close` | `True`    | If bar `ts_event` should be the bar close time. Set `False` to use venue-native open time.  |
-| `base_url_http`           | `None`    | HTTP API endpoint override. `None` selects the default for the selected network.             |
-| `base_url_ws`             | `None`    | WebSocket endpoint override. `None` selects the default for the selected network.            |
+| `network`                 | `MAINNET` | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET` (singular network enum; there is no `environment` field at the pin). |
+| `base_url_http`           | `None`    | HTTP API endpoint override (Rust struct). `None` selects the default for the selected network.             |
+| `base_url_ws`             | `None`    | WebSocket endpoint override (Rust struct). `None` selects the default for the selected network.            |
+| `http_timeout_secs`       | `60`      | HTTP request timeout in seconds (Rust struct).                                                              |
 | `proxy_url`               | `None`    | Optional proxy URL for HTTP and WebSocket transports.                                       |
-| `max_retries`             | `3`       | Maximum retry attempts for REST / WebSocket recovery.                                       |
-| `retry_delay_initial_ms`  | `1,000`   | Initial delay (milliseconds) between retries.                                               |
-| `retry_delay_max_ms`      | `10,000`  | Maximum delay (milliseconds) between retries.                                               |
+| `max_retries`             | `3`       | Maximum retry attempts for REST / WebSocket recovery (Rust struct).                                       |
+| `retry_delay_initial_ms`  | `100`     | Initial delay (milliseconds) between retries (Rust struct).                                               |
+| `retry_delay_max_ms`      | `5,000`   | Maximum delay (milliseconds) between retries (Rust struct).                                               |
+| `transport_backend`       | default   | Transport backend selection (Rust struct).                                                                 |
 
 ### Execution client configuration options
 
 | Option                         | Default   | Description                                                                                        |
 |--------------------------------|-----------|----------------------------------------------------------------------------------------------------|
+| `account_id`                  | `DYDX-001` | Account ID for the execution client.                                                              |
 | `wallet_address`               | `None`    | dYdX wallet address. Falls back to `DYDX_WALLET_ADDRESS` / `DYDX_TESTNET_WALLET_ADDRESS` env var.  |
-| `subaccount`                   | `0`       | Subaccount number (0-127). Subaccount 0 is the default.                                            |
+| `subaccount_number`           | `0`        | Subaccount number (0-127). Subaccount 0 is the default.                                            |
 | `private_key`                  | `None`    | Hex-encoded private key for signing. Falls back to `DYDX_PRIVATE_KEY` / `DYDX_TESTNET_PRIVATE_KEY`. |
-| `authenticator_ids`            | `None`    | List of authenticator IDs for permissioned key trading (institutional setups).                     |
-| `environment`                  | `None`    | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`.                                                    |
-| `base_url_http`                | `None`    | HTTP client custom endpoint override. `None` selects the default for the selected network.         |
-| `base_url_ws`                  | `None`    | WebSocket client custom endpoint override. `None` selects the default for the selected network.    |
-| `base_url_grpc`                | `None`    | gRPC client custom endpoint override. `None` selects the default for the selected network.         |
+| `authenticator_ids`           | `None`     | List of authenticator IDs for permissioned key trading (institutional setups; Rust struct).        |
+| `network`                     | `MAINNET`  | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET` (singular network enum; there is no `environment` field at the pin). |
+| `http_endpoint`               | `None`     | HTTP client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `ws_endpoint`                 | `None`     | WebSocket client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `grpc_endpoint`               | `None`     | gRPC client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `grpc_urls`                   | `[]`       | Explicit multi-URL gRPC fallback list (Rust struct).                                               |
 | `proxy_url`                    | `None`    | Optional proxy URL for HTTP and WebSocket transports.                                              |
-| `max_retries`                  | `3`       | Maximum retry attempts for submit/cancel/modify order operations.                                  |
-| `retry_delay_initial_ms`       | `1,000`   | Initial delay (milliseconds) between retries.                                                      |
-| `retry_delay_max_ms`           | `10,000`  | Maximum delay (milliseconds) between retries.                                                      |
+| `max_retries`                 | `None`     | Maximum retry attempts for submit/cancel/modify order operations (Rust struct).                    |
+| `retry_delay_initial_ms`      | `None`     | Initial delay (milliseconds) between retries (Rust struct).                                        |
+| `retry_delay_max_ms`          | `None`     | Maximum delay (milliseconds) between retries (Rust struct).                                        |
+| `transport_backend`           | default    | Transport backend selection (Rust struct).                                                         |
 | `grpc_rate_limit_per_second`   | `4`       | Maximum gRPC requests per second. Set to `None` to disable.                                        |
 
 ### Basic setup
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Configure a live `TradingNode` to include dYdX data and execution clients:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Register dYdX data and execution clients on a live node. Rust-backed Python v2
+nodes use `LiveNode.builder(...)` with concrete factory instances (NT v2 compatibility note: the v1
+`TradingNodeConfig(data_clients={...})` + `node.add_data_client_factory(...)`
+flow is migration/reference-only):
 
 ```python
 from nautilus_trader.adapters.dydx import DydxDataClientConfig
-from nautilus_trader.adapters.dydx import DydxExecClientConfig
+from nautilus_trader.adapters.dydx import DydxDataClientFactory
+from nautilus_trader.adapters.dydx import DydxExecutionClientConfig
+from nautilus_trader.adapters.dydx import DydxExecutionClientFactory
 from nautilus_trader.adapters.dydx import DydxNetwork
-from nautilus_trader.adapters.dydx.constants import DYDX
-from nautilus_trader.config import InstrumentProviderConfig
-from nautilus_trader.config import TradingNodeConfig
+from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.model import AccountId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        DYDX: DydxDataClientConfig(
-            wallet_address=None,  # Falls back to env var
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.MAINNET,
+node = (
+    LiveNode.builder("DYDX", trader_id, Environment.LIVE)
+    .add_data_client(
+        None,
+        DydxDataClientFactory(),
+        DydxDataClientConfig(network=DydxNetwork.MAINNET),
+    )
+    .add_exec_client(
+        None,
+        DydxExecutionClientFactory(),
+        DydxExecutionClientConfig(
+            account_id=AccountId("DYDX-001"),
+            wallet_address=None,  # Falls back to DYDX_WALLET_ADDRESS env var
+            private_key=None,  # Falls back to DYDX_PRIVATE_KEY env var
+            subaccount_number=0,
+            network=DydxNetwork.MAINNET,
         ),
-    },
-    exec_clients={
-        DYDX: DydxExecClientConfig(
-            wallet_address=None,  # Falls back to env var
-            private_key=None,  # Falls back to env var
-            subaccount=0,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-            environment=DydxNetwork.MAINNET,
-        ),
-    },
+    )
+    .build()
 )
-```
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and register the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.dydx import DydxLiveDataClientFactory
-from nautilus_trader.adapters.dydx import DydxLiveExecClientFactory
-from nautilus_trader.adapters.dydx.constants import DYDX
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-node = TradingNode(config=config)
-
-node.add_data_client_factory(DYDX, DydxLiveDataClientFactory)
-node.add_exec_client_factory(DYDX, DydxLiveExecClientFactory)
-
-node.build()
 ```
 
 ### API credentials
 
 Credentials can be passed directly via the Python config (`wallet_address`, `private_key`) or
-resolved automatically from environment variables based on the configured `environment`.
+resolved automatically from environment variables based on the configured `network`.
 
 #### Environment variables
 
@@ -822,7 +791,7 @@ resolved automatically from environment variables based on the configured `envir
 #### Resolution priority
 
 1. Value passed in the Python config (if non-empty)
-2. Environment variable selected by `environment`
+2. Environment variable selected by `network`
 
 ### Permissioned key trading
 

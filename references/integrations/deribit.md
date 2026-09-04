@@ -24,8 +24,8 @@ on your use case:
 - `DeribitInstrumentProvider`: Instrument parsing and loading functionality.
 - `DeribitDataClient`: Market data feed manager.
 - `DeribitExecutionClient`: Account management and trade execution gateway.
-- `DeribitLiveDataClientFactory`: Factory for Deribit data clients (used by the trading node builder).
-- `DeribitLiveExecClientFactory`: Factory for Deribit execution clients (used by the trading node builder).
+- `DeribitDataClientFactory`: Factory for Deribit data clients (used by the trading node builder).
+- `DeribitExecutionClientFactory`: Factory for Deribit execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as shown below),
@@ -142,7 +142,7 @@ The Nautilus adapter supports both feed types via subscription parameters:
 | `depth` | `1`, `10`, `20` | Default: `10`. Number of price levels per side. |
 
 ```python
-from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.model import InstrumentId
 
 instrument_id = InstrumentId.from_str("BTC-PERPETUAL.DERIBIT")
 
@@ -351,9 +351,9 @@ Subscribe from an actor or strategy with `DataType(DeribitVolatilityIndex)`.
 The `index_name` metadata key is required:
 
 ```python
-from nautilus_trader.adapters.deribit.constants import DERIBIT_CLIENT_ID
-from nautilus_trader.adapters.deribit.data import DeribitVolatilityIndex
-from nautilus_trader.model.data import DataType
+from nautilus_trader.adapters.deribit import DERIBIT_CLIENT_ID
+from nautilus_trader.adapters.deribit import DeribitVolatilityIndex
+from nautilus_trader.model import DataType
 
 self.subscribe_data(
     data_type=DataType(DeribitVolatilityIndex, metadata={"index_name": "btc_usd"}),
@@ -525,9 +525,9 @@ Deribit provides a testnet environment for testing strategies without real funds
 To use the testnet, set `environment=DeribitEnvironment.TESTNET` in your client configuration:
 
 ```python
-from nautilus_trader.core.nautilus_pyo3 import DeribitEnvironment
+from nautilus_trader.adapters.deribit import DeribitEnvironment
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+# NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work.
 
 config = TradingNodeConfig(
     data_clients={
@@ -606,51 +606,44 @@ HTTP failures are logged and the WebSocket subscribe is skipped.
 
 ### Production configuration
 
-Below is an example configuration for a live trading node using Deribit data and execution clients:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Below is an example configuration for a live node using Deribit data and execution clients (see
+the shared [Live node wiring](index.md#live-node-wiring) pattern):
 
 ```python
-from nautilus_trader.adapters.deribit import DERIBIT
 from nautilus_trader.adapters.deribit import DeribitDataClientConfig
-from nautilus_trader.adapters.deribit import DeribitExecClientConfig
-from nautilus_trader.adapters.deribit import DeribitLiveDataClientFactory
-from nautilus_trader.adapters.deribit import DeribitLiveExecClientFactory
-from nautilus_trader.config import InstrumentProviderConfig
-from nautilus_trader.config import TradingNodeConfig
-from nautilus_trader.core.nautilus_pyo3 import DeribitEnvironment
-from nautilus_trader.core.nautilus_pyo3 import DeribitProductType
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.adapters.deribit import DeribitDataClientFactory
+from nautilus_trader.adapters.deribit import DeribitEnvironment
+from nautilus_trader.adapters.deribit import DeribitExecutionClientConfig
+from nautilus_trader.adapters.deribit import DeribitExecutionClientFactory
+from nautilus_trader.adapters.deribit import DeribitProductType
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import AccountId
+from nautilus_trader.model import TraderId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+trader_id = TraderId("TESTER-001")
 
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        DERIBIT: DeribitDataClientConfig(
-            api_key=None,           # Uses DERIBIT_API_KEY env var
-            api_secret=None,        # Uses DERIBIT_API_SECRET env var
-            product_types=(DeribitProductType.Future,),
-            environment=DeribitEnvironment.MAINNET,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        DERIBIT: DeribitExecClientConfig(
-            api_key=None,
-            api_secret=None,
-            product_types=(DeribitProductType.Future,),
-            environment=DeribitEnvironment.MAINNET,
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
+data_config = DeribitDataClientConfig(
+    api_key=None,           # Uses DERIBIT_API_KEY env var
+    api_secret=None,        # Uses DERIBIT_API_SECRET env var
+    product_types=(DeribitProductType.FUTURE,),
+    environment=DeribitEnvironment.MAINNET,
 )
 
+exec_config = DeribitExecutionClientConfig(
+    account_id=AccountId("DERIBIT-001"),
+    api_key=None,
+    api_secret=None,
+    product_types=(DeribitProductType.FUTURE,),
+    environment=DeribitEnvironment.MAINNET,
+)
 
-node = TradingNode(config=config)
-node.add_data_client_factory(DERIBIT, DeribitLiveDataClientFactory)
-node.add_exec_client_factory(DERIBIT, DeribitLiveExecClientFactory)
-node.build()
+node = (
+    LiveNode.builder("DERIBIT-001", trader_id, Environment.LIVE)
+    .add_data_client(None, DeribitDataClientFactory(), data_config)
+    .add_exec_client(None, DeribitExecutionClientFactory(), exec_config)
+    .build()
+)
 ```
 
 ### API credentials
@@ -678,21 +671,21 @@ We recommend using environment variables to manage your credentials.
 The `product_types` configuration option controls which Deribit product families are loaded.
 Available options via the `DeribitProductType` enum:
 
-- `DeribitProductType.Future` - Perpetual and dated futures.
-- `DeribitProductType.Option` - Call and put options.
-- `DeribitProductType.Spot` - Spot trading pairs.
-- `DeribitProductType.FutureCombo` - Future spread instruments.
-- `DeribitProductType.OptionCombo` - Option spread instruments.
+- `DeribitProductType.FUTURE` - Perpetual and dated futures.
+- `DeribitProductType.OPTION` - Call and put options.
+- `DeribitProductType.SPOT` - Spot trading pairs.
+- `DeribitProductType.FUTURE_COMBO` - Future spread instruments.
+- `DeribitProductType.OPTION_COMBO` - Option spread instruments.
 
 Example loading multiple product types:
 
 ```python
-from nautilus_trader.core.nautilus_pyo3 import DeribitProductType
+from nautilus_trader.adapters.deribit import DeribitProductType
 
 config = DeribitDataClientConfig(
     product_types=(
-        DeribitProductType.Future,
-        DeribitProductType.Option,
+        DeribitProductType.FUTURE,
+        DeribitProductType.OPTION,
     ),
     # ... other config
 )

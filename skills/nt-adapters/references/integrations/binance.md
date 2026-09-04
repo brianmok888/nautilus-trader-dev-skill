@@ -31,8 +31,8 @@ The Binance adapter includes multiple components that can be used together or se
 - `BinanceInstrumentProvider`: Instrument parsing and loading.
 - `BinanceSpotDataClient` / `BinanceFuturesDataClient`: Market data feed manager.
 - `BinanceSpotExecutionClient` / `BinanceFuturesExecutionClient`: Account management and trade execution gateway.
-- `BinanceLiveDataClientFactory`: Factory for Binance data clients (used by the trading node builder).
-- `BinanceLiveExecClientFactory`: Factory for Binance execution clients (used by the trading node builder).
+- `BinanceDataClientFactory`: Factory for Binance data clients (used by the trading node builder).
+- `BinanceExecutionClientFactory`: Factory for Binance execution clients (used by the trading node builder).
 
 :::note
 Most users configure a live trading node (as below) and do not interact with
@@ -655,123 +655,108 @@ For the latest rate limits, query `/api/v3/exchangeInfo` (Spot) or `/fapi/v1/exc
 ## Configuration
 
 :::note
-The configuration tables below describe the **Python adapter**. The Rust adapter
-uses `BinanceDataClientConfig` and `BinanceExecutionClientConfig` with different field
-names. See the Rust source at `crates/adapters/binance/src/config.rs` for the
-definitive list of Rust config options.
+The configuration tables below describe the pinned v2 surface: the Rust
+`BinanceDataClientConfig` / `BinanceExecutionClientConfig` structs
+(`crates/adapters/binance/src/config.rs`) projected to Python as frozen PyO3
+classes. Products split via `product_type` (`BinanceProductType`); the v1
+`account_type` / `BinanceAccountType` spelling is migration/reference-only.
 :::
 
 ### Data client configuration options
 
 | Option                             | Default   | Description |
 |------------------------------------|-----------|-------------|
-| `venue`                            | `BINANCE` | Venue identifier used when registering the client. |
-| `api_key`                          | `None`    | Binance API key; loaded from environment variables when omitted. |
-| `api_secret`                       | `None`    | Binance API secret; loaded from environment variables when omitted. |
-| `key_type`                         | `HMAC`    | **Deprecated**: key type is now auto-detected from the API secret format. Only needed to force `RSA`. |
-| `account_type`                     | `SPOT`    | Account type for data endpoints (spot, margin, USDT futures, coin futures). |
+| `product_type`                     | `SPOT`    | Product type to subscribe to (`SPOT`, `MARGIN`, `USD_M`, `COIN_M`, `OPTIONS`). |
+| `environment`                      | `LIVE`    | Binance environment: `LIVE`, `TESTNET`, or `DEMO`. |
+| `api_key`                          | `None`    | Binance API key (Ed25519); loaded from environment variables when omitted. |
+| `api_secret`                       | `None`    | Binance API secret (Ed25519 base64-encoded or PEM); loaded from environment variables when omitted. |
 | `base_url_http`                    | `None`    | Override for the HTTP REST base URL. |
 | `base_url_ws`                      | `None`    | Override for the WebSocket base URL. |
+| `spot_market_data_mode`            | `Json`    | Spot market-data transport mode: `Sbe` (requires Ed25519 credentials) or `Json` (public streams). |
+| `instrument_provider`              | default  | Instrument loading and fee configuration (`BinanceInstrumentProviderConfig`). |
+| `instrument_refresh_interval_secs` | `3600`    | Interval (seconds) for a full instrument catalogue refresh. Set to `0` to disable. |
+| `instrument_status_poll_secs`      | `3600`    | Interval (seconds) between exchange info polls to detect instrument status changes. Set to `0` to disable. |
 | `proxy_url`                        | `None`    | Optional proxy URL for HTTP and WebSocket transports. |
+| `recv_window_ms`                   | `5,000`   | Receive window (milliseconds) for signed REST requests. |
 | `us`                               | `False`   | Route requests to Binance US endpoints when `True`. |
-| `environment`                      | `None`    | Binance environment: `LIVE`, `TESTNET`, or `DEMO`. Defaults to `LIVE` when `None`. |
-| `update_instruments_interval_mins` | `60`      | Interval (minutes) between instrument catalogue refreshes. |
-| `use_agg_trade_ticks`              | `False`   | When `True`, subscribe to aggregated trade ticks instead of raw trades. Futures WebSocket subscriptions always use `@aggTrade` regardless of this flag. |
-| `instrument_status_poll_secs`      | `3600`    | *Rust only.* Interval (seconds) between exchange info polls to detect instrument status changes. Set to `0` to disable. |
+| `transport_backend`                | default  | Transport backend selection. |
 
 ### Execution client configuration options
 
 | Option                               | Default   | Description |
 |--------------------------------------|-----------|-------------|
-| `venue`                              | `BINANCE` | Venue identifier used when registering the client. |
+| `account_id`                         | required  | Account ID for the execution client (e.g. `BINANCE-001`). |
+| `product_type`                       | `SPOT`    | Product type for order placement (`SPOT`, `MARGIN`, `USD_M`, `COIN_M`, `OPTIONS`). |
+| `environment`                        | `LIVE`    | Binance environment: `LIVE`, `TESTNET`, or `DEMO`. |
 | `api_key`                            | `None`    | Binance API key; loaded from environment variables when omitted. |
 | `api_secret`                         | `None`    | Binance API secret; loaded from environment variables when omitted. |
-| `key_type`                           | `HMAC`    | **Deprecated**: key type is now auto-detected from the API secret format. Only needed to force `RSA` (data clients only, RSA is not supported for execution). |
-| `account_type`                       | `SPOT`    | Account type for order placement (spot, margin, USDT futures, coin futures). |
 | `base_url_http`                      | `None`    | Override for the HTTP REST base URL. |
 | `base_url_ws`                        | `None`    | Override for the WebSocket API base URL. |
-| `base_url_ws_stream`                 | `None`    | Override for the WebSocket stream URL (futures user data event delivery). |
-| `proxy_url`                          | `None`    | Optional proxy URL for HTTP and WebSocket transports. |
-| `us`                                 | `False`   | Route requests to Binance US endpoints when `True`. |
-| `environment`                        | `None`    | Binance environment: `LIVE`, `TESTNET`, or `DEMO`. Defaults to `LIVE` when `None`. |
+| `base_url_ws_trading`                | `None`    | Override for the WebSocket trading API URL. |
+| `use_ws_trading`                     | `True`    | Use the WebSocket trading API for order operations (Spot and USD-M Futures). When `False`, HTTP is used. |
+| `ws_trading_setup_timeout_ms`        | `None`    | Setup timeout (milliseconds) for the WebSocket trading stream. |
+| `instrument_provider`                | default  | Instrument loading and fee configuration (`BinanceInstrumentProviderConfig`). |
+| `instrument_refresh_interval_secs`   | `3600`    | Interval (seconds) for a full instrument catalogue refresh. |
 | `use_gtd`                            | `True`    | When `False`, remaps GTD orders to GTC for local expiry management. |
-| `use_reduce_only`                    | `True`    | When `True`, passes through `reduce_only` instructions to Binance. |
-| `use_position_ids`                   | `True`    | Enable Binance hedging position IDs; set `False` for virtual hedging. |
-| `use_trade_lite`                     | `False`   | Use TRADE_LITE execution events that include derived fees. |
-| `treat_expired_as_canceled`          | `False`   | Treat `EXPIRED` execution types as `CANCELED` when `True`. |
+| `use_position_ids`                   | `True`    | Use venue position IDs for order reconciliation. |
+| `oms_type`                           | `None`    | Optional OMS type override. |
+| `default_taker_fee`                  | `None`    | Default taker fee rate for commission estimation on exchange-generated fills (liquidation, ADL, settlement). |
 | `recv_window_ms`                     | `5,000`   | Receive window (milliseconds) for signed REST requests. |
-| `max_retries`                        | `None`    | Maximum retry attempts for order submission/cancel/modify calls. |
-| `retry_delay_initial_ms`             | `None`    | Initial delay (milliseconds) between retry attempts. |
-| `retry_delay_max_ms`                 | `None`    | Maximum delay (milliseconds) between retry attempts. |
+| `us`                                 | `False`   | Route requests to Binance US endpoints when `True`. |
 | `futures_leverages`                  | `None`    | Mapping of `BinanceSymbol` to initial leverage for futures accounts. |
 | `futures_margin_types`               | `None`    | Mapping of `BinanceSymbol` to futures margin type (isolated/cross). |
-| `use_ws_trading`                         | `True`  | Use the WebSocket trading API for order operations (Spot and USD-M Futures). When `False`, HTTP is used. |
-| `default_taker_fee`                      | `0.0004` | Default taker fee rate for commission estimation on exchange-generated fills (liquidation, ADL, settlement). |
-| `log_rejected_due_post_only_as_warning` | `True` | Log post-only rejections as warnings when `True`; otherwise as errors. |
+| `treat_expired_as_canceled`          | `False`   | Treat `EXPIRED` execution types as `CANCELED` when `True`. |
+| `use_trade_lite`                     | `False`   | Use TRADE_LITE execution events that include derived fees. |
+| `bnfcr_currency`                     | `None`    | Funding currency for BNF conversion reporting. |
+| `proxy_url`                          | `None`    | Optional proxy URL for HTTP and WebSocket transports. |
+| `transport_backend`                  | default  | Transport backend selection. |
 
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
-The most common use case is to configure a live `TradingNode` with Binance
-data and execution clients. Add a `BINANCE` section to your client
-configuration:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+The most common use case is to register Binance data and execution clients on a
+live node. Rust-backed Python v2 nodes use `LiveNode.builder(...)` with concrete
+factory instances and the plain config structs (the v1
+`TradingNodeConfig(data_clients={...})` + `node.add_data_client_factory(...)`
+flow is migration/reference-only):
 
 ```python
-from nautilus_trader.adapters.binance import BINANCE
-from nautilus_trader.live.node import TradingNode
+from nautilus_trader.adapters.binance import BinanceDataClientConfig
+from nautilus_trader.adapters.binance import BinanceDataClientFactory
+from nautilus_trader.adapters.binance import BinanceEnvironment
+from nautilus_trader.adapters.binance import BinanceExecutionClientConfig
+from nautilus_trader.adapters.binance import BinanceExecutionClientFactory
+from nautilus_trader.adapters.binance import BinanceProductType
+from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.model import AccountId
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+data_config = BinanceDataClientConfig(
+    api_key=None,  # Falls back to BINANCE_API_KEY env var
+    api_secret=None,  # Falls back to BINANCE_API_SECRET env var
+    product_type=BinanceProductType.SPOT,
+    environment=BinanceEnvironment.LIVE,
+    us=False,  # If client is for Binance US
+)
 
-config = TradingNodeConfig(
-    ...,  # Omitted
-    data_clients={
-        BINANCE: {
-            "api_key": "YOUR_BINANCE_API_KEY",
-            "api_secret": "YOUR_BINANCE_API_SECRET",
-            "account_type": "spot",  # {spot, usdt_futures, coin_futures}
-            "base_url_http": None,  # Override with custom endpoint
-            "base_url_ws": None,  # Override with custom endpoint
-            "us": False,  # If client is for Binance US
-        },
-    },
-    exec_clients={
-        BINANCE: {
-            "api_key": "YOUR_BINANCE_API_KEY",
-            "api_secret": "YOUR_BINANCE_API_SECRET",
-            "account_type": "spot",  # {spot, usdt_futures, coin_futures}
-            "base_url_http": None,  # Override with custom endpoint
-            "base_url_ws": None,  # Override with custom endpoint
-            "us": False,  # If client is for Binance US
-        },
-    },
+exec_config = BinanceExecutionClientConfig(
+    account_id=AccountId("BINANCE-001"),
+    api_key=None,
+    api_secret=None,
+    product_type=BinanceProductType.SPOT,
+    environment=BinanceEnvironment.LIVE,
+    us=False,
+)
+
+node = (
+    LiveNode.builder("BINANCE", trader_id, Environment.LIVE)
+    .add_data_client(None, BinanceDataClientFactory(), data_config)
+    .add_exec_client(None, BinanceExecutionClientFactory(), exec_config)
+    .build()
 )
 ```
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Then, create a `TradingNode` and add the client factories:
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-```python
-from nautilus_trader.adapters.binance import BINANCE
-from nautilus_trader.adapters.binance import BinanceLiveDataClientFactory
-from nautilus_trader.adapters.binance import BinanceLiveExecClientFactory
-from nautilus_trader.live.node import TradingNode
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-# Instantiate the live trading node with a configuration
-node = TradingNode(config=config)
-
-# Register the client factories with the node
-node.add_data_client_factory(BINANCE, BinanceLiveDataClientFactory)
-node.add_exec_client_factory(BINANCE, BinanceLiveExecClientFactory)
-
-# Finally build the node
-node.build()
-```
+Pass an explicit name as the first `add_data_client`/`add_exec_client` argument
+to run multiple products side by side (for example `BINANCE_SPOT` with
+`BinanceProductType.SPOT` and `BINANCE_FUTURES` with `BinanceProductType.USD_M`).
 
 ### Key types
 
@@ -861,17 +846,20 @@ removed in a future version. Rename them to `BINANCE_API_KEY` /
 When the trading node starts, you receive confirmation of whether your
 credentials are valid and have trading permissions.
 
-### Account type
+### Product type
 
-Set `account_type` using the `BinanceAccountType` enum:
+Set `product_type` using the `BinanceProductType` enum (the v1
+`account_type` / `BinanceAccountType` spelling is migration/reference-only):
 
 - `SPOT`
-- `USDT_FUTURES` (USDT or BUSD stablecoins as collateral)
-- `COIN_FUTURES` (other cryptocurrency as collateral)
+- `MARGIN`
+- `USD_M` (USDT or BUSD stablecoins as collateral)
+- `COIN_M` (other cryptocurrency as collateral)
+- `OPTIONS`
 
 :::note
-`MARGIN` and `ISOLATED_MARGIN` account types exist in the enum but margin
-trading is not implemented. See [Product support](#product-support).
+`MARGIN` exists in the enum but margin trading is not implemented. See
+[Product support](#product-support).
 :::
 
 ### Base URL overrides
@@ -904,10 +892,10 @@ The default environment for live trading with real funds. Uses your main Binance
 account credentials.
 
 ```python
-config = BinanceExecutionClientConfig(
+config = BinanceDataClientConfig(
     api_key="YOUR_API_KEY",
     api_secret="YOUR_API_SECRET",
-    account_type=BinanceAccountType.SPOT,
+    product_type=BinanceProductType.SPOT,
     # environment=BinanceEnvironment.LIVE (default)
 )
 ```
@@ -939,10 +927,10 @@ virtual balances.
 | COIN-M WS      | `demo-dstream.binance.com`    |
 
 ```python
-config = BinanceExecutionClientConfig(
+config = BinanceDataClientConfig(
     api_key="YOUR_DEMO_API_KEY",
     api_secret="YOUR_DEMO_API_SECRET",
-    account_type=BinanceAccountType.SPOT,
+    product_type=BinanceProductType.SPOT,
     environment=BinanceEnvironment.DEMO,
 )
 ```
@@ -969,10 +957,10 @@ endpoints may route through the Demo Trading infrastructure.
 continue to work, but new Futures testing should use `BinanceEnvironment.DEMO`.
 
 ```python
-config = BinanceExecutionClientConfig(
+config = BinanceDataClientConfig(
     api_key="YOUR_TESTNET_API_KEY",
     api_secret="YOUR_TESTNET_API_SECRET",
-    account_type=BinanceAccountType.SPOT,
+    product_type=BinanceProductType.SPOT,
     environment=BinanceEnvironment.TESTNET,
 )
 ```
@@ -995,13 +983,14 @@ Binance provides aggregated trade data endpoints as an alternative source of
 trades. Unlike the default trade endpoints, aggregated trade endpoints can
 return all ticks between a `start_time` and `end_time`.
 
-Set `use_agg_trade_ticks=True` to use aggregated trades (`False` by default).
+NT v2 compatibility note: the v1 `use_agg_trade_ticks=True` config option is
+migration/reference-only; it is not a pinned `BinanceDataClientConfig` field.
 
 :::note
 For Futures (USD-M and COIN-M), the WebSocket trade subscription always uses
 `@aggTrade`. Binance only publishes aggregated trades on the Futures WebSocket;
-the legacy `@trade` stream was undocumented and has been silenced. The HTTP
-`request_trade_ticks` path continues to honour `use_agg_trade_ticks`.
+the legacy `@trade` stream was undocumented and has been silenced. (The v1 HTTP
+`request_trade_ticks` path honoured the removed `use_agg_trade_ticks` flag.)
 :::
 
 ### Commission rate queries
@@ -1055,34 +1044,33 @@ same instrument simultaneously.
 To use hedge mode:
 
 1. Configure hedge mode on Binance before starting the strategy.
-2. Set `use_reduce_only=False` in `BinanceExecutionClientConfig` (`True` by default).
+2. Register USD-M futures clients with `BinanceProductType.USD_M` (the v1
+   `account_type=BinanceAccountType.USDT_FUTURES` spelling is
+   migration/reference-only):
 
     ```python
-    from nautilus_trader.adapters.binance import BINANCE
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-    config = TradingNodeConfig(
-        ...,  # Omitted
-        data_clients={
-            BINANCE: BinanceDataClientConfig(
+    node = (
+        LiveNode.builder("BINANCE", trader_id, Environment.LIVE)
+        .add_data_client(
+            None,
+            BinanceDataClientFactory(),
+            BinanceDataClientConfig(
                 api_key=None,  # 'BINANCE_API_KEY' env var
                 api_secret=None,  # 'BINANCE_API_SECRET' env var
-                account_type=BinanceAccountType.USDT_FUTURES,
-                base_url_http=None,  # Override with custom endpoint
-                base_url_ws=None,  # Override with custom endpoint
+                product_type=BinanceProductType.USD_M,
             ),
-        },
-        exec_clients={
-            BINANCE: BinanceExecutionClientConfig(
+        )
+        .add_exec_client(
+            None,
+            BinanceExecutionClientFactory(),
+            BinanceExecutionClientConfig(
+                account_id=AccountId("BINANCE-001"),
                 api_key=None,  # 'BINANCE_API_KEY' env var
                 api_secret=None,  # 'BINANCE_API_SECRET' env var
-                account_type=BinanceAccountType.USDT_FUTURES,
-                base_url_http=None,  # Override with custom endpoint
-                base_url_ws=None,  # Override with custom endpoint
-                use_reduce_only=False,  # Must be disabled for Hedge mode
+                product_type=BinanceProductType.USD_M,
             ),
-        }
+        )
+        .build()
     )
     ```
 

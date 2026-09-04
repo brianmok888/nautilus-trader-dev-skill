@@ -27,8 +27,8 @@ on the use case.
 - `BitmexInstrumentProvider`: Instrument parsing and loading functionality.
 - `BitmexDataClient`: A market data feed manager.
 - `BitmexExecutionClient`: An account management and trade execution gateway.
-- `BitmexLiveDataClientFactory`: Factory for BitMEX data clients (used by the trading node builder).
-- `BitmexLiveExecClientFactory`: Factory for BitMEX execution clients (used by the trading node builder).
+- `BitmexDataClientFactory`: Factory for BitMEX data clients (used by the trading node builder).
+- `BitmexExecutionClientFactory`: Factory for BitMEX execution clients (used by the trading node builder).
 
 :::note
 Most users will define a configuration for a live trading node (as below),
@@ -144,7 +144,7 @@ Within NautilusTrader, BitMEX instruments are identified using the native BitMEX
 directly, combined with the venue identifier:
 
 ```python
-from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.model import InstrumentId
 
 # Spot pairs (note: no slash in the symbol)
 spot_id = InstrumentId.from_str("XBTUSDT.BITMEX")  # XBT/USDT spot
@@ -234,7 +234,7 @@ Choose the trigger type that matches your strategy and/or risk preferences.
 **Example**:
 
 ```python
-from nautilus_trader.model.enums import TriggerType
+from nautilus_trader.model import TriggerType
 
 order = self.order_factory.stop_market(
     instrument_id=instrument_id,
@@ -263,7 +263,7 @@ favorably. The adapter maps `TRAILING_STOP_MARKET` orders to BitMEX's pegged ord
 **Example**:
 
 ```python
-from nautilus_trader.model.enums import TrailingOffsetType
+from nautilus_trader.model import TrailingOffsetType
 
 order = self.order_factory.trailing_stop_market(
     instrument_id=instrument_id,
@@ -579,7 +579,7 @@ The submit broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -647,7 +647,7 @@ The cancel broadcaster is configured via the execution client configuration:
 **Example configuration**:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -721,7 +721,7 @@ Enable the dead man's switch by setting `deadmans_switch_timeout_secs` on the ex
 client config:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 exec_config = BitmexExecutionClientConfig(
     api_key="YOUR_API_KEY",
@@ -835,9 +835,9 @@ The BitMEX execution client provides the following configuration options:
 A typical BitMEX configuration for live trading includes both testnet and mainnet options:
 
 ```python
-from nautilus_trader.adapters.bitmex.config import BitmexDataClientConfig
-from nautilus_trader.adapters.bitmex.config import BitmexExecutionClientConfig
-from nautilus_trader.core.nautilus_pyo3 import BitmexEnvironment
+from nautilus_trader.adapters.bitmex import BitmexDataClientConfig
+from nautilus_trader.adapters.bitmex import BitmexEnvironment
+from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig
 
 # Using environment variables (recommended)
 testnet_data_config = BitmexDataClientConfig(
