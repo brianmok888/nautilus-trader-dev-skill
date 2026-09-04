@@ -98,6 +98,31 @@ are key differences between backtesting and live trading.
 The NautilusTrader design allows for integrating data providers and/or trading venues through adapter implementations.
 The **Adapters** guide covers requirements and best practices for developing new integration adapters for the platform.
 
+## Pinned upstream concept topics (pointer policy)
+
+This directory mirrors the core concept guides only. The pinned upstream checkout
+(see `tools/upstream_baseline.py` in the skill repository) ships a broader
+`docs/concepts/` tree; consult those pages directly at the pinned revision instead
+of duplicating them here:
+
+- Topic subdirectories (per-type deep dives):
+  - `docs/concepts/orders/` - per-type order guides (market, limit, stop-limit, trailing stops, emulated, advanced).
+  - `docs/concepts/events/` - per-event references (order accepted/filled/rejected, position changed/closed, etc.).
+  - `docs/concepts/instruments/` - per-instrument-type guides (equity, futures, options, perpetuals, synthetics, etc.).
+  - `docs/concepts/data/` - per-data-type guides (quote_tick, trade_tick, bar, order book deltas/depth, funding/mark/index updates).
+  - `docs/concepts/backtesting/` - engine internals (data-and-venues, execution-flow, fill-models, fill-prices-and-matching, bar-execution, trade-execution, accounts-and-margin, apis-and-runs).
+- High-value single-page topics not mirrored locally:
+  - `docs/concepts/reconciliation.md` - live state reconciliation.
+  - `docs/concepts/custom_data.md` - custom data types.
+  - `docs/concepts/order_book.md` - L1/L2/L3 order book model.
+  - `docs/concepts/synthetics.md` - synthetic instruments.
+  - `docs/concepts/value_types.md` - fixed-point value types.
+  - `docs/concepts/rust.md` - Rust architecture.
+  - `docs/concepts/configuration.md` - configuration system.
+
+When a topic above is needed, read it from the pinned checkout and cite the pinned
+path; do not paraphrase from memory or from unpinned web docs.
+
 :::note
 The [API Reference](../api_reference/index.md) documentation should be considered the source of truth
 for the platform. If there are any discrepancies between concepts described here and the API Reference,

@@ -128,46 +128,49 @@ depending on whether the data is historical or real-time.
 The system distinguishes between two types of data flow:
 
 1. **Historical data** (from *requests*):
-   - Obtained through methods like `request_bars()`, `request_quote_ticks()`, etc.
-   - Processed through the `on_historical_data()` handler.
+   - Obtained through methods like `request_bars()`, `request_quotes()`, etc.
+   - Processed through type-specific batch handlers like `on_historical_bars()` and
+     `on_historical_quotes()` (custom data uses `on_historical_data()`).
    - Used for initial data loading and historical analysis.
 
 2. **Real-time data** (from *subscriptions*):
-   - Obtained through methods like `subscribe_bars()`, `subscribe_quote_ticks()`, etc.
-   - Processed through specific handlers like `on_bar()`, `on_quote_tick()`, etc.
+   - Obtained through methods like `subscribe_bars()`, `subscribe_quotes()`, etc.
+   - Processed through specific handlers like `on_bar()`, `on_quote()`, etc.
    - Used for live data processing.
 
 ### Callback handlers
 
 Here's how different data operations map to their handlers:
 
-| Operation                            | Category   | Handler                  | Purpose                                           |
-|--------------------------------------|------------|--------------------------|---------------------------------------------------|
-| `subscribe_data()`                   | Real-time  | `on_data()`              | Live data updates.                                |
-| `subscribe_instrument()`             | Real-time  | `on_instrument()`        | Live instrument definition updates.               |
-| `subscribe_instruments()`            | Real-time  | `on_instrument()`        | Live instrument definition updates (for venue).   |
-| `subscribe_order_book_deltas()`      | Real-time  | `on_order_book_deltas()` | Live order book deltas.                           |
-| `subscribe_order_book_depth()`       | Real-time  | `on_order_book_depth()`  | Live order book depth snapshots.                  |
-| `subscribe_order_book_at_interval()` | Real-time  | `on_order_book()`        | Live order book snapshots at intervals.           |
-| `subscribe_quote_ticks()`            | Real-time  | `on_quote_tick()`        | Live quote updates.                               |
-| `subscribe_trade_ticks()`            | Real-time  | `on_trade_tick()`        | Live trade updates.                               |
-| `subscribe_mark_prices()`            | Real-time  | `on_mark_price()`        | Live mark price updates.                          |
-| `subscribe_index_prices()`           | Real-time  | `on_index_price()`       | Live index price updates.                         |
-| `subscribe_bars()`                   | Real-time  | `on_bar()`               | Live bar updates.                                 |
-| `subscribe_funding_rates()`          | Real-time  | `on_funding_rate()`      | Live funding rate updates.                        |
-| `subscribe_instrument_status()`      | Real-time  | `on_instrument_status()` | Live instrument status updates.                   |
-| `subscribe_instrument_close()`       | Real-time  | `on_instrument_close()`  | Live instrument close updates.                    |
-| `request_data()`                     | Historical | `on_historical_data()`   | Historical data processing.                       |
-| `request_order_book_deltas()`        | Historical | `on_historical_data()`   | Historical order book deltas.                     |
-| `request_order_book_depth()`         | Historical | `on_historical_data()`   | Historical order book depth.                      |
-| `request_order_book_snapshot()`      | Historical | `on_historical_data()`   | Historical order book snapshot.                   |
-| `request_instrument()`               | Historical | `on_instrument()`        | Instrument definition.                            |
-| `request_instruments()`              | Historical | `on_instrument()`        | Instrument definitions.                           |
-| `request_quote_ticks()`              | Historical | `on_historical_data()`   | Historical quotes processing.                     |
-| `request_trade_ticks()`              | Historical | `on_historical_data()`   | Historical trades processing.                     |
-| `request_bars()`                     | Historical | `on_historical_data()`   | Historical bars processing.                       |
-| `request_aggregated_bars()`          | Historical | `on_historical_data()`   | Historical aggregated bars (on-the-fly).          |
-| `request_funding_rates()`            | Historical | `on_historical_data()`   | Historical funding rates processing.              |
+| Operation                       | Category     | Handler                         | Purpose                                    |
+| ------------------------------- | ------------ | ------------------------------- | ------------------------------------------ |
+| `subscribe_data()`              | Subscription | `on_data()`                     | Custom data updates.                       |
+| `subscribe_signal()`            | Subscription | `on_signal()`                   | Signal updates.                            |
+| `subscribe_instrument()`        | Subscription | `on_instrument()`               | Instrument definition updates.             |
+| `subscribe_instruments()`       | Subscription | `on_instrument()`               | Instrument definition updates for a venue. |
+| `subscribe_book_deltas()`       | Subscription | `on_book_deltas()`              | Order book deltas.                         |
+| `subscribe_book_depth10()`      | Subscription | `on_book_depth()`               | Order book depth snapshots.                |
+| `subscribe_book_at_interval()`  | Subscription | `on_book()`                     | Order book snapshots at intervals.         |
+| `subscribe_quotes()`            | Subscription | `on_quote()`                    | Quote updates.                             |
+| `subscribe_trades()`            | Subscription | `on_trade()`                    | Trade updates.                             |
+| `subscribe_mark_prices()`       | Subscription | `on_mark_price()`               | Mark price updates.                        |
+| `subscribe_index_prices()`      | Subscription | `on_index_price()`              | Index price updates.                       |
+| `subscribe_bars()`              | Subscription | `on_bar()`                      | Bar updates.                               |
+| `subscribe_funding_rates()`     | Subscription | `on_funding_rate()`             | Funding rate updates.                      |
+| `subscribe_instrument_status()` | Subscription | `on_instrument_status()`        | Instrument status updates.                 |
+| `subscribe_instrument_close()`  | Subscription | `on_instrument_close()`         | Instrument close updates.                  |
+| `subscribe_option_greeks()`     | Subscription | `on_option_greeks()`            | Option Greek updates.                      |
+| `subscribe_option_chain()`      | Subscription | `on_option_chain()`             | Option chain slice snapshots.              |
+| `request_data()`                | Request      | `on_historical_data()`          | Historical custom data.                    |
+| `request_book_deltas()`         | Request      | `on_historical_book_deltas()`   | Historical order book deltas.              |
+| `request_book_depth()`          | Request      | `on_historical_book_depth()`    | Historical order book depth.               |
+| `request_book_snapshot()`       | Request      | `on_book()`                     | Order book snapshot.                       |
+| `request_instrument()`          | Request      | `on_instrument()`               | Instrument definition.                     |
+| `request_instruments()`         | Request      | `on_instrument()`               | Instrument definitions.                    |
+| `request_quotes()`              | Request      | `on_historical_quotes()`        | Historical quotes.                         |
+| `request_trades()`              | Request      | `on_historical_trades()`        | Historical trades.                         |
+| `request_bars()`                | Request      | `on_historical_bars()`          | Historical bars.                           |
+| `request_funding_rates()`       | Request      | `on_historical_funding_rates()` | Historical funding rates.                  |
 
 ### Example
 
@@ -239,6 +242,14 @@ as the data might be coming from a request rather than a subscription.
 Order lifecycle events flow through the message bus rather than data-engine subscriptions. Handle `OrderFilled` and
 `OrderCanceled` messages in `on_order_filled()` and `on_order_canceled()` while the actor is running. Use message-bus
 topics when a component must observe order events beyond its normal handler routing.
+
+## Rust actors
+
+Rust actors implement the `DataActor` trait, store runtime identity and state in
+`DataActorCore`, and use the subscription/request facade methods on `self` (the
+same v2 names as the table above). The pinned upstream how-to guide walks through
+a complete Rust actor end to end: `docs/how_to/write_rust_actor.md` in the pinned
+checkout.
 
 ## Related guides
 

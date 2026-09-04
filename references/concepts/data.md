@@ -403,14 +403,16 @@ self.request_bars(BarType.from_str("6EH4.XCME-1-MINUTE-LAST-EXTERNAL"))
 self.request_bars(BarType.from_str("6EH4.XCME-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL"))
 ```
 
-If historical aggregated bars are needed, you can use specialized request `request_aggregated_bars()` method:
+For on-the-fly aggregation of historical bars, request a composite bar type (the
+`@` source syntax) with `request_bars()` - there is no separate aggregated-bars
+request method at the pinned v2:
 
 ```python
 # Request bars that are aggregated from historical trade ticks
-self.request_aggregated_bars([BarType.from_str("6EH4.XCME-100-VOLUME-LAST-INTERNAL")])
+self.request_bars(BarType.from_str("6EH4.XCME-100-VOLUME-LAST-INTERNAL"))
 
 # Request bars that are aggregated from other bars
-self.request_aggregated_bars([BarType.from_str("6EH4.XCME-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL")])
+self.request_bars(BarType.from_str("6EH4.XCME-5-MINUTE-LAST-INTERNAL@1-MINUTE-EXTERNAL"))
 ```
 
 ### Common pitfalls

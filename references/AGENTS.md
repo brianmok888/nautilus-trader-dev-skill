@@ -16,7 +16,7 @@ references/
 │   └── *.md           # Core module APIs
 ├── concepts/          # Conceptual guides (20 files)
 │   ├── backtesting.md # BacktestEngine, fill models
-│   ├── live.md        # TradingNode, reconciliation
+│   ├── live.md        # LiveNode, reconciliation
 │   ├── orders.md      # Order types, lifecycle
 │   └── data.md        # Data types, subscriptions
 ├── developer_guide/   # Development guides (24 files)
@@ -37,7 +37,8 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 | Topic | File |
 |-------|------|
 | BacktestEngine | `concepts/backtesting.md` |
-| TradingNode | `concepts/live.md` |
+| LiveNode | `concepts/live.md` |
+| TradingNode (legacy v1 alias for LiveNode routing) | `concepts/live.md` |
 | Order types | `concepts/orders.md` |
 | Data subscriptions | `concepts/data.md` |
 | Actor system | `concepts/actors.md` |

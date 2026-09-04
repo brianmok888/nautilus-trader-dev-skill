@@ -153,12 +153,12 @@ For real-time data, use subscription methods:
 ```python
 def on_start(self) -> None:
     # Subscribe to live trade updates
-    self.subscribe_trade_ticks(InstrumentId.from_str("BTCUSDT-PERP.BINANCE"))
+    self.subscribe_trades(InstrumentId.from_str("BTCUSDT-PERP.BINANCE"))
 
     # Subscribe to live bars
     self.subscribe_bars(BarType.from_str("BTCUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL"))
 
-def on_trade_tick(self, tick: TradeTick) -> None:
+def on_trade(self, tick: TradeTick) -> None:
     self.log.info(f"Trade: {tick}")
 
 def on_bar(self, bar: Bar) -> None:

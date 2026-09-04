@@ -102,27 +102,43 @@ These handlers receive data updates, including built-in market data and custom u
 You can use these handlers to define actions upon receiving data object instances.
 
 ```python
-from nautilus_trader.core import Data
-from nautilus_trader.model import OrderBook
+from collections.abc import Sequence
+from typing import Any
+
+from nautilus_trader.common import Signal
 from nautilus_trader.model import Bar
-from nautilus_trader.model import QuoteTick
-from nautilus_trader.model import TradeTick
-from nautilus_trader.model import OrderBookDeltas
+from nautilus_trader.model import CustomData
+from nautilus_trader.model import FundingRateUpdate
+from nautilus_trader.model import IndexPriceUpdate
 from nautilus_trader.model import InstrumentClose
 from nautilus_trader.model import InstrumentStatus
-from nautilus_trader.model.instruments import Instrument
+from nautilus_trader.model import MarkPriceUpdate
+from nautilus_trader.model import OptionChainSlice
+from nautilus_trader.model import OptionGreeks
+from nautilus_trader.model import OrderBook
+from nautilus_trader.model import OrderBookDelta
+from nautilus_trader.model import OrderBookDeltas
+from nautilus_trader.model import OrderBookDepth10
+from nautilus_trader.model import QuoteTick
+from nautilus_trader.model import TradeTick
 
-def on_order_book_deltas(self, deltas: OrderBookDeltas) -> None:
-def on_order_book(self, order_book: OrderBook) -> None:
-def on_quote_tick(self, tick: QuoteTick) -> None:
-def on_trade_tick(self, tick: TradeTick) -> None:
+def on_book_deltas(self, deltas: OrderBookDeltas) -> None:
+def on_book_depth(self, depth: OrderBookDepth10) -> None:
+def on_book(self, order_book: OrderBook) -> None:
+def on_quote(self, tick: QuoteTick) -> None:
+def on_trade(self, tick: TradeTick) -> None:
 def on_bar(self, bar: Bar) -> None:
-def on_instrument(self, instrument: Instrument) -> None:
+def on_mark_price(self, mark_price: MarkPriceUpdate) -> None:
+def on_index_price(self, index_price: IndexPriceUpdate) -> None:
+def on_funding_rate(self, funding_rate: FundingRateUpdate) -> None:
+def on_instrument(self, instrument: Any) -> None:
 def on_instrument_status(self, data: InstrumentStatus) -> None:
 def on_instrument_close(self, data: InstrumentClose) -> None:
-def on_historical_data(self, data: Data) -> None:
-def on_data(self, data: Data) -> None:  # Custom data passed to this handler
-def on_signal(self, signal: Data) -> None:  # Custom signals passed to this handler
+def on_option_greeks(self, greeks: OptionGreeks) -> None:
+def on_option_chain(self, chain: OptionChainSlice) -> None:
+def on_historical_data(self, data: CustomData | Sequence[CustomData]) -> None:
+def on_data(self, data: CustomData) -> None:  # Custom data passed to this handler
+def on_signal(self, signal: Signal) -> None:  # Signals passed to this handler
 ```
 
 #### Order management
@@ -233,7 +249,7 @@ def on_start(self) -> None:
 
     # Subscribe to live data
     self.subscribe_bars(self.bar_type)
-    self.subscribe_quote_ticks(self.instrument_id)
+    self.subscribe_quotes(self.instrument_id)
 ```
 
 ### Clock and timers
@@ -550,7 +566,7 @@ semantics (e.g., bracket orders with interdependencies).
 To check if an exit is in progress (e.g., to skip order submission logic), use `is_exiting()`:
 
 ```python
-def on_quote_tick(self, tick: QuoteTick) -> None:
+def on_quote(self, tick: QuoteTick) -> None:
     if self.is_exiting():
         return  # Skip order logic during exit
     # ... normal order logic
@@ -686,6 +702,14 @@ strategy class name, and the strategies `order_id_tag` separated by a hyphen. Fo
 example the above config would result in a strategy ID of `MyStrategy-001`.
 
 See the [`StrategyId` API Reference](../api_reference/model/identifiers.md) for further details.
+
+## Rust strategies
+
+Rust strategy authors implement the `DataActor` callbacks they need (the same v2
+handler names as above), hold runtime state in `StrategyCore`, and create orders
+through the order factory on the core. The pinned upstream how-to guide walks
+through a complete Rust strategy end to end: `docs/how_to/write_rust_strategy.md`
+in the pinned checkout.
 
 ## Related guides
 

@@ -470,7 +470,7 @@ self._synthetic_id = synthetic.id
 self.add_synthetic(synthetic)
 
 # Subscribe to quotes for the synthetic instrument
-self.subscribe_quote_ticks(self._synthetic_id)
+self.subscribe_quotes(self._synthetic_id)
 ```
 
 :::note
