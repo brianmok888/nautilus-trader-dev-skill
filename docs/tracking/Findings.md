@@ -4,13 +4,1457 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-02
+Review date: 2026-09-04
 Reviewed upstream develop: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
 Pinned G2 baseline: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
 
 The review manifest preserves five contiguous transitions. The newest transition reviews 61 commits and 561 net changed paths from the previously reviewed `65a168ea14976bf936d30ab67e1187db8f5703d0` through current develop `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window standardizes adapter task lifecycles (`crates/live/src/task.rs` TaskGroup/TaskSpawner/TaskSlot), adds `LiveNode.add_actor` registration for constructed Python actor instances, refreshes Rust development-guidance docs, and refines model and engine internals; seventeen delta entries carry repository impact; correction findings NT-2026-09-02-01 through NT-2026-09-02-12 were opened and closed from this review cycle.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
+
+## Open findings — 2026-09-04 full-tree audit
+
+Nine parallel read-only audit passes (all 17 skills, references/api_reference, references/concepts, references/developer_guide, references/integrations, templates) against pinned upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` (develop tip, 0 commits ahead). Every finding below was verified against the pinned tree (symbols, module layouts, configs, Make targets) before recording. Systemic patterns: v1 submodule automodule stubs across skills' references/api/ trees; v1 factory/type names (`*LiveDataClientFactory`, `*ExecClientConfig`, `TradingNodeConfig`, `LoggingConfig`) in venue guides; venue config-field drift; handler/subscription renames (`on_quote_tick`→`on_quote`, `subscribe_quote_ticks`→`subscribe_quotes`); toolchain drift (make targets, test paths, feature names, versions 0.62→0.63); and missing v2 coverage (task lifecycle, SimulationModule, LiveNode builder surface). Totals: 35 P0, 160 P1, 45 P2.
+
+[NT-2026-09-04-01] [P0] [OPEN] Rust conversion gaps: nt-trading api/accounting.md documents removed Python nautilus_trader.accounting package for the Rust-owned accounting domain
+  file: skills/nt-trading/references/api/accounting.md:4,8,16,24,32,40
+  evidence: pin 4692bac: python/nautilus_trader/accounting/ absent; Rust crates/model/src/accounts/{cash,margin,margin_model,betting,wallet}.rs + crates/portfolio/src/manager.rs; PyO3 CashAccount/MarginAccount from flat nautilus_trader.model (model/__init__.pyi:661,2818)
+  fix: rewrite page around pinned Rust accounting modules + flat PyO3 account classes; delete or legacy-label v1 automodule stubs
+  acceptance-test: grep -c 'nautilus_trader.accounting' skills/nt-trading/references/api/ returns 0 unlabelled; python3 tools/check_legacy_labelling.py exits 0
+
+[NT-2026-09-04-02] [P0] [OPEN] Rust conversion gaps: nt-trading api/ stubs (execution, portfolio, risk, trading, orders, events, position) teach v1 Python submodule APIs for Rust-owned domains
+  file: skills/nt-trading/references/api/execution.md:10-70; portfolio.md:8-16; risk.md:8-16; trading.md:8-32; orders.md:8-88; events.md:8-24; position.md:4
+  evidence: pin: python/nautilus_trader/{execution,portfolio,risk,trading}/ flat __init__ only; model.orders/events/position absent; Rust: crates/execution/src/engine/, crates/portfolio/src/portfolio.rs, crates/risk/src/engine/mod.rs, crates/trading/src/strategy/, crates/model/src/{orders,events,position.rs}
+  fix: replace stubs with pinned Rust module surfaces + flat PyO3 exports (e.g. OrderFactory crates/trading/src/strategy/api.rs:516) or label files as v1 snapshots
+  acceptance-test: no automodule directive in nt-trading/references/api/ targets a module absent from the pinned python tree; legacy labelling validator green
+
+[NT-2026-09-04-03] [P0] [OPEN] Rust conversion gaps: nt-model api/model/ stubs teach v1 Python submodule APIs for the entirely Rust-owned model domain
+  file: skills/nt-model/references/api/model/orders.md:4; also instruments.md, events.md, identifiers.md, objects.md, book.md, data.md, position.md, tick_scheme.md in the same directory
+  evidence: pin: python/nautilus_trader/model/ flat (only __init__.py/.pyi re-exporting _libnautilus.model); domain defined in crates/model/src/{orders,instruments,events,identifiers,types,position.rs}
+  fix: regenerate pages against flat nautilus_trader.model automodule + Rust crate paths per section
+  acceptance-test: no dead v1 submodule path remains under skills/nt-model/references/api/
+
+[NT-2026-09-04-04] [P1] [OPEN] V2 compliance: instrument_types.md teaches from_pyo3()/from_pyo3_c()/instruments_from_pyo3() conversion APIs absent at pin
+  file: skills/nt-model/references/guides/instrument_types.md:267,271,298,303,306
+  evidence: grep from_pyo3 over pin python/+crates/ = 0 hits; pinned cross-boundary: PyO3 classes are the Python surface; from_raw preserves precision (model/__init__.pyi:6110)
+  fix: delete/rewrite 'From pyo3' and 'Batch conversion from Rust' sections around pinned behavior
+  acceptance-test: grep -c 'from_pyo3' skills/nt-model/references/guides/instrument_types.md returns 0
+
+[NT-2026-09-04-05] [P1] [OPEN] V2 compliance: instrument_types.md claims a Python Instrument base class and v1 submodule imports
+  file: skills/nt-model/references/guides/instrument_types.md:11-29,37,279-281
+  evidence: pin model/__init__.pyi: 176 concrete classes, no class Instrument base; InstrumentAny enum is Rust-only (crates/model/src/instruments/any.rs:33, 18 variants); model.instruments/.identifiers/.objects submodules absent
+  fix: update hierarchy and examples: concrete instrument classes; InstrumentAny Rust-side only; flat imports (from nautilus_trader.model import Equity, InstrumentId, ...)
+  acceptance-test: no 'model.instruments.base' or Python Instrument-base hierarchy remains in the guide
+
+[NT-2026-09-04-06] [P1] [OPEN] V2 compliance: instrument_types.md lists phantom instrument methods is_spread()/get_base_currency()/get_settlement_currency()/get_cost_currency()
+  file: skills/nt-model/references/guides/instrument_types.md:82-85
+  evidence: 0 hits in model pyi; is_spread exists only on Rust InstrumentAny (any.rs:62); settlement_currency is a property (pyi:1010)
+  fix: replace with pinned surface: make_price/make_qty/notional_value/next_bid_price/next_ask_price (pyi:431-436)
+  acceptance-test: grep for the four phantom methods in the guide returns 0
+
+[NT-2026-09-04-07] [P1] [OPEN] V2 compliance: value_type_patterns.md names constant FIXED_PRECISION_BYTES; pin exports PRECISION_BYTES
+  file: skills/nt-model/references/guides/value_type_patterns.md:58
+  evidence: model/__init__.pyi:17,29 exports PRECISION_BYTES; FIXED_PRECISION_BYTES 0 hits at pin
+  fix: rename documented constant to PRECISION_BYTES
+  acceptance-test: grep FIXED_PRECISION_BYTES in skill tree returns 0
+
+[NT-2026-09-04-08] [P1] [OPEN] V2 compliance: value_type_patterns.md teaches Quantity.saturating_sub() absent at pin
+  file: skills/nt-model/references/guides/value_type_patterns.md:121-122,126
+  evidence: 0 hits in pyi; saturating_sub in crates/ only as internal integer arithmetic (money.rs:415)
+  fix: remove saturating_sub guidance; document __sub__ semantics only
+  acceptance-test: grep saturating_sub in guide returns 0
+
+[NT-2026-09-04-09] [P1] [OPEN] V2 compliance: value_type_patterns.md teaches Currency.from_internal_map(), model.currencies module, register_currency() — none exist at pin
+  file: skills/nt-model/references/guides/value_type_patterns.md:260,293,317
+  evidence: 0 hits at pin; python model/ flat; pinned registration is Currency.register(currency, overwrite) (pyi:1555, correctly used at :284)
+  fix: drop the three; use Currency.from_str and Currency.register consistently
+  acceptance-test: grep from_internal_map/register_currency in guide returns 0
+
+[NT-2026-09-04-10] [P1] [OPEN] V2 compliance: value_type_patterns.md imports CurrencyType from v1 path nautilus_trader.core.rust.model
+  file: skills/nt-model/references/guides/value_type_patterns.md:247,319
+  evidence: pin core/ has no rust/ subpackage; CurrencyType is a class in model/__init__.pyi:7672
+  fix: from nautilus_trader.model import CurrencyType
+  acceptance-test: grep 'core.rust' in guide returns 0
+
+[NT-2026-09-04-11] [P1] [OPEN] V2 compliance: value_type_patterns.md documents from_raw_c/from_str_c low-level constructors absent at pin
+  file: skills/nt-model/references/guides/value_type_patterns.md:382-384,396
+  evidence: 0 hits at pin; Python surface is from_raw(raw, precision) (pyi:6110,6172) and from_str
+  fix: rewrite sections around from_raw/from_str or remove
+  acceptance-test: grep '_c(' phantom constructors in guide returns 0
+
+[NT-2026-09-04-12] [P1] [OPEN] V2 compliance: nt-trading rust.md capability matrix marks Controller unavailable in v2 PyO3 but it is exported and functional
+  file: skills/nt-trading/references/concepts/rust.md:54
+  evidence: trading/__init__.pyi:20,95 class Controller(common.DataActor) with full lifecycle methods
+  fix: set Controller v2 PyO3 cell to check (v2 Rust stays '-')
+  acceptance-test: matrix row shows Controller v2 PyO3 available
+
+[NT-2026-09-04-13] [P1] [OPEN] V2 compliance: nt-trading rust.md adapter matrix marks Interactive Brokers unavailable in v2 but a full Rust IB crate exists
+  file: skills/nt-trading/references/concepts/rust.md:73
+  evidence: crates/adapters/interactive_brokers/ at pin with src/{data,execution,providers,gateway,historical,python,factories.rs} and runnable examples
+  fix: mark IB v2 Rust available; scope any '-' claim to specific feature gaps with evidence
+  acceptance-test: matrix row reflects pinned IB crate
+
+[NT-2026-09-04-14] [P1] [OPEN] Legacy unlabelled content: all 8 nt-trading references/api/ files carry v1-only module paths with no legacy label anywhere
+  file: skills/nt-trading/references/api/accounting.md:4; also events.md, execution.md, orders.md, portfolio.md, position.md, risk.md, trading.md line 4
+  evidence: grep legacy/migration in dir = 0; all referenced modules absent from pinned python tree
+  fix: add legacy/migration framing to each file or (preferred) regenerate per the P0 fixes
+  acceptance-test: check_legacy_labelling.py green and each file either v2-accurate or explicitly labelled
+
+[NT-2026-09-04-15] [P1] [OPEN] Legacy unlabelled content: all 11 nt-model references/api/model/ files carry v1-only module paths with no legacy label
+  file: skills/nt-model/references/api/model/book.md:4; also data.md, events.md, identifiers.md, index.md lines 14-22, instruments.md, objects.md, orders.md, position.md, tick_scheme.md
+  evidence: grep legacy/migration in dir = 0; all model submodules absent at pin (flat package)
+  fix: add legacy/migration framing or regenerate against flat v2 surface
+  acceptance-test: same validator + labelling check
+
+[NT-2026-09-04-16] [P2] [OPEN] Improvement opportunities: OrderStatus.VOIDED / OrderFillVoided / on_order_fill_voided lifecycle absent from orders/strategies concept docs
+  file: skills/nt-trading/references/concepts/orders.md:122-139,62-120; references/concepts/strategies.md:157-173
+  evidence: OrderStatus has 15 variants ending Voided=15; OrderFillVoided (crates/model/src/events/order/fill_voided.rs:48); on_order_fill_voided hook (crates/trading/src/strategy/mod.rs:1663, dispatched :1437)
+  fix: add VOIDED (terminal) to status table/diagram and on_order_fill_voided to handler list
+  acceptance-test: grep VOIDED orders.md shows the row; handler listed in strategies.md
+
+[NT-2026-09-04-17] [P2] [OPEN] Improvement opportunities: orders.md bracket section lacks the pinned OrderFactory::bracket builder usage
+  file: skills/nt-trading/references/concepts/orders.md:685-698
+  evidence: bracket is builder-style (crates/trading/src/strategy/api.rs:516); SKILL.md:123 records factory.bracket()...call()
+  fix: add bracket example in builder form for Rust lane and labelled Python reference
+  acceptance-test: bracket example present in orders.md
+
+[NT-2026-09-04-18] [P2] [OPEN] Improvement opportunities: portfolio concept doc does not cover PortfolioSnapshot mark-to-market events
+  file: skills/nt-trading/references/concepts/portfolio.md:1
+  evidence: PortfolioSnapshot (crates/model/src/events/portfolio/snapshot.rs); opt-in streaming via PortfolioConfig.snapshot_interval_ms (crates/portfolio/src/config.rs:88)
+  fix: add PortfolioSnapshot section (config + message-bus subscription)
+  acceptance-test: section present citing pinned sources
+
+[NT-2026-09-04-19] [P2] [OPEN] Improvement opportunities: adapter capability matrix omits four pinned adapter crates (coinbase, derive, lighter, blockchain)
+  file: skills/nt-trading/references/concepts/rust.md:62-79
+  evidence: 19 adapter crates at pin; matrix lists 15
+  fix: add the four rows with pinned v2 status
+  acceptance-test: matrix lists 19 adapters
+
+[NT-2026-09-04-20] [P0] [OPEN] Rust conversion gaps: nt-signals SKILL.md 'Python Indicator Conventions' teaches v1-only indicator authoring in current conventions, unlabelled
+  file: skills/nt-signals/SKILL.md:181-187
+  evidence: pin indicators/__init__.pyi: only @typing.final classes; no Indicator base exported; Rust trait Indicator (crates/indicators/src/indicator.rs:28)
+  fix: replace section with pointer to Rust authoring (trait + crates/indicators/src/python/) or move under legacy label; delete params_init/_name_not_ratio/handle_partial bullets
+  acceptance-test: section no longer teaches v1-only authoring as current
+
+[NT-2026-09-04-21] [P0] [OPEN] Rust conversion gaps: nt-signals portfolio.md teaches custom portfolio statistics via Python inheritance from dead analysis.statistic module
+  file: skills/nt-signals/references/concepts/portfolio.md:114-129
+  evidence: crates/analysis/src/statistic.rs:30 pub trait PortfolioStatistic (calculate_from_realized_pnls :50); python analysis/ has only config.py,reporter.py,tearsheet.py,themes.py
+  fix: add the Rust trait as the current custom-statistic path with migration framing for the v1 pattern
+  acceptance-test: guide documents Rust PortfolioStatistic trait as current path
+
+[NT-2026-09-04-22] [P0] [OPEN] Rust conversion gaps: nt-signals data.md teaches custom data types via subclassing Python Data; Data is not exported at pin
+  file: skills/nt-signals/references/concepts/data.md:1535-1560,1681,1854
+  evidence: no class Data in any pinned pyi (only DataType); current surface #[custom_data] macro (crates/persistence/macros/src/lib.rs:59) + register_custom_data_class
+  fix: point custom-data authoring at #[custom_data(pyo3)]/register_custom_data_class
+  acceptance-test: guide shows Rust macro path as current
+
+[NT-2026-09-04-23] [P0] [OPEN] Rust conversion gaps: indicators_guide.md asserts the v1 Cython indicator model and claims both Cython and Rust versions exist
+  file: skills/nt-signals/references/guides/indicators_guide.md:14,365
+  evidence: find '*.pyx' at pin = 0; indicators/ is flat PyO3 re-export; Rust impls in crates/indicators/src/{average,momentum,ratio,volatility}
+  fix: correct line 365 (Rust + PyO3 bindings only); mark Overview Cython statements as v1 historical
+  acceptance-test: guide no longer claims current Cython indicators
+
+[NT-2026-09-04-24] [P1] [OPEN] V2 compliance: nt-signals SKILL.md Rust conventions name trait methods handle_quote_tick; trait methods are handle_quote/handle_trade
+  file: skills/nt-signals/SKILL.md:192
+  evidence: crates/indicators/src/indicator.rs:56 fn handle_quote, :60 fn handle_trade
+  fix: correct to handle_bar/handle_quote/handle_trade (+ handle_delta/deltas/depth/book where relevant)
+  acceptance-test: grep handle_quote_tick in Rust-conventions context returns 0
+
+[NT-2026-09-04-25] [P1] [OPEN] V2 compliance: nt-signals SKILL.md teaches nonexistent params_init, _name_not_ratio, handle_partial() as current conventions
+  file: skills/nt-signals/SKILL.md:184,187
+  evidence: 0 hits over pin crates/+python/
+  fix: delete these bullets; pin exposes name/has_inputs/initialized/reset
+  acceptance-test: grep for the three markers in SKILL.md returns 0
+
+[NT-2026-09-04-26] [P1] [OPEN] V2 compliance: custom_data_patterns.md calls register_custom_data_class with keyword callbacks; pinned function takes one class argument
+  file: skills/nt-signals/references/guides/custom_data_patterns.md:13-19
+  evidence: crates/model/src/python/data/mod.rs:549 register_custom_data_class(data_class); requires to_json/from_json classmethods (:567-571) + encode/decode_record_batch_py
+  fix: rewrite example: class with to_json/from_json classmethod + encode/decode_record_batch_py, then register_custom_data_class(MySignal)
+  acceptance-test: example matches single-arg pinned signature
+
+[NT-2026-09-04-27] [P1] [OPEN] V2 compliance: nt-signals SKILL.md custom-data contract says to_dict/from_dict callbacks for registration; pin requires to_json/from_json
+  file: skills/nt-signals/SKILL.md:210
+  evidence: mod.rs:567-571 error strings 'must have from_json(data) class method'
+  fix: correct contract wording
+  acceptance-test: SKILL.md names to_json/from_json
+
+[NT-2026-09-04-28] [P1] [OPEN] V2 compliance: nt-signals SKILL.md stale Python module list (data/aggregation, model/data, model/book are v1 paths)
+  file: skills/nt-signals/SKILL.md:52
+  evidence: python data/ and model/ flat at pin
+  fix: list flat nautilus_trader.{indicators,model,data,analysis}
+  acceptance-test: module list matches pinned flat surfaces
+
+[NT-2026-09-04-29] [P1] [OPEN] V2 compliance: nt-signals api/indicators.md automodules seven nonexistent v1 submodules
+  file: skills/nt-signals/references/api/indicators.md:8,16,24,32,40,48,56
+  evidence: indicators/ flat at pin; Rust modules crates/indicators/src/{average,momentum,ratio,volatility,book}
+  fix: single automodule of flat nautilus_trader.indicators or Rust crate paths
+  acceptance-test: no dead submodule directives remain
+
+[NT-2026-09-04-30] [P1] [OPEN] V2 compliance: nt-signals api/analysis.md references dead analysis.analyzer and analysis.statistic modules
+  file: skills/nt-signals/references/api/analysis.md:8,24
+  evidence: analysis/ at pin: config.py, reporter.py, tearsheet.py, themes.py; PortfolioAnalyzer is flat pyi class
+  fix: flat nautilus_trader.analysis + analysis.reporter only
+  acceptance-test: dead directives removed
+
+[NT-2026-09-04-31] [P1] [OPEN] V2 compliance: nt-signals api/book.md and api/data.md automodule dead model.book/model.data submodules
+  file: skills/nt-signals/references/api/book.md:4; also data.md line 4
+  evidence: model/ flat at pin; book/data types are flat exports
+  fix: point at flat nautilus_trader.model
+  acceptance-test: dead directives removed
+
+[NT-2026-09-04-32] [P1] [OPEN] V2 compliance: nt-signals api/portfolio.md automodules dead portfolio.portfolio and portfolio.base
+  file: skills/nt-signals/references/api/portfolio.md:8; also line 16
+  evidence: portfolio/ flat at pin (Portfolio, PortfolioConfig only)
+  fix: flat nautilus_trader.portfolio only
+  acceptance-test: dead directives removed
+
+[NT-2026-09-04-33] [P1] [OPEN] V2 compliance: nt-signals data.md example uses dead v1 imports (TEST_DATA_DIR top-level, adapters.binance.loaders, persistence.wranglers, test_kit)
+  file: skills/nt-signals/references/concepts/data.md:667-669
+  evidence: TEST_DATA_DIR lives in testkit/providers.py:70; binance python pkg has only instruments.py; wranglers flat in persistence; module is testkit not test_kit
+  fix: update to pinned flat imports (nautilus_trader.persistence, nautilus_trader.testkit.providers)
+  acceptance-test: imports resolve against pinned tree
+
+[NT-2026-09-04-34] [P1] [OPEN] V2 compliance: nt-signals data.md uses dead persistence.catalog/config submodule paths and RotationMode
+  file: skills/nt-signals/references/concepts/data.md:739,1092,1127,1149,1376,1811
+  evidence: persistence/ flat + loaders.py; ParquetDataCatalog/StreamingConfig flat exports; RotationMode absent
+  fix: flat nautilus_trader.persistence imports; drop RotationMode
+  acceptance-test: dead paths gone
+
+[NT-2026-09-04-35] [P1] [OPEN] V2 compliance: nt-signals data.md teaches catalog.write_data(); pin ships typed writers + write_custom_data
+  file: skills/nt-signals/references/concepts/data.md:561,843-857,890
+  evidence: persistence/__init__.pyi:110-166 typed write_* functions, :218 write_custom_data; generic write_data commented out upstream
+  fix: replace write_data guidance with typed writers/write_custom_data
+  acceptance-test: write_data guidance removed or labelled v1
+
+[NT-2026-09-04-36] [P1] [OPEN] V2 compliance: nt-dex SKILL.md + rules teach InstrumentProvider.load_all_async()/load_ids_async(); pinned trait is load_all/load_ids/load
+  file: skills/nt-dex-adapter/SKILL.md:73; rules/compliance_checklist.md:31-32,42; rules/dos_and_donts.md:16-30
+  evidence: crates/common/src/providers.rs:144 load_all(filters), :154 load_ids, :164 load; load_all_async absent from pinned pyi
+  fix: rename canonical contract to load_all/load_ids/load with filters parameter
+  acceptance-test: grep load_all_async in nt-dex returns 0
+
+[NT-2026-09-04-37] [P1] [OPEN] V2 compliance: nt-dex SKILL.md references list cites LiveMarketDataClient/LiveExecutionClient APIs — names absent at pin
+  file: skills/nt-dex-adapter/SKILL.md:283
+  evidence: pinned bases are nautilus_common::clients::DataClient/ExecutionClient (crates/common/src/clients/); target doc self-identifies as legacy v1 snapshot
+  fix: cite current Rust trait bases; label live.md link legacy-v1
+  acceptance-test: references cite pinned client bases
+
+[NT-2026-09-04-38] [P1] [OPEN] Legacy unlabelled content: five nt-signals references/api/*.md files carry v1-only module markers with no legacy banner
+  file: skills/nt-signals/references/api/indicators.md:8; also analysis.md, book.md, data.md, portfolio.md
+  evidence: all submodule paths absent from pinned flat tree; no label in files
+  fix: add NT v2 compatibility/legacy banner to each or regenerate
+  acceptance-test: each file labelled or regenerated
+
+[NT-2026-09-04-39] [P1] [OPEN] Legacy unlabelled content: nt-signals SKILL.md v1-only markers (params_init, _name_not_ratio, handle_partial, super().__init__(params=...)) outside label window
+  file: skills/nt-signals/SKILL.md:184,187,201
+  evidence: 0 hits at pin; top banner scoped to TradingNode references only
+  fix: covered by the v2 fixes above (delete/replace markers)
+  acceptance-test: check_legacy_labelling.py green; no unlabelled v1 markers remain
+
+[NT-2026-09-04-40] [P1] [OPEN] Legacy unlabelled content: nt-signals concepts/data.md scattered v1-only imports with no labelling (line-1 banner TradingNode-scoped)
+  file: skills/nt-signals/references/concepts/data.md:667-669,739,1092,1127,1149,1376,1542,1681,1811,1854
+  evidence: dead-at-pin names as per the v2 findings
+  fix: update paths (preferred) or add local legacy notes at each block
+  acceptance-test: no unlabelled dead imports remain
+
+[NT-2026-09-04-41] [P1] [OPEN] Legacy unlabelled content: nt-dex SKILL.md v1-only load_all_async marker inside current adapter canonical contract, >5 lines from any note
+  file: skills/nt-dex-adapter/SKILL.md:73
+  evidence: trait methods at pin are load_all/load_ids/load
+  fix: covered by the rename fix above
+  acceptance-test: grep load_all_async returns 0
+
+[NT-2026-09-04-42] [P2] [OPEN] Improvement opportunities: nt-dex never references the upstream nautilus-blockchain crate (canonical EVM/DEX execution slice)
+  file: skills/nt-dex-adapter/SKILL.md:123-132,280-287
+  evidence: crates/adapters/blockchain/ at pin: rpc/chains/{ethereum,bsc,polygon,arbitrum}, hypersync, contracts, execution/client.rs; repo ships references/integrations/blockchain.md unlinked
+  fix: add blockchain crate + integrations/blockchain.md to References and the execution overlay phase
+  acceptance-test: SKILL.md cites the blockchain crate and local guide
+
+[NT-2026-09-04-43] [P2] [OPEN] Improvement opportunities: nt-dex AGENTS.md documents 7-phase sequence while SKILL.md/compliance checklist mandate ten phases
+  file: skills/nt-dex-adapter/AGENTS.md:31
+  evidence: SKILL.md:3 'official ten-phase'; rules/compliance_checklist.md '10 phases completed in order'
+  fix: reconcile AGENTS.md to the ten-phase contract
+  acceptance-test: phase counts consistent across the three files
+
+[NT-2026-09-04-44] [P2] [OPEN] Improvement opportunities: MovingAverageFactory (Rust-only at pin) undocumented in any current-V2 section
+  file: skills/nt-signals/SKILL.md:88-96; references/guides/indicators_guide.md:275
+  evidence: crates/indicators/src/average/mod.rs:82 pub struct MovingAverageFactory; not in Python __all__
+  fix: document MovingAverageFactory::create in SKILL.md Rust Usage
+  acceptance-test: Rust Usage documents the factory
+
+[NT-2026-09-04-45] [P2] [OPEN] Improvement opportunities: book/candle indicator family shipped at pin not covered in indicator tables
+  file: skills/nt-signals/references/guides/indicators_guide.md:24-70
+  evidence: crates/indicators/src/book/: BookImbalanceRatio, CandleBodySize, CandleDirection, CandleSize, CandleWickSize (all in Python __all__)
+  fix: add a book/candle indicators row-group
+  acceptance-test: tables include the five indicators
+
+[NT-2026-09-04-46] [P2] [OPEN] Improvement opportunities: tearsheet/theme surface is current v2 Python but SKILL.md frames visualization as migration-only
+  file: skills/nt-signals/SKILL.md:61; references/guides/indicators_guide.md
+  evidence: analysis/tearsheet.py: create_tearsheet(:366), create_tearsheet_from_stats(:975), register_chart(:251); Themes.py register_theme(:133)
+  fix: document current tearsheet/theme API including custom-chart registry
+  acceptance-test: visualization section documents current API
+
+[NT-2026-09-04-47] [P0] [OPEN] Rust conversion gaps: nt-backtest api/backtest.md documents v1 Python module layout for the Rust backtest engine, unlabelled
+  file: skills/nt-backtest/references/api/backtest.md:8,16,24,32,40,48,56
+  evidence: pin backtest/ flat PyO3 (BacktestEngine, BacktestNode, ...); engine is Rust crates/backtest/src/{engine.rs,node.rs,exchange.rs,modules/}; pinned docs/api_reference/backtest.md = single flat automodule
+  fix: replace seven submodule directives with pinned single automodule + crates/backtest pointer
+  acceptance-test: file matches pinned doc form
+
+[NT-2026-09-04-48] [P0] [OPEN] Rust conversion gaps: nt-data api/cache.md documents removed Python nautilus_trader.cache package, unlabelled
+  file: skills/nt-data/references/api/cache.md:4,8,16,24
+  evidence: python/nautilus_trader/cache/ absent; cache is crates/common/src/cache/mod.rs exposed as nautilus_trader.common.Cache/CacheConfig (pyi:17,75,284); pinned docs/api_reference/cache.md targets nautilus_trader.common
+  fix: rewrite to pinned form (nautilus_trader.common, members Cache/CacheConfig) + Rust cache pointer
+  acceptance-test: file matches pinned doc form
+
+[NT-2026-09-04-49] [P1] [OPEN] V2 compliance: nt-backtest SKILL.md/guide use nonexistent 'stubs' cargo feature (pin: test-support) and pin crate versions 0.62 (pin workspace 0.63.0)
+  file: skills/nt-backtest/SKILL.md:139,156; references/guides/run_rust_backtest.md:22
+  evidence: crates/model/Cargo.toml:34 test-support = ["rstest"]; pinned guide uses features = ["test-support"]; workspace Cargo.toml:52 version = "0.63.0"
+  fix: rename feature to test-support; bump versions to 0.63
+  acceptance-test: grep '"stubs"' in skill returns 0; versions say 0.63
+
+[NT-2026-09-04-50] [P1] [OPEN] V2 compliance: nt-backtest SKILL.md calls write_to_parquet by value; signature takes &[T]
+  file: skills/nt-backtest/SKILL.md:230
+  evidence: crates/persistence/src/backend/catalog.rs:580-586 write_to_parquet(&self, data: &[T], ...); pinned example node_ema_cross.rs:115 uses &quotes
+  fix: catalog.write_to_parquet(&quotes, None, None, None)?
+  acceptance-test: example passes reference
+
+[NT-2026-09-04-51] [P1] [OPEN] V2 compliance: nt-backtest SKILL.md BacktestNode example omits run-config id then looks it up — always fails at pin
+  file: skills/nt-backtest/SKILL.md:245,254
+  evidence: BacktestRunConfig.id defaults to random UUID4 (config.rs:1052-1054); get_engine_mut is a plain map lookup (node.rs:117-119); pinned example sets .id(RUN_ID.to_string())
+  fix: add .id("ema-cross-run".to_string()) to the builder chain
+  acceptance-test: example sets id before lookup
+
+[NT-2026-09-04-52] [P1] [OPEN] V2 compliance: nt-backtest SKILL.md scope line names nonexistent Python submodules (backtest/models, execution/matching_core)
+  file: skills/nt-backtest/SKILL.md:70
+  evidence: both packages flat at pin; matching_core is Rust-only crates/execution/src/matching_core.rs
+  fix: flat backtest/ + move matching_core to Rust-crates line
+  acceptance-test: scope line matches pinned layout
+
+[NT-2026-09-04-53] [P1] [OPEN] V2 compliance: nt-data SKILL.md cites stale type CustomDataBatch
+  file: skills/nt-data/SKILL.md:121
+  evidence: 0 hits at pin; write path is ParquetDataCatalog::write_custom_data_batch(Vec<CustomData>) and PyO3 write_custom_data; CustomData exists
+  fix: drop CustomDataBatch; document CustomData + write_custom_data_batch/write_custom_data
+  acceptance-test: grep CustomDataBatch returns 0
+
+[NT-2026-09-04-54] [P1] [OPEN] V2 compliance: nt-data SKILL.md wrangler conventions teach removed v1 DataFrame API as current
+  file: skills/nt-data/SKILL.md:150-151
+  evidence: pinned wranglers: __init__(instrument_id, price_precision, size_precision) + process_record_batch_bytes(data: bytes) (persistence pyi:366-373); own serialization_patterns.md documents this correctly
+  fix: rewrite section to bytes-based API; link serialization_patterns.md for legacy framing
+  acceptance-test: conventions match pinned wrangler signature
+
+[NT-2026-09-04-55] [P1] [OPEN] V2 compliance: nt-data api/data.md automodules dead v1 submodules (aggregation, client, engine, messages)
+  file: skills/nt-data/references/api/data.md:10,20,30,40
+  evidence: python data/ flat at pin; engine Rust crates/data/src/engine/; pinned doc = single flat automodule
+  fix: single flat automodule + Rust pointer
+  acceptance-test: file matches pinned doc form
+
+[NT-2026-09-04-56] [P1] [OPEN] V2 compliance: nt-data api/persistence.md automodules dead catalog/wranglers/writer submodules
+  file: skills/nt-data/references/api/persistence.md:8,16,24,32
+  evidence: persistence/ flat + loaders.py at pin; pinned doc = single flat automodule
+  fix: single flat automodule + Rust backend pointer
+  acceptance-test: file matches pinned doc form
+
+[NT-2026-09-04-57] [P1] [OPEN] V2 compliance: nt-data api/serialization.md automodules dead serializer/base submodules
+  file: skills/nt-data/references/api/serialization.md:8,16
+  evidence: serialization/ flat at pin; own guide states no public serialization.arrow
+  fix: single flat automodule
+  acceptance-test: file matches pinned doc form
+
+[NT-2026-09-04-58] [P1] [OPEN] V2 compliance: nt-data cache_operations.md uses removed cache module paths and ghost types CacheDatabaseFacade/CachePostgresAdapter
+  file: skills/nt-data/references/guides/cache_operations.md:7,19,22,245,249
+  evidence: nautilus_trader.cache absent; v2 surface PostgresCacheConfig (infrastructure pyi:19) + crates/infrastructure/src/sql/pg.rs + redis/
+  fix: update to nautilus_trader.common (Cache/CacheConfig) + pinned infrastructure backing story
+  acceptance-test: no cache.* module paths or ghost types remain
+
+[NT-2026-09-04-59] [P1] [OPEN] V2 compliance: nt-data cache_operations.md uses v1 accessor names (quote_tick/quote_ticks/counts, index params on mark_price etc., prices(), instruments(underlying=))
+  file: skills/nt-data/references/guides/cache_operations.md:25,60,76-85,112-126
+  evidence: pinned Cache API: quote/quotes/quote_count, trade/trades/trade_count (common pyi:295-344); mark_price/index_price/funding_rate take no index; instruments(venue) has no underlying param
+  fix: rename accessors to v2 forms; drop removed params; update CacheConfig example (no database kwarg; save_market_data exists)
+  acceptance-test: accessor examples match pinned pyi
+
+[NT-2026-09-04-60] [P1] [OPEN] V2 compliance: nt-data tardis.md teaches removed TardisCSVDataLoader class and inverted precision rule
+  file: skills/nt-data/references/guides/tardis.md:11,349,356-367,423-437
+  evidence: TardisCSVDataLoader 0 hits at pin; pinned surface load_tardis_*/stream_tardis_* functions; pinned doc states precisions inferred from CSV when omitted
+  fix: replace loader examples with load_tardis_*/stream_tardis_*; correct precision statement
+  acceptance-test: grep TardisCSVDataLoader in skill returns 0
+
+[NT-2026-09-04-61] [P1] [OPEN] V2 compliance: nt-data test_datasets.md uses wrong fixture paths (tests/test_data/ vs top-level test_data/)
+  file: skills/nt-data/references/guides/test_datasets.md:11,15,91-92,118,147,162-164
+  evidence: pinned repo has top-level test_data/ (test_data/large/checksums.json); no tests/test_data/
+  fix: replace tests/test_data/ with test_data/
+  acceptance-test: grep 'tests/test_data' returns 0
+
+[NT-2026-09-04-62] [P1] [OPEN] V2 compliance: nt-data SKILL.md scope line lists cache/ as a Python module
+  file: skills/nt-data/SKILL.md:54
+  evidence: python cache/ absent; cache is nautilus_trader.common.Cache
+  fix: list data/, persistence/, serialization/, common/ (cache)
+  acceptance-test: scope line matches pinned layout
+
+[NT-2026-09-04-63] [P1] [OPEN] Legacy unlabelled content: five nt-backtest/nt-data api reference files carry v1-only automodule markers with no legacy label
+  file: skills/nt-backtest/references/api/backtest.md:8-56; skills/nt-data/references/api/{cache,data,persistence,serialization}.md
+  evidence: every directive targets a module absent from the pinned python tree; no label in the files (other .md files in both skills carry banners)
+  fix: apply the flat v2 module fixes above (preferred), after which no labelling is needed
+  acceptance-test: files regenerated; check_legacy_labelling.py green
+
+[NT-2026-09-04-64] [P2] [OPEN] Improvement opportunities: simulation modules (FXRolloverInterestModule, CfdSwapModule, SimulationModule trait) uncovered in nt-backtest
+  file: skills/nt-backtest/SKILL.md:66
+  evidence: crates/backtest/src/modules/: SimulationModule(:262), FXRolloverInterestModule, CfdSwapModule, PythonSimulationModule; PyO3 exports them
+  fix: add simulation-modules subsection to SKILL.md Rust Usage (venue config modules field, config.rs:307)
+  acceptance-test: subsection present
+
+[NT-2026-09-04-65] [P2] [OPEN] Improvement opportunities: benchmarking guidance predates pinned doc rewrite (CodSpeed, flamegraph, iai correction); benchmarking_review.md is a byte-duplicate
+  file: skills/nt-backtest/references/guides/benchmarking.md:3; also benchmarking_review.md
+  evidence: pinned docs/developer_guide/benchmarking.md adds CodSpeed+flamegraph, corrects iai as Cachegrind-based; skill claims hardware counters
+  fix: re-snapshot both files from pinned doc; delete or genuinely differentiate benchmarking_review.md
+  acceptance-test: guide matches pinned content; duplicate resolved
+
+[NT-2026-09-04-66] [P2] [OPEN] Improvement opportunities: streaming Feather writer with rotation uncovered in nt-data
+  file: skills/nt-data/SKILL.md:93
+  evidence: StreamingFeatherWriter + StreamingConfig (rotation_mode, max_file_size, ...) in crates/persistence/src/backend/feather.rs:194 + Python pyi:336,377
+  fix: add streaming-writer/rotation subsection
+  acceptance-test: subsection present
+
+[NT-2026-09-04-67] [P2] [OPEN] Improvement opportunities: v2 Redis/Postgres cache backing stores uncovered (only stale v1 adapter described)
+  file: skills/nt-data/SKILL.md:86
+  evidence: nautilus_trader.infrastructure exports PostgresCacheConfig, RedisMessageBusBacking etc. (pyi:19-60); Rust crates/infrastructure/src/{redis,sql}
+  fix: add pinned v2 backing-store configuration to cache invariants section
+  acceptance-test: section covers infrastructure backing stores
+
+[NT-2026-09-04-68] [P2] [OPEN] Improvement opportunities: user-fetched test-dataset model uncovered; guide predates pinned rewrite
+  file: skills/nt-data/references/guides/test_datasets.md:5
+  evidence: pinned docs/developer_guide/test_datasets.md:16-39 adds user-fetched model + tightened metadata.json requirements
+  fix: re-snapshot guide from pinned doc (also fixes path drift)
+  acceptance-test: guide matches pinned doc
+
+[NT-2026-09-04-69] [P2] [OPEN] Improvement opportunities: DeFi backtest feature (cargo defi, Data::Defi handling) uncovered
+  file: skills/nt-backtest/SKILL.md:150
+  evidence: crates/backtest/Cargo.toml:28 defi feature; engine.rs:443-447 add_data special-cases Data::Defi
+  fix: add defi row to feature table + add_data note
+  acceptance-test: feature table includes defi
+
+[NT-2026-09-04-70] [P2] [OPEN] Improvement opportunities: nt-backtest migration_reference dangling internal pointer (templates/legacy_migration/fill_model.py)
+  file: skills/nt-backtest/migration_reference/python/python-extension.md:29
+  evidence: file actually lives at migration_reference/python/templates/fill_model.py
+  fix: correct the pointer
+  acceptance-test: pointer resolves
+
+[NT-2026-09-04-71] [P0] [OPEN] Rust conversion gaps: nt-architect AGENTS.md teaches adapters as hybrid Rust-core + Python-integration split; adapters are end-to-end Rust crates at pin
+  file: skills/nt-architect/AGENTS.md:70
+  evidence: crates/adapters/okx/src/: data.rs, execution.rs, factories.rs, providers — full Rust clients; factories implement DataClientFactory/ExecutionClientFactory (crates/common/src/factories/client.rs:57,85); registered via LiveNodeBuilder::add_data_client/add_exec_client (builder.rs:444,485); no Python adapter layer in v2
+  fix: rewrite constraint: entire adapter is a Rust crate under crates/adapters/<venue>/; Python only optional bounded PyO3 control-plane projection
+  acceptance-test: AGENTS.md no longer claims a Python integration layer for new adapters
+
+[NT-2026-09-04-72] [P0] [OPEN] Rust conversion gaps: nt-strategy-builder dos_and_donts.md live DO teaches removed Python TradingNodeConfig timeouts
+  file: skills/nt-strategy-builder/rules/dos_and_donts.md:115-122
+  evidence: TradingNodeConfig 0 matches in pinned python; same four timeout fields exist in Rust LiveNodeConfig (crates/live/src/node/config.rs:775-784)
+  fix: replace with Rust LiveNodeConfig timeout fields; keep v1 snippet only in migration_reference
+  acceptance-test: grep TradingNodeConfig in rules/ returns 0 unlabelled
+
+[NT-2026-09-04-73] [P1] [OPEN] V2 compliance: market_exit(instrument_id) signature wrong; v2 market_exit() takes no argument
+  file: skills/nt-implement/AGENTS.md:36; skills/nt-strategy-builder/SKILL.md:173; skills/nt-implement/legacy_migration/templates.md:31
+  evidence: trading pyi:491 def market_exit(self); Rust crates/trading/src/strategy/mod.rs:1724 fn market_exit(&mut self) (config-driven TIF/reduce-only)
+  fix: market_exit() everywhere; drop instrument_id
+  acceptance-test: grep 'market_exit(instrument_id)' returns 0
+
+[NT-2026-09-04-74] [P1] [OPEN] V2 compliance: nt-implement AGENTS.md teaches InstrumentProvider with v1-only async method names (load_all_async, load_ids_async, load_async)
+  file: skills/nt-implement/AGENTS.md:47,93
+  evidence: zero _async-suffixed provider methods at pin; Rust trait InstrumentProvider crates/common/src/providers.rs:130 with load_all(:144)/load_ids(:154); Python InstrumentProvider class gone
+  fix: replace rows with the Rust trait methods; move v1 wording to labelled migration material
+  acceptance-test: grep load_all_async in nt-implement returns 0 unlabelled
+
+[NT-2026-09-04-75] [P1] [OPEN] V2 compliance: nt-implement AGENTS.md cites OrderBook.get_target_px_for_quantity() — nonexistent at pin
+  file: skills/nt-implement/AGENTS.md:51; skills/nt-implement/legacy_migration/templates.md:24
+  evidence: grep target_px over pin = only unrelated proptest locals; no such method on OrderBook
+  fix: delete row / stop citing as current API
+  acceptance-test: grep get_target_px_for_quantity returns 0 unlabelled
+
+[NT-2026-09-04-76] [P1] [OPEN] V2 compliance: nt-implement AGENTS.md teaches WS connect() needs loop_=self._loop (v1 Python-adapter-only guidance)
+  file: skills/nt-implement/AGENTS.md:50
+  evidence: no loop_ param anywhere in pinned pyi; v2 WebSocket clients are Rust
+  fix: remove row or mark 'v1 Python adapters only (removed in v2)'
+  acceptance-test: no unlabelled loop_ guidance remains
+
+[NT-2026-09-04-77] [P1] [OPEN] V2 compliance: nt-architect AGENTS.md uses self.cache.quote_tick(); v2 cache exposes quote()/quotes()
+  file: skills/nt-architect/AGENTS.md:43
+  evidence: common pyi:296 def quote(...), :303 def quotes(...)
+  fix: update state-management table
+  acceptance-test: accessor names match pinned pyi
+
+[NT-2026-09-04-78] [P1] [OPEN] V2 compliance: nt-architect AGENTS.md cites v1 Python client class families InstrumentProvider/LiveDataClient/LiveExecutionClient as adapter contract
+  file: skills/nt-architect/AGENTS.md:71
+  evidence: pinned live pyi exports DataClientConfig/ExecutionClientConfig; v2 contracts are Rust traits InstrumentProvider/DataClient/ExecutionClient
+  fix: rename method families to the Rust traits (+ factories)
+  acceptance-test: contract cites pinned Rust traits
+
+[NT-2026-09-04-79] [P1] [OPEN] V2 compliance: nt-strategy-builder SKILL.md factory create(loop, name, config, msgbus, cache, clock) is the v1 Python signature
+  file: skills/nt-strategy-builder/SKILL.md:141
+  evidence: crates/common/src/factories/client.rs:57-64 DataClientFactory::create(name, config, cache: CacheView, clock); :85-93 exec factory create(trader_id, name, config, cache); registered via LiveNodeBuilder
+  fix: state v2 trait-object factory contract; keep v1 form only as labelled migration note
+  acceptance-test: factory signature matches pinned traits
+
+[NT-2026-09-04-80] [P1] [OPEN] V2 compliance: nt-strategy-builder rules cite LiveExecEngineConfig; v2 exports LiveExecutionEngineConfig
+  file: skills/nt-strategy-builder/rules/dos_and_donts.md:105
+  evidence: live pyi:124 class LiveExecutionEngineConfig; LiveExecEngineConfig 0 hits at pin
+  fix: rename class in snippet (import from nautilus_trader.live)
+  acceptance-test: grep LiveExecEngineConfig returns 0
+
+[NT-2026-09-04-81] [P1] [OPEN] V2 compliance: nt-strategy-builder rules/AGENTS teach FillModel constructor kwargs; base FillModel takes none at pin
+  file: skills/nt-strategy-builder/rules/dos_and_donts.md:167-171; skills/nt-strategy-builder/AGENTS.md:58,61
+  evidence: execution pyi:152-157 class FillModel def __init__(self); kwargs constructors are DefaultFillModel(:75)/BestPriceFillModel(:35)/ProbabilisticFillModel(:228)
+  fix: use DefaultFillModel(...)/variants; note fill models import from nautilus_trader.execution
+  acceptance-test: examples use concrete fill model classes
+
+[NT-2026-09-04-82] [P1] [OPEN] V2 compliance: nt-strategy-builder DEX DON'T subclasses removed LiveExecClientConfig and uses pydantic SecretStr typing
+  file: skills/nt-strategy-builder/rules/dos_and_donts.md:285,290-294
+  evidence: live pyi exports ExecutionClientConfig; zero SecretStr in pinned pyi (adapter configs take plain str | None)
+  fix: rename base to ExecutionClientConfig; drop pydantic/SecretStr from v2 snippet (keep don't-log-keys intent)
+  acceptance-test: snippet uses pinned config base
+
+[NT-2026-09-04-83] [P1] [OPEN] V2 compliance: nt-implement custom-simulation recipe imports nautilus_trader.backtest.models and passes fill_model to BacktestEngineConfig
+  file: skills/nt-implement/legacy_migration/custom-simulation-models.md:14,75-88,98-99
+  evidence: backtest pyi __all__ has neither FillModel nor MarginModel; BacktestEngineConfig has no fill_model param (:141-175); models attach per-venue via BacktestVenueConfig.fill_model/.margin_model (:331,374); MarginModel only as Rust account types
+  fix: correct recipe: import fill models from nautilus_trader.execution, attach via BacktestVenueConfig; mark MarginModelConfig subclassing removed (v2 custom simulation via Rust SimulationModule)
+  acceptance-test: recipe compiles against pinned API conceptually; no dead imports
+
+[NT-2026-09-04-84] [P1] [OPEN] Legacy unlabelled content: nt-architect AGENTS.md presents removed @customdataclass decorator in production knowledge base with no label within 5 lines
+  file: skills/nt-architect/AGENTS.md:34
+  evidence: customdataclass 0 matches in pinned python tree; v2 structured data is CustomData (crates/common/src/custom.rs:34) via publish_data
+  fix: label row legacy or replace with v2 pattern (CustomData + publish_data)
+  acceptance-test: no unlabelled @customdataclass remains
+
+[NT-2026-09-04-85] [P1] [OPEN] Legacy unlabelled content: nt-implement AGENTS.md v1.223/v1.224 changelog tables presented as current API knowledge with no adjacent label
+  file: skills/nt-implement/AGENTS.md:32-54
+  evidence: block contains markers verified absent at pin (load_all_async family, loop_=, get_target_px_for_quantity); only note is at file line 1
+  fix: add legacy/migration note directly above the tables; correct/remove rows absent at pin
+  acceptance-test: tables labelled or corrected
+
+[NT-2026-09-04-86] [P2] [OPEN] Improvement opportunities: v2 custom-simulation extension point SimulationModule/SimulationModuleContext not covered
+  file: skills/nt-implement/SKILL.md:56-58; skills/nt-implement/legacy_migration/custom-simulation-models.md
+  evidence: crates/backtest/src/modules/mod.rs:262 pub trait SimulationModule; Python exposure crates/backtest/src/python/modules.rs; exports CfdSwapModule/FXRolloverInterestModule/SimulationModule(Context)
+  fix: add Rust SimulationModule guidance; note it supersedes v1 FillModel/MarginModel subclassing
+  acceptance-test: current custom-simulation path documented
+
+[NT-2026-09-04-87] [P2] [OPEN] Improvement opportunities: LiveNodeBuilder::add_simulated_exec_client paper/sandbox wiring uncovered
+  file: skills/nt-strategy-builder-rust/SKILL.md:224-229; skills/nt-strategy-builder/SKILL.md:70
+  evidence: crates/live/src/node/builder.rs:527 add_simulated_exec_client; sandbox adapter crates/adapters/sandbox/
+  fix: document paper-mode wiring alongside add_strategy
+  acceptance-test: paper-mode wiring documented
+
+[NT-2026-09-04-88] [P2] [OPEN] Improvement opportunities: Live node lifecycle control (NodeState, LiveNodeHandle) uncovered
+  file: skills/nt-strategy-builder-rust/SKILL.md:224-229
+  evidence: live pyi exports NodeState and LiveNodeHandle; state machine crates/live/src/node/state.rs
+  fix: add short paragraph on NodeState transitions + LiveNodeHandle usage
+  acceptance-test: lifecycle control documented
+
+[NT-2026-09-04-89] [P2] [OPEN] Improvement opportunities: canonical reference-adapter list drifts from pinned developer guide
+  file: skills/nt-implement/SKILL.md:72
+  evidence: pinned references/developer_guide/adapters.md:31-38 lists Bybit, OKX, Binance, Kraken, Lighter, Derive — not BitMEX
+  fix: align list with pinned guide table
+  acceptance-test: list matches pinned guide
+
+[NT-2026-09-04-90] [P2] [OPEN] Improvement opportunities: adapter phase numbering contradicts pinned guide (1-10 vs Phase 0-9) and AGENTS files teach 7-phase
+  file: skills/nt-implement/SKILL.md:81-92; skills/nt-implement/AGENTS.md:83-90; skills/nt-architect/AGENTS.md:69
+  evidence: pinned guide defines Phase 0 'Define scope' through Phase 9; SKILL.md numbers 1-10; both AGENTS.md teach older 7-phase
+  fix: renumber SKILL.md to Phase 0-9; update AGENTS files to same sequence
+  acceptance-test: phase numbering consistent with pinned guide
+
+[NT-2026-09-04-91] [P0] [OPEN] Rust conversion gaps: nt-live concepts/live.md teaches v1 TradingNodeConfig as the main live config class with no v2 section
+  file: skills/nt-live/references/concepts/live.md:67,74,79,160
+  evidence: TradingNodeConfig 0 matches in pinned python + docs; v2 surface LiveNodeConfig (crates/live/src/node/config.rs:750; live pyi:20)
+  fix: replace section with LiveNodeConfig (Rust + builder wiring); move TradingNodeConfig content to migration_reference
+  acceptance-test: concepts/live.md config section is LiveNodeConfig-based
+
+[NT-2026-09-04-92] [P0] [OPEN] Rust conversion gaps: nt-live concepts/cache.md live-cache example keeps TradingNodeConfig; pinned upstream doc for same section uses LiveNodeConfig
+  file: skills/nt-live/references/concepts/cache.md:83,96
+  evidence: pinned docs/concepts/cache.md:70-92 uses LiveNodeConfig(cache=CacheConfig(...)); Rust LiveNodeConfig.cache ~config.rs:797
+  fix: update example to pinned form
+  acceptance-test: example matches pinned doc
+
+[NT-2026-09-04-93] [P0] [OPEN] Rust conversion gaps: nt-live teaches cache/msgbus persistence via v1 CacheConfig(database=DatabaseConfig)/MessageBusConfig(database=...); no such fields at pin
+  file: skills/nt-live/references/concepts/live.md:114-131,137-150; concepts/cache.md:117,147-157; guides/deployment_patterns.md:248-252
+  evidence: crates/common/src/cache/config.rs:36-73 CacheConfig has no database field; DatabaseConfig 0 matches in pinned python; v2 wiring LiveNodeBuilder::with_cache_database_factory (builder.rs:322) + with_external_msgbus_* (builder.rs:404-433)
+  fix: rewrite around with_cache_database_factory and MessageBusConfig.external_streams/msgbus factory wiring
+  acceptance-test: no DatabaseConfig-based wiring remains as current guidance
+
+[NT-2026-09-04-94] [P0] [OPEN] Rust conversion gaps: nt-live capability matrix steers Interactive Brokers users to v1 legacy; pin ships a v2 Rust IB adapter with runnable examples
+  file: skills/nt-live/references/concepts/rust.md:73,82-83
+  evidence: crates/adapters/interactive_brokers/examples/{node_exec_tester,node_data_tester}.rs run with --features examples; full Rust data/execution/gateway modules
+  fix: mark IB v2 Rust available; remove IB from v1-only choosing-a-path list
+  acceptance-test: matrix + guidance reflect pinned IB crate
+
+[NT-2026-09-04-95] [P0] [OPEN] Rust conversion gaps: nt-live's only deployment guide documents v1 Python TradingNode internals; no LiveNode deployment guidance exists
+  file: skills/nt-live/references/guides/deployment_patterns.md:7-84,262,289-337
+  evidence: v1 internals cited are 0-match ghosts (live/cancellation.py, cancel_tasks_with_timeout, RetryManagerPool, add_stream_processor, check_disconnected, _is_built/TradingNodeBuilder); pinned surface LiveNode run/run_async/stop/dispose (live pyi:366-398)
+  fix: rewrite around pinned LiveNode lifecycle (run modes, stop/dispose, LiveNodeHandle, TaskGroup cancellation); move v1 internals to migration_reference
+  acceptance-test: deployment guide teaches LiveNode lifecycle
+
+[NT-2026-09-04-96] [P1] [OPEN] V2 compliance: nt-live SKILL.md/guide show OKXExecutionClientConfig with nonexistent trader_id field (deny_unknown_fields makes it fail)
+  file: skills/nt-live/SKILL.md:196-198; references/guides/run_rust_live_trading.md:53-55
+  evidence: crates/adapters/okx/src/config.rs:247-296 field list has no trader_id (grep = 0); deny_unknown_fields at :238; pinned example builds exec client without trader_id (trader_id goes to LiveNode::builder)
+  fix: delete trader_id field/builder call from both examples
+  acceptance-test: examples match pinned config fields
+
+[NT-2026-09-04-97] [P1] [OPEN] V2 compliance: nt-live cargo dependency examples pin 0.62; pinned workspace is 0.63.0
+  file: skills/nt-live/SKILL.md:160-164; references/guides/run_rust_live_trading.md:18-22; references/concepts/rust.md:100-104,114-115
+  evidence: pinned Cargo.toml:52 version = "0.63.0"
+  fix: bump nautilus-* requirements to 0.63
+  acceptance-test: grep '"0.62"' in nt-live returns 0
+
+[NT-2026-09-04-98] [P1] [OPEN] V2 compliance: nt-live references/api/*.md automodule stubs point at v1 submodule paths (common.actor, core.fsm, live.node, config.*, system.kernel)
+  file: skills/nt-live/references/api/common.md:8; also core.md, live.md, config.md, system.md
+  evidence: pinned packages flat; nautilus_trader.system and nautilus_trader.cache do not exist at all; pinned docs use single flat automodules
+  fix: regenerate stubs against pinned flat modules or link pinned stubs; drop/redirect api/system.md to kernel types re-exported from live/backtest
+  acceptance-test: no dead automodule paths remain
+
+[NT-2026-09-04-99] [P1] [OPEN] V2 compliance: nt-live concepts/cache.md imports from dead v1 path nautilus_trader.core.rust.model
+  file: skills/nt-live/references/concepts/cache.md:257,269
+  evidence: core/ has only datetime.py; pinned docs/concepts/cache.md:279,291 use from nautilus_trader.model import PriceType/AggregationSource
+  fix: change to flat nautilus_trader.model imports
+  acceptance-test: grep 'core.rust' in nt-live returns 0 unlabelled
+
+[NT-2026-09-04-100] [P1] [OPEN] V2 compliance: nt-live concepts/logging.md teaches v1 LoggingConfig with log_level/log_colors params; pinned name is LoggerConfig (stdout_level/fileout_level/component_levels/is_colored)
+  file: skills/nt-live/references/concepts/logging.md:118,247-255,293,456-468
+  evidence: common pyi:183-218 class LoggerConfig; LoggingConfig 0 matches at pin; use_tracing exists only on the Rust struct (config.rs:106)
+  fix: rename class + params throughout; keep use_tracing guidance Rust-only
+  acceptance-test: grep LoggingConfig in nt-live returns 0 unlabelled
+
+[NT-2026-09-04-101] [P1] [OPEN] V2 compliance: nt-live logging.md 'using a logger directly' snippet uses wrong module (common.component) and wrong empty init_logging signature
+  file: skills/nt-live/references/concepts/logging.md:306-312
+  evidence: init_logging exported from nautilus_trader.common (pyi:50-51) requiring trader_id, instance_id, level_stdout (pyi:1768-1784); pinned doc shows exact call
+  fix: replace with pinned snippet (from nautilus_trader.common import init_logging, Logger)
+  acceptance-test: snippet matches pinned signature
+
+[NT-2026-09-04-102] [P1] [OPEN] V2 compliance: nt-live logging.md teaches engine.get_log_guard(); 0 matches at pin
+  file: skills/nt-live/references/concepts/logging.md:371,382
+  evidence: pinned logging docs obtain guard from init_logging(...) return value
+  fix: replace with log_guard = init_logging(...) pattern
+  acceptance-test: grep get_log_guard returns 0
+
+[NT-2026-09-04-103] [P1] [OPEN] V2 compliance: nt-live teaches graceful_shutdown_on_exception as an exec-engine setting; removed at pin in favor of node-level shutdown_on_error
+  file: skills/nt-live/references/concepts/live.md:349; references/guides/deployment_patterns.md:110-112
+  evidence: pinned docs/concepts/live.md:396 'per-engine graceful_shutdown_on_error option has been removed'; LiveNodeConfig.shutdown_on_error (config.rs:765-767)
+  fix: delete option from both tables; document LiveNodeConfig.shutdown_on_error
+  acceptance-test: guidance points at shutdown_on_error
+
+[NT-2026-09-04-104] [P1] [OPEN] V2 compliance: nt-live uses stale v1 names LiveExecEngineConfig, LiveExecClientConfig, LiveDataClientConfig
+  file: skills/nt-live/references/concepts/live.md:86,189,195,480; references/guides/deployment_patterns.md:108,119,166,321,342
+  evidence: live pyi:16-21 exports LiveExecutionEngineConfig, DataClientConfig, ExecutionClientConfig; v1 names 0 matches
+  fix: rename all occurrences to pinned names
+  acceptance-test: grep v1 names in nt-live returns 0
+
+[NT-2026-09-04-105] [P1] [OPEN] V2 compliance: nt-live timeout table stale vs pinned LiveNodeConfig defaults + stale field timeout_post_stop (pin: delay_post_stop)
+  file: skills/nt-live/references/concepts/live.md:104-108; references/guides/deployment_patterns.md:157-162
+  evidence: config.rs:775-796: timeout_connection 60s default, timeout_reconciliation 30s, delay_post_stop 10s; builder exposes with_delay_post_stop_secs
+  fix: update defaults/names to pinned values
+  acceptance-test: table matches pinned config
+
+[NT-2026-09-04-106] [P1] [OPEN] V2 compliance: nt-live SKILL.md teaches v1 component lifecycle INITIALIZED→RUNNING→STOPPED→DISPOSED; pinned v2 has no INITIALIZED state
+  file: skills/nt-live/SKILL.md:121,373
+  evidence: crates/common/src/enums.rs:58-74 ComponentState starts PreInitialized/Ready; pinned architecture docs document PRE_INITIALIZED/READY; skill's own architecture.md:277-332 is correct
+  fix: use pinned state machine (PRE_INITIALIZED → READY → RUNNING → STOPPED → DISPOSED, with DEGRADED/FAULTED)
+  acceptance-test: SKILL.md lifecycle matches enums.rs
+
+[NT-2026-09-04-107] [P1] [OPEN] V2 compliance: nt-live environment_setup build instructions reference .pyx/.pxd sources and build.py — none exist at pin
+  file: skills/nt-live/references/guides/environment_setup.md:276-284
+  evidence: 0 .pyx/.pxd in pinned repo; 0 build.py; Makefile:320-326 build/build-debug run maturin develop in python/
+  fix: replace with pinned flow (make build / make build-debug after .rs/Python changes)
+  acceptance-test: no .pyx/build.py references remain unlabelled
+
+[NT-2026-09-04-108] [P1] [OPEN] V2 compliance: nt-live migration reference asserts Python examples may still use nautilus_trader.live.node.TradingNode; module absent at pin
+  file: skills/nt-live/migration_reference/python/live-runtime-contract.md:14-16
+  evidence: live/ contains only __init__.py/.pyi; TradingNode 0 matches in pinned python tree
+  fix: reword to v1-historical; migrate to LiveNode
+  acceptance-test: text no longer presents live.node.TradingNode as usable at pin
+
+[NT-2026-09-04-109] [P1] [OPEN] V2 compliance: nt-live guide cites pinned baseline d2b62d35a7; the mission pin is 4692bac
+  file: skills/nt-live/references/guides/run_rust_live_trading.md:154-156
+  evidence: SKILL.md:37 names pin 4692bac; d2b62d35a7 is an older reviewed tip
+  fix: update pin reference to 4692bac
+  acceptance-test: guide cites current pin
+
+[NT-2026-09-04-110] [P1] [OPEN] Legacy unlabelled content: nt-live concepts/cache.md v1-only markers (DatabaseConfig wiring, core.rust.model imports, core.Data inheritance) with no label within 5 lines
+  file: skills/nt-live/references/concepts/cache.md:117,147-150,257,269,532
+  evidence: DatabaseConfig/core.rust.model/core.Data all 0 matches at pin; custom data is common.CustomData
+  fix: label blocks or rewrite to pinned equivalents
+  acceptance-test: no unlabelled v1 markers remain
+
+[NT-2026-09-04-111] [P1] [OPEN] Legacy unlabelled content: nt-live concepts/live.md database-config block unlabelled (DatabaseConfig wiring, types_filter=[QuoteTick, TradeTick])
+  file: skills/nt-live/references/concepts/live.md:114-131,137-150
+  evidence: pinned MessageBusConfig.types_filter is Sequence[str]; no database param
+  fix: label or rewrite per pin
+  acceptance-test: block labelled or rewritten
+
+[NT-2026-09-04-112] [P1] [OPEN] Legacy unlabelled content: nt-live concepts/logging.md v1-only markers (log_level, LoggingConfig blocks, common.component import, get_log_guard, use_tracing on Python config) far from labels
+  file: skills/nt-live/references/concepts/logging.md:118,247-255,293,307-311,371,382,456-468
+  evidence: all names 0 matches at pin (see v2 findings)
+  fix: migrate to pinned v2 API (preferred) or add adjacent legacy labels
+  acceptance-test: no unlabelled v1 markers remain
+
+[NT-2026-09-04-113] [P1] [OPEN] Legacy unlabelled content: nt-live deployment_patterns.md v1 internals presented as current guidance (run() internals, cancellation.py, RetryManagerPool, check_disconnected, LiveExecEngineConfig production block)
+  file: skills/nt-live/references/guides/deployment_patterns.md:42-53,57-79,262,289-337
+  evidence: all symbols 0 matches at pin; production block presents nonexistent config type
+  fix: covered by the deployment-guide rewrite (label v1 or replace with LiveNode surface)
+  acceptance-test: guide rewritten; no unlabelled v1 internals
+
+[NT-2026-09-04-114] [P2] [OPEN] Improvement opportunities: zero coverage of pinned live task lifecycle API (TaskGroup/TaskSpawner/TaskSlot) in nt-live
+  file: skills/nt-live/SKILL.md:21; whole skill
+  evidence: crates/live/src/task.rs: TaskGroup(:104, spawner() :132, begin_shutdown() :159, abort() :164), TaskSpawner(:276), TaskSlot(:442), SharedTaskSlot(:564); grep TaskGroup in nt-live = 0
+  fix: add task-lifecycle section (groups, spawners, shutdown generations, abort semantics)
+  acceptance-test: section present citing task.rs
+
+[NT-2026-09-04-115] [P2] [OPEN] Improvement opportunities: node-level LiveNodeConfig.shutdown_on_error not documented in nt-live
+  file: skills/nt-live/SKILL.md:389-395
+  evidence: config.rs:765-767; pinned docs/concepts/live.md:378-396 (trigger cleared/re-armed per run; observes Rust log records)
+  fix: cover shutdown_on_error in production-readiness guidance
+  acceptance-test: option documented
+
+[NT-2026-09-04-116] [P2] [OPEN] Improvement opportunities: adapter example/capability tables omit four shipped v2 Rust adapters (blockchain, coinbase, derive, lighter)
+  file: skills/nt-live/SKILL.md:316-331; references/concepts/rust.md:62-78
+  evidence: examples exist for all four at pin
+  fix: add the four adapters to both tables
+  acceptance-test: tables list them
+
+[NT-2026-09-04-117] [P2] [OPEN] Improvement opportunities: LiveNodeBuilder wiring surface beyond clients/logging/reconciliation undocumented (engine configs, state persistence, run-mode)
+  file: skills/nt-live/SKILL.md:215-231
+  evidence: builder.rs: with_data_engine_config :359, with_risk_engine_config :369, with_exec_engine_config :379, with_msgbus_config :332, with_cache_config :312, with_streaming_config :349; Python with_load_state/with_save_state/with_instance_id; run_with_mode(NodeRunMode) node/mod.rs:977
+  fix: extend builder guide with these methods + NodeRunMode note
+  acceptance-test: builder surface documented
+
+[NT-2026-09-04-118] [P0] [OPEN] Rust conversion gaps: concepts/risk.md teaches a Python RiskEngine runtime API that no longer exists in Python (engine is Rust-only at pin)
+  file: references/concepts/risk.md:37
+  evidence: crates/risk/src/engine/mod.rs:456 set_max_notional_per_order(instrument_id, Decimal) Rust-only; python risk pyi exposes only FixedRiskSizer/PositionSizer/RiskEngineConfig — no RiskEngine class
+  fix: replace Python example with Rust engine call or RiskEngineConfig(max_notional_per_order=...) (pyi:59); add legacy label for retained v1 form
+  acceptance-test: page documents pinned surface; file carries v2 banner
+
+[NT-2026-09-04-119] [P0] [OPEN] Rust conversion gaps: entire api_reference is a v1 Python submodule snapshot for Rust-owned subsystems; no Rust/v2 API reference exists
+  file: references/api_reference/system.md:6; trading.md:10; indicators.md:10-58
+  evidence: nautilus_trader.system does not exist at pin (kernel is Rust crates/system); trading/ and indicators/ flat; pinned docs/api_reference documents current surfaces
+  fix: regenerate pages against pinned v2 flat modules with per-page owning-crate pointers; retain v1 snapshot only as clearly secondary historical reference
+  acceptance-test: api_reference targets only modules that exist at pin (or are labelled historical)
+
+[NT-2026-09-04-120] [P0] [OPEN] Rust conversion gaps: concepts guides for actors/strategies teach only v1 handler/subscription names; Rust how-to guides exist upstream but are not surfaced
+  file: references/concepts/strategies.md:117
+  evidence: pinned docs/concepts/strategies.md:132 on_quote + :271 subscribe_quotes; pinned docs/how_to/write_rust_strategy.md and write_rust_actor.md exist; skill concepts use on_quote_tick/subscribe_quote_ticks (also actors.md:152-153, adapters.md:156,161, backtesting.md:394,421, instruments.md:473)
+  fix: update names to pinned v2; add Rust concept sections referencing the pinned how-to guides
+  acceptance-test: concept files use v2 names and cite Rust how-tos
+
+[NT-2026-09-04-121] [P1] [OPEN] V2 compliance: nt-learn curriculum dependency versions pinned to 0.62; pinned workspace is 0.63.0
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:28-37
+  evidence: pinned Cargo.toml:52 version = "0.63.0"
+  fix: bump version pins to 0.63
+  acceptance-test: curriculum Cargo.toml example says 0.63
+
+[NT-2026-09-04-122] [P1] [OPEN] V2 compliance: nt-learn curriculum teaches nonexistent stubs cargo feature on nautilus-model
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:32,53
+  evidence: crates/model/src/lib.rs:138 pub mod stubs unconditional; Cargo.toml features have test-support, not stubs
+  fix: remove features=["stubs"] and the stubs row; stubs available without a flag
+  acceptance-test: grep '"stubs"' in nt-learn returns 0
+
+[NT-2026-09-04-123] [P1] [OPEN] V2 compliance: nt-learn teaches BacktestEngine::add_venue with legacy multi-arg signature; pinned Rust API takes a single SimulatedVenueConfig
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:217
+  evidence: crates/backtest/src/engine.rs:274 add_venue(&mut self, config: SimulatedVenueConfig)
+  fix: replace with engine.add_venue(SimulatedVenueConfig {...})?
+  acceptance-test: example uses pinned signature
+
+[NT-2026-09-04-124] [P1] [OPEN] V2 compliance: nt-learn misattributes actor framework ownership to nautilus_trading; DataActor lives in nautilus_common at pin
+  file: skills/nt-learn/curriculum/03-foundations.md:18; 08-rust-internals.md:33
+  evidence: crates/common/src/actor/mod.rs:36 re-exports DataActor/DataActorCore from crates/common/src/actor/data_actor.rs; crates/trading has no actor module (re-export only)
+  fix: state nautilus_common owns the actor framework; correct both stages
+  acceptance-test: both stages state pinned ownership
+
+[NT-2026-09-04-125] [P1] [OPEN] V2 compliance: concepts/strategies.md teaches v1 handler names on_quote_tick/on_trade_tick and subscribe_quote_ticks
+  file: references/concepts/strategies.md:117,118,236,553
+  evidence: trading pyi:616-618 on_quote/on_trade/on_bar; :715,721 subscribe_quotes/subscribe_trades; on_quote_tick 0 hits in pinned python+docs
+  fix: rename handlers/subscriptions to v2 names
+  acceptance-test: grep on_quote_tick in concepts returns 0 unlabelled
+
+[NT-2026-09-04-126] [P1] [OPEN] V2 compliance: concepts/actors.md subscription table maps v1 names to v1 handlers
+  file: references/concepts/actors.md:152-153,136-137
+  evidence: pinned docs/concepts/actors.md:386 uses subscribe_quotes() → on_quote()
+  fix: update table and prose to v2 names
+  acceptance-test: table matches pinned doc
+
+[NT-2026-09-04-127] [P1] [OPEN] V2 compliance: v1 subscription/handler names in adapters.md, backtesting.md, instruments.md concept files
+  file: references/concepts/adapters.md:156,161; backtesting.md:394,421; instruments.md:473
+  evidence: same pinned evidence as above
+  fix: replace with pinned v2 names
+  acceptance-test: grep returns 0 unlabelled v1 names
+
+[NT-2026-09-04-128] [P1] [OPEN] V2 compliance: api_reference/model/tick_scheme.md documents removed module layout
+  file: references/api_reference/model/tick_scheme.md:6-20
+  evidence: model/ flat at pin; only a tick_scheme config field survives (pyi:296,350); pinned api_reference/model has reports.md instead
+  fix: drop page (or reduce to surviving field + Rust pointer); add model/reports.md per pin
+  acceptance-test: page matches pinned api_reference set
+
+[NT-2026-09-04-129] [P1] [OPEN] Legacy unlabelled content: concepts/risk.md contains v1-only Python API markers with no legacy/migration label anywhere
+  file: references/concepts/risk.md:37
+  evidence: zero legacy/migration/NT v2 strings in file; presented as current authored content
+  fix: add standard NT v2 compatibility banner; mark Python risk-engine runtime example legacy (covered by the P0 fix)
+  acceptance-test: file carries banner and pinned surface
+
+[NT-2026-09-04-130] [P2] [OPEN] Improvement opportunities: concepts/ lacks coverage for 15+ pinned concept topics (orders/, events/, instruments/, data/, backtesting/ subdirs; reconciliation, custom_data, order_book, synthetics, value_types, rust, configuration)
+  file: references/concepts/index.md:1
+  evidence: pinned docs/concepts/ contains accounting, configuration, continuous_futures, custom_data, dst, event_sourcing, greeks, networking, options, order_book, reconciliation, rust, synthetics, value_types, python + 5 subdirectories
+  fix: add concept pages or pointers for high-value pinned topics; index the subdirectories
+  acceptance-test: index covers pinned subdirectories or documents the pointer policy
+
+[NT-2026-09-04-131] [P2] [OPEN] Improvement opportunities: api_reference/adapters missing 6 venue pages present at pin (architect_ax, bitmex, deribit, hyperliquid, kraken, sandbox)
+  file: references/api_reference/adapters/index.md:1
+  evidence: pinned docs/api_reference/adapters/ has 15 venues; skill has 10
+  fix: add the six pages or pointers to pinned pages/owning crates
+  acceptance-test: adapter api_reference set matches pin or documents policy
+
+[NT-2026-09-04-132] [P2] [OPEN] Improvement opportunities: Stage 09 handler table omits many pinned DataActor handlers (on_data/on_signal, on_instrument_close, on_block, DeFi on_pool_*, on_historical_*)
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:277-295
+  evidence: crates/common/src/actor/data_actor.rs: on_data :393, on_signal :403, on_book_depth :453, on_instrument_close :563, on_block :574, on_pool_* :585-629, on_historical_* :652-725
+  fix: extend handler table with these families
+  acceptance-test: table covers the families
+
+[NT-2026-09-04-133] [P2] [OPEN] Improvement opportunities: curriculum never cites the pinned Rust how-to guides (write_rust_strategy, write_rust_actor, run_rust_backtest, get_started_lighter)
+  file: skills/nt-learn/curriculum/07-live-trading.md:62
+  evidence: pinned docs/how_to/ contains all four; grep shows no nt-learn reference
+  fix: link write_rust_strategy from Stage 04, write_rust_actor from Stage 06, run_rust_backtest from Stage 05/09
+  acceptance-test: checkpoints cite the pinned how-tos
+
+[NT-2026-09-04-134] [P2] [OPEN] Improvement opportunities: migration material never cites pinned upstream MIGRATION_V2.md
+  file: skills/nt-learn/migration_reference/python/curriculum/01-setup.md:5
+  evidence: MIGRATION_V2.md (796 lines) is the canonical v1→v2 migration guide; grep MIGRATION_V2 in scope = 0
+  fix: add MIGRATION_V2.md as authoritative pointer in migration headers and legacy banners
+  acceptance-test: MIGRATION_V2.md cited
+
+[NT-2026-09-04-135] [P0] [OPEN] Rust conversion gaps: root integrations betfair.md routing story inverted: calls pinned upstream Betfair doc 'v1 wiring' though at pin it IS the current Rust-adapter/LiveNode guide
+  file: references/integrations/betfair.md:14; betfair_v2.md:7-9
+  evidence: pinned docs/integrations/betfair.md:7 'implemented in Rust and exposed at nautilus_trader.adapters.betfair'; :20-21 BetfairDataClientFactory/BetfairExecutionClientFactory; :25 LiveNode.builder example
+  fix: replace inverted framing: upstream doc is authoritative v2 guidance; sync primary guide to it (or make betfair_v2.md a delta page); delete wrong-commit citations
+  acceptance-test: betfair pages no longer dismiss the pinned upstream doc as v1
+
+[NT-2026-09-04-136] [P0] [OPEN] Rust conversion gaps: root integrations binance.md overview presents v1 Python component surface as the adapter surface
+  file: references/integrations/binance.md:29-35
+  evidence: pinned binance doc:13-14 'implemented in Rust...same public configurations, factories, and data types'; BinanceLiveDataClientFactory/BinanceLiveExecClientFactory 0 hits at pin
+  fix: rewrite overview to pinned v2 surface (flat configs/factories/loaders/decoders)
+  acceptance-test: overview lists pinned components
+
+[NT-2026-09-04-137] [P0] [OPEN] Rust conversion gaps: root integrations architect_ax.md overview omits pinned Rust/PyO3 statement and teaches v1 factory names
+  file: references/integrations/architect_ax.md:29-30
+  evidence: pinned doc:12 'implemented in Rust...PyO3 bindings'; :19-20 AxDataClientFactory/AxExecutionClientFactory; v1 names 0 hits
+  fix: adopt pinned overview or label list v1
+  acceptance-test: overview matches pinned doc
+
+[NT-2026-09-04-138] [P0] [OPEN] Rust conversion gaps: root integrations bitmex.md example sections teach v1 import paths as current (adapters.bitmex.config, core.nautilus_pyo3)
+  file: references/integrations/bitmex.md:582,650,724,838-857
+  evidence: pinned doc:595,854-856 use flat from nautilus_trader.adapters.bitmex import BitmexExecutionClientConfig; .config submodule and core.nautilus_pyo3 absent at pin
+  fix: flatten imports per pinned doc or add adjacent legacy labels
+  acceptance-test: no unlabelled dead import paths remain
+
+[NT-2026-09-04-139] [P0] [OPEN] Rust conversion gaps: root integrations coinbase.md teaches config construction via dead PyO3 module core.nautilus_pyo3 as the current method
+  file: references/integrations/coinbase.md:705-707,46
+  evidence: pinned doc:781-783 imports from flat nautilus_trader.adapters.coinbase; core.nautilus_pyo3 0 hits at pin
+  fix: replace imports with flat adapter module; correct :46 module-path claim
+  acceptance-test: no core.nautilus_pyo3 references remain unlabelled
+
+[NT-2026-09-04-140] [P0] [OPEN] Rust conversion gaps: root integrations hyperliquid.md teaches removed core.nautilus_pyo3 client surface in current-framed sample
+  file: references/integrations/hyperliquid.md:399-400
+  evidence: pinned hyperliquid pyi exports HyperliquidEnvironment flat; core.nautilus_pyo3 absent
+  fix: import from nautilus_trader.adapters.hyperliquid or label legacy
+  acceptance-test: no unlabelled pyo3-path imports remain
+
+[NT-2026-09-04-141] [P0] [OPEN] Rust conversion gaps: root integrations lighter.md teaches revoke_lighter_integrator/LighterEnvironment via dead pyo3 path
+  file: references/integrations/lighter.md:148-149
+  evidence: pinned doc:256 from nautilus_trader.adapters.lighter import revoke_lighter_integrator
+  fix: use flat adapter imports
+  acceptance-test: imports match pinned doc
+
+[NT-2026-09-04-142] [P0] [OPEN] Rust conversion gaps: root integrations tardis.md teaches removed TardisCSVDataLoader as THE way to load Tardis CSVs, unlabelled
+  file: references/integrations/tardis.md:357,429-437
+  evidence: TardisCSVDataLoader 0 hits in pinned python/crates/docs; pinned surface load_tardis_*/stream_tardis_*/convert_tardis_options_chain_csv (adapters/tardis pyi __all__)
+  fix: replace sections with pinned loader/stream API or label legacy v1
+  acceptance-test: no unlabelled TardisCSVDataLoader guidance remains
+
+[NT-2026-09-04-143] [P0] [OPEN] Rust conversion gaps: root integrations polymarket.md complete backtest example is unlabelled pure-v1 Python pointing at a nonexistent example file
+  file: references/integrations/polymarket.md:1165-1241
+  evidence: examples/backtest/polymarket_simple_quoter.py absent at pin; nautilus_trader.examples package absent; EMACrossLongOnly/get_polymarket_instrument_id/model.currencies.pUSD 0 hits; pinned fee path SimulatedVenueConfig::builder().fee_model(...)
+  fix: rewrite to pinned v2 or label legacy v1
+  acceptance-test: example uses pinned surface or is labelled
+
+[NT-2026-09-04-144] [P0] [OPEN] Rust conversion gaps: root integrations ib.md teaches v1 HistoricInteractiveBrokersClient and Strategy-from-submodule workflows as current
+  file: references/integrations/ib.md:633,622-641,1819-1820
+  evidence: pinned exports HistoricalInteractiveBrokersClient (spelling) flat from nautilus_trader.adapters.interactive_brokers; Strategy flat in nautilus_trader.trading; .historical.client and trading.strategy submodules absent
+  fix: use pinned names/imports or label sections legacy v1
+  acceptance-test: no unlabelled v1 IB client guidance remains
+
+[NT-2026-09-04-145] [P1] [OPEN] V2 compliance: root integrations overviews teach v1 factory names (*LiveDataClientFactory/*LiveExecClientFactory) across 9 venue files
+  file: references/integrations/bybit.md:25; also kraken.md line 27, okx.md line 53, dydx.md line 94, deribit.md line 27, hyperliquid.md line 22, polymarket.md line 71, binance.md line 34, bitmex.md line 30
+  evidence: every pinned adapter pyi exports {Venue}DataClientFactory/{Venue}ExecutionClientFactory; grep Live*Factory over pin = 0
+  fix: rename to pinned factory names in every overview and prose repetition
+  acceptance-test: grep LiveExecClientFactory/LiveDataClientFactory in references/integrations returns 0 unlabelled
+
+[NT-2026-09-04-146] [P1] [OPEN] V2 compliance: root integrations bitmex.md dead v1 module paths (adapters.bitmex.config, core.nautilus_pyo3, model.identifiers, model.enums)
+  file: references/integrations/bitmex.md:838-840,147,237,266
+  evidence: pinned doc:152,245,275 flat model imports; no .config submodule or pyo3 path at pin
+  fix: flatten all imports
+  acceptance-test: imports resolve against pinned tree
+
+[NT-2026-09-04-147] [P1] [OPEN] V2 compliance: root integrations databento.md data-loading guidance uses v1 submodule paths (adapters.databento.loaders, model.enums/identifiers/data, persistence.catalog)
+  file: references/integrations/databento.md:702-703,170-171,310,545
+  evidence: pinned DatabentoDataLoader flat from nautilus_trader.adapters.databento; ParquetDataCatalog flat from persistence; model types flat
+  fix: flatten imports
+  acceptance-test: imports resolve against pinned tree
+
+[NT-2026-09-04-148] [P1] [OPEN] V2 compliance: root integrations deribit.md current samples use adapters.deribit.data, model.data, model.identifiers, core.nautilus_pyo3
+  file: references/integrations/deribit.md:355-356,145,690
+  evidence: pinned deribit pyi exports DeribitVolatilityIndex/DeribitEnvironment/DeribitProductType flat; no .data submodule
+  fix: flatten imports
+  acceptance-test: imports resolve against pinned tree
+
+[NT-2026-09-04-149] [P1] [OPEN] V2 compliance: root integrations hyperliquid.md teaches HyperliquidInstrumentProvider as a Python class and .providers/.enums/.constants/.data submodules
+  file: references/integrations/hyperliquid.md:244,554-556,528
+  evidence: HyperliquidInstrumentProvider 0 hits in pinned pyi and pinned doc; pinned exports HyperliquidProductType/HYPERLIQUID flat
+  fix: drop Python provider usage (Rust-internal at pin); flatten imports
+  acceptance-test: no phantom provider class remains
+
+[NT-2026-09-04-150] [P1] [OPEN] V2 compliance: root integrations ib.md teaches v1-only symbols (IBMarketDataTypeEnum, IBContract class, IBOrderTags import, new_generic_spread_id, .config/.common/.gateway submodules)
+  file: references/integrations/ib.md:1007,66-67,89-90,411-471,567,1642
+  evidence: pinned doc:43 MarketDataType flat; :176-186 load_contracts=[dicts]; IBOrderTags is a string tag prefix; new_generic_spread_id 0 hits; submodules absent
+  fix: convert to pinned forms; remove or legacy-label new_generic_spread_id
+  acceptance-test: no v1-only symbols remain unlabelled
+
+[NT-2026-09-04-151] [P1] [OPEN] V2 compliance: root integrations architect_ax.md teaches AxExecClientConfig — exists in neither v1 nor v2 (pin: AxExecutionClientConfig)
+  file: references/integrations/architect_ax.md:347,141,147,160,362
+  evidence: architect_ax pyi:16-20 AxExecutionClientConfig; AxExecClientConfig 0 hits at pin
+  fix: rename to AxExecutionClientConfig
+  acceptance-test: grep AxExecClientConfig returns 0
+
+[NT-2026-09-04-152] [P1] [OPEN] V2 compliance: root integrations binance.md teaches from nautilus_trader.core import Data for on_data handler
+  file: references/integrations/binance.md:490
+  evidence: pinned core __all__ has only helpers — no Data; pinned doc:687-690 uses from nautilus_trader.model import DataType + subscribe_data
+  fix: drop Data import; type handler against concrete class per pinned doc
+  acceptance-test: no core-Data import remains
+
+[NT-2026-09-04-153] [P1] [OPEN] V2 compliance: root integrations polymarket.md backtest imports model.currencies.pUSD as a currency object
+  file: references/integrations/polymarket.md:1177
+  evidence: pUSD 0 hits in pinned pyi (Rust-side + doc concept only); model.currencies submodule absent
+  fix: remove pUSD import; use instrument currency from loader
+  acceptance-test: no pUSD import remains
+
+[NT-2026-09-04-154] [P1] [OPEN] V2 compliance: root integrations betfair pages cite wrong baseline commit 8e51f957c (actual terminal-order-identity commit: 8ecab1ce9; repo pin 4692bac)
+  file: references/integrations/betfair.md:11,14; betfair_v2.md:8,18,27,30
+  evidence: git log -1 8e51f957c = 'Restore persistence config re-exports'; grep 'Retain Betfair terminal order identity' = 8ecab1ce9
+  fix: re-cite actual pin 4692bac (and 8ecab1ce9 where that landing is meant)
+  acceptance-test: citations name correct commits
+
+[NT-2026-09-04-155] [P1] [OPEN] V2 compliance: references/AGENTS.md WHERE-TO-LOOK routes live trading under v1 symbol TradingNode
+  file: references/AGENTS.md:40
+  evidence: pinned docs have 0 TradingNode mentions, 167 LiveNode; docs/concepts/live.md documents LiveNode::run()
+  fix: change row key to LiveNode; keep TradingNode only as labelled legacy alias
+  acceptance-test: routing key is LiveNode
+
+[NT-2026-09-04-156] [P1] [OPEN] Legacy unlabelled content: root integrations architect_ax.md v1 factories + model.identifiers unlabelled
+  file: references/integrations/architect_ax.md:29-30,96
+  evidence: v1 names 0 hits at pin; no note within 5 lines
+  fix: label or update to v2 names
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-157] [P1] [OPEN] Legacy unlabelled content: root integrations binance.md v1 factory names + dead core Data import unlabelled
+  file: references/integrations/binance.md:34-35,490
+  evidence: v1 names 0 hits at pin
+  fix: label or rename per pin
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-158] [P1] [OPEN] Legacy unlabelled content: root integrations bitmex.md 9 unlabelled v1-marker clusters
+  file: references/integrations/bitmex.md:30-31,147,237,266,582,650,724,838-840
+  evidence: dead paths absent from pinned python tree
+  fix: label each block or flatten imports
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-159] [P1] [OPEN] Legacy unlabelled content: root integrations bybit.md overview v1 factories + model.data import unlabelled
+  file: references/integrations/bybit.md:25-26,517
+  evidence: DataType flat in model pyi:1676; v1 factory names 0 hits
+  fix: label or update
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-160] [P1] [OPEN] Legacy unlabelled content: root integrations coinbase.md dead core.nautilus_pyo3 path claims unlabelled
+  file: references/integrations/coinbase.md:46,705-707
+  evidence: module absent at pin
+  fix: label or correct module path
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-161] [P1] [OPEN] Legacy unlabelled content: root integrations databento.md v1 submodule samples unlabelled
+  file: references/integrations/databento.md:170-171,310,545,702-703
+  evidence: dead submodules absent at pin
+  fix: label or flatten
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-162] [P1] [OPEN] Legacy unlabelled content: root integrations deribit.md v1 samples unlabelled
+  file: references/integrations/deribit.md:27-28,145,355-356,690
+  evidence: dead paths absent at pin
+  fix: label or flatten
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-163] [P1] [OPEN] Legacy unlabelled content: root integrations dydx.md overview v1 factories unlabelled
+  file: references/integrations/dydx.md:94-95
+  evidence: pinned DydxDataClientFactory/DydxExecutionClientFactory
+  fix: rename or label
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-164] [P1] [OPEN] Legacy unlabelled content: root integrations hyperliquid.md 5 unlabelled v1 clusters
+  file: references/integrations/hyperliquid.md:22-23,244,399-400,528,554-556
+  evidence: dead paths (core.nautilus_pyo3, .providers, .constants, .data, model.data) absent at pin
+  fix: label or flatten
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-165] [P1] [OPEN] Legacy unlabelled content: root integrations ib.md ~20 unlabelled v1 clusters
+  file: references/integrations/ib.md:66-67,89-90,138,411,567,633,1642,1819-1820,1868
+  evidence: pinned flat surface in adapters/interactive_brokers pyi; Historic*/new_generic_spread_id 0 hits
+  fix: label v1 blocks or convert to pinned flat API
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-166] [P1] [OPEN] Legacy unlabelled content: root integrations kraken.md overview v1 factories unlabelled
+  file: references/integrations/kraken.md:27-29
+  evidence: pinned KrakenDataClientFactory/KrakenExecutionClientFactory
+  fix: rename or label
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-167] [P1] [OPEN] Legacy unlabelled content: root integrations lighter.md dead pyo3 path unlabelled
+  file: references/integrations/lighter.md:148-149
+  evidence: pinned flat import at doc:256
+  fix: flatten or label
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-168] [P1] [OPEN] Legacy unlabelled content: root integrations okx.md overview v1 factories unlabelled (file's only cluster)
+  file: references/integrations/okx.md:53-54
+  evidence: pinned OKXDataClientFactory/OKXExecutionClientFactory
+  fix: rename or label
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-169] [P1] [OPEN] Legacy unlabelled content: root integrations polymarket.md overview factories, v1 backtest block, helper block unlabelled
+  file: references/integrations/polymarket.md:71-72,1169-1177,1236
+  evidence: v1 names + examples package 0 hits at pin
+  fix: label or rewrite to pinned surface
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-170] [P1] [OPEN] Legacy unlabelled content: root integrations tardis.md TardisCSVDataLoader blocks unlabelled
+  file: references/integrations/tardis.md:357,429
+  evidence: TardisCSVDataLoader 0 hits at pin
+  fix: label as v1 or replace with pinned loader functions
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-171] [P2] [OPEN] Improvement opportunities: root integrations binance.md missing pinned discovery/loading utilities (load_binance_instruments, load_binance_order_book_deltas, get_binance_arrow_schema_map)
+  file: references/integrations/binance.md:27
+  evidence: all three in pinned binance pyi __all__ and doc overview :27-40
+  fix: add section covering standalone discovery and depth-CSV loading
+  acceptance-test: utilities documented
+
+[NT-2026-09-04-172] [P2] [OPEN] Improvement opportunities: root integrations tardis.md missing the pinned load_tardis_*/stream_tardis_*/convert_tardis_options_chain_csv family
+  file: references/integrations/tardis.md:350
+  evidence: pinned adapters/tardis pyi __all__; upstream doc :463-639 documents each
+  fix: document current loader/stream API
+  acceptance-test: family documented
+
+[NT-2026-09-04-173] [P2] [OPEN] Improvement opportunities: root integrations polymarket.md missing pinned Rtds custom data types and PolymarketUpDownEventSlugConfig
+  file: references/integrations/polymarket.md:952
+  evidence: pinned doc :963-967 (Rtds + DataType subscription) and :1495
+  fix: add RTDS subscription and UpDown event-slug sections
+  acceptance-test: sections present
+
+[NT-2026-09-04-174] [P2] [OPEN] Improvement opportunities: only derive.md shows the v2 LiveNode.builder registration API; every other integration page resolves to v1 wiring
+  file: references/integrations/index.md:7
+  evidence: pinned LiveNodeBuilder.add_data_client(name, factory, config, routing)/add_exec_client; derive.md:481-486 is the only correct in-repo example
+  fix: add shared LiveNode.builder wiring pattern (or per-adapter examples) mirroring derive.md
+  acceptance-test: wiring pattern available from the index
+
+[NT-2026-09-04-175] [P2] [OPEN] Improvement opportunities: root integrations ib.md missing pinned TradingMode export (gateway trading-mode selection)
+  file: references/integrations/ib.md:1550
+  evidence: pinned doc:78 from nautilus_trader.adapters.interactive_brokers import TradingMode
+  fix: document TradingMode in gateway section
+  acceptance-test: TradingMode documented
+
+[NT-2026-09-04-176] [P0] [OPEN] Rust conversion gaps: nt-dev ffi_memory.md teaches legacy *_API Box-wrapper pattern; pinned Rust uses *mut T + Box::into_raw
+  file: skills/nt-dev/references/guides/ffi_memory.md:104,109-121; skills/nt-dev/SKILL.md:430
+  evidence: crates/model/src/ffi/orderbook/book.rs:35-40 orderbook_new -> *mut OrderBook via Box::into_raw; orderbook_drop(book: *mut OrderBook) :51; grep _API( crates/ = 0; pinned docs/developer_guide/ffi.md documents *mut pattern
+  fix: replace section + SKILL.md rule 6 with pinned pattern; label OrderBook_API example legacy v1
+  acceptance-test: grep '_API' in ffi guidance returns 0 unlabelled
+
+[NT-2026-09-04-177] [P0] [OPEN] Rust conversion gaps: nt-dev/nt-testing testing.md test-layer matrix routes through legacy Cython backtest client
+  file: skills/nt-testing/references/guides/testing.md:406,465; skills/nt-dev/references/guides/testing.md:406,465; skills/nt-dev/SKILL.md:419
+  evidence: crates/backtest/src/data_client.rs is Rust BacktestDataClient; pinned python backtest/ has no .pyx; upstream testing doc drops the layer and contains zero .pyx references
+  fix: point layer at crates/backtest/src/data_client.rs or delete row/step as upstream did; update SKILL.md layer list
+  acceptance-test: no .pyx backtest-client layer remains
+
+[NT-2026-09-04-178] [P1] [OPEN] V2 compliance: nt-testing/nt-dev testing.md describes make pytest as v1 root-suite runner; at pin it runs python/tests and root tests/ does not exist
+  file: skills/nt-testing/references/guides/testing.md:158-164; skills/nt-dev/references/guides/testing.md:158-164; skills/nt-testing/SKILL.md:222-227
+  evidence: Makefile:1304-1308 pytest: build-debug runs cd python && uv run --no-sync pytest tests/; no root tests/ dir
+  fix: rewrite section (single suite via make pytest); delete v1 uv invocation
+  acceptance-test: guidance matches pinned Makefile
+
+[NT-2026-09-04-179] [P1] [OPEN] V2 compliance: skills teach nonexistent Make targets (pytest-v2, build-debug-v2, test-performance, test, lint)
+  file: skills/nt-testing/references/guides/testing.md:181,185,187,199; nt-dev copy; skills/nt-testing/SKILL.md:230,241,247,250
+  evidence: grep Makefile for those targets = 0; real: pytest(:1304), build-debug(:325), cargo-ci-benches(:1223), check-code, clippy, pre-commit
+  fix: replace with real targets; drop make test/make lint block
+  acceptance-test: all cited make targets exist in pinned Makefile
+
+[NT-2026-09-04-180] [P1] [OPEN] V2 compliance: stale Python test path tests/unit_tests/common/test_actor.py
+  file: skills/nt-testing/references/guides/testing.md:404,405,457; nt-dev copy
+  evidence: pinned path is python/tests/unit/common/test_actor.py; no unit_tests dir
+  fix: update all occurrences
+  acceptance-test: grep unit_tests returns 0
+
+[NT-2026-09-04-181] [P1] [OPEN] V2 compliance: wait_until_async mislabelled 'legacy helper'; it is the current public helper upstream recommends
+  file: skills/nt-testing/references/guides/testing.md:286; nt-dev copy
+  evidence: crates/common/src/testing.rs:106 pub async fn wait_until_async; pinned doc:303-306 prefers it
+  fix: present as current recommendation
+  acceptance-test: framing corrected
+
+[NT-2026-09-04-182] [P1] [OPEN] V2 compliance: nt-dev SKILL.md teaches await eventually(...) — symbol absent at pin
+  file: skills/nt-dev/SKILL.md:381
+  evidence: grep eventually over pin = 0; only wait_until_async exists
+  fix: remove eventually
+  acceptance-test: grep 'eventually(' in nt-dev returns 0
+
+[NT-2026-09-04-183] [P1] [OPEN] V2 compliance: aligned-features table omits arrow and streaming from pinned standard set
+  file: skills/nt-dev/references/guides/rust_conventions.md:50,52; skills/nt-testing/SKILL.md:232
+  evidence: Makefile:182 BASE_FEATURES := arrow,ffi,python,high-precision,streaming,defi; scripts/clippy-changed.sh:9 same
+  fix: update table and snippets
+  acceptance-test: feature sets match pinned Makefile
+
+[NT-2026-09-04-184] [P1] [OPEN] V2 compliance: nt-dev rust_conventions names cargo feature stubs; pin gates stubs/specs behind test-support
+  file: skills/nt-dev/references/guides/rust_conventions.md:40,1036
+  evidence: crates/model/Cargo.toml:34 test-support; cfg(any(test, feature="test-support")) in events/order/mod.rs:57,59; upstream rust.md:656
+  fix: rename both occurrences; drop stubs from feature list
+  acceptance-test: grep 'feature = "stubs"' in skills returns 0
+
+[NT-2026-09-04-185] [P1] [OPEN] V2 compliance: nt-dev environment_setup references root pyproject.toml/uv.lock and root uv sync; at pin only python/pyproject.toml exists
+  file: skills/nt-dev/references/guides/environment_setup.md:61,86,151-152,221,235,240-241,268-269; skills/nt-dev/SKILL.md:89,114,181
+  evidence: no root pyproject/uv.lock at pin; python/pyproject.toml (2.0.0rc4) and python/uv.lock exist; make sync runs uv sync in python/
+  fix: replace with python/ paths or make sync
+  acceptance-test: manifest paths match pin
+
+[NT-2026-09-04-186] [P1] [OPEN] V2 compliance: exclude-newer cooldown stated as 3 days; pin uses 7 days
+  file: skills/nt-dev/references/guides/environment_setup.md:228
+  evidence: python/pyproject.toml:69 exclude-newer = "7 days"
+  fix: correct to 7 days
+  acceptance-test: value matches pin
+
+[NT-2026-09-04-187] [P1] [OPEN] V2 compliance: make install-tools list misattributes shared Cargo CLIs to workspace.metadata.tools
+  file: skills/nt-dev/references/guides/environment_setup.md:103-116
+  evidence: Cargo.toml:405-412 metadata.tools has cargo-codspeed/fuzz/hawk/machete/cbindgen/flamegraph/lychee; cargo-audit/deny/edit/llvm-cov/nextest/vet + uv pinned in .nautilus-engineering/tools.toml:61-79
+  fix: split shared vs local CLI lists with paths
+  acceptance-test: attribution matches pin
+
+[NT-2026-09-04-188] [P1] [OPEN] V2 compliance: releases guidance points at root pyproject.toml; version lives only in python/pyproject.toml
+  file: skills/nt-dev/references/guides/releases.md:15; skills/nt-dev/SKILL.md:507,514,528
+  evidence: grep ^version pyproject.toml python/pyproject.toml = only python/ (2.0.0rc4)
+  fix: update all references
+  acceptance-test: paths match pin
+
+[NT-2026-09-04-189] [P1] [OPEN] V2 compliance: coding_standards teaches Gitlint which does not exist at pin; commit messages enforced by in-repo script
+  file: skills/nt-dev/references/guides/coding_standards.md:116-147
+  evidence: grep gitlint over pin = 0; no .gitlint; .pre-commit-config.yaml:135-144 commit-msg hook runs scripts/ci/check_commit_message.py
+  fix: replace with pinned commit-message gate + upstream conventions
+  acceptance-test: no gitlint guidance remains
+
+[NT-2026-09-04-190] [P1] [OPEN] V2 compliance: python_conventions teaches TypeVar/Generic[T]; pin requires Python >=3.12 and upstream mandates PEP 695 syntax
+  file: skills/nt-dev/references/guides/python_conventions.md:46-50
+  evidence: python/pyproject.toml:25 requires-python >=3.12,<3.15; TypeVar 0 hits in pinned python/; upstream python.md:44 mandates PEP 695
+  fix: replace example with PEP 695 syntax
+  acceptance-test: no TypeVar-based generic guidance
+
+[NT-2026-09-04-191] [P1] [OPEN] V2 compliance: nt-testing api/data_tester_config.md import path nautilus_trader.test_kit.strategies.tester_data does not exist
+  file: skills/nt-testing/references/api/data_tester_config.md:5,11,139
+  evidence: pinned package is testkit/ (no test_kit, no strategies/); testkit pyi exports only DataTesterConfig; DataTester is Rust (crates/testkit/src/testers/data/actor.rs:50)
+  fix: Python: from nautilus_trader.testkit import DataTesterConfig; state DataTester is Rust-only, registered via node.add_builtin_actor
+  acceptance-test: import paths match pin
+
+[NT-2026-09-04-192] [P1] [OPEN] V2 compliance: nt-testing SKILL.md prohibition cites nonexistent compat root nautilus_trader.core.nautilus_pyo3
+  file: skills/nt-testing/SKILL.md:113
+  evidence: nautilus_pyo3 0 hits; compiled root at pin is nautilus_trader._libnautilus
+  fix: point rule at _libnautilus or drop named path
+  acceptance-test: rule names the real root
+
+[NT-2026-09-04-193] [P1] [OPEN] V2 compliance: rust_conventions makes anyhow::Result the primary pattern; upstream mandates typed Result at library/domain boundaries
+  file: skills/nt-dev/references/guides/rust_conventions.md:202
+  evidence: docs/developer_guide/rust.md:242-250 error-boundary table; enforced by .pre-commit-hooks/check_anyhow_usage.sh
+  fix: replace with boundary table (typed Result for reusable/domain APIs; anyhow for app/adapter orchestration) + import rule
+  acceptance-test: guidance matches pinned boundary policy
+
+[NT-2026-09-04-194] [P1] [OPEN] V2 compliance: docs_style example uses stale type TradingNodeConfig
+  file: skills/nt-dev/references/guides/docs_style.md:50
+  evidence: TradingNodeConfig 0 hits at pin; upstream docs.md:49 uses LiveNodeConfig
+  fix: change example type
+  acceptance-test: example uses LiveNodeConfig
+
+[NT-2026-09-04-195] [P1] [OPEN] V2 compliance: nt-dev SKILL.md core FFI rule cites nonexistent DataFfiCVec example
+  file: skills/nt-dev/SKILL.md:431-432
+  evidence: grep DataFfiCVec = 0; only CVec (crates/core/src/ffi/cvec.rs:49)
+  fix: drop named example or substitute real pinned wrapper
+  acceptance-test: example exists at pin
+
+[NT-2026-09-04-196] [P1] [OPEN] V2 compliance: test-dataset paths use tests/test_data/...; pinned data lives in root test_data/ and cited curation suite does not exist
+  file: skills/nt-testing/references/guides/test_datasets.md:11,15,157,158,167,173,192,237,266; nt-dev copy:11,15,91-92,118,147,162-164; skills/nt-dev/SKILL.md:462; skills/nt-testing/SKILL.md:406,432,444
+  evidence: pinned root has test_data/ + test_data/large/checksums.json; no tests/ dir; no test_data_curation suite (curation uses scripts/curate-dataset.sh)
+  fix: replace paths; delete the nonexistent suite command
+  acceptance-test: grep 'tests/test_data' in skills returns 0
+
+[NT-2026-09-04-197] [P1] [OPEN] V2 compliance: benchmarking guide says opt into CI benches by editing the cargo-ci-benches recipe; pin uses CI_BENCH_CRATES/CODSPEED_BENCH_TARGETS variables
+  file: skills/nt-dev/references/guides/benchmarking.md:59
+  evidence: Makefile:1198 CI_BENCH_CRATES, :1203 CODSPEED_BENCH_TARGETS, :1224 recipe iterates the variables; upstream benchmarking.md:54-59
+  fix: point at the variables (+ CodSpeed exclusion rules)
+  acceptance-test: guidance matches pinned Makefile
+
+[NT-2026-09-04-198] [P1] [OPEN] Legacy unlabelled content: testing.md mixed-debugging section teaches v1-only test_kit.debug_helpers.setup_debugging unlabelled
+  file: skills/nt-testing/references/guides/testing.md:337-380,341,347; nt-dev copy
+  evidence: setup_debugging/debug_helpers 0 hits at pin; no make build-debug-pyo3 target; upstream uses uv run --no-sync maturin develop --profile debug-pyo3 in python/
+  fix: replace with pinned maturin debug-pyo3 workflow or label legacy
+  acceptance-test: section matches pinned workflow
+
+[NT-2026-09-04-199] [P1] [OPEN] Legacy unlabelled content: testing.md .pyx token in test-layer matrix outside the 5-line label window
+  file: skills/nt-testing/references/guides/testing.md:406; nt-dev copy
+  evidence: nearest note 11 lines above; row target does not exist at pin
+  fix: covered by the P0 matrix fix
+  acceptance-test: no unlabelled .pyx remains
+
+[NT-2026-09-04-200] [P2] [OPEN] Improvement opportunities: per-adapter fuzz harness (scripts/fuzz-adapter.sh, adapter fuzz features) not covered
+  file: skills/nt-dev/references/guides/testing.md:100-124; skills/nt-testing/SKILL.md:290-298
+  evidence: pinned docs/developer_guide/testing.md:122-127 documents scripts/fuzz-adapter.sh + adapter fuzz features
+  fix: add fuzz-adapter.sh invocation and registration pattern
+  acceptance-test: fuzz harness documented
+
+[NT-2026-09-04-201] [P2] [OPEN] Improvement opportunities: benchmark registration and v1-vs-v2 comparison harness (scripts/benchmark-backtest-versions.py) not covered
+  file: skills/nt-dev/references/guides/benchmarking.md:140-150; skills/nt-dev/SKILL.md:402-410
+  evidence: pinned benchmarking.md:184-240; script exists at pin; CODSPEED_BENCH_TARGETS exclusions documented
+  fix: document registration + comparison workflow
+  acceptance-test: coverage present
+
+[NT-2026-09-04-202] [P2] [OPEN] Improvement opportunities: markdown lint toolchain and shared style baseline not covered
+  file: skills/nt-dev/references/guides/docs_style.md:44-100
+  evidence: pinned .markdownlint.jsonc exists; make check-markdown (Makefile:643); docs/developer_guide/markdown_style.md is the shared baseline
+  fix: reference markdown_style.md, .markdownlint.jsonc, make check-markdown
+  acceptance-test: toolchain referenced
+
+[NT-2026-09-04-203] [P2] [OPEN] Improvement opportunities: pinned Rust-guide sections missing (Error boundaries/Panic policy, Runtime ownership, Domain numeric types, check-cbindgen-abi, exclude-newer-package)
+  file: skills/nt-dev/references/guides/rust_conventions.md:198-260,1484-1500; environment_setup.md:228-235
+  evidence: docs/developer_guide/rust.md:242-292,341-366,417-430,707-723; make check-cbindgen-abi (Makefile:770); python/pyproject.toml:71
+  fix: fold pinned sections into the guides
+  acceptance-test: sections present
+
+[NT-2026-09-04-204] [P2] [OPEN] Improvement opportunities: current commit-message conventions and their automated gate not covered (gitlint section stale)
+  file: skills/nt-dev/references/guides/coding_standards.md:102-147
+  evidence: docs/developer_guide/coding_standards.md:140-203; enforced by scripts/ci/check_commit_message.py via commit-msg hook
+  fix: replace gitlint section with rules + gate
+  acceptance-test: covered by the P1 gitlint fix
+
+[NT-2026-09-04-205] [P0] [OPEN] Rust conversion gaps: nt-adapters official_adapter_spec task-management section teaches hand-rolled spawn_task()/JoinHandle pattern replaced by TaskGroup/TaskSpawner/TaskSlot
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1657-1700,1483,1492
+  evidence: crates/live/src/task.rs:104,132,151,159,174,276,442; pinned docs/developer_guide/adapters.md:1489-1554 mandates TaskGroup; skill's own SKILL.md:505-548 already teaches the correct model
+  fix: rewrite section to ownership table + TaskGroup admission + begin_shutdown/finish_shutdown + TaskSlot for singular loops; delete spawn_task/JoinHandle example
+  acceptance-test: spec matches pinned doc and SKILL.md
+
+[NT-2026-09-04-206] [P0] [OPEN] Rust conversion gaps: nt-adapters SKILL.md Python Layer Structure teaches v1 per-module Python adapter layout as the build path
+  file: skills/nt-adapters/SKILL.md:202-214,85
+  evidence: every pinned adapters/<venue>/ has only __init__.py (+binance instruments.py); no config.py/factories.py/providers.py anywhere; adapters/_template/ absent; pinned adapters.md:12-14,205-216 states out-of-tree Python adapters are not a defined surface
+  fix: replace tree with pinned v2 wiring (crate src/python bindings + PyO3 registry + __init__.py re-export projection); label v1 layout migration-only; drop _template claim
+  acceptance-test: SKILL.md layout matches pinned tree
+
+[NT-2026-09-04-207] [P0] [OPEN] Rust conversion gaps: nt-adapters spec teaches Pydantic config subclassing in Python for a Rust-owned #[pyclass] config surface
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:2556-2567,174
+  evidence: nautilus_trader.config.DataClientConfig re-exports a frozen PyO3 pyclass (config pyi:18 → live pyi:34), not subclassable; all 18 venue configs are Rust structs with bon::Builder
+  fix: replace with Rust config struct + #[pyclass(from_py_object)] + impl_pyo3_config_getters! pattern, or move under v1-labelled lane
+  acceptance-test: no Python config subclassing taught as current
+
+[NT-2026-09-04-208] [P0] [OPEN] Rust conversion gaps: nt-adapters references/api/ tree documents retired v1 Python adapter module surface with no labels
+  file: skills/nt-adapters/references/api/live.md:8-56; references/api/adapters/*.md (12 files)
+  evidence: pinned adapters/<venue>/ dirs contain only __init__.py/.pyi; live/ only __init__.py; grep legacy/migration in references/api/ = 0
+  fix: regenerate stubs against pinned projections (automodule on nautilus_trader.adapters.<venue> + nautilus_trader.live only) or quarantine with migration-only banner
+  acceptance-test: api tree matches pinned projections or is labelled
+
+[NT-2026-09-04-209] [P1] [OPEN] V2 compliance: nt-adapters SKILL.md factory trait example uses async_trait/create(name: String) and omits cache/clock/trader_id — drift vs pinned trait
+  file: skills/nt-adapters/SKILL.md:370-395
+  evidence: crates/common/src/factories/client.rs:48-60 sync create(name:&str, config, cache: CacheView, clock: Rc<RefCell<dyn Clock>>); :76-91 exec create(trader_id, name, config, cache); reference impl bybit factories.rs:84-107
+  fix: rewrite to sync trait with pinned signatures + name()/config_type()
+  acceptance-test: example matches pinned traits
+
+[NT-2026-09-04-210] [P1] [OPEN] V2 compliance: nt-adapters SKILL.md builder call wrong arity/order: add_data_client(data_config, Box::new(factory))
+  file: skills/nt-adapters/SKILL.md:397-401
+  evidence: builder.rs:444-448 add_data_client(name: Option<String>, factory: Box<dyn DataClientFactory>, config: Box<dyn ClientConfig>) -> Result<Self>
+  fix: add_data_client(None, Box::new(Factory), Box::new(cfg))? (matches SKILL.md:42-45)
+  acceptance-test: calls match pinned builder
+
+[NT-2026-09-04-211] [P1] [OPEN] V2 compliance: nt-adapters naming convention {Venue}ExecClientConfig contradicts every pinned venue ({Venue}ExecutionClientConfig)
+  file: skills/nt-adapters/SKILL.md:567,207
+  evidence: 17 of 18 pinned adapters use ExecutionClientConfig; grep struct ExecClientConfig = 0
+  fix: change convention to {Venue}ExecutionClientConfig
+  acceptance-test: convention matches pin
+
+[NT-2026-09-04-212] [P1] [OPEN] V2 compliance: nt-adapters integrations stale {Venue}ExecClientConfig names in okx/architect_ax/hyperliquid docs
+  file: skills/nt-adapters/references/integrations/okx.md:664; also architect_ax.md line 147, hyperliquid.md line 264
+  evidence: pinned exports OKXExecutionClientConfig/AxExecutionClientConfig/HyperliquidExecutionClientConfig
+  fix: rename each site
+  acceptance-test: grep 'ExecClientConfig' returns 0 in nt-adapters integrations
+
+[NT-2026-09-04-213] [P1] [OPEN] V2 compliance: nt-adapters integrations teach v1 factory names in 11 venue Overview sections (50 mentions)
+  file: skills/nt-adapters/references/integrations/binance.md:34; also bybit.md line 25, okx.md line 51, kraken.md line 27, dydx.md line 94, hyperliquid.md line 22, deribit.md line 27, bitmex.md line 30, databento.md line 901, polymarket.md line 74, architect_ax.md line 29
+  evidence: grep LiveDataClientFactory/LiveExecClientFactory over pin = 0; pinned names in every projection pyi
+  fix: global rename to pinned factory names + LiveNode builder wiring
+  acceptance-test: grep v1 factory names in nt-adapters returns 0 unlabelled
+
+[NT-2026-09-04-214] [P1] [OPEN] V2 compliance: nt-adapters binance.md config tables/examples teach removed v1 fields (key_type, account_type, update_instruments_interval_mins, use_agg_trade_ticks, BinanceAccountType)
+  file: skills/nt-adapters/references/integrations/binance.md:671-679,689-690,726-745,864-878,909-910,945,975,1071,1080
+  evidence: pinned BinanceDataClientConfig fields (crates/adapters/binance/src/config.rs:173-200): product_type, spot_market_data_mode, instrument_refresh_interval_secs, transport_backend...; BinanceAccountType absent (BinanceProductType only)
+  fix: replace tables/sections with pinned fields (Product type section)
+  acceptance-test: config fields match pinned struct
+
+[NT-2026-09-04-215] [P1] [OPEN] V2 compliance: nt-adapters kraken.md config tables teach nonexistent URL/heartbeat fields and plural product_types
+  file: skills/nt-adapters/references/integrations/kraken.md:673-720,219
+  evidence: pinned KrakenDataClientConfig (crates/adapters/kraken/src/config.rs:41-120): product_type singular, base_url, ws_public_url, ws_private_url, ws_l3_url, heartbeat_interval_secs, ws_idle_timeout_ms, timeout_secs, validate_l3_checksum; no .config submodule
+  fix: rewrite tables against pinned struct; flat imports
+  acceptance-test: fields match pinned struct
+
+[NT-2026-09-04-216] [P1] [OPEN] V2 compliance: nt-adapters okx.md config rows base_url_ws/use_fills_channel/use_spot_cash_position_reports are not pinned fields
+  file: skills/nt-adapters/references/integrations/okx.md:901,928,936,941
+  evidence: pinned okx configs: base_url_ws_public/business/private; no use_fills_channel/use_spot_cash_position_reports in crate; current rows load_spreads/region/book_stale_* exist
+  fix: replace rows with pinned fields
+  acceptance-test: fields match pinned structs
+
+[NT-2026-09-04-217] [P1] [OPEN] V2 compliance: nt-adapters dydx.md base_url_grpc field and environment= kwarg do not exist at pin
+  file: skills/nt-adapters/references/integrations/dydx.md:500-509,669,677,688
+  evidence: pinned dydx config.rs:50-59 fields grpc_url/grpc_urls; :269-273 network: DydxNetwork (no environment field)
+  fix: use grpc_url/grpc_urls and network=DydxNetwork.Testnet
+  acceptance-test: fields match pinned struct
+
+[NT-2026-09-04-218] [P1] [OPEN] V2 compliance: nt-adapters hyperliquid.md data config passes product_types= — not a pinned field
+  file: skills/nt-adapters/references/integrations/hyperliquid.md:267-272,356-362
+  evidence: pinned HyperliquidDataClientConfig (config.rs:47-97): private_key, URLs, environment, timeouts, stale_stream_*, transport_backend — no product_types
+  fix: remove product_types from examples
+  acceptance-test: examples match pinned struct
+
+[NT-2026-09-04-219] [P1] [OPEN] V2 compliance: nt-adapters lighter.md exec config lists/builder-uses trader_id and active_markets — not config fields
+  file: skills/nt-adapters/references/integrations/lighter.md:582,588,611
+  evidence: pinned LighterExecutionClientConfig (config.rs:240-288): environment, deployment, venue, account_id, account_index, api_key_index, private_key, URLs, timeouts, slippage/quota fields; trader_id arrives via factory create()
+  fix: drop trader_id/active_markets; add pinned fields
+  acceptance-test: config matches pinned struct
+
+[NT-2026-09-04-220] [P1] [OPEN] V2 compliance: nt-adapters ib.md connection guidance uses v1 kwargs/paths (ibg_host/ibg_port/ibg_client_id, .config/.gateway imports, request_timeout_secs, IBMarketDataTypeEnum, superseded dockerized_gateway flow)
+  file: skills/nt-adapters/references/integrations/ib.md:63-119,397-400,676-699,851-852,964-968,1077-1092
+  evidence: pinned InteractiveBrokersDataClientConfig kwargs (pyi:96-112): host, port, client_id, use_regular_trading_hours, market_data_type: MarketDataType, connection_timeout, request_timeout, handle_revised_bars, batch_quotes, instrument_provider, dockerized_gateway; pinned doc: passing non-None dockerized_gateway raises
+  fix: rename kwargs to pinned names; package-root imports; document pinned DockerizedIBGateway flow
+  acceptance-test: kwargs match pinned pyi
+
+[NT-2026-09-04-221] [P1] [OPEN] V2 compliance: nt-adapters ib.md SymbologyMethod.IB_SIMPLIFIED variant and IBContract class (46 uses) do not exist at pin
+  file: skills/nt-adapters/references/integrations/ib.md:293,394,421,424,464-540,673
+  evidence: pinned variants SIMPLIFIED/RAW (pyi:778-780); IBContract 0 hits; provider loads contracts as JSON Vec<serde_json::Value> (config.rs:231)
+  fix: rename variant; replace IBContract examples with load_contracts JSON format
+  acceptance-test: no IB_SIMPLIFIED/IBContract remains unlabelled
+
+[NT-2026-09-04-222] [P1] [OPEN] V2 compliance: nt-adapters databento.md configuration teaches v1 keys (http_gateway, live_gateway, instrument_ids, parent_symbols, timeout_initial_load, mbo_subscriptions_delay)
+  file: skills/nt-adapters/references/integrations/databento.md:880-886,922-931
+  evidence: pinned DatabentoDataClientConfig (crates/adapters/databento/src/data.rs:105-113): publishers_filepath, venue_dataset_map, use_exchange_as_venue, bars_timestamp_on_close, reconnect_timeout_mins
+  fix: regenerate table from pinned struct
+  acceptance-test: fields match pinned struct
+
+[NT-2026-09-04-223] [P1] [OPEN] V2 compliance: nt-adapters polymarket.md config tables list options not on any pinned config (venue, trader_id, ack_timeout_secs, ws_connection_delay_secs, generate_order_history_from_trades, log_raw_ws_messages)
+  file: skills/nt-adapters/references/integrations/polymarket.md:834,845,860,875-877,911,926,950
+  evidence: pinned PolymarketExecutionClientConfig (pyi + config.rs): account_id, funder, signature_type, URLs, timeouts, max_retries, heartbeat_enabled, transport_backend, instrument_config; ghost keys 0 hits; no .providers submodule
+  fix: regenerate both tables from pinned struct/pyi; flat imports
+  acceptance-test: fields match pinned struct
+
+[NT-2026-09-04-224] [P1] [OPEN] V2 compliance: nt-adapters bybit.md exec rows use_ws_execution_fast/use_http_batch_api/repay_queue_interval_secs/ws_trade_timeout_secs/ws_auth_timeout_secs not pinned; plus Tardis loader/nautilus_pyo3/venu-passphrase drifts
+  file: skills/nt-adapters/references/integrations/bybit.md:799-810; tardis.md:357,429,554; coinbase.md:46,705-707; deribit.md:528,621-622,690; bitmex.md:845-848; hyperliquid.md:399-400; kraken.md:373; lighter.md:148-149; okx.md:798,959-962; SKILL.md:325
+  evidence: pinned bybit configs (config.rs:40-90,210-245) lack the five keys; TardisCSVDataLoader/TardisHttpClient absent; nautilus_pyo3 absent; bybit has no passphrase (okx api_passphrase only)
+  fix: drop the five bybit rows (keep auth_timeout_secs/heartbeat_interval_secs/recv_window_ms); replace tardis loaders with functions; flatten all nautilus_pyo3 imports; SKILL.md passphrase note OKX-only
+  acceptance-test: grep phantom keys + nautilus_pyo3 in nt-adapters returns 0 unlabelled
+
+[NT-2026-09-04-225] [P1] [OPEN] Legacy unlabelled content: nt-adapters venue Overview sections list v1 factory names as current components with no note within 5 lines
+  file: skills/nt-adapters/references/integrations/binance.md:34; also bybit.md line 25, okx.md line 51, kraken.md line 27, dydx.md line 94, hyperliquid.md line 22, deribit.md line 27, bitmex.md line 30, polymarket.md line 74, architect_ax.md line 29
+  evidence: symbols absent from pinned tree; file-top banners >5 lines away
+  fix: rename to pinned factories (preferred) or add local notes
+  acceptance-test: no unlabelled v1 factory names
+
+[NT-2026-09-04-226] [P1] [OPEN] Legacy unlabelled content: nt-adapters nautilus_trader.core.nautilus_pyo3 imports in current-guidance sections
+  file: skills/nt-adapters/references/integrations/coinbase.md:46; also deribit.md line 528, bitmex.md line 845, hyperliquid.md line 399, kraken.md line 373, lighter.md line 148, okx.md line 959
+  evidence: module absent at pin
+  fix: rewrite to pinned projection imports; label retained v1 snippets
+  acceptance-test: no unlabelled pyo3-path imports
+
+[NT-2026-09-04-227] [P1] [OPEN] Legacy unlabelled content: nt-adapters binance.md Environments examples use nonexistent BinanceAccountType, unlabelled
+  file: skills/nt-adapters/references/integrations/binance.md:866-878,909-910,945,975,1071,1080
+  evidence: no BinanceAccountType in pinned crate/pyi (__all__ has BinanceProductType only)
+  fix: replace with BinanceProductType examples or label v1
+  acceptance-test: no unlabelled BinanceAccountType
+
+[NT-2026-09-04-228] [P1] [OPEN] Legacy unlabelled content: nt-adapters kraken.md Configuration tables present v1 fields as current, unlabelled
+  file: skills/nt-adapters/references/integrations/kraken.md:673-720
+  evidence: fields absent from pinned config.rs; no note in section
+  fix: regenerate table from pinned config (preferred)
+  acceptance-test: tables match pinned struct
+
+[NT-2026-09-04-229] [P1] [OPEN] Legacy unlabelled content: nt-adapters databento.md configuration-parameter rows are v1 keys, unlabelled
+  file: skills/nt-adapters/references/integrations/databento.md:921-933
+  evidence: keys absent from pinned data.rs:105-113; nearest label >15 lines above
+  fix: prune to pinned keys or add local note
+  acceptance-test: tables match pinned struct
+
+[NT-2026-09-04-230] [P1] [OPEN] Legacy unlabelled content: nt-adapters ib.md v1 kwargs/submodules/IBContract blocks unlabelled
+  file: skills/nt-adapters/references/integrations/ib.md:63-119,397-400,418-540,957-1045,1077-1092
+  evidence: pinned kwargs host/port/client_id; IBContract absent; first body note at :941 far below
+  fix: add local migration notes or convert to pinned guidance
+  acceptance-test: no unlabelled v1 blocks
+
+[NT-2026-09-04-231] [P1] [OPEN] Legacy unlabelled content: nt-adapters okx.md TradingNode block imports dead .factories submodule and nautilus_trader.live.node
+  file: skills/nt-adapters/references/integrations/okx.md:953-962,982,995-997
+  evidence: okx python pkg flat; live/ exports via __init__ only; notes exist at :948,961 but lines 955-958,995-997 outside window
+  fix: add inline notes inside the code block or convert to LiveNode wiring
+  acceptance-test: no unlabelled dead imports
+
+[NT-2026-09-04-232] [P1] [OPEN] Legacy unlabelled content: nt-adapters concepts/adapters.md instrument-discovery example uses v1-only symbols unlabelled
+  file: skills/nt-adapters/references/concepts/adapters.md:66-71,77-90
+  evidence: binance.common.enums/.futures.providers, get_cached_binance_http_client, BinanceAccountType.USDT_FUTURES, common.component.LiveClock, load_all_async — all 0 hits/mismatched at pin; pinned flat example load_binance_instruments (binance __init__.py:29-31)
+  fix: replace with pinned example or label v1
+  acceptance-test: example matches pinned surface
+
+[NT-2026-09-04-233] [P1] [OPEN] Legacy unlabelled content: nt-adapters official_adapter_spec.md v1 markers outside labelled lanes (load_all_async milestone, nautilus_pyo3 prose, Pydantic config block)
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:130,1960,2556-2567
+  evidence: trait is load_all; nautilus_pyo3 absent; DataClientConfig is frozen PyO3; nearest v1-lane note >100 lines above 2556
+  fix: add NT v2 notes within 5 lines of each site
+  acceptance-test: no unlabelled v1 markers
+
+[NT-2026-09-04-234] [P1] [OPEN] Legacy unlabelled content: nt-adapters SKILL.md scope/layout claims unlabelled (adapters/_template/, config.py/factories.py/providers.py layout, ExecClientConfig naming)
+  file: skills/nt-adapters/SKILL.md:85,207-211,567
+  evidence: _template and per-module files absent at pin; 17/18 venues use ExecutionClientConfig
+  fix: covered by the P0 layout fix + naming fix
+  acceptance-test: SKILL.md layout matches pinned tree
+
+[NT-2026-09-04-235] [P1] [OPEN] Legacy unlabelled content: nt-adapters bybit options README documents a v1-only example script as a current runnable path, whole file unlabelled
+  file: skills/nt-adapters/references/examples/bybit/README_options_data_collector.md:35-37,54-60
+  evidence: no bybit_options_data_collector.py or BybitOptionsDataCollectorConfig at pin; pinned Rust options examples exist (node_option_chain.rs, node_greeks.rs)
+  fix: add migration-only banner pointing at pinned Rust options examples or replace README
+  acceptance-test: README labelled or replaced
+
+[NT-2026-09-04-236] [P2] [OPEN] Improvement opportunities: nt-adapters sandbox adapter has zero coverage although the skill ships its example
+  file: skills/nt-adapters/references/integrations/index.md; skills/nt-adapters/SKILL.md:89
+  evidence: crates/adapters/sandbox/ (SandboxExecutionClientConfig config.rs:45) with examples/databento_cme.rs; skill ships references/examples/rust_adapters/sandbox/databento_cme.rs undocumented
+  fix: add short sandbox.md integration guide + index/venue-list rows
+  acceptance-test: sandbox documented
+
+[NT-2026-09-04-237] [P2] [OPEN] Improvement opportunities: Lighter-on-Robinhood deployment absent from lighter guide and index
+  file: skills/nt-adapters/references/integrations/lighter.md:1; also references/integrations/index.md
+  evidence: pinned LighterDeployment::{Lighter,Robinhood} (common/enums.rs:60-66); pinned index.md:24,32 LIGHTER_ROBINHOOD with registration caveat
+  fix: document deployment/venue fields + Robinhood caveat; add index row
+  acceptance-test: deployment documented
+
+[NT-2026-09-04-238] [P2] [OPEN] Improvement opportunities: nt-adapters integration index and SKILL.md venue lists omit Blockchain (and sandbox)
+  file: skills/nt-adapters/references/integrations/index.md:9-25; skills/nt-adapters/SKILL.md:89
+  evidence: pinned index lists Blockchain; skill's own blockchain.md exists
+  fix: add rows
+  acceptance-test: index lists blockchain
+
+[NT-2026-09-04-239] [P2] [OPEN] Improvement opportunities: current pinned config fields absent from nt-adapters venue docs (binance transport_backend, okx region/load_spreads/book_stale_*, polymarket resolve_poll_*/RTDS, kraken ws_idle_timeout_ms)
+  file: skills/nt-adapters/references/integrations/binance.md:671; also okx.md, polymarket.md, kraken.md config tables
+  evidence: greps of the four files for the pinned fields all empty; fields exist in pinned config structs
+  fix: add the pinned fields to the tables
+  acceptance-test: tables include pinned fields
+
+[NT-2026-09-04-240] [P2] [OPEN] Improvement opportunities: derive.md-style LiveNode.builder wiring absent from nt-adapters venue docs (only derive.md correct, in root integrations)
+  file: skills/nt-adapters/references/integrations/derive.md:1; other venue wiring sections in the same directory
+  evidence: pinned per-adapter docs show LiveNode wiring; derive.md:481-486 is the model
+  fix: adopt the shared LiveNode.builder pattern in venue wiring sections
+  acceptance-test: wiring sections use LiveNode.builder
 
 ## Current audit result
 
