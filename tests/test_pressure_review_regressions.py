@@ -173,7 +173,7 @@ def test_data_custom_persistence_uses_model_registry() -> None:
     data = read("skills/nt-data/SKILL.md")
 
     assert "nautilus_model::data::register_arrow" in data
-    assert "CustomDataBatch" in data
+    assert "CustomData" in data
     assert "write_custom_data_batch" in data
     assert "crates/serialization/src/arrow" not in data
 

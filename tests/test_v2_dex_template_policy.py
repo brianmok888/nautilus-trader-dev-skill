@@ -24,8 +24,8 @@ def test_dex_canonical_skill_is_unconditionally_rust_first() -> None:
     canonical = text.split("## Migration/reference-only Python architecture", 1)[0]
 
     assert "Rust Core Infrastructure (if Rust-first)" not in canonical
-    assert "Phase 1: Define scope" in canonical
-    assert "Phase 2: Build the protocol core" in canonical
+    assert "Phase 0: Define scope" in canonical
+    assert "Phase 1: Build the protocol core" in canonical
     assert "Rust `InstrumentProvider`, data and execution client" in canonical
     assert "LiveNodeBuilder" in canonical
     assert "registered with `TradingNode`" not in canonical

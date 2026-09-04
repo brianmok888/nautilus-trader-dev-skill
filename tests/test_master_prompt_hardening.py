@@ -23,7 +23,7 @@ def test_in_scope_artifacts_exclude_ai_framework_guidance() -> None:
 def test_inventory_claims_and_signal_paths_resolve() -> None:
     signal_skill = (ROOT / "skills/nt-signals/SKILL.md").read_text(encoding="utf-8")
 
-    assert len(list((ROOT / "references/api_reference").rglob("*.md"))) == 38
+    assert len(list((ROOT / "references/api_reference").rglob("*.md"))) == 45
     assert (ROOT / "skills/nt-signals/migration_reference/python/python/analysis").is_dir()
     assert (ROOT / "skills/nt-signals/migration_reference/python/templates").is_dir()
     assert "migration_reference/python/python/analysis/" in signal_skill

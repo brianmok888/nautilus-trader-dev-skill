@@ -9,16 +9,16 @@ def read(relative_path: str) -> str:
 
 def test_adapter_guidance_uses_the_official_ten_phase_dependency_structure() -> None:
     expected_phases = (
-        "Phase 1: Define scope",
-        "Phase 2: Build the protocol core",
-        "Phase 3: Implement instruments",
-        "Phase 4: Implement market data",
-        "Phase 5: Implement execution",
-        "Phase 6: Add optional venue capabilities",
-        "Phase 7: Complete factories and projection",
-        "Phase 8: Prove conformance",
-        "Phase 9: Measure performance and robustness",
-        "Phase 10: Finish documentation and operations",
+        "Phase 0: Define scope",
+        "Phase 1: Build the protocol core",
+        "Phase 2: Implement instruments",
+        "Phase 3: Implement market data",
+        "Phase 4: Implement execution",
+        "Phase 5: Add optional venue capabilities",
+        "Phase 6: Complete factories and projection",
+        "Phase 7: Prove conformance",
+        "Phase 8: Measure performance and robustness",
+        "Phase 9: Finish documentation and operations",
     )
 
     for relative_path in (
