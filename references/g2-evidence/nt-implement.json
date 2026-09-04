@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "e1f21e434cd02b7864ae4db7447cf162fc584432704c1900cd86a8f4b8f05612",
+  "owned_content_sha256": "30fc34d4b2956eca3493c0532c807441396fc389fbd865c12691782fdb99f8a5",
   "schema_version": 2,
   "scope": "repository:fixed-point-schema-plus-upstream-owners",
   "skill": "nt-implement",
@@ -14,7 +14,7 @@
         "tests/test_capnp_schema_precision.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.921259,
+      "duration_seconds": 0.740698,
       "returncode": 0
     },
     {
@@ -32,11 +32,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.885677,
+      "duration_seconds": 0.6611,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
-  "verified_at": "2026-09-02T08:23:13.551390+00:00"
+  "verified_at": "2026-09-04T16:30:14.954805+00:00"
 }

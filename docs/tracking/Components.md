@@ -6,7 +6,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Current per-skill behavior, ownership, and executable readiness. -->
 <!-- Does NOT contain: plans, historical attestations, or removed lanes. -->
 
-Review date: 2026-09-02
+Review date: 2026-09-04
 Reviewed upstream develop: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
 Pinned G2 baseline: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
 

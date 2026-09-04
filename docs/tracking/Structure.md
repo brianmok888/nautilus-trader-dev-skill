@@ -5,7 +5,7 @@
 <!-- Updated when: skill inventory, repository boundaries, or validation wiring changes. -->
 <!-- Does NOT contain: plans, historical attestations, or session state. -->
 
-Review date: 2026-08-28
+Review date: 2026-09-04
 
 ## Repository shape
 
@@ -44,7 +44,7 @@ Review date: 2026-08-28
 2. `references/upstream-delta-review.json` records reviewed post-pin changes.
 3. `references/developer_guide/contracts/` holds canonical local contracts; the adapter snapshot carries field-contract precision rules and the Rust skills carry LiveNode reconciliation/lifecycle acceptance criteria.
 4. `references/g2-evidence/` records per-skill executable evidence and owned-content hashes.
-5. `references/api_reference/` is a legacy v1 Python-layout API snapshot labelled migration/reference-only on every page (NT-2026-09-02-11); its deep `nautilus_trader.<pkg>.<module>` paths predate the V2 flat PyO3 re-export surfaces and do not resolve in the pinned package. Current APIs: pinned upstream `docs/developer_guide/` and `crates/`.
+5. `references/api_reference/` (45 pages incl. `model/` and `adapters/`) mirrors the pinned upstream `docs/api_reference/` v2 surfaces: flat `nautilus_trader.<pkg>` automodules with per-page owning-crate pointers, regenerated against pin `4692bac` (NT-2026-09-04-119/128/131). Legacy v1 snapshots survive only in sanctioned migration zones.
 6. `docs/tracking/` records current invariants, structure, components, and findings.
 
 ## Validation surfaces

@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "e1429ef47cd2a73411c88a4e8a754ef638e131dd99d93382adccc831fa36dfac",
+  "owned_content_sha256": "a3d37e6952159866f1e0410174354d3afbbda5c9e5bcdd81fbdd15504fe391ba",
   "schema_version": 2,
   "scope": "upstream:analysis-and-indicators-owners",
   "skill": "nt-signals",
@@ -14,7 +14,7 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 26.373974,
+      "duration_seconds": 26.09401,
       "returncode": 0
     },
     {
@@ -26,11 +26,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 26.995574,
+      "duration_seconds": 26.253668,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
-  "verified_at": "2026-09-02T08:32:35.296519+00:00"
+  "verified_at": "2026-09-04T15:53:33.790804+00:00"
 }
