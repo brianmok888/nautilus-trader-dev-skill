@@ -661,7 +661,7 @@ The following example shows how to accomplish the above in Python:
 from nautilus_trader import TEST_DATA_DIR
 from nautilus_trader.adapters.binance.loaders import BinanceOrderBookDeltaDataLoader
 from nautilus_trader.persistence.wranglers import OrderBookDeltaDataWrangler
-from nautilus_trader.test_kit.providers import TestInstrumentProvider
+from nautilus_trader.testkit.providers import TestInstrumentProvider  # pinned python module
 
 
 # Load raw data
@@ -1446,7 +1446,7 @@ This guide explains how to handle data migrations using our utility tools.
 
 The `nautilus_persistence` crate provides two key utilities:
 
-#### `to_json`
+#### `to-json`
 
 Converts Parquet files to JSON while preserving metadata:
 
@@ -1462,7 +1462,7 @@ Converts Parquet files to JSON while preserving metadata:
   - `TradeTick` (contains "trades" or "trade_tick")
   - `Bar` (contains "bars")
 
-#### `to_parquet`
+#### `to-parquet`
 
 Converts JSON back to Parquet format:
 
@@ -1489,7 +1489,7 @@ be sure to check out commit [e284162](https://github.com/nautechsystems/nautilus
 **1. Convert from standard-precision Parquet to JSON**:
 
 ```bash
-cargo run --bin to_json trades.parquet
+cargo run --bin to-json trades.parquet
 ```
 
 This will create `trades.json` and `trades.metadata.json` files.
@@ -1499,7 +1499,7 @@ This will create `trades.json` and `trades.metadata.json` files.
 Add the `--features high-precision` flag to write data as high-precision (128-bit) schema Parquet.
 
 ```bash
-cargo run --features high-precision --bin to_parquet trades.json
+cargo run --features high-precision --bin to-parquet trades.json
 ```
 
 This will create a `trades.parquet` file with high-precision schema data.
@@ -1513,7 +1513,7 @@ This example describes a scenario where you want to migrate from one schema vers
 Add the `--features high-precision` flag if the source data uses a high-precision (128-bit) schema.
 
 ```bash
-cargo run --bin to_json trades.parquet
+cargo run --bin to-json trades.parquet
 ```
 
 This will create `trades.json` and `trades.metadata.json` files.
@@ -1527,7 +1527,7 @@ git checkout <new-version>
 **3. Convert from JSON back to new schema Parquet**:
 
 ```bash
-cargo run --features high-precision --bin to_parquet trades.json
+cargo run --features high-precision --bin to-parquet trades.json
 ```
 
 This will create a `trades.parquet` file with the new schema.
@@ -1695,8 +1695,7 @@ import msgspec
 from nautilus_trader.core import Data
 from nautilus_trader.core.datetime import unix_nanos_to_iso8601
 from nautilus_trader.model import DataType
-from nautilus_trader.serialization.base import register_serializable_type
-from nautilus_trader.serialization.arrow.serializer import register_arrow
+from nautilus_trader.model import register_custom_data_class  # pinned v2 registration surface
 import pyarrow as pa
 
 from nautilus_trader.model import InstrumentId
@@ -1769,7 +1768,7 @@ class GreeksData(Data):
 Here is an example of publishing and receiving data using the `MessageBus` from an actor or strategy:
 
 ```python
-register_serializable_type(GreeksData, GreeksData.to_dict, GreeksData.from_dict)
+register_custom_data_class(GreeksData)  # pinned v2 registration surface
 
 def publish_greeks(self, greeks_data: GreeksData):
     self.publish_data(DataType(GreeksData), greeks_data)
@@ -1800,10 +1799,10 @@ def greeks_from_cache(self, instrument_id: InstrumentId):
 #### Writing and reading data using a catalog
 
 For streaming custom data to feather files or writing it to parquet files in a catalog
-(`register_arrow` needs to be used):
+(catalog serialization is handled by the registered custom-data wiring):
 
 ```python
-register_arrow(GreeksData, GreeksData.schema(), GreeksData.to_catalog, GreeksData.from_catalog)
+# Arrow serialization is provided by the custom-data registration at the pinned baseline
 
 from nautilus_trader.persistence.catalog import ParquetDataCatalog
 catalog = ParquetDataCatalog('.')
@@ -1813,7 +1812,7 @@ catalog.write_data([GreeksData()])
 
 ### Creating a custom data class automatically
 
-The `@customdataclass` decorator enables the creation of a custom data class with default
+legacy: the pre-cutover `@customdataclass` decorator (migration/reference-only; absent from the pinned Python surface) enabled a custom data class with default
 implementations for all the features described above.
 
 Each method can also be overridden if needed. Here is an example of its usage:

@@ -110,9 +110,10 @@ of duplicating them here:
   - `docs/concepts/events/` - per-event references (order accepted/filled/rejected, position changed/closed, etc.).
   - `docs/concepts/instruments/` - per-instrument-type guides (equity, futures, options, perpetuals, synthetics, etc.).
   - `docs/concepts/data/` - per-data-type guides (quote_tick, trade_tick, bar, order book deltas/depth, funding/mark/index updates).
+  - `docs/concepts/execution/` - execution deep dives (guide index, algorithms, policies, reconciliation).
   - `docs/concepts/backtesting/` - engine internals (data-and-venues, execution-flow, fill-models, fill-prices-and-matching, bar-execution, trade-execution, accounts-and-margin, apis-and-runs).
 - High-value single-page topics not mirrored locally:
-  - `docs/concepts/reconciliation.md` - live state reconciliation.
+  - `docs/concepts/execution/reconciliation.md` - live state reconciliation.
   - `docs/concepts/custom_data.md` - custom data types.
   - `docs/concepts/order_book.md` - L1/L2/L3 order book model.
   - `docs/concepts/synthetics.md` - synthetic instruments.

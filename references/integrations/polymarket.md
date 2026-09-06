@@ -262,7 +262,7 @@ Polymarket operates as a prediction market with a more limited set of order type
 | Order Type             | Binary Options | Notes                                                                     |
 |------------------------|----------------|---------------------------------------------------------------------------|
 | `MARKET`               | ✓              | **BUY orders require quote quantity**, SELL orders require base quantity. |
-| `LIMIT`                | ✓              |                                                                           |
+| `LIMIT`                | ✓              | BUY orders accept base or quote quantity; SELL orders require base.       |
 | `STOP_MARKET`          | -              | *Not supported by Polymarket*.                                            |
 | `STOP_LIMIT`           | -              | *Not supported by Polymarket*.                                            |
 | `MARKET_IF_TOUCHED`    | -              | *Not supported by Polymarket*.                                            |
@@ -271,14 +271,39 @@ Polymarket operates as a prediction market with a more limited set of order type
 
 ### Quantity semantics
 
-Polymarket interprets order quantities differently depending on the order type *and* side:
+Polymarket interprets order quantities differently depending on the order type, side, and
+`quote_quantity` setting:
 
-- **Limit** orders interpret `quantity` as the number of conditional tokens (base units).
-- **Market SELL** orders also use base-unit quantities.
+- **Limit orders with `quote_quantity=False`** interpret `quantity` as the number of conditional
+  tokens (base units).
+- **Limit BUY orders with `quote_quantity=True`** interpret `quantity` as pUSD collateral:
+  - The adapter truncates collateral to cents, signs it as the maker amount, and derives shares at
+    the market's amount precision.
+  - It updates the local order to the signed share quantity before processing the venue response.
+  - The signed amounts must preserve the limit price exactly. Otherwise, the adapter rejects the
+    order before HTTP. For example, 10.00 pUSD at 0.33 is not representable, while 9.90 pUSD at
+    0.33 produces exactly 30 shares.
 - **Market BUY** orders interpret `quantity` as quote notional in **pUSD**.
+- **Market SELL** orders use base-unit quantities.
 
-As a result, a market buy order submitted with a base-denominated quantity will execute far
-more size than intended.
+Quote-sized limit SELL orders are not supported. The adapter denies them before submission. It also
+denies any limit order whose base or quote quantity truncates to zero at the two-decimal signing
+boundary.
+
+To cap a limit BUY by collateral, set `quote_quantity=True`:
+
+```python
+# Limit BUY with quote quantity (spend $10 pUSD at a limit price of 0.50)
+order = strategy.order_factory.limit(
+    instrument_id=instrument_id,
+    order_side=OrderSide.BUY,
+    quantity=instrument.make_qty(10.0),
+    price=instrument.make_price(0.50),
+    time_in_force=TimeInForce.GTC,
+    quote_quantity=True,
+)
+strategy.submit_order(order)
+```
 
 When submitting market BUY orders, set `quote_quantity=True` on the order. The Python SDK
 or Rust adapter converts the quote amount (pUSD) to the signed base-unit share amount before
@@ -349,8 +374,10 @@ sequential 15-order chunks.
 - Only `LIMIT` orders are batched. `MARKET` orders inside the list are routed to the
   single-order path, which signs a marketable order and submits it with `FAK` or `FOK`
   based on Nautilus `time_in_force`.
-- `reduce_only` orders, `quote_quantity` orders, and `post_only` with market TIF
-  (`IOC` or `FOK`) are rejected before submission.
+- `reduce_only` orders, quote-sized SELL orders, and `post_only` with market TIF
+  (`IOC` or `FOK`) are rejected before submission. Quote-sized limit BUY legs
+  batch normally: each leg is signed as a pUSD collateral amount and its local
+  quantity is updated to the signed share amount.
 - A single eligible order falls through to `POST /order` so it keeps the single-order retry
   semantics; the batch path deliberately disables retry because the venue does not expose an
   idempotency key.

@@ -60,51 +60,13 @@ The use cases for the instruments available from an `InstrumentProvider` are eit
 Here is an example of discovering the current instruments for the Binance Futures testnet:
 
 ```python
-import asyncio
-import os
+from nautilus_trader.adapters.binance import load_binance_instruments
+from nautilus_trader.adapters.binance import BinanceDataClientConfig
 
-from nautilus_trader.adapters.binance.common.enums import BinanceAccountType
-from nautilus_trader.adapters.binance import get_cached_binance_http_client
-from nautilus_trader.adapters.binance.futures.providers import BinanceFuturesInstrumentProvider
-from nautilus_trader.common.component import LiveClock
-
-
-async def main():
-    clock = LiveClock()
-
-    client = get_cached_binance_http_client(
-        clock=clock,
-        account_type=BinanceAccountType.USDT_FUTURES,
-        api_key=os.getenv("BINANCE_FUTURES_TESTNET_API_KEY"),
-        api_secret=os.getenv("BINANCE_FUTURES_TESTNET_API_SECRET"),
-        is_testnet=True,
-    )
-
-    provider = BinanceFuturesInstrumentProvider(
-        client=client,
-        account_type=BinanceAccountType.USDT_FUTURES,
-    )
-
-    await provider.load_all_async()
-
-    # Access loaded instruments
-    instruments = provider.list_all()
-    print(f"Loaded {len(instruments)} instruments")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-### Live trading
-
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Each integration is implementation specific, and there are generally two options for the behavior of an `InstrumentProvider` within a `TradingNode` for live trading,
-as configured:
-
-- All instruments are automatically loaded on start:
-
+# Pinned v2 surface: adapters/binance/instruments.py load_binance_instruments
+instruments = load_binance_instruments(
+    config=BinanceDataClientConfig(testnet=True),
+)
 ```python
 from nautilus_trader.config import InstrumentProviderConfig
 

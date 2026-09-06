@@ -133,12 +133,23 @@ preventing it from progressing further. This event includes a human-readable rea
 ### Trading state
 
 Additionally, the current trading state of a Nautilus system affects order flow.
+The states become progressively more restrictive:
 
-The `TradingState` enum has three variants:
+| State      | Numeric value | Permitted commands                                                           |
+| ---------- | ------------: | ---------------------------------------------------------------------------- |
+| `ACTIVE`   |             1 | Submit, modify, cancel, and query commands operate normally.                 |
+| `REDUCING` |             2 | Eligible individual reduce-only submissions, cancels, and queries.           |
+| `HALTED`   |             3 | Cancels and queries only. New submissions and modifications are not allowed. |
 
-- `ACTIVE`: Operates normally.
-- `HALTED`: Does not process further order commands until state changes.
-- `REDUCING`: Only processes cancels or commands that reduce open positions.
+In `REDUCING`, an individual `SubmitOrder` is eligible only when the order sets
+`reduce_only=true`, the command and order identify the same instrument, and the supplied position
+ID matches the order's cached open position. The order side must oppose the position, and the
+submitted quantity must not exceed the cached position quantity. Order lists and modifications are
+denied.
+
+The risk engine applies these rules before forwarding commands to execution. When
+`RiskEngineConfig.bypass` is enabled, trading state is not enforced. Execution clients still follow
+the [reduce-only send-or-reject contract](https://nautilustrader.io/docs/latest/concepts/adapters/#reduce-only-execution-contract).
 
 See the [`RiskEngineConfig` API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#risk) for further details.
 

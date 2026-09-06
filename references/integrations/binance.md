@@ -124,7 +124,7 @@ The integration includes several custom data types:
 - `BinanceBar`: Bar data with additional volume metrics for historical and real-time use.
 - `BinanceFuturesMarkPriceUpdate`: Mark price updates for Binance Futures.
 
-See the Binance [API Reference](https://nautilustrader.io/docs/python-api-latest/adapters/binance.html) for full definitions.
+See the Binance [API Reference](https://nautilustrader.io/docs/python-api-latest/adapters/binance) for full definitions.
 
 ## Symbology
 
@@ -260,8 +260,9 @@ Upstream references:
 The execution engine creates external orders from runtime status reports when
 the order is not already in cache. This covers first-seen exchange-generated
 orders (the typical case for a live liquidation or ADL event). The engine
-assigns the order to any strategy that has claimed the instrument via
-`external_order_claims`, or to the `EXTERNAL` strategy by default.
+assigns the order through the instrument's active external order claim, configured initially with
+`external_order_instrument_ids` (replaceable post-registration via
+`Strategy.set_external_order_instrument_ids`), or to the `EXTERNAL` strategy by default.
 
 #### Commission estimation
 

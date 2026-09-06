@@ -19,16 +19,16 @@ All visualization outputs are self-contained HTML files that can be viewed in an
 browser, shared with stakeholders, or archived for future reference.
 
 :::note
-The visualization system requires `plotly>=6.3.1`. Install it with:
+The visualization system requires `plotly>=7.0.0,<8.0.0`. Install it with:
 
 ```bash
-uv pip install "nautilus_trader[visualization]"
+uv pip install --pre "nautilus_trader[visualization]"
 ```
 
 or
 
 ```bash
-uv pip install "plotly>=6.3.1"
+uv pip install "plotly>=7.0.0,<8.0.0"
 ```
 
 :::

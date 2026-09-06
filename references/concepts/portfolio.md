@@ -118,19 +118,16 @@ base class, and implementing any of the `calculate_` methods.
 For example, the following is the implementation for the built-in `WinRate` statistic:
 
 ```python
-import pandas as pd
-from typing import Any
+```python
 from nautilus_trader.analysis.statistic import PortfolioStatistic
-
 
 class WinRate(PortfolioStatistic):
     """
     Calculates the win rate from a realized PnLs series.
     """
 
-    def calculate_from_realized_pnls(self, realized_pnls: pd.Series) -> Any | None:
-        # Preconditions
-        if realized_pnls is None or realized_pnls.empty:
+    def calculate_from_realized_pnls(self, realized_pnls: list[float]) -> float | None:
+        if not realized_pnls:
             return 0.0
 
         # Calculate statistic
@@ -140,13 +137,18 @@ class WinRate(PortfolioStatistic):
         return len(winners) / float(max(1, (len(winners) + len(losers))))
 ```
 
-These statistics can then be registered with a traders `PortfolioAnalyzer`.
+The base class (pinned `python/nautilus_trader/analysis/statistic.py`, restored by upstream
+`7e8c9c9cd`) feeds each input category separately: override `calculate_from_returns(returns: dict[int, float])`
+and/or `calculate_from_realized_pnls(realized_pnls: list[float])`; there is no `calculate_from_orders`
+on the current surface.
+
+These statistics can then be registered with a traders `Portfolio`.
 
 ```python
 stat = WinRate()
 
-# Register with the portfolio analyzer
-engine.portfolio.analyzer.register_statistic(stat)
+# Register with the portfolio (v2 surface)
+engine.portfolio.register_statistic(stat)
 ```
 
 See the [`PortfolioAnalyzer` API Reference](../api_reference/analysis.md#class-portfolioanalyzer) for all available methods.

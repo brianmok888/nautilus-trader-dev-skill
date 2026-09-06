@@ -48,14 +48,14 @@ audusd = TestInstrumentProvider.default_fx_ccy("AUD/USD")
 Exchange specific instruments can be discovered from live exchange data using an adapters `InstrumentProvider`:
 
 ```python
-from nautilus_trader.adapters.binance.spot.providers import BinanceSpotInstrumentProvider
+from nautilus_trader.adapters.binance import load_binance_instruments
 from nautilus_trader.model import InstrumentId
 
-provider = BinanceSpotInstrumentProvider(client=binance_http_client)
-await provider.load_all_async()
-
+# Pinned v2 surface: adapters/binance/instruments.py (per-provider classes were
+# folded into load_binance_instruments)
+instruments = load_binance_instruments(config=binance_data_client_config)
 btcusdt = InstrumentId.from_str("BTCUSDT.BINANCE")
-instrument = provider.find(btcusdt)
+instrument = next(i for i in instruments if i.id == btcusdt)
 ```
 
 Or flexibly defined by the user through an `Instrument` constructor, or one of its more specific subclasses:

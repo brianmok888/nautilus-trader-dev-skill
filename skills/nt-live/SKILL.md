@@ -324,6 +324,19 @@ should follow the same pattern so shutdown stays deterministic:
 - **`TaskGroupGuard`**: closes its groups and runs a synchronous rollback closure when dropped
   while armed; `disarm()` cancels that rollback.
 
+Named-task identity: `TaskGroup::spawn_named(name, future)` and
+`TaskSpawner::spawn_named(name, future)` return a read-only `TaskRef` instead of transferring
+ownership. `TaskRef::id()` returns the process-unique `TaskId` (monotonic `u64` numbering from
+`crates/live/src/task.rs`), `TaskRef::name()` the logical `&'static str` name, and
+`TaskRef::is_active()` / `is_finished()` the one-way terminal state. The group remains the sole
+owner of cancellation and joining; use `spawn_named` when client state must observe a grouped
+task's logical name, instance identity, or terminal state (for example, to correlate a shutdown
+failure with the exact session task that produced it). A task may finish before `spawn_named`
+returns, and neither state proves the user future was ever polled. Child tasks that also need
+identity in shutdown failures should capture a `TaskSpawner` from the owning group and call
+`TaskSpawner::spawn_named`; a spawner from an older generation cannot register work in the
+replacement generation.
+
 Shutdown ordering: `LiveNodeConfig.timeout_shutdown` bounds pending-task cancellation during
 shutdown; `delay_post_stop` bounds residual event processing after the trader stops. Prefer
 these structured primitives over bare `tokio::spawn` in live component code, so every spawned

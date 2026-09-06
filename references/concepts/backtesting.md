@@ -104,22 +104,18 @@ engine.add_data(all_bars, sort=True)
 
 For datasets that don't fit in memory, there are two streaming approaches:
 
-**Automatic chunking** - supply a generator that yields batches. The engine pulls chunks
-lazily during a single `run()` call:
+**Typed batch input** - build `DataBatch` values and load each batch in one call.
+The pinned engine exposes `add_data_batch` (`crates/backtest/src/engine.rs:436`, upstream `3c9ad2ef4`) and the
+matching typed batch replay API (`dabe39d77`); `BacktestNode` streams multiple data
+configs lazily across batches (upstream `ec1894d6f`). There is no
+generator-based `add_data_iterator` method at the pinned baseline:
 
 ```python
-def data_generator():
-    # Yield chunks of data (each chunk is a list of Data objects)
-    yield load_chunk_1()
-    yield load_chunk_2()
-    yield load_chunk_3()
+from nautilus_trader.backtest import BacktestEngine  # typed batch types re-exported flat
 
-engine.add_data_iterator(
-    data_name="my_data_stream",
-    generator=data_generator(),
-)
-
-engine.run()  # Chunks are consumed on-demand
+batch = build_data_batch(rows)  # DataBatch of homogeneous Data objects
+engine.add_data_batch(name="bars", data=batch, append_data=True)
+engine.run()
 ```
 
 **Manual chunking** - load and run each batch yourself. This is the pattern
@@ -1116,7 +1112,7 @@ Only affects internally aggregated bars (`AggregationSource.INTERNAL`).
 
 The backtest engine supports running with timers but no market data. This is useful for scheduled
 operations or testing timer-based logic. Timers fire in chronological order, and timer callbacks
-can dynamically add data via `add_data_iterator()` which will be processed in sequence.
+can dynamically add typed batches via `add_data_batch()` which will be processed in sequence.
 
 :::warning
 Data added by timer callbacks at the exact start time should have timestamps **after** the start time.

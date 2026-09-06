@@ -52,7 +52,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 | Indicators            | ✓                  | ✓              | ✓                        |
 | Exec algorithms       | TWAP               | TWAP           | TWAP                     |
 | Controller            | ✓                  | -              | ✓                        |
-| Tearsheets            | ✓                  | -              | -                        |
+| Tearsheets            | ✓                  | -              | ✓                        |
 | Config serialization  | ✓                  | -              | -                        |
 
 ### Adapters
@@ -109,7 +109,7 @@ The Nautilus crates are published to
 nautilus-backtest = "0.63"
 nautilus-common = "0.63"
 nautilus-execution = "0.63"
-nautilus-model = { version = "0.63", features = ["stubs"] }
+nautilus-model = { version = "0.63", features = ["test-support"] }
 nautilus-trading = { version = "0.63", features = ["examples"] }
 
 anyhow = "1"
@@ -132,7 +132,7 @@ same git source to avoid type mismatches between crates.io and git versions:
 nautilus-backtest = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop" }
 nautilus-common = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop" }
 nautilus-execution = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop" }
-nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["stubs"] }
+nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["test-support"] }
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
@@ -145,7 +145,7 @@ release/docs references are lag notes unless the checked-out repository pins the
 | Flag             | Crate               | Effect                                                        |
 |------------------|---------------------|---------------------------------------------------------------|
 | `high-precision` | `nautilus-model`    | 16-digit fixed precision (default is 9). Required for crypto. |
-| `stubs`          | `nautilus-model`    | Test instrument stubs (`audusd_sim`, etc.).                   |
+| `test-support`   | `nautilus-model`    | Test instrument stubs (`audusd_sim`, etc.).                   |
 | `examples`       | `nautilus-trading`  | Example strategies (`EmaCross`, `GridMarketMaker`).           |
 | `streaming`      | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode`.              |
 | `defi`           | `nautilus-model`    | DeFi data types. Implies `high-precision`.                    |
@@ -369,8 +369,8 @@ against live venues.
 - [Write a Strategy (Rust)](https://nautilustrader.io/docs/latest/how_to/write_rust_strategy/) - Step-by-step strategy walkthrough.
 - [Run a Backtest (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_backtest/) - BacktestEngine and BacktestNode usage.
 - [Run Live Trading (Rust)](https://nautilustrader.io/docs/latest/how_to/run_rust_live_trading/) - LiveNode setup and venue connection.
-- [Architecture](https://nautilustrader.io/docs/latest/developer_guide/architecture/) - System design and data/execution flow.
-- [Actors](https://nautilustrader.io/docs/latest/developer_guide/actors/) - Actor concepts (applies to both Python and Rust).
-- [Strategies](https://nautilustrader.io/docs/latest/developer_guide/strategies/) - Strategy concepts and handler reference.
-- [Events](https://nautilustrader.io/docs/latest/developer_guide/events/) - Event types and handler dispatch.
-- [Backtesting](https://nautilustrader.io/docs/latest/developer_guide/backtesting/) - Backtest concepts and matching engine behavior.
+- [Architecture](https://nautilustrader.io/docs/latest/concepts/architecture/) - System design and data/execution flow.
+- [Actors](https://nautilustrader.io/docs/latest/concepts/actors/) - Actor concepts (applies to both Python and Rust).
+- [Strategies](https://nautilustrader.io/docs/latest/concepts/strategies/) - Strategy concepts and handler reference.
+- [Events](https://nautilustrader.io/docs/latest/concepts/events/) - Event types and handler dispatch.
+- [Backtesting](https://nautilustrader.io/docs/latest/concepts/backtesting/) - Backtest concepts and matching engine behavior.

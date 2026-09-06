@@ -388,7 +388,7 @@ See the [`PortfolioAnalyzer` API Reference](../api_reference/analysis.md) and [P
 ### Trading commands
 
 The following trading commands are available for order management.
-See also the [Execution](../concepts/execution.md) guide for the full flow through the system.
+See also the [Execution](execution.md) guide for the full flow through the system.
 
 #### Submitting orders
 

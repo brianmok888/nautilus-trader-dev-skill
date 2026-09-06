@@ -58,10 +58,10 @@ cargo install cargo-binstall --locked
 make install-tools
 ./scripts/install-capnp.sh
 
-uv sync --all-groups --all-extras
-source .venv/bin/activate
+make sync
+source python/.venv/bin/activate
 
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 
 if [ "$(uname -s)" = "Linux" ]; then
   PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
@@ -188,7 +188,7 @@ macOS, set the following environment variables from the repository root after `u
 
 ```bash
 # Set the Python executable path for PyO3
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 
 # Linux only: Set the library path for the uv-managed Python runtime
 PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
@@ -272,7 +272,7 @@ To update the pinned uv version, change `required-version` in both `pyproject.to
 ## Builds
 
 The Python package and the standalone Nautilus CLI are separate build artifacts. `make build-debug`
-and `make build` install the Python package into the root `.venv`; neither command updates the
+and `make build` install the Python package into `python/.venv`; neither command updates the
 `nautilus` binary in Cargo's binary directory.
 
 NT v2 compatibility note: legacy v1 referenced `.pyx`/`.pxd` sources and a `build.py` driver for
@@ -503,17 +503,17 @@ Rust analyzer is a popular language server for Rust and has integrations for man
     "rust-analyzer.cargo.features": "all",
     "rust-analyzer.check.workspace": false,
     "rust-analyzer.check.extraEnv": {
-        "VIRTUAL_ENV": "<path-to-your-virtual-environment>/.venv",
+        "VIRTUAL_ENV": "<path-to-your-nautilus-trader>/python/.venv",
         "CC": "clang",
         "CXX": "clang++"
     },
     "rust-analyzer.cargo.extraEnv": {
-        "VIRTUAL_ENV": "<path-to-your-virtual-environment>/.venv",
+        "VIRTUAL_ENV": "<path-to-your-nautilus-trader>/python/.venv",
         "CC": "clang",
         "CXX": "clang++"
     },
     "rust-analyzer.runnables.extraEnv": {
-        "VIRTUAL_ENV": "<path-to-your-virtual-environment>/.venv",
+        "VIRTUAL_ENV": "<path-to-your-nautilus-trader>/python/.venv",
         "CC": "clang",
         "CXX": "clang++"
     },
@@ -532,7 +532,7 @@ config = {
         cargo = {
           features = "all",
           extraEnv = {
-            VIRTUAL_ENV = "<path-to-your-virtual-environment>/.venv",
+            VIRTUAL_ENV = "<path-to-your-nautilus-trader>/python/.venv",
             CC = "clang",
             CXX = "clang++",
           },
@@ -542,14 +542,14 @@ config = {
           command = "check",
           features = "all",
           extraEnv = {
-            VIRTUAL_ENV = "<path-to-your-virtual-environment>/.venv",
+            VIRTUAL_ENV = "<path-to-your-nautilus-trader>/python/.venv",
             CC = "clang",
             CXX = "clang++",
           },
         },
         runnables = {
           extraEnv = {
-            VIRTUAL_ENV = "<path-to-your-virtual-environment>/.venv",
+            VIRTUAL_ENV = "<path-to-your-nautilus-trader>/python/.venv",
             CC = "clang",
             CXX = "clang++",
           },

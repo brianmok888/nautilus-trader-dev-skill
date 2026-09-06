@@ -123,35 +123,32 @@ The Data publish/subscribe approach excels when you need:
 
 - **Exchange of structured trading data** like market data, indicators, custom metrics, or option greeks.
 - **Proper event ordering** via built-in timestamps (`ts_event`, `ts_init`) crucial for backtest accuracy.
-- **Data persistence and serialization** through the `@customdataclass` decorator, integrating seamlessly with NautilusTrader's data catalog system.
+- **Data persistence and serialization** through `Data` subclasses registered with `register_custom_data_class` (pinned flat `nautilus_trader.model` surface), integrating with NautilusTrader's data catalog system.
 - **Standardized trading data exchange** between system components.
 
 #### Considerations
 
-- Requires defining a class that inherits from `Data` or uses `@customdataclass`.
+- Requires defining a class that inherits from `Data` and registering it with `register_custom_data_class`.
 
-#### Inheriting from `Data` vs. using `@customdataclass`
+#### Inheriting from `Data` (the pinned v2 surface)
 
 **Inheriting from `Data` class:**
 
 - Defines abstract properties `ts_event` and `ts_init` that must be implemented by the subclass. These ensure proper data ordering in backtests based on timestamps.
 
-**The `@customdataclass` decorator:**
-
-- Adds `ts_event` and `ts_init` attributes if they are not already present.
-- Provides serialization functions: `to_dict()`, `from_dict()`, `to_bytes()`, `to_arrow()`, etc.
-- Enables data persistence and external communication.
+**legacy: the pre-cutover `@customdataclass` decorator** (migration/reference-only; absent from the pinned Python surface) used to add `ts_event`/`ts_init` and serialization helpers automatically. At the pinned baseline, subclass `Data` and call `register_custom_data_class(GreeksData)` (pinned `model/__init__.pyi:8348`) to gain catalog serialization.
 
 #### Quick overview code
 
 ```python
-from nautilus_trader.core.data import Data
-from nautilus_trader.model.custom import customdataclass
+from nautilus_trader.core import Data
+from nautilus_trader.model import register_custom_data_class
 
-@customdataclass
 class GreeksData(Data):
     delta: float
     gamma: float
+
+register_custom_data_class(GreeksData)  # pinned model/__init__.pyi:8348
 
 # Publish data (in Actor / Strategy)
 data = GreeksData(delta=0.75, gamma=0.1, ts_event=1_630_000_000_000_000_000, ts_init=1_630_000_000_000_000_000)
@@ -249,7 +246,7 @@ Here's a quick reference to help you decide which messaging style to use:
 | **Use Case**                                | **Recommended Approach**                                                        | **Setup required** |
 |:--------------------------------------------|:--------------------------------------------------------------------------------|:-------------------|
 | Custom events or system-level communication | `MessageBus` + Pub/Sub to topic                                                 | Topic + Handler management |
-| Structured trading data                     | `Actor` + Pub/Sub Data + optional `@customdataclass` if serialization is needed | New class definition inheriting from `Data` (handler `on_data` is predefined) |
+| Structured trading data                     | `Actor` + Pub/Sub Data + `register_custom_data_class` if serialization is needed | New class definition inheriting from `Data` (handler `on_data` is predefined) |
 | Simple alerts/notifications                 | `Actor` + Pub/Sub Signal                                                        | Just signal name |
 
 ## External publishing

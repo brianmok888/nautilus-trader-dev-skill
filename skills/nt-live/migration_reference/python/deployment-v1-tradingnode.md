@@ -235,8 +235,14 @@ stream processors, and published them on the internal message bus.
 
 Custom stream processors were added via `node.add_stream_processor(callback)`.
 
-NT v2 compatibility note: `add_stream_processor` does not exist at the pinned baseline;
-current: external ingress/egress is wired at build time through the builder
+NT v2 compatibility note: `add_stream_processor` remains a runtime `LiveNode` API at the pinned
+baseline, exposed in Rust (`crates/live/src/node/mod.rs`) and over PyO3
+(`python/nautilus_trader/live/__init__.pyi`). Register processors on an idle node before
+`run`/`run_with_mode`: while the node services external ingress it invokes processors in
+registration order for supported typed JSON/MessagePack payloads (Rust callbacks receive the
+decoded concrete value; PyO3 callbacks receive the decoded payload mapping), suppresses external
+egress while they run, and logs callback exceptions, stops the remaining processors, and skips
+internal republishing. External ingress/egress wiring itself moved to build time through the builder
 (`with_external_msgbus_egress`, `with_external_msgbus_factory`, `with_external_ingress`).
 
 ## Task Cancellation and Retry Internals (v1)

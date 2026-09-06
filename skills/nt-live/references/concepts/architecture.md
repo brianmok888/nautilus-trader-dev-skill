@@ -469,7 +469,9 @@ for each of these subpackages from the left nav menu.
 - `cache`: Provides common caching infrastructure.
 - `data`: The data stack and data tooling for the platform.
 - `execution`: The execution stack for the platform.
+- `event_store`: Append-only event store for capture, tail-replay restarts, and deterministic incident replay.
 - `indicators`: A set of efficient indicators and analyzers.
+- `infrastructure`: Redis and PostgreSQL backings for the cache and message bus.
 - `persistence`: Data storage, cataloging and retrieval, mainly to support backtesting.
 - `portfolio`: Portfolio management functionality.
 - `risk`: Risk specific components and tooling.
@@ -531,6 +533,8 @@ flowchart BT
         network
         cryptography
         persistence
+        infrastructure
+        event_store
     end
 
     subgraph Engines
@@ -557,6 +561,8 @@ flowchart BT
     network --> common
     network --> cryptography
     persistence --> serialization
+    infrastructure --> common
+    event_store --> system
     data --> common
     execution --> common
     portfolio --> common
@@ -576,7 +582,7 @@ flowchart BT
 |----------------|-----------------------------------------------------------|----------------------------------------------------------|
 | Foundation     | `core`, `model`, `common`, `system`, `trading`            | Primitives, domain model, kernel, actor & strategy base. |
 | Engines        | `data`, `execution`, `portfolio`, `risk`                  | Core trading engine components.                          |
-| Infrastructure | `serialization`, `network`, `cryptography`, `persistence` | Encoding, networking, signing, storage.                  |
+| Infrastructure | `serialization`, `network`, `cryptography`, `persistence`, `infrastructure`, `event_store` | Encoding, networking, signing, storage, database backings, event store. |
 | Runtime        | `live`, `backtest`                                        | Environment-specific node implementations.               |
 | External       | `adapters/*`                                              | Venue and data integrations.                             |
 | Bindings       | `pyo3`                                                    | Python bindings.                                         |
