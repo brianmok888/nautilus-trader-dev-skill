@@ -48,16 +48,18 @@ can significantly impact performance.
 
 #### The performance consideration
 
-By default, `BacktestEngine.add_data()` sorts the entire data stream (existing data + newly
-added data) on each call when `sort=True` (the default). This means:
+At the pinned baseline, `BacktestEngine.add_data()` sorts only the newly added
+batch when `sort=True` (the default) — the previously added data is left as-is
+(pinned `engine.rs:408-420`). `sort_data()` does not sort anything itself; it
+sets the flag `run()` enforces (`engine.rs:1168-1176`, checked at `:729-733`),
+and already-sorted batches are merged in a replay-key min-heap
+(`BacktestDataIterator`) without any cumulative re-sort.
 
-- First call with 1M bars: sorts 1M bars.
-- Second call with 1M bars: sorts 2M bars.
-- Third call with 1M bars: sorts 3M bars.
-- And so on...
-
-This repeated sorting of increasingly large datasets can become a bottleneck when loading
-data for multiple instruments.
+NT v2 compatibility note: legacy: the pre-cut-over cumulative re-sort model
+(each call re-sorting existing + new data, 1M -> 2M -> 3M ...) is retained only
+as migration/reference history; it does not describe the pinned engine. For
+multi-instrument loads, pass pre-sorted batches with `sort=False` and call
+`sort_data()` once.
 
 #### Optimization strategies
 
