@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-r2-g2-execution",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --execute --skill <skill> for all 17 skills",
+  "exit_code": 0,
+  "output_sha256": "c3c0d676e24be344762660033a1b01ba7117593f8a818a75cfe393702c22a5a2",
+  "output_excerpt": "Re-approval G2 execution sweep on HEAD d706c40 (NT_UPSTREAM_ROOT=<disposable-ac22d5cf4-worktree>): PASS for all 17 skills (nt, nt-adapters, nt-architect, nt-backtest, nt-data, nt-dev, nt-dex-adapter, nt-implement, nt-learn, nt-live, nt-model, nt-review, nt-signals, nt-strategy-builder, nt-strategy-builder-rust, nt-testing, nt-trading). 17 PASS / 0 FAIL.",
+  "redactions": [
+    "Replaced host-specific disposable upstream worktree path with <disposable-ac22d5cf4-worktree>."
+  ],
+  "recorded_at": "2026-09-06T06:12:43Z"
+}

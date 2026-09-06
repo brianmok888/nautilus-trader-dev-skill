@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-p3-remediation-r2",
+  "finding_id": "NT-2026-09-05-108",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "7ee222f11e82a3fd798cca564a20f54152260acae00b4d51b26a7ac5c4ce2555",
+  "output_excerpt": "Second re-review rejected with 2 blockers: (a) NT-108's claimed param-table extension had silently no-opped (anchor whitespace mismatch) - now actually applied: cache.md CacheConfig example ends with save_market_data/persist_account_events per pinned config.rs:70,73; (b) NT-075's closure implied the auditor's 0.64.0 bump - rewritten to the true resolution (quickstart-lane 0.63 policy per NT-014, moved by commit f11fa55). Minor: duplicate '# Analysis' H1 removed from skills/nt-signals/references/api/analysis.md. The earlier phase-2-p3-remediation receipt overstated the param-table claim; this receipt records the completed state.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T06:22:51Z"
+}

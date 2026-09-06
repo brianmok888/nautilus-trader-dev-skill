@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-r2-manual-exercises",
+  "finding_id": "NT-2026-09-05-101",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD d706c40 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "40dcd19f82b2a7b4c0e4efcff9ca759e868ced327452b4cabd96fcc193dcce0f",
+  "output_excerpt": "Remediation spot verification on HEAD d706c40: skills/nt-signals/references/api/analysis.md contains the nautilus_trader.analysis.statistic automodule (matches pinned docs/api_reference/analysis.md); cache.md Redis example uses RedisCacheConfig x3 with no DatabaseConfig import; python_conventions.md ruff location python/pyproject.toml; data.md fs_rust_storage_options x2.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T06:09:38Z"
+}

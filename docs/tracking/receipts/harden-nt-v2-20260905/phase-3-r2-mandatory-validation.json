@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-r2-mandatory-validation",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD d706c40 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "446916800ca95484cda1e0aa8e4437984bb9a4eb4f944fda893b47700747e20a",
+  "output_excerpt": "Re-approval fresh battery on HEAD d706c40: pytest 452 passed 7 skipped; check-cards RC0; check-card-declarations RC0; freshness manifest_reviewed true; snapshot sync bodies match; dev guide sync passed; legacy labelling passed; rust trading sync match; governance receipts 289 validated; findings schema passed; git diff --check clean. Upstream cache clean at ac22d5cf4 (read-only). Primary main = origin/main = 6da550c, clean except the user-owned untracked backup file.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T06:09:38Z"
+}

@@ -602,7 +602,7 @@ Eight parallel read-only audit groups (all 17 skills, references/api_reference, 
   evidence: root Cargo.toml at ac22d5cf line 52: version = "0.64.0"; crates/* use version.workspace = true (e.g. crates/backtest/Cargo.toml:3).
   fix: Bump the five nautilus-* dependency versions in the SKILL.md Cargo.toml block from "0.62" to "0.64".
   acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
-  closure: legacy tokens quoted in this entry are audit evidence (migration/reference-only); fixed in segment S4 of the 2026-09-05 phase-2 wave (see receipt docs/tracking/receipts/harden-nt-v2-20260905/phase-2-seg-s4-backtest-model.json)
+  closure: NT v2 compatibility note: resolved by the repository's version-lane policy, not the auditor's suggested 0.64.0 bump: dependency examples align to the pinned quickstart lane 0.63 (crates.io latest 0.63.0; workspace 0.64.0 unpublished), exactly as NT-2026-09-05-014 established and the guard tests enforce (tests/test_v2_inventory_pins_versions.py, tests/test_active_doc_examples.py); the SKILL.md block was moved 0.62 -> 0.63 by commit f11fa55
   closure-proof: token-residue grep on the fixed tree returns 0 stale occurrences; python3 -m pytest -q green on the final tree (452 passed, 7 skipped - the skips are gated v1 modules with explicit migration-reference reasons); check_legacy_labelling + check_findings_schema + G2 check-cards green after final evidence regeneration
 
 [NT-2026-09-05-076] [P1] [CLOSED 2026-09-05] V2 compliance violations: run_rust_backtest.md dependency block pins nautilus crates at version 0.62; the pinned workspace version is 0.64.0.

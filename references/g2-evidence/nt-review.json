@@ -20,7 +20,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.367518,
+      "duration_seconds": 2.614265,
       "returncode": 0
     },
     {
@@ -38,11 +38,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.272109,
+      "duration_seconds": 78.420392,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
-  "verified_at": "2026-09-06T04:56:01.845776+00:00"
+  "verified_at": "2026-09-06T06:10:45.876383+00:00"
 }

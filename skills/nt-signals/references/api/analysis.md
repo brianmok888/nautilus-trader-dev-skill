@@ -1,6 +1,5 @@
 # Analysis
 
-# Analysis
 
 ```{eval-rst}
 .. automodule:: nautilus_trader.analysis

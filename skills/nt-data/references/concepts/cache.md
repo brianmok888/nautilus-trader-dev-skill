@@ -124,6 +124,8 @@ cache_config = CacheConfig(
     drop_instruments_on_reset: bool = True,  # Clear instruments on reset
     tick_capacity: int = 10_000,             # Maximum ticks stored per instrument
     bar_capacity: int = 10_000,              # Maximum bars stored per each bar-type
+    save_market_data: bool | None = None,    # Persist market data (pinned config.rs:73)
+    persist_account_events: bool | None = None,  # Persist account events (pinned config.rs:70)
 )
 ```
 
