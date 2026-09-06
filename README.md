@@ -1,7 +1,5 @@
 # NautilusTrader Development Skills for AI Agents
 
-NT v2 compatibility note: legacy Cython/v1 and Python-live `TradingNode` material in this file is migration/release-history reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
-
 A collection of AI agent skills (Claude Code, Gemini CLI, Codex, Hermes) for developing trading systems with [NautilusTrader](https://github.com/nautechsystems/nautilus_trader) — a high-performance algorithmic trading platform written in Rust with Python bindings.
 
 ## Overview
