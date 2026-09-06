@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s6-shared-refs-live",
+  "finding_id": "NT-2026-09-05-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "b768dee3458fa48ee6503970931e7dc47f1d256e8ee121d01c6c61fcd013ef72",
+  "output_excerpt": "(Scope: see NT-2026-09-05-001 through the segment's remaining findings as listed in Findings.md.) S6 shared refs + nt-live: to-json/to-parquet bin names; TradingState semantics; plotly>=7.0.0,<8.0.0 + --pre; concepts index restructure pointers; polymarket batch behavior; portfolio statistic section rewritten for the restored surface; RetryManager sample fixed; message-bus external streams; analysis README badge; nt-live venv python/.venv, stubs-feature claim corrected to test-support, Environment import, add_stream_processor acknowledgment, crate map + infrastructure/event_store.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s8-trading-review",
+  "finding_id": "NT-2026-09-05-113",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "9d21f6f5b8d1009791af9d7ee73ccc1a4b232d7c2e8b9d1df8f0a80da4c111b8",
+  "output_excerpt": "(Scope: see NT-2026-09-05-113 through the segment's remaining findings as listed in Findings.md.) S8 trading+review: external_order_instrument_ids coverage; order-status filtering rule bullet (crates/live/src/execution/reports.rs); MIGRATION_V2.md pointers; feature-docs checklist item (fd247cda9); quarantined README legacy labels; QUICK CHECK v2 note; factory signature review gate corrected; rust_trading examples verified byte-identical and untouched.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

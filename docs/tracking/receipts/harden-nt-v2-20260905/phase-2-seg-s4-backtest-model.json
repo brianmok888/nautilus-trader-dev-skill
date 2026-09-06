@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s4-backtest-model",
+  "finding_id": "NT-2026-09-05-062",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "2f8591b45c43f06abc871594e3bc84e663450886569e68866dc9d78a2825b63d",
+  "output_excerpt": "(Scope: see NT-2026-09-05-062 through the segment's remaining findings as listed in Findings.md.) S4 backtest+model: margin surface rewritten to margin_model=StandardMarginModel()/LeveragedMarginModel() (flat nautilus_trader.model + crates/backtest/src/config.rs at pin); add_data_iterator disclaimed, add_data_batch/typed replay/lazy streaming taught; engine_ema_cross.rs on SimulatedVenueConfig::builder(); FillModel trait sample corrected; flat model surface lists; instruments/value_types fixes; version lane kept at quickstart 0.63 (agent's 0.64 bump reverted; policy test green).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

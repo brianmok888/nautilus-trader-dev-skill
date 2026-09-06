@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s10-dev-impl-arch",
+  "finding_id": "NT-2026-09-05-151",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "85805316d77ac98df85ccbb6f1fcfbfb80cba90aae59da4d713d3ccb9183d0e4",
+  "output_excerpt": "(Scope: see NT-2026-09-05-151 through the segment's remaining findings as listed in Findings.md.) S10 dev/implement/architect + refs: venv layout python/.venv across nt-dev skill+guide; UV_PROJECT_ENVIRONMENT removed; ffi drop-helper list corrected to pinned exports (vec_drop_fills book.rs:457); ten-phase ordering note; log::* convention per rust.md:296; analysis api stub mirrored with statistic automodule; root concepts: add_data_iterator replaced by add_data_batch pattern, portfolio v2 statistics example, binance discovery via load_binance_instruments, flat model imports, register_custom_data_class registration, customdataclass labelled legacy; cutover map Rust+Python statistics row.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s3-strategy-builders",
+  "finding_id": "NT-2026-09-05-088",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "fa853f55d29680324d844baaa01e3069b2349fa21cdadef89088b1588a76cbd7",
+  "output_excerpt": "(Scope: see NT-2026-09-05-088 through the segment's remaining findings as listed in Findings.md.) S3 strategy-builder lane: conftest/backtest_patterns/dex_as_venue ported to the pinned V2 package-root surface (16 passed, 2 skipped vs pre-fix collection ImportError); inherently-v1 tests skip with migration-reference reasons; SKILL.md/AGENTS.md claims match the runnable suite; is_stopping->should_stop per crates/live/src/node/state.rs:181; typed batch + register_statistic coverage added. NT-094 closed as invalid: line 122 already matched the pinned mixed owned/reference handler signatures (mod.rs:1629/1635/1683/1689).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

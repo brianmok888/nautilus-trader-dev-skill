@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s7-signals-data",
+  "finding_id": "NT-2026-09-05-099",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "127503d1fac7d6751433110b3286ce351bd83c73a0ac323819412c6dd146bf0b",
+  "output_excerpt": "(Scope: see NT-2026-09-05-099 through the segment's remaining findings as listed in Findings.md.) S7 signals+data: portfolio.md restored-statistics rewrite + calculate_from_orders removal; indicators_guide factory Rust-only create(type, period) and lr/vwap Python visibility; nt-signals visualization plotly>=7; SKILL.md user-defined statistics coverage; CacheConfig database param removed (pinned common/__init__.pyi:75-90); flat PriceType import; DataCatalogConfig fs_storage_options corrected to fs_rust_storage_option_keys; mark_price accessor note aligned to pin; per-type data guide pointers added.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

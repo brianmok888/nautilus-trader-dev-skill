@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "d2d4af78a156ea1ffeb28b1c3cf99bc7998e71d11f63bb9cab4881a36d593848",
+  "owned_content_sha256": "24f1e007645d50bd354b82301b9cca85cadb2a1d753d63b247352ceb92287032",
   "schema_version": 2,
   "scope": "repository:python-v2-strategy-templates",
   "skill": "nt-strategy-builder",
@@ -12,7 +12,7 @@
         "tests/test_strategy_builder_v2_contract.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.070373,
+      "duration_seconds": 0.942784,
       "returncode": 0
     },
     {
@@ -25,11 +25,11 @@
         "tests/unit/live/test_live_configs.py"
       ],
       "cwd": "upstream-python",
-      "duration_seconds": 91.668926,
+      "duration_seconds": 90.730566,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
-  "verified_at": "2026-09-05T18:00:32.514463+00:00"
+  "verified_at": "2026-09-06T02:39:10.111184+00:00"
 }

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s9-testing-learn-dex",
+  "finding_id": "NT-2026-09-05-131",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "63dbcadbbb4158d966f480e6f39a493fd9ed8332a73f0a6d4f75b3e424a46e1d",
+  "output_excerpt": "(Scope: see NT-2026-09-05-131 through the segment's remaining findings as listed in Findings.md.) S9 testing+learn+dex: DataTesterConfig fabricated params removed (pinned testkit/__init__.pyi:16-52); ExecTesterConfig rename; spec_exec OrderRejected reconciliation note synced; fake SHA replaced; curriculum PYO3_PYTHON python/.venv; typed-batch coverage added; diverging dual guide copies re-synced to pinned bodies with repo-resolving links (deterministic-async section restored); dex test lane: 5 v1 modules gated migration-reference, 2 current tests pass against the pinned venv (8 passed 5 skipped); _template pointer replaced; 7-phase labels mapped to ten-phase; NT-143 closed as policy-invalid (quickstart-lane 0.63 guarded by tests).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}

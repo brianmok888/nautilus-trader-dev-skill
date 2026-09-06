@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-seg-s5-adapters",
+  "finding_id": "NT-2026-09-05-030",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "3c894e5b0e50cf1a9c2e7e17a4ef9a1327298e0eaa3f76b51d3d4a929e1b9799",
+  "output_excerpt": "(Scope: see NT-2026-09-05-030 through the segment's remaining findings as listed in Findings.md.) S5 adapters: all 10 node_exec_tester.rs copies on external_order_instrument_ids + DRY_RUN wiring; okx open_position_on_start_qty; databento DatabentoDataClientConfig; tardis jiff; blockchain ENVIO_API_TOKEN + v2 pyclass path; SecretString conversions; spec: RetryManager::invocation builder, tests/integration layout, pinned ReconnectRequestOutcome variants, FifoCache, SecretString credential standard; lighter/hyperliquid/bitmex/link fixes; test_current_develop_guidance markers updated to pinned variants.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T02:22:12Z"
+}
