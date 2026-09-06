@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/design_principles/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/design_principles.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -148,8 +148,7 @@ because no measured performance case justifies the additional variant and dispat
 The open-source [plug-in crate](plugins.md) defines an artifact ABI, but model registration and the
 loading host are not part of this repository. The open-source distribution does not provide runtime
 native model plugins. Native models are composed at compile time and passed through the
-corresponding enum or handle. The v1 `Importable*ModelConfig` and `MarginModelConfig` types and their
-factories loaded Python or Cython classes by import path; v1 never provided native model plugins.
+corresponding enum or handle.
 
 ### Simulation modules
 

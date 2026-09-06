@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_exec_testing.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Execution Testing Spec
 
 This section defines a rigorous test matrix for validating adapter execution
@@ -1868,7 +1869,9 @@ ExecTesterConfig::builder()
 **Considerations:**
 
 - `OrderDenied` occurs at the adapter level before the order reaches the venue.
-- This differs from `OrderRejected` which comes from the venue.
+- This differs from the normal `OrderRejected` path, which follows a venue rejection.
+  Reconciliation can also synthesize `OrderRejected`; see
+  [Terminal reconciliation provenance](../concepts/execution/policies.md#terminal-reconciliation-provenance).
 - Test by configuring a stop order type that the adapter does not support.
 
 ### TC-E73: Unsupported TIF
@@ -2011,7 +2014,8 @@ ExecTesterConfig::builder()
 **Considerations:**
 
 - Leave limit orders open from a prior test session (do not cancel on stop).
-- Use `external_order_claims` to claim the instrument so the adapter reconciles orders for it.
+- Configure `external_order_instrument_ids` so strategy registration creates the active claim used
+  to assign reconciled orders.
 - Verify that the reconciled order count matches the venue-reported count.
 - Mass-status may include historical terminal orders. Unclaimed ones appear as EXTERNAL.
   Compare open-order counts against the venue open-order endpoint, not the full mass-status
@@ -2300,7 +2304,7 @@ construction; the Rust builder uses equivalent defaults.
 | `order_id_tag`                                  | `str?`                | `None`                 | All            |
 | `use_hyphens_in_client_order_ids`               | `bool`                | `True`                 | All            |
 | `use_uuid_client_order_ids`                     | `bool`                | `False`                | All            |
-| `external_order_claims`                         | `list[InstrumentId]?` | `None`                 | 9              |
+| `external_order_instrument_ids`                 | `list[InstrumentId]?` | `None`                 | 9              |
 | `instrument_id`                                 | `InstrumentId`        | `BTCUSDT-PERP.BINANCE` | All            |
 | `client_id`                                     | `ClientId?`           | `None`                 | All            |
 | `order_qty`                                     | `Quantity`            | `0.001`                | All            |

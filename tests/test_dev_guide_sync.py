@@ -795,7 +795,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs uv version pinned by `required-version` bon::bon try_order.\n"
             + "rust-toolchain.toml 1.98.0 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
-            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "scripts/cargo-features.bash --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
         )
@@ -1084,7 +1084,7 @@ def test_reports_latest_upstream_alignment_deltas(tmp_path: Path) -> None:
 
     assert result.ok is False
     assert (
-        "missing latest upstream delta 'arrow,ffi,python,high-precision,streaming,defi' "
+        "missing latest upstream delta 'scripts/cargo-features.bash' "
         "in references/developer_guide/testing.md" in result.errors
     )
     assert (
@@ -1987,7 +1987,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
         "Rust guidance with rust-toolchain.toml 1.98.0 "
         "Generated Python bindings Propagate `high-precision` py-stubs "
         "ffi,python,high-precision,defi "
-        "arrow,ffi,python,high-precision,streaming,defi.\n",
+        "scripts/cargo-features.bash.\n",
     )
 
     result = run_checks(tmp_path)
@@ -2141,7 +2141,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "rust-toolchain.toml 1.98.0 "
             "Generated FFI bindings and precision mode Propagate `high-precision`\n"
             "Generated Python artifacts make py-stubs bon::bon try_order.\n"
-            "Generated Python bindings arrow,ffi,python,high-precision,streaming,defi\n"
+            "Generated Python bindings scripts/cargo-features.bash\n"
             "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
         ),
         "python.md": (
@@ -2224,7 +2224,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
         "v1.231.0 rust-toolchain.toml 1.98.0 "
-        "Generated Python artifacts make py-stubs arrow,ffi,python,high-precision,streaming,defi.\n"
+        "Generated Python artifacts make py-stubs scripts/cargo-features.bash.\n"
         "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -2308,7 +2308,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "Generated Python artifacts make py-stubs bon::bon try_order.\n"
             + "rust-toolchain.toml 1.98.0 Generated Python bindings Propagate `high-precision` py-stubs.\n"
             + "2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
-            + "arrow,ffi,python,high-precision,streaming,defi --lib --tests.\n"
+            + "scripts/cargo-features.bash --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
         )

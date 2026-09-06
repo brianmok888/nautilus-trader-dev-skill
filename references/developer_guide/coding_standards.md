@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Coding Standards
 
 ## Code Style
@@ -69,9 +70,8 @@ documentation feel natural to end-users.
    as `BinanceExecutionClientConfig`. Internal implementation types may retain established `Exec`
    names. Also reserve `Exec` for the `ExecAlgorithmId` and `ExecTester` families, established
    `exec_*` names, and venue or protocol terms such as `BitmexExecType`. Name protocol-specific
-   wire models after the venue concept, such as `HyperliquidExchangeAction`. Preserve shipped names
-   on legacy v1 compatibility surfaces, in historical release entries, and on the source side of
-   migration tables.
+   wire models after the venue concept, such as `HyperliquidExchangeAction`. Preserve established
+   public names, historical release entries, and source names in migration tables.
 
 5. **Runtime qualifiers**: Use `Live` when a type selects or configures real-time runtime semantics,
    such as `LiveNode` versus `BacktestNode`, `LiveClock` versus `TestClock`, and the
@@ -122,7 +122,7 @@ A venue adapter exposes its canonical identity constants plus the supported publ
 - stateless loaders (`load_*`, `stream_*`, `convert_*`) and intentional utilities
   (`decode_*`, `get_*_arrow_schema_map`)
 
-Keep the facade thin. Never add raw HTTP or WebSocket clients, wire models, endpoint helpers
+Keep the facade thin. Never add raw HTTP or WebSocket clients, wire models, endpoint URL resolvers
 (`get_*_url`, `*_HTTP_URL`), caches, or other internals to `__all__` merely for structural parity.
 Data providers (such as `databento` and `tardis`), the `blockchain` data client, the `sandbox`
 execution client, and the multi-venue `interactive_brokers` broker omit venue constants because the

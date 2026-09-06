@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-pin-move",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_dev_guide_sync.py && python3 tools/check_skill_g2_harnesses.py --check-cards && python3 tools/check_skill_g2_harnesses.py --check-card-declarations && python3 tools/check_legacy_labelling.py && python3 tools/check_rust_trading_reference_sync.py",
+  "exit_code": 0,
+  "output_sha256": "63063b2b7067933318b03c7ed123a76049d80aa98e433b4e67328564360fabf9",
+  "output_excerpt": "freshness: ok (pinned_commit == reviewed tip ac22d5cf4, manifest_reviewed true, 62-commit transition recorded)\nsnapshot sync: bodies match pinned upstream\ndev guide sync: passed\ncheck-cards: exit 0 (17 skills)\ncheck-card-declarations: exit 0\nlegacy labelling: passed\nrust trading sync: references match pinned upstream examples",
+  "redactions": [
+    "Replaced host-specific disposable upstream worktree path with the pinned-cache root."
+  ],
+  "recorded_at": "2026-09-05T23:38:48Z"
+}

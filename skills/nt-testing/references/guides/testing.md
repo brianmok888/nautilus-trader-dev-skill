@@ -136,7 +136,7 @@ When building or modifying core types, write property tests to cover the mathema
 
 Memory leak tests track Python-side allocations across backtests, components,
 LiveNode runs, model operations, and persistence with
-[Memray](https://bloomberg.github.io/memray/) (pinned `4692bac35`).
+[Memray](https://bloomberg.github.io/memray/) (pinned `ac22d5cf4`).
 
 - **Location:** `python/memray_tests/` with suites `test_backtest.py`,
   `test_components.py`, `test_live_node.py`, `test_model.py`, and

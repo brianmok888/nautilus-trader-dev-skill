@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "a66cf486a53e659ec5974d49def8b6cb09b205b4b6bd954e6bf056462f4bcc65",
+  "owned_content_sha256": "3a04750686c0d407b9bc6046a800301728ec25bc870c9596857e82005591bf0e",
   "schema_version": 2,
   "scope": "upstream:live-node-and-rust-live-example",
   "skill": "nt-live",
@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 47.51128,
+      "duration_seconds": 8.689888,
       "returncode": 0
     },
     {
@@ -29,11 +29,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.818757,
+      "duration_seconds": 12.183341,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "4692bac35bb11a25eeebb8d7af4d51c55afe53ec",
-  "verified_at": "2026-09-04T15:46:39.094268+00:00"
+  "upstream_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
+  "verified_at": "2026-09-05T23:29:34.988164+00:00"
 }

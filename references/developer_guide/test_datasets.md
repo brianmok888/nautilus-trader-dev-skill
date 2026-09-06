@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/test_datasets/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/test_datasets.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Test Datasets
 
 Target standards for curating, storing, and consuming external datasets used as test fixtures.
@@ -20,7 +21,7 @@ alongside a `metadata.json` file. These files are always available without netwo
 
 **Large data** (> 1 MB) is hosted as Parquet in the R2 test-data bucket.
 A SHA-256 checksum is recorded in `test_data/large/checksums.json`.
-The `ensure_test_data_exists()` helper downloads the file on first use and verifies integrity.
+The `ensure_test_data_exists()` function downloads the file on first use and verifies integrity.
 
 **User-fetched data** is used when a vendor license, entitlement model, or access control does not
 allow NautilusTrader to redistribute the data through the public repo or the public R2 bucket.
@@ -134,7 +135,7 @@ For datasets that NautilusTrader cannot redistribute:
 
 1. Commit a manifest and `metadata.json`, but do not commit the real vendor data or derived
    Parquet output.
-2. Provide a local fetch command or helper that uses the user's own vendor credentials,
+2. Provide a local fetch command or script that uses the user's own vendor credentials,
    entitlements, or purchased historical files.
 3. Convert the vendor data locally into Nautilus Parquet.
 4. Store the resulting files in a local cache path that is ignored by git.
@@ -165,7 +166,7 @@ sharing. Treat this as a separate operational path, not as part of the public te
 4. For large data: upload Parquet to R2, add checksum to `test_data/large/checksums.json`.
 5. For user-fetched data: commit the manifest and fetch instructions only. Keep the source and
    derived data out of the repo and out of the public R2 bucket.
-6. Add path helper functions to `crates/testkit/src/common.rs` when shared testkit access is needed.
+6. Add shared test-data path functions to `crates/testkit/src/common.rs` when needed.
 7. Write tests that consume the dataset.
 
 For user-fetched data, prefer this layout:
@@ -221,17 +222,17 @@ expected to run in default CI.
 
 ## Test runner serialization
 
-Tests that download large data files share target paths across test binaries.
-Because `nextest` runs each binary in a separate process, concurrent downloads
-to the same path can race. The nextest config at `.config/nextest.toml` defines
-a `large-data-tests` group with `max-threads = 1` to serialize these binaries.
+Tests that download large data files share target paths. Because `nextest` runs
+each test in a separate process, concurrent downloads to the same path can race.
+The nextest config at `.config/nextest.toml` defines a `large-data-tests` group with
+`max-threads = 1` to serialize these tests.
 
-When adding a new test binary that downloads large shared files, add it to the
+When adding a new test module that downloads large shared files, add it to the
 group filter:
 
 ```toml
 [[profile.default.overrides]]
-filter = 'binary(grid_mm_itch) | binary(orderbook_integration) | binary(your_new_binary)'
+filter = 'package(your-package) & binary(integration) & test(/^your_module::/)'
 test-group = 'large-data-tests'
 ```
 
@@ -326,11 +327,9 @@ Build the Python package, then run the source tutorials from the repository root
 
 ```bash
 make build-debug
-UV_PROJECT_ENVIRONMENT="$PWD/.venv" \
-  NAUTILUS_DATA_DIR="$PWD/test_data/local" \
+NAUTILUS_DATA_DIR="$PWD/test_data/local" \
   uv run --project python --no-sync python docs/tutorials/backtest_orderbook_binance.py
-UV_PROJECT_ENVIRONMENT="$PWD/.venv" \
-  NAUTILUS_DATA_DIR="$PWD/test_data/local" \
+NAUTILUS_DATA_DIR="$PWD/test_data/local" \
   uv run --project python --no-sync python docs/tutorials/backtest_orderbook_bybit.py
 ```
 

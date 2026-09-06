@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -118,7 +118,10 @@ exception.
   `dydx-proto` with `prost` and `tonic`.
 - List only declared dependencies under `[package.metadata.cargo-machete] ignored`.
 - Remove a root `[workspace.dependencies]` entry when no crate uses it. Cargo tools kept only for CI
-  and top-level workspace packages are exempt from this check.
+  are exempt from this check.
+- Remove a root `[workspace.package]` field when no crate inherits it.
+- List each `[workspace] members` entry as a literal path. The convention hook resolves
+  member manifests directly and does not expand Cargo glob members.
 - Obtain `libfuzzer-sys` in adapter crates through `nautilus-live`; do not add it directly to an
   adapter manifest.
 
@@ -127,13 +130,12 @@ internal crates.
 
 ### Package fields
 
-Crate `[package]` sections use this canonical prefix. `readme` is optional; the other fields shown
-are required.
+Crate `[package]` sections use this canonical prefix. Cargo infers `README.md` next to the
+manifest, so omit `readme`. The other fields shown are required.
 
 ```toml
 [package]
 name = "nautilus-example"
-readme = "README.md"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

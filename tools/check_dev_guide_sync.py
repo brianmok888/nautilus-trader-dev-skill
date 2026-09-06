@@ -63,7 +63,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-09-02"
+CURRENT_SYNC_DATE = "2026-09-05"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.231.0"
 CURRENT_RELEASE_DATE = "2026-08-02"
@@ -315,7 +315,7 @@ LATEST_UPSTREAM_DELTA_TARGETS = {
         "try_order",
     ],
     Path("references/developer_guide/testing.md"): [
-        "arrow,ffi,python,high-precision,streaming,defi",
+        "scripts/cargo-features.bash",
         "--lib --tests",
     ],
     Path("references/developer_guide/spec_exec_testing.md"): [
@@ -555,7 +555,7 @@ LATEST_SKILL_ALIGNMENT_TARGETS = {
     Path("skills/nt-dev/SKILL.md"): [
         "make py-stubs",
         "Generated Python artifacts",
-        "arrow,ffi,python,high-precision,streaming,defi",
+        "scripts/cargo-features.bash",
     ],
     Path("skills/nt-testing/SKILL.md"): [
         "ExecTesterConfig::builder()",

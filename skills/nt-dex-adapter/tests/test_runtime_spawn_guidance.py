@@ -95,7 +95,7 @@ def test_pinned_upstream_hook_enforces_the_cited_split() -> None:
     assert runtime.is_file(), f"pinned upstream runtime missing: {runtime}"
     assert "pub fn get_runtime() -> &'static tokio::runtime::Runtime" in _read(runtime)
 
-    betfair = upstream / "crates" / "adapters" / "betfair" / "tests" / "data_client.rs"
+    betfair = upstream / "crates" / "adapters" / "betfair" / "tests" / "integration" / "data_client.rs"
     assert betfair.is_file(), f"pinned upstream adapter test missing: {betfair}"
     betfair_text = _read(betfair)
     assert "#[tokio::test]" in betfair_text

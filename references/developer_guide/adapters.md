@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/adapters/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/adapters.md
-source_commit: 4692bac35bb11a25eeebb8d7af4d51c55afe53ec
-sync_date: 2026-09-02
+source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+sync_date: 2026-09-05
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -395,7 +395,9 @@ Adapter configs then add only venue semantics:
 - Use an enum for a closed set such as environment, product family, account mode, or endpoint.
 - Use `Option<T>` only when absence has a distinct meaning, including runtime credential fallback.
 - Keep data and execution config separate when their capabilities or credentials differ.
-- Implement a redacted `Debug` for any config that can hold secrets.
+- Store fields that must not appear in `Debug` as `SecretString`. Derive `Debug` when every sensitive
+  field uses a redacting type; write a custom implementation only when a field cannot use one or the
+  type requires more restrictive output.
 - Keep Python config projection thin. It converts types and delegates to the Rust config.
 
 Centralize default HTTP and WebSocket endpoint resolution so one environment selection cannot mix
@@ -410,23 +412,130 @@ commonly under `common/credential.rs`. Keep configs as data transfer objects: re
 when constructing the credential, factory, or client, not in Python wrappers or individual request
 methods.
 
+#### Classify sensitive values
+
+Classify a value before choosing its type and diagnostic output. Apply the more restrictive rule
+when a venue gives one value more than one role.
+
+| Value class                  | Examples                                                                                                      | Diagnostic output                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Secret material              | Passwords, private keys, API secrets, passphrases, bearer and session tokens, refresh tokens, and signatures. | Always show `<redacted>`.                                                               |
+| Credential identity          | API keys, client IDs, usernames, and account identifiers used during authentication.                          | Redact by default. Use a masked API key only when operational correlation requires it.  |
+| Secret-bearing location      | Proxy URLs, RPC URLs, request paths, and query parameters that can contain credentials.                       | Redact the complete location from logs and errors.                                      |
+| Deliberately public identity | Wallet addresses, vault addresses, and public account names that the venue exposes publicly.                  | Show only when the type and adapter contract deliberately classify the value as public. |
+
+Do not infer that an API key, username, or URL is safe to print because it is not sufficient to
+authenticate by itself. Configs often cross logging, exception, and Python representation
+boundaries where partial credential identity remains sensitive.
+
+#### Use the common secret types
+
+Use `nautilus_core::string::secret` and `zeroize` instead of defining adapter-local redaction or
+zeroization conventions.
+
+| Mechanism                     | Use                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `SecretString`                | Own a string that must zeroize on drop and render as `<redacted>` with `Debug`.                                                       |
+| `REDACTED`                    | Replace an unconditional secret field in a custom `Debug` or `Display` implementation.                                                |
+| `redact_option`               | Preserve `Some` versus `None` while redacting an optional field in a custom `Debug`.                                                  |
+| `mask_api_key`                | Correlate an API key only through an explicit masked-identity method. Do not use it for secret material.                              |
+| `Zeroizing<T>`                | Bound the lifetime of an owned plaintext `String`, byte buffer, decoded key, canonical payload, or serialized authentication message. |
+| `Zeroize` and `ZeroizeOnDrop` | Clear secret-bearing fields in structs that cannot use `SecretString`, including byte arrays and signing types.                       |
+| `zeroize_json_value`          | Clear owned strings in a mutable JSON value after serializing secret-bearing fields.                                                  |
+
+#### Use `SecretString` safely
+
+- Treat serialization as plaintext. `SecretString` uses the underlying string for wire-format
+  compatibility, so never serialize a config, credential, or authentication model for diagnostics.
+- Do not use ordinary `SecretString` equality to verify attacker-controlled secrets; it is not
+  constant-time.
+- Borrow plaintext through `expose_secret()` only at the signing, encoding, or transport boundary
+  that needs it.
+- Consume with `into_inner()` only to transfer ownership. If the receiving API requires `String`,
+  create that final copy at the call boundary and do not retain it in adapter code.
+- Take `&SecretString` when a function only reads the value. Take it by value when the function
+  retains or consumes it.
+- Put secret-bearing fields in the authenticated wire model instead of creating a second model only
+  to change `Debug`. Derive `Serialize` and derive `Debug` when every sensitive field redacts.
+- Write a custom `Debug` for credentials backed by byte arrays, signing keys, or other types that
+  cannot store their secret fields as `SecretString`.
+- Avoid `Display` for secret-bearing types unless a caller requires it. Any implementation must
+  redact secret material.
+
+#### Resolve and share credentials
+
 - Define environment variable names once and select them from typed environment and product values.
+- Document the established environment variable names in the adapter's integration guide.
 - Resolve all fields as one credential set. Public clients may remain unauthenticated, but an
   authenticated client rejects an incomplete or invalid set before sending a request.
-- Store secret fields in owned memory and zeroize them on drop. Redact secrets and private keys from
-  `Debug`. If logs need credential identity, log only a masked API key.
+- Convert config and environment strings into zeroizing owners at the credential boundary. Do not
+  retain a non-zeroizing plaintext copy in adapter state after conversion.
 - Share credential storage across transports only when they use the same key material. Keep HTTP,
   WebSocket, and transaction signing methods separate when their canonical payloads differ.
-- Test explicit values, environment fallback, missing fields, redacted output, and deterministic
-  signature vectors.
 
-Use the repository's established environment variable names for each venue and environment.
-Document the exact names in the adapter's integration guide, where users need them.
+#### Project credentials into Python
 
-Never include credentials, signatures, or secret material in errors, INFO logs, or DEBUG logs.
-Do not add adapter-level logs of raw authenticated requests or WebSocket payloads. Shared transport
-TRACE logs can contain raw outbound payloads, so treat TRACE output as sensitive and redact it
-before sharing.
+- Convert credential strings accepted by a Python constructor to `SecretString` at the Rust
+  boundary.
+- Apply the Rust `Debug` and `Display` redaction rules to Python `__repr__` and `__str__`.
+- Expose only a presence check for secret material and secret-bearing locations.
+- Return credential identity, such as a username, only when an existing public API or another
+  explicit caller needs it. Document the choice and keep the value out of diagnostics.
+- Never expose passwords, private keys, API secrets, passphrases, tokens, or signatures through
+  plaintext getters.
+
+#### Bound plaintext lifetime
+
+- Zeroize each owned plaintext allocation after its final use, including normalized and decoded keys,
+  secret-bearing signing payloads, serialized authentication messages, encoded form values, and
+  mutable request models.
+- Prefer borrowed slices and existing zeroizing owners over intermediate `String` and `Vec<u8>`
+  copies.
+- Limit the guarantee to allocations the adapter owns. Serialization libraries, transports, TLS,
+  and the operating system may make copies the adapter cannot reach.
+- Keep plaintext lifetimes short; do not promise process-wide or transport-wide erasure.
+
+#### Redact diagnostics and transport errors
+
+- Never include credentials, signatures, secret material, or secret-bearing URLs in errors or logs
+  at any level.
+- Log request metadata such as the method, field count, and byte lengths instead of credentials or
+  authentication payloads. Shared transports log metadata rather than payload contents.
+- Treat TRACE as developer-facing diagnostic output. Raw inbound payloads are allowed when their
+  schema cannot contain credential material.
+- Treat raw private-stream TRACE output as sensitive because it can disclose orders, balances,
+  positions, and account identity. Redact it before sharing.
+- Prefer metadata or a sanitized, bounded excerpt when either can diagnose the protocol.
+- Clear mutable source models after serialization when they own another plaintext copy.
+- Never log a raw authentication request or response, or any frame whose schema can contain secret
+  material.
+
+| Surface                      | Required handling                                                                                                | Zeroization boundary                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| HTTP secret body             | Use `HttpClient::request_with_secret_body`.                                                                      | The client retains the zeroizing owner; lower layers may copy it.      |
+| HTTP path or `HashMap` query | Use `HttpClient::request_with_url_redacted`.                                                                     | The URL is removed from logs and transport errors.                     |
+| HTTP typed query             | Use `HttpClient::request_with_params_url_redacted`.                                                              | The URL is removed from logs and transport errors.                     |
+| HTTP headers and proxy       | Create credential-bearing strings at the client boundary, avoid clones, and do not retain them in adapter state. | The shared client or transport may retain copies.                      |
+| WebSocket authentication     | Keep fields and serialized frames in `SecretString`; create the final `String` immediately before `send_text`.   | The shared client has no secret-owner-preserving send method.          |
+| Unsupported combination      | Extend the common client instead of implementing adapter-local URL or error scrubbing.                           | The common API must define the resulting ownership and redaction rule. |
+
+#### Verify credential handling
+
+Test the secret-handling contract as well as successful authentication:
+
+- Cover explicit values, environment fallback, incomplete credentials, and invalid credentials.
+- Assert that config, credential, request, response, and client `Debug` output omits the exact input
+  secrets. Test `Display` separately for every secret-bearing type that implements it.
+- Assert that Python `__repr__` and `__str__` omit credential identity and secret material. Test
+  presence checks and every deliberately exposed identity getter.
+- Assert that serialization and transport preserve the exact wire value where the venue requires
+  plaintext.
+- Force transport failures for credential-bearing URLs and assert that both `Display` and `Debug`
+  error output omit the URL, path secret, and query secret.
+- Use compile-time trait assertions for `Zeroize` or `ZeroizeOnDrop`, and test explicit clearing for
+  mutable request and response models.
+- Keep deterministic signature vectors so redaction and zeroization changes cannot alter signing
+  bytes, field order, or encoding.
 
 ### Symbols and instrument identity
 
@@ -565,8 +674,8 @@ Do not shorten `Execution` in public, project-owned PascalCase type names. Inter
 types may retain established `Exec` names. Also keep `Exec` where the
 [general naming convention](coding_standards.md#naming-conventions) allows it, including venue
 protocol terms such as `ExecType`. Name protocol-specific wire models after the venue concept, such
-as `HyperliquidExchangeAction`. Legacy v1 compatibility surfaces retain their shipped names; apply
-this convention to v2 and new APIs.
+as `HyperliquidExchangeAction`. Preserve established public names, and apply this convention to new
+APIs.
 
 Factories receive a downcast `ClientConfig` and a read-only
 [`CacheView`](../../crates/common/src/cache/mod.rs). Data factories also receive the shared clock.
@@ -699,6 +808,10 @@ reports for reconciliation. They must support these boundaries consistently:
 - Release shared clock, cache, or account borrows before publishing account state because
   subscribers may access the same state synchronously.
 
+Keep deterministic adapter-specific checks in one `validate_order` function that returns
+`OrderDeniedReason`. Call it before emitting `OrderSubmitted` from single-order and order-list
+submission paths.
+
 Do not infer support from a venue API alone. Implement and test the Nautilus command and event
 semantics, then advertise the capability.
 
@@ -729,7 +842,12 @@ fails startup.
 The bulk methods take a filter command carrying `instrument_id`, `start`, and `end`, plus
 `open_only` for order reports and `venue_order_id` for fill reports. Apply every filter the venue
 endpoint supports and complete the rest locally. `open_only` separates the currently open orders a
-periodic check needs from the history a mass status needs. Log report counts at the command's
+periodic check needs from the history a mass status needs. Retain a report for `open_only` when its
+status is open **or** in-flight, not open alone: a venue holding an order it has not yet
+acknowledged reports it as `SUBMITTED`, which is in-flight rather than open. Apply `start` and `end`
+only to closed reports, since an order working at the venue is authoritative however long it has
+rested without an update. Test a report for a terminal status with `is_closed()`, never
+`!is_open()`, which classifies `SUBMITTED` as terminal. Log report counts at the command's
 `log_receipt_level` so periodic checks stay at debug while mass status logs at info.
 
 When a periodic check request fails, the engine marks that client failed for the cycle and stops
@@ -754,7 +872,7 @@ A failed lookup returned as `Ok(None)` can therefore reject or cancel an order t
 venue. The trait default returns `Ok(None)` after logging that the handler is not implemented, so
 implement this method before an open-order check runs in full-history mode.
 
-[Execution reconciliation](../concepts/reconciliation.md) documents what the engine does with these
+[Execution reconciliation](../concepts/execution/reconciliation.md) documents what the engine does with these
 reports, including the startup procedure, the runtime checks that drive the periodic and targeted
 requests, and their retry and throttling rules. Cases TC-E84 to TC-E87 and TC-E101 in the
 [execution testing specification](spec_exec_testing.md) exercise startup reconciliation against a
@@ -843,7 +961,7 @@ report for an absent touched instrument only after that coverage is established.
 Preserve stable venue order and trade identities across live dispatch and mass status. Include
 client order linkage and `venue_position_id` where the venue supplies them so the execution engine
 can distinguish a coherent lifecycle from ambiguous history. See
-[Bounded history safety](../concepts/reconciliation.md#bounded-history-safety) for the engine's
+[Bounded history safety](../concepts/execution/reconciliation.md#bounded-history-safety) for the engine's
 economic application rules.
 
 #### Instrument resolution during reconciliation
@@ -898,7 +1016,7 @@ Route execution updates according to order ownership, independent of the dispatc
 
 Do not invent strategy or client identity for an untracked order. Preserve available venue
 identity in the report and let the engine apply
-[external order ownership](../concepts/execution.md#external-order-creation). The adapter may use
+[external order ownership](../concepts/execution/reconciliation.md#external-order-creation). The adapter may use
 any state structure that proves this routing decision.
 
 Model tracked ownership with two conceptual layers. Order identity contains the stable fields that
@@ -1001,6 +1119,9 @@ duplicates from overlapping sources, submission or venue-binding races, and stal
 updates. Test active-context retention separately from bounded replay eviction.
 
 #### Order command outcome policy
+
+Use [Execution policies](../concepts/execution/policies.md) as the cross-adapter contract for
+command delivery, event application, persistence, and recovery.
 
 Separate three evidence classes:
 
@@ -1452,8 +1573,9 @@ Parsing may remain in the handler when it depends on handler-owned protocol stat
 external execution ownership remains a client decision.
 
 When reporting malformed frames, log the parse error separately from a sanitized, bounded payload
-excerpt. Never log a raw authenticated frame. Log a peer close code and reason at the transport
-layer that receives it; the adapter should not duplicate the shared transport log.
+excerpt. Never log a raw authentication frame or a frame whose schema can contain secret material.
+Log a peer close code and reason at the transport layer that receives it; the adapter should not
+duplicate the shared transport log.
 
 Dispatch module layout, intermediate enum names, context registries, venue bindings, and state
 containers remain adapter-specific. Prefer the smallest design that makes protocol ownership and
@@ -1504,7 +1626,7 @@ Classify every production task by its owner before choosing its storage and shut
 | ------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Session-scoped      | Stream consumers, keepalives, health polls, refresh loops, and reconnect drivers.           | One session group owns the task from successful admission through disconnect or failed startup.    |
 | Command-scoped      | Work spawned by synchronous data requests or execution commands.                            | A separate command group owns the task without tying its outcome to the transport session.         |
-| Explicitly singular | One transport loop or disconnect operation whose identity is part of the owning state.      | Store one named handle and apply the same bounded join, forced abort, and failure reporting rules. |
+| Explicitly singular | One task whose handle or typed result must remain in owning state for direct joining.       | Store one named handle and apply the same bounded join, forced abort, and failure reporting rules. |
 | Handler-local       | Retry futures, send workers, and child work created and joined inside one handler.          | The handler drains the work before it exits and exposes failure to its owner.                      |
 | Protocol exception  | Typed fan-out results, keyed timeouts, or work whose local join preserves protocol meaning. | Keep the exception local, state why a shared group would lose meaning, and test its shutdown path. |
 
@@ -1515,9 +1637,18 @@ explicit ambiguous outcome. Do not let transport shutdown silently reclassify th
 [`TaskHandles`](../../crates/common/src/live/task.rs) stores unit task handles without setting
 spawn, cancellation, generation, or join policy. Use it inside a component that defines those
 rules. [`TaskGroup`](../../crates/live/src/task.rs) supplies the shared live-client policy for
-unit-output session and command tasks. The module's `finish_task` function applies the same bounded
-policy to an explicitly singular handle without erasing a typed result. For another explicit ownership
-pattern, spawn through `nautilus_common::live::get_runtime().spawn()` as described in
+unit-output session and command tasks. Use `TaskGroup::spawn_named` when client state must observe a
+grouped task's logical name, instance identity, or terminal state. Its `TaskRef` is read-only: the
+group remains the sole owner of cancellation and joining. Read-only observation does not make the
+task explicitly singular.
+
+`TaskRef::is_active` and `TaskRef::is_finished` expose the same one-way lifecycle state. Active means
+the task was admitted and has not reached a terminal state. A task may finish before `spawn_named`
+returns; neither state proves that the user future received its first poll.
+
+The same task module's `finish_task` function applies the bounded policy to an explicitly singular
+handle without erasing a typed result. For another explicit ownership pattern, spawn through
+`nautilus_common::live::get_runtime().spawn()` as described in
 [Async code](rust.md#async-code), then retain or locally await the returned handle.
 
 ### Spawn through a task group
@@ -1552,7 +1683,8 @@ where
 Validate the command and clone every input before constructing the future. Do not capture a
 `RefCell` borrow, cache guard, clock borrow, or reference to the command in work that outlives the
 trait call. When a long-lived task creates children, capture a `TaskSpawner` from the owning group.
-A spawner from an older generation cannot register work in the replacement generation.
+Use `TaskSpawner::spawn_named` when those child tasks also need identity in shutdown failures. A
+spawner from an older generation cannot register work in the replacement generation.
 
 Give each task:
 
@@ -1620,13 +1752,13 @@ payloads from official venue documentation or captured venue responses; do not h
 them. Synthetic malformed or mutated inputs remain useful for negative, property, and fuzz tests
 when the test marks them as such.
 
-| Boundary                    | Typical location                                      | Required proof                                                                                  |
-| --------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Pure protocol logic         | `src/**` test modules                                 | Symbols, enums, timestamps, decimals, signatures, codecs, parsers, and malformed input.         |
-| Public Rust client boundary | `tests/`                                              | Typed HTTP and WebSocket behavior through mock servers, event dispatch, lifecycle, and retries. |
-| Rust PyO3 boundary          | `tests/python.rs` or another feature-gated crate test | Module registration, conversion, constructors, and representative async calls.                  |
-| Public Python package       | `python/tests/unit/adapters/`                         | Package imports, config, factories, and user-visible behavior not proved by Rust tests.         |
-| Live venue acceptance       | Adapter examples or test nodes                        | Authentication, subscriptions, execution, reports, recovery, and advertised limitations.        |
+| Boundary                    | Typical location                                                  | Required proof                                                                                  |
+| --------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Pure protocol logic         | `src/**` test modules                                             | Symbols, enums, timestamps, decimals, signatures, codecs, parsers, and malformed input.         |
+| Public Rust client boundary | `tests/`                                                          | Typed HTTP and WebSocket behavior through mock servers, event dispatch, lifecycle, and retries. |
+| Rust PyO3 boundary          | `tests/integration/python.rs` or another feature-gated crate test | Module registration, conversion, constructors, and representative async calls.                  |
+| Public Python package       | `python/tests/unit/adapters/`                                     | Package imports, config, factories, and user-visible behavior not proved by Rust tests.         |
+| Live venue acceptance       | Adapter examples or test nodes                                    | Authentication, subscriptions, execution, reports, recovery, and advertised limitations.        |
 
 ### Rust testing
 
@@ -1651,10 +1783,12 @@ When HTTP and WebSocket tests share fixture loaders or model builders, place tes
 when no test code is shared.
 
 Client tests should drive public methods through mock HTTP or WebSocket servers. Assert emitted
-events, requests, connection state, subscription state, retry count, and shutdown behavior. Wait
-on observable state with [`wait_until_async`](../../crates/common/src/testing.rs) when possible. A
-short sleep is valid when the time window itself is under test or no protocol signal exists, but
-it should not mask a missing synchronization point.
+events, requests, connection state, subscription state, retry count, and shutdown behavior. Prefer
+a notification owned by the test or mock when the operation exposes one. Subscribe before reading
+the authoritative state, then recheck it after every notification so a transition between the read
+and the await cannot be missed. When no suitable signal exists, use
+[`wait_until_async`](../../crates/common/src/testing.rs). A short sleep is valid when the time window
+itself is under test, but it should not mask a missing synchronization point.
 
 Shared repository test policy uses `#[rstest]` for Rust test functions, permits
 `#[tokio::test]` for async tests, and rejects arrange/act/assert comments. The
