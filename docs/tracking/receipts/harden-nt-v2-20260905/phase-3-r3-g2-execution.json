@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-r3-g2-execution",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD 7150c34 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "7e95d5fa737d7eebd32d3439b4111d327fe271b3640034254a0db508ec69fa9f",
+  "output_excerpt": "Round-3 G2 execution sweep on HEAD 7150c34 (NT_UPSTREAM_ROOT=<disposable-ac22d5cf4-worktree>): 17 PASS / 0 FAIL across all skills (nt, nt-adapters, nt-architect, nt-backtest, nt-data, nt-dev, nt-dex-adapter, nt-implement, nt-learn, nt-live, nt-model, nt-review, nt-signals, nt-strategy-builder, nt-strategy-builder-rust, nt-testing, nt-trading).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T09:26:46Z"
+}

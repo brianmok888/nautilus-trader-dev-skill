@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-r3-remediation-verification",
+  "finding_id": "NT-2026-09-05-108",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD 7150c34 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "aeeec027945d6dbe83a2c1ad67c84ca3ef90c38c09b1b10ac6f6f4e43f914eef",
+  "output_excerpt": "Round-3 remediation spot checks on HEAD 7150c34: cache.md CacheConfig example ends with save_market_data and persist_account_events (grep 1/1, matches pinned config.rs:70,73); NT-075 ledger closure states the quickstart-lane 0.63 resolution per NT-014 with no 0.64 claim and skills/nt-backtest/SKILL.md block reads 0.63; analysis.md has exactly one '# Analysis' H1; r2 receipt present and schema-valid.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T09:26:46Z"
+}
