@@ -139,13 +139,14 @@ or `end()` is called, which flushes up to the `end` boundary from the last `run(
 :::
 
 :::tip[Performance impact]
-For a backtest with 10 instruments, each with 1M bars:
-
-- Sorting on each call: ~10 sorts of increasing size (1M, 2M, 3M, ... 10M bars).
-- Sorting once at the end: 1 sort of 10M bars.
-
-The deferred sorting approach can be **significantly faster** for large datasets.
-:::
+At the pinned baseline each `add_data` call sorts only its own batch (pinned
+`BacktestEngine::add_data`); `sort_data()` just sets the flag `run()` requires.
+Pre-sorted batches with `sort=False` plus a single `sort_data()` avoid repeated
+per-batch sorts entirely - the engine merges already-sorted batches in a
+replay-key heap (`BacktestDataIterator`) without a cumulative re-sort. legacy:
+the pre-cut-over cumulative 1M/2M/.../10M re-sort narrative below this box in
+older material is migration/reference-only and does not describe the pinned
+engine.
 
 ### Data loading contract
 

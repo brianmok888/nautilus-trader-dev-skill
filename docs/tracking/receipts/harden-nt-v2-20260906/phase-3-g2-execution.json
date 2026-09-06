@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-3-g2-execution",
+  "finding_id": "NT-2026-09-06-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD a28b498 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "9e9e4197f797d4f9b009236f050291fd2a2dec84a1adc58e542791d057d43f8b",
+  "output_excerpt": "Phase-3 G2 execution sweep (NT_UPSTREAM_ROOT=<disposable-6df23738-worktree>): 17 PASS / 0 FAIL across all skills at the new pin.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:59:30Z"
+}

@@ -15,7 +15,7 @@
         "tests/test_template_classification.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.336819,
+      "duration_seconds": 2.24363,
       "returncode": 0
     },
     {
@@ -30,11 +30,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.94865,
+      "duration_seconds": 0.89523,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
-  "verified_at": "2026-09-06T12:44:33.600679+00:00"
+  "verified_at": "2026-09-06T12:57:10.948679+00:00"
 }

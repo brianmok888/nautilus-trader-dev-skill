@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "6bbb89619107922f55e23b84a03168de422332ef807777559548728970fc9593",
+  "owned_content_sha256": "7681f3328194147950ba82dbd6834d6e710e57bd2c22d6136f364a32338fa7bc",
   "schema_version": 2,
   "scope": "upstream:crates/data-persistence-serialization",
   "skill": "nt-data",
@@ -18,11 +18,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.847179,
+      "duration_seconds": 0.871474,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
-  "verified_at": "2026-09-06T12:43:20.715090+00:00"
+  "verified_at": "2026-09-06T13:33:50.555474+00:00"
 }

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-p3-remediation",
+  "finding_id": "NT-2026-09-06-043",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "5d6e79e19edad6ed058c79e091daf6867a4e7f510afab358ff7da1584646dc53",
+  "output_excerpt": "Phase-3 review rejected with 2 blockers + 3 minors; all verified and remediated: D1 the cumulative-resort Performance-impact tip box rewritten to pinned per-batch sort semantics in BOTH backtesting.md copies; D2 the v1 purge_from_database kwarg removed and legacy-labelled in the two remaining sibling cache.md copies (root concepts + nt-data), matching F4's nt-live pattern (pyi 2-arg surface; engine-level config); minors fixed (header hash length, -001 evidence parenthetical, -021 acceptance phrasing). Evidence regenerated for 5 skills.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T13:35:33Z"
+}

@@ -14,11 +14,11 @@
         "tests/test_rust_trading_reference_sync.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.752961,
+      "duration_seconds": 0.970154,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
-  "verified_at": "2026-09-06T12:44:49.221095+00:00"
+  "verified_at": "2026-09-06T12:59:02.074699+00:00"
 }

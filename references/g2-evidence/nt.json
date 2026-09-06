@@ -19,7 +19,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.098902,
+      "duration_seconds": 2.070344,
       "returncode": 0
     },
     {
@@ -29,11 +29,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.64892,
+      "duration_seconds": 0.654391,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
-  "verified_at": "2026-09-06T11:39:53.825021+00:00"
+  "verified_at": "2026-09-06T12:56:29.520495+00:00"
 }

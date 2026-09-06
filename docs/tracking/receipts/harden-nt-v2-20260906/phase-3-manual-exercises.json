@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-3-manual-exercises",
+  "finding_id": "NT-2026-09-06-061",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD a28b498 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "c781532c2e33adc11cde53631bd44d8d6bf632716b9a5a0b38ecfdb1fc5d679a",
+  "output_excerpt": "Manual real-surface exercises vs the pinned venv: dex suite 8 passed 5 skipped; strategy-builder suite 16 passed 2 skipped. Closure-truth spot checks by the mission lead: Bybit smp_type + Kraken over-precision present in both copies; venue tables (Kraken/Bybit/dYdX/Lighter/Polymarket) fields verified against pinned config.rs; option-chain reference-price rows present in both bybit copies.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:59:30Z"
+}
