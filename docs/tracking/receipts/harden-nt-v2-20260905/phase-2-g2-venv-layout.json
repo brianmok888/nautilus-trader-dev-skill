@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-g2-venv-layout",
+  "finding_id": "NT-2026-09-05-013",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "NT_UPSTREAM_ROOT=<disposable-ac22d5cf4-worktree> python3 tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder",
+  "exit_code": 0,
+  "output_sha256": "9e315deb7355b65f7eb3fe69b00d31d07458e13b2605cffb111c8e7b5581cf81",
+  "output_excerpt": "RED (before fix): exit 1 - 'nt-strategy-builder G2 is blocked: the pinned upstream Python v2 runtime is not prepared; missing nautilus_trader._libnautilus.common'\nGREEN (after tools/check_skill_g2_harnesses.py:507,710 resolved to python/.venv per upstream 0be8327ae): PASS nt-strategy-builder; upstream pytest 99 passed, 6 skipped in 90.91s",
+  "redactions": [
+    "Replaced the host-specific disposable upstream worktree path with <disposable-ac22d5cf4-worktree>."
+  ],
+  "recorded_at": "2026-09-05T23:38:48Z"
+}

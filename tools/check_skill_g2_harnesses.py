@@ -504,7 +504,7 @@ HARNESSES: dict[str, Harness] = {
                 "tests/test_strategy_builder_v2_contract.py",
             ),
             upstream_python_step(
-                "../.venv/bin/python",
+                "./.venv/bin/python",
                 "-m",
                 "pytest",
                 "-q",
@@ -707,7 +707,7 @@ def assert_python_v2_runtime(
     upstream_root: Path, *, runner: Runner = subprocess.run
 ) -> None:
     python_root = upstream_root / "python"
-    interpreter = upstream_root / ".venv/bin/python"
+    interpreter = upstream_root / "python/.venv/bin/python"
     try:
         result = runner(
             (str(interpreter), "-c", "import nautilus_trader._libnautilus.common"),

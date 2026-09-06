@@ -180,7 +180,7 @@ def test_supported_python_v2_harness_uses_the_pinned_upstream_runtime() -> None:
     assert any(
         step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON for step in harness.steps
     )
-    assert any("../.venv/bin/python" in step.command for step in harness.steps)
+    assert any("./.venv/bin/python" in step.command for step in harness.steps)
 
 
 def test_learning_example_command_has_no_stray_positional_package() -> None:
@@ -848,7 +848,7 @@ def test_strategy_builder_uses_documented_python_v2_working_directory() -> None:
 
     assert upstream_step.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON
     assert upstream_step.command == (
-        "../.venv/bin/python",
+        "./.venv/bin/python",
         "-m",
         "pytest",
         "-q",
@@ -863,7 +863,7 @@ def test_strategy_builder_preflight_fails_closed_for_missing_pyo3_runtime(
     upstream = tmp_path / "upstream"
     python_root = upstream / "python"
     python_root.mkdir(parents=True)
-    interpreter = upstream / ".venv/bin/python"
+    interpreter = upstream / "python/.venv/bin/python"
     interpreter.parent.mkdir(parents=True)
     interpreter.write_text("", encoding="utf-8")
 
@@ -971,7 +971,7 @@ def test_strategy_builder_upstream_step_resolves_root_venv() -> None:
     upstream_steps = [s for s in steps if s.cwd is g2.WorkingDirectory.UPSTREAM_PYTHON]
     assert upstream_steps, "nt-strategy-builder must exercise the upstream venv"
     for step in upstream_steps:
-        assert step.command[0].startswith("../.venv/bin/"), (
+        assert step.command[0].startswith("./.venv/bin/"), (
             "upstream-python steps run with cwd=<upstream>/python, so the interpreter "
-            "must resolve the root-level UV_PROJECT_ENVIRONMENT venv"
+            "must resolve the python/.venv uv project environment beside python/pyproject.toml"
         )
