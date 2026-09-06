@@ -70,16 +70,14 @@ DataTesterConfig::builder()
 | `request_bars`               | bool              | False           | 5              |
 | `request_funding_rates`      | bool              | False           | 6              |
 | `request_params`             | dict?             | None            | 9              |
-| `requests_start_delta`       | Timedelta?        | 1 hour          | 3, 4, 5        |
 | `book_type`                  | BookType          | L2_MBP          | 2              |
 | `book_depth`                 | PositiveInt?      | None            | 2              |
 | `book_interval_ms`           | PositiveInt       | 1000            | 2              |
 | `book_levels_to_print`       | PositiveInt       | 10              | 2              |
 | `manage_book`                | bool              | False           | 2              |
-| `use_pyo3_book`              | bool              | False           | 2              |
 | `log_data`                   | bool              | True            | All            |
 
-Note: set `manage_book(true)` explicitly in Rust builder configs when the venue test owns book management; Python defaults it to `False`.
+Note: `manage_book` accepts `None`, `True`, or `False`; `None` resolves to the Rust builder default (pinned `crates/testkit/src/python/testers.rs:155`). Set it explicitly when the venue test owns book management.
 
 ## Rust Builder Methods
 

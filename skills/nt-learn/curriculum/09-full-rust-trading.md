@@ -232,6 +232,12 @@ engine.add_venue(
 engine.add_instrument(&instrument)?;
 engine.add_data(quotes, None, true, true);
 
+// Typed batch input/replay (upstream 3c9ad2ef4 / dabe39d77): for larger
+// multi-type datasets, build DataBatch values and load them in one call via
+// engine.add_data_batch(...) (crates/backtest/src/engine.rs:436), and use the
+// typed batch replay API for deterministic replays across multiple data
+// configs streamed lazily (ec1894d6f).
+
 // Add strategy and run
 let strategy = MyStrategy::new(instrument_id);
 engine.add_strategy(strategy)?;

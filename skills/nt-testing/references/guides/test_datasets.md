@@ -13,7 +13,7 @@ alongside a `metadata.json` file. These files are always available without netwo
 
 **Large data** (> 1 MB) is hosted as Parquet in the R2 test-data bucket.
 A SHA-256 checksum is recorded in `test_data/large/checksums.json`.
-The `ensure_test_data_exists()` helper downloads the file on first use and verifies integrity.
+The `ensure_test_data_exists()` function downloads the file on first use and verifies integrity.
 
 **User-fetched data** is used when a vendor license, entitlement model, or access control does not
 allow NautilusTrader to redistribute the data through the public repo or the public R2 bucket.
@@ -31,37 +31,37 @@ Use the user-fetched model when any of the following apply:
 Every curated dataset that stores or redistributes a concrete artifact must include a
 `metadata.json` with at minimum:
 
-| Field          | Description                                                       |
-|----------------|-------------------------------------------------------------------|
-| `file`         | Filename of the dataset.                                          |
-| `sha256`       | SHA-256 hash of the file.                                         |
-| `size_bytes`   | File size in bytes.                                               |
-| `original_url` | Download URL of the original source data.                         |
-| `licence`      | License terms and any redistribution constraints.                 |
-| `added_at`     | ISO 8601 timestamp when the dataset was curated.                  |
+| Field          | Description                                       |
+| -------------- | ------------------------------------------------- |
+| `file`         | Filename of the dataset.                          |
+| `sha256`       | SHA-256 hash of the file.                         |
+| `size_bytes`   | File size in bytes.                               |
+| `original_url` | Download URL of the original source data.         |
+| `licence`      | License terms and any redistribution constraints. |
+| `added_at`     | ISO 8601 timestamp when the dataset was curated.  |
 
 These fields match the output of `scripts/curate-dataset.sh`. Additional recommended
 fields for richer provenance:
 
-| Field           | Description                                                      |
-|-----------------|------------------------------------------------------------------|
-| `instrument`    | Instrument symbol(s) covered.                                    |
-| `date`          | Trading date(s) covered.                                         |
-| `format`        | Storage format (e.g., "Nautilus OrderBookDelta Parquet").        |
-| `original_file` | Original vendor filename before transformation.                  |
-| `parser`        | Parser used for transformation (e.g., "itchy 0.3.4").            |
+| Field           | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `instrument`    | Instrument symbol(s) covered.                             |
+| `date`          | Trading date(s) covered.                                  |
+| `format`        | Storage format (e.g., "Nautilus OrderBookDelta Parquet"). |
+| `original_file` | Original vendor filename before transformation.           |
+| `parser`        | Parser used for transformation (e.g., "itchy 0.3.4").     |
 
 User-fetched datasets use the same metadata fields where they apply. They should also include:
 
-| Field                 | Description                                                           |
-|-----------------------|-----------------------------------------------------------------------|
-| `distribution`        | Must be `"user-fetch"`.                                               |
-| `fetch_method`        | How the user acquires the source data (API, web portal, CLI, etc.).   |
-| `fetch_reference`     | URL or document reference for the user-facing download flow.          |
-| `auth`                | Required credentials or entitlements, if any.                         |
-| `transform_version`   | Version of the local transform pipeline that builds the final files.   |
-| `redistribution`      | Short note describing redistribution limits for the dataset.          |
-| `public_mirror`       | Must be `false` for restricted vendor datasets.                       |
+| Field               | Description                                                          |
+| ------------------- | -------------------------------------------------------------------- |
+| `distribution`      | Must be `"user-fetch"`.                                              |
+| `fetch_method`      | How the user acquires the source data (API, web portal, CLI, etc.).  |
+| `fetch_reference`   | URL or document reference for the user-facing download flow.         |
+| `auth`              | Required credentials or entitlements, if any.                        |
+| `transform_version` | Version of the local transform pipeline that builds the final files. |
+| `redistribution`    | Short note describing redistribution limits for the dataset.         |
+| `public_mirror`     | Must be `false` for restricted vendor datasets.                      |
 
 For user-fetched datasets without a single committed or mirrored artifact, `file`, `sha256`, and
 `size_bytes` may be omitted from `metadata.json`. In that case, `target_files` in `manifest.json`
@@ -127,7 +127,7 @@ For datasets that NautilusTrader cannot redistribute:
 
 1. Commit a manifest and `metadata.json`, but do not commit the real vendor data or derived
    Parquet output.
-2. Provide a local fetch command or helper that uses the user's own vendor credentials,
+2. Provide a local fetch command or script that uses the user's own vendor credentials,
    entitlements, or purchased historical files.
 3. Convert the vendor data locally into Nautilus Parquet.
 4. Store the resulting files in a local cache path that is ignored by git.
@@ -158,7 +158,7 @@ sharing. Treat this as a separate operational path, not as part of the public te
 4. For large data: upload Parquet to R2, add checksum to `test_data/large/checksums.json`.
 5. For user-fetched data: commit the manifest and fetch instructions only. Keep the source and
    derived data out of the repo and out of the public R2 bucket.
-6. Add path helper functions to `crates/testkit/src/common.rs` when shared testkit access is needed.
+6. Add shared test-data path functions to `crates/testkit/src/common.rs` when needed.
 7. Write tests that consume the dataset.
 
 For user-fetched data, prefer this layout:
@@ -182,18 +182,18 @@ to reproduce the fetch and transform steps on another machine.
 
 Recommended manifest fields:
 
-| Field               | Description                                                        |
-|---------------------|--------------------------------------------------------------------|
-| `slug`              | Stable dataset identifier.                                         |
-| `vendor`            | Vendor or venue name.                                              |
-| `source_type`       | `api`, `portal-download`, `purchased-archive`, etc.                |
-| `source_filters`    | Symbols, event IDs, market IDs, date ranges, or file names.        |
-| `target_files`      | Output Nautilus Parquet files expected after conversion.            |
-| `cache_dir`         | Local output location relative to `test_data/local/`.         |
-| `fetch_command`     | Suggested command or script entry point.                           |
-| `transform_command` | Suggested local conversion command.                                |
-| `env`               | Required environment variables.                                    |
-| `notes`             | Short operational notes for users.                                 |
+| Field               | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `slug`              | Stable dataset identifier.                                  |
+| `vendor`            | Vendor or venue name.                                       |
+| `source_type`       | `api`, `portal-download`, `purchased-archive`, etc.         |
+| `source_filters`    | Symbols, event IDs, market IDs, date ranges, or file names. |
+| `target_files`      | Output Nautilus Parquet files expected after conversion.    |
+| `cache_dir`         | Local output location relative to `test_data/local/`.       |
+| `fetch_command`     | Suggested command or script entry point.                    |
+| `transform_command` | Suggested local conversion command.                         |
+| `env`               | Required environment variables.                             |
+| `notes`             | Short operational notes for users.                          |
 
 Tests that rely on user-fetched data should:
 
@@ -214,17 +214,17 @@ expected to run in default CI.
 
 ## Test runner serialization
 
-Tests that download large data files share target paths across test binaries.
-Because `nextest` runs each binary in a separate process, concurrent downloads
-to the same path can race. The nextest config at `.config/nextest.toml` defines
-a `large-data-tests` group with `max-threads = 1` to serialize these binaries.
+Tests that download large data files share target paths. Because `nextest` runs
+each test in a separate process, concurrent downloads to the same path can race.
+The nextest config at `.config/nextest.toml` defines a `large-data-tests` group with
+`max-threads = 1` to serialize these tests.
 
-When adding a new test binary that downloads large shared files, add it to the
+When adding a new test module that downloads large shared files, add it to the
 group filter:
 
 ```toml
 [[profile.default.overrides]]
-filter = 'binary(grid_mm_itch) | binary(orderbook_integration) | binary(your_new_binary)'
+filter = 'package(your-package) & binary(integration) & test(/^your_module::/)'
 test-group = 'large-data-tests'
 ```
 
@@ -272,9 +272,9 @@ cargo test -p nautilus-tardis test_curate_deribit_deltas -- --ignored --nocaptur
 
 ## Tutorial test data
 
-Several tutorials load user-provided market data. The `NAUTILUS_DATA_DIR` environment variable
-overrides the base data path used by these tutorials. The test suite sets this variable to
-`test_data/local/` so that tutorials run against small sample files stored locally.
+Several tutorials and guides load user-provided market data. The `NAUTILUS_DATA_DIR` environment
+variable overrides their base data path. Use `test_data/local/` as an ignored repository-local
+location for these files.
 
 ### Directory layout
 
@@ -289,7 +289,8 @@ test_data/local/
     DAT_ASCII_EURUSD_T_202001.csv.gz
 ```
 
-The `test_data/local/` directory is gitignored. Tests skip when the data is absent.
+The `test_data/local/` directory is gitignored. The tutorial scripts stop with a missing-data
+message when the expected files are absent.
 
 ### Obtaining the data
 
@@ -312,13 +313,17 @@ smaller zip.
 EUR/USD ASCII tick data for any month and place the CSV (or `.csv.gz`) under
 `test_data/local/HISTDATA/`.
 
-### Running the tests
+### Running the tutorials
+
+Build the Python package, then run the source tutorials from the repository root:
 
 ```bash
-pytest tests/docs_tests/test_tutorials.py::test_tutorial_with_local_data -v
+make build-debug
+NAUTILUS_DATA_DIR="$PWD/test_data/local" \
+  uv run --project python --no-sync python docs/tutorials/backtest_orderbook_binance.py
+NAUTILUS_DATA_DIR="$PWD/test_data/local" \
+  uv run --project python --no-sync python docs/tutorials/backtest_orderbook_bybit.py
 ```
-
-Tests skip with a message when the corresponding data subdirectory is empty or missing.
 
 ## Legacy datasets
 
@@ -326,14 +331,14 @@ These datasets predate this policy and use raw vendor formats (CSV/CSV.gz)
 without `metadata.json`. They remain valid for existing tests. New datasets
 should follow the Parquet standard above.
 
-| Dataset                       | Source   | Format           | Location                  | Status   |
-|-------------------------------|----------|------------------|---------------------------|----------|
-| Tardis Deribit L2 deltas      | Tardis   | Parquet (large)  | `test_data/large/`  | Curated  |
-| ITCH AAPL L3 deltas           | NASDAQ   | Parquet (large)  | `test_data/large/`  | Curated  |
-| HISTDATA EURUSD.SIM quotes    | HISTDATA | Parquet (large)  | `test_data/large/`  | Migrated |
-| Tardis Deribit L2             | Tardis   | CSV (checked in) | `test_data/tardis/` | Legacy   |
-| Tardis Binance snapshots      | Tardis   | CSV.gz (large)   | `test_data/large/`  | Legacy   |
-| Tardis Bitmex trades          | Tardis   | CSV.gz (large)   | `test_data/large/`  | Legacy   |
+| Dataset                    | Source   | Format           | Location            | Status   |
+| -------------------------- | -------- | ---------------- | ------------------- | -------- |
+| Tardis Deribit L2 deltas   | Tardis   | Parquet (large)  | `test_data/large/`  | Curated  |
+| ITCH AAPL L3 deltas        | NASDAQ   | Parquet (large)  | `test_data/large/`  | Curated  |
+| HISTDATA EURUSD.SIM quotes | HISTDATA | Parquet (large)  | `test_data/large/`  | Migrated |
+| Tardis Deribit L2          | Tardis   | CSV (checked in) | `test_data/tardis/` | Legacy   |
+| Tardis Binance snapshots   | Tardis   | CSV.gz (large)   | `test_data/large/`  | Legacy   |
+| Tardis Bitmex trades       | Tardis   | CSV.gz (large)   | `test_data/large/`  | Legacy   |
 
 The former `nautechsystems/nautilus_data` catalog maps to the HISTDATA EURUSD.SIM Parquet
 files above. Raw HISTDATA CSV files remain user-fetched.

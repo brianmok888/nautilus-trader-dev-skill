@@ -85,7 +85,7 @@ uv run pytest skills/nt-dex-adapter/tests/test_dex_compliance.py -v
 
 ## REFERENCE ADAPTERS
 
-Study: `_template`, OKX, BitMEX, Bybit (built-in), dYdX v4, Hyperliquid
+Study pinned examples: OKX, BitMEX, Bybit (built-in), dYdX v4, Hyperliquid (all under `crates/adapters/` at the pinned baseline; no `_template` adapter exists upstream)
 
 ## NEXT
 

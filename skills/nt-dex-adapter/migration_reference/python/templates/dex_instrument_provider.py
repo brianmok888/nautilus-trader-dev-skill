@@ -4,7 +4,7 @@ DEX Adapter Template: Instrument Provider
 
 Discovers on-chain pools/markets and converts them to Nautilus instrument objects.
 
-Phase 2 of the 7-phase DEX adapter implementation sequence.
+Legacy step 2 of the pre-cutover 7-phase DEX sequence; the current standard is the ten-phase implementation sequence in SKILL.md.
 
 Replace 'MyDEX' with your actual DEX name and fill in the RPC client calls.
 """

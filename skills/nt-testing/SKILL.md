@@ -116,7 +116,9 @@ PyO3 tests verify binding registration, configuration round trips, error transla
 The public V2 projection is `from nautilus_trader.testkit import ExecTesterConfig`;
 do not import the private compiled root `nautilus_trader._libnautilus`.
 
-Current-develop overlay (`949207b053b040feaff273dff9ad36b796a0e2a9ea`): every public PyO3
+Backtest data loading gained typed batch input (`BacktestEngine::add_data_batch`, `crates/backtest/src/engine.rs:436`), typed batch replay, and lazy multi-config streaming (upstream `3c9ad2ef4`, `dabe39d77`, `ec1894d6f`) — cover these paths when testing data-heavy strategies.
+
+Current-develop overlay (reviewed through `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`): every public PyO3
 actor `subscribe_*` and `unsubscribe_*` entry point calls `ensure_registered()` before mutating
 subscription state and returns `PyResult`. Test that a call fails before actor registration, leaves
 no retained subscription, and succeeds after registration.

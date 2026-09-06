@@ -19,7 +19,7 @@ The suite covers these categories:
 ## Testing policy
 
 Tests and runtime contracts form one design system. The
-[Design by contract](https://nautilustrader.io/docs/latest/developer_guide/rust/#design-by-contract) ladder pushes invariants into the type
+[Design by contract](../../../../references/developer_guide/rust.md#design-by-contract) ladder pushes invariants into the type
 system where possible; the testing ladder below escalates the remaining unknowns through
 larger input spaces and richer execution models. Each layer extends coverage to inputs
 or execution states the layer below cannot reach.
@@ -29,7 +29,7 @@ before adding tests or `debug_assert!` statements.
 
 ### Mechanism ladder
 
-Runtime contracts are covered in the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/#design-by-contract): prefer the
+Runtime contracts are covered in the [Rust guide](../../../../references/developer_guide/rust.md#design-by-contract): prefer the
 type system first, then `check_*` from `nautilus_core::correctness` at API boundaries,
 then `debug_assert!` for internal invariants, then `assert!` for soundness-critical or
 always-on checks.
@@ -39,7 +39,7 @@ matters; climb only when the layer below stops detecting regressions or when the
 space grows beyond hand-picked cases.
 
 | Layer                    | Trigger condition                                                               |
-|--------------------------|---------------------------------------------------------------------------------|
+| ------------------------ | ------------------------------------------------------------------------------- |
 | Unit test                | A single function or transition has a small, enumerable set of cases.           |
 | Parametrized test        | The same shape repeats across discrete inputs (order side, status, instrument). |
 | Property-based test      | An invariant must hold for a whole class of inputs the mind cannot enumerate.   |
@@ -60,7 +60,7 @@ Apply the rule at module granularity, not crate granularity: an adapter crate co
 pure parsers and I/O-bound client loops, and each row applies to a different part.
 
 | Module shape                        | Layers that apply                             | Example                                |
-|-------------------------------------|-----------------------------------------------|----------------------------------------|
+| ----------------------------------- | --------------------------------------------- | -------------------------------------- |
 | Pure function, crisp invariants     | Unit, parametrized, property, fuzz            | Reconciliation kernels, portfolio math |
 | Pure function, no stated invariants | Unit, parametrized, property, fuzz            | Codecs, adapter parsers, formatters    |
 | Stateful, synchronous               | Unit, parametrized, property over transitions | Cache, order book                      |
@@ -128,29 +128,11 @@ registered targets for one adapter from the repository root:
 scripts/fuzz-adapter.sh derive
 ```
 
-The workspace pins `libfuzzer-sys`, and `nautilus-live` owns the shared libFuzzer integration.
+The workspace pins `libfuzzer-sys`, and `nautilus-live` owns the shared libFuzzer integration. A
+separate `publish = false` package is reserved for fuzz targets that require dependencies which
+must not enter a published adapter graph, such as Lighter's git-pinned Pornin differential oracle.
 
 When building or modifying core types, write property tests to cover the mathematical boundaries.
-
-## Memory leak tests
-
-Memory leak tests track Python-side allocations across backtests, components,
-LiveNode runs, model operations, and persistence with
-[Memray](https://bloomberg.github.io/memray/) (pinned `ac22d5cf4`).
-
-- **Location:** `python/memray_tests/` with suites `test_backtest.py`,
-  `test_components.py`, `test_live_node.py`, `test_model.py`, and
-  `test_persistence.py`.
-- **Invocation:** `make pytest-memray` from the repository root (depends on
-  `build-debug`; runs `cd python && VIRTUAL_ENV= uv run --no-sync pytest -qq -rfE memray_tests/`).
-- **Prerequisites:** the `memray` and `pytest-memray>=1.10.0` dev dependencies
-  (Linux/macOS only) and a debug build of the compiled extension.
-- **CI:** the nightly workflow (`.github/workflows/nightly-tests.yml`, daily
-  12:00 UTC) runs the `python-memray` job with a dedicated cargo target dir.
-
-This is a separate lane from ordinary Python test runs: treat a memray failure
-as a leak or retained-reference regression, not a functional test failure, and
-reproduce locally with `make pytest-memray` before fixing.
 
 Performance tests help evolve performance-critical components.
 
@@ -161,9 +143,8 @@ Use parametrized tests and fixtures (e.g., `@pytest.mark.parametrize`) to avoid 
 
 ### Python tests
 
-The Python test suite lives under `python/tests/` and tests the Rust-backed PyO3
-package. It requires a built extension module and uses the Python project under
-`python/`. From the repository root, run:
+The Python test suite lives under `python/tests/` and tests the Rust-backed PyO3 package. It requires
+a built extension module and uses the Python project under `python/`. From the repository root, run:
 
 ```bash
 make pytest
@@ -196,8 +177,31 @@ measurement policy. Run benchmarks separately from unit tests to avoid interfere
 ```bash
 make cargo-test
 # or
-cargo nextest run --workspace --features "python,ffi,high-precision,defi" --cargo-profile nextest
+cargo nextest run --workspace --features "$(bash scripts/cargo-features.bash)" --cargo-profile nextest --lib --tests
 ```
+
+:::info
+`cargo nextest` is the supported runner for the full Rust unit and integration suite. The suite
+relies on nextest's per-test process isolation for process-global and thread-local state, including
+logging, the message bus, and deterministic test state. Plain `cargo test --workspace` runs a test
+binary's cases in a shared process, so it is not a supported full-suite gate and is not guaranteed to
+pass. Plain `cargo test` remains appropriate for doctests and focused tests that are known to work
+with the libtest runner.
+:::
+
+#### Rust doctests
+
+`cargo nextest` cannot execute doctests, so they run through a separate target:
+
+```bash
+make cargo-test-doc
+# or
+cargo test --doc --workspace --features "$(bash scripts/cargo-features.bash)" --profile nextest
+```
+
+Doc examples are a maintained test surface. The scheduled `nightly-tests` workflow runs this target
+with Python 3.13 and 3.14. See the [Rust guide](../../../../references/developer_guide/rust.md#doc-examples) for how to annotate a fence so
+it compiles.
 
 #### Testing with optional features
 
@@ -247,7 +251,7 @@ Use **pytest-style free functions and fixtures**. Do not use test classes.
   Prefer `yield` fixtures when teardown is needed (e.g., `engine.dispose()`).
 - Use `@pytest.mark.parametrize` to cover multiple inputs without duplicating
   test bodies.
-- Import model types from `nautilus_trader.model`, not from the private compiled root
+- Import model types from `nautilus_trader.model`, not from
   `nautilus_trader._libnautilus`.
 - Test providers live in `python/tests/providers.py`. Use `TestInstrumentProvider`
   and `TestDataProvider` for common instruments and data.
@@ -257,28 +261,16 @@ Use **pytest-style free functions and fixtures**. Do not use test classes.
 ### Rust
 
 For Rust-specific test conventions (module structure, `#[rstest]`, parameterization),
-see the [Rust guide](https://nautilustrader.io/docs/latest/developer_guide/rust/#testing-conventions).
+see the [Rust guide](../../../../references/developer_guide/rust.md#testing-conventions).
 
 ## Waiting for asynchronous effects
 
-### Deterministic async completion
-
-First, subscribe to the exact event or state-transition channel before you trigger the
-action. Await that signal directly and use a bounded timeout only as a failure
-guard for a stuck test. Prefer this event-first pattern over fixed delays,
-polling, or condition-wait helpers as the correctness mechanism. Cases without an
-event surface must be labelled explicitly and isolated from deterministic unit
-coverage; the polling-condition helper for those cases is covered under
-"Waiting for async conditions" below.
-
-### Waiting for async conditions
-
-When no exact event surface exists and a condition must be polled in Rust tests,
-prefer `wait_until_async(condition, timeout)` from `nautilus_common::testing`
-(pinned `crates/common/src/testing.rs:106`): it evaluates the condition until it
-succeeds and applies a bounded timeout, instead of arbitrary sleeps. Use it only
-for condition-waiting; deterministic assertions follow the event-first pattern
-above.
+In Rust tests, prefer a notification channel or another event owned by the test over repeated
+condition evaluation. Subscribe before reading the authoritative state, then recheck it after every
+notification so a transition between the read and the await cannot be missed. When no suitable
+signal exists, use `wait_until_async(...)` from `nautilus_common::testing`; it stops as soon as the
+condition succeeds and applies a bounded timeout. Use a fixed sleep only when the time window itself
+is under test.
 
 ## Mocks
 
@@ -314,11 +306,11 @@ Use the default test configuration to debug Rust tests.
 To run the full suite with debug symbols for later, run `make cargo-test-debug` instead of `make cargo-test`.
 
 In IntelliJ IDEA, adjust the run configuration for parametrised `#[rstest]` cases so it reads `test --package nautilus-model --lib data::bar::tests::test_get_time_bar_start::case_1`
-(remove `-- --exact` and append `::case_n` where `n` starts at 1). This workaround matches the behaviour explained [here](https://github.com/rust-lang/rust-analyzer/issues/8964#issuecomment-871592851).
+(remove `-- --exact` and append `::case_n` where `n` starts at 1). This workaround matches the behaviour explained in [rust-analyzer issue 8964](https://github.com/rust-lang/rust-analyzer/issues/8964#issuecomment-871592851).
 
 In VS Code you can pick the specific test case to debug directly.
 
-## Python + Rust mixed debugging
+## Debugging Python and Rust
 
 Build the PyO3 extension with the workspace's `debug-pyo3` Cargo profile when a native debugger
 needs Rust symbols:
@@ -327,8 +319,7 @@ needs Rust symbols:
 make sync
 (
   cd python
-  UV_PROJECT_ENVIRONMENT=../.venv \
-    CARGO_TARGET_DIR=../target \
+  CARGO_TARGET_DIR=../target \
     uv run --no-sync maturin develop --profile debug-pyo3
 )
 ```
@@ -344,17 +335,15 @@ existing types are tested, so new types can follow the same pattern.
 
 ### Test layer matrix
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
 | Layer                  | Location                                    | What it covers                                             |
-|------------------------|---------------------------------------------|------------------------------------------------------------|
-| DataEngine subscribe   | `crates/data/tests/engine.rs`               | Engine processes subscribe/unsubscribe commands correctly. |
-| DataEngine publish     | `crates/data/tests/engine.rs`               | Engine routes published data to the message bus.           |
+| ---------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| DataEngine subscribe   | `crates/data/tests/integration/engine.rs`   | Engine processes subscribe/unsubscribe commands correctly. |
+| DataEngine publish     | `crates/data/tests/integration/engine.rs`   | Engine routes published data to the message bus.           |
 | DataActor subscribe    | `crates/common/src/actor/tests.rs`          | Actor subscribes and receives data via typed publish.      |
 | DataActor unsubscribe  | `crates/common/src/actor/tests.rs`          | Actor stops receiving data after unsubscribe.              |
 | PyO3 actor dispatch    | `crates/common/src/python/actor.rs`         | Rust handler dispatches to Python `on_*` method.           |
-| Python Actor subscribe | `python/tests/unit/common/test_actor.py` | Python actor subscribes; command count increments.         |
-| Python Actor unsub     | `python/tests/unit/common/test_actor.py` | Python actor unsubscribes; subscription list clears.       |
+| Python Actor subscribe | `python/tests/unit/common/test_actor.py`    | Python actor subscribes; command count increments.         |
+| Python Actor unsub     | `python/tests/unit/common/test_actor.py`    | Python actor unsubscribes; subscription list clears.       |
 | Adapter live tests     | `docs/developer_guide/spec_data_testing.md` | Live data acceptance tests (DataTester).                   |
 
 ### Coverage per data type
@@ -363,7 +352,7 @@ The following table shows which layers have test coverage for each data type.
 Use this as a checklist when adding a new type.
 
 | Data type           | Engine | Actor (Rust) | PyO3 dispatch | Actor (Python) | Adapter spec |
-|---------------------|--------|--------------|---------------|----------------|--------------|
+| ------------------- | ------ | ------------ | ------------- | -------------- | ------------ |
 | `InstrumentAny`     | ✓      | ✓            | ✓             | ✓              | ✓            |
 | `OrderBookDeltas`   | ✓      | ✓            | ✓             | ✓              | ✓            |
 | `OrderBook`         | ✓      | ✓            | ✓             | ✓              | ✓            |
@@ -380,40 +369,58 @@ Use this as a checklist when adding a new type.
 | `CustomData`        | ✓      | ✓            | ✓             | ✓              | -            |
 
 `OptionChainSlice` is assembled by the DataEngine's `OptionChainManager` from per-instrument
-greeks and quote subscriptions. It does not have its own engine subscribe command or
-backtest client override.
+greeks and quote subscriptions. It does not have its own engine subscribe command.
 
 ### Adding a new data type
 
 When introducing a new data type, add tests at each layer:
 
-1. **DataEngine** (`crates/data/tests/engine.rs`): Add `test_execute_subscribe_<type>` and
+1. **DataEngine** (`crates/data/tests/integration/engine.rs`): Add `test_execute_subscribe_<type>` and
    `test_execute_unsubscribe_<type>` tests. Follow the pattern in existing subscribe tests:
    register client, build command, call `engine.execute`, assert subscription list.
 
-2. **DataActor Rust** (`crates/common/src/actor/tests.rs`):
+1. **DataActor Rust** (`crates/common/src/actor/tests.rs`):
    - Add `received_<type>: Vec<Type>` field to `TestDataActor`.
    - Implement the `on_<type>` handler in the `DataActor` trait impl.
    - Add `test_subscribe_and_receive_<type>` and `test_unsubscribe_<type>` tests.
    - Use the typed publish function (`msgbus::publish_<type>`), not `publish_any`,
      for types that use `TypedHandler` routing.
 
-3. **PyO3 actor dispatch** (`crates/common/src/python/actor.rs`):
+1. **PyO3 actor dispatch** (`crates/common/src/python/actor.rs`):
    - Add `dispatch_on_<type>` method that calls `py_self.call_method1("on_<type>", ...)`.
    - Add `on_<type>` in the `DataActor` trait impl that calls the dispatch method.
    - Add `#[pyo3(name = "on_<type>")]` method in the `#[pymethods]` block.
    - Add `on_<type>` to `RustTestDataActor` wrapper and the inline Python test class.
    - Add handler test and dispatch test.
 
-4. **Python Actor** (`python/tests/unit/common/test_actor.py`):
+1. **Python Actor** (`python/tests/unit/common/test_actor.py`):
    - Add `test_subscribe_<type>` and `test_unsubscribe_<type>` tests.
    - Assert `actor.subscribed_<type>()` returns expected entries after subscribe and
      is empty after unsubscribe.
 
-5. **Documentation**: Add entries to `actors.md` callback table, `strategies.md` handler
+1. **Documentation**: Add entries to `actors.md` callback table, `strategies.md` handler
    signatures, `adapters.md` subscribe method stubs, and `spec_data_testing.md` test cards.
 
 :::tip
 Search for an existing type like `instrument_close` or `funding_rate` across all five layers
 to find concrete examples of the patterns described above.
 :::
+
+### Deterministic async completion
+
+First, subscribe to the exact event or state-transition channel before you trigger the
+action. Await that signal directly and use a bounded timeout only as a failure
+guard for a stuck test. Prefer this event-first pattern over fixed delays,
+polling, or condition-wait helpers as the correctness mechanism. Cases without an
+event surface must be labelled explicitly and isolated from deterministic unit
+coverage; the polling-condition helper for those cases is covered under
+"Waiting for async conditions" below.
+
+### Waiting for async conditions
+
+When no exact event surface exists and a condition must be polled in Rust tests,
+prefer `wait_until_async(condition, timeout)` from `nautilus_common::testing`
+(pinned `crates/common/src/testing.rs:106`): it evaluates the condition until it
+succeeds and applies a bounded timeout, instead of arbitrary sleeps. Use it only
+for condition-waiting; deterministic assertions follow the event-first pattern
+above.

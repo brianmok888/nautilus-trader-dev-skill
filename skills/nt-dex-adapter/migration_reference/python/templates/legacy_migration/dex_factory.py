@@ -9,7 +9,7 @@ DEX Adapter Template: Client Factory
 # NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Registers the DEX adapter's data and execution clients with a TradingNode.
 
-Phase 6 of the 7-phase DEX adapter implementation sequence.
+Legacy step 6 of the pre-cutover 7-phase DEX sequence; the current standard is the ten-phase implementation sequence in SKILL.md.
 
 # NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 Usage in TradingNode:

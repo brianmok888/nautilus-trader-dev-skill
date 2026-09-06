@@ -1,5 +1,18 @@
 """Non-production smoke checks for quarantined Python migration templates."""
 
+import pytest
+
+# NT v2 compatibility note: legacy: migration/reference-only — this module exercises the quarantined v1
+# Python templates and v1-only helper surface (TestComponentStubs,
+# execution.messages/reports commands, nautilus_trader.model.data) that do not
+# exist in the pinned V2 Python package (ac22d5cf4). It is retained for
+# migration review and skips against the pinned interpreter.
+pytest.skip(
+    "legacy v1 template/module surface absent from the pinned V2 package "
+    "(migration/reference-only; see NT-2026-09-05-145)",
+    allow_module_level=True,
+)
+
 import importlib.util
 import asyncio
 import os
@@ -13,6 +26,7 @@ from nautilus_trader.model.identifiers import AccountId, ClientId, Venue
 from nautilus_trader.test_kit.stubs.component import TestComponentStubs
 
 pytest.importorskip("pydantic")
+
 
 _templates = Path(__file__).parent.parent / "migration_reference" / "python" / "templates"
 _legacy_templates = _templates / "legacy_migration"

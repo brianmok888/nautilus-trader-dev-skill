@@ -52,7 +52,7 @@ workspace builds:
 
 ```bash
 make sync
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 ```
 
 On Linux, point the linker and embedded runtime at that environment:

@@ -239,7 +239,7 @@ Runtime-spawn rule source (upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`):
 
 Own DEX background work with the standardized Nautilus task lifecycle (pinned
 `ac22d5cf4`, `crates/live/src/task.rs`; see `nt-adapters` "Task Management" for
-the full ownership table): one session `TaskGroup` for the WebSocket stream,
+the full ownership table). Named task identity (upstream `eb42e2bfc`) lets you hold a `TaskRef` from `spawn_named` without taking `TaskGroup` ownership — prefer it for receipt-monitoring handles that outlive a single command, and for shared task-state checks instead of per-adapter flags: one session `TaskGroup` for the WebSocket stream,
 keepalive, and receipt-monitoring loop; a separate command `TaskGroup` for
 work spawned by execution commands so a disconnect never reclassifies an
 accepted command's outcome; `TaskSlot`/`SharedTaskSlot` for an explicitly

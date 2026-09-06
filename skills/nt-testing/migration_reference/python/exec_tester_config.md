@@ -48,6 +48,6 @@ config = ExecTesterConfig(
     limit_aggressive=True,  # marketable limit paths crossing the spread
 )
 
-# `test_modify_rejected` and `test_reject_post_only` are Rust builder fields in
-# the current source but are not exposed by the generated Python constructor.
+# `test_modify_rejected` and `test_reject_post_only` are Python constructor
+# keywords at the pinned tip (testkit/__init__.pyi:180-182).
 ```

@@ -1,3 +1,5 @@
+NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+
 # Data Testing Spec
 
 This section defines a rigorous test matrix for validating adapter data
@@ -40,9 +42,7 @@ from nautilus_trader.testkit import DataTesterConfig
 
 node = (
     LiveNode.builder("TESTER-001", TraderId("TESTER-001"), Environment.SANDBOX)
-    .with_data_engine_config(
-        LiveDataEngineConfig(time_bars_build_with_no_updates=False)
-    )
+    .with_data_engine_config(LiveDataEngineConfig(time_bars_build_with_no_updates=False))
     .add_data_client(None, adapter_data_client_factory, data_client_config)
     .build()
 )

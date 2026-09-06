@@ -34,7 +34,7 @@ config = ExecTesterConfig(
 
 Common constructor keywords include `strategy_id=`, `order_id_tag=`,
 `use_hyphens_in_client_order_ids=`, `use_uuid_client_order_ids=`,
-`external_order_claims=`, `instrument_id=`, `client_id=`, `order_qty=`,
+`external_order_instrument_ids=`, `instrument_id=`, `client_id=`, `order_qty=`,
 `subscribe_book=`, `subscribe_quotes=`, `subscribe_trades=`,
 `open_position_on_start_qty=`, `open_position_on_first_quote=`,
 `open_position_time_in_force=`, `enable_limit_buys=`, `enable_limit_sells=`,

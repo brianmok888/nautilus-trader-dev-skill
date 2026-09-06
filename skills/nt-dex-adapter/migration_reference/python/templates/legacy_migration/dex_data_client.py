@@ -5,7 +5,7 @@ DEX Adapter Template: Data Client
 Handles market data subscriptions for a custom DEX.
 Converts pool state (AMM reserves, on-chain events) into Nautilus data objects.
 
-Phase 3 of the 7-phase DEX adapter implementation sequence.
+Legacy step 3 of the pre-cutover 7-phase DEX sequence; the current standard is the ten-phase implementation sequence in SKILL.md.
 
 Key differences from CeFi data clients:
 - No WebSocket streams (usually) → polling-based data updates

@@ -4,7 +4,7 @@ DEX Adapter Template: Execution Client
 
 Handles wallet-signed on-chain order submission, cancellation, and account state.
 
-Phases 4–5 of the 7-phase DEX adapter implementation sequence.
+Legacy steps 4–5 of the pre-cutover 7-phase DEX sequence; the current standard is the ten-phase implementation sequence in SKILL.md.
 
 Key differences from CeFi execution clients:
 - No API keys — uses wallet private key + transaction signing

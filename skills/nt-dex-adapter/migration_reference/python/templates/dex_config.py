@@ -11,6 +11,9 @@ Replace 'MyDEX' with your actual DEX/venue name throughout.
 """
 
 from frozendict import frozendict
+# legacy: migration/reference-only v1 config names; the pinned v2 surface
+# (DataClientConfig/ExecutionClientConfig) is PyO3-final and not subclassable
+# from Python, so this template pattern cannot run against the pin.
 from nautilus_trader.config import (
     InstrumentProviderConfig,
     LiveDataClientConfig,
