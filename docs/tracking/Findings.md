@@ -4,15 +4,1030 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-04
-Reviewed upstream develop: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
-Pinned G2 baseline: `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`
+Review date: 2026-09-05
+Reviewed upstream develop: `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`
+Pinned G2 baseline: `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`
 
 The review manifest preserves five contiguous transitions. The newest transition reviews 61 commits and 561 net changed paths from the previously reviewed `65a168ea14976bf936d30ab67e1187db8f5703d0` through current develop `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window standardizes adapter task lifecycles (`crates/live/src/task.rs` TaskGroup/TaskSpawner/TaskSlot), adds `LiveNode.add_actor` registration for constructed Python actor instances, refreshes Rust development-guidance docs, and refines model and engine internals; seventeen delta entries carry repository impact; correction findings NT-2026-09-02-01 through NT-2026-09-02-12 were opened and closed from this review cycle.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
-## Open findings — 2026-09-04 full-tree audit
+## Open findings — 2026-09-05 full-tree audit
+
+NT v2 compatibility note: quoted legacy v1/Cython/`TradingNode` tokens below are historical finding evidence (migration reference only).
+Eight parallel read-only audit groups (all 17 skills, references/api_reference, references/concepts, references/integrations, templates) plus the 62-commit delta review (4692bac..ac22d5cf) against pinned upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d` (develop tip, 0 ahead). Every finding was verified against the pinned tree; spot-verification by the mission lead re-checked the highest-impact claims (RetryManager invocation API, to-json/to-parquet bin renames, LiveNodeHandle methods, OrderCanceled signature, margin-model surface, add_data_batch, venv layout, crates.io 0.63.0 publication). Nine findings closed during the pin-move wave (receipts in docs/tracking/receipts/harden-nt-v2-20260905/).
+
+[NT-2026-09-05-001] [P1] [OPEN] V2 compliance violations: references/concepts/data.md teaches the persistence CLI as `to_json`/`to_parquet` with `cargo run --bin to_json` / `--bin to_parquet` (lines 1449, 1465, 1492, 1502, 1516, 1530); at the tip those binary targets are `to-json`/`to-parquet`, so the commands error out. references/developer_guide/rust.md:136 also still shows `readme = "README.md"` which the new manifest convention drops (Cargo infers README.md).
+  file: references/concepts/data.md:1492
+  evidence: upstream edc28fb2d (drift window 4692bac..ac22d5cf)
+  fix: Rename the tool sections/commands to to-json/to-parquet in references/concepts/data.md and remove the explicit readme line from the manifest example in references/developer_guide/rust.md:135-136.
+  acceptance-test: grep -c 'to_json' references/concepts/data.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-002] [P1] [OPEN] V2 compliance violations: references/concepts/execution.md:140 (mirrored at skills/nt-trading/references/concepts/execution.md:140) teaches 'HALTED: Does not process further order commands until state changes' and a variant list without numeric values; at the tip HALTED=3 permits cancels/queries, REDUCING=2 has strict reduce-only eligibility rules, and the discriminant order swapped. references/integrations/coinbase.md:477 also still teaches that the client threads reduce_only onto the wire for parity, which was replaced by reject-before-transport.
+  file: references/concepts/execution.md:140
+  evidence: upstream 9da48e039 (drift window 4692bac..ac22d5cf)
+  fix: Replace the TradingState bullet list in both execution-concepts copies with the tip's state table (numeric values, permitted commands, REDUCING eligibility rules) and update the Coinbase reduce-only note to rejection-before-transport.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-003] [P1] [OPEN] Improvement opportunities: Curated concepts index still points at docs/concepts/reconciliation.md, which upstream renamed/moved to docs/concepts/execution/reconciliation.md while splitting execution.md into execution/index.md, algorithms.md, and policies.md; two more skill-repo links target the old execution.md/reconciliation.md paths.
+  file: references/concepts/index.md:115
+  evidence: upstream 27dacca2c (drift window 4692bac..ac22d5cf)
+  fix: Update the path list in references/concepts/index.md (reconciliation.md -> execution/reconciliation.md, and add the new execution/algorithms.md and execution/policies.md pages) and fix the two relative links in strategies.md:391 and adapters.md:757.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-004] [P1] [OPEN] V2 compliance violations: visualization guidance pins plotly>=6.3.1 while upstream python/pyproject.toml now requires plotly>=7.0.0,<8.0.0; following the skill's install line alongside current nautilus_trader produces a dependency conflict (same stale text mirrored at skills/nt-signals/references/visualization.md:22,31).
+  file: references/concepts/visualization.md:22
+  evidence: upstream ea42d0fde (drift window 4692bac..ac22d5cf)
+  fix: Update both copies (references/concepts/visualization.md and skills/nt-signals/references/concepts/visualization.md, plus nt-review/nt-trading migration_reference mentions) to the plotly>=7 line.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-005] [P1] [OPEN] V2 compliance violations: Snapshot install commands for the visualization extra lack the now-required --pre flag, so following them installs the v1 wheel that cannot run the v2 documentation the skill repo teaches; the repo-authored docs/visualization.md:10 has the same gap via `uv add`.
+  file: references/concepts/visualization.md:25
+  evidence: upstream 030ea32d8 (drift window 4692bac..ac22d5cf)
+  fix: Add --pre to the uv pip install commands in references/concepts/visualization.md:25 and references/concepts/reports.md:352 at the next snapshot sync, and configure pre-release resolution (or --prerelease=allow) for the `uv add "nautilus_trader[visualization]"` instruction in docs/visualization.md:10.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-006] [P1] [CLOSED 2026-09-05] Improvement opportunities: Synced developer-guide snapshot claims Rust doctests run in per-PR CI and are part of `make pre-flight`; upstream moved them to the scheduled nightly-tests workflow and dropped them from pre-flight and test.yml. Stale developer-workflow guidance for anyone validating Rust changes against the tip.
+  file: references/developer_guide/testing.md:209
+  evidence: upstream a43deb32c (drift window 4692bac..ac22d5cf)
+  fix: At the next dev-guide snapshot sync, replace references/developer_guide/testing.md:208-210 with the nightly-tests wording; check whether any nt-testing/nt-dev guide text repeats the per-PR CI claim.
+  closure: snapshot refreshed to ac22d5cf body at pin move; stale doctest claim replaced by upstream text (testing.md:210-212 now nightly-tests workflow)
+
+[NT-2026-09-05-007] [P1] [OPEN] V2 compliance violations: references/integrations/polymarket.md:352 teaches that `quote_quantity` orders are rejected before batch submission, but at the tip quote-sized limit BUYs are supported and batchable; only quote-sized SELL orders are denied. The quantity-semantics section at :276 ('Limit orders interpret quantity as base units') also predates the collateral-sized limit BUY mode.
+  file: references/integrations/polymarket.md:352
+  evidence: upstream 533cfa19a (drift window 4692bac..ac22d5cf)
+  fix: Sync the quantity-semantics and batch sections of references/integrations/polymarket.md to the tip: document quote_quantity=True collateral-sized limit BUYs (truncation, exact-price requirement, local quantity update) and narrow the batch rejection list to quote-sized SELL orders.
+  acceptance-test: grep -c 'quote_quantity' references/integrations/polymarket.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-008] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md's send_with_retry sample calls self.retry_manager.execute_with_retry(...), an API removed by this commit; any adapter built from the spec fails to compile at the tip.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1378
+  evidence: upstream 08aa1b70f (drift window 4692bac..ac22d5cf)
+  fix: Rewrite the sample to the invocation builder API, e.g. self.retry_manager.invocation("websocket_send", op, should_retry_error, create_timeout_error).cancellation_token(&token).execute().await, and re-check the RetryManager prose at references/developer_guide/adapters.md:1254-1274 against the new builder semantics.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-009] [P1] [OPEN] V2 compliance violations: Benchmarking guidance runs `cargo test --locked -p nautilus-backtest --test canonical_backtest_workloads`, which fails at the tip because the test target was renamed to the consolidated `integration` binary (upstream now uses `--test integration canonical_backtest_workloads::`). The same stale command appears in references/developer_guide/benchmarking.md:172, and stale layout paths remain at references/developer_guide/adapters.md:1627 (`tests/python.rs` -> `tests/integration/python.rs`) and references/developer_guide/testing.md:344,345,382 (`crates/data/tests/engine.rs` -> `crates/data/tests/integration/engine.rs`).
+  file: skills/nt-backtest/references/guides/benchmarking.md:165
+  evidence: upstream 503debebe (drift window 4692bac..ac22d5cf)
+  fix: Update the four sites to the tests/integration layout: benchmarking command in both copies, `tests/integration/python.rs` in the adapters test-boundary table, and `crates/data/tests/integration/engine.rs` in the testing.md table/steps.
+  acceptance-test: grep -c 'integration' skills/nt-backtest/references/guides/benchmarking.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-010] [P1] [OPEN] V2 compliance violations: nt-signals portfolio.md:156-160 says 'the removed nautilus_trader.analysis.statistic module allowed defining statistics by inheriting from a Python PortfolioStatistic base class' as a legacy v1 pattern; upstream 7e8c9c9c re-adds that module as the supported v2 path with Portfolio.register_statistic/deregister_statistic, so the 'removed/legacy' framing is stale.
+  file: skills/nt-signals/references/concepts/portfolio.md:156
+  evidence: upstream 7e8c9c9cd (drift window 4692bac..ac22d5cf)
+  fix: Rewrite the custom-statistics section: Python inheritance via nautilus_trader.analysis.statistic.PortfolioStatistic + Portfolio.register_statistic is now a supported v2 path alongside the Rust trait; move the Python pattern out of the legacy-lane framing.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-011] [P1] [OPEN] V2 compliance violations: Vendored README badge points to docs.rs/nautilus-analysis/latest/nautilus-analysis/ (hyphenated module path), the exact dead link upstream fixed to .../nautilus_analysis/ in this commit; references/integrations/binance.md:127 also still uses a .html documentation URL that upstream's new convention rejects.
+  file: skills/nt-signals/references/rust/analysis/README.md:4
+  evidence: upstream a315409b8 (drift window 4692bac..ac22d5cf)
+  fix: Update the vendored README badge to the underscored path and convert the binance.md python-api link to the extensionless URL form.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-012] [P1] [OPEN] V2 compliance violations: skills/nt-strategy-builder-rust/SKILL.md:102 teaches `fn external_order_claims(&self) -> Option<Vec<InstrumentId>> { None }` as the strategy trait override; the trait method is now external_order_instrument_ids(), so the sample is not a trait member and fails to compile. Stale uses also remain at references/developer_guide/spec_exec_testing.md:2014 and :2303, references/integrations/binance.md:264, and references/integrations/bybit.md:307.
+  file: skills/nt-strategy-builder-rust/SKILL.md:102
+  evidence: upstream 681607428 (drift window 4692bac..ac22d5cf)
+  fix: Rename the trait override to external_order_instrument_ids, document set_external_order_instrument_ids for post-registration claim replacement, and update the four remaining external_order_claims references.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-013] [P1] [CLOSED 2026-09-05] V2 compliance violations: G2 harness expects the pinned upstream venv at the repository root (.venv/bin/python), but upstream moved the project environment to python/.venv by adopting uv's default; against a tip-built checkout the interpreter path no longer exists and assert_python_v2_runtime fails, and the repo's own run_pinned_v2_pytest.py already uses the new python/.venv path, so the two tools disagree.
+  file: tools/check_skill_g2_harnesses.py:507
+  evidence: upstream 0be8327ae (drift window 4692bac..ac22d5cf)
+  fix: Change tools/check_skill_g2_harnesses.py:507 to 'python/.venv/bin/python' (invoked from the python/ cwd) and :710 to upstream_root/'python/.venv/bin/python', update the matching assertions in tests/test_skill_g2_harnesses.py:851,866,974-976 and references/g2-evidence/nt-strategy-builder.json:20, and refresh the .venv guidance in skills/nt-learn/curriculum/01-setup.md:55 and the environment_setup/testing/test_datasets snapshots to python/.venv with UV_PROJECT_ENVIRONMENT removed.
+  closure: G2 tool+tests moved to python/.venv (upstream 0be8327ae); red->green proof in docs/tracking/receipts/harden-nt-v2-20260905/phase-2-g2-venv-layout.json
+
+[NT-2026-09-05-014] [P2] [CLOSED 2026-09-05] Improvement opportunities: The end-to-end guide and its guard test pin nautilus crates at 0.62 as the published release lane, while the upstream quickstart the repo policy aligns to now pins 0.63 (workspace at 0.64.0, Python 2.0.0rc5); dependency examples taught to agents are one release behind.
+  file: docs/end_to_end_guide.md:34
+  evidence: upstream 38314daa1 (drift window 4692bac..ac22d5cf)
+  fix: Bump the nautilus-* versions in docs/end_to_end_guide.md:34-39 and skills/nt-learn/curriculum/09-full-rust-trading.md to the quickstart's 0.63, and update the lane assertions in tests/test_active_doc_examples.py:28-29,42 in the same change.
+  closure: dependency lane aligned to quickstart 0.63 + guard tests; receipt phase-2-version-lane.json
+
+[NT-2026-09-05-015] [P2] [OPEN] Improvement opportunities: references/concepts/message_bus.md 'External streams' section (and nt-live external-streaming guidance) predates typed external streaming: the payload_kind field of the BusMessage record and the typed egress gating for control/execution/reconciliation payloads are undocumented.
+  file: references/concepts/message_bus.md:415
+  evidence: upstream 9dcf043dc (drift window 4692bac..ac22d5cf)
+  fix: Extend the external-streams section with the payload_kind=typed discriminator semantics and note that typed egress applies to control/execution/reconciliation messages while custom payloads keep the prior record shape.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-016] [P2] [OPEN] Improvement opportunities: Adapter guidance teaches the open_only/start/end filter contract but not the new shared retain_order_status_reports helper in nautilus-live that standardizes the filtering (open-only includes in-flight; time bounds apply to closed reports only).
+  file: references/developer_guide/adapters.md:730
+  evidence: upstream 9b7db8236 (drift window 4692bac..ac22d5cf)
+  fix: Extend the bulk-report filtering guidance in the adapters reference (and nt-adapters skill) to direct implementers to retain_order_status_reports instead of hand-rolled per-venue filters.
+  acceptance-test: python3 tools/check_dev_guide_snapshot_sync.py and check_dev_guide_sync.py exit 0
+
+[NT-2026-09-05-017] [P2] [CLOSED 2026-09-05] Improvement opportunities: Developer-guide snapshot and two skill guides keep the v1-vs-v2 backtest comparison section under benchmarking, which upstream moved into MIGRATION_V2.md when centralizing v2 migration docs. Not wrong to run, but the documented upstream location changed and the synced snapshot will drift.
+  file: references/developer_guide/benchmarking.md:191
+  evidence: upstream beaac71e0 (drift window 4692bac..ac22d5cf)
+  fix: Drop the section from the benchmarking snapshot at re-pin and re-point the comparison-workflow references in nt-dev/nt-backtest guides and SKILL.md to MIGRATION_V2.md.
+  closure: withdrawn as invalid: upstream at ac22d5cf still teaches this content itself (testing.md:269, benchmarking.md:183); snapshot is faithful to ground truth, no repo correction required
+
+[NT-2026-09-05-018] [P2] [CLOSED 2026-09-05] Improvement opportunities: Async-test guidance still teaches wait_until_async as the preferred primitive (references/developer_guide/testing.md:275, skills/nt-dev/SKILL.md:381, skills/nt-adapters/references/guides/official_adapter_spec.md:1969); upstream reordered the guidance to notification-first with wait_until_async as fallback.
+  file: references/developer_guide/testing.md:275
+  evidence: upstream 12f1e9ee2 (drift window 4692bac..ac22d5cf)
+  fix: Update the pinned testing.md/adapters.md copies and the nt-dev/nt-adapters skill guidance to the notification-first ordering (subscribe before reading, recheck after every notification, wait_until_async only when no suitable signal exists).
+  closure: withdrawn as invalid: upstream at ac22d5cf still teaches this content itself (testing.md:269, benchmarking.md:183); snapshot is faithful to ground truth, no repo correction required
+
+[NT-2026-09-05-019] [P2] [OPEN] Improvement opportunities: Skill-repo Bybit execution config tables (references/integrations/bybit.md and skills/nt-adapters/references/integrations/bybit.md) lack the new smp_type config field and BybitOrderSmpType order parameter; zero SMP mentions exist anywhere in the skill repo.
+  file: references/integrations/bybit.md:812
+  evidence: upstream b1a715004 (drift window 4692bac..ac22d5cf)
+  fix: Add the smp_type config row (default None; order parameter overrides; both unset omits the field) and an SMP section to both Bybit reference copies.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-020] [P2] [OPEN] Improvement opportunities: Skill-repo Kraken reference lacks the new Futures over-precision guidance: Kraken Futures can return instrument definitions needing more than standard precision's nine decimals, Futures catalog requests now fail outright on any parse error, and high-precision mode must stay enabled for Futures. The existing 'Futures limitation' note covers only bar streaming.
+  file: references/integrations/kraken.md:90
+  evidence: upstream 6f51bca4b (drift window 4692bac..ac22d5cf)
+  fix: Add the precision-mode warning (high-precision required for Futures; catalogs return no partial result and never round/clamp) next to the Futures limitation note, and mirror it in skills/nt-adapters/references/integrations/kraken.md.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-021] [P2] [OPEN] Improvement opportunities: The adapter spec's request-signing section teaches storing API keys as Ustr and secrets as Box<[u8]> with #[zeroize], and references/developer_guide/adapters.md's credential section (lines 398-419) teaches custom redacted Debug as the mechanism; upstream now standardizes on SecretString storage with derived Debug and a value-classification table.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:752
+  evidence: upstream 824241ba6 (drift window 4692bac..ac22d5cf)
+  fix: Update the spec's Credential guidance and the adapters.md credential section to the new standard: classify values per the upstream table, store secrets as SecretString, derive Debug when all sensitive fields redact, and prefer the HttpClient secret-body/URL-redaction methods.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-022] [P2] [OPEN] Improvement opportunities: nt-backtest teaches only add_data/add_data_iterator/manual per-batch add_data loops; the new add_data_batch typed batch input (homogeneous DataBatch, shared validation, replay-key sorting, DeFi routing) is uncovered.
+  file: skills/nt-backtest/references/concepts/backtesting.md:133
+  evidence: upstream 3c9ad2ef4 (drift window 4692bac..ac22d5cf)
+  fix: Add add_data_batch to the nt-backtest data-loading guidance and the Rust example lane as the typed alternative to the per-batch add_data loop, noting validation/sort parity with add_data.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-023] [P2] [OPEN] Improvement opportunities: backtesting.md:126-127 presents manual per-batch add_data/run(streaming=True) as 'the pattern used internally by BacktestNode'; after ec1894d6f the node's streaming path lazily k-way merges per-config catalog queries, so the internal-pattern attribution is stale and the multi-config memory-bound behavior is undocumented.
+  file: skills/nt-backtest/references/concepts/backtesting.md:126
+  evidence: upstream ec1894d6f (drift window 4692bac..ac22d5cf)
+  fix: Reword the manual-chunking intro (no longer 'used internally by BacktestNode') and document that BacktestNode streaming now preserves lazy chunking across multiple BacktestDataConfigs.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-024] [P2] [OPEN] Improvement opportunities: nt-data cache guidance documents instrument/tick/bar/order/position queries and the durable backing loaders but not the new InstrumentClose cache APIs or their Redis/PostgreSQL persistence and restore/purge behavior.
+  file: skills/nt-data/references/guides/cache_operations.md:249
+  evidence: upstream 9d45d410d (drift window 4692bac..ac22d5cf)
+  fix: Add an InstrumentClose subsection under Instrument Queries and note instrument-close persistence in the Durable Backing Stores section.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-025] [P2] [OPEN] Improvement opportunities: nt-live SKILL.md's live task lifecycle section documents TaskGroup generations, TaskSpawner, TaskSlot, and TaskGroupGuard but not the new spawn_named/TaskRef/TaskId identity API and its read-only observation semantics (group remains sole owner; a task may finish before spawn_named returns).
+  file: skills/nt-live/SKILL.md:310
+  evidence: upstream eb42e2bfc (drift window 4692bac..ac22d5cf)
+  fix: Extend the TaskGroup bullet in skills/nt-live/SKILL.md (and the adapters.md snapshot's task-management section) with spawn_named/TaskRef identity semantics and when to prefer it over TaskSlot.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-026] [P2] [OPEN] Improvement opportunities: instrument_types.md property lists cover only activation_ns/expiration_ns; the restored activation_utc/expiration_utc properties (and the new delta is_* inspection properties) are not covered anywhere in the skill repo (rg for is_add|is_snapshot|activation_utc over skills/references/tools/tests/docs returns no guidance hits).
+  file: skills/nt-model/references/guides/instrument_types.md:138
+  evidence: upstream 741b61d6d (drift window 4692bac..ac22d5cf)
+  fix: Extend instrument_types.md FuturesContract/FuturesSpread (and other expiring instruments) property lists with activation_utc/expiration_utc alongside the ns variants, and note the delta is_* inspection properties in the order-book data guidance.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-027] [P2] [OPEN] Improvement opportunities: skills/nt-model/references/guides/value_type_patterns.md enumerates built-in fiat currencies without TWD, which this commit registers upstream (also 1INCH/CAKE/SHIB crypto); the list is now stale, and the new is_inflight predicate plus 'test finished with is_closed, never by negating is_open' rule are untaught.
+  file: skills/nt-model/references/guides/value_type_patterns.md:299
+  evidence: upstream bb721205d (drift window 4692bac..ac22d5cf)
+  fix: Add TWD to the built-in fiat list and note the is_open/is_inflight/is_closed predicate semantics (SUBMITTED is in-flight, not open; use is_closed for terminal checks) where order status handling is taught.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-028] [P2] [OPEN] Improvement opportunities: nt-review's upstream-contribution checklist and the nt-dev Cargo.toml conventions do not cover the new enforced convention that non-default crate features must appear in matching alphabetical `Feature flags` lists in README.md and src/lib.rs; the pre-commit hook now rejects manifests/docs that violate it.
+  file: skills/nt-review/AGENTS.md:94
+  evidence: upstream fd247cda9 (drift window 4692bac..ac22d5cf)
+  fix: Add a checklist/bullet line to nt-review (and nt-dev Cargo.toml conventions) requiring the alphabetical `Feature flags` list in README.md and src/lib.rs to match [features] in Cargo.toml whenever a feature is added or renamed.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-029] [P1] [CLOSED 2026-09-05] V2 compliance violations: Pinned upstream baseline 4692bac fell 62 commits behind develop tip ac22d5cf; every pin-citing layer required refresh
+  file: tools/upstream_baseline.py:4
+  evidence: git rev-list --count 4692bac..origin/develop = 62 (2026-09-05); check_upstream_freshness manifest_error at preflight
+  fix: Move UPSTREAM_COMMIT to ac22d5cf4; refresh manifest, 19 snapshots, README/end-to-end/curriculum/tracker citations, vendored analysis snapshot, curated sync tokens, exec-spec digest, betfair test path; re-execute all 17 G2 harnesses
+  closure: receipt phase-2-pin-move.json; freshness/snapshot/dev-guide/check-cards/card-declarations/legacy/rust-trading-sync all green; pytest 534 passed 3 skipped
+
+[NT-2026-09-05-030] [P1] [OPEN] V2 compliance violations: live.md Rust LiveNode example imports Environment from nautilus_live::node, which is not re-exported there; pinned tree defines it in nautilus_common::enums (crates/common/src/enums.rs:200) and every pinned adapter example imports nautilus_common::enums::Environment
+  file: skills/nt-adapters/references/concepts/live.md:92
+  evidence: crates/common/src/enums.rs:200 `pub enum Environment`; crates/live/src/node/mod.rs:151-157 re-export list has no Environment; e.g. crates/adapters/bybit/examples/node_exec_tester.rs:34 `use nautilus_common::enums::Environment;` (verified via git -C pinned show ac22d5cf4:crates/adapters/bybit/examples/node_exec_tester.rs)
+  fix: Change both occurrences (lines 92 and 198) to `use nautilus_common::enums::Environment;` + `use nautilus_live::node::LiveNode;`
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-031] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md documents adapter integration tests at tests/{data_client,exec_client,http,websocket}.rs, but upstream commit 503debebe consolidated all Rust integration test binaries under tests/integration/ with a main.rs module harness (betfair/bybit/okx/kraken/deribit/coinbase all verified)
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1806
+  evidence: crates/adapters/bybit/tests/integration/{main.rs,data_client.rs,exec_client.rs,http.rs,websocket.rs,pagination.rs,python.rs} at pin ac22d5cf; crates/adapters/betfair/tests/integration/ likewise; `ls crates/adapters/{bybit,okx,kraken,deribit,coinbase,betfair}/tests/` shows only integration/ (+README.md for betfair). Stale spots: layout tree ~line 1806-1812, table lines 1819-1824, line 1933
+  fix: Update the spec layout tree, file table, and integration-testing section to tests/integration/<suite>.rs modules declared from tests/integration/main.rs (per-adapter examples: bybit, betfair)
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-032] [P1] [OPEN] V2 compliance violations: lighter.md runs Python examples with `.venv/bin/python` from repo root, but upstream moved the uv project env to python/.venv (commit 0be8327ae, in pin) and upstream docs now use `uv run --project python --no-sync python ...`
+  file: skills/nt-adapters/references/integrations/lighter.md:41
+  evidence: docs/integrations/lighter.md:45-46 at pin ac22d5cf uses `uv run --project python --no-sync python examples/live/lighter/{data_tester,exec_tester}.py`; upstream Makefile:421 keeps `python/.venv/`; git -C pinned show 0be8327ae stat shows CI/Docker/docs aligned to python/.venv
+  fix: Replace the two `.venv/bin/python` lines (41-42) with `uv run --project python --no-sync python examples/live/lighter/...` to match the pinned upstream guide
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-033] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md teaches plain-String credential storage: `Ustr` keys in Credential structs (line 752, no pinned adapter does this) and `Option<String>` api_key/api_secret in the config template (line ~2620) while citing crates/adapters/binance/src/config.rs, which at the pin uses `Option<SecretString>`
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:752
+  evidence: crates/adapters/bybit/src/common/credential.rs:42-43 `api_key: Box<str>`/`api_secret: Box<[u8]>` with ZeroizeOnDrop; crates/adapters/binance/src/config.rs:191-193 `api_key: Option<SecretString>`; `grep -rn 'api_key: Ustr' crates/adapters/` returns nothing at pin ac22d5cf
+  fix: Update line 752 to the pinned storage pattern (Box<str>/SecretString ids, Box<[u8]> secrets, ZeroizeOnDrop, redacting Debug) and the config template at ~2620 to Option<SecretString>
+  acceptance-test: grep -c 'Ustr' skills/nt-adapters/references/guides/official_adapter_spec.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-034] [P2] [OPEN] Improvement opportunities: official_adapter_spec.md credential guidance does not cover the adapter credential-handling standard added by upstream 824241ba60 (SecretString config fields, value classification table, expose_secret/into_inner borrowing rules, redaction tests)
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:748
+  evidence: git -C pinned show 824241ba60 -- docs/developer_guide/adapters.md adds 'Classify sensitive values' + 'Use SecretString safely' sections; pinned crates/core/src/string/secret.rs grew to 120+ lines; adapter configs now declare `Option<SecretString>` (e.g. crates/adapters/betfair/src/config.rs:126-132)
+  fix: Add a credential-handling subsection mirroring the pinned docs/developer_guide/adapters.md standard (classification, SecretString usage rules, env-var resolution, redaction)
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-035] [P1] [OPEN] V2 compliance violations: Shipped okx/node_exec_tester.rs copy uses removed ExecTesterConfig field `external_order_claims` and removed builder method `maybe_open_position_on_start_qty`; pinned tree renamed them to `external_order_instrument_ids` and `open_position_on_start_qty`
+  file: skills/nt-adapters/references/examples/rust_adapters/okx/node_exec_tester.rs:111
+  evidence: crates/adapters/okx/examples/node_exec_tester.rs:109 `external_order_instrument_ids: Some(vec![instrument_id])`; crates/testkit/src/testers/exec/config.rs:86 `pub open_position_on_start_qty: Option<Decimal>`; `grep -rn 'external_order_claims\|maybe_open_position_on_start_qty' crates/testkit/src crates/adapters/*/examples/` returns nothing at pin ac22d5cf
+  fix: Rename line 111 to `external_order_instrument_ids` and line 120 to `.open_position_on_start_qty(order_qty.as_decimal())` to match the pinned example
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-036] [P1] [OPEN] V2 compliance violations: Nine more shipped node_exec_tester.rs copies use the removed `external_order_claims` field (and lack the pinned `DRY_RUN` const + `.dry_run(DRY_RUN)` call), so all ten shipped exec testers diverge from the pinned examples they claim to copy
+  file: skills/nt-adapters/references/examples/rust_adapters/bybit/node_exec_tester.rs:102
+  evidence: Pinned tree uses `external_order_instrument_ids` in every adapter example (e.g. crates/adapters/bybit/examples/node_exec_tester.rs at ac22d5cf); stale copies at kraken:124, architect_ax:106, deribit:106, dydx:101, hyperliquid:99, bybit:102, binance/futures:101, binance/spot:102, bitmex:90; all ten also predate the upstream DRY_RUN additions
+  fix: Sync each shipped copy to its pinned counterpart: rename external_order_claims -> external_order_instrument_ids and adopt the DRY_RUN const/.dry_run() wiring
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-037] [P1] [OPEN] V2 compliance violations: kraken/node_exec_tester.rs passes plain `String` credentials into config fields that are `Option<SecretString>` at the pin (824241ba60), missing the `.into()` conversions the pinned example performs
+  file: skills/nt-adapters/references/examples/rust_adapters/kraken/node_exec_tester.rs:91
+  evidence: Pinned crates/adapters/kraken/examples/node_exec_tester.rs uses `api_key: Some(api_key.clone().into())` / `api_secret: Some(api_secret.clone().into())`; pinned kraken config declares SecretString fields (824241ba60 diff touches crates/adapters/kraken/src/config.rs)
+  fix: Add `.into()` to the api_key/api_secret initializers at lines 91-92 and the later `api_key,`/`api_secret,` shorthand at ~98-99
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-038] [P1] [OPEN] V2 compliance violations: architect_ax/node_data_tester.rs builds configs with `Option<String>` env reads where pinned fields are `Option<SecretString>`, missing the `.map(Into::into)` conversions
+  file: skills/nt-adapters/references/examples/rust_adapters/architect_ax/node_data_tester.rs:59
+  evidence: Pinned crates/adapters/architect_ax/examples/node_data_tester.rs:59-60 `api_key: std::env::var("AX_API_KEY").ok().map(Into::into)`; 824241ba60 changed architect_ax config.rs to SecretString fields
+  fix: Add `.map(Into::into)` to both env-read initializers
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-039] [P1] [OPEN] V2 compliance violations: databento/node_data_tester.rs uses `DatabentoLiveClientConfig`, which no longer exists at the pin; the struct is `DatabentoDataClientConfig` exported from `nautilus_databento::data`
+  file: skills/nt-adapters/references/examples/rust_adapters/databento/node_data_tester.rs:34
+  evidence: crates/adapters/databento/src/data.rs:103 `pub struct DatabentoDataClientConfig`; `grep -rn 'DatabentoLiveClientConfig' crates/` at pin ac22d5cf returns zero hits
+  fix: Change the import to `data::DatabentoDataClientConfig` and the constructor call at line 70 accordingly (68a1cbc9e client source layout standardization)
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-040] [P1] [OPEN] V2 compliance violations: tardis/node_data_tester.rs still uses `chrono::NaiveDate` for replay dates; pinned example switched to `jiff::civil::Date` and tardis's manifest no longer depends on chrono
+  file: skills/nt-adapters/references/examples/rust_adapters/tardis/node_data_tester.rs:28
+  evidence: Pinned crates/adapters/tardis/examples/node_data_tester.rs uses `use jiff::civil::Date;`, `Date::new(...)`, and `(i16,i8,i8)` consts; crates/adapters/tardis/Cargo.toml:79 has `jiff = { workspace = true }` and no chrono entry at pin ac22d5cf
+  fix: Replace chrono import/usage (lines 28,57-58) with jiff::civil::Date and retuple the REPLAY_FROM/REPLAY_TO consts to (i16,i8,i8)
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-041] [P1] [OPEN] V2 compliance violations: blockchain/node_data_tester.rs omits the now-required ENVIO_API_TOKEN env read, passes raw Strings to SecretString builder setters, and registers pyclasses under the removed v1 module path `nautilus_trader.core.nautilus_pyo3.blockchain`
+  file: skills/nt-adapters/references/examples/rust_adapters/blockchain/node_data_tester.rs:118
+  evidence: Pinned crates/adapters/blockchain/examples/node_data_tester.rs:23,75 require ENVIO_API_TOKEN; :83-84 use `.http_rpc_url(http_rpc_url.into())`; pyclass module is `nautilus_trader.adapters.blockchain` (824241ba60 diff removes `nautilus_trader.adapters.blockchain` pyi legacy exports; python tree has no core.nautilus_pyo3 at pin)
+  fix: Sync the copy to the pinned example: add get_env_var("ENVIO_API_TOKEN")?, add .into() on rpc urls, fix both pyclass module attributes (lines 118,190) to nautilus_trader.adapters.blockchain
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-042] [P2] [OPEN] Improvement opportunities: api/adapters/index.md toctree lists 10 adapter API stubs; pinned upstream docs/api_reference/adapters documents 16 (adds architect_ax, bitmex, deribit, hyperliquid, kraken, sandbox)
+  file: skills/nt-adapters/references/api/adapters/index.md:18
+  evidence: docs/api_reference/adapters/index.md at pin ac22d5cf lists architect_ax, betfair, binance, bitmex, bybit, databento, deribit, dydx, hyperliquid, interactive_brokers, kraken, okx, polymarket, sandbox, tardis; python/nautilus_trader/adapters/ contains all those modules
+  fix: Add stub pages + toctree entries for the six missing adapters to match the pinned API reference
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-043] [P1] [OPEN] V2 compliance violations: bitmex.md points readers to examples/live/bitmex/bitmex_exec_tester.py for the MARK_PRICE stop-trigger ExecTester config, but upstream deleted the entire examples/live/bitmex/ directory (e8daa045ab); the pinned equivalent is crates/adapters/bitmex/examples/node_exec_tester.rs
+  file: skills/nt-adapters/references/integrations/bitmex.md:253
+  evidence: `ls examples/live/` at pin ac22d5cf has no bitmex dir; git -C pinned show e8daa045ab --stat deletes examples/live/bitmex/{bitmex_data_tester,bitmex_exec_tester,data_tester,exec_tester}.py; pinned crates/adapters/bitmex/examples/node_exec_tester.rs:105 `.stop_trigger_type(TriggerType::MarkPrice)`; pinned docs/integrations/bitmex.md:256 links the Rust tester
+  fix: Replace the examples/live/bitmex/bitmex_exec_tester.py reference with crates/adapters/bitmex/examples/node_exec_tester.rs
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-044] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md's endpoint-scoped reconnect section invents ReconnectRequestOutcome variants `AlreadyPending` and `Unavailable`; the pinned enum (crates/network/src/mode.rs, re-exported as SocketReconnectRequestOutcome) has Accepted/AlreadyReconnecting/Disconnected/Closed/Unsupported
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:963
+  evidence: crates/network/src/mode.rs:251-262 `pub enum ReconnectRequestOutcome { Accepted, AlreadyReconnecting, Disconnected, Closed, Unsupported }`; crates/live/src/socket.rs:36 re-export; `grep -rn 'AlreadyPending\|Unavailable' crates/network/ crates/live/` returns nothing at pin ac22d5cf
+  fix: Correct lines 963-964 to the pinned variants and adjust the test-guidance sentence accordingly
+  acceptance-test: grep -c 'AlreadyPending' skills/nt-adapters/references/guides/official_adapter_spec.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-045] [P2] [OPEN] V2 compliance violations: official_adapter_spec.md's AuthTracker snippet shows `authenticated: Arc<AtomicBool>`; the pinned struct tracks state as `state: Arc<AtomicU8>` plus a `state_notify: Arc<Notify>` (lifecycle methods begin/succeed/fail/invalidate are correct)
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:980
+  evidence: crates/network/src/websocket/auth.rs:107-111 `pub struct AuthTracker { tx: Arc<Mutex<Option<AuthResultSender>>>, state: Arc<AtomicU8>, state_notify: Arc<tokio::sync::Notify> }` at pin ac22d5cf
+  fix: Update the illustrative struct fields to the pinned shape (or drop the field-level snippet and describe the lifecycle only)
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-046] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md teaches a `BoundedDedup<T>` type for trade-ID dedup that does not exist anywhere in the pinned tree; the pinned mechanism is `nautilus_common::cache::fifo::FifoCache<T, N>` (insert() -> bool duplicate signal), used by e.g. hyperliquid's WsDispatchState
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1327
+  evidence: `grep -rn 'BoundedDedup' crates/` at pin ac22d5cf returns zero hits; crates/common/src/cache/fifo.rs:62 `pub struct FifoCache<T, const N: usize>` with insert()->bool at :119; crates/adapters/hyperliquid/src/websocket/dispatch.rs:168-171 uses `emitted_trades: Mutex<FifoCache<TradeId, DEDUP_CAPACITY>>`
+  fix: Replace the BoundedDedup snippet with the pinned FifoCache pattern (nautilus_common::cache::fifo::FifoCache, capacity as const generic, insert() returning bool)
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-047] [P2] [OPEN] V2 compliance violations: rust.md's aligned-targets table lists cargo-test/clippy features as `ffi,python,high-precision,defi`, but the pinned Makefile's BASE_FEATURES is `arrow,ffi,python,high-precision,streaming,defi` (scripts/cargo-features.bash), so the stated feature set no longer matches the shared build cache key
+  file: skills/nt-adapters/references/guides/rust.md:51
+  evidence: Makefile:180/182 + `bash scripts/cargo-features.bash` at pin ac22d5cf emits `arrow,ffi,python,high-precision,streaming,defi`; Makefile:893 passes --features "$(CARGO_FEATURES)" to cargo nextest run
+  fix: Update the two feature-set cells in the aligned-targets table to arrow,ffi,python,high-precision,streaming,defi
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-048] [P1] [OPEN] V2 compliance violations: SKILL.md says integration tests live in the `tests/` directory, but commit 503debebe consolidated all Rust adapter integration test binaries under `tests/integration/` with a main.rs harness at the pin
+  file: skills/nt-adapters/SKILL.md:599
+  evidence: crates/adapters/{bybit,okx,kraken,deribit,coinbase,betfair}/tests/ contain only integration/ (+README.md for betfair) at ac22d5cf; e.g. crates/adapters/bybit/tests/integration/main.rs declares mod data_client; mod exec_client; mod http; ...
+  fix: Update the bullet to 'Integration tests in `tests/integration/` (single binary per adapter, main.rs harness)'
+  acceptance-test: grep -c 'tests/' skills/nt-adapters/SKILL.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-049] [P2] [OPEN] V2 compliance violations: SKILL.md's own configuration sketch uses `testnet: bool` and `Option<String>` credentials, contradicting its own high-risk rule to use adapter environment enums and the pinned SecretString credential fields
+  file: skills/nt-adapters/SKILL.md:485
+  evidence: SKILL.md line ~112 mandates adapter environment enums (Live/LIVE naming); pinned configs use typed environment enums (e.g. crates/adapters/binance/src/common/enums.rs:133 BinanceEnvironment{Live,Testnet,Demo}) and Option<SecretString> credential fields (crates/adapters/binance/src/config.rs:191-193)
+  fix: Replace testnet: bool with an environment enum field and Option<SecretString> credential fields in the sketch
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-050] [P1] [OPEN] V2 compliance violations: hyperliquid.md claims a Python `HyperliquidExecutionClient` lives at nautilus_trader/adapters/hyperliquid/execution.py and runs `_handle_order_status_report_pyo3`; neither the module nor the method exists at the pin - the projection is a flat __init__.py
+  file: skills/nt-adapters/references/integrations/hyperliquid.md:708
+  evidence: `ls python/nautilus_trader/adapters/hyperliquid/` at pin ac22d5cf shows only __init__.py/__init__.pyi; `grep -rn '_handle_order_status_report_pyo3' python/ crates/` returns nothing
+  fix: Delete or rewrite the note: the pinned surface has no per-module Python execution client; describe only the Rust dispatch path
+  acceptance-test: grep -c 'HyperliquidExecutionClient' skills/nt-adapters/references/integrations/hyperliquid.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-051] [P2] [OPEN] Improvement opportunities: official_adapter_spec.md's retry section is a single sentence and does not cover the pinned RetryManager invocation API simplified by 08aa1b70fe (invocation(name, op, should_retry, create_error).cancellation_token(&t).execute())
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:826
+  evidence: crates/network/src/retry.rs:126+ RetryManager with bon builder; pinned usage e.g. crates/adapters/bitmex/src/http/client.rs:495-500 `.invocation(endpoint.as_str(), operation, should_retry, create_error).cancellation_token(&cancel_token).execute().await`; 08aa1b70fe 'Simplify RetryManager invocation API' replaced specialized retry methods with one configurable builder
+  fix: Expand the section with the pinned invocation-builder pattern (single invocation() entry point, cancellation_token, execute) and the RetryError variants to map
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-052] [P1] [OPEN] V2 compliance violations: official_adapter_spec.md's Python testing layout points to tests/integration_tests/adapters/<venue>/, which does not exist at the pin; adapter Python tests live under python/tests/unit/adapters/<venue>/ and Rust-side Python-projection tests under crates/adapters/<venue>/tests/integration/python.rs
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1979
+  evidence: `find python/tests -type d -name integration_tests` returns nothing at ac22d5cf; python/tests/unit/adapters/{bybit,okx,...}/ exist (e.g. unit/adapters/bybit/test_bybit_factories.py); crates/adapters/{betfair,binance,bitmex,blockchain,bybit}/tests/integration/python.rs exist
+  fix: Rewrite the Python testing layout to python/tests/unit/adapters/<venue>/ and reference the Rust tests/integration/python.rs projection suites
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-053] [P1] [OPEN] V2 compliance violations: spec_exec_testing.md (symlinked from nt-adapters references/guides) documents the removed ExecTesterConfig field `external_order_claims`; the pinned Python and Rust ExecTesterConfig both expose `external_order_instrument_ids` (shared file, noted once under its real path)
+  file: skills/nt-testing/references/guides/spec_exec_testing.md:2005
+  evidence: python/nautilus_trader/testkit/__init__.pyi:128,197 `external_order_instrument_ids`; crates/testkit/src/testers/exec/config.rs + strategy.rs:112; `grep -rn 'external_order_claims' python/ crates/testkit/` returns nothing at pin ac22d5cf; stale occurrences at lines 2005 and 2294
+  fix: Rename both occurrences (guide text at 2005, config table row at 2294) to external_order_instrument_ids
+  acceptance-test: grep -c 'external_order_claims' skills/nt-testing/references/guides/spec_exec_testing.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-054] [P1] [OPEN] V2 compliance violations: environment_setup guide still teaches the repository-root .venv layout; upstream moved the uv project environment to python/.venv in 0be8327ae (drift window).
+  file: skills/nt-live/references/guides/environment_setup.md:62
+  evidence: pinned docs/developer_guide/environment_setup.md:59 'source python/.venv/bin/activate', :61 'export PYO3_PYTHON="$PWD/python/.venv/bin/python"', :297 'install the Python package into python/.venv', :598 VIRTUAL_ENV '<path-to-nautilus-trader>/python/.venv'; upstream commit 0be8327ae589f64426ccf6a12a3da5ac85616454 'Use uv's default project environment'. Skill lines 62/64 (quick setup), 191 (PYO3_PYTHON export), 275 ('root .venv' build note), 506-552 (rust-analyzer VIRTUAL_ENV) all use the old root path.
+  fix: Update lines 62-64, 191, 275, and the rust-analyzer VIRTUAL_ENV examples to python/.venv paths; align the quick-setup block with the pinned doc (make sync, source python/.venv/bin/activate, PYO3_PYTHON="$PWD/python/.venv/bin/python").
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-055] [P1] [OPEN] V2 compliance violations: Stale pin citation: rust.md cites pinned `4692bac35` for the LiveNode Python registration surface, but the mission baseline moved tree-wide to ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d.
+  file: skills/nt-live/references/concepts/rust.md:258
+  evidence: skills/nt-live/references/concepts/rust.md:258 'node.add_strategy_from_config(config) (pinned `4692bac35`'. The cited API itself is current at the pin: python/nautilus_trader/live/__init__.pyi:383-386 (add_actor, add_actor_from_config, add_strategy, add_strategy_from_config at ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d).
+  fix: Re-cite the registration surface as pinned ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d (python/nautilus_trader/live/__init__.pyi).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-056] [P1] [OPEN] V2 compliance violations: rust.md teaches a `stubs` cargo feature on nautilus-model that does not exist at the pinned tree; test stubs are gated behind `test-support`.
+  file: skills/nt-live/references/concepts/rust.md:148
+  evidence: crates/model/Cargo.toml [features] at ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d lists test-support/high-precision/defi/arrow/python/ffi (no `stubs`); crates/model/src/instruments/mod.rs:40 gates the stubs module with #[cfg(any(test, feature = "test-support"))]. Skill lines 112 and 135 also specify features = ["stubs"] on nautilus-model dependencies, which cargo rejects at the pin.
+  fix: Rename the feature-flag table row to `test-support` (nautilus-model, test stubs such as audusd_sim) and change both dependency examples (lines 112, 135) from features = ["stubs"] to features = ["test-support"].
+  acceptance-test: grep -c 'stubs' skills/nt-live/references/concepts/rust.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-057] [P1] [OPEN] V2 compliance violations: Related-guides block points at docs/latest/developer_guide/{architecture,actors,strategies,events,backtesting}/ URLs that do not exist at the pinned tree; those pages live under docs/concepts/.
+  file: skills/nt-live/references/concepts/rust.md:372
+  evidence: Pinned docs/ tree (git -C <upstream> ls-tree ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d docs/developer_guide/) contains no architecture/actors/strategies/events/backtesting pages; the equivalents are docs/concepts/architecture.md, docs/concepts/actors.md, docs/concepts/strategies.md, docs/concepts/events/, docs/concepts/backtesting/ (also how upstream links them from docs/concepts/rust.md:472-482). Skill lines 372-376 use the developer_guide paths.
+  fix: Rewrite lines 372-376 to https://nautilustrader.io/docs/latest/concepts/{architecture,actors,strategies,events,backtesting}/.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-058] [P1] [OPEN] V2 compliance violations: Architecture guide's Rust crate inventory omits the infrastructure and event_store crates, both present at the pin and taught elsewhere in this skill (RedisCacheConfig/PostgresCacheConfig live in nautilus-infrastructure).
+  file: skills/nt-live/references/concepts/architecture.md:579
+  evidence: Pinned workspace contains crates/infrastructure and crates/event_store (git -C <upstream> ls-tree ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d crates/); upstream docs/concepts/architecture.md:633 lists 'infrastructure, persistence, and event_store' and :735 categorizes 'network, cryptography, infrastructure, persistence, event_store'. Skill table line 579 lists only serialization/network/cryptography/persistence, and the mermaid dependency graph (lines 525-533) omits both crates.
+  fix: Add infrastructure and event_store to the Infrastructure row and the dependency graph (event_store under Infrastructure, infrastructure owning Redis/Postgres cache and msgbus backings).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-059] [P1] [OPEN] V2 compliance violations: Migration reference falsely claims `add_stream_processor` does not exist at the pinned baseline; LiveNode exposes it in Rust and PyO3 at the pin.
+  file: skills/nt-live/migration_reference/python/deployment-v1-tradingnode.md:238
+  evidence: crates/live/src/node/mod.rs:362 'pub fn add_stream_processor' and crates/live/src/python/node.rs:916 pyo3 'add_stream_processor' at ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d; python/nautilus_trader/live/__init__.pyi:378 'def add_stream_processor(self, callback: typing.Any) -> None'. Skill line 238 states it 'does not exist at the pinned baseline'.
+  fix: Correct the compatibility note: custom stream processors remain a runtime LiveNode API (node.add_stream_processor), while external egress/ingress wiring moved to the builder (with_external_msgbus_egress/with_external_msgbus_factory/with_external_ingress).
+  acceptance-test: grep -c 'add_stream_processor' skills/nt-live/migration_reference/python/deployment-v1-tradingnode.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-060] [P2] [OPEN] Improvement opportunities: Live task identity from the drift window (eb42e2bfc: TaskId, TaskRef, TaskGroup::spawn_named / TaskSpawner::spawn_named) is not covered; the task-lifecycle section documents TaskGroup/TaskSpawner/TaskSlot only.
+  file: skills/nt-live/SKILL.md:302
+  evidence: crates/live/src/task.rs at ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d:105 'pub struct TaskId(u64)', :128 'pub struct TaskRef', :255 and :416 'pub fn spawn_named'; docs/developer_guide/adapters.md:1611 '## Task management', :1630 'Use TaskGroup::spawn_named when client state must observe a task's identity', :1676 TaskSpawner::spawn_named. Introduced by eb42e2bfc6c5540839dbdaade7fdef242a6f3b2e (in 4692bac..ac22d5cf). grep for spawn_named|TaskRef|TaskId across skills/nt-live/ returns nothing.
+  fix: Extend the 'Live task lifecycle' section with named-task identity: spawn_named returning a read-only TaskRef (logical name, instance identity, terminal state) without transferring ownership, TaskId numbering, and when adapter clients should use it per docs/developer_guide/adapters.md Task management.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-061] [P2] [OPEN] Improvement opportunities: Concepts/live guide (symlinked into nt-live as references/concepts/live.md; noted once under its real path) does not cover the two sections upstream added to docs/concepts/live.md in the drift window: 'Backtest and live differences' and 'Dispatch priority and overload behavior'.
+  file: skills/nt-adapters/references/concepts/live.md:11
+  evidence: Pinned docs/concepts/live.md:13 '## Backtest and live differences' (venue/transport/timing/persistence/external-activity deltas) and :245 '## Dispatch priority and overload behavior' (seven unbounded runner channels, polling order, no producer backpressure); both added by 27dacca2c 'Restructure execution documentation' within 4692bac..ac22d5cf. grep across skills/nt-live/ for 'Backtest and live differences', 'polling order', 'global FIFO', 'backpressure' returns nothing.
+  fix: Add matching sections (or a pointer) covering backtest-vs-live behavioral differences and runner dispatch priority/overload semantics (no backpressure, no coalescing, queue growth under sustained overload) to the live concepts guide consumed by nt-live.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-062] [P1] [OPEN] V2 compliance violations: nt-model SKILL.md lists v1 Python module paths (model/identifiers, model/instruments/, model/types/, model/objects, model/enums, model/tick_scheme/) that do not exist in the pinned flat PyO3 surface.
+  file: skills/nt-model/SKILL.md:94
+  evidence: git ls-tree -r ac22d5cf --name-only python/nautilus_trader/model -> only __init__.py and __init__.pyi (flat re-export); skill's own references/api/model/tick_scheme.md:3-7 states the package is flat with no submodules.
+  fix: Replace the Python modules line with the flat surface: 'nautilus_trader.model (flat PyO3 re-export) and nautilus_trader.testkit'.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-063] [P1] [OPEN] V2 compliance violations: value_types.md imports from stale v1 submodules nautilus_trader.model.objects and nautilus_trader.model.currencies instead of the flat nautilus_trader.model surface (lines 24, 62, 89, 188-190, 209, 225, 244).
+  file: skills/nt-model/references/concepts/value_types.md:24
+  evidence: upstream docs/concepts/value_types.md:22 'from nautilus_trader.model import Quantity', :246 'Currency.from_str("USD")'; python/nautilus_trader/model/__init__.pyi has no objects/currencies submodules at ac22d5cf.
+  fix: Change all imports to 'from nautilus_trader.model import ...' and replace 'from nautilus_trader.model.currencies import USD, EUR' with 'USD = Currency.from_str("USD")'.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-064] [P1] [OPEN] V2 compliance violations: value_types.md teaches that same-type arithmetic always returns the original type; at the pin, same-type * / // % return Decimal, and unary minus on Quantity returns Decimal.
+  file: skills/nt-model/references/concepts/value_types.md:50
+  evidence: upstream docs/concepts/value_types.md:68-120 documents 'Price * Price -> Decimal' and the unary-operator table; python/nautilus_trader/model/__init__.pyi:6322 __neg__ -> decimal.Decimal (Quantity), __mul__/__truediv__ -> typing.Any backed by crates/model/src/python/types/price.rs:238.
+  fix: Sync the Same-type operations section with upstream docs/concepts/value_types.md (add the Decimal-result table for * / // % and the unary operators section).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-065] [P1] [OPEN] V2 compliance violations: instruments.md imports TestInstrumentProvider from 'nautilus_trader.test_kit.providers' (underscore spelling) which does not exist; the pinned module is nautilus_trader.testkit.
+  file: skills/nt-model/references/concepts/instruments.md:43
+  evidence: python/nautilus_trader/testkit/providers.py:123 'class TestInstrumentProvider' at ac22d5cf; no python/nautilus_trader/test_kit directory exists in the pinned tree.
+  fix: Change the import to 'from nautilus_trader.testkit.providers import TestInstrumentProvider'.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-066] [P1] [OPEN] V2 compliance violations: instruments.md live-discovery example imports BinanceSpotInstrumentProvider from nautilus_trader.adapters.binance.spot.providers; the class and submodule do not exist at the pin (adapters/binance ships only __init__, instruments.py).
+  file: skills/nt-model/references/concepts/instruments.md:51
+  evidence: git ls-tree -r ac22d5cf python/nautilus_trader/adapters/binance -> __init__.py, __init__.pyi, instruments.py only; 'BinanceSpotInstrumentProvider' appears at ac22d5cf only in historical RELEASES.md entries.
+  fix: Replace the adapter example with the current mechanism per upstream docs/concepts/instruments/index.md (instruments are cached automatically by Rust adapter InstrumentProviders; access via cache.instrument()) or use an adapter that still exposes a Python provider surface at the pin.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-067] [P1] [OPEN] V2 compliance violations: instruments.md imports from stale submodule nautilus_trader.model.instruments (lines 66, 111, 459) instead of the flat nautilus_trader.model surface.
+  file: skills/nt-model/references/concepts/instruments.md:66
+  evidence: upstream docs/concepts/instruments/synthetic_instrument.md:57-59 'from nautilus_trader.model import InstrumentId/Symbol/SyntheticInstrument'; python/nautilus_trader/model is flat at ac22d5cf.
+  fix: Change 'from nautilus_trader.model.instruments import X' to 'from nautilus_trader.model import X' at lines 66, 111, 459 (line 111 defines the on_instrument callback type).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-068] [P1] [OPEN] V2 compliance violations: Commissions section (instruments.md:326-408) teaches a Cython-era get_commission signature (Order_order, Quantity_fill_qty, Price_fill_px, Instrument_instrument); the pinned Python FeeModel uses (_order, _fill_quantity, _fill_px, _instrument), and hand-rolling a per-contract model hides the built-in PerContractFeeModel and get_commission_with_context.
+  file: skills/nt-model/references/concepts/instruments.md:352
+  evidence: python/nautilus_trader/execution/__init__.pyi FeeModel.get_commission(_order, _fill_quantity: model.Quantity, _fill_px: model.Price, _instrument) and get_commission_with_context(...); __all__ includes PerContractFeeModel at ac22d5cf.
+  fix: Rewrite the custom fee model example against the pinned signature, mention built-in PerContractFeeModel (from nautilus_trader.execution) and get_commission_with_context, and drop the Cython parameter-naming narrative.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-069] [P2] [OPEN] Improvement opportunities: overview.md data types list omits MarkPriceUpdate, IndexPriceUpdate, FundingRateUpdate and OptionGreeks which the pinned overview documents.
+  file: skills/nt-model/references/concepts/overview.md:123
+  evidence: upstream docs/concepts/overview.md:156-168 at ac22d5cf lists 13 data types including MarkPriceUpdate, IndexPriceUpdate, FundingRateUpdate, OptionGreeks.
+  fix: Extend the Data types list with the four missing types and the custom-data pointer sentence from upstream.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-070] [P2] [OPEN] Improvement opportunities: instrument_types.md does not cover the drift-window Python instrument properties: direct instrument.symbol / instrument.venue getters and activation_utc / expiration_utc on expiring instruments.
+  file: skills/nt-model/references/guides/instrument_types.md:83
+  evidence: commits 20a16b761 and 741b61d6d (in 4692bac..ac22d5cf); python/nautilus_trader/model/__init__.pyi:448/450 instrument symbol()/venue() getters and impl_instrument_utc_getters (activation_utc/expiration_utc) in crates/model/src/python/instruments/mod.rs.
+  fix: Add instrument.symbol/venue to the key-properties list and note activation_utc/expiration_utc alongside the existing activation_ns/expiration_ns coverage (lines 138, 357).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-071] [P1] [OPEN] V2 compliance violations: backtesting.md 'Automatic chunking' pattern calls engine.add_data_iterator(data_name=..., generator=...) which does not exist anywhere in the pinned tree (repeated at line 1120 for timer-only backtests).
+  file: skills/nt-backtest/references/concepts/backtesting.md:118
+  evidence: git grep -n 'add_data_iterator' ac22d5cf returns nothing in crates/ or python/; upstream docs/concepts/backtesting/apis-and-runs.md:88 explicitly states 'The low-level API does not expose a generator-based add_data_iterator() method.'
+  fix: Remove the add_data_iterator streaming subsection; document the real streaming options: manual chunking with run(streaming=True)+clear_data()+end() (already shown) and BacktestNode catalog streaming per apis-and-runs.md.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-072] [P1] [OPEN] V2 compliance violations: backtesting.md fill-model configuration uses ImportableFillModelConfig/FillModelConfig and paths nautilus_trader.backtest.models:FillModel / nautilus_trader.backtest.config:FillModelConfig; none exist at the pin and upstream explicitly removed import-path fill model loading.
+  file: skills/nt-backtest/references/concepts/backtesting.md:1160
+  evidence: git grep 'ImportableFillModelConfig\|class FillModelConfig' ac22d5cf -- python/ returns nothing; upstream docs/concepts/backtesting/fill-models.md:103-104 'The current high-level venue configuration accepts built-in fill models. It does not load fill models from import-path configuration objects.'
+  fix: Replace the ImportableFillModelConfig examples with built-in model instances per upstream fill-models.md (e.g. fill_model=ThreeTierFillModel(prob_fill_on_limit=1.0, prob_slippage=0.0, random_seed=42) from nautilus_trader.execution) and note the low-level custom-object protocol.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-073] [P1] [OPEN] V2 compliance violations: backtesting.md margin-model section (1429-1644) teaches MarginModelConfig(model_type='standard'|'leveraged'|custom-path), MarginModelFactory.create, account.set_margin_model(), TestExecStubs.margin_account() and nautilus_trader.backtest.models imports - none exist on the pinned Python surface.
+  file: skills/nt-backtest/references/concepts/backtesting.md:1452
+  evidence: git grep 'MarginModelConfig\|MarginModelFactory\|TestExecStubs' ac22d5cf -- python/ returns nothing; MarginAccount pyi has no set_margin_model; the real API is from nautilus_trader.model import StandardMarginModel / LeveragedMarginModel with add_venue(margin_model=...) or BacktestVenueConfig(margin_model=...) per upstream docs/concepts/backtesting/accounts-and-margin.md:74-95 and crates/backtest/src/python/engine.rs:1588-1602 (accepts only Standard/Leveraged instances).
+  fix: Rewrite Usage/Real-world/Custom-model subsections to the pinned API: margin_model=StandardMarginModel() / LeveragedMarginModel() in BacktestVenueConfig or engine.add_venue(); delete MarginModelConfig/MarginModelFactory/set_margin_model/TestExecStubs examples and the custom-Python-margin-model how-to (not supported at the pin).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-074] [P1] [OPEN] V2 compliance violations: backtesting.md Python snippets import from stale v1 module paths throughout: backtest.engine (67, 245, 1071, 1330), backtest.node (223), backtest.config (552, 673, 897, 1159-1160, 1182-1183, 1451-1452, 1595), model.enums (1072, 1246, 1332), model.currencies (392/1331), model.objects (1245), model.book (1245), data.config (1098), core.rust.model (1247).
+  file: skills/nt-backtest/references/concepts/backtesting.md:67
+  evidence: pinned python tree is flat: nautilus_trader.backtest (BacktestEngine/BacktestNode/BacktestVenueConfig), nautilus_trader.model (Money/Currency/OmsType/AccountType/OrderSide/OrderBook/BookType), nautilus_trader.data (DataEngineConfig), nautilus_trader.execution (FillModel); upstream docs use e.g. docs/getting_started/backtest_low_level.py:23 'from nautilus_trader.backtest import BacktestEngine'; 'nautilus_trader.core.rust' is v1-only.
+  fix: Rewrite all import lines to the flat pinned modules: nautilus_trader.backtest, nautilus_trader.model, nautilus_trader.data, nautilus_trader.execution, nautilus_trader.config (for BacktestEngineConfig re-exports).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-075] [P1] [OPEN] V2 compliance violations: SKILL.md Cargo dependency block pins nautilus crates at version 0.62; the pinned workspace version is 0.64.0.
+  file: skills/nt-backtest/SKILL.md:137
+  evidence: root Cargo.toml at ac22d5cf line 52: version = "0.64.0"; crates/* use version.workspace = true (e.g. crates/backtest/Cargo.toml:3).
+  fix: Bump the five nautilus-* dependency versions in the SKILL.md Cargo.toml block from "0.62" to "0.64".
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-076] [P1] [OPEN] V2 compliance violations: run_rust_backtest.md dependency block pins nautilus crates at version 0.62; the pinned workspace version is 0.64.0.
+  file: skills/nt-backtest/references/guides/run_rust_backtest.md:20
+  evidence: root Cargo.toml at ac22d5cf line 52: version = "0.64.0"; crates/* use version.workspace = true.
+  fix: Bump the five nautilus-* dependency versions from "0.62" to "0.64".
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-077] [P1] [OPEN] V2 compliance violations: SKILL.md Rust fill-model example calls self.sample(...) and self.simulated_book(...), which are not methods of the pinned FillModel trait - the example cannot compile.
+  file: skills/nt-backtest/SKILL.md:335
+  evidence: crates/execution/src/models/fill.rs at ac22d5cf defines the FillModel trait (line 48) with is_limit_filled, is_slipped, fill_limit_inside_spread, get_orderbook_for_fill_simulation only; git grep 'fn sample\|fn simulated_book' ac22d5cf -- crates/ returns no FillModel methods.
+  fix: Replace sample()/simulated_book() calls with concrete logic in the example (e.g. rand sampling inside the user struct and a constructed OrderBook), matching the pinned trait surface.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-078] [P1] [OPEN] V2 compliance violations: references/examples/rust_backtest/engine_ema_cross.rs is a stale copy: it calls add_venue with ~30 positional arguments (Venue, OmsType, ..., FillModelAny::default(), FeeModelAny::default(), ...), but the pinned Rust engine takes a single SimulatedVenueConfig.
+  file: skills/nt-backtest/references/examples/rust_backtest/engine_ema_cross.rs:89
+  evidence: crates/backtest/src/engine.rs:274 at ac22d5cf: 'pub fn add_venue(&mut self, config: SimulatedVenueConfig)'; upstream crates/backtest/examples/engine_ema_cross.rs uses SimulatedVenueConfig::builder().venue(...).oms_type(...)...build() (diff shows the divergence).
+  fix: Replace the file body with the pinned upstream crates/backtest/examples/engine_ema_cross.rs (including the mimalloc allocator gating and constants), keeping any skill header comment.
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-079] [P1] [OPEN] V2 compliance violations: order_book.md note references the removed nautilus_pyo3 module and the v1 path nautilus_trader.model.book.OrderBook; the pinned surface is flat nautilus_trader.model.OrderBook.
+  file: skills/nt-backtest/references/concepts/order_book.md:14
+  evidence: no nautilus_pyo3 files or references exist under python/ at ac22d5cf (git grep nautilus_pyo3 returns nothing); python/nautilus_trader/common/__init__.pyi:337 cache.order_book() -> model.OrderBook on the flat module.
+  fix: Rewrite the note: Python access is 'from nautilus_trader.model import OrderBook, OwnOrderBook' on the flat PyO3 surface.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-080] [P1] [OPEN] V2 compliance violations: benchmarking.md canonical-workload semantic-check command uses '--test canonical_backtest_workloads'; after 503debebe (in the drift window) integration tests were consolidated and the invocation is '--test integration canonical_backtest_workloads::'.
+  file: skills/nt-backtest/references/guides/benchmarking.md:164
+  evidence: commit 503debebe 'Consolidate Rust integration test binaries' changed Makefile/docs from '--test canonical_backtest_workloads' to '--test integration canonical_backtest_workloads::'; upstream docs/developer_guide/benchmarking.md:162-163 at ac22d5cf shows the new form; crates/backtest/tests/integration/main.rs exists.
+  fix: Update the command to 'CARGO_BUILD_JOBS=16 cargo test --locked -p nautilus-backtest --test integration canonical_backtest_workloads::'.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-081] [P2] [OPEN] Improvement opportunities: SKILL.md Rust Usage covers only add_data/BacktestNode chunking; the drift-window typed batch input/replay (BacktestEngine::add_data_batch + DataBatch) and lazy multi-config node streaming are not covered anywhere in the skill.
+  file: skills/nt-backtest/SKILL.md:197
+  evidence: commits 3c9ad2ef4 'Add BacktestEngine typed batch input' and dabe39d77 'Add BacktestEngine typed batch replay' (crates/backtest/src/engine.rs:436 pub fn add_data_batch, crates/model/src/data/batch.rs); ec1894d6f 'Stream backtest data lazily across multiple data configs' (crates/backtest/src/node.rs) - all in 4692bac..ac22d5cf.
+  fix: Add a short subsection after the add_data example: add_data_batch(DataBatch, client_id, validate, sort) replays typed batches without per-item Data values, and note BacktestNode now streams lazily across multiple BacktestDataConfig entries.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-082] [P2] [OPEN] Improvement opportunities: order_book.md's Python note predates the drift-window Python order book compatibility work: OrderBook.to_deltas(), get_all_crossed_levels(), pickle/deep-copy support, BookLevel comparisons, and OrderBookDelta is_add/is_update/is_delete/is_clear + OrderBookDeltas.is_snapshot properties are uncovered.
+  file: skills/nt-backtest/references/concepts/order_book.md:14
+  evidence: commits a5dfd991b and 741b61d6d (in 4692bac..ac22d5cf); RELEASES.md lines added by 741b61d6d: 'Added Python OrderBookDelta.is_add, is_update, is_delete, is_clear, and OrderBookDeltas.is_snapshot'; python/nautilus_trader/model/__init__.pyi:4157 def is_snapshot.
+  fix: After correcting the module name (see 078), extend the Python note with the new compatibility surface and delta inspection properties.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-083] [P2] [OPEN] Improvement opportunities: Quarantined portfolio example calls self.portfolio.is_flat(instrument_id), margins_init(venue) and margins_maint(venue), which do not exist on the pinned Python Portfolio surface (only balances_locked among that group remains).
+  file: skills/nt-backtest/migration_reference/python/examples/portfolio/strategy.py:118
+  evidence: python/nautilus_trader/portfolio/__init__.pyi at ac22d5cf exposes balances_locked (line 51) but no is_flat/margins_init/margins_maint (git grep returns nothing for those three names).
+  fix: Replace is_flat with net_position(...) == 0 / unrealized_pnl checks and drop or replace the margins_init/margins_maint block with balances_locked or account(venue) usage, keeping the migration-lane label.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-084] [P2] [OPEN] Improvement opportunities: model_configs_example.py is built entirely on ImportableFillModelConfig/ImportableFeeModelConfig/ImportableLatencyModelConfig and nautilus_trader.backtest.models/config paths, all removed at the pin; as a migration example it should show the v2 equivalents.
+  file: skills/nt-backtest/migration_reference/python/examples/model_configs_example.py:22
+  evidence: git grep 'ImportableFeeModelConfig\|ImportableFillModelConfig\|ImportableLatencyModelConfig' ac22d5cf returns nothing; venue configs at the pin accept model instances (python/nautilus_trader/backtest/__init__.pyi BacktestVenueConfig fill_model/latency_model/fee_model params take instances; latency model is StaticLatencyModel from nautilus_trader.execution).
+  fix: Rewrite the example to configure venues with instance models (DefaultFillModel/ThreeTierFillModel, StaticLatencyModel, MakerTakerFeeModel/FixedFeeModel/PerContractFeeModel from nautilus_trader.execution), noting the v1 importable-config contrast.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-085] [P2] [OPEN] Improvement opportunities: python-usage.md BacktestDataConfig example uses v1 keys data_cls= and bar_type= and stale imports (backtest.node, model.data); the pinned config uses data_type= plus bar_spec=/bar_types= on the flat modules.
+  file: skills/nt-backtest/migration_reference/python/python-usage.md:34
+  evidence: python/nautilus_trader/backtest/__init__.pyi:76-92 BacktestDataConfig.__new__(data_type: str, ..., bar_spec: BarSpecification | None, bar_types: Sequence[str] | None, ...) at ac22d5cf; upstream docs use 'from nautilus_trader.backtest import BacktestNode'.
+  fix: Update the example to data_type='bar'/'quote_tick' with bar_types=[...] and flat imports, or explicitly annotate the v1 keys as pre-migration.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-086] [P2] [OPEN] Improvement opportunities: templates/fill_model.py subclasses FillModel passing prob_fill_on_limit/prob_slippage/random_seed to super().__init__; the pinned Python FillModel.__init__ takes no arguments, so the template breaks, and its imports (backtest.models, model.book, model.instruments.base, model.objects, model.orders.base) are v1 paths.
+  file: skills/nt-backtest/migration_reference/python/templates/fill_model.py:39
+  evidence: python/nautilus_trader/execution/__init__.pyi: 'class FillModel: def __init__(self) -> None' at ac22d5cf; probabilistic parameters live on built-in models (DefaultFillModel/ProbabilisticFillModel) and upstream docs/concepts/backtesting/fill-models.md:112-120 documents the custom-object protocol (is_limit_filled/is_slipped/...).
+  fix: Store the parameters on the subclass without forwarding them to super(), import FillModel/OrderBook/Price from nautilus_trader.execution / nautilus_trader.model, and reference the pinned custom-object protocol.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-087] [P2] [OPEN] Improvement opportunities: Portfolio example/README predate user-defined portfolio statistics (Portfolio.register_statistic with a PortfolioStatistic base class) added in the drift window; the flagship portfolio example does not exercise it.
+  file: skills/nt-backtest/migration_reference/python/examples/portfolio/README.md:10
+  evidence: commits 7e8c9c9cd and eb42e2bfc (in 4692bac..ac22d5cf), RELEASES.md: 'Added user-defined portfolio statistics through Portfolio.register_statistic(), with a PortfolioStatistic base class'; python/nautilus_trader/portfolio/__init__.pyi:136 def register_statistic.
+  fix: Add a short section (README plus strategy snippet) demonstrating Portfolio.register_statistic(MyStatistic()) for a custom portfolio metric.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-088] [P1] [OPEN] V2 compliance violations: Test conftest gates on the pinned V2 module set but imports v1-only module paths and v1 FillModel constructor, so the suite cannot even collect against the pinned tree.
+  file: skills/nt-strategy-builder/tests/conftest.py:17
+  evidence: conftest.py:10-14 importorskips nautilus_trader._libnautilus.common ('pinned NautilusTrader V2 module set'), then line 17-18 import nautilus_trader.backtest.engine/.models; pinned python/nautilus_trader/backtest/ contains only __init__.py re-exporting BacktestEngine/FillModel-related names at package root (__init__.pyi __all__), and base FillModel at v2 takes no constructor args (python/nautilus_trader/execution/__init__.pyi:152-153 `class FillModel: def __init__(self) -> None`; DefaultFillModel with prob_fill_on_limit/prob_slippage/random_seed at :75-79). Executed with the pinned build (python/.venv): 'ModuleNotFoundError: No module named nautilus_trader.backtest.engine' at conftest.py:17.
+  fix: Change to package-root v2 imports: `from nautilus_trader.backtest import BacktestEngine` and `from nautilus_trader.execution import FillModel, DefaultFillModel`, constructing DefaultFillModel(prob_fill_on_limit=..., prob_slippage=..., random_seed=...) instead of FillModel(...). Apply the same import fix in tests/test_backtest_patterns.py:17-18 and tests/test_dex_as_venue.py:16-17 (identical stale paths).
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-089] [P1] [OPEN] V2 compliance violations: test_live_node_config.py imports v1-only config names (TradingNodeConfig, LiveExecEngineConfig, LoggingConfig) that do not exist in the pinned v2 nautilus_trader.config.
+  file: skills/nt-strategy-builder/tests/test_live_node_config.py:19
+  evidence: Pinned-build introspection (4692bac35, python/.venv): nautilus_trader.config exports LiveExecutionEngineConfig and LoggerConfig, but has no TradingNodeConfig, no LiveExecEngineConfig, no LoggingConfig (`ImportError: cannot import name 'LoggingConfig' ... Did you mean: 'LoggerConfig'?`); nautilus_trader.live exports LiveNode but not TradingNode. python/nautilus_trader/config/__init__.pyi __all__ confirms the v2 name set.
+  fix: Either rewrite the test against the v2 names (LiveExecutionEngineConfig, LoggerConfig, LiveNodeConfig-driven LiveNode wiring) or keep it as an explicitly v1-labelled migration test that skips when the v1 module set is absent; as written it is a broken V2-gated test.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-090] [P1] [OPEN] V2 compliance violations: test_multi_venue.py imports v1-only nautilus_trader.model.data and exec-loads the legacy template whose own v1 imports fail against the pinned V2 tree.
+  file: skills/nt-strategy-builder/tests/test_multi_venue.py:18
+  evidence: `from nautilus_trader.model.data import QuoteTick` (test_multi_venue.py:18) fails at v2 (pinned-build check: 'No module named nautilus_trader.model.data'; QuoteTick is exported from nautilus_trader.model package root); _spec.loader.exec_module (line 30) then executes templates/legacy_migration/multi_venue_strategy.py, which imports nautilus_trader.trading.config/.strategy and nautilus_trader.live.node — all absent submodules at pinned v2 (verified ModuleNotFoundError for each).
+  fix: Import QuoteTick from nautilus_trader.model (package root) and make the template load conditional on a v1 module set (pytest.importorskip) or port the template under test to v2 package-root imports; the test is V2-gated via conftest and currently cannot run.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-091] [P1] [OPEN] V2 compliance violations: SKILL.md claims 'New code built from these templates should pass the included test suite' and enumerates its coverage, but the suite cannot collect against the pinned V2 build.
+  file: skills/nt-strategy-builder/SKILL.md:187
+  evidence: Verified execution: pinned-build pytest on skills/nt-strategy-builder/tests/ aborts with 'ImportError while loading conftest ... ModuleNotFoundError: No module named nautilus_trader.backtest.engine' (conftest.py:17). The recorded G2 evidence (references/g2-evidence/nt-strategy-builder.json) runs tools/run_pinned_v2_pytest.py on tests/test_strategy_builder_v2_contract.py plus upstream acceptance tests, not this suite, so the gate does not cover the advertised command at SKILL.md:191.
+  fix: Fix the test suite imports (NT-081..083) and re-run, or restate the Testing section to point at the contract test that is actually executed against the pinned V2 build; the current 'should pass' claim is false for the pinned tree.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-092] [P1] [OPEN] V2 compliance violations: AGENTS.md instructs 'uv run pytest skills/nt-strategy-builder/tests/ -v' but that suite fails to collect against the pinned V2 tree.
+  file: skills/nt-strategy-builder/AGENTS.md:78
+  evidence: Same verified run: conftest.py:17 ModuleNotFoundError under the pinned V2 build (python/.venv, 4692bac35); conftest.py:10-14 explicitly gates on the pinned V2 module set, so the command cannot succeed as documented.
+  fix: Update the TESTING command after fixing the suite (NT-081), or point agents at the pinned-V2 contract test actually used for G2 evidence.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-093] [P1] [OPEN] V2 compliance violations: Authoritative LiveNode lifecycle guidance documents a nonexistent LiveNodeHandle::is_stopping() method.
+  file: skills/nt-strategy-builder-rust/SKILL.md:223
+  evidence: crates/live/src/node/state.rs:175-198 (4692bac35) shows the handle exposes state() -> NodeState, should_stop(), is_running(), metrics_snapshot(), stop(); grep 'pub fn is_stopping' across crates/live returns zero hits at both 4692bac35 and the drift-window tip ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d (evidence worktree nautilus_trader-evidence-ac22d5cf4).
+  fix: Replace 'is_stopping()' with the real readiness/teardown probe, e.g. handle.state() == NodeState::ShuttingDown or handle.should_stop(), so the documented API compiles.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-094] [P1] [OPEN] V2 compliance violations: Authoritative Strategy trait sketch shows on_order_canceled receiving an owned OrderCanceled; upstream takes &OrderCanceled.
+  file: skills/nt-strategy-builder-rust/SKILL.md:122
+  evidence: crates/trading/src/strategy/mod.rs:1653 (4692bac35): `fn on_order_canceled(&mut self, event: &OrderCanceled) {}`; unchanged at ac22d5cf4 (mod.rs:1683). The skill's own note says handlers receive owned events 'except a few &-reference ones' but the sketch omits the reference for this handler, so a copied override would not match the trait method.
+  fix: Change the sketch line to `fn on_order_canceled(&mut self, event: &OrderCanceled) {}` to mirror upstream mod.rs:1653.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-095] [P1] [OPEN] Legacy unlabelled content: Four test files carry unlabelled v1/TradingNode-adjacent Python content while the skill's other Python artifacts all carry migration/reference labels.
+  file: skills/nt-strategy-builder/tests/conftest.py:1
+  evidence: All five templates open with '# TEMPLATE_CLASSIFICATION: legacy executable; migration/reference-only; not a production default' (e.g. templates/legacy_migration/backtest_node.py:1) and test_live_node_config.py:1-4 opens with the NT v2 compatibility note, but tests/conftest.py, tests/test_backtest_patterns.py, tests/test_dex_as_venue.py, and tests/test_multi_venue.py have no label header while containing v1-only import paths (conftest.py:17-18, test_backtest_patterns.py:17-18, test_dex_as_venue.py:16-17, test_multi_venue.py:18) and exec-loading the legacy TradingNode template (test_multi_venue.py:30).
+  fix: Add the same '# NT v2 compatibility note' / migration-reference header used by test_live_node_config.py to conftest.py, test_backtest_patterns.py, test_dex_as_venue.py, and test_multi_venue.py (or port them to v2 shapes per NT-081..083).
+  acceptance-test: python3 tools/check_legacy_labelling.py exits 0; grep in skills/nt-strategy-builder/tests/conftest.py shows the v1 excerpt only under a migration/reference label
+
+[NT-2026-09-05-096] [P2] [OPEN] Improvement opportunities: BacktestEngine registration guidance omits drift-window typed batch input and lazy multi-config streaming now available for replay.
+  file: skills/nt-strategy-builder-rust/SKILL.md:220
+  evidence: Drift window 4692bac..ac22d5cf: 3c9ad2ef4 adds `BacktestEngine::add_data_batch(data: DataBatch, client_id: Option<ClientId>, validate: bool, sort: bool)` (crates/backtest/src/engine.rs); ec1894d6f makes run_streaming stream lazily across multiple BacktestDataConfigs instead of collecting into one Vec<Data>. Neither feature appears in the skill's BacktestEngine registration/lifecycle guidance.
+  fix: Add a bullet next to the BacktestEngine registration item covering typed batch input via add_data_batch and lazy multi-config streaming for memory-bounded replay, citing the upstream commits as version-scoped evidence.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-097] [P2] [OPEN] Improvement opportunities: portfolio() guidance omits drift-window user-defined portfolio statistics registration carried into backtest results.
+  file: skills/nt-strategy-builder-rust/SKILL.md:130
+  evidence: Drift window commit 7e8c9c9cd 'Support user-defined portfolio statistics': register any user-defined Python or Rust statistic on Portfolio, carried into backtest results and post-run logs (crates/portfolio/src/portfolio.rs, crates/portfolio/src/python/mod.rs, python/nautilus_trader/analysis/statistic.py, docs/concepts/portfolio.md). The skill's portfolio() bullet only lists positions/balances/PnL.
+  fix: Extend the portfolio() bullet (and optionally the backtest results note) with the user-defined statistics registration capability, marked as post-4692bac drift evidence.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-098] [P2] [OPEN] Improvement opportunities: Migration lane shows only the v1 frozen=True StrategyConfig subclass pattern with no mapping to the v2 keyword-only subclass shape simplified by bed07c6c3e.
+  file: skills/nt-strategy-builder/templates/legacy_migration/multi_venue_strategy.py:37
+  evidence: Drift window commit bed07c6c3e 'Simplify Python config subclass definitions' documents the v2 rule in docs/concepts/strategies.md:757-791 (ac22d5cf4): keyword-only custom fields, `**_kwargs` passthrough, `super().__init__()` with no arguments; the template still shows `class MultiVenueStrategyConfig(StrategyConfig, frozen=True)` with annotated fields, and migration_reference/python/venue-and-simulation-examples.md contains no config-subclass migration mapping.
+  fix: Add a v1-to-v2 StrategyConfig subclass mapping section to migration_reference/python/venue-and-simulation-examples.md (frozen=True annotated-struct pattern -> keyword-only __init__ with **_kwargs and super().__init__()), citing docs/concepts/strategies.md and MIGRATION_V2.md at bed07c6c3e.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-099] [P1] [OPEN] V2 compliance violations: portfolio.md claims the nautilus_trader.analysis.statistic module was 'removed', but upstream restored user-defined Python portfolio statistics at the pinned tip (commit 7e8c9c9cd 'Support user-defined portfolio statistics', 2026-09-04).
+  file: skills/nt-signals/references/concepts/portfolio.md:156
+  evidence: python/nautilus_trader/analysis/statistic.py:16 docstring 'Base class for user-defined portfolio statistics.' (exists at pinned ac22d5cf4); crates/analysis/src/python/statistic.rs added by 7e8c9c9cd (git log --oneline -1 -- crates/analysis/src/python/statistic.rs -> 7e8c9c9cd); crates/analysis/src/python/analyzer.rs:145 register_statistic(statistic_from_pyobject(py, statistic)); python/nautilus_trader/portfolio/__init__.pyi:136 def register_statistic(self, statistic: typing.Any); docs/concepts/portfolio.md:277 '### Custom statistics' instructs subclassing Python PortfolioStatistic.
+  fix: Rewrite the 'Legacy v1 Python pattern' paragraph and 'Custom statistics' section: the Python base class nautilus_trader.analysis.statistic.PortfolioStatistic is current at the pinned tip; document the dual supported paths (Rust PortfolioStatistic trait AND Python subclass registered via Portfolio.register_statistic / PortfolioAnalyzer.register_statistic), and reclassify migration_reference/python/python/analysis/statistic.py + templates/portfolio_statistic.py away from 'removed/legacy' framing.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-100] [P1] [OPEN] V2 compliance violations: portfolio.md teaches calculate_from_orders as a PortfolioStatistic trait method and lists 'Orders based statistics' as a category, but 7e8c9c9cd removed calculate_from_orders from the trait; orders are no longer a statistic input.
+  file: skills/nt-signals/references/concepts/portfolio.md:118
+  evidence: crates/analysis/src/statistic.rs:39-78 trait now defines only name, calculate_from_returns (:46), calculate_from_realized_pnls (:55), calculate_from_positions (:67), calculate_from_returns_with_benchmark (:78); git show 7e8c9c9cd -- crates/analysis/src/statistic.rs deletes 'fn calculate_from_orders(&self, orders: Vec<Box<dyn Order>>)'; docs/concepts/portfolio.md:262-266 result categories are PnL/returns/general-from-positions only.
+  fix: Delete calculate_from_orders from the trait-method list (line 117-119), drop the 'Orders based statistics' bullet (line 108), and fix the Backtest analysis paragraph (lines 195, 200) to say realized PnLs, returns, and positions (no orders); optionally mention the new calculate_from_returns_with_benchmark default.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-101] [P1] [OPEN] V2 compliance violations: api/analysis.md automodule stub omits the nautilus_trader.analysis.statistic module that upstream documents in its Analysis API reference.
+  file: skills/nt-signals/references/api/analysis.md:40
+  evidence: docs/api_reference/analysis.md:44 '.. automodule:: nautilus_trader.analysis.statistic' (block added by 7e8c9c9cd per git show 7e8c9c9cd --stat 'docs/api_reference/analysis.md | 8 +'); skill file ends at line 41 after reporter block with no statistic block.
+  fix: Append the eval-rst automodule block for nautilus_trader.analysis.statistic mirroring upstream docs/api_reference/analysis.md:42-48.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-102] [P1] [OPEN] V2 compliance violations: Vendored Rust reference copy of the analysis crate is stale vs the pinned tree: src/python/statistic.rs is missing entirely, python/mod.rs does not register it, python/analyzer.rs still carries the removed ~300-line match-based py_register_statistic, analyzer.rs lacks replace_statistics, and Cargo.toml lacks the log workspace dependency - all added/changed by 7e8c9c9cd.
+  file: skills/nt-signals/references/rust/analysis/src/python/mod.rs:23
+  evidence: diff skill vs pinned crates/analysis: skill python/mod.rs:23-25 has only 'pub mod analyzer; pub mod snapshot; pub mod statistics;' while upstream crates/analysis/src/python/mod.rs:25 adds 'pub mod statistic;'; upstream crates/analysis/src/python/statistic.rs exists (312 lines, new in 7e8c9c9cd); upstream crates/analysis/src/python/analyzer.rs:26,145,152 use statistic_from_pyobject while skill src/python/analyzer.rs:164 still has the type-name match implementation; upstream crates/analysis/src/analyzer.rs:137-144 adds pub fn replace_statistics (used by crates/portfolio/src/portfolio.rs:2049); upstream crates/analysis/Cargo.toml adds 'log = { workspace = true }' absent from skill Cargo.toml.
+  fix: Refresh the vendored crate snapshot at skills/nt-signals/references/rust/analysis from pinned crates/analysis at ac22d5cf4 (copy src/python/statistic.rs, update python/mod.rs, python/analyzer.rs, analyzer.rs, Cargo.toml; the remaining ~90 statistics/*.rs files are already byte-identical).
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-103] [P1] [OPEN] V2 compliance violations: Vendored src/statistic.rs still defines the removed calculate_from_orders default method and imports nautilus_model::orders::Order, so the reference copy teaches a trait shape that no longer compiles at the pinned tip.
+  file: skills/nt-signals/references/rust/analysis/src/statistic.rs:63
+  evidence: skill src/statistic.rs:18 'use nautilus_model::{orders::Order, position::Position};' and :63 'fn calculate_from_orders(&self, orders: Vec<Box<dyn Order>>)...' vs upstream crates/analysis/src/statistic.rs:18 'use nautilus_model::position::Position;' with no orders method (removed by 7e8c9c9cd); upstream also added the panic-contract doc at crates/analysis/src/statistic.rs:27-33.
+  fix: Sync this file from pinned crates/analysis/src/statistic.rs: drop calculate_from_orders and the Order import, keep the new doc comment describing which defaults panic and that calculate_from_returns_with_benchmark defaults to None.
+  acceptance-test: cargo check of the corrected example passes at pin ac22d5cf4 (G2 harness re-execution); python3 -m pytest -q green
+
+[NT-2026-09-05-104] [P1] [OPEN] V2 compliance violations: indicators_guide.md presents MovingAverageFactory as a Python-visible API with create(period, ma_type, **kwargs) and a 'from nautilus_trader.indicators import MovingAverageFactory' example, and uses nonexistent nautilus_trader.indicators.averages/.momentum/.trend submodule headers - at the pinned tip the factory is Rust-only with argument order (moving_average_type, period) and the Python module is flat.
+  file: skills/nt-signals/references/guides/indicators_guide.md:42
+  evidence: crates/indicators/src/average/mod.rs:84-88 'pub fn create(moving_average_type: MovingAverageType, period: usize) -> Box<dyn MovingAverage + Send + Sync>'; python/nautilus_trader/indicators/__init__.pyi exports 45 classes and no MovingAverageFactory (grep -c MovingAverageFactory = 0; only MovingAverageType at :37); python/nautilus_trader/indicators/ contains only __init__.py/__init__.pyi (no averages/momentum/trend submodules); the skill's own SKILL.md states the factory 'is Rust-only and is not exposed to Python'.
+  fix: Fix line 42 to describe the Rust-only factory with its real signature, remove or rewrite the Python import example at lines 286-289 (import only MovingAverageType from the flat module), and drop the fake submodule suffixes from the section headers (lines 27, 53, 71) since the PyO3 surface is the flat nautilus_trader.indicators module.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-105] [P1] [OPEN] V2 compliance violations: indicators_guide.md claims average::lr and average::vwap are 'Additional Rust-only averages', but both are exposed to Python at the pinned tip as LinearRegression and VolumeWeightedAveragePrice.
+  file: skills/nt-signals/references/guides/indicators_guide.md:46
+  evidence: python/nautilus_trader/indicators/__init__.pyi:606 'class LinearRegression' and :981 'class VolumeWeightedAveragePrice' (PyO3 wrappers crates/indicators/src/python/average/lr.rs and vwap.rs exist); crates/indicators/src/average/ contains lr.rs and vwap.rs.
+  fix: Replace the 'Rust-only averages' sentence with a correct statement (e.g., linear-regression MA and VWAP are Python-visible as LinearRegression / VolumeWeightedAveragePrice) or list only genuinely unexposed items after grepping python/nautilus_trader/indicators/__init__.pyi.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-106] [P1] [OPEN] V2 compliance violations: visualization.md instructs installing plotly>=6.3.1, but the pinned upstream requires plotly>=7.0.0,<8.0.0 for the visualization extra.
+  file: skills/nt-signals/references/concepts/visualization.md:22
+  evidence: python/pyproject.toml:31 '"plotly>=7.0.0,<8.0.0",' (visualization extra at :29); skill line 31 repeats 'uv pip install "plotly>=6.3.1"'.
+  fix: Update both occurrences (lines 22 and 31) to 'plotly>=7.0.0,<8.0.0' to match python/pyproject.toml.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-107] [P2] [OPEN] Improvement opportunities: The restored user-defined portfolio-statistics feature (drift-window commit 7e8c9c9cd) is not covered anywhere in nt-signals beyond the false 'removed' note: the skill does not document Portfolio.register_statistic carrying custom statistics into backtest results and tearsheets, statistics surviving analyzer resets, or the current Python PortfolioStatistic method signatures.
+  file: skills/nt-signals/SKILL.md:198
+  evidence: docs/concepts/portfolio.md:269-331 (register before the run; registration persists across statistics() calls and resets; every category is called; error handling via unraisable hook); docs/concepts/visualization.md:514-520 (a statistic registered with Portfolio.register_statistic() reaches the tearsheet without extra wiring); crates/portfolio/src/portfolio.rs:2049 analyzer.replace_statistics(...); python/nautilus_trader/analysis/statistic.py:64-114 current signatures calculate_from_returns(dict[int, float]) / calculate_from_realized_pnls(list[float]) / calculate_from_positions(list[Position]) - the quarantined templates/portfolio_statistic.py still teaches v1 pd.Series signatures with _check_valid_returns/_downsample_to_daily_bins which do not exist upstream (grep on python/nautilus_trader/analysis/statistic.py returns nothing).
+  fix: Add a current-path subsection on user-defined statistics to SKILL.md/portfolio.md (Python subclass + Portfolio.register_statistic + Rust trait), and refresh migration_reference/python/templates/portfolio_statistic.py and python-extension.md's 'Custom PortfolioStatistic' block to the pinned API shape (dict/list inputs, float|None returns) or relabel them accurately.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-108] [P1] [OPEN] V2 compliance violations: concepts/cache.md documents a CacheConfig 'database' parameter and a CacheConfig(database=DatabaseConfig(...)) example that no longer exist at the pinned tip, and omits the new save_market_data / persist_account_events parameters.
+  file: skills/nt-data/references/concepts/cache.md:117
+  evidence: crates/common/src/cache/config.rs:36-73 CacheConfig fields (encoding ... tick_capacity, bar_capacity, persist_account_events:70, save_market_data:73) contain no database field; python/nautilus_trader/common/__init__.pyi:75+ CacheConfig.__init__ likewise; DatabaseConfig is not exported anywhere in python/nautilus_trader (grep -rn 'DatabaseConfig' python/nautilus_trader returns only RedisCacheConfig/PostgresCacheConfig hits); docs/concepts/cache.md:95-126 shows the current parameter set and docs/concepts/cache.md:126-198 documents the replacement RedisCacheConfig/PostgresCacheConfig + with_cache_database_factory pattern.
+  fix: Replace the parameter table (lines 116-137) with the pinned CacheConfig fields including save_market_data and persist_account_events, and rewrite the Database configuration section (lines 136-158) to the current backing-store pattern (RedisCacheConfig/PostgresCacheConfig via with_cache_database_factory) as in docs/concepts/cache.md.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-109] [P1] [OPEN] V2 compliance violations: cache_operations.md imports PriceType from the nonexistent nautilus_trader.model.enums module; the pinned Python model package is flat.
+  file: skills/nt-data/references/guides/cache_operations.md:108
+  evidence: python/nautilus_trader/model/ contains only __init__.py and __init__.pyi (no enums submodule); PriceType is exported from the flat module (python/nautilus_trader/model/__init__.pyi class list includes PriceType; also members list in docs api data stub).
+  fix: Change line 108 to 'from nautilus_trader.model import PriceType' and sweep the guide for other dotted model imports.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-110] [P1] [OPEN] V2 compliance violations: concepts/data.md lists fs_storage_options as a DataCatalogConfig optional parameter, but at the pinned tip DataCatalogConfig accepts only path, fs_protocol, fs_rust_storage_options, and name.
+  file: skills/nt-data/references/concepts/data.md:1053
+  evidence: python/nautilus_trader/persistence/__init__.pyi:55-72 DataCatalogConfig.__new__(cls, path, fs_protocol=None, fs_rust_storage_options=None, name=None) - no fs_storage_options (fs_storage_options survives only on FeatherDataCatalog at :343 and as catalog_fs_storage_options on BacktestDataConfig, python/nautilus_trader/backtest/__init__.pyi:81).
+  fix: Rename the bullet at line 1053 to fs_rust_storage_options (matching the cloud example already at lines 1064-1074) and note the Feather/BacktestData variants separately if needed.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-111] [P1] [OPEN] V2 compliance violations: nt-data migration python-usage.md still tells readers the mark_price_count/has_mark_prices/index_price_count/has_index_prices/funding_rate_count/has_funding_rates/instrument_status_count/has_instrument_statuses cache accessors are develop-only and must not be copied into code compiled against the pinned commit, but they are present in the pinned baseline ac22d5cf4 - and nt-data/SKILL.md:103-107 already asserts they are at the baseline, so the two files contradict each other.
+  file: skills/nt-data/migration_reference/python/python-usage.md:65
+  evidence: crates/common/src/cache/mod.rs:1614 and :7837 'pub fn mark_price_count(&self, instrument_id: &InstrumentId) -> usize' at pinned ac22d5cf4; python/nautilus_trader/common/__init__.pyi:342,350 exposes has_mark_prices / mark_price_count (plus index/funding/instrument_status pairs verified in the same stub); skill nt-data/SKILL.md:103-107 states these are 'at the pinned G2 baseline ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d'.
+  fix: Update the 'Develop-only cache history introspection' section (lines 53-70) to state the accessors are part of the pinned baseline and remove the 'Treat these as develop-only / do not copy' instruction, or delete the section since SKILL.md already documents the baseline status.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-112] [P2] [OPEN] Improvement opportunities: concepts/data.md is a pre-restructure single-file snapshot; upstream now ships per-type data guides (bar.md, quote_tick.md, trade_tick.md, order_book_delta(s).md, order_book_depth10.md, mark/index price, funding_rate_update.md, instrument_status.md, instrument_close.md, option_greeks.md) plus an index with a built-in data-types table, none of which the skill references.
+  file: skills/nt-data/references/concepts/data.md:1
+  evidence: docs/concepts/data/ at pinned ac22d5cf4 contains 13 per-type guide files plus index.md (built-in data types table at docs/concepts/data/index.md:9-30 listing each type with a dedicated guide); the skill's 1727-line concepts/data.md has no per-type sections or links (grep -n 'order_book_delta.md\|quote_tick.md' finds nothing).
+  fix: Add per-type coverage (or link stubs) mirroring docs/concepts/data/ for the built-in types, prioritizing types touched in the drift window (e.g., InstrumentClose persistence, 9d45d410d), or refresh the snapshot from the pinned index.md layout.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-113] [P1] [OPEN] V2 compliance violations: TradingState semantics are stale: HALTED is taught as blocking all order commands and REDUCING as cancels/position-reducing only, but the pinned tree reordered values (Active=1, Reducing=2, Halted=3) and now permits cancels+queries under HALTED and eligible reduce-only submissions (same instrument, matching position ID, opposing side, qty <= position) under REDUCING (commit 9da48e03).
+  file: skills/nt-trading/references/concepts/execution.md:140
+  evidence: crates/model/src/enums.rs:1984-1992 (Active=1/Reducing=2/Halted=3 with new doc comments); docs/concepts/execution/index.md:240-256 (permitted-commands table and REDUCING eligibility rules); upstream commit 9da48e0399dec9b7d60b1cd2fb67a973c260120d; shared mirror references/concepts/execution.md:139-141 has the same stale text
+  fix: Rewrite the TradingState block (lines 137-141) to the pinned semantics: ACTIVE=1 all commands, REDUCING=2 eligible individual reduce-only submissions plus cancels/queries (order lists and modifications denied), HALTED=3 cancels and queries only; note the numeric-value reorder and the reduce-only send-or-reject contract for adapters.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-114] [P1] [OPEN] V2 compliance violations: Rust strategy guide calls submit_order with three arguments, but the pinned Strategy trait requires four (order, position_id, client_id, params); the example will not compile against the pinned tree.
+  file: skills/nt-trading/references/guides/write_rust_strategy.md:96
+  evidence: crates/trading/src/strategy/mod.rs:172-179 (fn submit_order(&mut self, order: OrderAny, position_id: Option<PositionId>, client_id: Option<ClientId>, params: Option<Params>)); upstream example crates/trading/src/examples/strategies/ema_cross/strategy.rs:98 calls self.submit_order(order, None, None, None)
+  fix: Change line 96 to self.submit_order(order, None, None, None)?; and note the optional Params argument in the surrounding prose (nt-trading SKILL.md already documents the Params argument correctly).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-115] [P1] [OPEN] V2 compliance violations: Project-setup guidance pins crates at 0.62 and enables a nonexistent nautilus-model feature named stubs; the pinned tree publishes 0.63/0.64-era crates and the feature is test-support, so both the version block and the feature flags table are wrong.
+  file: skills/nt-trading/references/concepts/rust.md:112
+  evidence: crates/model/Cargo.toml:20-34 ([features] lists test-support, no stubs; grep for stubs exits 1); docs/concepts/rust.md:92-96 (nautilus-model { version = "0.63", features = ["test-support"] }); pinned workspace Cargo.toml:52 version = "0.64.0"
+  fix: Update lines 109-124 and 148 to version 0.63 (or the pinned 0.64.0) and rename the stubs feature to test-support everywhere it appears (lines 112, 135, 148), matching docs/concepts/rust.md:92-96.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-116] [P1] [OPEN] V2 compliance violations: Capability matrix marks Tearsheets absent for the v2 PyO3 path, but the pinned upstream capability matrix lists Tearsheets as available on the Python path.
+  file: skills/nt-trading/references/concepts/rust.md:55
+  evidence: docs/concepts/rust.md:19,44 (| Tearsheets | - | ✓ | with Rust|Python columns, Python = v2 PyO3 path); skill row reads | Tearsheets | ✓ | - | - | (v1 legacy / v2 Rust / v2 PyO3)
+  fix: Change the Tearsheets v2 PyO3 cell at line 55 from - to checkmark (keep v2 Rust as -), or replace the three-column v1-era matrix with the pinned two-column Rust|Python matrix now that v1 comparisons are centralized in MIGRATION_V2.md (commit beaac71e0).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-117] [P1] [OPEN] V2 compliance violations: Custom-statistics guidance lists calculate_from_orders as a PortfolioStatistic hook, but no such method exists on the pinned trait; the real hooks are calculate_from_returns, calculate_from_realized_pnls, calculate_from_positions, and optional calculate_from_returns_with_benchmark.
+  file: skills/nt-trading/references/concepts/portfolio.md:118
+  evidence: crates/analysis/src/statistic.rs:30-90 (trait defines only returns/realized_pnls/positions/returns_with_benchmark; grep calculate_from_orders finds nothing); crates/analysis/src/analyzer.rs:794,850,867
+  fix: Remove calculate_from_orders from the method list at line 118 and mention calculate_from_returns_with_benchmark as the optional fourth hook.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-118] [P1] [OPEN] V2 compliance violations: The SessionWinRate example overrides only calculate_from_realized_pnls, but pinned trait defaults panic for every unimplemented category and the analyzer invokes all three calculate_ methods on each registered statistic, so the documented example panics when statistics are computed.
+  file: skills/nt-trading/references/concepts/portfolio.md:140
+  evidence: crates/analysis/src/statistic.rs:30-33 ('their defaults panic, so an implementation must override all three and return None for a category it does not support'); crates/analysis/src/analyzer.rs:794,850,867 (analyzer calls realized_pnls, positions, and returns per statistic)
+  fix: Extend the SessionWinRate impl (lines 130-152) to override calculate_from_returns and calculate_from_positions returning None, and add a note that all three must be overridden because defaults panic.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-119] [P1] [OPEN] V2 compliance violations: The file claims the nautilus_trader.analysis.statistic module was removed and points to a quarantined copy at migration_reference/python/python/analysis/statistic.py, but the pinned tree ships the module as a current v2 Python API and the referenced quarantine file does not exist.
+  file: skills/nt-trading/references/concepts/portfolio.md:156
+  evidence: python/nautilus_trader/analysis/__init__.pyi:29 (from nautilus_trader.analysis.statistic import PortfolioStatistic as PortfolioStatistic); docs/concepts/portfolio.md:279-307 (current docs teach subclassing PortfolioStatistic and Portfolio.register_statistic()); find skills/nt-trading/migration_reference -name statistic.py returns nothing (dangling pointer at line 160)
+  fix: Replace the 'removed module' paragraph (lines 156-160) with the current dual-path guidance: Rust PortfolioStatistic trait + PortfolioAnalyzer::register_statistic, and current Python subclassing of nautilus_trader.analysis.statistic.PortfolioStatistic via Portfolio.register_statistic(); delete the dangling migration_reference/python/python/analysis/statistic.py pointer.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-120] [P1] [OPEN] V2 compliance violations: Testing guide recommends 'await eventually(...)' from nautilus_trader.test_kit.functions as the current polling helper, but that module and function do not exist anywhere in the pinned tree, and the same file acknowledges at line 165 that test_kit modules were removed at V2.
+  file: skills/nt-trading/references/guides/testing.md:109
+  evidence: python/nautilus_trader/testkit/ contains only __init__.py, __init__.pyi, providers.py (no functions.py); grep -rn 'def eventually' python/ returns nothing; grep -rn test_kit python/ returns nothing; crates/common/src/testing.rs:106 (pub async fn wait_until_async, the real helper); testing.md:165 already labels test_kit as v1-removed
+  fix: Drop the eventually/test_kit.functions half of line 109 and keep only wait_until_async from nautilus_common::testing as the recommended polling helper, or replace with the pinned Python equivalent if one exists upstream.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-121] [P1] [OPEN] V2 compliance violations: Performance-testing commands reference a make test-performance target and a tests/performance_tests directory that do not exist in the pinned tree.
+  file: skills/nt-trading/references/guides/testing.md:55
+  evidence: pinned Makefile has no test-performance target (only cargo-ci-benches/cargo-codspeed targets; grep -n test-performance Makefile empty); python/tests/ contains acceptance, integration, strategies, unit only (no performance_tests); upstream docs/developer_guide/testing.md contains neither string
+  fix: Replace lines 53-62 with the pinned tree's actual performance workflow (make cargo-ci-benches for criterion benches, pytest-memray for memory-leak tests) or remove the Python performance block; sync the file body against docs/developer_guide/testing.md which now leads with the testing-policy ladder the copy lacks.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-122] [P1] [OPEN] V2 compliance violations: Adapter Review Gate teaches the v1 Python factory signature create(loop, name, config, msgbus, cache, clock) as a fail-if-missing contract, but pinned v2 factories take no loop or msgbus parameter.
+  file: skills/nt-review/AGENTS.md:60
+  evidence: crates/adapters/okx/src/factories.rs:81-87 (fn create(&self, name: &str, config: &dyn ClientConfig, cache: CacheView, clock: Rc<RefCell<dyn Clock>>)) and :139-145 (execution factory create(trader_id, name, config, cache)); grep -rn 'create(loop' across pinned crates/ and python/ returns nothing
+  fix: Update line 60 to the pinned contract: data client factories create(name, config, cache view, clock) and execution client factories create(trader_id, name, config, cache), with safe credential handling; keep credential/env checks unchanged.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-123] [P1] [OPEN] V2 compliance violations: G2 gate row claims the skill harness passed against pinned commit ac22d5cf4 while the cited evidence file records upstream_commit 4692bac3 verified on 2026-09-04, so the Pass status lacks fresh evidence for the current pin (62 commits of drift, including the reduce-only and order-status changes).
+  file: skills/nt-trading/SKILL.md:35
+  evidence: references/g2-evidence/nt-trading.json fields upstream_commit=4692bac35bb11a25eeebb8d7af4d51c55afe53ec, verified_at=2026-09-04T15:58:53Z, status=pass; SKILL.md:35 cites that file as proof for ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+  fix: Re-run uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-trading against the pinned checkout at ac22d5cf4 so the evidence JSON records the current pin, or downgrade the G2 row to Pending until re-run.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-124] [P1] [CLOSED 2026-09-05] V2 compliance violations: Same G2 evidence mismatch as the nt-trading card: the nt-review gate row claims ac22d5cf4 but references/g2-evidence/nt-review.json records upstream_commit 4692bac3 verified 2026-09-04.
+  file: skills/nt-review/SKILL.md:18
+  evidence: references/g2-evidence/nt-review.json fields upstream_commit=4692bac35bb11a25eeebb8d7af4d51c55afe53ec, verified_at=2026-09-04T15:52:40Z, status=pass; SKILL.md:18 cites that file as proof for ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+  fix: Re-run uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review against the pinned checkout at ac22d5cf4, or set the G2 row to Pending until the evidence records the current pin.
+  closure: closed by full G2 evidence regeneration at ac22d5cf (all 17 skills re-executed PASS)
+
+[NT-2026-09-05-125] [P2] [OPEN] Improvement opportunities: The Rust trading deltas section does not cover the external-order claim routing rename from commit 681607428: StrategyConfig external_order_claims was renamed to external_order_instrument_ids, with new set_external_order_instrument_ids atomic claim updates and claim release on removal.
+  file: skills/nt-trading/SKILL.md:117
+  evidence: crates/trading/src/strategy/mod.rs:108,122,138 (external_order_instrument_ids / set_external_order_instrument_ids / cache.set_external_order_claims); python/nautilus_trader/trading/__init__.pyi:476,972,994 (Python surface renamed); upstream commit 681607428c6ff7ecedd5c646637964dab87f33b6; docs/how_to/configure_live_trading.md updated by that commit; no nt-trading or nt-review file mentions the new name (grep external_order returns only the v1 quarantine at nt-review/migration_reference/python/legacy-root-guidance.md:548)
+  fix: Add a delta bullet to the SKILL.md Rust trading deltas section documenting the rename, the atomic replace semantics, and that v1 external_order_claims keys no longer exist; update nt-review/AGENTS.md:134 live checklist to name external_order_instrument_ids explicitly.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-126] [P2] [OPEN] Improvement opportunities: Review guidance does not cover the standardized order-status-report filtering rule from commit 9b7db823: open-only venue report requests must retain both open and in-flight reports (is_open() || is_inflight()), because venues that map a resting order to pending/SUBMITTED are silently dropped from reconciliation when is_open() is tested alone.
+  file: skills/nt-review/SKILL.md:33
+  evidence: crates/live/src/execution/reports.rs:19-32 (retain_order_status_reports: matches_open = open_only implies is_open() || is_inflight(); closed reports bounded by start/end); crates/model/src/enums.rs:1340-1345 (is_open doc note: testing is_open() alone silently drops pending-mapped orders from reconciliation); upstream commit 9b7db8236e2f47de2dce5d536da92afde38acad7
+  fix: Extend the live-trading review bullets (Correctness and lifecycle) with a check that adapter reconciliation and report filtering retain open and in-flight orders per the shared reports.rs rule, preserving only the documented Bybit/Polymarket reconciliation exceptions.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-127] [P2] [OPEN] Improvement opportunities: Neither skill's migration lane references the centralized upstream MIGRATION_V2.md, which commit beaac71e0 made the single authoritative home for v1-vs-v2 comparisons and compatibility notes (v1 comparisons were removed from current docs into it).
+  file: skills/nt-review/migration_reference/python/legacy-root-guidance.md:3
+  evidence: pinned MIGRATION_V2.md (924 lines, 'Migrate from v1 to v2', install/env/parity guidance); upstream commit beaac71e00bb6dd32dc26b4448fbc3b5e4390e21 moved v1 comparisons out of docs/concepts/*, docs/developer_guide/benchmarking.md, and installation docs into MIGRATION_V2.md; grep -rn MIGRATION_V2 skills/nt-review skills/nt-trading returns nothing
+  fix: Add a pointer at the top of the quarantine header (and in nt-trading SKILL.md's Migration/reference lane) to the pinned upstream MIGRATION_V2.md as the authoritative v1-to-v2 comparison source, version-scoped to ac22d5cf4.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-128] [P2] [OPEN] Improvement opportunities: The RUST/FFI CHECKLIST omits the enforced crate-feature documentation convention added by commit fd247cda9: non-default crate features must appear in matching alphabetical Feature flags lists in README.md and src/lib.rs, and the pre-commit hook rejects violations.
+  file: skills/nt-review/AGENTS.md:91
+  evidence: upstream commit fd247cda9b6efcfb21e7c868c06c06c9c488229c4 (Enforce crate feature documentation; pre-commit rejects manifests/docs violating the alphabetical Feature flags lists); matching candidate finding recorded in references/upstream-delta-review.json reviewed_transitions[-1] for fd247cda9b with affected_files [skills/nt-review/AGENTS.md]
+  fix: Add a checklist bullet under RUST/FFI CHECKLIST requiring the alphabetical Feature flags list in README.md and src/lib.rs to match [features] in Cargo.toml whenever a feature is added or renamed.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-129] [P2] [OPEN] Improvement opportunities: The three example READMEs under the Python quarantine lack the explicit migration/reference-only header that every sibling .py file in the same directories carries, so an agent opening a README directly sees unmarked Python-only guidance.
+  file: skills/nt-trading/migration_reference/python/examples/actor_data/README.md:1
+  evidence: actor_data/run_example.py:2, actor_signals/run_example.py:2, msgbus/run_example.py:2 all carry 'TEMPLATE_CLASSIFICATION: migration/reference-only; not a production default' while actor_data/README.md:1, actor_signals/README.md:1, msgbus/README.md:1 begin with unlabelled titles describing Python patterns; Rust equivalents exist upstream (crates/common/src/actor/data_actor.rs:780 publish_signal, :1446 subscribe_signal)
+  fix: Prepend the same migration/reference-only banner used by the sibling templates to all three READMEs (actor_data, actor_signals, msgbus) and note the Rust DataActor signal/msgbus equivalents.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-130] [P2] [OPEN] Improvement opportunities: QUICK CHECK and COMMON ISSUES tables in the current-lane review knowledge base are v1-Python shaped (super() calls, type hints, on_bar blocking, ParquetDataCatalog) with only the file-top blanket note for cover, while the rest of the file carries current Rust/PyO3 gates.
+  file: skills/nt-review/AGENTS.md:67
+  evidence: AGENTS.md:67-77 (QUICK CHECK: 'All lifecycle methods call super()', 'Type hints on all methods'), :82-90 (COMMON ISSUES table keyed to Python handlers), contrasted with the current RUST/FFI CHECKLIST at :91 and current V2 shapes in nt-review/SKILL.md:30-40; blanket note at AGENTS.md:1 is the only label for these sections
+  fix: Add a section-scoped NT v2 compatibility note above QUICK CHECK marking those items v1-Python migration/reference-only, and add a minimal Rust v2 quick check (StrategyCore wiring, nautilus_strategy! macro, anyhow::Result handlers, params-aware order APIs).
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-131] [P1] [OPEN] V2 compliance violations: DataTesterConfig API reference documents parameters `requests_start_delta` (line 73) and `use_pyo3_book` (line 79) that do not exist in the pinned DataTesterConfig; upstream has only a TODO for requests_start_delta and no use_pyo3_book anywhere.
+  file: skills/nt-testing/references/api/data_tester_config.md:73
+  evidence: git -C <upstream> show ac22d5cf4:crates/testkit/src/testers/data/config.rs line 128 '// TODO: Support requests_start_delta when we implement historical data requests'; git grep 'use_pyo3_book' at ac22d5cf returns 0 hits in crates/
+  fix: Delete the `requests_start_delta` and `use_pyo3_book` rows from the parameter table and Rust builder method table; regenerate the table from crates/testkit/src/testers/data/config.rs and crates/testkit/src/python/testers.rs at ac22d5cf.
+  acceptance-test: grep -c 'requests_start_delta' skills/nt-testing/references/api/data_tester_config.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-132] [P1] [OPEN] V2 compliance violations: DataTesterConfig API reference states `manage_book` defaults to False and that 'Python defaults it to False' (lines 78, 82); the pinned builder/PyO3 default is true, and the table omits the real `stats_interval_secs` parameter.
+  file: skills/nt-testing/references/api/data_tester_config.md:78
+  evidence: git -C <upstream> show ac22d5cf4:crates/testkit/src/testers/data/config.rs:142-143 '#[builder(default = true)] pub manage_book: bool' and :149 'pub stats_interval_secs: u64'; crates/testkit/src/python/testers.rs:73 exposes stats_interval_secs in the Python constructor
+  fix: Correct the `manage_book` default to True, remove the incorrect note, and add the missing `stats_interval_secs` (default 5) row.
+  acceptance-test: grep -c 'manage_book' skills/nt-testing/references/api/data_tester_config.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-133] [P1] [OPEN] V2 compliance violations: ExecTesterConfig API reference lists `external_order_claims=` as a Python constructor keyword; the pinned Python ExecTesterConfig accepts `external_order_instrument_ids` (renamed in drift-window commit 681607428).
+  file: skills/nt-testing/references/api/exec_tester_config.md:37
+  evidence: git -C <upstream> show ac22d5cf4:crates/testkit/src/python/testers.rs:381 'external_order_instrument_ids = None' in the #[pyo3(signature)] block; crates/trading/src/strategy/config.rs:69 'pub external_order_instrument_ids: Option<Vec<InstrumentId>>'
+  fix: Replace `external_order_claims=` with `external_order_instrument_ids=` in the constructor keyword list.
+  acceptance-test: grep -c 'external_order_instrument_ids' skills/nt-testing/references/api/exec_tester_config.md returns 0 (or content matches pin ac22d5cf4); python3 -m pytest -q green
+
+[NT-2026-09-05-134] [P1] [OPEN] V2 compliance violations: Local spec_exec_testing snapshot still uses the pre-rename config key `external_order_claims` in the reconciliation guidance (line 2005) and the configuration reference table (line 2294); the pinned upstream spec uses `external_order_instrument_ids`.
+  file: skills/nt-testing/references/guides/spec_exec_testing.md:2005
+  evidence: git -C <upstream> show ac22d5cf4:docs/developer_guide/spec_exec_testing.md:2007-2008 'Configure `external_order_instrument_ids`...' and :2297 table row; rename landed in commit 681607428c6ff7ecedd5c646637964dab87f33b6 (4692bac..ac22d5cf)
+  fix: Re-sync the two hunks from the pinned upstream spec: rename the key at lines 2005 and 2294 to `external_order_instrument_ids` with the claim-routing wording.
+  acceptance-test: grep -c 'external_order_claims' skills/nt-testing/references/guides/spec_exec_testing.md returns 0 after the correction (or the corrected symbol matches the pin via git -C <upstream> show ac22d5cf4:<path>); python3 -m pytest -q green
+
+[NT-2026-09-05-135] [P1] [OPEN] V2 compliance violations: Local spec_exec_testing snapshot's TC rejected-order note says OrderRejected 'comes from the venue'; the pinned spec adds that reconciliation can also synthesize OrderRejected with a link to Terminal reconciliation provenance (doc restructure commit 27dacca2c).
+  file: skills/nt-testing/references/guides/spec_exec_testing.md:1862
+  evidence: git -C <upstream> show ac22d5cf4:docs/developer_guide/spec_exec_testing.md:1862-1864 'Reconciliation can also synthesize `OrderRejected`; see 'Terminal reconciliation provenance' (see the execution policies page anchor terminal-reconciliation-provenance)'
+  fix: Replace line 1862 with the pinned three-line note including the reconciliation-synthesized OrderRejected sentence and provenance link.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-136] [P1] [OPEN] V2 compliance violations: Local benchmarking snapshot is stale: the tool table (lines 18-30) lacks the CodSpeed and flamegraph rows and the local-run command table lacks `make cargo-ci-benches`, `make cargo-codspeed-build`, and `make cargo-codspeed-run`; the repo-root synced copy references/developer_guide/benchmarking.md already carries the pinned content with frontmatter source_commit ac22d5cf.
+  file: skills/nt-testing/references/guides/benchmarking.md:18
+  evidence: git -C <upstream> show ac22d5cf4:docs/developer_guide/benchmarking.md:19-20 (CodSpeed, flamegraph rows) and :139-141 (cargo-ci-benches, cargo-codspeed-build, cargo-codspeed-run); Makefile at ac22d5cf defines cargo-codspeed-build/cargo-codspeed-run targets
+  fix: Re-sync skills/nt-testing/references/guides/benchmarking.md from the pinned upstream doc (CodSpeed/flamegraph rows, CodSpeed command table, current intro) or replace skill-local copies with pointers to the repo-root synced snapshot.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-137] [P1] [CLOSED 2026-09-05] V2 compliance violations: testing.md snapshot cites the stale pin '(pinned 4692bac35)' for Memray tooling; the pinned baseline is now ac22d5cf tree-wide and memray remains present at the new pin.
+  file: skills/nt-testing/references/guides/testing.md:139
+  evidence: git -C <upstream> grep memray at ac22d5cf: python/pyproject.toml:103,118,155 (memray, pytest-memray>=1.10.0), Makefile:1328-1331 pytest-memray target, .github/workflows/nightly-tests.yml:124 python-memray job
+  fix: Update the citation to `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d` (memray facts themselves verified current at the pin).
+  closure: closed by the 2026-09-05 pin-citation sweep (full+short forms); re-grep returns 0 stale cites
+
+[NT-2026-09-05-138] [P1] [CLOSED 2026-09-05] V2 compliance violations: SKILL.md cites 'At the pinned develop 4692bac35' for the pyobject_to_fee_model_any capability; the pin citation is stale after the tree-wide move to ac22d5cf (the underlying commit e4d3ac7f37 and symbol remain in-pin).
+  file: skills/nt-testing/SKILL.md:171
+  evidence: git -C <upstream> merge-base --is-ancestor e4d3ac7f37 ac22d5cf4 succeeds; crates/execution/src/python/fee.rs:512 'pub fn pyobject_to_fee_model_any' at ac22d5cf
+  fix: Reword to 'At the pinned develop ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d (in-pin since d2b62d35a7 via change e4d3ac7f37)' or drop the pin-level citation and keep the change SHA.
+  closure: closed by the 2026-09-05 pin-citation sweep (full+short forms); re-grep returns 0 stale cites
+
+[NT-2026-09-05-139] [P1] [OPEN] V2 compliance violations: SKILL.md cites a full SHA '949207b053b040feaff273dff9ad36b796a0e2a9ea' that does not resolve in the upstream cache (real commit: 949207b053b040feaffc2c5ec759cd4658abc7c5 'Guard PyO3 subscription registration'); the commit is also an ancestor of the pin, so the 'Current-develop overlay' framing is wrong.
+  file: skills/nt-testing/SKILL.md:119
+  evidence: git -C <upstream> rev-parse 949207b053b040feaff273dff9ad36b796a0e2a9ea fails; git log --all --format=%H | grep ^949207b returns 949207b053b040feaffc2c5ec759cd4658abc7c5; git branch --contains shows ac22d5cf4 contains it (in-pin)
+  fix: Correct the SHA to 949207b053b040feaffc2c5ec759cd4658abc7c5 and relabel the note as in-pin behavior (ensure_registered guards verified in crates/common/src/python/actor.rs and crates/trading/src/python/{strategy,algorithm}.rs at ac22d5cf).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-140] [P1] [OPEN] V2 compliance violations: Migration-reference ExecTesterConfig doc claims test_modify_rejected and test_reject_post_only 'are not exposed by the generated Python constructor'; the pinned Python constructor signature exposes both (plus test_reject_reduce_only).
+  file: skills/nt-testing/migration_reference/python/exec_tester_config.md:51
+  evidence: git -C <upstream> show ac22d5cf4:crates/testkit/src/python/testers.rs:433-435 'test_reject_post_only = None, test_reject_reduce_only = None, test_modify_rejected = None' in the #[pyo3(signature = (...))] for ExecTesterConfig
+  fix: Delete or invert the trailing comment: the flags are Python constructor keywords at the pin; optionally add a labelled keyword example.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-141] [P2] [OPEN] Improvement opportunities: nt-testing keeps two diverging copies of each developer guide: repo-root references/developer_guide/*.md synced at ac22d5cf (frontmatter source_commit/sync_date 2026-09-05) and skill-local references/guides/*.md with stale bodies; SKILL.md References (lines 492-496) and the source-pinned lane (line 130) point at the repo-root paths while a skill consumer naturally reads references/guides/ next to the skill. The local testing.md also drops upstream's publish=false fuzz-target paragraph.
+  file: skills/nt-testing/SKILL.md:130
+  evidence: diff references/developer_guide/testing.md skills/nt-testing/references/guides/testing.md (frontmatter + body deltas incl. dropped 'publish = false package is reserved for fuzz targets' paragraph present at git -C <upstream> show ac22d5cf4:docs/developer_guide/testing.md:129-131); repo-root copies carry source_commit ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
+  fix: Pick one source of truth: either re-sync the skill-local copies to the pinned bodies (preserving only the intentional NT-note header) or delete them and repoint SKILL.md references explicitly (../../references/developer_guide/...) as nt-dex-adapter does.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-142] [P1] [OPEN] V2 compliance violations: Setup curriculum exports PYO3_PYTHON from the retired repository-root .venv ('$PWD/.venv/bin/python'); the pinned tree moved the uv project environment to python/.venv (commit 0be8327ae, tip environment_setup.md).
+  file: skills/nt-learn/curriculum/01-setup.md:55
+  evidence: git -C <upstream> show ac22d5cf4:docs/developer_guide/environment_setup.md:59 'source python/.venv/bin/activate' and :61 'export PYO3_PYTHON="$PWD/python/.venv/bin/python"'; commit 0be8327ae589f64426ccf6a12a3da5ac85616454 removed UV_PROJECT_ENVIRONMENT overrides; pre-change scripts/uv-project-environment.bash defaulted to repo-root .venv
+  fix: Change line 55 to export PYO3_PYTHON="$PWD/python/.venv/bin/python" (and mention `make sync` creating python/.venv).
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-143] [P1] [OPEN] V2 compliance violations: Full-Rust trading curriculum's Cargo.toml example pins all nautilus-* crates at version 0.63; the pinned upstream workspace version is 0.64.0.
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:28
+  evidence: git -C <upstream> show ac22d5cf4:Cargo.toml:52 'version = "0.64.0"' and workspace dependency entries at version 0.64.0
+  fix: Bump the example Cargo.toml dependency versions (lines 28-35) and the toolchain note to the pinned workspace version 0.64.0.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-144] [P2] [OPEN] Improvement opportunities: Drift-window BacktestEngine data-input features are uncovered anywhere in nt-learn/nt-testing: typed batch input (3c9ad2ef4) and typed batch replay (dabe39d77), and lazy streaming across multiple data configs (ec1894d6f) extend the streaming/BacktestNode guidance the curriculum teaches.
+  file: skills/nt-learn/curriculum/09-full-rust-trading.md:54
+  evidence: git -C <upstream> log 4692bac..ac22d5cf --oneline: 3c9ad2ef4 'Add BacktestEngine typed batch input', dabe39d77 'Add BacktestEngine typed batch replay', ec1894d6f 'Stream backtest data lazily across multiple data configs (#4897)'; grep for 'batch input'/'batch replay'/'lazily' across skills/nt-testing and skills/nt-learn returns nothing
+  fix: Add a short subsection to the Stage 05/09 backtest material (and optionally nt-testing SKILL.md) covering typed batch input/replay APIs and lazy multi-config streaming with a pinned example reference.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-145] [P1] [OPEN] V2 compliance violations: The dex pytest suite imports v1-only module paths that error on collection against the pinned interpreter: test_legacy_migration_fail_closed.py:9-22 (nautilus_trader.execution.messages/.reports) and :23 (nautilus_trader.test_kit.stubs.component.TestComponentStubs); test_nonproduction_migration_templates.py:11-13 (model.identifiers, test_kit); test_backtest_integration.py:28-31 (backtest.engine, backtest.models, model.enums, model.objects); test_instrument_parsing.py:15-17 (model.identifiers/.instruments/.objects); test_order_book_events.py:26 loads dex_order_book_builder.py whose header imports model.data/model.enums/model.identifiers.
+  file: skills/nt-dex-adapter/tests/test_legacy_migration_fail_closed.py:23
+  evidence: Verified empirically in the pinned venv (nautilus_trader 2.0.0rc4): 'No module named nautilus_trader.model.identifiers', 'No module named nautilus_trader.execution.messages', 'No module named nautilus_trader.test_kit'; upstream MIGRATION_V2.md:43-47 documents the v1->v2 path table (e.g. nautilus_trader.model.identifiers.TraderId -> nautilus_trader.model.TraderId, backtest.engine.BacktestEngine -> backtest.BacktestEngine)
+  fix: Rewrite the five test files to v2 flat import paths (nautilus_trader.model, nautilus_trader.backtest, nautilus_trader.execution) or convert them to static contract checks like tests/test_dex_compliance.py; note that nautilus_trader.backtest.engine importorskip guard at test_backtest_integration.py:23 does not trigger because nautilus_trader._libnautilus.common exists at the pin.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-146] [P1] [OPEN] V2 compliance violations: Quarantined config template imports LiveDataClientConfig and LiveExecClientConfig from nautilus_trader.config and its header claims these are 'the three config classes required by NautilusTrader's adapter framework' in present tense; at the pin nautilus_trader.config exports DataClientConfig/ExecutionClientConfig and the LiveDataClientConfig/LiveExecClientConfig names do not exist, so the 'legacy executable' templates are not executable against any current environment (same v1 submodule surface in dex_order_book_builder.py:20-22, dex_data_client.py:25-35, dex_factory.py:24-30, dex_instrument_provider.py:12-18).
+  file: skills/nt-dex-adapter/migration_reference/python/templates/dex_config.py:14
+  evidence: Pinned venv run: 'cannot import name LiveDataClientConfig from nautilus_trader.config'; git -C <upstream> show ac22d5cf4:python/nautilus_trader/config/__init__.pyi:18-19 re-exports DataClientConfig/ExecutionClientConfig from nautilus_trader.live; live/__init__.pyi defines @final classes DataClientConfig/ExecutionClientConfig
+  fix: Either port the template imports to the v2 surface (DataClientConfig/ExecutionClientConfig, flat module imports per MIGRATION_V2.md) and keep the migration framing, or relabel the templates from 'legacy executable' to non-executable reference and drop the current-tense 'required by the adapter framework' claim; update the six templates consistently.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-147] [P1] [OPEN] V2 compliance violations: AGENTS.md tells DEX adapter developers to study the '_template' adapter; no _template adapter exists at the pinned tree in crates/adapters/ or python/nautilus_trader/adapters/ (nor anywhere in upstream git history for that path).
+  file: skills/nt-dex-adapter/AGENTS.md:88
+  evidence: git -C <upstream> ls-tree ac22d5cf4 crates/adapters/ (20 venues, no _template); git log --all --diff-filter=A -- 'crates/adapters/_template/*' returns nothing; find for '*template*' at pin shows only docs/dev_templates benchmark templates
+  fix: Remove '_template' from the study list or replace with a real pinned reference (e.g. the blockchain adapter crate nautilus-blockchain, or sandbox) consistent with SKILL.md's canonical OKX/BitMEX/Bybit list.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-148] [P1] [OPEN] V2 compliance violations: SKILL.md cites '(pinned 4692bac35, crates/live/src/task.rs)' for the standardized task lifecycle; the pin has moved tree-wide to ac22d5cf and task.rs changed inside the drift window.
+  file: skills/nt-dex-adapter/SKILL.md:241
+  evidence: git -C <upstream> rev-parse HEAD = ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d; eb42e2bfc6c5540839dbdaade7fdef242a6f3b2e 'Add live task identity' (4692bac..ac22d5cf) modified crates/live/src/task.rs (+533 lines)
+  fix: Update the citation to ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d for crates/live/src/task.rs.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-149] [P2] [OPEN] Improvement opportunities: The DEX task-ownership section does not cover the drift-window live task identity feature (named TaskRef handles, spawn_named on TaskGroup/TaskSpawner, shared task state replacing adapter-local flags).
+  file: skills/nt-dex-adapter/SKILL.md:238
+  evidence: git -C <upstream> show ac22d5cf4:crates/live/src/task.rs:128 'pub struct TaskRef', :159 'struct TaskIdentity', :255/:416 'pub fn spawn_named(... name: &'static str ...) -> Result<TaskRef, TaskSpawnError>'; commit eb42e2bfc 'Expose named task references without transferring group ownership'
+  fix: Extend the task-ownership guidance to mention spawn_named/TaskRef for named background work (receipt monitors, keepalives) and cite the pinned task.rs symbols.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-150] [P2] [OPEN] Improvement opportunities: Migration templates label their phases against a '7-phase DEX adapter implementation sequence' while SKILL.md, AGENTS.md, and compliance_checklist.md define the official ten-phase sequence (Phase 0-9); the phase numbers cited in the templates no longer map to the skill's own contract.
+  file: skills/nt-dex-adapter/migration_reference/python/templates/dex_instrument_provider.py:7
+  evidence: Same file line 7, dex_data_client.py:8, dex_exec_client.py:7, dex_factory.py:12 all say '7-phase'; skills/nt-dex-adapter/tests/test_dex_compliance.py requires 'Phase 0: Define scope' through 'Phase 9: Finish documentation and operations' in SKILL.md
+  fix: Renumber the template docstrings to the ten-phase sequence (instrument provider = Phase 2, data client = Phase 3, exec client = Phases 4-5, factory = Phase 6) or drop the phase numbering.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-151] [P1] [OPEN] V2 compliance violations: nt-dev SKILL.md teaches root-.venv PyO3 interpreter path; upstream moved the uv project environment to python/.venv at the pin (commit 0be8327ae removed repository-level UV_PROJECT_ENVIRONMENT overrides).
+  file: skills/nt-dev/SKILL.md:130
+  evidence: upstream docs/developer_guide/environment_setup.md:61 `export PYO3_PYTHON="$PWD/python/.venv/bin/python"`; commit 0be8327ae "Use uv's default project environment"
+  fix: Change line 130 to `export PYO3_PYTHON="$PWD/python/.venv/bin/python"` and align the surrounding Linux/macOS env-var block with upstream environment_setup.md.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-152] [P1] [OPEN] V2 compliance violations: environment_setup.md guide still teaches the pre-0be8327ae root .venv layout throughout (activate, PYO3_PYTHON, 'installs into the root .venv', rust-analyzer VIRTUAL_ENV placeholders).
+  file: skills/nt-dev/references/guides/environment_setup.md:62
+  evidence: same file lines 64, 195, 282, 507-553; upstream docs/developer_guide/environment_setup.md:59 `source python/.venv/bin/activate`, :297 'install the Python package into python/.venv', :191-199 migration note for old root-.venv checkouts; commit 0be8327ae
+  fix: Replace root `.venv` references with `python/.venv` (activate line, both PYO3_PYTHON exports, Builds section sentence, and the six VIRTUAL_ENV placeholder values) and add the 'remove UV_PROJECT_ENVIRONMENT export' migration note from upstream.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-153] [P1] [OPEN] V2 compliance violations: testing.md mixed-debugging snippet still exports UV_PROJECT_ENVIRONMENT=../.venv; upstream removed repository-level UV_PROJECT_ENVIRONMENT overrides when the venv moved to python/.venv.
+  file: skills/nt-testing/references/guides/testing.md:330
+  evidence: upstream docs/developer_guide/testing.md:310-324 maturin develop block contains no UV_PROJECT_ENVIRONMENT line; docs/developer_guide/environment_setup.md:199 'remove any UV_PROJECT_ENVIRONMENT export'; commit 0be8327ae (shared real path: nt-dev/references/guides/testing.md symlinks here)
+  fix: Delete the `UV_PROJECT_ENVIRONMENT=../.venv \` line from the maturin develop subshell so the block matches upstream testing.md.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-154] [P1] [OPEN] V2 compliance violations: testing.md data-type test matrix cites the pre-consolidation DataEngine test path crates/data/tests/engine.rs; upstream moved integration tests into crates/data/tests/integration/.
+  file: skills/nt-testing/references/guides/testing.md:351
+  evidence: same file lines 352, 390; upstream tree has crates/data/tests/integration/engine.rs and no crates/data/tests/engine.rs; commit 503debebe 'Consolidate Rust integration test binaries' (crates/data/tests/{ => integration}/engine.rs)
+  fix: Update the three occurrences (matrix rows and the 'Data type testing' checklist) to `crates/data/tests/integration/engine.rs`.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-155] [P1] [OPEN] V2 compliance violations: python_conventions.md says ruff rules live in the top-level pyproject.toml; the pinned v2 tree has no root pyproject.toml - ruff config is in python/pyproject.toml.
+  file: skills/nt-dev/references/guides/python_conventions.md:110
+  evidence: upstream tree: `ls pyproject.toml` fails, `python/pyproject.toml` exists with [tool.ruff] at lines 167-210
+  fix: Reword to "Ruff rules can be found in `python/pyproject.toml`, with ignore justifications typically commented."
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-156] [P1] [OPEN] V2 compliance violations: ffi_memory.md cites vec_time_event_handlers_drop as an example type-specific CVec drop helper; no such export exists anywhere in the pinned tree (it does not resolve against crates/).
+  file: skills/nt-dev/references/guides/ffi_memory.md:38
+  evidence: git grep 'vec_time_event_handlers_drop' ac22d5cf4 -- crates/ returns nothing; real helpers at pin: vec_drop_fills (crates/model/src/ffi/orderbook/book.rs:457), vec_drop_book_levels / vec_drop_book_orders (crates/model/src/ffi/orderbook/level.rs:120,136)
+  fix: Replace `vec_time_event_handlers_drop` in the example list with `vec_drop_fills` (or another helper that exists at the pin).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-157] [P1] [OPEN] V2 compliance violations: legacy-root-guidance.md requires preserving an 'adapter 7-phase dependency order' but the pinned developer guide defines ten phases (Phase 0 through Phase 9); nt-architect/AGENTS.md already states the correct ten-phase order.
+  file: skills/nt-architect/migration_reference/python/legacy-root-guidance.md:46
+  evidence: upstream docs/developer_guide/adapters.md:234-360 defines Phase 0..Phase 9 (10 sections); skills/nt-architect/AGENTS.md:63 'ten-phase dependency order (Phase 0 ... Phase 9)'
+  fix: Change 'the adapter 7-phase dependency order' to 'the adapter ten-phase dependency order (Phase 0-9)' to match the pinned guide and the sibling AGENTS.md.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-158] [P1] [OPEN] V2 compliance violations: nt-implement AGENTS.md coding-standards row says 'log::* for sync, tracing::* for async/adapter code'; upstream logging guidance is fully-qualified log macros for all Rust components and only the Interactive Brokers adapter uses tracing at the pin.
+  file: skills/nt-implement/AGENTS.md:145
+  evidence: upstream docs/developer_guide/rust.md:294-296 'Fully qualify log macros, for example log::debug! and log::info!.'; git grep -l 'tracing::' ac22d5cf4 -- crates/adapters returns only interactive_brokers (20 files) while all other adapters use log::*
+  fix: Change the row to 'Fully qualify log::* macros in core and adapter crates' and drop the tracing rule (or scope it explicitly to the IB adapter if intentional).
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-159] [P1] [OPEN] V2 compliance violations: api_reference/analysis.md stub is missing the nautilus_trader.analysis.statistic automodule block that upstream added with user-defined portfolio statistics, so the new module is absent from the generated API docs surface.
+  file: references/api_reference/analysis.md:36
+  evidence: upstream docs/api_reference/analysis.md:44 `.. automodule:: nautilus_trader.analysis.statistic`; commit 7e8c9c9cd added python/nautilus_trader/analysis/statistic.py and the +8-line docs stub
+  fix: Append the `nautilus_trader.analysis.statistic` automodule block (eval-rst fence) after the reporter block so the file matches upstream docs/api_reference/analysis.md at ac22d5cf.
+  acceptance-test: content matches pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-160] [P1] [OPEN] V2 compliance violations: concepts/backtesting.md teaches an engine.add_data_iterator(data_name=..., generator=...) streaming API that does not exist at the pin; upstream explicitly documents that the low-level API has no generator-based method.
+  file: references/concepts/backtesting.md:117
+  evidence: same file line 1119 repeats it; upstream docs/concepts/backtesting/apis-and-runs.md:88 'The low-level API does not expose a generator-based add_data_iterator() method.'; `def add_data` is the only data-add method in python/nautilus_trader/backtest/__init__.pyi:489 and crates/backtest/src/python/engine.rs
+  fix: Remove the add_data_iterator 'automatic chunking' example and the line-1119 reference; present the add_data + run(streaming=True) + end() loop (and BacktestNode chunk_size catalog chunking) as the streaming options, matching upstream apis-and-runs.md.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-161] [P1] [OPEN] V2 compliance violations: concepts/portfolio.md custom-statistics example mixes a v2 import with v1 APIs: calculate_from_realized_pnls is typed against pd.Series (v2 base class takes list[float] and returns float | None) and registration goes through engine.portfolio.analyzer, but the v2 Portfolio has no analyzer attribute.
+  file: references/concepts/portfolio.md:149
+  evidence: python/nautilus_trader/analysis/statistic.py:80 `def calculate_from_realized_pnls(self, realized_pnls: list[float]) -> float | None`; python/nautilus_trader/portfolio/__init__.pyi:136 exposes `def register_statistic` on Portfolio with no `analyzer` getter; upstream docs/concepts/portfolio.md:302 `engine.portfolio.register_statistic(TradeCount())`
+  fix: Retype the example override to `calculate_from_realized_pnls(self, realized_pnls: list[float]) -> float | None` (drop pandas), and change registration to `engine.portfolio.register_statistic(stat)`.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-162] [P1] [OPEN] V2 compliance violations: concepts/adapters.md instrument-discovery how-to uses v1-only import paths (binance submodule providers, get_cached_binance_http_client, common.component.LiveClock) that do not resolve in the pinned v2 package; the section has no adjacent legacy label.
+  file: references/concepts/adapters.md:66
+  evidence: python/nautilus_trader/adapters/binance/ contains only __init__ and instruments.py; its __init__.pyi export list has no get_cached_binance_http_client/BinanceAccountType/provider classes; no LiveClock is exposed to Python (only unified Clock in crates/common/src/python/clock.rs); upstream v2 discovery guidance is InstrumentProviderConfig(load_all=True) per docs/concepts/instruments/index.md:150-151
+  fix: Either label the example as v1 migration/reference inline, or rewrite it against the pinned surface (flat `nautilus_trader.adapters.binance` exports such as load_binance_instruments, InstrumentProviderConfig-driven loading).
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-163] [P1] [OPEN] V2 compliance violations: concepts/instruments.md exchange-discovery example imports BinanceSpotInstrumentProvider from nautilus_trader.adapters.binance.spot.providers, a v1 path absent from the pinned tree.
+  file: references/concepts/instruments.md:51
+  evidence: python/nautilus_trader/adapters/binance/ has no spot/ package; flat exports include load_binance_instruments; upstream docs/concepts/instruments/index.md:142-151 uses TestInstrumentProvider and InstrumentProviderConfig instead of standalone provider classes
+  fix: Replace the provider-class example with the pinned v2 flow (load_binance_instruments from flat nautilus_trader.adapters.binance, or InstrumentProviderConfig within a node) or add an adjacent migration/reference label.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-164] [P1] [OPEN] V2 compliance violations: concepts/cache.md price/bar-types examples import PriceType and AggregationSource from the v1 Cython-internal path nautilus_trader.core.rust.model, which does not exist in the pinned v2 package.
+  file: references/concepts/cache.md:223
+  evidence: same file line 235; python/nautilus_trader/core/ contains only datetime.py and flat re-exports; PriceType and AggregationSource are exported from flat python/nautilus_trader/model/__init__.pyi
+  fix: Change both imports to `from nautilus_trader.model import PriceType` / `from nautilus_trader.model import PriceType, AggregationSource`.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-165] [P1] [OPEN] V2 compliance violations: concepts/data.md custom-data walkthrough (a current v2 capability) registers types with v1-only APIs: nautilus_trader.serialization.base.register_serializable_type and nautilus_trader.serialization.arrow.serializer.register_arrow, plus nautilus_trader.core.Data / test_kit paths; none resolve at the pin.
+  file: references/concepts/data.md:1698
+  evidence: python/nautilus_trader/serialization/__init__.pyi __all__ has no register_serializable_type/register_arrow; v2 registration is register_custom_data_class exported from flat nautilus_trader.model (python/nautilus_trader/model/__init__.pyi:8348) per docs/concepts/custom_data.md:31; same file lines 1695-1699, 1772, test_kit at 664
+  fix: Rewrite the custom-data registration example against the v2 surface (register_custom_data_class(MyType) from nautilus_trader.model, pure-Python class with JSON/Arrow callbacks per docs/concepts/custom_data.md) and fix `nautilus_trader.core.Data` -> `nautilus_trader.model.Data`, `test_kit` -> `testkit`.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-166] [P1] [OPEN] V2 compliance violations: concepts/message_bus.md custom-data overview example uses the v1-only @customdataclass decorator from nautilus_trader.model.custom and Data from nautilus_trader.core.data with no adjacent legacy label; neither module exists at the pin.
+  file: references/concepts/message_bus.md:148
+  evidence: python/nautilus_trader/model/ is a flat re-export package (no custom submodule); no python/nautilus_trader/core/data.py; v2 custom-data pattern is a plain class plus register_custom_data_class per docs/concepts/custom_data.md:31,180-207
+  fix: Label the @customdataclass block as v1 migration/reference, or convert it to the v2 plain-class + register_custom_data_class pattern from the pinned custom_data guide.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-167] [P2] [OPEN] Improvement opportunities: nt-implement V2 cutover map presents Portfolio Statistics as Rust-only with Python relegated to migration templates, but the drift window added first-class user-defined Python statistics (PortfolioStatistic base + Portfolio.register_statistic) that the skill does not cover as a bounded PyO3 extension point.
+  file: skills/nt-implement/SKILL.md:164
+  evidence: commit 7e8c9c9cd 'Support user-defined portfolio statistics': python/nautilus_trader/analysis/statistic.py (PortfolioStatistic base), crates/portfolio/src/portfolio.rs:2067 pub fn register_statistic, python/nautilus_trader/portfolio/__init__.pyi:136; documented in docs/concepts/portfolio.md:269-316
+  fix: Add a note to the Portfolio Statistics row (and the custom-simulation-models pointer) that user-defined Python statistics are a supported v2 surface via nautilus_trader.analysis.statistic.PortfolioStatistic registered with Portfolio.register_statistic, while keeping Rust as the repository's production default.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+[NT-2026-09-05-168] [P2] [OPEN] Improvement opportunities: concepts/backtesting.md does not cover the drift-window BacktestEngine data-input features: typed batch input/replay (add_data_batch with homogeneous DataBatch) and lazy multi-config streaming, which upstream added for large-workflow performance.
+  file: references/concepts/backtesting.md:100
+  evidence: commits 3c9ad2ef4 'Add BacktestEngine typed batch input' (crates/backtest/src/engine.rs:436 pub fn add_data_batch, crates/model/src/data/batch.rs DataBatch), dabe39d77 'Add BacktestEngine typed batch replay', ec1894d6f 'Stream backtest data lazily across multiple data configs (#4897)'; capabilities are Rust-side at the pin (not in python/nautilus_trader/backtest/__init__.pyi)
+  fix: Extend the streaming section (after replacing add_data_iterator per NT-2026-09-05-170) with a version-scoped note that the Rust engine accepts typed DataBatch input via add_data_batch and streams lazily across multiple data configs, pointing at crates/backtest/src/engine.rs and BENCHMARKS.md for measurements.
+  acceptance-test: corrected content verified against pin ac22d5cf4; python3 -m pytest -q green
+
+---
+
+## Closed findings — 2026-09-04 full-tree audit (history)
 
 NT v2 compatibility note: quoted legacy v1/Cython/`TradingNode` tokens are historical finding evidence (migration reference only).
 Nine parallel read-only audit passes (all 17 skills, references/api_reference, references/concepts, references/developer_guide, references/integrations, templates) against pinned upstream `4692bac35bb11a25eeebb8d7af4d51c55afe53ec` (develop tip, 0 commits ahead). Every finding below was verified against the pinned tree (symbols, module layouts, configs, Make targets) before recording. Systemic patterns: v1 submodule automodule stubs across skills' references/api/ trees; v1 factory/type names (`*LiveDataClientFactory`, `*ExecClientConfig`, `TradingNodeConfig`, `LoggingConfig`) in venue guides; venue config-field drift; handler/subscription renames (`on_quote_tick`→`on_quote`, `subscribe_quote_ticks`→`subscribe_quotes`); toolchain drift (make targets, test paths, feature names, versions 0.62→0.63); and missing v2 coverage (task lifecycle, SimulationModule, LiveNode builder surface). Totals: 35 P0, 160 P1, 45 P2.
