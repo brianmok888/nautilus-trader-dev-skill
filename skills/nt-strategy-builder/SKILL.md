@@ -184,20 +184,22 @@ Key additions that affect strategy and execution wiring:
 
 ## Testing
 
-New code built from these templates should pass the included test suite:
+New code built from these templates should pass the included test suite, run
+against the pinned NautilusTrader V2 build with the repository's pinned-V2
+pytest runner:
 
 ```bash
 # From repo root
-uv run python -m pytest skills/nt-strategy-builder/tests/ -v
+python3 tools/run_pinned_v2_pytest.py skills/nt-strategy-builder/tests/
 ```
 
 NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `LiveNode` for Rust v2/Rust-backed work.
 
 Tests cover:
-- `test_backtest_patterns.py` — venue config, fill model, catalog round-trip
-- `test_live_node_config.py` — TradingNode config builds without error
-- `test_dex_as_venue.py` — DEX adapter wired into BacktestEngine
-- `test_multi_venue.py` — multi-venue data routing
+- `test_backtest_patterns.py` — venue config, fill model construction, engine run and account report (executes against the pinned V2 package-root surface)
+- `test_dex_as_venue.py` — DEX adapter wired into BacktestEngine (executes against the pinned V2 package-root surface)
+- `test_live_node_config.py` — v1 TradingNode config patterns (migration-reference; skips against the pinned V2 build, which has no v1 config names)
+- `test_multi_venue.py` — v1 multi-venue template data routing (migration-reference; skips against the pinned V2 build, which has no v1 module set)
 
 ## References
 

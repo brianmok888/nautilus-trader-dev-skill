@@ -127,7 +127,7 @@ pub trait Strategy: DataActor {
 Key points:
 - `on_start`/`on_stop` return `anyhow::Result<()>`; subscribe/unsubscribe there.
 - `order()` returns the order-creation API (`order().market(...)`, `.limit(...)`, etc.).
-- `portfolio()` returns the read-side portfolio API (positions, balances, PnL).
+- `portfolio()` returns the read-side portfolio API (positions, balances, PnL); user-defined statistics registration lives on the node's `Portfolio` via `register_statistic` (Rust: crates/portfolio/src/portfolio.rs:2067; PyO3-exposed: crates/portfolio/src/python/mod.rs:504) and registrations are carried into backtest results and post-run logs (7e8c9c9cd2 — post-4692bac35 drift, present at the pin).
 - `submit_order(order, position_id, client_id, params)` — pass `None` for defaults.
 - Handlers receive **owned** events (except a few `&`-reference ones); never mutate
   after publication — publish state transitions, never edit in-flight events.
@@ -217,10 +217,10 @@ impl DataActor for MyStrategy {
    `src/python/mod.rs`; `crates/pyo3/src/lib.rs` aggregates the crate submodule.
    Register the strategy config as importable so node config can load it.
 5. **Register with a node**:
-   - `BacktestEngine` — `engine.add_strategy(your_strategy)?` (Rust API).
+   - `BacktestEngine` — `engine.add_strategy(your_strategy)?` (Rust API). For replay data, `engine.add_data_batch(data: DataBatch, client_id, validate, sort)` adds a typed batch that keeps its typed storage through replay with no per-item `Data` construction (crates/backtest/src/engine.rs:436; 3c9ad2ef44), and `BacktestNode` streaming k-way merges lazily across multiple `BacktestDataConfig`s so `chunk_size` keeps its memory bound (crates/backtest/src/node.rs; ec1894d6fa) — version-scoped drift after the 4692bac35 baseline, present at the pin.
    - `LiveNode` — native Rust uses `node.add_strategy(your_strategy)?`. The upstream-only `add_builtin_strategy(...)` PyO3 helper is feature-gated to bundled example strategies and is not a general extension path. For custom production strategies, keep native Rust registration or expose a purpose-built owning-crate PyO3 registration surface. A `LiveNodeBuilder` callback cannot re-enter the same active builder; expose that as a recoverable PyO3 error and test retry after a callback failure. The legacy Python-live node is not a Rust-strategy target.
    - Paper/sandbox mode - wire a simulated execution client instead of a venue exec client: chain `LiveNodeBuilder::add_simulated_exec_client(name, Box<dyn SimulatedExecutionClientFactory>, Box<dyn ClientConfig>)` (crates/live/src/node/builder.rs) alongside a real data client, e.g. `LiveNode::builder(trader_id, environment)?.add_data_client(None, Box::new(data_factory), Box::new(data_config))?.add_simulated_exec_client(Some(venue.to_string()), Box::new(SandboxExecutionClientFactory::new()), Box::new(sandbox_config))?.build()?` using the `crates/adapters/sandbox` factory. This path is for sync-core simulated clients (the sandbox matching engine owns cache mutation); live venue adapters still use `add_exec_client`.
-   - Node lifecycle - `LiveNode::handle()` returns a `LiveNodeHandle` (crates/live/src/node/) exposing `state() -> NodeState`, `is_running()`, `is_stopping()`, and `stop()`. `NodeState` transitions `Idle -> Starting -> Running -> ShuttingDown -> Stopped` (crates/live/src/node/state.rs); poll `handle.state()` for readiness/teardown instead of sleeping, and call `handle.stop()` to initiate graceful shutdown.
+   - Node lifecycle - `LiveNode::handle()` returns a `LiveNodeHandle` (crates/live/src/node/state.rs) exposing `state() -> NodeState`, `should_stop()`, `is_running()`, and `stop()`. `NodeState` transitions `Idle -> Starting -> Running -> ShuttingDown -> Stopped` (crates/live/src/node/state.rs); poll `handle.state()` for readiness/teardown instead of sleeping, and call `handle.stop()` to initiate graceful shutdown.
 6. **Test in Rust** before wiring Python:
    ```bash
    cargo nextest run -p <your_crate> --all-features --cargo-profile nextest

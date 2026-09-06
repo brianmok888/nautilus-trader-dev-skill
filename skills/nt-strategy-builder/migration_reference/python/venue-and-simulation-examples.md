@@ -101,3 +101,64 @@ perp_venue_config = BacktestVenueConfig(
     fill_model=cefi_fill_model,
 )
 ```
+
+## v1 to v2 `StrategyConfig` subclass mapping
+
+NT v2 compatibility note: the v1 pattern below is migration/reference-only;
+new Python config subclasses use the v2 shape, and new production work uses the
+Rust v2 lane (`nt-strategy-builder-rust`).
+
+The legacy lane (`templates/legacy_migration/multi_venue_strategy.py`) shows the
+v1 `frozen=True` annotated-struct subclass (migration/reference-only): declared
+fields are consumed directly by the legacy base. v2 simplified Python config
+subclass definitions (bed07c6c3e):
+
+- Declare custom fields as keyword-only arguments on `__init__`, so no
+  positional argument is matched against a base field.
+- Accept `**_kwargs` so base keywords pass through the subclass signature.
+- Call `super().__init__()` with no arguments, then assign the custom fields;
+  the PyO3 base reads its own fields in `__new__` and ignores unrecognized
+  keywords, so no `__new__` override is needed.
+- Do not reuse a base field name (`strategy_id`, `order_id_tag`, `oms_type`,
+  ...) for a custom field, and keep a `__new__` override only where a custom
+  field widens a base field's type.
+
+v1 (frozen annotated struct, migration/reference-only):
+
+```python
+# NT v2 compatibility note: v1 shape retained for migration reference only.
+class MultiVenueStrategyConfig(StrategyConfig, frozen=True):
+    primary_instrument_id: str
+    secondary_instrument_id: str
+    min_spread_bps: float = 10.0
+    max_position_size: float = 1.0
+    trade_primary: bool = True
+```
+
+maps to the v2 keyword-only subclass shape:
+
+```python
+from nautilus_trader.config import StrategyConfig
+
+class MultiVenueStrategyConfig(StrategyConfig):
+    def __init__(
+        self,
+        *,
+        primary_instrument_id: str,
+        secondary_instrument_id: str,
+        min_spread_bps: float = 10.0,
+        max_position_size: float = 1.0,
+        trade_primary: bool = True,
+        **_kwargs,
+    ) -> None:
+        super().__init__()
+        self.primary_instrument_id = primary_instrument_id
+        self.secondary_instrument_id = secondary_instrument_id
+        self.min_spread_bps = min_spread_bps
+        self.max_position_size = max_position_size
+        self.trade_primary = trade_primary
+```
+
+Source: `docs/concepts/strategies.md` (strategy configuration) and
+`MIGRATION_V2.md` (config subclass rule) at bed07c6c3e, present at the pinned
+commit ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d.

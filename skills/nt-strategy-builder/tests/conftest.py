@@ -4,6 +4,10 @@ Strategy Builder Tests: Conftest
 Shared fixtures for unit and integration tests.
 """
 
+# NT v2 compatibility note: this Python test lane is migration/reference-only
+# context; prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed work.
+# Imports target the pinned V2 package-root module set.
+
 import pytest
 
 nautilus_trader = pytest.importorskip("nautilus_trader")
@@ -14,14 +18,25 @@ pytest.importorskip(
 
 from decimal import Decimal
 
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.backtest.models import FillModel
-from nautilus_trader.model.currencies import USDT, ETH
-from nautilus_trader.model.enums import AccountType, OmsType
-from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
-from nautilus_trader.model.instruments import CurrencyPair
-from nautilus_trader.model.objects import Money, Price, Quantity
-from nautilus_trader.test_kit.providers import TestInstrumentProvider
+from nautilus_trader.backtest import BacktestEngine
+from nautilus_trader.backtest import BacktestEngineConfig
+from nautilus_trader.execution import DefaultFillModel, FillModel
+from nautilus_trader.model import (
+    AccountType,
+    Currency,
+    CurrencyPair,
+    InstrumentId,
+    Money,
+    OmsType,
+    Price,
+    Quantity,
+    Symbol,
+    Venue,
+)
+from nautilus_trader.testkit.providers import TestInstrumentProvider
+
+USDT = Currency.from_str("USDT")
+ETH = Currency.from_str("ETH")
 
 
 # ─── INSTRUMENT FIXTURES ───────────────────────────────────────────────────────
@@ -70,7 +85,7 @@ def eth_usdc_uniswap():
 @pytest.fixture
 def cefi_fill_model():
     """Realistic CeFi fill model."""
-    return FillModel(
+    return DefaultFillModel(
         prob_fill_on_limit=0.5,
         prob_slippage=0.2,
         random_seed=42,
@@ -80,7 +95,7 @@ def cefi_fill_model():
 @pytest.fixture
 def dex_fill_model():
     """Realistic DEX fill model with higher slippage."""
-    return FillModel(
+    return DefaultFillModel(
         prob_fill_on_limit=0.25,
         prob_slippage=0.70,
         random_seed=42,
@@ -93,7 +108,7 @@ def dex_fill_model():
 @pytest.fixture
 def cefi_engine(btcusdt_binance, cefi_fill_model):
     """BacktestEngine pre-configured with a standard CeFi venue."""
-    engine = BacktestEngine()
+    engine = BacktestEngine(BacktestEngineConfig())
     engine.add_venue(
         venue=Venue("BINANCE"),
         oms_type=OmsType.NETTING,
@@ -110,7 +125,7 @@ def cefi_engine(btcusdt_binance, cefi_fill_model):
 @pytest.fixture
 def dex_engine(eth_usdc_uniswap, dex_fill_model):
     """BacktestEngine pre-configured with a DEX venue."""
-    engine = BacktestEngine()
+    engine = BacktestEngine(BacktestEngineConfig())
     engine.add_venue(
         venue=Venue("UNISWAP_V3"),
         oms_type=OmsType.NETTING,

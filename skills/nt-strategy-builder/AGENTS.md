@@ -75,8 +75,11 @@ DefaultFillModel(prob_fill_on_limit=0.5, prob_slippage=0.2)
 ## TESTING
 
 ```bash
-uv run pytest skills/nt-strategy-builder/tests/ -v
+python3 tools/run_pinned_v2_pytest.py skills/nt-strategy-builder/tests/
 ```
+
+Pinned-V2 runner: executes the suite with the pinned NautilusTrader build's
+Python environment (`tools/run_pinned_v2_pytest.py`).
 
 ## NEXT
 

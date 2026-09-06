@@ -11,17 +11,29 @@ Tests confirm:
 - on_stop cancels orders on both venues
 """
 
+# NT v2 compatibility note: legacy Cython/v1 and Python live TradingNode
+# references in this file are retained for migration/reference-only context.
+# Prefer Rust v2/PyO3 guidance and LiveNode for new Rust-backed live work.
+
 from collections import deque
 from unittest.mock import MagicMock
 from types import MethodType
 
-from nautilus_trader.model.data import QuoteTick
-from nautilus_trader.model.identifiers import InstrumentId
-from nautilus_trader.model.objects import Price, Quantity
+import pytest
+
+from nautilus_trader.model import InstrumentId, Price, Quantity, QuoteTick
 
 # Import the template class under test
 import importlib.util
 from pathlib import Path
+
+# NT v2 compatibility note: the template under test is the legacy v1
+# migration/reference-only template and requires the v1 Python module set;
+# skip cleanly against the pinned V2 build.
+pytest.importorskip(
+    "nautilus_trader.live.node",
+    reason="legacy v1 multi-venue template requires the v1 Python live node module set",
+)
 
 # Dynamically load template to test it without installing as a package
 _template_path = Path(__file__).parent.parent / "templates" / "legacy_migration" / "multi_venue_strategy.py"
