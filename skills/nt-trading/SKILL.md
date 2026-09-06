@@ -4,6 +4,7 @@ description: "Use when working with strategy logic, order execution, risk manage
 ---
 
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+The pinned upstream `MIGRATION_V2.md` (centralized by `beaac71e0`, version-scoped to `ac22d5cf4`) is the authoritative v1-vs-v2 comparison source for the migration lane.
 
 # nt-trading
 
@@ -121,6 +122,7 @@ Source: upstream NautilusTrader pin `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`.
 - Rust `Strategy` order APIs take optional `Params`; pass `None` when no custom params are needed to avoid needless `IndexMap` allocation.
 - Rust `Strategy::cancel_order` / `modify_order` take `ClientOrderId`; `cancel_orders` takes `Vec<ClientOrderId>`.
 - `OrderFactory::bracket` is now a builder-style method (`factory.bracket()...call()`), not the older flat constructor form.
+- External-order claim routing moved into the cache (upstream `681607428c`): `StrategyConfig.external_order_claims` was renamed to `external_order_instrument_ids`, and `Strategy::set_external_order_instrument_ids(Vec<InstrumentId>)` atomically replaces a registered strategy's claims (rejecting duplicates and instruments claimed by another strategy; an empty vector releases all claims, while already-cached orders keep their assigned strategy ID). The v1 `external_order_claims` config key no longer exists. Pinned sources: `crates/trading/src/strategy/mod.rs:105-139`, `python/nautilus_trader/trading/__init__.pyi` (`set_external_order_instrument_ids`, `external_order_instrument_ids`), and `docs/how_to/configure_live_trading.md:437`.
 - Invalid Python order `create()` calls now raise `ValueError`; Rust order conversions should use `TryFrom<OrderInitialized>` / `try_from` / `try_into` rather than removed `From<OrderInitialized>`.
 
 ## Rust Usage

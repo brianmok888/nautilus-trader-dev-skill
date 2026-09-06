@@ -1,4 +1,7 @@
+<!-- NT v2 compatibility note: legacy: v1 Python example retained as migration/reference-only; not a production default. -->
 # Example - Messaging with Actor Data
+
+NT v2 compatibility note: legacy: this v1 Python example is migration/reference-only; not a production default.
 
 This example demonstrates how to work with custom data classes
 and the Actor's publish/subscribe mechanism in NautilusTrader.

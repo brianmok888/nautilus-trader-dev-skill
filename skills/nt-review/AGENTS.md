@@ -57,7 +57,7 @@ Fail review if missing:
   9. Phase 8: Measure performance and robustness
   10. Phase 9: Finish documentation and operations
 - Required interfaces: InstrumentProvider async loaders, LiveDataClient contract, LiveExecutionClient reconciliation
-- Factory/config contract: `create(loop, name, config, msgbus, cache, clock)` with safe credential handling
+- Factory/config contract (pinned v2, `crates/common/src/factories/client.rs:48,76`): data client factories implement `create(name, config, cache: CacheView, clock: Rc<RefCell<dyn Clock>>)` and execution client factories implement `create(trader_id, name, config, cache: CacheView)` — no `loop` or `msgbus` parameter; fail adapters that still take the v1 `create(loop, name, config, msgbus, cache, clock)` shape. Safe credential handling unchanged
 - Runtime/FFI safety: no `tokio::spawn()` in adapters, direct `PyObject`/`Py<T>` for ordinary callbacks, justified/cycle-audited `Arc<Py<T>>` exceptions only, no blocking hot handlers
 - Testing doctrine: real payload fixtures, no sleep-based timing, cover providers/data/execution/factories
 
@@ -65,6 +65,8 @@ G2 `cargo check` is compilation only. Never treat it as spec, testnet, resilienc
 operations acceptance evidence; require separate Phase 8-10 evidence for those claims.
 
 ## QUICK CHECK (<5 min)
+
+NT v2 compatibility note: the QUICK CHECK and COMMON ISSUES tables below include v1-Python-era items (`super()` wiring, blocking `on_bar`, `ParquetDataCatalog`) kept as migration/reference-only signals. For current work use the Rust v2 checks: `StrategyCore` wiring via the `nautilus_strategy!` macro, `anyhow::Result` handler signatures, params-aware order APIs, and PyO3 stub parity with Rust dispatch.
 
 - [ ] All lifecycle methods call `super()`
 - [ ] `on_start` fetches instrument from cache with null check
@@ -88,7 +90,7 @@ Quick check + Conventions + Trading Correctness + Performance + Testability + (i
 | **Adapter** | Blocking HTTP in data handlers, no reconnection, not Rust-first, `tokio::spawn()` misuse |
 | **Data Catalog** | Not using `ParquetDataCatalog`, missing `BacktestDataConfig` for custom data, missing `metadata` |
 
-## RUST/FFI CHECKLIST (16 items)
+## RUST/FFI CHECKLIST (17 items)
 
 - [ ] Copyright header (2015-2026 Nautech Systems)
 - [ ] Module documentation with feature flags
@@ -127,6 +129,7 @@ upstream `crates/` sources before applying any item.
 - WS `connect()` needs `loop_=self._loop` in adapter code
 
 
+- Crate feature documentation convention (upstream `fd247cda9`, enforced by `.pre-commit-hooks/check_docs_conventions.sh`): every non-default feature must appear in the alphabetical Feature flags lists in both `README.md` and the `src/lib.rs` crate docs, matching `[features]` in `Cargo.toml` whenever a feature is added or renamed.
 ## LIVE TRADING CHECKLIST (9+ items)
 NT v2 compatibility note: v1.x checklist items below are migration/reference-only where they mention legacy/v1 removals; prefer current Rust v2/PyO3 guidance for new work.
 

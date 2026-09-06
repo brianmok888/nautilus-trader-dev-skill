@@ -1,6 +1,7 @@
 # Legacy Python Root Guidance
 
 > **Migration/reference-only.** This is the pre-cutover root guidance preserved for Python migration and historical review. It is not an active production lane.
+> For the authoritative v1-vs-v2 comparison and compatibility notes, see the pinned upstream `MIGRATION_V2.md` (centralized by upstream commit `beaac71e0`; version-scoped to `ac22d5cf4`).
 
 ---
 name: nt-review

@@ -56,12 +56,14 @@ pytest
 For performance tests:
 
 ```bash
-make test-performance
-# or
-uv run --active --no-sync pytest tests/performance_tests --benchmark-disable-gc --codspeed
+make cargo-ci-benches   # registered Rust criterion benchmark set (CI performance workflow)
+make pytest-memray       # Python memory-leak tests under python/memray_tests/ (requires make build-debug)
 ```
 
-The `--benchmark-disable-gc` flag prevents garbage collection from skewing results. Run performance tests in isolation (not with unit tests) to avoid interference.
+No canonical Python performance suite is wired into CI. Focused Criterion and iai commands,
+profiling, and measurement policy live in the upstream benchmarking guide
+(`docs/developer_guide/benchmarking.md` in the pinned tree). Run benchmarks separately from unit
+tests to avoid interference.
 
 ### Rust tests
 
@@ -106,7 +108,7 @@ For Rust-specific test conventions (module structure, `#[rstest]`, parameterizat
 
 ## Waiting for asynchronous effects
 
-When waiting for background work to complete, prefer the polling helpers `await eventually(...)` from `nautilus_trader.test_kit.functions` and `wait_until_async(...)` from `nautilus_common::testing` instead of arbitrary sleeps. They surface failures faster and reduce flakiness in CI because they stop as soon as the condition is satisfied or time out with a useful error.
+When waiting for background work to complete in Rust, prefer the polling helpers `wait_until(...)` and `wait_until_async(...)` from `nautilus_common::testing` (`crates/common/src/testing.rs:80,106` in the pinned tree; `wait_until_async` requires the `live` crate feature) instead of arbitrary sleeps. They surface failures faster and reduce flakiness in CI because they stop as soon as the condition is satisfied or time out with a useful error.
 
 ## Mocks
 

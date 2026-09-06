@@ -134,11 +134,22 @@ preventing it from progressing further. This event includes a human-readable rea
 
 Additionally, the current trading state of a Nautilus system affects order flow.
 
-The `TradingState` enum has three variants:
+The `TradingState` enum has three variants (pinned numeric values: `Active = 1`, `Reducing = 2`,
+`Halted = 3` — the v1 ordering placed `HALTED` between the other two, so any persisted numeric
+value from v1 data is stale):
 
-- `ACTIVE`: Operates normally.
-- `HALTED`: Does not process further order commands until state changes.
-- `REDUCING`: Only processes cancels or commands that reduce open positions.
+- `ACTIVE`: Operates normally — submit, modify, cancel, and query commands all work.
+- `REDUCING`: Eligible individual reduce-only submissions, cancels, and queries. An individual
+  `SubmitOrder` is eligible only when the order sets `reduce_only=true`, the command and order
+  identify the same instrument, the supplied position ID matches the order's cached open position,
+  the order side opposes that position, and the quantity does not exceed the cached position
+  quantity. Order lists and modifications are denied.
+- `HALTED`: Cancels and queries only — new submissions and modifications are not allowed.
+
+The risk engine applies these rules before forwarding commands to execution. Execution clients must
+still honor the [reduce-only send-or-reject contract](https://nautilustrader.io/docs/latest/concepts/adapters#reduce-only-execution-contract)
+for eligible reduce-only submissions: an adapter that cannot enforce `reduce_only` on the venue
+side must reject the order rather than submit it as a plain order.
 
 See the [`RiskEngineConfig` API Reference](https://nautilustrader.io/docs/latest/api_reference/config/#risk) for further details.
 

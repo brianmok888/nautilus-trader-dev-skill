@@ -1,4 +1,7 @@
+<!-- NT v2 compatibility note: legacy: v1 Python example retained as migration/reference-only; not a production default. -->
 # Example: Self-Communication Using Message Bus
+
+NT v2 compatibility note: legacy: this v1 Python example is migration/reference-only; not a production default.
 
 A practical demonstration of using NautilusTrader's message bus for self-communication within a strategy.
 The example implements a "10th bar notification system" where the strategy:

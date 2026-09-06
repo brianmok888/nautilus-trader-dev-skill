@@ -31,6 +31,7 @@ Review behavior before style. Classify findings as **Blocker** (unsafe or incorr
 **Correctness and lifecycle**
 - Verify deterministic startup, warmup, reset, stop, and shutdown behavior.
 - Confirm order rejection, cancellation, expiration, partial fill, reconciliation, position limits, and circuit-breaker paths.
+- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `ac22d5cf4`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
 - Ensure `DataActor`, strategy, adapter, cache, and message bus responsibilities are separated and messages remain immutable after publication.
 - Check current V2 shapes: `TryFrom<OrderInitialized>`, owned cache snapshots at boundaries, `RecencyMap` behavior, v2 wranglers, and raw fixed-point overflow handling.
 
