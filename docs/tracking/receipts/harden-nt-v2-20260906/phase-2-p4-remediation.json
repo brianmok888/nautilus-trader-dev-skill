@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-p4-remediation",
+  "finding_id": "NT-2026-09-06-030",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards && git -C <upstream> grep -c retain_order_status_reports 6df237384 -- crates/adapters/bybit/ crates/adapters/polymarket/",
+  "exit_code": 0,
+  "output_sha256": "6ed145f120c5db41ef2913fb2a4e3453e55db97c826e217daae600341116638b",
+  "output_excerpt": "Round-4 review rejected: the phase-5 remediation paragraph itself contained two claims contradicted by the pinned code (inverted Bybit/Polymarket semantics - they are the two adapters that hand-roll venue-specific filters instead of using the shared helper, verified 0 helper references in both crates; and a nonexistent 'closed-only request' mode - the rule is that start/end bounds apply only to closed reports). Both clauses rewritten to pinned truth with assert-verified anchors; nt-adapters evidence regenerated; battery 452/7 green.",
+  "redactions": [
+    "Replaced the full pinned-commit hash with 6df237384 in the command for brevity."
+  ],
+  "recorded_at": "2026-09-06T15:15:03Z"
+}
