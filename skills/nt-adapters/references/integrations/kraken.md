@@ -89,6 +89,13 @@ WebSocket. The following intervals are available:
 :::note
 **Futures limitation**: Kraken Futures does not support bar streaming via
 WebSocket. Use `request_bars()` for historical bar data instead.
+
+**Futures precision**: Kraken Futures can return instrument definitions that need more than
+standard-precision mode's nine decimal places. Keep high-precision mode enabled for Futures.
+Standard-precision mode continues to support Spot, but Futures clients fail to start or return
+instruments when any definition cannot be parsed. Futures catalogue requests return no partial
+result and never round, clamp, or omit an unsupported definition (upstream
+`docs/integrations/kraken.md` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
 :::
 
 ### Bar emission latency
@@ -454,6 +461,15 @@ the exchange state at startup or during operation.
 - Time-bounded queries: Supports filtering by start/end timestamps.
 - All fill types: Market, limit, and conditional order fills.
 
+**Account balances:**
+
+- Wallet balances: Fetched from `POST /0/private/BalanceEx`, which reports both the
+  total and the held (`hold_trade`) amount per asset. The held amount populates
+  `AccountBalance.locked`, so `free` excludes funds Kraken has reserved against
+  resting orders. For accounts with a credit line, net credit (`credit - credit_used`)
+  is included in `AccountBalance.total`, so `free` matches Kraken's available balance
+  of `balance + credit - credit_used - hold_trade`.
+
 **Margin position reports** (when `spot_account_type=Margin`):
 
 - Open positions: Fetched from `POST /0/private/OpenPositions` and aggregated
@@ -710,6 +726,7 @@ The product types for each client must be specified in the configurations.
 | `heartbeat_interval_secs`       | `30`         | WebSocket heartbeat interval in seconds.                               |
 | `auth_timeout_secs`             | `None`       | WebSocket authentication timeout in seconds.                           |
 | `max_requests_per_second`       | `None`       | Override rate limit; default is 5 req/s.                               |
+| `max_retries`                   | `3`          | Maximum retry attempts for retryable REST requests; `0` yields a single attempt. |
 | `spot_account_type`             | `CASH`       | Account type for spot trading; `MARGIN` enables leverage and reports.  |
 | `default_leverage`              | `None`       | Default spot margin leverage sent as `"N:1"` when set.                 |
 | `use_spot_position_reports`     | `False`      | Report wallet balances as positions; cash mode only.                   |
@@ -718,6 +735,12 @@ The product types for each client must be specified in the configurations.
 | `use_ws_trade`                  | `True`       | Route orders over the Spot WebSocket v2 trade channel (Rust client).   |
 | `ws_request_timeout_secs`       | `None`       | WebSocket order request timeout in seconds.                            |
 | `transport_backend`             | default      | Transport backend selection.                                           |
+
+On the spot cancellation path, `cancel_order` and `cancel_all_orders` route through the
+retrying REST sender, so a single cancel command can produce up to four venue requests when
+`max_retries` is left at its default of three. Order submission is single-shot on both product
+types; only cancels retry. Adjust `max_retries` when you account for order commands outside the
+adapter.
 
 For spot margin, `default_leverage` applies when an order has no per-order leverage
 param. `margin_balance_asset` only changes the `TradeBalance` summary denomination;

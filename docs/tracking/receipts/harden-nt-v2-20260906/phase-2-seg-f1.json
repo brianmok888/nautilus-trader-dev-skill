@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-seg-f1",
+  "finding_id": "NT-2026-09-06-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "5ed9395b3e671530fc527ec0fb8e95c954206e1c95d3787766fd59c8bb35f07e",
+  "output_excerpt": "F1 adapters/integrations (16/16): root venue-guide config tables aligned to pin 6df23738 (Kraken both tables, Bybit 8 v1 rows deleted + pinned rows added, dYdX/Lighter/Polymarket renames; every field verified against config.rs); falsely-closed items got real coverage (Bybit smp_type both copies, Kraken over-precision both copies); window items applied (Polymarket order-mod cancel-replace, Kraken max_retries, Bybit funding exclusion, BalanceEx locked/free, resolution events).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:43:42Z"
+}

@@ -578,20 +578,7 @@ impl PortfolioAnalyzer {
         }
 
         // Require explicit currency for multi-currency portfolios to avoid nondeterminism
-        let currency = match currency {
-            Some(c) => *c,
-            None if self.account_balances.len() == 1 => *self.account_balances.keys().next()?,
-            None => {
-                let mut currencies: IndexSet<Currency> =
-                    self.realized_pnls.keys().copied().collect();
-                currencies.extend(self.recorded_realized_pnls.keys().copied());
-                if currencies.len() != 1 {
-                    return None;
-                }
-
-                *currencies.first()?
-            }
-        };
+        let currency = self.resolve_pnl_currency(currency).ok()?;
 
         let realized_pnls = self.realized_pnls.get(&currency);
         let recorded_realized_pnls = self.recorded_realized_pnls.get(&currency);
@@ -776,12 +763,8 @@ impl PortfolioAnalyzer {
         // `trade_pnl_records` returns `None` both when the resolved currency has no records
         // and when an unspecified currency cannot be resolved. Only the first may dispatch on
         // an empty slice; the second would report values that ignore real PnLs.
-        if records.is_none()
-            && currency.is_none()
-            && has_records
-            && self.account_balances.len() != 1
-        {
-            return Err("Currency must be specified for multi-currency portfolio");
+        if records.is_none() && has_records {
+            self.resolve_pnl_currency(currency)?;
         }
 
         let realized_pnls: Vec<f64> = records
@@ -894,6 +877,33 @@ impl PortfolioAnalyzer {
         }
 
         self.returns = self.portfolio_returns.clone();
+    }
+
+    /// Resolves the currency for PnL record queries: the explicit currency when given,
+    /// otherwise the single account-balance currency, otherwise the single currency across
+    /// realized PnL records.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the currency is unspecified and cannot be resolved to exactly
+    /// one currency.
+    fn resolve_pnl_currency(&self, currency: Option<&Currency>) -> Result<Currency, &'static str> {
+        match currency {
+            Some(c) => Ok(*c),
+            None if self.account_balances.len() == 1 => {
+                Ok(*self.account_balances.keys().next().expect("len is 1"))
+            }
+            None => {
+                let mut currencies: IndexSet<Currency> =
+                    self.realized_pnls.keys().copied().collect();
+                currencies.extend(self.recorded_realized_pnls.keys().copied());
+                if currencies.len() != 1 {
+                    return Err("Currency must be specified for multi-currency portfolio");
+                }
+
+                Ok(*currencies.first().expect("len is 1"))
+            }
+        }
     }
 
     /// Gets formatted PnL statistics as strings.
@@ -1531,6 +1541,50 @@ mod tests {
     }
 
     #[rstest]
+    fn test_pnl_statistics_resolve_single_pnl_currency() {
+        // One realized-PnL currency and no explicit currency: resolution falls back to that
+        // currency, so statistics dispatch on its records.
+        let mut analyzer = PortfolioAnalyzer::new();
+        analyzer.register_statistic(Arc::new(MockStatistic::new("test_stat")));
+        let currency = Currency::USD();
+        let position_id = PositionId::new("P-USD");
+        analyzer.add_trade(
+            &position_id,
+            UnixNanos::from(1),
+            &Money::new(10.0, currency),
+        );
+
+        let records = analyzer.trade_pnl_records(None).unwrap();
+        let stats = analyzer.get_performance_stats_pnls(None, None).unwrap();
+
+        assert_eq!(records, vec![(position_id, UnixNanos::from(1), 10.0)]);
+        assert_eq!(stats["test_stat"], 10.0);
+    }
+
+    #[rstest]
+    fn test_pnl_statistics_prefer_account_balance_currency() {
+        // A single account-balance currency resolves the query even when the realized-PnL
+        // records are in another currency: the balance currency wins, has no records, and
+        // statistics dispatch on an empty slice instead of erroring.
+        let mut analyzer = PortfolioAnalyzer::new();
+        analyzer.register_statistic(Arc::new(MockStatistic::new("test_stat")));
+        let currency = Currency::USD();
+        analyzer
+            .account_balances
+            .insert(currency, Money::new(1000.0, currency));
+        analyzer.add_trade(
+            &PositionId::new("P-EUR"),
+            UnixNanos::from(1),
+            &Money::new(5.0, Currency::EUR()),
+        );
+
+        let stats = analyzer.get_performance_stats_pnls(None, None).unwrap();
+
+        assert!(analyzer.trade_pnl_records(None).is_none());
+        assert_eq!(stats["test_stat"], 0.0);
+    }
+
+    #[rstest]
     fn test_trade_pnl_records_sorted_by_event_time() {
         // A recorded PnL at t=1 and an unmatched position-derived PnL at t=2 are merged from
         // two sources; without sorting the derived record leads and the sequence reads [t2, t1].
@@ -1568,6 +1622,19 @@ mod tests {
         let stats = analyzer
             .get_performance_stats_pnls(Some(&Currency::USD()), None)
             .unwrap();
+
+        assert_eq!(stats["Custom"], 0.0);
+        assert_eq!(stats["PnL (total)"], 0.0);
+    }
+
+    #[rstest]
+    fn test_pnl_statistics_run_without_any_trades_or_currency() {
+        // No realized PnLs and no explicit currency: with nothing to resolve, statistics
+        // still receive an empty slice instead of erroring.
+        let mut analyzer = PortfolioAnalyzer::new();
+        analyzer.register_statistic(Arc::new(ConstantStatistic::new("Custom", 0.0)));
+
+        let stats = analyzer.get_performance_stats_pnls(None, None).unwrap();
 
         assert_eq!(stats["Custom"], 0.0);
         assert_eq!(stats["PnL (total)"], 0.0);

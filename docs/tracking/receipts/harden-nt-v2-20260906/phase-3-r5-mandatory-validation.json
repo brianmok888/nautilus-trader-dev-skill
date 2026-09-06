@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-3-r5-mandatory-validation",
+  "finding_id": "NT-2026-09-06-030",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD f0a56b9 (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "242bbdeeb6bfebe36c0633ad3f62cc5a68ca42c6287fe435878291aa51d7b35f",
+  "output_excerpt": "Round-5 fresh battery on HEAD f0a56b9: pytest 452 passed 7 skipped; cards RC0; declarations RC0; freshness manifest_reviewed at 6df23738; governance receipts 310 validated; findings schema passed; git diff --check clean.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T16:50:20Z"
+}

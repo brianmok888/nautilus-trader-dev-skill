@@ -5,7 +5,7 @@ This guide gives the default NautilusTrader Development Skills workflow for a ne
 All new strategy, integration, and live work follows the Rust-first path in this guide. Python NT material is migration/reference-only unless an upstream contract explicitly requires Python bindings.
 
 **Prerequisites**:
-- Rust 1.98.0 toolchain and Cargo installed for the pinned `ac22d5cf4` develop baseline.
+- Rust 1.98.0 toolchain and Cargo installed for the pinned `6df23738` develop baseline.
 - NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
@@ -22,7 +22,7 @@ cargo new my-strategy --bin
 cd my-strategy
 ```
 
-Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. The published crates.io lane is `0.63`; the pinned source workspace declares `0.64.0`, which is not published on crates.io. These are intentionally different lanes: use the release snippet below for a standalone project, or use the source-pinned path lane in repository validation when exact API parity with commit `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d` is required. `cargo info nautilus-live@0.63.0` succeeds while `cargo info nautilus-live@0.64.0` reports no published version.
+Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. The published crates.io lane is `0.63`; the pinned source workspace declares `0.64.0`, which is not published on crates.io. These are intentionally different lanes: use the release snippet below for a standalone project, or use the source-pinned path lane in repository validation when exact API parity with commit `6df237382eb1d8411906f9b1790fa06f8ba7aad4` is required. `cargo info nautilus-live@0.63.0` succeeds while `cargo info nautilus-live@0.64.0` reports no published version.
 
 ```toml
 [dependencies]

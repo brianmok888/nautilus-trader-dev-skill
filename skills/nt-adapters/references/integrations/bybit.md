@@ -282,6 +282,17 @@ To override, pass `position_idx` via `params`:
 params = {"position_idx": 1}  # 0 one-way, 1 long, 2 short
 ```
 
+#### Self-match prevention (SMP)
+
+Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpType`:
+`None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
+is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
+leaving both unset omits the field so the venue default applies
+(`crates/adapters/bybit/src/config.rs` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
+Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
+values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
+(`crates/adapters/bybit/src/common/enums.rs`).
+
 ### Risk events
 
 | Feature                   | Spot | Linear | Inverse | Option | Notes                                     |
@@ -305,6 +316,12 @@ execution ID, symbol, side, quantity, and price. Fills flow through the normal
 `FillReport` path; because these orders carry an empty `orderLinkId`, the
 execution engine treats them as external and assigns them via
 `external_order_claims` (or the `EXTERNAL` strategy by default).
+
+Funding settlements use `execType=Funding`, but they are balance adjustments rather than fills.
+The adapter ignores them in historical fill reports and standard private `execution` messages, so
+it emits neither a `FillReport` nor an `OrderFilled` event and does not change local position
+quantity. During reconciliation, funding records do not count toward the requested fill-report
+limit.
 
 Bybit also publishes an ADL ranking on position updates via the
 `adlRankIndicator` field. The range is 0 (flat / no position) to 5 (next to
@@ -587,7 +604,7 @@ channel:
 | Greeks                     | Delta, gamma, vega, theta, plus bid/ask/mark IV.         |
 | Mark price                 | Exchange mark price for each option contract.            |
 | Index price                | Underlying index price.                                  |
-| Underlying (forward) price | Per-expiry forward price, used for ATM determination.    |
+| Underlying reference price | Per-expiry venue reference used for ATM determination (upstream `148e7cf6` replaced the `ForwardPrice` series with an internal reference response). |
 | Open interest              | Per-contract open interest.                              |
 | Order book deltas          | L2 MBP updates from the option orderbook stream.         |
 
@@ -811,6 +828,7 @@ The product types for each client must be specified in the configurations.
 | `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings (Rust struct). |
 | `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode (Rust struct). See [Hedge mode](#hedge-mode-bothsides). |
 | `margin_mode`                    | `None`  | Margin mode setting for the account. |
+| `smp_type`                       | `None`  | Self-match prevention type (`BybitOrderSmpType`) sent on every submitted order; the per-order `smp_type` parameter overrides it, and both unset omits the field. See [Self-match prevention (SMP)](#self-match-prevention-smp). |
 | `auto_repay_spot_borrows`         | `None`  | Automatically repay Spot borrow balances. |
 | `account_id`                      | `None`  | Optional account ID for the execution client. |
 

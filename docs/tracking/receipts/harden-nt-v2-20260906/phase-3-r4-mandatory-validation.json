@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-3-r4-mandatory-validation",
+  "finding_id": "NT-2026-09-06-030",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "fresh verifier reruns on committed HEAD 3c7258e (see output_excerpt)",
+  "exit_code": 0,
+  "output_sha256": "80d20271c3c72f13364ec46274515df1296dd1f8ed45e9eb324eba3b2914f5e5",
+  "output_excerpt": "Round-4 fresh battery on HEAD 3c7258e: pytest 452 passed 7 skipped; cards RC0; declarations RC0; freshness manifest_reviewed at 6df23738; legacy labelling passed; governance receipts 308 validated; findings schema passed; git diff --check clean; 0 OPEN. Remediation verified present: retain_order_status_reports implementer-contract section in the nt-adapters official spec.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T15:07:22Z"
+}

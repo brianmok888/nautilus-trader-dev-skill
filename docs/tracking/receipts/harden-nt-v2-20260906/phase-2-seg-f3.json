@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-seg-f3",
+  "finding_id": "NT-2026-09-06-041",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "9f117ef1b0d3ff9ff7f456a12e33e5cb29d7974d287a641463a4556a43095cd8",
+  "output_excerpt": "F3 signals/backtest/model (10/11, -101 rejected with evidence - wrong file cited): indicators_guide CamelCase variants, six stale defaults, Rust Indicator trait path, ZScore row, corrected Aroon semantics; backtesting sort semantics to pinned behavior; typed-batch coverage into the skill-local copy (Rust-only signature); Sortino n<2 NaN + resolve_pnl_currency prose; instrument properties into value_type_patterns. -101 re-executed by the mission lead in bybit.md both copies (option-chain reference-price terminology per 148e7cf6).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:43:42Z"
+}

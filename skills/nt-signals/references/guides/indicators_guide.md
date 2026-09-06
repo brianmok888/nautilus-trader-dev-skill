@@ -1,8 +1,6 @@
 # ARCHIVAL / MIGRATION NOTE
 
-NT v2 compatibility note: this whole file contains historical NautilusTrader legacy Cython/v1 or Python live integration-specific `TradingNode` material retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and Rust `LiveNode` patterns for new Rust-backed live work.
-
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
+NT v2 compatibility note: only the historical Cython/v1 naming noted in the overview below is retained for migration/reference-only context; the tables, examples, and how-tos in this file document the pinned V2 surface (Rust `crates/indicators`, flat PyO3 `nautilus_trader.indicators` package). Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
 # NautilusTrader Indicators Reference Guide
 
@@ -18,36 +16,44 @@ base class are historical; the authoring surface is the Rust `Indicator` trait
 
 - `has_inputs: bool` -- whether any data has been received
 - `initialized: bool` -- whether the warmup period is satisfied
-- `handle_bar(bar)` / `handle_quote_tick(tick)` / `handle_trade_tick(tick)` -- typed update methods (Rust trait handlers: `handle_bar` / `handle_quote` / `handle_trade`)
-- `update_raw(...)` -- direct numeric update (no data object required)
 - `reset()` -- reset all state
+
+The typed update surface varies per indicator, so check the specific class in
+`nautilus_trader.indicators` for what it actually exposes. Bar-only indicators
+expose only `handle_bar` (15 classes at the pin, e.g. `CommodityChannelIndex`,
+`DonchianChannel`, `IchimokuCloud`, `Stochastics`, `OnBalanceVolume`,
+`LinearRegression`); `BookImbalanceRatio` exposes none of the bar/tick handlers
+and updates via `handle_book(book)` / `update(best_bid, best_ask)`;
+`SpreadAnalyzer` exposes `handle_quote_tick` but no `handle_bar` or
+`update_raw`. Most price-based indicators also expose `update_raw(...)` --
+direct numeric update, no data object required; calling a handler an indicator
+does not implement panics with `is not implemented for`.
 
 ---
 
-## Averages (`nautilus_trader.indicators.averages`)
+## Averages
 
-All moving averages extend `MovingAverage(Indicator)` and share: `period`, `value`, `price_type`.
+All moving averages implement the Rust `MovingAverage` trait, whose shared members are `value`, `count`, and `update_raw`; most classes also expose `period` and `price_type` properties. `AdaptiveMovingAverage` has no single `period` -- it is parameterized by `period_efficiency_ratio`, `period_fast`, and `period_slow`.
 
 | Class | Params | Description | Rust crate path |
 |---|---|---|---|
 | `SimpleMovingAverage` | `period` | Arithmetic mean over rolling window | `average::sma` |
 | `ExponentialMovingAverage` | `period` | EMA with alpha = 2/(period+1) | `average::ema` |
 | `DoubleExponentialMovingAverage` | `period` | DEMA: 2*EMA1 - EMA2 for reduced lag | `average::dema` |
-| `WeightedMovingAverage` | `period, weights=None` | Weighted average with custom or linear weights | `average::wma` |
+| `WeightedMovingAverage` | `period, weights` | Weighted average with explicit weights (`len(weights) == period`, positive sum) | `average::wma` |
 | `HullMovingAverage` | `period` | Alan Hull's fast smooth MA using nested WMAs | `average::hma` |
 | `AdaptiveMovingAverage` | `period_efficiency_ratio (>=2), period_fast, period_slow` | Kaufman AMA adapting to noise via EfficiencyRatio | `average::ama` |
 | `WilderMovingAverage` | `period` | EMA variant with alpha = 1/period (Wilder smoothing) | `average::rma` |
-| `VariableIndexDynamicAverage` | `period, cmo_ma_type=SIMPLE` | VIDYA: EMA with dynamic alpha from Chande Momentum Oscillator | `average::vidya` |
+| `VariableIndexDynamicAverage` | `period, price_type=None, cmo_ma_type=WILDER` | VIDYA: EMA with dynamic alpha from Chande Momentum Oscillator | `average::vidya` |
+| `ZScore` | `period, price_type=None` | Rolling z-score `(last - mean) / sample std`; window expands to `period` then slides; outputs `value`/`mean`/`std` | `average::zscore` |
 
-**Factory** (Rust-only): `MovingAverageFactory::create(moving_average_type, period)` in `nautilus_indicators::average` returns the matching `Box<dyn MovingAverage>` — the type comes first and there are no keyword arguments; the pinned Python indicators package does not export this factory
-given a `MovingAverageType` enum value (`SIMPLE`, `EXPONENTIAL`, `WEIGHTED`, `HULL`, `WILDER`,
-`DOUBLE_EXPONENTIAL`, `VARIABLE_INDEX_DYNAMIC`).
+**Factory** (Rust-only): `MovingAverageFactory::create(moving_average_type, period)` in `nautilus_indicators::average` returns the matching `Box<dyn MovingAverage>` given a `MovingAverageType` enum value -- the type comes first and there are no keyword arguments; the pinned Python indicators package does not export this factory. `MovingAverageType` has exactly five CamelCase variants at the pin: `Simple`, `Exponential`, `DoubleExponential`, `Wilder`, `Hull` (`crates/indicators/src/average/mod.rs`). `WeightedMovingAverage` and `VariableIndexDynamicAverage` exist as classes but cannot be produced via the factory.
 
 `LinearRegression` and `VolumeWeightedAveragePrice` are Python-visible at the pinned tip (`python/nautilus_trader/indicators/__init__.pyi:35,52`) alongside their Rust implementations in `nautilus_indicators::average`.
 
 ---
 
-## Momentum (`nautilus_trader.indicators.momentum`)
+## Momentum
 
 | Class | Params | Output | Description | Rust path |
 |---|---|---|---|---|
@@ -57,45 +63,45 @@ given a `MovingAverageType` enum value (`SIMPLE`, `EXPONENTIAL`, `WEIGHTED`, `HU
 | `Stochastics` | `period_k, period_d, slowing=1, ma_type=EXP, d_method="ratio"` | `value_k, value_d` | %K/%D oscillator; supports "ratio" and "moving_average" D methods | `momentum::stochastics` |
 | `CommodityChannelIndex` | `period, scalar=0.015, ma_type=SIMPLE` | `value` | CCI: deviation of typical price from its MA | `momentum::cci` |
 | `EfficiencyRatio` | `period (>=2)` | `value` (0-1) | Kaufman ER: \|P(t)−P(t−n)\| / sum of \|ΔP\| over the n price changes in the window (initialized after n inputs) | `ratio::efficiency_ratio` |
-| `RelativeVolatilityIndex` | `period, scalar=100, ma_type=EXP` | `value` (0-100) | RVI: standard deviation direction tracker | `momentum::rvi` (volatility crate) |
+| `RelativeVolatilityIndex` | `period, scalar=100, ma_type=SIMPLE` | `value` (0-100) | RVI: standard deviation direction tracker | `volatility::rvi` |
 | `PsychologicalLine` | `period, ma_type=SIMPLE` | `value` (0-100) | Percentage of bars closing above prior close | `momentum::psl` |
 
 ---
 
-## Trend (`nautilus_trader.indicators.trend`)
+## Trend
 
 | Class | Params | Output | Description | Rust path |
 |---|---|---|---|---|
 | `ArcherMovingAveragesTrends` | `fast_period, slow_period, signal_period, ma_type=EXP` | `long_run, short_run` | Detects trend runs from fast/slow MA divergence | `momentum::amat` |
-| `AroonOscillator` | `period` | `aroon_up, aroon_down, value` | Measures periods since highest high / lowest low | `momentum::aroon` |
+| `AroonOscillator` | `period` | `aroon_up, aroon_down, value` | Periods since highest high / lowest low over the full `period+1` window, scanned newest-to-oldest; ties resolve to the most recent occurrence | `momentum::aroon` |
 | `DirectionalMovement` | `period, ma_type=EXP` | `pos, neg` | +DI / -DI directional movement lines | `momentum::dm` |
-| `MovingAverageConvergenceDivergence` | `fast_period, slow_period, ma_type=EXP` | `value` | MACD: difference of fast and slow MAs | `momentum::macd` |
+| `MovingAverageConvergenceDivergence` | `fast_period, slow_period, ma_type=SIMPLE` | `value` | MACD: difference of fast and slow MAs | `momentum::macd` |
 | `IchimokuCloud` | `tenkan=9, kijun=26, senkou=52, displacement=26` | `tenkan_sen, kijun_sen, senkou_span_a, senkou_span_b, chikou_span` | Full Ichimoku Kinko Hyo with 5 components | `momentum::ichimoku` |
-| `LinearRegression` | `period` | `value, slope, intercept, degree, cfo, R2` | OLS regression over rolling window | `average::lr` |
+| `LinearRegression` | `period` | `value, slope, intercept, degree, cfo, r2` | OLS regression over rolling window | `average::lr` |
 | `Bias` | `period, ma_type=SIMPLE` | `value` | Rate of change between price and its MA: (price/MA) - 1 | `momentum::bias` |
 | `Swings` | `period` | `direction, changed, high_price, low_price, length, duration` | Swing high/low detection with timing metrics | `momentum::swings` |
 
 ---
 
-## Volatility (`nautilus_trader.indicators.volatility`)
+## Volatility
 
 | Class | Params | Output | Description | Rust path |
 |---|---|---|---|---|
 | `AverageTrueRange` | `period, ma_type=SIMPLE, use_previous=True, value_floor=0` | `value` | ATR: smoothed true range | `volatility::atr` |
 | `BollingerBands` | `period, k, ma_type=SIMPLE` | `upper, middle, lower` | Bands at k standard deviations from MA | `momentum::bb` |
 | `DonchianChannel` | `period` | `upper, middle, lower` | Highest high / lowest low channel | `volatility::dc` |
-| `KeltnerChannel` | `period, k_multiplier, ma_type=EXP, ma_type_atr=SIMPLE, use_previous=True, atr_floor=0` | `upper, middle, lower` | ATR-based envelope around MA of typical price | `volatility::kc` |
+| `KeltnerChannel` | `period, k_multiplier, ma_type=SIMPLE, ma_type_atr=SIMPLE, use_previous=True, atr_floor=0` | `upper, middle, lower` | ATR-based envelope around MA of typical price | `volatility::kc` |
 | `KeltnerPosition` | `period, k_multiplier, ...` | `value` | Relative position within Keltner channel (-1..+1 range, unbounded) | `volatility::kp` |
 | `VerticalHorizontalFilter` | `period, ma_type=SIMPLE` | `value` | VHF: highest-lowest range / sum of changes (trending vs ranging) | `momentum::vhf` |
-| `VolatilityRatio` | `fast_period, slow_period, ma_type=SIMPLE, use_previous=True, value_floor=0` | `value` | Ratio of slow ATR to fast ATR | `volatility::vr` |
+| `VolatilityRatio` | `fast_period, slow_period, ma_type=SIMPLE, use_previous=False, value_floor=0` | `value` | Ratio of slow ATR to fast ATR | `volatility::vr` |
 
 ---
 
-## Volume (`nautilus_trader.indicators.volume`)
+## Volume
 
 | Class | Params | Output | Description | Rust path |
 |---|---|---|---|---|
-| `OnBalanceVolume` | `period=0` | `value` | Cumulative positive/negative volume momentum | `momentum::obv` |
+| `OnBalanceVolume` | `period` (required) | `value` | Cumulative positive/negative volume momentum | `momentum::obv` |
 | `VolumeWeightedAveragePrice` | (none) | `value` | Intraday VWAP, auto-resets on new day | `average::vwap` |
 | `KlingerVolumeOscillator` | `fast_period, slow_period, signal_period, ma_type=EXP` | `value` | Compares volume to price movement for reversal prediction | `momentum::kvo` |
 | `Pressure` | `period, ma_type=EXP, atr_floor=0` | `value, value_cumulative` | Relative volume needed to move price across ATR | `momentum::pressure` |
@@ -126,87 +132,105 @@ given a `MovingAverageType` enum value (`SIMPLE`, `EXPONENTIAL`, `WEIGHTED`, `HU
 
 ## Building a Custom Indicator
 
-To create a custom indicator, subclass `Indicator` and implement `handle_bar()` (or
-`handle_quote_tick` / `handle_trade_tick`), `update_raw()`, and `_reset()`.
+Custom indicators are authored in Rust by implementing the `Indicator` trait
+(`crates/indicators/src/indicator.rs`); there is no Python base class at the pin --
+`nautilus_trader.indicators` re-exports PyO3-wrapped classes only. Implement
+`name`, `has_inputs`, `initialized`, `reset`, the typed handlers your indicator
+supports (`handle_bar`, `handle_quote`, `handle_trade`, `handle_book`, ...),
+and keep the calculation in an `update_raw` method:
 
-### Step-by-step: Exponential Weighted Momentum
+### Step-by-step: Exponential Weighted Momentum (Rust)
 
-```python
-from nautilus_trader.indicators import Indicator
-from nautilus_trader.model.data import Bar, QuoteTick, TradeTick
-from nautilus_trader.model.enums import PriceType
+```rust
+use nautilus_indicators::indicator::Indicator;
+use nautilus_model::data::Bar;
 
+pub struct ExponentialWeightedMomentum {
+    period: usize,
+    value: f64,
+    prev_price: f64,
+    count: usize,
+    has_inputs: bool,
+    initialized: bool,
+}
 
-class ExponentialWeightedMomentum(Indicator):
-    """
-    Momentum indicator using exponentially weighted price changes.
+impl ExponentialWeightedMomentum {
+    pub fn new(period: usize) -> Self {
+        assert!(period > 0, "period must be positive");
+        Self {
+            period,
+            value: 0.0,
+            prev_price: 0.0,
+            count: 0,
+            has_inputs: false,
+            initialized: false,
+        }
+    }
+}
 
-    Parameters
-    ----------
-    period : int
-        Lookback period for the momentum calculation.
-    price_type : PriceType
-        Price extraction type for ticks.
-    """
+impl Indicator for ExponentialWeightedMomentum {
+    fn name(&self) -> String {
+        stringify!(ExponentialWeightedMomentum).to_string()
+    }
 
-    def __init__(self, period: int, price_type: PriceType = PriceType.LAST):
-        # Pass params list for serialization — must match constructor args
-        super().__init__(params=[period])
-        self.period = period
-        self.price_type = price_type
+    fn has_inputs(&self) -> bool {
+        self.has_inputs
+    }
 
-        # Stateful values — all must be reset in _reset()
-        self.value = 0.0
-        self._prev_price = 0.0
-        self._alpha = 2.0 / (period + 1)
-        self._count = 0
+    fn initialized(&self) -> bool {
+        self.initialized
+    }
 
-    # --- Typed update methods: extract the price, then delegate to update_raw ---
+    fn handle_bar(&mut self, bar: &Bar) {
+        self.update_raw(bar.close.as_f64());
+    }
 
-    def handle_bar(self, bar: Bar):
-        self.update_raw(bar.close.as_double())
+    fn reset(&mut self) {
+        self.value = 0.0;
+        self.prev_price = 0.0;
+        self.count = 0;
+        self.has_inputs = false;
+        self.initialized = false;
+    }
+}
 
-    def handle_quote_tick(self, tick: QuoteTick):
-        self.update_raw(tick.extract_price(self.price_type).as_double())
-
-    def handle_trade_tick(self, tick: TradeTick):
-        self.update_raw(tick.price.as_double())
-
-    # --- Core calculation ---
-
-    def update_raw(self, close: float):
-        if not self.has_inputs:
-            self._set_has_inputs(True)
-            self._prev_price = close
-            self._count = 1
-            return
-
-        # Momentum = current close - previous close
-        momentum = close - self._prev_price
-        # Exponentially weight it
-        self.value = self._alpha * momentum + (1 - self._alpha) * self.value
-        self._prev_price = close
-        self._count += 1
-
-        if not self.initialized and self._count >= self.period:
-            self._set_initialized(True)
-
-    # --- Reset: MUST reset ALL stateful values ---
-
-    def _reset(self):
-        self.value = 0.0
-        self._prev_price = 0.0
-        self._count = 0
+impl ExponentialWeightedMomentum {
+    // Core calculation -- typed handlers just extract prices and delegate here
+    pub fn update_raw(&mut self, close: f64) {
+        if self.count == 0 {
+            self.prev_price = close;
+            self.count = 1;
+            self.has_inputs = true;
+            return;
+        }
+        let alpha = 2.0 / (self.period as f64 + 1.0);
+        let momentum = close - self.prev_price;
+        self.value = alpha * momentum + (1.0 - alpha) * self.value;
+        self.prev_price = close;
+        self.count += 1;
+        self.initialized = self.count >= self.period;
+    }
+}
 ```
 
 **Key patterns:**
-- `super().__init__(params=[...])` — pass constructor args for indicator serialization
-- `_set_has_inputs(True)` — call on first data point
-- `_set_initialized(True)` — call once enough data for valid output
-- `_reset()` — must reset ALL stateful values (called by `reset()`)
-- `update_raw()` — keep calculation here; typed handlers just extract prices and delegate
 
-**Registering your custom indicator** — same as built-in:
+- Implement only the handlers your indicator consumes; the trait defaults panic
+  with `is not implemented for` when an unimplemented handler is called, which
+  the PyO3 wrapper surfaces to Python.
+- `has_inputs` flips on the first data point; `initialized` flips once enough
+  data exists for valid output (here `count >= period`).
+- `update_raw()` -- keep the calculation here; typed handlers just extract
+  prices and delegate.
+- `reset()` -- must reset ALL stateful values while preserving configuration.
+- To make the indicator Python-visible, add a PyO3 wrapper under
+  `crates/indicators/src/python/` following the built-in bindings (separate
+  `#[pyclass]`/`#[pymethods]` wrapper; do not substitute `#[pymethods]` for the
+  Rust `Indicator` implementation). Without a wrapper the indicator is
+  Rust-only.
+
+**Registering your custom indicator** -- once Python-visible, registration is
+the same as built-in indicators:
 
 ```python
 def on_start(self):
@@ -215,7 +239,8 @@ def on_start(self):
     self.subscribe_bars(bar_type)
 ```
 
-See `../../migration_reference/python/templates/indicator.py` for a complete starter template.
+See `../../SKILL.md` "Custom Indicator in Rust" for the condensed version of
+this authoring path.
 
 ---
 
@@ -282,11 +307,11 @@ print(ema.initialized)  # True after 20 updates
 
 ### Using MovingAverageFactory
 
-```python
-// Rust: use nautilus_indicators::average::{MovingAverageFactory, MovingAverageType};
+```rust
+use nautilus_indicators::average::{MovingAverageFactory, MovingAverageType};
 
-# Create any MA type with a uniform interface
-ma = MovingAverageFactory.create(20, MovingAverageType.HULL)
+// Create any factory-supported MA type with a uniform interface (type first)
+let ma = MovingAverageFactory::create(MovingAverageType::Hull, 20);
 ```
 
 ### Multi-output indicators
@@ -366,7 +391,7 @@ The Rust implementations live in `crates/indicators/src/` and mirror the Python 
 crates/indicators/src/
   indicator.rs          # Indicator trait
   lib.rs                # Crate root
-  average/              # sma, ema, dema, hma, wma, ama, rma, vidya, vwap, lr
+  average/              # sma, ema, dema, hma, wma, ama, rma, vidya, vwap, lr, zscore
   momentum/             # rsi, roc, cmo, stochastics, cci, macd, aroon, amat,
                         # bb, bias, dm, ichimoku, kvo, obv, pressure, psl, swings, vhf
   ratio/                # efficiency_ratio, spread_analyzer

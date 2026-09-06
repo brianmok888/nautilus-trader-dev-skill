@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-seg-f4",
+  "finding_id": "NT-2026-09-06-061",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "efacb751dbd203dc6ef174197da9efe201be9ad50d7809cb784cdf32288b550e",
+  "output_excerpt": "F4 lanes (9/9): Cache purge section to the pinned 2-arg surface with labeled v1 note; tools.toml split to .nautilus-engineering; submit_order 4-arg/self.order() facade; mod.rs:1015 citation; version-scoped drift notes (09a235060, 62b50579); try_send_account_state coverage; hyperliquid ws_post_timeout_secs default 10; durable cache queries + instrument closes.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:43:42Z"
+}

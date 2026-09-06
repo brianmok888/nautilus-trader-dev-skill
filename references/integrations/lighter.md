@@ -579,8 +579,7 @@ same values when all three are available.
 
 | Option                      | Default   | Description                                                |
 |-----------------------------|-----------|------------------------------------------------------------|
-| `trader_id`                 | Required  | Nautilus trader identifier.                                |
-| `account_id`                | Required  | Nautilus account identifier for the venue.                 |
+| `account_id`                | Required  | Nautilus account identifier for the venue (issuer must equal the resolved venue; pinned default `LIGHTER-001`). |
 | `account_index`             | `None`    | Lighter account index.                                     |
 | `api_key_index`             | `None`    | Lighter API key slot.                                      |
 | `private_key`               | `None`    | Hex private key for auth and L2 transaction signing.       |
@@ -590,9 +589,16 @@ same values when all three are available.
 | `environment`               | `Mainnet` | `LighterEnvironment::Mainnet` or `Testnet`.                |
 | `http_timeout_secs`         | `60`      | HTTP request timeout in seconds.                           |
 | `ws_timeout_secs`           | `30`      | WebSocket connect timeout in seconds.                      |
-| `active_markets`            | `[]`      | Lighter market IDs to poll during unscoped reconciliation. |
 | `market_order_slippage_bps` | `50`      | Slippage cap (bps) for `MARKET` / `STOP_MARKET` / `MIT`.   |
+| `rest_quota_per_min`        | `None`    | REST request quota per minute.                             |
+| `sendtx_quota_per_min`      | `None`    | Transaction send quota per minute.                         |
+| `deployment`                | `Lighter` | `LighterDeployment::Lighter` or `Robinhood` deployment selection. |
+| `venue`                     | `None`    | Custom venue identity when running separate Lighter-protocol endpoints. |
 | `transport_backend`         | Default   | WebSocket transport backend.                               |
+
+The trader ID is not an execution config field; it comes from the owning node
+via the execution factory's `create(trader_id, name, config, cache)`. The v1
+`trader_id` / `active_markets` config fields are migration/reference-only.
 
 ### Configuration example
 
@@ -608,17 +614,13 @@ let data_config = LighterDataClientConfig {
 };
 
 let exec_config = LighterExecutionClientConfig::builder()
-    .trader_id(trader_id)
     .account_id(account_id)
     .environment(LighterEnvironment::Testnet)
-    .active_markets(vec![0])
     .build();
 ```
 
 The execution config above resolves credentials from the matching testnet environment variables.
 Set `account_index`, `api_key_index`, and `private_key` directly to override environment lookup.
-Set `active_markets` to the venue market IDs that should be checked for open orders during
-cold-start reconciliation.
 
 ## Official documentation
 

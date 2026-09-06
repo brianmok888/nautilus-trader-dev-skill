@@ -62,7 +62,7 @@ which is newer than this repository's pinned G2 baseline, adds the following Rus
 - `funding_rate_count` / `has_funding_rates`
 - `instrument_status_count` / `has_instrument_statuses`
 
-These accessors are available at the pinned baseline `ac22d5cf4` (see the current-lane guidance in this skill's SKILL.md). Use the `*_count` result as the authoritative count and the
+These accessors are available at the pinned baseline `6df23738` (see the current-lane guidance in this skill's SKILL.md). Use the `*_count` result as the authoritative count and the
 matching `has_*` method for the non-empty predicate; both return zero/false for
 a missing history.
 - Custom Arrow storage supports `#[custom_data_field(json)]` for JSON-backed Serde fields with PyO3 dict conversion for `IndexMap` / `HashMap` values.

@@ -15,6 +15,7 @@ while zero-cost abstractions and the absence of a garbage collector deliver C-li
 - Apply the same layout across related manifests when the feature or dependency sets change to avoid drift between crates.
 - Use snake_case filenames for `bin/` sources (for example `bin/ws_data.rs`) and reflect those paths in each `[[bin]]` section.
 - Keep `[[bin]] name` entries in kebab-case (for example `name = "hyperliquid-ws-data"`) so the compiled binaries retain their intended CLI names.
+- Trim dependency features to what the crate actually consumes: disable unneeded defaults (`default-features = false` for workspace dependencies), and enable required transport and Alloy features at their consumers. The upstream pre-commit hook `.pre-commit-hooks/check_dependency_features.py` (upstream `09a235060b`) enforces per-dependency feature allowlists when maintained manifests change.
 
 ## Versioning guidance
 
@@ -56,7 +57,7 @@ The `nextest` profile is used to align with the workflow of the majority of core
 
 ### Strict Clippy audit (candidate report)
 
-Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `ac22d5cf4`,
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `6df23738`,
 `scripts/clippy-strict-audit.py`) reports candidate violations of the configured
 strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
 `indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,
@@ -887,6 +888,13 @@ For modules with feature flags, document them clearly:
 //! - `extension-module`: Builds as a Python extension module (used with `python`).
 //! - `test-support`: Enables testing stubs and test specs.
 ```
+
+This documentation is enforced: every non-default feature must appear exactly once, in
+alphabetical order, under `Feature flags` in both `README.md` and the crate's configured library
+source (the `[lib]` `path` in `Cargo.toml`, defaulting to `src/lib.rs`), matching `[features]` in
+`Cargo.toml`. The upstream pre-commit hook `.pre-commit-hooks/check_docs_conventions.sh`
+(upstream `fd247cda9`; configured library source added by `09a235060b`) rejects manifests and
+docs that drift from these lists.
 
 #### Field documentation
 

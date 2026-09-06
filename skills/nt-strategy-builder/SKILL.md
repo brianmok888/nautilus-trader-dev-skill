@@ -22,7 +22,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6df237382eb1d8411906f9b1790fa06f8ba7aad4`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Execute the supported `BacktestNode`/`BacktestRunConfig` contract against pinned V2 and statically verify that retained Python templates remain migration/reference-only. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed against the writable pinned-V2 build selected through `NT_UPSTREAM_ROOT`; `tests/test_strategy_builder_v2_contract.py` provides executable V2 coverage plus static migration/reference checks, while pinned upstream backtest/live acceptance tests provide integration coverage; `references/g2-evidence/nt-strategy-builder.json` records provenance. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -51,7 +51,7 @@ Historical Python prose and examples are pointer-only from this root. Read `migr
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `6df237382eb1d8411906f9b1790fa06f8ba7aad4`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 

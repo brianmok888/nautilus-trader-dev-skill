@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-p3-remediation-r2",
+  "finding_id": "NT-2026-09-06-043",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "ec2d2a9955ef34cfe8ce57d2b376bfaa6185aae945595f11f7cd7e2e884b02fd",
+  "output_excerpt": "Round-2 review rejected: D1 partial (root backtesting.md SECTION PROSE, not just the tip box, still taught the cumulative re-sort model) and both minor text fixes had silently no-opped (anchors not matched - the r1 remediation receipt overstated them). All three now fixed with assert-verified replaces: root performance section rewritten to pinned per-batch/flag/heap-merge semantics with the cumulative model legacy-labelled; -001 evidence states max_retries is IN-pin (config.rs:187); -021 acceptance distinguishes placeholder closures from audit-evidence quotes. Evidence regenerated (nt-architect, nt-implement, nt-review); pytest 452/7 fully green; cards PASS.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T14:14:07Z"
+}

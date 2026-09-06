@@ -182,11 +182,11 @@ impl DataActor for MyStrategy {
     }
 
     fn on_quote(&mut self, quote: &QuoteTick) -> anyhow::Result<()> {
-        let order = self.core.order_factory().market(
+        let order = self.order().market(
             self.instrument_id, OrderSide::Buy, self.trade_size,
             None, None, None, None, None, None, None,
         );
-        self.submit_order(order, None, None)?;
+        self.submit_order(order, None, None, None)?;
         Ok(())
     }
 }
@@ -204,8 +204,10 @@ nautilus_strategy!(MyStrategy, {
 
 Key differences from actor:
 - `nautilus_strategy!` also generates the `Strategy` trait impl (`core()`/`core_mut()`)
-- Order factory: `self.core.order_factory().market(...)`, `.limit(...)`, `.stop_market(...)`, etc.
-- Order management: `self.submit_order()`, `self.cancel_order()`, `self.close_position()`, etc.
+- Order creation: `self.order().market(...)`, `.limit(...)`, `.stop_market(...)`, etc. (the `OrderApi`
+  facade; `self.core.order_factory()` is the lower-level form and needs `StrategyNative` in scope)
+- Order management: `self.submit_order()` (four arguments: `order`, `position_id`, `client_id`,
+  `params`), `self.cancel_order()`, `self.close_position()`, etc.
 
 ## Running a Backtest
 
@@ -342,7 +344,7 @@ backtest flows, see the pinned upstream how-to `docs/how_to/run_rust_backtest.md
 
 1. **Write an actor**: Create a `VolumeTracker` actor that subscribes to trades and logs cumulative volume per instrument. Register it with a `BacktestEngine`.
 
-2. **Write a strategy**: Create a simple mean-reversion strategy that buys when price drops below the 20-period SMA and sells when it rises above. Use `self.core.order_factory().market(...)`.
+2. **Write a strategy**: Create a simple mean-reversion strategy that buys when price drops below the 20-period SMA and sells when it rises above. Use `self.order().market(...)`.
 
 3. **Run a backtest**: Set up a `BacktestEngine` with the `audusd_sim()` stub instrument, generate quote data, register your strategy, and run. Examine the output.
 

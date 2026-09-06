@@ -2552,6 +2552,18 @@ never receive the data when buffering is enabled.
 The `ExecutionClient` manages order submission, modification, and cancellation against the venue
 trading system.
 
+Order-status report filtering (implementer contract): when handling
+`GenerateOrderStatusReports` (mass status), filter fetched reports with the shared,
+venue-agnostic `retain_order_status_reports(&mut reports, cmd)` helper from
+`nautilus_live::execution::reports` (pinned `crates/live/src/execution/reports.rs:23`):
+open-only requests retain open AND in-flight reports (`is_open() || is_inflight()`), and
+the inclusive `start`/`end` bounds apply only to closed reports. Bybit and Polymarket
+are the two adapters that intentionally do NOT use the shared helper — they hand-roll
+their own venue-specific reconciliation filtering (upstream `9b7db823` converted every
+other adapter); treat any third venue's custom filter as a review flag. Representative
+shared-helper call sites: `crates/adapters/bitmex/src/execution.rs:802`,
+`crates/adapters/betfair/src/execution.rs:3755`, `crates/adapters/architect_ax/src/execution.rs:1094`.
+
 NT v2 compatibility note: the Python `nautilus_trader.execution.messages` / `execution.reports` contract below is v1 migration reference; at V2 the contract is the Rust `ExecutionClient` trait in `crates/common/src/clients/execution.rs`.
 
 ```python

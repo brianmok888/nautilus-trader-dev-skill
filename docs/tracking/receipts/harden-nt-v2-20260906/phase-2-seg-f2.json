@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-seg-f2",
+  "finding_id": "NT-2026-09-06-021",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "70458a0c17fb4f9a54f1b374733e0caea52891fa752ae1023060824f4b0d6bbd",
+  "output_excerpt": "F2 core skills (10 fixed, 2 rejected with evidence): dynamic cargo-features test command; version baseline 2.0.0rc5/0.64.0 (verified at pin before writing); regen-capnp.sh typo; ExecutionManager terminal-fill safeguards; dependency-feature policy; configured-library-source; Feature-flags convention; typed external streaming payload_kind; Bybit SMP + Kraken precision via shared references. Rejections: -021/-030 target other lanes' files; gated artifacts verified present.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:43:42Z"
+}

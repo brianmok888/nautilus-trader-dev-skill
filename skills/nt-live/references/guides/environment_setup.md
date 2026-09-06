@@ -14,7 +14,8 @@ NautilusTrader uses increasingly more [Rust](https://www.rust-lang.org), so Rust
 ([installation guide](https://www.rust-lang.org/tools/install)).
 
 [Cap'n Proto](https://capnproto.org/) is required for serialization schema compilation. The required
-version is specified in `tools.toml` in the repository root. Ubuntu's default package
+version is specified in `.nautilus-engineering/tools.toml` (the shared engineering tool catalog;
+the root `tools.toml` retains only NautilusTrader-specific pins). Ubuntu's default package
 is typically too old, so you may need to install from source (see below).
 
 :::info
@@ -111,11 +112,12 @@ This installs:
 - **Cargo CLIs** pinned in `Cargo.toml` under `[workspace.metadata.tools]`: `cargo-audit`,
   `cargo-deny`, `cargo-edit`, `cargo-fuzz`, `cargo-llvm-cov`, `cargo-machete`, `cargo-nextest`,
   `cargo-vet`, `flamegraph`, `lychee`.
-- **Prebuilt binaries** pinned in `tools.toml`: `prek` (pre-commit runner) and `osv-scanner`
-  (vulnerability scanner).
+- **Prebuilt binaries** pinned in `.nautilus-engineering/tools.toml`: `prek` (pre-commit runner) and
+  `osv-scanner` (vulnerability scanner).
 - **uv**, synced to the version required by `pyproject.toml`.
 
-Cap'n Proto is also pinned in `tools.toml` but installs separately; see the [Cap'n Proto](#capn-proto)
+Cap'n Proto is also pinned in `.nautilus-engineering/tools.toml` but installs separately; see the
+[Cap'n Proto](#capn-proto)
 section below.
 
 Fuzz targets also require a Rust nightly toolchain at runtime because `cargo-fuzz` uses
@@ -150,10 +152,13 @@ to read them.
 | `Cargo.toml` `[workspace.metadata.tools]`    | Cargo-installable development tools.                  |
 | `pyproject.toml` and `python/pyproject.toml` | Python dependencies, supported Python range, and uv.  |
 | `uv.lock` and `python/uv.lock`               | Exact Python dependency resolutions.                  |
-| `tools.toml`                                 | External CLIs and binaries without a native manifest. |
+| `.nautilus-engineering/tools.toml`             | Shared engineering tools (uv, prek, pip-audit, osv-scanner, Cap'n Proto, Cargo CLIs). |
+| `tools.toml`                                 | NautilusTrader-specific tools without a native manifest (nightly, Miri, pypi-attestations). |
 
-The external tool pins in `tools.toml` include `prek`, `pip-audit`, `pypi-attestations`,
-`maturin`, `osv-scanner`, and `capnp`.
+The shared catalog (`.nautilus-engineering/tools.toml`) includes `uv`, `prek`, `pip-audit`,
+`osv-scanner`, and `capnp`; the root `tools.toml` retains only the docs.rs nightly, Miri toolchain,
+and `pypi-attestations` pins. `maturin` is not pinned in either catalog: it is pinned exactly in
+`python/pyproject.toml` (`maturin==1.15.0`).
 
 The Makefile reads these via `scripts/cargo-tool-version.sh`, `scripts/tool-version.sh`, and
 `scripts/uv-version.sh`, so bumping a version in the source file is the only required version
@@ -292,7 +297,7 @@ Use `make build` when you need an optimized build.
 ## Cap'n Proto
 
 [Cap'n Proto](https://capnproto.org/) is required for serialization schema compilation.
-The required version is defined in `tools.toml` in the repository root.
+The required version is defined in `.nautilus-engineering/tools.toml`.
 
 Install the correct version for your platform:
 
@@ -320,7 +325,7 @@ sudo ldconfig
 choco install capnproto
 ```
 
-Verify the installed version matches `tools.toml`:
+Verify the installed version matches the shared catalog in `.nautilus-engineering/tools.toml`:
 
 ```bash
 capnp --version

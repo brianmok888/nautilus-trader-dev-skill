@@ -940,9 +940,11 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 | `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries. Rust-only.                                  |
 | `retry_delay_max_ms`           | `None`  | Maximum delay (milliseconds) between retries. Rust-only.                                  |
 | `http_timeout_secs`            | `10`    | Timeout (seconds) applied to REST calls.                                                  |
+| `ws_post_timeout_secs`         | `10`    | Timeout (seconds) applied to WebSocket post trading requests (one deadline across queueing, sends, and replies). |
 | `normalize_prices`             | `True`  | Normalize order prices to 5 significant figures before submission.                        |
 | `market_order_slippage_bps`    | `50`    | Slippage buffer (bps) applied to MARKET and stop trigger derivations. Rust-only.          |
 | `outcome_settlement_poll_secs` | `0`     | HIP-4 `outcomeMeta` settlement poll interval (seconds). Rust-only; venue `Settlement` fills cover settlement, so polling is disabled by default. |
+| `include_builder_attribution`  | `None`  | Opt in to the builder code attribution signature flag.                                   |
 | `proxy_url`                    | `None`  | Optional proxy URL for HTTP and WebSocket transports.                                     |
 
 :::note
