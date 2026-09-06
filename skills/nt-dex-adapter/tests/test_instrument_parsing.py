@@ -11,7 +11,7 @@ import pytest
 
 # NT v2 compatibility note: legacy: migration/reference-only — this module exercises the quarantined v1
 # DEX Python templates, whose config-subclassing pattern cannot instantiate
-# against the pinned V2 package (PyO3-final config classes at ac22d5cf4).
+# against the pinned V2 package (PyO3-final config classes at 6df23738).
 # It is retained for migration review and skips against the pinned interpreter.
 pytest.skip(
     "legacy v1 DEX template lane not instantiable against the pinned V2 package "

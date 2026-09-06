@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-2-pin-move",
+  "finding_id": "NT-2026-09-06-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_legacy_labelling.py && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "d30ebea60691c94c0b93ec7604ed5898942e2f5052a2315f189a580260829062",
+  "output_excerpt": "Pin moved ac22d5cf4 -> 6df237382e: delta manifest records the 21-commit/194-path transition; spec_data_testing.md snapshot body refreshed; all 19 sync dates bumped; full+short cite sweeps; vendored analysis crate re-snapshotted (LICENSE symlink at the new tip materialized with root bytes to keep the byte-comparison meaningful); pinned cache moved to the tip (clean); exec-spec digest updated; G2 evidence regenerated for all 17 skills (PASS).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T12:43:42Z"
+}

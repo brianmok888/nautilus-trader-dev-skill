@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
-  "reviewed_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
-  "reviewed_on": "2026-09-05",
+  "pinned_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
+  "reviewed_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
+  "reviewed_on": "2026-09-06",
   "deltas": [],
   "reviewed_transitions": [
     {
@@ -7520,6 +7520,560 @@
             "Makefile"
           ],
           "no_impact_rationale": "Rescopes the cargo-machete pre-commit hook to changed Rust packages (nearest maintained manifest) with full scans preserved for global/unresolved changes, and adds test_cargo_machete.sh to test-scripts. The skill repo only mentions cargo-machete as an installed tool and for [package.metadata.cargo-machete] Cargo.toml conventions (references/developer_guide/rust.md:110,119; environment_setup.md:117), and rg confirms no skill doc describes the hook's triggering behavior. No taught surface changes."
+        }
+      ]
+    },
+    {
+      "from_commit": "ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d",
+      "to_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
+      "reviewed_on": "2026-09-06",
+      "commit_count": 21,
+      "unique_path_count": 194,
+      "reviewed_commits": [
+        "947685bd4eb0d725c913396655117e8a096e4b38",
+        "26ac2dbab09cd356c81ae163028feba432b55633",
+        "616980b15ff4ae34703b88d775af3b48567094f8",
+        "f1e28dadccceb3cf69b157b0a18942b8c5d54092",
+        "8d9a922ab1ac63a344459ce156d52285da7a7f5e",
+        "e2019736b7f60a9a00e69aa5673ddfa81fdc10a3",
+        "f0055ed48dcbbee48e3a86891c3f61e2182edf9b",
+        "09a235060b815d55ab56ec3ff4bf9a94ed07fbaa",
+        "b107cf2fe95037f5854bcf81a6bee52ae4c001fe",
+        "6665d0863c5b85ae4bb72a0ef666580fe12e627f",
+        "c752249cbf99aaa59fb9bf6cafd080fac76e5f1c",
+        "80938b7723eec8cec8eb4f9f6deb9bf97f4801fb",
+        "004fbf58f539691f07cdd5349c0002974c8b1d03",
+        "0373b0240d3cf29222c0d46555b3e5c647004a86",
+        "62b5057927948be677242847865f713aba508bcc",
+        "492406675779cafc719af0546b5478fc4aa37dde",
+        "148e7cf6ce21295c9682a71bf71598f0a156c142",
+        "a0cfecb9c0dd771295ef67248644fdef1f830000",
+        "8f6f5795d26776e92af9241d8435225c36c48f64",
+        "9dd7f1a1a6313ec8e8bf6679aa667ba595ebbe99",
+        "6df237382eb1d8411906f9b1790fa06f8ba7aad4"
+      ],
+      "changed_paths": [
+        ".docker/DockerfileUbuntu",
+        ".docker/jupyterlab.dockerfile",
+        ".docker/nautilus_trader.dockerfile",
+        ".nautilus-engineering.lock",
+        ".nautilus-engineering/pre-commit/sync.yaml",
+        ".nautilus-engineering/tools.toml",
+        ".pre-commit-config.yaml",
+        ".pre-commit-hooks/check_dependency_features.py",
+        ".pre-commit-hooks/check_docs_conventions.sh",
+        ".pre-commit-hooks/test_check_dependency_features.py",
+        ".pre-commit-hooks/test_check_docs_conventions.sh",
+        ".supply-chain/audits.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "Makefile",
+        "RELEASES.md",
+        "crates/Cargo.toml",
+        "crates/README.md",
+        "crates/adapters/architect_ax/Cargo.toml",
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/betfair/tests/integration/exec_client.rs",
+        "crates/adapters/binance/Cargo.toml",
+        "crates/adapters/binance/src/spot/execution.rs",
+        "crates/adapters/binance/src/spot/http/client.rs",
+        "crates/adapters/binance/src/spot/http/models.rs",
+        "crates/adapters/binance/src/spot/http/parse.rs",
+        "crates/adapters/binance/src/spot/websocket/trading/messages.rs",
+        "crates/adapters/binance/tests/integration/spot/exec_client.rs",
+        "crates/adapters/binance/tests/integration/spot/http.rs",
+        "crates/adapters/binance/tests/integration/spot/websocket_trading.rs",
+        "crates/adapters/bitmex/Cargo.toml",
+        "crates/adapters/blockchain/Cargo.toml",
+        "crates/adapters/bybit/Cargo.toml",
+        "crates/adapters/bybit/examples/node_option_chain.rs",
+        "crates/adapters/bybit/src/data.rs",
+        "crates/adapters/bybit/src/http/client.rs",
+        "crates/adapters/bybit/src/python/http.rs",
+        "crates/adapters/bybit/src/websocket/dispatch.rs",
+        "crates/adapters/bybit/test_data/http_get_executions_funding.json",
+        "crates/adapters/bybit/test_data/ws_account_execution_funding.json",
+        "crates/adapters/bybit/tests/integration/data_client.rs",
+        "crates/adapters/bybit/tests/integration/http.rs",
+        "crates/adapters/coinbase/Cargo.toml",
+        "crates/adapters/deribit/Cargo.toml",
+        "crates/adapters/deribit/src/data.rs",
+        "crates/adapters/deribit/src/http/client.rs",
+        "crates/adapters/deribit/src/http/models.rs",
+        "crates/adapters/deribit/src/python/http.rs",
+        "crates/adapters/deribit/tests/integration/data_client.rs",
+        "crates/adapters/derive/Cargo.toml",
+        "crates/adapters/derive/src/data.rs",
+        "crates/adapters/derive/src/websocket/mod.rs",
+        "crates/adapters/derive/tests/integration/data_client.rs",
+        "crates/adapters/dydx/Cargo.toml",
+        "crates/adapters/hyperliquid/Cargo.toml",
+        "crates/adapters/hyperliquid/src/websocket/client.rs",
+        "crates/adapters/hyperliquid/src/websocket/handler.rs",
+        "crates/adapters/hyperliquid/src/websocket/post.rs",
+        "crates/adapters/kraken/Cargo.toml",
+        "crates/adapters/kraken/src/config.rs",
+        "crates/adapters/kraken/src/execution/futures.rs",
+        "crates/adapters/kraken/src/execution/spot.rs",
+        "crates/adapters/kraken/src/http/spot/client.rs",
+        "crates/adapters/kraken/src/http/spot/models.rs",
+        "crates/adapters/kraken/src/python/config.rs",
+        "crates/adapters/kraken/src/python/http_spot.rs",
+        "crates/adapters/kraken/test_data/http_spot_balance_ex.json",
+        "crates/adapters/kraken/tests/integration/exec_client.rs",
+        "crates/adapters/kraken/tests/integration/http.rs",
+        "crates/adapters/lighter/Cargo.toml",
+        "crates/adapters/lighter/fuzz/pornin/Cargo.lock",
+        "crates/adapters/okx/Cargo.toml",
+        "crates/adapters/okx/src/data.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/python/http.rs",
+        "crates/adapters/okx/tests/integration/data_client.rs",
+        "crates/adapters/okx/tests/integration/http.rs",
+        "crates/adapters/polymarket/Cargo.toml",
+        "crates/adapters/polymarket/src/data/auto_load.rs",
+        "crates/adapters/polymarket/src/data/dispatch.rs",
+        "crates/adapters/polymarket/src/data/instruments.rs",
+        "crates/adapters/polymarket/src/data/lifecycle.rs",
+        "crates/adapters/polymarket/src/data/mod.rs",
+        "crates/adapters/polymarket/src/data/requests.rs",
+        "crates/adapters/polymarket/src/data/runtime.rs",
+        "crates/adapters/polymarket/src/data/subscriptions.rs",
+        "crates/adapters/polymarket/src/execution/cancellations.rs",
+        "crates/adapters/polymarket/src/execution/lifecycle.rs",
+        "crates/adapters/polymarket/src/execution/order_builder.rs",
+        "crates/adapters/polymarket/src/execution/orders.rs",
+        "crates/adapters/polymarket/src/execution/pending.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/http/clob.rs",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/adapters/polymarket/src/providers.rs",
+        "crates/adapters/polymarket/src/resolve/apply.rs",
+        "crates/adapters/polymarket/src/resolve/mod.rs",
+        "crates/adapters/polymarket/src/resolve/parsing.rs",
+        "crates/adapters/polymarket/src/resolve/watchlist.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/tests/integration/data_client.rs",
+        "crates/adapters/polymarket/tests/integration/exec_client.rs",
+        "crates/adapters/polymarket/tests/integration/http.rs",
+        "crates/analysis/Cargo.toml",
+        "crates/analysis/src/analyzer.rs",
+        "crates/analysis/src/statistics/sortino_ratio.rs",
+        "crates/backtest/Cargo.toml",
+        "crates/backtest/src/data_client.rs",
+        "crates/backtest/src/python/node.rs",
+        "crates/backtest/tests/integration/option_chain_data_client.rs",
+        "crates/common/Cargo.toml",
+        "crates/common/src/clients/data.rs",
+        "crates/common/src/messages/data/mod.rs",
+        "crates/common/src/messages/data/request.rs",
+        "crates/common/src/messages/data/response.rs",
+        "crates/common/src/msgbus/api.rs",
+        "crates/common/src/testing.rs",
+        "crates/data/Cargo.toml",
+        "crates/data/src/client.rs",
+        "crates/data/src/engine/mod.rs",
+        "crates/data/src/engine/requests.rs",
+        "crates/data/src/option_chains/manager.rs",
+        "crates/data/tests/integration/common/mocks.rs",
+        "crates/data/tests/integration/engine.rs",
+        "crates/event_store/src/capture/builtins.rs",
+        "crates/event_store/src/replay.rs",
+        "crates/execution/Cargo.toml",
+        "crates/indicators/Cargo.toml",
+        "crates/indicators/README.md",
+        "crates/indicators/src/average/mod.rs",
+        "crates/indicators/src/average/zscore.rs",
+        "crates/indicators/src/lib.rs",
+        "crates/indicators/src/momentum/aroon.rs",
+        "crates/indicators/src/python/average/mod.rs",
+        "crates/indicators/src/python/average/zscore.rs",
+        "crates/indicators/src/python/mod.rs",
+        "crates/indicators/src/stubs.rs",
+        "crates/infrastructure/Cargo.toml",
+        "crates/lib.rs",
+        "crates/live/Cargo.toml",
+        "crates/live/src/execution/emitter.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/live/src/python/node.rs",
+        "crates/live/src/task.rs",
+        "crates/live/tests/emitter.rs",
+        "crates/live/tests/integration/manager.rs",
+        "crates/live/tests/integration/node.rs",
+        "crates/live/tests/integration/stress.rs",
+        "crates/model/src/data/forward.rs",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/defi/pool_analysis/size_estimator.rs",
+        "crates/model/src/orders/mod.rs",
+        "crates/model/src/python/data/forward.rs",
+        "crates/model/src/python/data/mod.rs",
+        "crates/model/src/python/defi/size_estimator.rs",
+        "crates/model/src/python/mod.rs",
+        "crates/persistence/Cargo.toml",
+        "crates/portfolio/Cargo.toml",
+        "crates/risk/Cargo.toml",
+        "crates/serialization/Cargo.toml",
+        "crates/system/Cargo.toml",
+        "crates/system/src/python/registration.rs",
+        "crates/trading/Cargo.toml",
+        "docs/concepts/event_sourcing.md",
+        "docs/concepts/options.md",
+        "docs/developer_guide/spec_data_testing.md",
+        "docs/integrations/bybit.md",
+        "docs/integrations/deribit.md",
+        "docs/integrations/derive.md",
+        "docs/integrations/kraken.md",
+        "docs/integrations/polymarket.md",
+        "docs/tutorials/options_data_bybit.md",
+        "examples/live/bybit/bybit_option_chain.py",
+        "examples/live/deribit/deribit_option_chain.py",
+        "examples/quickstarts/lighter-rust-data-client/Cargo.toml",
+        "python/nautilus_trader/adapters/bybit/__init__.pyi",
+        "python/nautilus_trader/adapters/deribit/__init__.pyi",
+        "python/nautilus_trader/adapters/kraken/__init__.pyi",
+        "python/nautilus_trader/adapters/okx/__init__.pyi",
+        "python/nautilus_trader/indicators/__init__.pyi",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/pyproject.toml",
+        "python/tests/unit/backtest/test_backtest_engine_surface.py",
+        "python/tests/unit/common/actor.py",
+        "python/tests/unit/indicators/test_aroon.py",
+        "python/tests/unit/indicators/test_zscore.py",
+        "python/tests/unit/model/test_pricing.py",
+        "python/tests/unit/test_live_node.py",
+        "python/tests/unit/trading/test_trading.py",
+        "python/uv.lock",
+        "scripts/tool-version.sh",
+        "scripts/uv-version.sh"
+      ],
+      "deltas": [
+        {
+          "commit": "947685bd4eb0d725c913396655117e8a096e4b38",
+          "subject": "Fix Kraken spot wallet balances to report venue-held amounts (#4922)",
+          "upstream_paths": [
+            "crates/adapters/kraken/src/http/spot/client.rs",
+            "crates/adapters/kraken/src/http/spot/models.rs",
+            "crates/adapters/kraken/src/python/http_spot.rs",
+            "crates/adapters/kraken/test_data/http_spot_balance_ex.json",
+            "crates/adapters/kraken/tests/integration/exec_client.rs",
+            "crates/adapters/kraken/tests/integration/http.rs",
+            "docs/integrations/kraken.md"
+          ],
+          "no_impact_rationale": "Behavior fix in the Kraken spot account-state path: wallet balances are now sourced from POST /0/private/BalanceEx with hold_trade passed as locked (previously POST /0/private/Balance totals with locked hardcoded to zero), so free = total - locked no longer overstates availability when Kraken holds funds against resting orders. rg-verified the skill's kraken.md wallet-balance guidance (references/integrations/kraken.md:496-505, cash-mode spot position reports) makes no free/locked or Balance-endpoint claims \u2014 its Balance mentions are all TradeBalance margin content (:462-463, :584-595), which is untouched. No claims become stale; documenting the new locked semantics next to the cash-mode section would be a nice-to-have, not a correction."
+        },
+        {
+          "commit": "26ac2dbab09cd356c81ae163028feba432b55633",
+          "subject": "Fix Binance Spot cancel-all order lists",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/adapters/binance/src/spot/execution.rs",
+            "crates/adapters/binance/src/spot/http/client.rs",
+            "crates/adapters/binance/src/spot/http/models.rs",
+            "crates/adapters/binance/src/spot/http/parse.rs",
+            "crates/adapters/binance/src/spot/websocket/trading/messages.rs",
+            "crates/adapters/binance/tests/integration/spot/exec_client.rs",
+            "crates/adapters/binance/tests/integration/spot/http.rs"
+          ],
+          "no_impact_rationale": "Internal fix in Binance Spot cancel-all response handling: decodes mixed order and order-list cancel-all responses through HTTP and wrapped WebSocket paths, validates complete responses before applying lifecycle events, terminalizes tracked order-list children once, and clears state (+1647 lines mostly tests). Read and verified the skill's 'Cancel all orders behavior' section (references/integrations/binance.md:198-212: open+inflight inclusion, multi-strategy safety, futures algo endpoints) \u2014 strategy-level semantics unchanged by this commit; the skill's note that Bracket/OCO orders are denied at submission (:187) remains the upstream posture. No stale claims."
+        },
+        {
+          "commit": "616980b15ff4ae34703b88d775af3b48567094f8",
+          "subject": "Support Polymarket limit order modification",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/adapters/polymarket/src/execution/cancellations.rs",
+            "crates/adapters/polymarket/src/execution/lifecycle.rs",
+            "crates/adapters/polymarket/src/execution/order_builder.rs",
+            "crates/adapters/polymarket/src/execution/orders.rs",
+            "crates/adapters/polymarket/src/execution/pending.rs",
+            "crates/adapters/polymarket/src/execution/reconciliation.rs",
+            "crates/adapters/polymarket/src/execution/reports.rs"
+          ],
+          "impact_rationale": "Polymarket execution now supports order modification via adapter-local cancel-replace for open base-denominated LIMIT orders: cancel the venue order, reconcile final confirmed fills, then sign a replacement for the remaining quantity; the logical order keeps its ClientOrderId and receives a new VenueOrderId; ModifyOrder.quantity is the absolute target (possible slight reduction after venue precision normalization); ambiguous cancels emit OrderModifyRejected while ambiguous replacements stay in flight under a deterministic signed order hash (recovery not persisted across restarts). Upstream docs updated the Advanced order features table row from 'Order modification | - | Cancellation functionality only.' to 'Yes | Adapter-managed cancel-replace for open LIMIT orders.' The skill states the now-false claim verbatim, rg-verified at references/integrations/polymarket.md:356 ('| Order modification | -              | Cancellation functionality only.   |'); the trimmed skills/nt-adapters mirror has no equivalent row.",
+          "affected_files": [
+            "references/integrations/polymarket.md"
+          ],
+          "candidate_finding": {
+            "severity": "high",
+            "category": "stale-guidance",
+            "description": "The Polymarket Advanced order features table claims order modification is unsupported ('Cancellation functionality only'), which is false after this commit: modification of open LIMIT orders is supported via adapter-managed cancel-replace.",
+            "fix": "Update references/integrations/polymarket.md:356 to 'Yes \u2014 adapter-managed cancel-replace for open LIMIT orders', add the cancel-replace semantics (absolute quantity target, possible precision-normalized reduction, rejection/recovery behavior, no persistence across restart), and leave the Batch Modify row as unsupported."
+          }
+        },
+        {
+          "commit": "f1e28dadccceb3cf69b157b0a18942b8c5d54092",
+          "subject": "Expose fallible account state dispatch on the emitter (#4907)",
+          "upstream_paths": [
+            "crates/live/src/execution/emitter.rs",
+            "crates/live/tests/emitter.rs"
+          ],
+          "impact_rationale": "Visibility-only change in crates/live/src/execution/emitter.rs: `try_send_account_state(&self, state: AccountState) -> anyhow::Result<()>` goes from private (line 480 at the parent commit) to `pub` (line 485 at HEAD) with doc comment, plus an external test in crates/live/tests/emitter.rs pinning the visibility and asserting the uninitialized-sender error and exact delivery of a caller-built state. Unlike `try_emit_account_state`, it does not stamp ts_init from the emitter's AtomicTime, so adapters that timestamp account state from their own clock can now get fallible dispatch too. rg evidence: skills/nt-adapters/references/guides/official_adapter_spec.md:617 states 'The `ExecutionEventEmitter` provides two methods for emitting account state:' and enumerates only `emit_account_state` (line 618-621) and `send_account_state` (line 622-624); upstream HEAD now exposes four public account-state methods (emit_account_state:124, try_emit_account_state:142, send_account_state:474, try_send_account_state:485 - the last newly public via this commit), so the adapter guide's fallible-dispatch option list is incomplete for exactly the pre-built-state case its `send_account_state` bullet covers. Other emitter references (skills/nt-adapters/references/integrations/hyperliquid.md:702, references/integrations/hyperliquid.md:690 - `send_order_event`; references/developer_guide/adapters.md:727 - link only) are unaffected.",
+          "affected_files": [
+            "skills/nt-adapters/references/guides/official_adapter_spec.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "improvement",
+            "description": "The adapter-spec guide's account-state emission section presents an exhaustive-sounding 'two methods' enumeration (emit_account_state, send_account_state). Commit f1e28dadc makes `try_send_account_state(state)` public - the fallible counterpart of the documented `send_account_state` that returns the channel error to the caller and preserves the caller's ts_event instead of stamping from the emitter clock - which is precisely the option an adapter author needs when building AccountState from venue payloads with the adapter's own timestamps and wanting backpressure/failure reporting. The section should mention it (and may as well note try_emit_account_state for the factory-built form).",
+            "fix": "In the 'Account state emission' section of skills/nt-adapters/references/guides/official_adapter_spec.md (line 617), extend the enumeration to three methods, adding `try_send_account_state(state) -> anyhow::Result<()>`: dispatches a pre-built, caller-timestamped AccountState and returns the send error (uninitialized sender / closed receiver) instead of panicking - use it when the adapter stamps ts_event itself and wants fallible dispatch."
+          }
+        },
+        {
+          "commit": "8d9a922ab1ac63a344459ce156d52285da7a7f5e",
+          "subject": "Fix AroonOscillator lowest low scan and tie handling (#4914)",
+          "upstream_paths": [
+            "crates/indicators/src/momentum/aroon.rs"
+          ],
+          "no_impact_rationale": "Fixes the AroonOscillator window scan in crates/indicators/src/momentum/aroon.rs: the lowest-low scan previously skipped the oldest window element and computed periods-since-low incorrectly; ties now resolve to the most recent occurrence of the extreme. Constructor and outputs (aroon_up, aroon_down, value) are unchanged. rg-verified the skill's description at skills/nt-signals/references/guides/indicators_guide.md:70 ('Measures periods since highest high / lowest low') remains accurate \u2014 indeed it now matches the fixed semantics exactly; the migration-reference list at skills/nt-signals/migration_reference/python/python-usage.md:29 is name-only. No stale claims."
+        },
+        {
+          "commit": "e2019736b7f60a9a00e69aa5673ddfa81fdc10a3",
+          "subject": "Centralize PortfolioAnalyzer PnL currency resolution",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/analysis/src/analyzer.rs"
+          ],
+          "impact_rationale": "Refactor of crates/analysis/src/analyzer.rs: extracts `resolve_pnl_currency` (explicit currency -> single account-balance currency -> single realized/recorded-PnL currency) and uses it from both `trade_pnl_records` (`.ok()?`, same None behavior) and the stats guard, where the old four-condition check drops the `self.account_balances.len() != 1` arm so the 'Currency must be specified' error now fires exactly when resolution fails, regardless of account-balance count; adds implicit-resolution and empty-analyzer tests plus a RELEASES.md note. rg evidence: the string 'Currency must be specified' appears in the skill repo only inside the vendored source snapshot skills/nt-signals/references/rust/analysis/src/analyzer.rs (4 hits incl. the stale guard at lines 779-785); that file is byte-identical to the pinned baseline ac22d5cf (verified by diff against `git show ac22d5cf:crates/analysis/src/analyzer.rs`) and now differs from HEAD only by this commit's 114 diff lines (it lacks `resolve_pnl_currency`). Prose guidance stays valid: skills/nt-signals/migration_reference/python/python/analysis/analyzer.py:209,223 ('For multi-currency portfolios, specify the currency') matches the post-change semantics, and get_performance_stats_pnls examples (references/concepts/reports.md:301,393; skills/nt-signals/references/concepts/reports.md:301,394) don't pin the old guard.",
+          "affected_files": [
+            "skills/nt-signals/references/rust/analysis/src/analyzer.rs"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "improvement",
+            "description": "Vendored Rust source snapshot for the analysis crate still carries the pre-e2019736 currency-resolution logic: the four-condition stats guard (including the `&& self.account_balances.len() != 1` arm removed upstream) at lines 779-785 and the inline four-arm currency match, with no `resolve_pnl_currency`. Anyone consulting this reference against current develop gets the old error semantics (error keyed on account-balance count rather than resolvability). The file matches the pinned baseline ac22d5cf by design, so this is a refresh-for-next-cycle item, not live misinformation.",
+            "fix": "When the pinned baseline advances to 6df237382e, refresh the vendored snapshot skills/nt-signals/references/rust/analysis/src/analyzer.rs from upstream crates/analysis/src/analyzer.rs so it includes `resolve_pnl_currency` and the new guard, and record e2019736 in the current-develop overlay (references/upstream-delta-review.json deltas) until then."
+          }
+        },
+        {
+          "commit": "f0055ed48dcbbee48e3a86891c3f61e2182edf9b",
+          "subject": "Refine DeFi size estimator documentation",
+          "upstream_paths": [
+            "crates/model/src/defi/pool_analysis/size_estimator.rs",
+            "crates/model/src/python/defi/size_estimator.rs"
+          ],
+          "no_impact_rationale": "Doc-comment-only refinement of crates/model/src/defi/pool_analysis/size_estimator.rs (removes redundant # Arguments/# Returns sections, corrects the initial-size heuristic description to active liquidity/sqrt-price/direction with a fixed 2x safety factor) plus regenerated Python wrapper docstrings; no code or API change. rg evidence: `SizeEstimator|SizeForImpact|accuracy_percent|impact_bps|zero_for_one|pool_analysis` have no hits anywhere under skills/ - the DeFi size estimator is not taught (nt-dex-adapter SKILL.md covers reconciliation/adapter concerns) - so there is no guidance to correct."
+        },
+        {
+          "commit": "09a235060b815d55ab56ec3ff4bf9a94ed07fbaa",
+          "subject": "Trim Cargo dependency features",
+          "upstream_paths": [
+            ".pre-commit-config.yaml",
+            ".pre-commit-hooks/check_dependency_features.py",
+            ".pre-commit-hooks/check_docs_conventions.sh",
+            ".pre-commit-hooks/test_check_dependency_features.py",
+            ".pre-commit-hooks/test_check_docs_conventions.sh",
+            "Cargo.lock",
+            "Cargo.toml",
+            "Makefile"
+          ],
+          "no_impact_rationale": "Workspace hygiene: adds default-features = false to third-party and path dependencies (madsim, alloy, cosmrs, dydx-proto, rstest, nautilus-infrastructure/network path deps), trims per-crate feature lists across 20+ crate Cargo.tomls, and adds a new .pre-commit-hooks/check_dependency_features.py gate (+503 lines) with tests and Makefile wiring. No skill-facing guidance is affected: rg-verified the skill's Cargo dependency examples (docs/end_to_end_guide.md:32-39, e.g. features=[\"streaming\"] on nautilus-backtest and features=[\"examples\"] on nautilus-trading) reference features that still exist upstream (crates/Cargo.toml:29 defines streaming; crates/trading/Cargo.toml:25 defines examples)."
+        },
+        {
+          "commit": "b107cf2fe95037f5854bcf81a6bee52ae4c001fe",
+          "subject": "Enable Polymarket data-only resolution subscriptions (#4895)",
+          "upstream_paths": [
+            "crates/adapters/polymarket/src/data/auto_load.rs",
+            "crates/adapters/polymarket/src/data/dispatch.rs",
+            "crates/adapters/polymarket/src/data/instruments.rs",
+            "crates/adapters/polymarket/src/data/lifecycle.rs",
+            "crates/adapters/polymarket/src/data/mod.rs",
+            "crates/adapters/polymarket/src/data/requests.rs",
+            "crates/adapters/polymarket/src/data/runtime.rs",
+            "crates/adapters/polymarket/src/data/subscriptions.rs"
+          ],
+          "impact_rationale": "New user-facing capability: Polymarket data clients can watch an instrument without a position by subscribing to InstrumentStatus, InstrumentClose, or both; the subscriptions are independent (status emits only the status close, close emits only the settlement price), with documented watch/lifecycle semantics (auto-load and filter gating, retained outcomes for still-loading instruments, terminal-ownership rules, bounded missing-expiration polling). Upstream docs/integrations/polymarket.md grew ~90 lines, including extending the auto-load trigger list with subscribe_instrument_status/subscribe_instrument_close. rg-verified the skill's references/integrations/polymarket.md:733 still enumerates only subscribe_quote_ticks, subscribe_trade_ticks, subscribe_order_book_deltas, and request_instrument as auto-load triggers, and its Overview component list (:66-77) does not mention resolution InstrumentStatus/InstrumentClose events. No existing claim is false; this is a coverage gap.",
+          "affected_files": [
+            "references/integrations/polymarket.md"
+          ],
+          "candidate_finding": {
+            "severity": "medium",
+            "category": "coverage-gap",
+            "description": "The Polymarket integration guide's runtime-instrument-loading trigger list omits the new data-only resolution subscriptions (subscribe_instrument_status / subscribe_instrument_close) that upstream added to the same list, and the guide has no coverage of the new InstrumentStatus/InstrumentClose resolution event capability.",
+            "fix": "Extend the auto-load trigger bullet at references/integrations/polymarket.md:733 with subscribe_instrument_status/subscribe_instrument_close and add a short subsection documenting data-only resolution subscriptions (independent status vs close ownership, poll configuration unchanged), keeping the skills/nt-adapters mirror in sync."
+          }
+        },
+        {
+          "commit": "6665d0863c5b85ae4bb72a0ef666580fe12e627f",
+          "subject": "Add rolling ZScore indicator (#4868)",
+          "upstream_paths": [
+            "crates/indicators/README.md",
+            "crates/indicators/src/average/mod.rs",
+            "crates/indicators/src/average/zscore.rs",
+            "crates/indicators/src/lib.rs",
+            "crates/indicators/src/python/average/mod.rs",
+            "crates/indicators/src/python/average/zscore.rs",
+            "crates/indicators/src/python/mod.rs",
+            "crates/indicators/src/stubs.rs"
+          ],
+          "impact_rationale": "New rolling ZScore indicator: Rust module crates/indicators/src/average/zscore.rs (530 lines, average::zscore; expanding-then-sliding window with sample std recomputed from the bounded buffer), Python bindings crates/indicators/src/python/average/zscore.rs, exported as class ZScore (period, price_type; outputs value/mean/std plus count) in python/nautilus_trader/indicators/__init__.pyi, plus 325 lines of unit tests. rg-verified zero hits for 'zscore|z-score' anywhere in the skill repo: the nt-signals indicator guide maintains per-category indicator tables including an Averages table (rg-verified at skills/nt-signals/references/guides/indicators_guide.md:33-40) and python-usage.md keeps a category list (Averages at :26) \u2014 both omit ZScore. Nothing existing is invalidated; this is a coverage gap.",
+          "affected_files": [
+            "skills/nt-signals/references/guides/indicators_guide.md"
+          ],
+          "candidate_finding": {
+            "severity": "low",
+            "category": "coverage-gap",
+            "description": "The nt-signals indicator reference tables enumerate the indicator set per category but omit the newly added rolling ZScore (average::zscore), leaving the curated Averages list incomplete.",
+            "fix": "Add a ZScore row to the Averages table at skills/nt-signals/references/guides/indicators_guide.md:33-40 (params period + price_type; outputs value, mean, std; Rust path average::zscore) and append ZScore to the Averages list at skills/nt-signals/migration_reference/python/python-usage.md:26. Severity is low because the guide is flagged archival/migration-reference."
+          }
+        },
+        {
+          "commit": "c752249cbf99aaa59fb9bf6cafd080fac76e5f1c",
+          "subject": "Fix Betfair fill and order status report filtering",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/adapters/betfair/src/execution.rs",
+            "crates/adapters/betfair/tests/integration/exec_client.rs"
+          ],
+          "no_impact_rationale": "Internal fix in crates/adapters/betfair/src/execution.rs: filters fills by instrument and order before updating fill tracking, applies instrument and closed-order time filters to order status reports, and preserves unrelated fills and pending modifications for later queries (+181-line regression coverage). rg-verified the skill's betfair.md contains no fill or order-status-report filtering guidance (only factory mention at :10), and betfair_v2.md's reconciliation/identity rows (:31) describe the separate terminal-order-identity mechanism landed at 8ecab1ce; no stale claims."
+        },
+        {
+          "commit": "80938b7723eec8cec8eb4f9f6deb9bf97f4801fb",
+          "subject": "Fix ExecutionManager terminal fill races",
+          "upstream_paths": [
+            "Cargo.lock",
+            "crates/live/Cargo.toml",
+            "crates/live/src/execution/manager.rs",
+            "crates/live/tests/integration/manager.rs",
+            "crates/live/tests/integration/node.rs",
+            "crates/live/tests/integration/stress.rs"
+          ],
+          "no_impact_rationale": "Behavioral race fix in crates/live/src/execution/manager.rs (+609/-216, private helper `terminal_report_has_missing_fills`): query exact fills before applying terminal order reports, deduplicate reported vs streamed fills across ordering races, preserve newer cached fills and defer incomplete snapshots, and recover claimed external orders while filtering unclaimed venue state; bulk of the diff is new integration tests. No public API change. rg evidence: `rg 'ExecutionManager'` over the whole skill repo returns no hits; the execution/reconciliation guidance that does exist (skills/nt-adapters/references/concepts/live.md:560-614, e.g. line 571 'Missing order status reports are handled gracefully when fill reports arrive first', line 586 external-order creation) states the invariants this fix enforces rather than the buggy ordering, and ExecutionEngine-level docs (skills/nt-live/references/concepts/architecture.md:212) are unaffected."
+        },
+        {
+          "commit": "004fbf58f539691f07cdd5349c0002974c8b1d03",
+          "subject": "Fix Hyperliquid WebSocket post deadlines",
+          "upstream_paths": [
+            "crates/adapters/hyperliquid/Cargo.toml",
+            "crates/adapters/hyperliquid/src/websocket/client.rs",
+            "crates/adapters/hyperliquid/src/websocket/handler.rs",
+            "crates/adapters/hyperliquid/src/websocket/post.rs"
+          ],
+          "no_impact_rationale": "Internal fix in the Hyperliquid WebSocket post router: applies one caller deadline across queueing, sends, and replies; cancels abandoned router entries and stops pre-write retries; preserves unknown outcomes once a transport write has started (crates/adapters/hyperliquid/src/websocket/{client,handler,post}.rs, +tokio-util dep). Skill hyperliquid.md documents ws_post_timeout_secs (rg-verified at references/integrations/hyperliquid.md:929), which still exists unchanged, and makes no claims about router retry/deadline internals; the documented HTTP-modify edge-case section (:731-735) concerns a different path untouched by this commit. Note (pre-existing, out of scope for this commit): skill line 929 lists the ws_post_timeout_secs default as None while upstream crates/adapters/hyperliquid/src/config.rs:229 has builder default = 10; that mismatch predates this delta window entry and is not introduced by any assigned commit."
+        },
+        {
+          "commit": "0373b0240d3cf29222c0d46555b3e5c647004a86",
+          "subject": "Update dependencies and tools",
+          "upstream_paths": [
+            ".docker/DockerfileUbuntu",
+            ".docker/jupyterlab.dockerfile",
+            ".docker/nautilus_trader.dockerfile",
+            ".nautilus-engineering.lock",
+            ".nautilus-engineering/pre-commit/sync.yaml",
+            ".nautilus-engineering/tools.toml",
+            ".pre-commit-config.yaml",
+            ".supply-chain/audits.toml"
+          ],
+          "no_impact_rationale": "Tool/dependency upkeep: prek 0.5.0->0.5.2 and ruff 0.16.4->0.16.5 in .nautilus-engineering/tools.toml (plus new `releases` source metadata), matching Docker/pre-commit/script pin updates, cargo-vet audit backfill, RELEASES.md notes, removal of `uc-micro-py` from python/pyproject.toml, and transitive Cargo.lock bumps (async-compression 0.4.43->0.4.44, compression-codecs 0.4.38->0.4.39, compression-core 0.4.32->0.4.33, hermit-abi 0.5.2->0.5.3, hex-conservative 0.2.2->0.2.3, value-bag 1.13.2->1.14.1). No API surface changes. rg evidence: the skill repo pins no exact tool versions - the only version-qualified tooling guidance found is the `uv 0.11.8+` floor in skills/nt-dev/references/guides/environment_setup.md:236 and references/developer_guide/environment_setup.md:260, which remains satisfied - and none of the bumped crates is taught anywhere in skills/. Findings.md:2870 cites `.nautilus-engineering/tools.toml:61-79` against the pinned baseline ac22d5cf, which is untouched by this commit; refreshing pin-citing layers is the baseline-advance step, not this review."
+        },
+        {
+          "commit": "62b5057927948be677242847865f713aba508bcc",
+          "subject": "Accept string IDs in importable component configs",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/backtest/src/python/node.rs",
+            "crates/live/src/python/node.rs",
+            "crates/system/src/python/registration.rs"
+          ],
+          "no_impact_rationale": "Extends `config_value_to_py` in crates/live/src/python/node.rs, crates/backtest/src/python/node.rs, and crates/system/src/python/registration.rs to convert a string `strategy_id` config value into a `StrategyId` via `StrategyId::new_checked` at the importable-config construction boundary, and changes a failed `setattr` on the target config from `log::warn!` to `anyhow::bail!` (Python RuntimeError); adds Python unit tests and a RELEASES.md note. Additive capability plus a fail-loud error channel, no signature changes. rg evidence: skill guidance for config-driven registration (skills/nt-live/references/concepts/rust.md:265-266 `add_actor_from_config`/`add_strategy_from_config`) and the importable-config tables (skills/nt-live/migration_reference/python/deployment-v1-tradingnode.md:159-162; skills/nt-backtest/references/concepts/backtesting.md:169-172) never constrain the `strategy_id` value type at this boundary; `rg 'Failed to set attribute'` returns no hits, so no skill text describes the old warn-and-continue behavior; Rust-lane config examples (skills/nt-strategy-builder-rust/SKILL.md:172, skills/nt-trading/SKILL.md:155) use Rust-side `StrategyConfig` structs that this Python-boundary change does not touch."
+        },
+        {
+          "commit": "492406675779cafc719af0546b5478fc4aa37dde",
+          "subject": "Fix Polymarket resolution hydration",
+          "upstream_paths": [
+            "crates/adapters/polymarket/src/data/auto_load.rs",
+            "crates/adapters/polymarket/src/data/dispatch.rs",
+            "crates/adapters/polymarket/src/data/mod.rs",
+            "crates/adapters/polymarket/src/resolve/apply.rs",
+            "crates/adapters/polymarket/src/resolve/watchlist.rs"
+          ],
+          "no_impact_rationale": "Internal hardening of Polymarket resolution-subscriber hydration (retry transient closed-market hydration, retain resolution intents for manual recovery after retry exhaustion, match resolved assets against one stable subscription snapshot, centralize WebSocket sync and serialize watchlist updates) across crates/adapters/polymarket/src/{data,resolve}. No public API, config, or doc surface changed. Skill polymarket docs cover resolve_poll_* config (rg-verified at skills/nt-adapters/references/integrations/polymarket.md:260-263) and loader resolution_metadata (references/integrations/polymarket.md:1148-1171) without describing hydration internals, so no claims become stale."
+        },
+        {
+          "commit": "148e7cf6ce21295c9682a71bf71598f0a156c142",
+          "subject": "Refine option chain reference pricing",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/adapters/bybit/examples/node_option_chain.rs",
+            "crates/adapters/bybit/src/data.rs",
+            "crates/adapters/bybit/src/http/client.rs",
+            "crates/adapters/bybit/src/python/http.rs",
+            "crates/adapters/bybit/tests/integration/data_client.rs",
+            "crates/adapters/deribit/src/data.rs",
+            "crates/adapters/deribit/src/http/client.rs"
+          ],
+          "impact_rationale": "Removes public API within the review range: the ForwardPrice data type (crates/model/src/data/forward.rs and crates/model/src/python/data/forward.rs deleted, ~159 lines) and request_forward_prices methods from python/nautilus_trader/adapters/{bybit,deribit,okx}/__init__.pyi, replaced by an internal series reference response, plus large option-chain/data-engine/event-store refinements (crates/data/src/engine/mod.rs +537). rg-verified zero skill references to ForwardPrice or request_forward_prices, so no skill guidance is invalidated. Remaining drift is terminology: this commit renames 'forward price' to 'reference price'/'series reference price' in upstream docs (docs/concepts/options.md), while skill docs still use 'forward price' wording at rg-verified locations references/integrations/bybit.md:591, skills/nt-adapters/references/integrations/bybit.md:590, references/developer_guide/spec_data_testing.md:851, skills/nt-testing/references/guides/spec_data_testing.md:843. The described mechanism (HTTP bootstrap of ATM before subscriptions) is unchanged.",
+          "affected_files": [
+            "references/integrations/bybit.md"
+          ],
+          "candidate_finding": {
+            "severity": "low",
+            "category": "terminology-drift",
+            "description": "Skill docs describe option-chain ATM bootstrap using 'forward price' terminology that upstream renamed to 'reference price' (the ForwardPrice public type was removed and replaced by an internal series reference response); wording is now inconsistent with upstream docs while the mechanism remains accurate.",
+            "fix": "Update the four rg-verified locations (references/integrations/bybit.md:591, skills/nt-adapters/references/integrations/bybit.md:590, references/developer_guide/spec_data_testing.md:851, skills/nt-testing/references/guides/spec_data_testing.md:843) to upstream's 'reference price' terminology for option-chain ATM bootstrap."
+          }
+        },
+        {
+          "commit": "a0cfecb9c0dd771295ef67248644fdef1f830000",
+          "subject": "Guard SortinoRatio against single-observation samples (#4934)",
+          "upstream_paths": [
+            "crates/analysis/src/statistics/sortino_ratio.rs"
+          ],
+          "no_impact_rationale": "17-line guard in crates/analysis/src/statistics/sortino_ratio.rs: returns NaN when fewer than 2 daily-binned returns exist (matching calculate_std), instead of computing from n=1. rg-verified skill mentions of SortinoRatio are example/list references only (skills/nt-signals/SKILL.md:182, skills/nt-signals/migration_reference/python/python/analysis/__init__.py:69, skills/nt-signals/references/concepts/portfolio.md:123); none claim single-sample behavior, so no guidance is affected."
+        },
+        {
+          "commit": "8f6f5795d26776e92af9241d8435225c36c48f64",
+          "subject": "Stop two task lifecycle tests spinning on a stalled timer (#4899)",
+          "upstream_paths": [
+            "crates/live/src/task.rs"
+          ],
+          "no_impact_rationale": "Test-only fix: replaces `task::yield_now()` with `time::sleep(POLL_INTERVAL)` (10ms, cfg-gated to the non-simulation build) in the two `canceled_*_preserves_*_classification` test loops inside `mod tests` of crates/live/src/task.rs; no production code or public API changes. rg over the skill repo shows `yield_now` has no hits at all, and the TaskGroup/task-lifecycle guidance (skills/nt-adapters/SKILL.md, skills/nt-adapters/references/guides/official_adapter_spec.md, skills/nt-live/SKILL.md) teaches ownership/lifecycle contracts, not test polling mechanics, so nothing taught depends on the old loop shape."
+        },
+        {
+          "commit": "9dd7f1a1a6313ec8e8bf6679aa667ba595ebbe99",
+          "subject": "Add Kraken configurable REST retry count (#4902)",
+          "upstream_paths": [
+            "crates/adapters/kraken/src/config.rs",
+            "crates/adapters/kraken/src/execution/futures.rs",
+            "crates/adapters/kraken/src/execution/spot.rs",
+            "crates/adapters/kraken/src/python/config.rs",
+            "docs/integrations/kraken.md",
+            "python/nautilus_trader/adapters/kraken/__init__.pyi"
+          ],
+          "impact_rationale": "Adds max_retries to KrakenExecutionClientConfig (default 3, 0 = single attempt), forwarded from the spot and futures execution constructors and exposed in the Python config; upstream documents it in docs/integrations/kraken.md config table. rg for 'max_retries' in the skill repo returns zero hits and kraken.md has no execution-config option table, so nothing is invalidated; however the 'Order routing (Spot)' section (rg-verified at references/integrations/kraken.md:364, use_ws_trade at :369) documents the WS-to-REST fallback and cancel routing, and the commit makes operator-visible behavior explicit there: one REST cancel (cancel_order/cancel_all_orders via send_request) can issue up to 4 venue requests (1 + 3 retries) unless max_retries is set.",
+          "affected_files": [
+            "references/integrations/kraken.md"
+          ],
+          "candidate_finding": {
+            "severity": "low",
+            "category": "docs-gap",
+            "description": "Kraken order-routing guidance omits the new max_retries execution config option and the REST cancel retry multiplication (up to 4 venue requests per cancel command at the default of 3), which is observable to operators accounting for order commands outside the adapter.",
+            "fix": "Document max_retries (default 3, 0 = single attempt) alongside the Order routing (Spot) section, noting the REST cancel retry multiplication, in references/integrations/kraken.md and the skills/nt-adapters mirror."
+          }
+        },
+        {
+          "commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
+          "subject": "Ignore Bybit funding settlement executions",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/adapters/bybit/src/http/client.rs",
+            "crates/adapters/bybit/src/websocket/dispatch.rs",
+            "crates/adapters/bybit/test_data/http_get_executions_funding.json",
+            "crates/adapters/bybit/test_data/ws_account_execution_funding.json",
+            "crates/adapters/bybit/tests/integration/http.rs",
+            "docs/integrations/bybit.md"
+          ],
+          "impact_rationale": "Adapter behavior change with no API surface change: Bybit executions with execType=Funding are now skipped in HTTP fill-report paging (preserving requested fill limits) and in WebSocket execution dispatch, so no FillReport or OrderFilled is emitted, local position quantity is unchanged, and funding records no longer count toward requested fill-report limits during reconciliation. The skill's Bybit venue-initiated fills section enumerates execType values (AdlTrade, BustTrade, Delivery, Settle) and states 'Fills flow through the normal FillReport path' (rg-verified at references/integrations/bybit.md:293 and :305, mirrored at skills/nt-adapters/references/integrations/bybit.md:293/:305) but omits Funding, which this commit now documents as explicitly ignored in upstream docs/integrations/bybit.md (+6 lines).",
+          "affected_files": [
+            "references/integrations/bybit.md"
+          ],
+          "candidate_finding": {
+            "severity": "medium",
+            "category": "docs-gap",
+            "description": "The venue-initiated execType enumeration in the Bybit integration guide omits Funding settlements and its blanket fill-path phrasing can mislead users reconciling perpetuals: funding settlements never produce a FillReport/OrderFilled and do not count toward requested fill-report limits.",
+            "fix": "Add a 'Funding' entry to the execType list at references/integrations/bybit.md:293-309 noting the adapter ignores funding settlements (balance adjustments, no FillReport/OrderFilled, excluded from fill-report limits), and mirror in skills/nt-adapters/references/integrations/bybit.md:293."
+          }
         }
       ]
     }

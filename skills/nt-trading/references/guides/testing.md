@@ -70,7 +70,7 @@ tests to avoid interference.
 ```bash
 make cargo-test
 # or
-cargo nextest run --workspace --features "python,ffi,high-precision,defi" --cargo-profile nextest
+cargo nextest run --workspace --features "$(bash scripts/cargo-features.bash)" --cargo-profile nextest --lib --tests
 ```
 
 #### Testing with optional features

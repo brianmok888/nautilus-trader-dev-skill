@@ -417,6 +417,16 @@ The message bus within a `TradingNode` (node) is referred to as the "internal me
 A producer node is one which publishes messages onto an external stream (see [external publishing](#external-publishing)).
 The consumer node listens to external streams to receive and publish deserialized message payloads on its internal message bus.
 
+Typed external streaming (upstream `9dcf043dc`, current at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`):
+control, execution, and reconciliation messages (`SubscribeCommand`, `UnsubscribeCommand`,
+`TradingCommand`, `GenerateExecutionMassStatus`, `OrderStatusReport`, `FillReport`,
+`PositionStatusReport`, `ExecutionMassStatus`) are streamed as typed payloads. Their egress is
+gated on the bus having external streams configured
+(`crates/common/src/msgbus/external/mod.rs`), and on Redis each `BusMessage` record carries the
+discriminator as `payload_kind=typed` next to its flat `type` field
+(`crates/infrastructure/src/redis/stream_fields.rs`), so typed payload types resolve correctly
+instead of falling back to custom payloads.
+
 ```
                   ┌───────────────────────────┐
                   │                           │

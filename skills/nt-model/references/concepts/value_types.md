@@ -1,6 +1,6 @@
 # Value Types
 
-> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
+> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `6df237382eb1d8411906f9b1790fa06f8ba7aad4`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
 
 NautilusTrader provides specialized value types for representing core trading concepts:
 `Price`, `Quantity`, and `Money`. These types use fixed-point arithmetic internally

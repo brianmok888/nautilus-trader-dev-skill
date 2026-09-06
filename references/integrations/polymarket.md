@@ -11,7 +11,7 @@ Order Book (CLOB) API.
 The adapter is implemented in Rust and exposed to Python at
 `nautilus_trader.adapters.polymarket`; data, execution, signing, and WebSocket
 operations therefore have the same behavior from Rust and Python (pinned
-`ac22d5cf4`, `docs/integrations/polymarket.md`).
+`6df23738`, `docs/integrations/polymarket.md`).
 
 NautilusTrader supports multiple Polymarket signature types for order signing, which gives
 flexibility for different wallet configurations while NautilusTrader handles signing and order
@@ -351,11 +351,25 @@ resting `LIMIT` orders only.
 
 ### Advanced order features
 
-| Feature            | Binary Options | Notes                              |
-|--------------------|----------------|------------------------------------|
-| Order modification | -              | Cancellation functionality only.   |
-| Bracket/OCO orders | -              | *Not supported by Polymarket.*     |
-| Iceberg orders     | -              | *Not supported by Polymarket.*     |
+| Feature            | Binary Options | Notes                                                   |
+|--------------------|----------------|---------------------------------------------------------|
+| Order modification | Yes            | Adapter-managed cancel-replace for open `LIMIT` orders. |
+| Bracket/OCO orders | -              | *Not supported by Polymarket.*                          |
+| Iceberg orders     | -              | *Not supported by Polymarket.*                          |
+
+Polymarket has no in-place modify endpoint. The execution client cancels the current venue order,
+reconciles its final confirmed fills, and signs a replacement for the remaining quantity. The
+`ModifyOrder.quantity` value is the absolute target for the logical order, not the replacement leg.
+The replacement keeps the `ClientOrderId` and receives a new `VenueOrderId`. The resulting logical
+quantity reflects the exact signed base quantity after venue precision normalization, so it can be
+slightly lower than the requested target.
+
+The adapter submits no replacement unless the cancel response, canceled order state, and confirmed
+trade totals agree. An ambiguous cancel emits `OrderModifyRejected`. An ambiguous replacement stays
+in flight under its deterministic signed order hash so a later order update, fill, or order
+reconciliation can establish the replacement without emitting a second `OrderAccepted`. Later
+modify and cancel commands remain blocked until that happens. This recovery state is not persisted
+across an execution-client process restart.
 
 ### Batch operations
 
@@ -752,6 +766,35 @@ with bounded exponential backoff. Tune the cadence with `auto_load_max_retries` 
 to disable retry. 5-minute markets (e.g. updown crypto) can expire before the venue finishes
 hydrating, so budget for that or raise the cap.
 
+### Market resolution events
+
+The Rust data client tracks Polymarket exposure at `condition_id` level so both YES and NO legs
+close together when the venue resolves the market. Position events add open Polymarket binary
+option instruments to an internal watchlist. Data clients can also watch an instrument without a
+position by subscribing to `InstrumentStatus`, `InstrumentClose`, or both. These subscriptions are
+independent: a status subscription emits only the status close, while a close subscription emits
+only the settlement price. Unsubscribing from one does not remove the other.
+
+Cached instruments establish a watch when the subscription is accepted. Missing instruments first
+pass through auto-loading and the configured instrument filters. Unsubscribing removes only that
+data owner; open positions retain their independent ownership. If loading cannot produce usable
+metadata, no automatic watch is created — the resolution intent is retained so an explicit manual
+resolution selector can still check the condition. Transient closed-market hydration failures are
+retried; once retries are exhausted the intent stays available for that manual recovery instead of
+being dropped.
+
+If an outcome arrives while a subscribed instrument is still loading, the client retains that
+outcome until its metadata passes the configured filters. Already admitted data and position owners
+settle immediately; a pending sibling does not delay them. Completing the pending subscription emits
+only its requested events and does not reopen ordinary market-data streams. Unsubscribing its last
+event type or rejecting its instrument filter discards the retained outcome.
+
+Once a watched condition expires, the data client waits `resolve_poll_grace_secs` (default 10),
+then polls Gamma every `resolve_poll_interval_secs` (default 30) until the condition resolves or
+`resolve_poll_max_wait_secs` (default 1,800) elapses. Polling is enabled by default
+(`resolve_poll_enabled`); a resolution-only WebSocket path requires `subscribe_new_markets=true`,
+and with both disabled later recovery requires a manual request.
+
 ### Purging instruments at runtime
 
 Polymarket auto-loads instruments on demand, so a long-running session keeps growing the cache as
@@ -979,7 +1022,6 @@ Struct: `PolymarketExecutionClientConfig` in `crates/adapters/polymarket/src/con
 
 | Option                   | Default                                    | Description |
 |--------------------------|--------------------------------------------|-------------|
-| `trader_id`              | default `TraderId`                         | Trader identifier the client registers under. |
 | `account_id`             | `POLYMARKET-001`                           | Account identifier for this execution client. |
 | `private_key`            | `None` (`POLYMARKET_PK` env)               | Wallet private key for EIP-712 signing. |
 | `api_key`                | `None` (`POLYMARKET_API_KEY` env)          | CLOB API key (L2 auth). |
@@ -994,7 +1036,6 @@ Struct: `PolymarketExecutionClientConfig` in `crates/adapters/polymarket/src/con
 | `max_retries`            | `3`                                        | Maximum retry attempts for single-order submit/cancel requests. |
 | `retry_delay_initial_ms` | `1000`                                     | Initial delay (milliseconds) between retries. |
 | `retry_delay_max_ms`     | `10000`                                    | Maximum delay (milliseconds) between retries. |
-| `ack_timeout_secs`       | `5`                                        | Timeout (seconds) waiting for WebSocket order/trade acknowledgment. |
 | `transport_backend`      | `Sockudo`                                  | WebSocket transport backend. |
 
 The Rust execution client does not expose `generate_order_history_from_trades`,

@@ -17,9 +17,9 @@ NT v2 compatibility note: readiness-table mentions of legacy Cython/v1 and Pytho
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`; current-develop drift is version-scoped in `README.md`. |
+| G0 Upstream baseline | Confirm the upstream snapshot, official docs, release tag, and local reference baseline before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `6df237382eb1d8411906f9b1790fa06f8ba7aad4`; current-develop drift is version-scoped in `README.md`. |
 | G1 Legacy label | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 25 tests. |
-| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed the skill domain's scoped examples and owners against `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`; schema-v2 provenance is recorded in `references/g2-evidence/nt-architect.json`. |
+| G2 V2 example validation | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-architect` passed the skill domain's scoped examples and owners against `6df237382eb1d8411906f9b1790fa06f8ba7aad4`; schema-v2 provenance is recorded in `references/g2-evidence/nt-architect.json`. |
 | G3 Rust bindings/PyO3 | Rust bindings, PyO3 registration paths, callback routing, and crate ownership match current nautilus_core/V2 boundaries. | Pass | `uv run pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 tests. |
 | G4 Lane and API shape | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 Test evidence | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -43,7 +43,7 @@ Translate research outputs (trained ML models + signal generation logic) into a 
 
 If the architecture includes a custom or modified adapter, enforce these constraints in the design doc:
 
-- **Lifecycle ordering**: the architecture must follow the pinned developer guide's adapter implementation sequence (ten phases at `ac22d5cf4`, `docs/developer_guide/adapters.md`); the pre-cutover 7-phase order below is retained as migration/reference-only history.
+- **Lifecycle ordering**: the architecture must follow the pinned developer guide's adapter implementation sequence (ten phases at `6df23738`, `docs/developer_guide/adapters.md`); the pre-cutover 7-phase order below is retained as migration/reference-only history.
 - **Boundary clarity**:
   - Rust owns production adapter contracts and implementations: `InstrumentProvider`, data/execution clients, factory wiring, networking, parsing, normalization, and execution-critical state.
   - PyO3 exposes reviewed Rust capabilities only through bounded bindings. Under this repository's cutover policy, Python strategy, research, configuration, and orchestration material is migration/reference-only.

@@ -110,6 +110,13 @@ The statistics are generally categorized as follows.
 It's also possible to call a traders `PortfolioAnalyzer` and calculate statistics at any arbitrary
 time, including *during* a backtest, or live trading session.
 
+PnL-based statistics and `trade_pnl_records` resolve the query currency through
+`resolve_pnl_currency` (`crates/analysis/src/analyzer.rs`): an explicit currency wins;
+otherwise a single account-balance currency resolves it; otherwise a single realized-PnL
+currency (across analyzer-held and recorded PnLs) resolves it; otherwise the query fails
+with "Currency must be specified for multi-currency portfolio" -- pass an explicit
+currency for genuinely multi-currency portfolios.
+
 ## Custom statistics
 
 The current V2 path for custom statistics is the Rust `PortfolioStatistic` trait
@@ -185,6 +192,11 @@ subclassing example.
 :::tip
 Ensure your statistic is robust to degenerate inputs such as empty slices or insufficient data.
 Return `None` for unknown/incalculable values, or a reasonable default like `0.0` when semantically appropriate (e.g., win rate with no trades).
+For built-in returns-based statistics the degenerate-input convention is `NaN`, not `None`:
+`SharpeRatio` derives dispersion via `calculate_std`, and `SortinoRatio` has an explicit
+`returns.len() < 2` guard after daily binning ("a single observation cannot estimate
+dispersion"), so both yield `NaN` for samples with fewer than two daily observations
+(`crates/analysis/src/statistics/sortino_ratio.rs`).
 :::
 
 ## Portfolio snapshots

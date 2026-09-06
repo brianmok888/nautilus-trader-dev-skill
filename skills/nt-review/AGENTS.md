@@ -129,7 +129,7 @@ upstream `crates/` sources before applying any item.
 - WS `connect()` needs `loop_=self._loop` in adapter code
 
 
-- Crate feature documentation convention (upstream `fd247cda9`, enforced by `.pre-commit-hooks/check_docs_conventions.sh`): every non-default feature must appear in the alphabetical Feature flags lists in both `README.md` and the `src/lib.rs` crate docs, matching `[features]` in `Cargo.toml` whenever a feature is added or renamed.
+- Crate feature documentation convention (upstream `fd247cda9`, enforced by `.pre-commit-hooks/check_docs_conventions.sh`): every non-default feature must appear in the alphabetical Feature flags lists in both `README.md` and the crate's configured library source (the `[lib]` `path` in `Cargo.toml`, default `src/lib.rs`; upstream `09a235060b` extended the hook from hardcoded `src/lib.rs`), matching `[features]` in `Cargo.toml` whenever a feature is added or renamed.
 ## LIVE TRADING CHECKLIST (9+ items)
 NT v2 compatibility note: v1.x checklist items below are migration/reference-only where they mention legacy/v1 removals; prefer current Rust v2/PyO3 guidance for new work.
 

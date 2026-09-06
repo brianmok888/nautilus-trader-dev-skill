@@ -33,6 +33,10 @@ Add requests/subscriptions, books, malformed input, unsubscribe, and reconnect b
 
 ### Phase 4: Implement execution
 Establish account state and reconciliation before commands; cover ambiguous outcomes and reports.
+Stamp initial account state through the execution event emitter's send surface: the fallible
+`try_send_account_state(state)` returns the dispatch error to the caller (the infallible
+`send_account_state` only logs), completing the send/try_send pair alongside the order-event and
+execution-report methods (`crates/live/src/execution/emitter.rs`, pinned `6df23738`).
 
 ### Phase 5: Add optional venue capabilities
 Add advanced orders or product slices only after the base lifecycle is stable.

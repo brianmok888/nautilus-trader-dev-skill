@@ -48,16 +48,17 @@ can significantly impact performance.
 
 #### The performance consideration
 
-By default, `BacktestEngine.add_data()` sorts the entire data stream (existing data + newly
-added data) on each call when `sort=True` (the default). This means:
+At the pin, each `BacktestEngine.add_data()` call sorts only its own batch (by `ts_init`)
+when `sort=True` (the default); it never re-sorts previously added data. Each added batch
+becomes its own stream, and cross-stream ordering is handled at replay time by
+`BacktestDataIterator`, which orders every stream by replay key and merges the streams
+through a min-heap (`crates/backtest/src/data_iterator.rs`). The `sort` argument also sets
+the engine's `sorted` flag, which `run()` enforces: an unsorted engine errors with "Data
+has been added but not sorted, call `engine.sort_data()` or use `engine.add_data(...,
+sort=true)` before running" (`crates/backtest/src/engine.rs`).
 
-- First call with 1M bars: sorts 1M bars.
-- Second call with 1M bars: sorts 2M bars.
-- Third call with 1M bars: sorts 3M bars.
-- And so on...
-
-This repeated sorting of increasingly large datasets can become a bottleneck when loading
-data for multiple instruments.
+The per-batch sort is redundant when every batch is already ordered (e.g. catalog/Parquet
+reads), and skipping it avoids one full pass over each batch during loading.
 
 #### Optimization strategies
 
@@ -79,7 +80,8 @@ engine.add_data(instrument1_bars, sort=False)
 engine.add_data(instrument2_bars, sort=False)
 engine.add_data(instrument3_bars, sort=False)
 
-# Sort once at the end - much more efficient!
+# Mark the engine as sorted once before running
+# (sort_data() sets the flag run() requires; the iterator merges streams by replay key)
 engine.sort_data()
 
 # Now run your backtest
@@ -103,6 +105,23 @@ engine.add_data(all_bars, sort=True)
 **Strategy 3: Use streaming for very large datasets**
 
 For datasets that don't fit in memory, there are two streaming options:
+
+**Typed batch input (Rust)** - store each batch in a typed `DataBatch` and load it in one
+call. The pinned engine exposes `BacktestEngine::add_data_batch(data, client_id, validate,
+sort)` (`crates/backtest/src/engine.rs:436`, upstream `3c9ad2ef4`), backed by the typed
+batch replay API (`dabe39d77`) that keeps homogeneous data in typed storage through replay
+(no per-item `Data` conversion). `BacktestNode` streams multiple data configs lazily across
+batches (upstream `ec1894d6f`). This surface is Rust-only: the Python `BacktestEngine` has
+no `add_data_batch`, and there is no generator-based `add_data_iterator` method at the
+pinned baseline:
+
+```rust
+use nautilus_model::data::DataBatch;
+
+let batch = DataBatch::from(quotes);  // typed batch of homogeneous data
+engine.add_data_batch(batch, None, true, true)?;
+engine.run(None, None, None, false)?;
+```
 
 **Manual chunking (low-level)** - load and run each batch yourself. This is the pattern
 used internally by `BacktestNode` and gives full control over batch boundaries. The
@@ -1102,7 +1121,15 @@ Only affects internally aggregated bars (`AggregationSource.INTERNAL`).
 ### Timer-only backtests
 
 The backtest engine supports running with timers but no market data. This is useful for scheduled
-operations or testing timer-based logic. Timers fire in chronological order.
+operations or testing timer-based logic. Timers fire in chronological order, and timer
+callbacks can dynamically add typed batches via `add_data_batch()` (Rust surface) which
+will be processed in sequence.
+
+:::warning
+Data added by timer callbacks at the exact start time should have timestamps **after** the start time.
+The engine reads the first data point before processing start-time timers, so dynamically added data
+with timestamps at or before the start time may not be processed in the expected order.
+:::
 
 ### Fill models
 

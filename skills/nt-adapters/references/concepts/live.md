@@ -405,7 +405,7 @@ For a complete parameter list see the `StrategyConfig` [API Reference](https://n
 | `oms_type`                  | None    | Specifies the [OMS type](https://nautilustrader.io/docs/latest/concepts/execution/#oms-configuration), for position ID handling and order processing flow. |
 | `use_uuid_client_order_ids` | False   | If UUID4's should be used for client order ID values. |
 | `external_order_claims`     | None    | Lists instrument IDs for external orders the strategy should claim, aiding accurate order management. |
-| `manage_contingent_orders`  | False   | If enabled, manages open, non-active-local OTO, OCO, and OUO relationships; the `OrderEmulator` retains active-local contingent orders (upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`). |
+| `manage_contingent_orders`  | False   | If enabled, manages open, non-active-local OTO, OCO, and OUO relationships; the `OrderEmulator` retains active-local contingent orders (upstream `6df237382eb1d8411906f9b1790fa06f8ba7aad4`). |
 | `manage_gtd_expiry`         | False   | If enabled, the strategy manages GTD expirations, ensuring orders remain active as intended. |
 
 ### Windows signal handling

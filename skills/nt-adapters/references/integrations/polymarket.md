@@ -238,7 +238,7 @@ Class: `PolymarketDataClientConfig` (re-exported from `nautilus_trader.adapters.
 | Option                              | Default      | Description |
 |-------------------------------------|--------------|-------------|
 | `instrument_config`                 | `None`       | Optional `PolymarketInstrumentProviderConfig` for instrument loading. |
-| `private_key`                       | `None`       | Wallet private key; sourced from `POLYMARKET_PK` when omitted (Rust struct). |
+| `filters`                           | `[]`         | Instrument filters applied during loading and discovery (Rust struct; installed programmatically). |
 | `base_url_http`                     | `None`       | Override for the REST base URL. |
 | `base_url_ws`                       | `None`       | Override for the WebSocket base URL. |
 | `base_url_gamma`                    | `None`       | Override for the Gamma API base URL. |
@@ -249,6 +249,7 @@ Class: `PolymarketDataClientConfig` (re-exported from `nautilus_trader.adapters.
 | `ws_max_subscriptions`              | `None`       | Maximum instrument subscriptions per WebSocket connection (Polymarket limit is 500). |
 | `update_instruments_interval_mins`  | `None`       | Interval (minutes) between instrument catalogue refreshes. |
 | `subscribe_new_markets`             | `None`       | Subscribe to newly listed markets as they are discovered. |
+| `new_market_filter`                 | `None`       | Optional filter applied to newly discovered markets before emission (Rust struct; installed programmatically). |
 | `compute_effective_deltas`          | `None`       | Compute effective order book deltas for bandwidth savings. |
 | `drop_quotes_missing_side`          | `None`       | Drop quotes with missing bid/ask prices instead of substituting boundary values. |
 | `auto_load_missing_instruments`     | `None`       | Load instruments on demand when subscribe or request commands reference uncached instruments. |
@@ -267,6 +268,30 @@ Class: `PolymarketDataClientConfig` (re-exported from `nautilus_trader.adapters.
 NT v2 compatibility note: the v1 `venue`, `ws_connection_initial_delay_secs`,
 and `ws_connection_delay_secs` data config keys are migration/reference-only;
 they are not pinned fields.
+
+### Market resolution events
+
+The Rust data client tracks Polymarket exposure at `condition_id` level so both
+YES and NO legs close together when the venue resolves the market. Position
+events add open Polymarket binary option instruments to an internal watchlist.
+Data clients can also watch an instrument without a position by subscribing to
+`InstrumentStatus`, `InstrumentClose`, or both. These subscriptions are
+independent: a status subscription emits only the status close, while a close
+subscription emits only the settlement price. Unsubscribing from one does not
+remove the other.
+
+Cached instruments establish a watch when the subscription is accepted. Missing
+instruments first pass through auto-loading and the configured instrument
+filters. Unsubscribing removes only that data owner; open positions retain their
+independent ownership. If loading cannot produce usable metadata, no automatic
+watch is created — the resolution intent is retained so an explicit manual
+resolution selector can still check the condition. Transient closed-market
+hydration failures are retried; once retries are exhausted the intent stays
+available for manual recovery instead of being dropped.
+
+Once a watched condition expires, the data client waits `resolve_poll_grace_secs`,
+then polls Gamma every `resolve_poll_interval_secs` until the condition resolves
+or `resolve_poll_max_wait_secs` elapses (see the rows above).
 
 ### Execution client options
 
@@ -299,6 +324,24 @@ migration/reference-only; they are not pinned fields (the trader ID arrives via
 the factory's `create(trader_id, ...)`). Batch submissions via `POST /orders`
 deliberately skip retry regardless of `max_retries`; the single-order path still
 retries on transient failures.
+
+### Order modification
+
+Polymarket supports order modification as an adapter-managed cancel-replace for
+open `LIMIT` orders (window commit `616980b15f`, included in pin
+`6df237382eb1d8411906f9b1790fa06f8ba7aad4`). Polymarket has no in-place modify
+endpoint: the execution client cancels the current venue order, reconciles its
+final confirmed fills, and signs a replacement for the remaining quantity. The
+`ModifyOrder.quantity` value is the absolute target for the logical order, not
+the replacement leg. The replacement keeps the `ClientOrderId` and receives a
+new `VenueOrderId`.
+
+The adapter submits no replacement unless the cancel response, canceled order
+state, and confirmed trade totals agree. An ambiguous cancel emits
+`OrderModifyRejected`; an ambiguous replacement stays in flight under its
+deterministic signed order hash so a later order update, fill, or order
+reconciliation can establish it without emitting a second `OrderAccepted`. This
+recovery state is not persisted across an execution-client process restart.
 
 ### Instrument provider configuration options
 

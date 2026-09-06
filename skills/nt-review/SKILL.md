@@ -15,7 +15,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 | --- | --- | --- | --- |
 | G0 Scope and ownership | API claims match the pinned developer-guide snapshot. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
 | G1 Legacy labelling | NT v2 compatibility note: legacy/Cython/v1 guidance is migration/reference-only and does not enter production code. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`; evidence: `references/g2-evidence/nt-review.json`. |
+| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` passed against `6df237382eb1d8411906f9b1790fa06f8ba7aad4`; evidence: `references/g2-evidence/nt-review.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
 | G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
 | G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
@@ -31,7 +31,7 @@ Review behavior before style. Classify findings as **Blocker** (unsafe or incorr
 **Correctness and lifecycle**
 - Verify deterministic startup, warmup, reset, stop, and shutdown behavior.
 - Confirm order rejection, cancellation, expiration, partial fill, reconciliation, position limits, and circuit-breaker paths.
-- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `ac22d5cf4`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
+- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `6df23738`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
 - Ensure `DataActor`, strategy, adapter, cache, and message bus responsibilities are separated and messages remain immutable after publication.
 - Check current V2 shapes: `TryFrom<OrderInitialized>`, owned cache snapshots at boundaries, `RecencyMap` behavior, v2 wranglers, and raw fixed-point overflow handling.
 
@@ -72,4 +72,4 @@ Legacy Python review prose, checklists, and examples are physically quarantined 
 
 ## Source-pinned upstream lane
 
-Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`. Version-scope any newer upstream guidance until the pin advances.
+Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `6df237382eb1d8411906f9b1790fa06f8ba7aad4`. Version-scope any newer upstream guidance until the pin advances.

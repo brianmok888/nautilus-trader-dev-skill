@@ -497,18 +497,20 @@ The default of 4 req/s is conservative and works across all public providers.
 
 ### Multiple gRPC URL fallback
 
-Use `base_url_grpc` to override the primary gRPC endpoint:
+Use the Rust config's `grpc_endpoint` to override the primary gRPC endpoint
+(the Rust `DydxExecutionClientConfig` also accepts a `grpc_urls` list for
+explicit multi-URL fallback):
 
-```python
-exec_config = DydxExecutionClientConfig(
-    base_url_grpc="https://primary-grpc.example.com:443",
-    # ...
-)
+```rust
+let exec_config = DydxExecutionClientConfig::builder()
+    .grpc_endpoint("https://primary-grpc.example.com:443".to_string())
+    .build()?;
 ```
 
-When `base_url_grpc` is unset, the adapter uses the default public nodes for the
-selected network with built-in fallback across the public validator list. Explicit
-multi-URL fallback via user config is not currently exposed on the Python config.
+When `grpc_endpoint` is unset, the adapter uses the default public nodes for the
+selected network with built-in fallback across the public validator list. The
+Python config projection exposes `network` (plus credentials and proxy), not the
+per-endpoint overrides.
 
 ## Price and size quantization
 
@@ -682,8 +684,9 @@ config = TradingNodeConfig(
 
 ### Testnet endpoints
 
-Default testnet endpoints are used automatically. Override via `base_url_http`,
-`base_url_ws`, or `base_url_grpc` (execution only) on the respective config if needed.
+Default testnet endpoints are used automatically. Override via the Rust
+config's `base_url_http`/`base_url_ws` (data) or `http_endpoint`/`ws_endpoint`/
+`grpc_endpoint` (execution) if needed.
 
 | Service   | Default URL                                          |
 |-----------|------------------------------------------------------|
@@ -695,8 +698,9 @@ Default testnet endpoints are used automatically. Override via `base_url_http`,
 
 ### Mainnet endpoints
 
-Default mainnet endpoints are used automatically. Override via `base_url_http`,
-`base_url_ws`, or `base_url_grpc` (execution only) on the respective config if needed.
+Default mainnet endpoints are used automatically. Override via the Rust
+config's `base_url_http`/`base_url_ws` (data) or `http_endpoint`/`ws_endpoint`/
+`grpc_endpoint` (execution) if needed.
 
 | Service   | Default URL                                         |
 |-----------|-----------------------------------------------------|
@@ -714,33 +718,42 @@ wallet credentials.
 
 | Option                    | Default   | Description                                                                                 |
 |---------------------------|-----------|---------------------------------------------------------------------------------------------|
-| `wallet_address`          | `None`    | Legacy Python config field. The public data client does not use wallet credentials.         |
-| `environment`             | `None`    | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`.                                             |
-| `bars_timestamp_on_close` | `True`    | If bar `ts_event` should be the bar close time. Set `False` to use venue-native open time.  |
-| `base_url_http`           | `None`    | HTTP API endpoint override. `None` selects the default for the selected network.             |
-| `base_url_ws`             | `None`    | WebSocket endpoint override. `None` selects the default for the selected network.            |
+| `network`                 | `MAINNET` | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`; the pinned field is `network` (no `environment` field). |
+| `base_url_http`           | `None`    | HTTP API endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `base_url_ws`             | `None`    | WebSocket endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `http_timeout_secs`       | `60`      | HTTP request timeout in seconds (Rust struct).                                              |
 | `proxy_url`               | `None`    | Optional proxy URL for HTTP and WebSocket transports.                                       |
-| `max_retries`             | `3`       | Maximum retry attempts for REST / WebSocket recovery.                                       |
-| `retry_delay_initial_ms`  | `1,000`   | Initial delay (milliseconds) between retries.                                               |
-| `retry_delay_max_ms`      | `10,000`  | Maximum delay (milliseconds) between retries.                                               |
+| `max_retries`             | `3`       | Maximum retry attempts for REST / WebSocket recovery (Rust struct).                        |
+| `retry_delay_initial_ms`  | `100`     | Initial delay (milliseconds) between retries (Rust struct).                                |
+| `retry_delay_max_ms`      | `5,000`   | Maximum delay (milliseconds) between retries (Rust struct).                                |
+| `transport_backend`       | default   | Transport backend selection (Rust struct).                                                  |
 
 ### Execution client configuration options
 
 | Option                         | Default   | Description                                                                                        |
-|--------------------------------|-----------|----------------------------------------------------------------------------------------------------|
+|--------------------------------|-----------|-----------------------------------------------------------------------------------------------------|
+| `account_id`                   | `DYDX-001` | Account ID for the execution client.                                                               |
 | `wallet_address`               | `None`    | dYdX wallet address. Falls back to `DYDX_WALLET_ADDRESS` / `DYDX_TESTNET_WALLET_ADDRESS` env var.  |
-| `subaccount`                   | `0`       | Subaccount number (0-127). Subaccount 0 is the default.                                            |
+| `subaccount_number`            | `0`       | Subaccount number (0-127). Subaccount 0 is the default.                                            |
 | `private_key`                  | `None`    | Hex-encoded private key for signing. Falls back to `DYDX_PRIVATE_KEY` / `DYDX_TESTNET_PRIVATE_KEY`. |
-| `authenticator_ids`            | `None`    | List of authenticator IDs for permissioned key trading (institutional setups).                     |
-| `environment`                  | `None`    | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`.                                                    |
-| `base_url_http`                | `None`    | HTTP client custom endpoint override. `None` selects the default for the selected network.         |
-| `base_url_ws`                  | `None`    | WebSocket client custom endpoint override. `None` selects the default for the selected network.    |
-| `base_url_grpc`                | `None`    | gRPC client custom endpoint override. `None` selects the default for the selected network.         |
+| `authenticator_ids`            | `None`    | List of authenticator IDs for permissioned key trading (institutional setups; Rust struct).        |
+| `network`                      | `MAINNET` | `DydxNetwork.MAINNET` or `DydxNetwork.TESTNET`; the pinned field is `network` (no `environment` field). |
+| `http_endpoint`                | `None`    | HTTP client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `ws_endpoint`                  | `None`    | WebSocket client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `grpc_endpoint`                | `None`    | gRPC client custom endpoint override (Rust struct). `None` selects the default for the selected network. |
+| `grpc_urls`                    | `[]`      | Explicit multi-URL gRPC fallback list (Rust struct).                                               |
 | `proxy_url`                    | `None`    | Optional proxy URL for HTTP and WebSocket transports.                                              |
-| `max_retries`                  | `3`       | Maximum retry attempts for submit/cancel/modify order operations.                                  |
-| `retry_delay_initial_ms`       | `1,000`   | Initial delay (milliseconds) between retries.                                                      |
-| `retry_delay_max_ms`           | `10,000`  | Maximum delay (milliseconds) between retries.                                                      |
+| `max_retries`                  | `None`    | Maximum retry attempts for submit/cancel/modify order operations (Rust struct).                    |
+| `retry_delay_initial_ms`       | `None`    | Initial delay (milliseconds) between retries (Rust struct).                                        |
+| `retry_delay_max_ms`           | `None`    | Maximum delay (milliseconds) between retries (Rust struct).                                        |
+| `transport_backend`            | default   | Transport backend selection (Rust struct).                                                         |
 | `grpc_rate_limit_per_second`   | `4`       | Maximum gRPC requests per second. Set to `None` to disable.                                        |
+
+NT v2 compatibility note: the v1 data-config `environment`, `bars_timestamp_on_close`, and
+`wallet_address` keys and the v1 exec-config `subaccount`, `environment`, `base_url_http`,
+`base_url_ws`, and `base_url_grpc` keys are migration/reference-only; the pinned surfaces use
+`network`, `subaccount_number`, and `http_endpoint`/`ws_endpoint`/`grpc_endpoint`
+(`crates/adapters/dydx/src/config.rs` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
 
 ### Basic setup
 
@@ -785,7 +798,7 @@ node = (
 ### API credentials
 
 Credentials can be passed directly via the Python config (`wallet_address`, `private_key`) or
-resolved automatically from environment variables based on the configured `environment`.
+resolved automatically from environment variables based on the configured `network`.
 
 #### Environment variables
 
@@ -799,7 +812,7 @@ resolved automatically from environment variables based on the configured `envir
 #### Resolution priority
 
 1. Value passed in the Python config (if non-empty)
-2. Environment variable selected by `environment`
+2. Environment variable selected by `network`
 
 ### Permissioned key trading
 

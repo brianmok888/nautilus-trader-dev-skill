@@ -438,6 +438,13 @@ The likelihood of reconciliation race conditions increases when:
   provides time for WebSocket connections to stabilize before continuous reconciliation begins.
   Reducing this increases the chance of duplicate fills during the startup window.
 
+Since upstream `80938b7723` (at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`), the live
+`ExecutionManager` absorbs the same-fill ordering race engine-side before these thresholds are
+relevant: it queries exact fills before applying terminal mass-status order reports, deduplicates
+fills arriving via both the report and stream channels across ordering races, preserves newer
+cached fills, and defers incomplete snapshots (`crates/live/src/execution/manager.rs`). The
+thresholds above still govern the different-`trade_id` overfill path.
+
 See [Continuous reconciliation](live.md#continuous-reconciliation) for configuration details.
 
 ### System behavior

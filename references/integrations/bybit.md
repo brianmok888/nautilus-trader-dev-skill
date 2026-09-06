@@ -282,6 +282,17 @@ To override, pass `position_idx` via `params`:
 params={"position_idx": 1}  # 0 one-way, 1 long, 2 short
 ```
 
+#### Self-match prevention (SMP)
+
+Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpType`:
+`None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
+is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
+leaving both unset omits the field so the venue default applies
+(`crates/adapters/bybit/src/config.rs` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
+Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
+values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
+(`crates/adapters/bybit/src/common/enums.rs`).
+
 ### Risk events
 
 | Feature                   | Spot | Linear | Inverse | Option | Notes                                     |
@@ -306,6 +317,12 @@ execution ID, symbol, side, quantity, and price. Fills flow through the normal
 execution engine treats them as external and assigns them through the
 instrument's active external order claim, configured initially with
 `external_order_instrument_ids` (or the `EXTERNAL` strategy by default).
+
+Funding settlements use `execType=Funding`, but they are balance adjustments rather than fills.
+The adapter ignores them in historical fill reports and standard private `execution` messages, so
+it emits neither a `FillReport` nor an `OrderFilled` event and does not change local position
+quantity. During reconciliation, funding records do not count toward the requested fill-report
+limit.
 
 Bybit also publishes an ADL ranking on position updates via the
 `adlRankIndicator` field. The range is 0 (flat / no position) to 5 (next to
@@ -588,7 +605,7 @@ channel:
 | Greeks                     | Delta, gamma, vega, theta, plus bid/ask/mark IV.         |
 | Mark price                 | Exchange mark price for each option contract.            |
 | Index price                | Underlying index price.                                  |
-| Underlying (forward) price | Per-expiry forward price, used for ATM determination.    |
+| Underlying reference price | Per-expiry venue reference used for ATM determination (upstream `148e7cf6` replaced the `ForwardPrice` series with an internal reference response). |
 | Open interest              | Per-contract open interest.                              |
 | Order book deltas          | L2 MBP updates from the option orderbook stream.         |
 
@@ -771,47 +788,57 @@ The product types for each client must be specified in the configurations.
 
 | Option                           | Default | Description |
 |----------------------------------|---------|-------------|
+| `product_types`                  | `[LINEAR]` | Sequence of `BybitProductType` values to enable (pinned default: linear only). |
+| `environment`                    | `MAINNET` | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `api_key`                        | `None`  | API key; loaded from the matching environment variable when omitted. |
 | `api_secret`                     | `None`  | API secret; loaded from the matching environment variable when omitted. |
-| `product_types`                  | `None`  | Sequence of `BybitProductType` values to enable; loads all products when `None`. |
-| `environment`                    | `None`  | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `base_url_http`                  | `None`  | Override for the REST base URL. |
+| `base_url_ws_public`             | `None`  | Override for the public WebSocket base URL. |
+| `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
-| `update_instruments_interval_mins` | `60`  | Interval (minutes) between instrument catalogue refreshes. |
+| `http_timeout_secs`              | `60`    | HTTP request timeout (seconds). |
+| `max_retries`                    | `3`     | Maximum retry attempts for REST requests. |
+| `retry_delay_initial_ms`         | `1,000` | Initial retry delay (milliseconds). |
+| `retry_delay_max_ms`             | `10,000` | Maximum retry delay (milliseconds). |
+| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
 | `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `bars_timestamp_on_close`        | `True`  | Timestamp bars on the close (`True`) or open (`False`) of the interval. |
-| `max_retries`                    | `None`  | Maximum retry attempts for REST/WebSocket recovery. |
-| `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
-| `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
+| `update_instruments_interval_mins` | `60`  | Interval (minutes) between instrument catalogue refreshes. |
+| `instrument_status_poll_secs`    | `60`    | Interval (seconds) between instrument and status polls; `0` disables polling (Rust field `instrument_poll_interval_secs`). |
+| `transport_backend`              | `Sockudo` | WebSocket transport backend. |
 
 ### Execution client configuration options
 
 | Option                           | Default | Description |
 |----------------------------------|---------|-------------|
+| `product_types`                  | `[LINEAR]` | Sequence of `BybitProductType` values to enable (Spot cannot be mixed with derivatives for execution). |
+| `environment`                    | `MAINNET` | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `api_key`                        | `None`  | API key; loaded from the matching environment variable when omitted. |
 | `api_secret`                     | `None`  | API secret; loaded from the matching environment variable when omitted. |
-| `product_types`                  | `None`  | Sequence of `BybitProductType` values to enable (Spot cannot be mixed with derivatives for execution). |
-| `environment`                    | `None`  | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `base_url_http`                  | `None`  | Override for the REST base URL. |
 | `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
 | `base_url_ws_trade`              | `None`  | Override for the trade WebSocket base URL. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
-| `use_gtd`                        | `False` | Remap GTD orders to GTC when `True` (Bybit lacks native GTD support). |
-| `use_ws_execution_fast`          | `False` | Subscribe to the low-latency execution stream. |
-| `use_http_batch_api`             | `False` | Use Bybit's HTTP batch trading API (deprecated). |
-| `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions when `True`. |
-| `auto_repay_spot_borrows`        | `True`  | Automatically repay Spot margin borrows after BUY orders fully fill (Spot only). |
-| `repay_queue_interval_secs`      | `1.0`   | Interval (seconds) between processing repayment queues for spot borrows. |
-| `ignore_uncached_instrument_executions`    | `False` | Ignore execution messages for instruments not yet cached. |
-| `max_retries`                    | `None`  | Maximum retry attempts for order submission/cancel/modify calls. |
-| `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
-| `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
-| `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `ws_trade_timeout_secs`          | `5.0`   | Timeout (seconds) waiting for trade WebSocket acknowledgements. |
-| `ws_auth_timeout_secs`           | `5.0`   | Timeout (seconds) waiting for auth WebSocket acknowledgements. |
+| `http_timeout_secs`              | `60`    | HTTP request timeout (seconds). |
+| `max_retries`                    | `3`     | Maximum retry attempts for REST requests. |
+| `retry_delay_initial_ms`         | `1,000` | Initial retry delay (milliseconds). |
+| `retry_delay_max_ms`             | `10,000` | Maximum retry delay (milliseconds). |
+| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
+| `auth_timeout_secs`              | `None`  | Optional WebSocket authentication timeout (seconds). |
+| `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST and trade WebSocket requests. |
+| `account_id`                     | `None`  | Optional account ID associated with this client. |
+| `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions for scoped requests; bulk reports omit Spot (no pair attribution). |
+| `auto_repay_spot_borrows`        | `False` | Automatically repay tracked Spot margin borrows after BUY orders fully fill. |
 | `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings. |
 | `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode. See [Hedge mode](#hedge-mode-bothsides). |
-| `margin_mode`                    | `None`  | Margin mode setting for the account. |
+| `margin_mode`                    | `None`  | Unified margin mode setting for the account. |
+| `smp_type`                       | `None`  | Self-match prevention type (`BybitOrderSmpType`) sent on every submitted order; the per-order `smp_type` parameter overrides it, and both unset omits the field. See [Self-match prevention (SMP)](#self-match-prevention-smp). |
+| `transport_backend`              | `Sockudo` | WebSocket transport backend. |
+
+NT v2 compatibility note: the v1 `bars_timestamp_on_close`, `use_gtd`, `use_ws_execution_fast`,
+`use_http_batch_api`, `repay_queue_interval_secs`, `ignore_uncached_instrument_executions`,
+`ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are
+pinned fields (`crates/adapters/bybit/src/config.rs` at pin
+`6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
 
 Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
 `BybitExecutionClientFactory`. The current Python examples show the complete

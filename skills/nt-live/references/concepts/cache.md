@@ -520,18 +520,29 @@ accounts = self.cache.accounts()  # Retrieve all accounts in the cache
 
 The cache exposes explicit maintenance hooks that remove closed or stale objects while preserving safety checks:
 
-- `purge_closed_orders(ts_now, buffer_secs=0, purge_from_database=False)` drops closed orders that have been inactive for at least `buffer_secs`. Linked contingency orders remain until every dependent child is closed.
-- `purge_closed_positions(ts_now, buffer_secs=0, purge_from_database=False)` removes positions that have stayed closed beyond the buffer window and deletes associated indices.
-- `purge_account_events(ts_now, lookback_secs=0, purge_from_database=False)` trims account event history outside the lookback window and can cascade deletes to the backing database.
+- `purge_closed_orders(ts_now, buffer_secs=0)` drops closed orders that have been inactive for at least `buffer_secs`. Linked contingency orders remain until every dependent child is closed.
+- `purge_closed_positions(ts_now, buffer_secs=0)` removes positions that have stayed closed beyond the buffer window and deletes associated indices.
+- `purge_account_events(ts_now, lookback_secs=0)` trims account event history outside the lookback window.
 
 Key safeguards:
 
 - Open orders and positions are never purged; the cache logs a warning and leaves the item intact.
 - Linked orders keep parents in the cache until all children have closed, preventing premature removal of contingency chains.
 - Indices and reverse lookups are cleaned alongside the primary object to avoid dangling references.
-- Database deletions occur only when `purge_from_database=True` and a cache database is configured, ensuring in-memory purges do not silently erase persisted data.
 
-Use the trading clock (for example, `self.clock.timestamp_ns()`) when supplying `ts_now`. Set `purge_from_database=True` only when you intend to delete persisted records from Redis or PostgreSQL as well. In live trading these methods run automatically when the execution engine is configured with purge intervals; see [Memory management](live.md#memory-management) for the scheduler settings.
+These methods purge in-memory cache state only and take no database argument (pinned `6df23738`,
+`python/nautilus_trader/common/__init__.pyi` lines 288-293; `crates/common/src/cache/mod.rs` lines
+3400/3483/3990). NT v2 compatibility note: the `purge_from_database=True` keyword is v1-Cython
+surface that was removed from the v2 Rust Cache; passing it raises `TypeError`, and deleting
+persisted records is not a per-call option. Database deletion is configured at the engine level via
+`LiveExecutionEngineConfig.purge_from_database` (`crates/live/src/node/config.rs:501`, default
+`False`), which flows into the live execution manager config.
+
+Use the trading clock (for example, `self.clock.timestamp_ns()`) when supplying `ts_now`. In live
+trading these methods run automatically when the execution engine is configured with purge intervals
+(`crates/live/src/execution/manager.rs` `purge_closed_orders`/`purge_closed_positions`/
+`purge_account_events` translate the configured minute intervals into the `ts_now` and seconds
+arguments); see [Memory management](live.md#memory-management) for the scheduler settings.
 
 #### Instruments and currencies
 

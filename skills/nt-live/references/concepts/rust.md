@@ -136,6 +136,15 @@ nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git"
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
+Version-scoped note: upstream commit `09a235060b` ("Trim Cargo dependency features", in the pinned
+history) limits `nautilus-model` test support to test-focused dependency paths across the upstream
+workspace — maintained manifests move `features = ["test-support"]` to `[dev-dependencies]`, and
+`.pre-commit-hooks/check_dependency_features.py` enforces the audited feature policy ("nautilus-model
+test-support must be a dev dependency"; `crates/README.md` describes the feature as enabling model
+test fixtures, builders, specs, and defaults). The dependency blocks above mirror the pinned user
+quickstart, but treat `test-support` as test scope: enable it only where you consume test fixtures
+such as `audusd_sim` (dev/test dependency paths), not on production `[dependencies]`.
+
 Follow the checked-out `rust-toolchain.toml` for the active Rust version.
 Source-aligned work as of 2026-08-22 uses Rust 1.98.0; older 1.97.x
 release/docs references are lag notes unless the checked-out repository pins them.
@@ -145,7 +154,7 @@ release/docs references are lag notes unless the checked-out repository pins the
 | Flag             | Crate               | Effect                                                        |
 |------------------|---------------------|---------------------------------------------------------------|
 | `high-precision` | `nautilus-model`    | 16-digit fixed precision (default is 9). Required for crypto. |
-| `test-support`   | `nautilus-model`    | Test instrument stubs (`audusd_sim`, etc.).                   |
+| `test-support`   | `nautilus-model`    | Test fixtures, builders, specs, and defaults (`audusd_sim`, etc.). Test scope only; see the version-scoped note above. |
 | `examples`       | `nautilus-trading`  | Example strategies (`EmaCross`, `GridMarketMaker`).           |
 | `streaming`      | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode`.              |
 | `defi`           | `nautilus-model`    | DeFi data types. Implies `high-precision`.                    |
@@ -255,7 +264,7 @@ full walkthrough.
 `LiveNode` exposes first-class registration for Python components: constructed
 instances via `node.add_actor(actor)` / `node.add_strategy(strategy)`, and
 config-driven construction via `node.add_actor_from_config(config)` /
-`node.add_strategy_from_config(config)` (pinned `ac22d5cf4`,
+`node.add_strategy_from_config(config)` (pinned `6df23738`,
 `python/nautilus_trader/live/__init__.pyi`). Instance registration requires the
 node to be idle: actors and strategies are added before running the node, and
 registration preserves config-created component IDs while rejecting duplicates.
@@ -265,6 +274,12 @@ node.add_actor(actor)                 # constructed Python actor instance
 node.add_actor_from_config(config)    # ImportableActorConfig-driven
 node.add_strategy_from_config(config) # ImportableStrategyConfig-driven
 ```
+
+Importable config dicts accept a plain string `strategy_id` (or `actor_id`): the value is converted
+to a typed ID at the config construction boundary (`config_value_to_py` in
+`crates/live/src/python/node.rs`, pinned `6df23738`), and a config attribute that cannot be set on
+the constructed object raises `RuntimeError` instead of logging a warning and leaving the attribute
+unset (upstream commit `62b5057927`).
 
 #### Bundled examples from Python
 

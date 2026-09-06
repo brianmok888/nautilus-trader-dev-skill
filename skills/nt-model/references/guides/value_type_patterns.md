@@ -364,6 +364,27 @@ d = AccountBalance.to_dict(balance)
 restored = AccountBalance.from_dict(d)
 ```
 
+## Instrument Properties
+
+Instruments expose their specifications through the same value types, keeping precision
+handling uniform across the model (pinned
+`python/nautilus_trader/model/instruments/__init__.pyi`):
+
+- Precision and increments: `price_precision` / `size_precision` (`int`) with the
+  matching `price_increment` (`Price`) and `size_increment` (`Quantity`).
+- Sizing: `multiplier` and `lot_size` (`Quantity`); optional exchange limits
+  `max_quantity` / `min_quantity` (`Quantity | None`), `max_notional` /
+  `min_notional` (`Money | None`), and `max_price` / `min_price` (`Price | None`).
+- Margins and fees: `margin_init`, `margin_maint`, `maker_fee`, `taker_fee` -- all
+  `decimal.Decimal` values crossed from `rust_decimal` on the Rust side.
+- Dated instruments (e.g. `FuturesContract`, `OptionContract`, `CryptoOption`)
+  expose activation and expiry twice: `activation_utc` / `expiration_utc` as
+  `datetime.datetime` properties for display, and `activation_ns` /
+  `expiration_ns` as raw Unix-nanosecond `int` properties; constructors take the
+  `*_ns` values.
+- Optional fields stay `None`-able: `isin` (`str | None`), `tick_scheme`
+  (`str | None`); the raw exchange definition is available as the `info` dict.
+
 ## Rust to Python Conversion Patterns
 
 ### Raw reconstruction: from_raw

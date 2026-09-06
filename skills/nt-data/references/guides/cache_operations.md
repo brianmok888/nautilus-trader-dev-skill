@@ -64,6 +64,21 @@ synthetic = self.cache.synthetic(instrument_id)
 synthetic_ids = self.cache.synthetic_ids()
 ```
 
+### Instrument closes
+
+The cache keeps the latest `InstrumentClose` per instrument (upstream commit `9d45d410db`, pinned
+`6df23738`):
+
+```python
+self.cache.add_instrument_close(close)          # store the latest close (last write wins)
+close = self.cache.instrument_close(instrument_id)  # InstrumentClose | None
+has = self.cache.has_instrument_close(instrument_id) # bool
+```
+
+Rust additionally exposes `cache.instrument_close_ids()` for all instruments with a cached close
+(`crates/common/src/cache/mod.rs`). Closes are purged with the cached instrument state
+(`purge_instrument` removes the close alongside the instrument).
+
 ---
 
 ## Market Data Queries
@@ -266,6 +281,13 @@ crate (Rust: `crates/infrastructure/src/{redis,sql}`) and exposed to Python thro
 
 Whether market data is written through to the backing store is controlled by
 `CacheConfig.save_market_data`; account events by `CacheConfig.persist_account_events`.
+
+Instrument closes are durable at the pin: `add_instrument_close` queues the last-write-wins
+snapshot for persistence before the in-memory value is updated (a later database error is logged
+and does not roll back the cached value). Redis backs closes in
+`crates/infrastructure/src/redis/cache.rs` with `load_instrument_closes` restore (malformed close
+data fails the load so recovery cannot silently omit a close); PostgreSQL upserts into the
+`instrument_close` table (`crates/infrastructure/src/sql/queries.rs`).
 
 ---
 

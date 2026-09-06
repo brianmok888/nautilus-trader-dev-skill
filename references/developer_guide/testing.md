@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/testing.md
-source_commit: ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d
-sync_date: 2026-09-05
+source_commit: 6df237382eb1d8411906f9b1790fa06f8ba7aad4
+sync_date: 2026-09-06
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
