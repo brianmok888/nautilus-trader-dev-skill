@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-mandatory-validation",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "see output_excerpt (fresh verifier reruns from the committed mission branch)",
+  "exit_code": 0,
+  "output_sha256": "4dbf8d1035bb327a6643463e0766d5f3a6bd1457dcae19ac20f4d87f4f0d1876",
+  "output_excerpt": "Fresh phase-3 verifier run on committed HEAD 926b42e: python3 -m pytest -q -> 452 passed, 7 skipped (gated v1 modules carry explicit migration-reference reasons); check_dev_guide_sync passed; check_dev_guide_snapshot_sync bodies match pinned upstream; check_rust_trading_reference_sync match; check_legacy_labelling passed; check_upstream_freshness manifest_reviewed true; check_skill_g2_harnesses --check-cards RC 0; --check-card-declarations RC 0; check_governance_receipts validated 284; git diff --check clean. All RC=0.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T04:58:11Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-manual-exercises",
+  "finding_id": "NT-2026-09-05-145",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "see output_excerpt (fresh verifier reruns from the committed mission branch)",
+  "exit_code": 0,
+  "output_sha256": "c3db906aa5aec686ca3783c51682dcd6d13cc62b326e6dca68f56c65f144e3d9",
+  "output_excerpt": "Real-surface exercises against the pinned venv (python/.venv at ac22d5cf4): dex suite 8 passed 5 skipped; strategy-builder suite 16 passed 2 skipped. Symbol spot-checks: official_adapter_spec retry_manager invocation API matches crates/network/src/retry.rs at the pin; backtesting.md margin_model=StandardMarginModel() x5 matches pinned config surface; g2-evidence/nt-trading.json upstream_commit=ac22d5cf4 status=pass.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T04:58:11Z"
+}

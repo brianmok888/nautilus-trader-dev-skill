@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-p3-remediation",
+  "finding_id": "NT-2026-09-05-101",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_findings_schema.py && python3 tools/check_dev_guide_sync.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "64e1cecd920318c32746ac7b58d4e032fe2dbfe37030761b9afb2ab42cb556f7",
+  "output_excerpt": "Phase-3 review rejected the gate with 5 deficiencies; all verified by the mission lead and remediated in the phase-2 return pass: NT-101 nt-signals api/analysis.md statistic automodule mirrored from the pin; NT-108 cache.md Redis example rewritten to CacheConfig+RedisCacheConfig+CacheDatabaseFactory (pinned configure_live_trading.md) and param table extended (config.rs:70,73); NT-155 ruff location corrected to python/pyproject.toml; NT-110 kwarg corrected to fs_rust_storage_options (pyi:65); 157 stale closure-proof counts rewritten to the measured 452 passed / 7 skipped. Evidence regenerated for affected skills.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T05:23:24Z"
+}

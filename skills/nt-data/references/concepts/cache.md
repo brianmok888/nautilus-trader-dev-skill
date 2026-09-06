@@ -142,17 +142,32 @@ When is it useful to use persistence?
 - **Historical insights**: When you need to preserve past trading data for detailed post-analysis or audits.
 - **Multi-node or distributed setups**: If multiple services or nodes need to access the same state, a persistent store helps ensure shared and consistent data.
 
-```python
-from nautilus_trader.config import DatabaseConfig
+NT v2 compatibility note: the legacy: v1 `CacheConfig(database=DatabaseConfig(...))`
+pattern (quoted in older material as migration/reference-only) does not exist at the
+pinned baseline - `CacheConfig` has no `database` parameter. Rust-native systems keep
+cache behavior in `CacheConfig` and Redis connection settings in `RedisCacheConfig`,
+then attach the database adapter before node start (pinned
+`docs/how_to/configure_live_trading.md` "Cache database configuration"):
 
-config = CacheConfig(
-    database=DatabaseConfig(
-        type="redis",  # Database type
-        host="localhost",  # Database host
-        port=6379,  # Database port
-        timeout=2,  # Connection timeout (seconds)
-    ),
-)
+```rust
+use nautilus_common::cache::{CacheConfig, database::CacheDatabaseFactory};
+use nautilus_infrastructure::redis::cache::RedisCacheConfig;
+
+let config = CacheConfig {
+    encoding: SerializationEncoding::MsgPack,
+    buffer_interval_ms: Some(100),
+    ..Default::default()
+};
+
+let database = RedisCacheConfig {
+    host: Some("localhost".to_string()),
+    port: Some(6379),
+    connection_timeout: 2,
+    response_timeout: 2,
+    ..Default::default()
+};
+
+let cache_database = database.create(trader_id, instance_id, config.clone()).await?;
 ```
 
 ## Using the cache

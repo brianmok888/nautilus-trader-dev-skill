@@ -1054,7 +1054,7 @@ Catalogs defined this way can also be used for requesting historical data.
 
 - `fs_protocol`: Filesystem protocol ('file', 's3', 'gcs', 'azure', etc.).
 - `name`: Optional name identifier for the catalog configuration.
-- `fs_rust_storage_option_keys`: Keys for Rust-side protocol-specific storage options (pinned `persistence/__init__.pyi:63`); pass values through the Rust storage-options map, not a dict parameter.
+- `fs_rust_storage_options`: Rust-side protocol-specific storage options passed as a mapping (pinned `persistence/__init__.pyi:65`; the read-only `fs_rust_storage_option_keys` property exposes the configured keys).
 
 #### Basic usage examples
 

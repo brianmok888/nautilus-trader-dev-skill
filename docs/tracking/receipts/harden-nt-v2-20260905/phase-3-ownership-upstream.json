@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-3-ownership-upstream",
+  "finding_id": "NT-2026-09-05-029",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "see output_excerpt (fresh verifier reruns from the committed mission branch)",
+  "exit_code": 0,
+  "output_sha256": "cf4bd76643de7dfa85248346bbc8cc4e3800c1979d1db0b54eb1ecaae6633ad7",
+  "output_excerpt": "Changed-path ownership audit on 6da550c..926b42e: 205 paths, all under skills/, references/, tools/, tests/, docs/tracking/, docs/end_to_end_guide.md; zero out-of-scope paths, zero other-mission receipts, zero docs/specs changes. Upstream cache: HEAD ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d, git status clean (read-only preserved). Primary repo: main = origin/main = 6da550c (untouched by the mission).",
+  "redactions": [],
+  "recorded_at": "2026-09-06T04:58:11Z"
+}

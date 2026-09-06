@@ -107,7 +107,7 @@ def test_sma_with_single_input_returns_expected_value(self):
 
 ### Ruff
 
-[ruff](https://astral.sh/ruff) is used to lint the codebase. Ruff rules can be found in the top-level `pyproject.toml`, with ignore justifications typically commented.
+[ruff](https://astral.sh/ruff) is used to lint the codebase. Ruff rules live in `python/pyproject.toml` (pinned baseline; there is no repository-root `pyproject.toml`), with ignore justifications typically commented.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
