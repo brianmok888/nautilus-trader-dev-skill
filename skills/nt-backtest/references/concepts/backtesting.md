@@ -157,6 +157,7 @@ replay-key heap (`BacktestDataIterator`) without a cumulative re-sort. legacy:
 the pre-cut-over cumulative 1M/2M/.../10M re-sort narrative below this box in
 older material is migration/reference-only and does not describe the pinned
 engine.
+:::
 
 ### Data loading contract
 
