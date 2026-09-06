@@ -15,6 +15,7 @@
 # -------------------------------------------------------------------------------------------------
 
 
+from nautilus_trader.analysis import PortfolioStatistic
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.model.data import Bar
 from nautilus_trader.model.data import BarType
@@ -29,6 +30,13 @@ from nautilus_trader.trading.strategy import Strategy
 class DemoStrategyConfig(StrategyConfig, frozen=True):
     bar_type: BarType
     instrument: Instrument
+
+
+class TradeCount(PortfolioStatistic):
+    """User-defined portfolio statistic (drift-window `Portfolio.register_statistic`)."""
+
+    def calculate_from_realized_pnls(self, realized_pnls: list[float]) -> float | None:
+        return float(len(realized_pnls))
 
 
 class DemoStrategy(Strategy):
@@ -46,6 +54,10 @@ class DemoStrategy(Strategy):
         """
         Handle strategy start event.
         """
+        # Register a user-defined portfolio statistic (drift-window feature);
+        # register before the run so every statistics query sees it.
+        self.portfolio.register_statistic(TradeCount())
+
         # Subscribe to market data
         self.subscribe_bars(self.config.bar_type)
 
@@ -115,7 +127,9 @@ class DemoStrategy(Strategy):
 
         # POSITION information
         self.log.info("Portfolio -> Position information:", color=LogColor.BLUE)
-        is_flat = self.portfolio.is_flat(self.config.instrument.id)
+        # v1 `is_flat(instrument_id)` is gone at the pin; `is_net_flat` is the
+        # flat-surface equivalent.
+        is_flat = self.portfolio.is_net_flat(self.config.instrument.id)
         self.log.info(f"Is flat: {is_flat}", color=LogColor.BLUE)
 
         net_position = self.portfolio.net_position(self.config.instrument.id)
@@ -138,10 +152,12 @@ class DemoStrategy(Strategy):
         # -----------------------------------------------------
 
         self.log.info("Portfolio -> Account information:", color=LogColor.CYAN)
-        margins_init = self.portfolio.margins_init(self.config.instrument.venue)
+        # v1 `margins_init(venue)`/`margins_maint(venue)` are gone at the pin;
+        # the flat surface exposes `instrument_initial_margins`/`instrument_maintenance_margins`.
+        margins_init = self.portfolio.instrument_initial_margins(self.config.instrument.venue)
         self.log.info(f"Initial margin: {margins_init}", color=LogColor.CYAN)
 
-        margins_maint = self.portfolio.margins_maint(self.config.instrument.venue)
+        margins_maint = self.portfolio.instrument_maintenance_margins(self.config.instrument.venue)
         self.log.info(f"Maintenance margin: {margins_maint}", color=LogColor.CYAN)
 
         balances_locked = self.portfolio.balances_locked(self.config.instrument.venue)

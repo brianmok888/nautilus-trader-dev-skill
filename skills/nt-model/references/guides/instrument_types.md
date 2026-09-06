@@ -82,6 +82,9 @@ parameters and/or read-only properties:
 - `type_name` -- class name string for the instrument type
 - `instrument_id` -- the `InstrumentId`; use `instrument_id.symbol` and
   `instrument_id.venue` for the symbol and venue portions
+- `symbol` / `venue` -- direct getters for the symbol and venue of the
+  instrument's `InstrumentId` (drift-window addition; see
+  `python/nautilus_trader/model/__init__.pyi` instrument classes at the pin)
 - `make_price(value)` -- round a value to the instrument's price precision
 - `make_qty(value, round_down=False)` -- round a value to the instrument's size precision
 - `notional_value(quantity, price, use_quote_for_inverse=False)` -- calculate notional value
@@ -135,7 +138,7 @@ Fixed: `is_inverse=False`, `multiplier=1`, `margin_init=0`, `margin_maint=0`
 
 Additional required: `asset_class`, `currency`, `price_increment`, `multiplier`, `lot_size`, `underlying` (str), `activation_ns`, `expiration_ns`
 Additional optional: `exchange` (MIC code)
-Properties: `activation_ns`, `expiration_ns` (UNIX nanoseconds)
+Properties: `activation_ns`, `expiration_ns` (UNIX nanoseconds), plus drift-window `activation_utc` / `expiration_utc` (`datetime`, UTC)
 Fixed: `size_precision=0`, `size_increment=1`, `is_inverse=False`
 
 ### FuturesSpread
@@ -355,6 +358,9 @@ The Rust side also defines:
 ## Expiring Instruments
 
 Instrument classes that expire carry `activation_ns` and `expiration_ns`
-(Unix-nanosecond) fields on the flat `nautilus_trader.model` classes. The Rust
+(Unix-nanosecond) fields on the flat `nautilus_trader.model` classes, and expose
+drift-window `activation_utc` / `expiration_utc` properties returning UTC
+`datetime` objects (`crates/model/src/python/instruments/mod.rs`
+`impl_instrument_utc_getters` at the pin). The Rust
 side models expiry through the instrument definitions in `crates/model/src/instruments/`;
 no Python-side instrument-class set constants are exported at the pinned baseline.

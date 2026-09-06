@@ -17,6 +17,29 @@ The strategy shows portfolio information at four key points:
 To simulate these specific portfolio states, the strategy fires bracket order (a combination of an entry order
 with associated take-profit and stop-loss orders), allowing us to demonstrate the complete lifecycle of portfolio states.
 
+## User-defined portfolio statistics
+
+Drift-window addition (upstream commit `7e8c9c9cd`): `Portfolio.register_statistic()` accepts a
+user-defined statistic built on the `PortfolioStatistic` base class
+(`python/nautilus_trader/analysis/statistic.py` at the pin). This example registers one in the
+strategy's `on_start()` so it reaches backtest results and post-run logs for the whole run:
+
+```python
+from nautilus_trader.analysis import PortfolioStatistic
+
+class TradeCount(PortfolioStatistic):
+    def calculate_from_realized_pnls(self, realized_pnls: list[float]) -> float | None:
+        return float(len(realized_pnls))
+
+# In DemoStrategy.on_start():
+self.portfolio.register_statistic(TradeCount())
+```
+
+The statistic name defaults to the class name split on word boundaries (`TradeCount` registers as
+"Trade Count"); override the `name` property to choose it directly. A registration whose name
+matches an existing statistic replaces it, and `Portfolio.deregister_statistic()` removes one by
+name.
+
 ## Additional info
 
 Key differences between `Portfolio` and `Cache`:

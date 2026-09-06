@@ -10,11 +10,14 @@ orders separately, enabling filtered views that show true available liquidity.
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 :::note
-This guide documents the Rust API. These types are also available from Python via
-PyO3 bindings (`nautilus_pyo3.OrderBook`, `nautilus_pyo3.OwnOrderBook`). The legacy
-Cython `OrderBook` (`nautilus_trader.model.book.OrderBook`) returned by
-`cache.order_book()` has a similar but not identical interface. Refer to the
-API reference for differences.
+This guide documents the Rust API. These types are also available from Python on the
+flat PyO3 surface: `from nautilus_trader.model import OrderBook, OwnOrderBook`
+(`cache.order_book()` returns that same `nautilus_trader.model.OrderBook`). The
+drift-window Python order book compatibility work added `OrderBook.to_deltas(ts_event,
+ts_init)` snapshot export, `get_all_crossed_levels(...)`, full pickle/deep-copy support,
+rich `BookLevel` comparisons, `OrderBookDelta.is_add` / `is_update` / `is_delete` /
+`is_clear` action inspection, and `OrderBookDeltas.is_snapshot` (upstream commits
+`a5dfd991b`, `741b61d6d`). Refer to the API reference for the full surface.
 :::
 
 ## Book types

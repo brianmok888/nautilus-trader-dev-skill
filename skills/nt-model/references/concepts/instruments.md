@@ -40,30 +40,21 @@ An incorrectly specified instrument may truncate data or otherwise produce surpr
 Generic test instruments can be instantiated through the `TestInstrumentProvider`:
 
 ```python
-from nautilus_trader.test_kit.providers import TestInstrumentProvider
+from nautilus_trader.testkit.providers import TestInstrumentProvider
 
 audusd = TestInstrumentProvider.default_fx_ccy("AUD/USD")
 ```
 
-Exchange specific instruments can be discovered from live exchange data using an adapters `InstrumentProvider`:
-
-```python
-from nautilus_trader.adapters.binance.spot.providers import (
-    BinanceSpotInstrumentProvider,
-)
-from nautilus_trader.model import InstrumentId
-
-provider = BinanceSpotInstrumentProvider(client=binance_http_client)
-await provider.load_all_async()
-
-btcusdt = InstrumentId.from_str("BTCUSDT.BINANCE")
-instrument = provider.find(btcusdt)
-```
+Live integration adapters expose `InstrumentProvider` objects that cache the latest
+instrument definitions for the exchange automatically (Rust adapters at the pin do this
+without a user-facing Python provider class; configure loading via
+`InstrumentProviderConfig(load_all=True)` or `load_ids` where the integration supports it).
+Order submission requires the matching instrument definition to exist in the central cache.
 
 Or flexibly defined by the user through an `Instrument` constructor, or one of its more specific subclasses:
 
 ```python
-from nautilus_trader.model.instruments import Instrument
+from nautilus_trader.model import Instrument
 
 instrument = Instrument(...)  # <-- provide all necessary parameters
 ```
@@ -108,7 +99,7 @@ be passed to the actors/strategies `on_instrument()` method. A user can override
 to take upon receiving an instrument update:
 
 ```python
-from nautilus_trader.model.instruments import Instrument
+from nautilus_trader.model import Instrument
 
 
 def on_instrument(self, instrument: Instrument) -> None:
@@ -325,72 +316,67 @@ NautilusTrader supports multiple commission models to accommodate diverse fee st
 
 ### Built-in fee models
 
-The framework provides two built-in fee model implementations:
+The framework provides several built-in fee model implementations, importable from
+`nautilus_trader.execution` at the pinned tree:
 
 1. `MakerTakerFeeModel`: Implements the maker/taker fee structure common in cryptocurrency exchanges, where fees are
     calculated as a percentage of the trade value.
 2. `FixedFeeModel`: Applies a fixed commission per trade, regardless of the trade size.
+3. `PerContractFeeModel`: Charges a fixed commission per contract traded (taking leg ratios of
+    generic spread instruments into account).
 
 ### Creating custom fee models
 
 While the built-in fee models cover common scenarios, you might encounter situations requiring specific commission structures.
 NautilusTrader's flexible architecture allows you to implement custom fee models by inheriting from the base `FeeModel` class.
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
+For example, if you're trading futures on exchanges that charge per-contract commissions (like CME) and the built-in
+`PerContractFeeModel` does not fit, you can implement your own model. The Python `FeeModel` base class exposes two methods:
 
-For example, if you're trading futures on exchanges that charge per-contract commissions (like CME), you can implement
-a custom fee model. When creating custom fee models, we inherit from the `FeeModel` base class, which is implemented
-in Cython for performance reasons. This Cython implementation is reflected in the parameter naming convention,
-where type information is incorporated into parameter names using underscores (like `Order_order` or `Quantity_fill_qty`).
+- `get_commission(order, fill_quantity, fill_px, instrument)` returning the commission `Money` for a fill.
+- `get_commission_with_context(order, fill_quantity, fill_px, instrument, underlying_px=None)`, which additionally
+  receives the underlying price for derivatives fills.
 
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-While these parameter names might look unusual to Python developers, they're a result of Cython's type system and help
-maintain consistency with the framework's core components. Here's how you could create a per-contract commission model:
+Here's how you could create a custom per-contract commission model:
 
 ```python
-class PerContractFeeModel(FeeModel):
+from nautilus_trader.execution import FeeModel
+from nautilus_trader.model import Currency, Money, Price, Quantity
+
+
+class MyPerContractFeeModel(FeeModel):
     def __init__(self, commission: Money):
         super().__init__()
         self.commission = commission
 
     def get_commission(
-        self, Order_order, Quantity_fill_qty, Price_fill_px, Instrument_instrument
-    ):
+        self,
+        _order,
+        fill_quantity: Quantity,
+        _fill_px: Price,
+        _instrument,
+    ) -> Money:
         total_commission = Money(
-            self.commission * Quantity_fill_qty, self.commission.currency
+            self.commission * fill_quantity, self.commission.currency
         )
         return total_commission
 ```
 
 This custom implementation calculates the total commission by multiplying a `fixed per-contract fee` by the `number
 of contracts` traded. The `get_commission(...)` method receives information about the order, fill quantity, fill price
-and instrument, allowing for flexible commission calculations based on these parameters.
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-Our new class `PerContractFeeModel` inherits class `FeeModel`, which is implemented in Cython,
-so notice the Cython-style parameter names in the method signature:
-
-- `Order_order`: The order object, with type prefix `Order_`.
-- `Quantity_fill_qty`: The fill quantity, with type prefix `Quantity_`.
-- `Price_fill_px`: The fill price, with type prefix `Price_`.
-- `Instrument_instrument`: The instrument object, with type prefix `Instrument_`.
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-These parameter names follow NautilusTrader's Cython naming conventions, where the prefix indicates the expected type.
-While this might seem verbose compared to typical Python naming conventions, it ensures type safety and consistency
-with the framework's Cython codebase.
+and instrument, allowing for flexible commission calculations based on these parameters; override
+`get_commission_with_context(...)` instead when the calculation needs the underlying price of a derivatives instrument.
 
 ### Using fee models in practice
 
 To use any fee model in your trading system, whether built-in or custom, you specify it when setting up the venue.
-Here's an example using the custom per-contract fee model:
+Here's an example using the built-in per-contract fee model:
 
 ```python
-from nautilus_trader.model.currencies import USD
-from nautilus_trader.model.objects import Money, Currency
+from nautilus_trader.execution import PerContractFeeModel
+from nautilus_trader.model import Currency, Money
+
+USD = Currency.from_str("USD")
 
 engine.add_venue(
     venue=venue,
@@ -456,7 +442,7 @@ Ethereum spot prices on Binance. For this example, it is assumed that spot instr
 `BTCUSDT.BINANCE` and `ETHUSDT.BINANCE` are already present in the cache.
 
 ```python
-from nautilus_trader.model.instruments import SyntheticInstrument
+from nautilus_trader.model import SyntheticInstrument
 
 btcusdt_binance_id = InstrumentId.from_str("BTCUSDT.BINANCE")
 ethusdt_binance_id = InstrumentId.from_str("ETHUSDT.BINANCE")

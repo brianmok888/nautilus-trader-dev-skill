@@ -91,7 +91,7 @@ and lay increases. Source: upstream develop commit
 
 NautilusTrader **domain model** — instruments, identifiers, value types, enums, and currencies.
 
-**Python modules**: `model/identifiers`, `model/instruments/`, `model/types/`, `model/objects`, `model/enums`, `model/tick_scheme/`
+**Python modules**: `nautilus_trader.model` (flat PyO3 re-export) and `nautilus_trader.testkit`
 **Rust crates**: `nautilus_model` (identifiers, instruments, types, enums)
 
 ## When To Use

@@ -64,7 +64,7 @@ data for multiple instruments.
 **Strategy 1: Defer sorting until the end (recommended for multiple instruments)**
 
 ```python
-from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.backtest import BacktestEngine
 
 engine = BacktestEngine()
 
@@ -100,31 +100,13 @@ all_bars.extend(instrument3_bars)
 engine.add_data(all_bars, sort=True)
 ```
 
-**Strategy 3: Use streaming API for very large datasets**
+**Strategy 3: Use streaming for very large datasets**
 
-For datasets that don't fit in memory, there are two streaming approaches:
+For datasets that don't fit in memory, there are two streaming options:
 
-**Automatic chunking** - supply a generator that yields batches. The engine pulls chunks
-lazily during a single `run()` call:
-
-```python
-def data_generator():
-    # Yield chunks of data (each chunk is a list of Data objects)
-    yield load_chunk_1()
-    yield load_chunk_2()
-    yield load_chunk_3()
-
-
-engine.add_data_iterator(
-    data_name="my_data_stream",
-    generator=data_generator(),
-)
-
-engine.run()  # Chunks are consumed on-demand
-```
-
-**Manual chunking** - load and run each batch yourself. This is the pattern
-used internally by `BacktestNode` and gives full control over batch boundaries:
+**Manual chunking (low-level)** - load and run each batch yourself. This is the pattern
+used internally by `BacktestNode` and gives full control over batch boundaries. The
+low-level API does not expose a generator-based `add_data_iterator()` method:
 
 ```python
 engine.add_strategy(strategy)
@@ -142,6 +124,10 @@ In streaming mode, timer advancement stops when data exhausts for each batch. Ti
 past the last data point (e.g. bar aggregation intervals) are deferred until more data arrives
 or `end()` is called, which flushes up to the `end` boundary from the last `run()` call.
 :::
+
+`run(streaming=True)` pauses when the current data is exhausted; it does not finalize the
+trader or advance timers beyond that batch. `BacktestNode` provides automatic catalog
+chunking for the high-level path (see the High-level API section).
 
 :::tip[Performance impact]
 For a backtest with 10 instruments, each with 1M bars:
@@ -220,7 +206,7 @@ There are two main approaches for running multiple backtests:
 The high-level API is designed for multiple backtest runs with different configurations:
 
 ```python
-from nautilus_trader.backtest.node import BacktestNode
+from nautilus_trader.backtest import BacktestNode
 from nautilus_trader.config import BacktestRunConfig
 
 # Define multiple run configurations
@@ -242,7 +228,7 @@ Each run gets a fresh engine with clean state - no reset() needed.
 For fine-grained control with the low-level API:
 
 ```python
-from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.backtest import BacktestEngine
 
 engine = BacktestEngine()
 
@@ -549,7 +535,7 @@ protection mechanisms for market and stop-market orders.
 **Configuration:**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
+from nautilus_trader.backtest import BacktestVenueConfig
 
 venue_config = BacktestVenueConfig(
     name="BINANCE",
@@ -670,7 +656,7 @@ configuration option.
 **Configuration:**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
+from nautilus_trader.backtest import BacktestVenueConfig
 
 venue_config = BacktestVenueConfig(
     name="SIM",
@@ -894,7 +880,7 @@ orders are "ahead" of your order at a given price level.
 **Configuration:**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
+from nautilus_trader.backtest import BacktestVenueConfig
 
 venue_config = BacktestVenueConfig(
     name="SIM",
@@ -1068,8 +1054,8 @@ Nautilus supports two modes of bar processing:
 Here's how to configure adaptive bar ordering for a venue, including account setup:
 
 ```python
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.model.enums import OmsType, AccountType
+from nautilus_trader.backtest import BacktestEngine
+from nautilus_trader.model import OmsType, AccountType
 from nautilus_trader.model import Money, Currency
 
 # Initialize the backtest engine
@@ -1095,7 +1081,7 @@ Configure `time_bars_build_delay` in `DataEngineConfig` to delay bar close timer
 
 ```python
 from nautilus_trader.config import BacktestEngineConfig
-from nautilus_trader.data.config import DataEngineConfig
+from nautilus_trader.data import DataEngineConfig
 
 config = BacktestEngineConfig(
     data_engine=DataEngineConfig(
@@ -1116,14 +1102,7 @@ Only affects internally aggregated bars (`AggregationSource.INTERNAL`).
 ### Timer-only backtests
 
 The backtest engine supports running with timers but no market data. This is useful for scheduled
-operations or testing timer-based logic. Timers fire in chronological order, and timer callbacks
-can dynamically add data via `add_data_iterator()` which will be processed in sequence.
-
-:::warning
-Data added by timer callbacks at the exact start time should have timestamps **after** the start time.
-The engine reads the first data point before processing start-time timers, so dynamically added data
-with timestamps at or before the start time may not be processed in the expected order.
-:::
+operations or testing timer-based logic. Timers fire in chronological order.
 
 ### Fill models
 
@@ -1153,25 +1132,25 @@ for more sophisticated liquidity modeling.
 
 #### Configuring fill models
 
-**Using the base FillModel with probabilistic parameters:**
+Pass a built-in model instance directly to `BacktestVenueConfig`. The current high-level
+venue configuration accepts built-in fill models; it does not load fill models from
+import-path configuration objects (the v1 `ImportableFillModelConfig` mechanism is gone).
+
+**Using a built-in probabilistic model:**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
-from nautilus_trader.backtest.config import ImportableFillModelConfig
+from nautilus_trader.backtest import BacktestVenueConfig
+from nautilus_trader.execution import DefaultFillModel
 
 venue_config = BacktestVenueConfig(
     name="SIM",
     oms_type="NETTING",
     account_type="CASH",
     starting_balances=["100_000 USD"],
-    fill_model=ImportableFillModelConfig(
-        fill_model_path="nautilus_trader.backtest.models:FillModel",
-        config_path="nautilus_trader.backtest.config:FillModelConfig",
-        config={
-            "prob_fill_on_limit": 0.2,  # Chance a limit order fills when price matches
-            "prob_slippage": 0.5,  # Chance of 1-tick slippage (L1 data only)
-            "random_seed": 42,  # Optional: Set for reproducible results
-        },
+    fill_model=DefaultFillModel(
+        prob_fill_on_limit=0.2,  # Chance a limit order fills when price matches
+        prob_slippage=0.5,  # Chance of 1-tick slippage (L1 data only)
+        random_seed=42,  # Optional: Set for reproducible results
     ),
 )
 ```
@@ -1179,21 +1158,29 @@ venue_config = BacktestVenueConfig(
 **Using an order book simulation model:**
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
-from nautilus_trader.backtest.config import ImportableFillModelConfig
+from nautilus_trader.backtest import BacktestVenueConfig
+from nautilus_trader.execution import ThreeTierFillModel
 
 venue_config = BacktestVenueConfig(
     name="SIM",
     oms_type="NETTING",
     account_type="CASH",
     starting_balances=["100_000 USD"],
-    fill_model=ImportableFillModelConfig(
-        fill_model_path="nautilus_trader.backtest.models:ThreeTierFillModel",
+    fill_model=ThreeTierFillModel(
+        prob_fill_on_limit=1.0,
+        prob_slippage=0.0,
+        random_seed=42,
     ),
 )
 ```
 
-#### Probabilistic parameters (base FillModel)
+Custom fill objects are still accepted by the low-level `BacktestEngine.add_venue()`: any object
+implementing `is_limit_filled()` and `is_slipped()` (optionally `fill_limit_inside_spread()` and
+`get_orderbook_for_fill_simulation(instrument, order, best_bid, best_ask)`) can be passed as
+`fill_model=`; subclassing `nautilus_trader.execution.FillModel` supplies default implementations
+of these methods.
+
+#### Probabilistic parameters (built-in probabilistic models)
 
 **prob_fill_on_limit** (default: `1.0`)
 
@@ -1241,10 +1228,10 @@ A 100-contract market order would fill partially at each level, experiencing rea
 **Creating custom fill models:**
 
 ```python
-from nautilus_trader.backtest.models import FillModel
-from nautilus_trader.model.book import OrderBook, BookOrder
-from nautilus_trader.model.enums import OrderSide
-from nautilus_trader.core.rust.model import BookType
+from nautilus_trader.execution import FillModel
+from nautilus_trader.model import OrderBook, BookOrder
+from nautilus_trader.model import OrderSide
+from nautilus_trader.model import BookType
 
 
 class MyCustomFillModel(FillModel):
@@ -1327,10 +1314,11 @@ Example of adding a `CASH` account for a backtest venue:
 
 ```python
 from nautilus_trader.adapters.binance import BINANCE_VENUE
-from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.model.currencies import USDT
-from nautilus_trader.model.enums import OmsType, AccountType
+from nautilus_trader.backtest import BacktestEngine
+from nautilus_trader.model import OmsType, AccountType
 from nautilus_trader.model import Money, Currency
+
+USDT = Currency.from_str("USDT")
 
 # Initialize the backtest engine
 engine = BacktestEngine()
@@ -1426,51 +1414,54 @@ margin = adjusted_notional * instrument.margin_init
 
 ### Usage
 
-#### Programmatic configuration
+#### Low-level engine configuration
+
+Pass the model instance to `BacktestEngine.add_venue()`. Both classes are importable from the
+flat `nautilus_trader.model` surface and take no constructor arguments:
 
 ```python
-from nautilus_trader.backtest.models import LeveragedMarginModel
-from nautilus_trader.backtest.models import StandardMarginModel
-from nautilus_trader.test_kit.stubs.execution import TestExecStubs
+from nautilus_trader.backtest import BacktestEngine
+from nautilus_trader.model import AccountType, LeveragedMarginModel, Money, OmsType, StandardMarginModel, Venue
 
-# Create account
-account = TestExecStubs.margin_account()
-
-# Set standard model for traditional brokers
-standard_model = StandardMarginModel()
-account.set_margin_model(standard_model)
-
-# Or use leveraged model for crypto exchanges
-leveraged_model = LeveragedMarginModel()
-account.set_margin_model(leveraged_model)
+engine.add_venue(
+    venue=Venue("SIM"),
+    oms_type=OmsType.NETTING,
+    account_type=AccountType.MARGIN,
+    starting_balances=[Money.from_str("1_000_000 USD")],
+    margin_model=StandardMarginModel(),  # or LeveragedMarginModel() (the default)
+)
 ```
 
-#### Backtest configuration
+#### High-level venue configuration
 
 ```python
-from nautilus_trader.backtest.config import BacktestVenueConfig
-from nautilus_trader.backtest.config import MarginModelConfig
+from nautilus_trader.backtest import BacktestVenueConfig
+from nautilus_trader.model import StandardMarginModel
 
 venue_config = BacktestVenueConfig(
     name="SIM",
     oms_type="NETTING",
     account_type="MARGIN",
     starting_balances=["1_000_000 USD"],
-    margin_model=MarginModelConfig(
-        model_type="standard"
-    ),  # Options: 'standard', 'leveraged'
+    margin_model=StandardMarginModel(),
 )
 ```
 
-#### Available model types
+#### Available models
 
-- `"leveraged"`: Margin reduced by leverage (default).
-- `"standard"`: Fixed percentages (traditional brokers).
-- Custom class path: `"my_package.my_module.MyMarginModel"`.
+- `LeveragedMarginModel` (default): margin reduced by leverage.
+- `StandardMarginModel`: fixed percentages (traditional brokers).
+
+The venue configuration accepts these built-in model instances directly. It does not load
+custom margin models from class-path strings (the v1 `MarginModelConfig`/`MarginModelFactory`
+mechanism is gone; `crates/backtest/src/python/engine.rs` converts only `StandardMarginModel`
+and `LeveragedMarginModel` instances).
 
 #### Default behavior
 
-By default, `MarginAccount` uses `LeveragedMarginModel`.
+Margin accounts use `LeveragedMarginModel` by default. Pass `StandardMarginModel` when the
+simulation should reserve the instrument's fixed initial and maintenance margin percentages
+without reducing them by account leverage.
 
 #### Real-world example
 
@@ -1502,99 +1493,44 @@ By default, `MarginAccount` uses `LeveragedMarginModel`.
 
 ```python
 # IB requires fixed margin regardless of leverage
-account.set_margin_model(StandardMarginModel())
-margin = account.calculate_margin_init(instrument, quantity, price)
+venue_config = BacktestVenueConfig(
+    name="SIM",
+    oms_type="NETTING",
+    account_type="MARGIN",
+    starting_balances=["1_000_000 USD"],
+    margin_model=StandardMarginModel(),
+)
 # Result: Fixed percentage of notional value
 ```
 
 #### Binance crypto trading
 
 ```python
-# Binance may reduce margin with leverage
-account.set_margin_model(LeveragedMarginModel())
-margin = account.calculate_margin_init(instrument, quantity, price)
+# Binance may reduce margin with leverage (the default)
+venue_config = BacktestVenueConfig(
+    name="SIM",
+    oms_type="NETTING",
+    account_type="MARGIN",
+    starting_balances=["1_000_000 USD"],
+    margin_model=LeveragedMarginModel(),
+)
 # Result: Margin reduced by leverage factor
 ```
 
 ### Model selection
 
-#### Using the default model
-
-The default `LeveragedMarginModel` works out of the box:
-
-```python
-account = TestExecStubs.margin_account()
-margin = account.calculate_margin_init(instrument, quantity, price)
-```
-
-#### Using the standard model
-
-For traditional broker behavior:
-
-```python
-account.set_margin_model(StandardMarginModel())
-margin = account.calculate_margin_init(instrument, quantity, price)
-```
-
-### Custom models
-
-You can create custom margin models by inheriting from `MarginModel`. Custom models receive configuration through the `MarginModelConfig`:
-
-```python
-from nautilus_trader.backtest.models import MarginModel
-from nautilus_trader.backtest.config import MarginModelConfig
-
-
-class RiskAdjustedMarginModel(MarginModel):
-    def __init__(self, config: MarginModelConfig):
-        """Initialize with configuration parameters."""
-        self.risk_multiplier = Decimal(str(config.config.get("risk_multiplier", 1.0)))
-        self.use_leverage = config.config.get("use_leverage", False)
-
-    def calculate_margin_init(
-        self, instrument, quantity, price, leverage, use_quote_for_inverse=False
-    ):
-        notional = instrument.notional_value(quantity, price, use_quote_for_inverse)
-        if self.use_leverage:
-            adjusted_notional = notional.as_decimal() / leverage
-        else:
-            adjusted_notional = notional.as_decimal()
-        margin = adjusted_notional * instrument.margin_init * self.risk_multiplier
-        return Money(margin, instrument.quote_currency)
-
-    def calculate_margin_maint(
-        self, instrument, side, quantity, price, leverage, use_quote_for_inverse=False
-    ):
-        return self.calculate_margin_init(
-            instrument, quantity, price, leverage, use_quote_for_inverse
-        )
-```
-
-#### Using custom models
-
-**Programmatic:**
-
-```python
-from nautilus_trader.backtest.config import MarginModelConfig
-from nautilus_trader.backtest.config import MarginModelFactory
-
-config = MarginModelConfig(
-    model_type="my_package.my_module:RiskAdjustedMarginModel",
-    config={"risk_multiplier": 1.5, "use_leverage": False},
-)
-
-custom_model = MarginModelFactory.create(config)
-account.set_margin_model(custom_model)
-```
+The default `LeveragedMarginModel` works without any configuration. For traditional broker
+behavior, set `margin_model=StandardMarginModel()` on the venue configuration (or the
+`add_venue()` call).
 
 ### High-level backtest API configuration
 
-When using the high-level backtest API, you can specify margin models in your venue configuration using `MarginModelConfig`:
+When using the high-level backtest API, pass the margin model instance in the venue configuration:
 
 ```python
-from nautilus_trader.backtest.config import MarginModelConfig
-from nautilus_trader.backtest.config import BacktestVenueConfig
+from nautilus_trader.backtest import BacktestVenueConfig
 from nautilus_trader.config import BacktestRunConfig
+from nautilus_trader.model import StandardMarginModel
 
 # Configure venue with specific margin model
 venue_config = BacktestVenueConfig(
@@ -1602,9 +1538,7 @@ venue_config = BacktestVenueConfig(
     oms_type="NETTING",
     account_type="MARGIN",
     starting_balances=["1_000_000 USD"],
-    margin_model=MarginModelConfig(
-        model_type="standard"  # Use standard model for traditional broker simulation
-    ),
+    margin_model=StandardMarginModel(),  # Traditional broker simulation
 )
 
 # Use in backtest configuration
@@ -1614,34 +1548,10 @@ config = BacktestRunConfig(
 )
 ```
 
-#### Configuration examples
-
-**Standard model (traditional brokers):**
-
-```python
-margin_model = MarginModelConfig(model_type="standard")
-```
-
-**Leveraged model (default):**
-
-```python
-margin_model = MarginModelConfig(model_type="leveraged")  # Default
-```
-
-**Custom model with configuration:**
-
-```python
-margin_model = MarginModelConfig(
-    model_type="my_package.my_module:CustomMarginModel",
-    config={
-        "risk_multiplier": 1.5,
-        "use_leverage": False,
-        "volatility_threshold": 0.02,
-    },
-)
-```
-
 The margin model will be automatically applied to the simulated exchange during backtest execution.
+Custom margin models are not supported at the pinned baseline: the configuration accepts only the
+built-in `StandardMarginModel` and `LeveragedMarginModel` instances, and `MarginAccount` exposes no
+`set_margin_model()`.
 
 ## Related guides
 

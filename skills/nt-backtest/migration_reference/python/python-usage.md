@@ -10,30 +10,24 @@
 `BacktestNode` is the high-level API for running backtests with configuration:
 
 ```python
-from nautilus_trader.backtest.node import BacktestNode
+from nautilus_trader.backtest import BacktestNode
 from nautilus_trader.config import (
     BacktestRunConfig,
     BacktestDataConfig,
     BacktestVenueConfig,
     BacktestEngineConfig,
+    ImportableStrategyConfig,
 )
+from nautilus_trader.model import BarAggregation, BarSpecification, PriceType
 
 config = BacktestRunConfig(
-    engine=BacktestEngineConfig(
-        strategies=[
-            ImportableStrategyConfig(
-                strategy_path="my_module:MyStrategy",
-                config_path="my_module:MyStrategyConfig",
-                config={"instrument_id": "ETHUSDT-PERP.BINANCE", ...},
-            ),
-        ],
-    ),
+    engine=BacktestEngineConfig(),
     data=[
         BacktestDataConfig(
             catalog_path="/path/to/data",
-            data_cls="nautilus_trader.model.data:Bar",
+            data_type="Bar",
             instrument_id="ETHUSDT-PERP.BINANCE",
-            bar_type="ETHUSDT-PERP.BINANCE-1-MINUTE-LAST-EXTERNAL",
+            bar_spec=BarSpecification(1, BarAggregation.MINUTE, PriceType.LAST),
         ),
     ],
     venues=[
@@ -47,7 +41,18 @@ config = BacktestRunConfig(
     ],
 )
 
+# v1 migration note: data used `data_cls="nautilus_trader.model.data:Bar"` with a
+# `bar_type=` string; the pinned config takes `data_type` plus `bar_spec`/`bar_types`.
+
 node = BacktestNode(configs=[config])
+node.build()
+node.add_strategy_from_config(
+    config.id,
+    ImportableStrategyConfig(
+        strategy_path="my_module:MyStrategy",
+        config={"instrument_id": "ETHUSDT-PERP.BINANCE", ...},
+    ),
+)
 results = node.run()
 ```
 
@@ -56,7 +61,7 @@ results = node.run()
 `BacktestEngine` provides lower-level control, useful for strategy testing:
 
 ```python
-from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.backtest import BacktestEngine
 from nautilus_trader.config import BacktestEngineConfig
 
 engine = BacktestEngine(config=BacktestEngineConfig())

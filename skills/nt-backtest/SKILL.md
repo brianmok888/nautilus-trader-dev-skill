@@ -204,6 +204,28 @@ engine.run(None, None, None, false)?;
 
 Run the example: `cargo run -p nautilus-backtest --features examples --example engine-ema-cross`
 
+### Typed batch input/replay (drift window)
+
+`BacktestEngine::add_data_batch(data, client_id, validate, sort)`
+(`crates/backtest/src/engine.rs:436` at the pin) accepts a single typed
+`DataBatch` (`crates/model/src/data/batch.rs`) instead of per-item `Data`
+values. The batch keeps concrete storage per data family and replays its items
+as `DataRef`s, avoiding heterogeneous `Vec<Data>` assembly for uniform streams:
+
+```rust
+use nautilus_model::data::{DataBatch, QuoteTick};
+
+// Vec<QuoteTick> converts into a typed DataBatch via From<Vec<T>>.
+let batch = DataBatch::from(quotes_vec);
+engine.add_data_batch(batch, None, true, true)?;
+```
+
+On the high-level side, `BacktestNode` now streams data lazily across multiple
+`BacktestDataConfig` entries (upstream commit `ec1894d6f`): every data config is
+queried separately and k-way merged by `ts_init`, so the `chunk_size` memory
+bound also holds for multi-config runs instead of falling back to a merged
+`Vec<Data>` load.
+
 ### BacktestNode (High-Level API)
 
 Loads data from `ParquetDataCatalog` and streams in configurable chunks. Requires `streaming` feature.
@@ -322,36 +344,68 @@ Python-authored modules are supported through the PyO3 `SimulationModule`/
 Rust fill models for complex matching logic (order book simulation, market impact):
 
 ```rust
-use nautilus_execution::models::fill::{FillModel, FillModelHandle};
+use nautilus_execution::models::fill::{FillModel, FillModelHandle, ProbabilisticFillState};
+use nautilus_model::{
+    data::order::BookOrder,
+    enums::{BookType, OrderSide},
+    instruments::InstrumentAny,
+    orderbook::OrderBook,
+    orders::OrderAny,
+    types::{Price, Quantity},
+};
 
 #[derive(Debug)]
 pub struct MyFillModel {
-    prob_fill_on_limit: f64,
-    prob_slippage: f64,
+    state: ProbabilisticFillState,
+}
+
+impl MyFillModel {
+    pub fn new(prob_fill_on_limit: f64, prob_slippage: f64) -> anyhow::Result<Self> {
+        Ok(Self {
+            state: ProbabilisticFillState::new(prob_fill_on_limit, prob_slippage, Some(42))?,
+        })
+    }
 }
 
 impl FillModel for MyFillModel {
     fn is_limit_filled(&mut self) -> anyhow::Result<bool> {
-        Ok(self.sample(self.prob_fill_on_limit))
+        Ok(self.state.is_limit_filled())
     }
 
     fn is_slipped(&mut self) -> anyhow::Result<bool> {
-        Ok(self.sample(self.prob_slippage))
+        Ok(self.state.is_slipped())
     }
 
     fn get_orderbook_for_fill_simulation(
         &mut self,
         instrument: &InstrumentAny,
-        order: &OrderAny,
+        _order: &OrderAny,
         best_bid: Price,
         best_ask: Price,
     ) -> anyhow::Result<Option<OrderBook>> {
-        Ok(self.simulated_book(instrument, order, best_bid, best_ask))
+        // Build the liquidity view yourself; the trait has no helper for this.
+        let mut book = OrderBook::new(instrument.id(), BookType::L2_MBP);
+        let size_prec = instrument.size_precision();
+        let size = Quantity::from_mantissa_exponent(10_000_000_000, 0, size_prec);
+        book.add(
+            BookOrder::new(OrderSide::Buy, best_bid, size, 1),
+            0,
+            0,
+            Default::default(),
+        );
+        book.add(
+            BookOrder::new(OrderSide::Sell, best_ask, size, 2),
+            0,
+            0,
+            Default::default(),
+        );
+        Ok(Some(book))
     }
 }
 
-let fill_model = FillModelHandle::new(MyFillModel::new(0.7, 0.1)?);
-// Pass `Some(fill_model)` through the simulated venue configuration.
+let fill_model = MyFillModel::new(0.7, 0.1)?;
+// Pass it through the venue configuration builder:
+// SimulatedVenueConfig::builder()... .fill_model(FillModelHandle::new(fill_model)) .build()?
 ```
 
 ### Custom Matching Logic

@@ -126,9 +126,15 @@ The following market data types can be requested historically, and also subscrib
 - `QuoteTick`
 - `TradeTick`
 - `Bar`
+- `MarkPriceUpdate`
+- `IndexPriceUpdate`
+- `FundingRateUpdate`
+- `OptionGreeks`
 - `Instrument`
 - `InstrumentStatus`
 - `InstrumentClose`
+
+Use custom data for application-specific types.
 
 The following `PriceType` options can be used for bar aggregations:
 

@@ -1,6 +1,6 @@
 # Value Types
 
-> **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
+> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `ac22d5cf4a7e55ba93b233bba5b04de4723b3d3d`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
 
 NautilusTrader provides specialized value types for representing core trading concepts:
 `Price`, `Quantity`, and `Money`. These types use fixed-point arithmetic internally
@@ -21,7 +21,7 @@ All value types are **immutable**. Once a value is constructed, it cannot be cha
 Arithmetic operations always return new instances rather than modifying existing ones.
 
 ```python
-from nautilus_trader.model.objects import Quantity
+from nautilus_trader.model import Quantity
 
 qty1 = Quantity(100, precision=0)
 qty2 = Quantity(50, precision=0)
@@ -42,12 +42,14 @@ This design provides several benefits:
 
 ## Arithmetic operations
 
-Value types support standard arithmetic operators (`+`, `-`, `*`, `/`, `%`, `//`).
-The return type depends on the operand types.
+Value types support standard arithmetic operators (`+`, `-`, `*`, `/`, `%`, `//`)
+and unary operators (`-`, `+`, `abs`). The return type depends on the operator
+and the operand types.
 
-### Same-type operations
+### Same-type binary operations
 
-When both operands are the same value type, the result is also that type:
+Addition and subtraction of the same value type return that type, preserving
+domain meaning (a price plus a price is still a price):
 
 | Operation             | Result     |
 |-----------------------|------------|
@@ -59,7 +61,7 @@ When both operands are the same value type, the result is also that type:
 | `Money - Money`       | `Money`    |
 
 ```python
-from nautilus_trader.model.objects import Price
+from nautilus_trader.model import Price
 
 price1 = Price(100.50, precision=2)
 price2 = Price(0.25, precision=2)
@@ -67,6 +69,40 @@ price2 = Price(0.25, precision=2)
 result = price1 + price2  # Returns Price(100.75, precision=2)
 print(type(result))  # <class 'Price'>
 ```
+
+Multiplication, division, floor division, and modulo between two values of the
+same type return `Decimal`:
+
+| Operation        | Result    |
+|------------------|-----------|
+| `Price * Price`  | `Decimal` |
+| `Price / Price`  | `Decimal` |
+| `Price // Price` | `Decimal` |
+| `Price % Price`  | `Decimal` |
+
+The same pattern applies to `Quantity` and `Money`.
+
+These operations do not return the original type because the result has different
+dimensional meaning. Multiplying a price by a price produces "price squared", not
+a price. Dividing a quantity by a quantity produces a dimensionless ratio, not a
+quantity. Returning `Decimal` makes the unit change explicit and prevents
+misinterpretation of the result as a value with the original unit.
+
+### Unary operations
+
+Unary operators preserve the value type where the result is valid for that type:
+
+| Operation  | `Price`   | `Quantity` | `Money`   |
+|------------|-----------|------------|----------|
+| `-x` (neg) | `Price`   | `Decimal`  | `Money`   |
+| `+x` (pos) | `Price`   | `Quantity` | `Money`   |
+| `abs(x)`   | `Price`   | `Quantity` | `Money`   |
+| `int(x)`   | `int`     | `int`      | `int`     |
+| `float(x)` | `float`   | `float`    | `float`   |
+| `round(x)` | `Decimal` | `Decimal`  | `Decimal` |
+
+`Quantity.__neg__` returns `Decimal` rather than `Quantity` because `Quantity` is
+unsigned and cannot represent a negative value.
 
 ### Mixed-type operations
 
@@ -86,7 +122,7 @@ principle is that operations widen to the more general type: `float` operations 
 
 ```python
 from decimal import Decimal
-from nautilus_trader.model.objects import Quantity
+from nautilus_trader.model import Quantity
 
 qty = Quantity(100, precision=0)
 
@@ -116,7 +152,7 @@ field tracks the number of decimal places used at construction, controlling disp
 formatting and serialization, but the underlying raw value always uses the global scale.
 
 ```python
-from nautilus_trader.model.objects import Price
+from nautilus_trader.model import Price
 
 p1 = Price(1.23, precision=2)  # displays as "1.23"
 p2 = Price(1.230, precision=3)  # displays as "1.230"
@@ -150,7 +186,7 @@ When performing arithmetic between values with different precisions, the result
 uses the maximum precision of the operands.
 
 ```python
-from nautilus_trader.model.objects import Price
+from nautilus_trader.model import Price
 
 price1 = Price(100.5, precision=1)  # 1 decimal place
 price2 = Price(0.125, precision=3)  # 3 decimal places
@@ -168,7 +204,7 @@ print(result.precision)  # 3 (max of 1 and 3)
 or subtract a larger quantity from a smaller one raises an error:
 
 ```python
-from nautilus_trader.model.objects import Quantity
+from nautilus_trader.model import Quantity
 
 # This raises ValueError: Quantity cannot be negative
 qty = Quantity(-100, precision=0)
@@ -185,8 +221,10 @@ result = qty1 - qty2  # Would be -50, which is invalid
 matching currencies:
 
 ```python
-from nautilus_trader.model.objects import Money
-from nautilus_trader.model.currencies import USD, EUR
+from nautilus_trader.model import Currency, Money
+
+USD = Currency.from_str("USD")
+EUR = Currency.from_str("EUR")
 
 usd_amount = Money(100.00, USD)
 eur_amount = Money(50.00, EUR)
@@ -205,8 +243,9 @@ result = usd_amount + eur_amount
 Since value types are immutable, accumulate by reassigning:
 
 ```python
-from nautilus_trader.model.objects import Money
-from nautilus_trader.model.currencies import USD
+from nautilus_trader.model import Currency, Money
+
+USD = Currency.from_str("USD")
 
 total = Money(0.00, USD)
 amounts = [Money(100.00, USD), Money(50.00, USD), Money(25.00, USD)]
@@ -222,7 +261,7 @@ print(total)  # 175.00 USD
 Value types provide conversion methods:
 
 ```python
-from nautilus_trader.model.objects import Price
+from nautilus_trader.model import Price
 
 price = Price(123.456, precision=3)
 
@@ -241,7 +280,7 @@ string_value = str(price)  # "123.456"
 Parse value types from string representations:
 
 ```python
-from nautilus_trader.model.objects import Quantity, Price, Money
+from nautilus_trader.model import Quantity, Price, Money
 
 qty = Quantity.from_str("100.5")
 price = Price.from_str("99.95")

@@ -18,11 +18,18 @@
 //! Demonstrates a dual-EMA crossover strategy running on synthetic quote data
 //! for the AUD/USD FX pair on a simulated venue.
 //!
+//! Edit the constants below to change the venue, starting balance, trade size,
+//! and EMA periods.
+//!
 //! Run with: `cargo run -p nautilus-backtest --features examples --example engine-ema-cross`
 
-use ahash::AHashMap;
-use nautilus_backtest::{config::BacktestEngineConfig, engine::BacktestEngine};
-use nautilus_execution::models::{fee::FeeModelAny, fill::FillModelAny};
+#[cfg(feature = "mimalloc")]
+mod allocator;
+
+use nautilus_backtest::{
+    config::{BacktestEngineConfig, SimulatedVenueConfig},
+    engine::BacktestEngine,
+};
 use nautilus_model::{
     data::{Data, QuoteTick},
     enums::{AccountType, BookType, OmsType},
@@ -31,6 +38,12 @@ use nautilus_model::{
     types::{Money, Price, Quantity},
 };
 use nautilus_trading::examples::strategies::EmaCross;
+
+const VENUE: &str = "SIM";
+const STARTING_BALANCE: &str = "1_000_000 USD";
+const TRADE_SIZE: &str = "100000";
+const EMA_FAST_PERIOD: usize = 10;
+const EMA_SLOW_PERIOD: usize = 20;
 
 fn quote(instrument_id: InstrumentId, bid: &str, ask: &str, ts: u64) -> Data {
     Data::Quote(QuoteTick::new(
@@ -58,7 +71,7 @@ fn generate_quotes(instrument_id: InstrumentId) -> Vec<Data> {
         tick += 1;
     };
 
-    // Flat initialization — both EMAs converge around 0.65000
+    // Flat initialization - both EMAs converge around 0.65000
     for _ in 0..25 {
         add(0.65000);
     }
@@ -68,12 +81,12 @@ fn generate_quotes(instrument_id: InstrumentId) -> Vec<Data> {
     for cycle in 0..cycles {
         let base = 0.65000 + (cycle as f64 * 0.00100);
 
-        // Ramp up — fast EMA crosses above slow → BUY signal
+        // Ramp up - fast EMA crosses above slow → BUY signal
         for i in 0..40 {
             add(base + (i as f64 * 0.00050));
         }
 
-        // Ramp down — fast EMA crosses below slow → SELL signal
+        // Ramp down - fast EMA crosses below slow → SELL signal
         for i in 0..80 {
             let peak = base + 39.0 * 0.00050;
             add(peak - (i as f64 * 0.00050));
@@ -84,40 +97,19 @@ fn generate_quotes(instrument_id: InstrumentId) -> Vec<Data> {
 }
 
 fn main() -> anyhow::Result<()> {
+    #[cfg(feature = "mimalloc")]
+    allocator::register();
+
     let mut engine = BacktestEngine::new(BacktestEngineConfig::default())?;
 
     engine.add_venue(
-        Venue::from("SIM"),
-        OmsType::Hedging,
-        AccountType::Margin,
-        BookType::L1_MBP,
-        vec![Money::from("1_000_000 USD")],
-        None,            // base_currency
-        None,            // default_leverage (defaults to 10x for Margin)
-        AHashMap::new(), // per-instrument leverages
-        None,            // margin_model
-        vec![],          // simulation modules
-        FillModelAny::default(),
-        FeeModelAny::default(),
-        None, // latency_model
-        None, // routing
-        None, // reject_stop_orders
-        None, // support_gtd_orders
-        None, // support_contingent_orders
-        None, // use_position_ids
-        None, // use_random_ids
-        None, // use_reduce_only
-        None, // use_message_queue
-        None, // use_market_order_acks
-        None, // bar_execution
-        None, // bar_adaptive_high_low_ordering
-        None, // trade_execution
-        None, // liquidity_consumption
-        None, // allow_cash_borrowing
-        None, // frozen_account
-        None, // queue_position
-        None, // oto_full_trigger
-        None, // price_protection_points
+        SimulatedVenueConfig::builder()
+            .venue(Venue::from(VENUE))
+            .oms_type(OmsType::Hedging)
+            .account_type(AccountType::Margin)
+            .book_type(BookType::L1_MBP)
+            .starting_balances(vec![Money::from(STARTING_BALANCE)])
+            .build()?,
     )?;
 
     let instrument = InstrumentAny::CurrencyPair(audusd_sim());
@@ -126,13 +118,13 @@ fn main() -> anyhow::Result<()> {
 
     engine.add_strategy(EmaCross::new(
         instrument_id,
-        Quantity::from("100000"),
-        10,
-        20,
+        Quantity::from(TRADE_SIZE),
+        EMA_FAST_PERIOD,
+        EMA_SLOW_PERIOD,
     ))?;
 
     let quotes = generate_quotes(instrument_id);
-    engine.add_data(quotes, None, true, true);
+    engine.add_data(quotes, None, true, true).unwrap();
     engine.run(None, None, None, false)?;
 
     Ok(())
