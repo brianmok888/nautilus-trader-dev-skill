@@ -59,9 +59,9 @@ make install-tools
 ./scripts/install-capnp.sh
 
 make sync
-source .venv/bin/activate
+source python/.venv/bin/activate
 
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 
 if [ "$(uname -s)" = "Linux" ]; then
   PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
@@ -192,7 +192,7 @@ macOS, set the following environment variables from the repository root after `m
 
 ```bash
 # Set the Python executable path for PyO3
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 
 # Linux only: Set the library path for the uv-managed Python runtime
 PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
@@ -279,7 +279,7 @@ to install the project version locally.
 ## Builds
 
 The Python package and the standalone Nautilus CLI are separate build artifacts. `make build-debug`
-and `make build` install the Python package into the root `.venv`.
+and `make build` install the Python package into the `python/.venv`.
 
 After changing Rust bindings or Python package code, use a debug build for normal development. It
 skips release optimization and LTO, which reduces build time and peak memory use:

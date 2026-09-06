@@ -142,7 +142,7 @@ pub fn new(params) -> Self { Self::new_checked(params).expect(FAILED) }
 ### Rust
 - `anyhow::Result<T>` + `anyhow::bail!` for fallible functions
 - Fully qualify `anyhow::` and `tokio::` macros
-- `log::*` for sync, `tracing::*` for async/adapter code
+- `log::*` macros everywhere (fully qualified, e.g. `log::debug!`) per the pinned Rust guide (`docs/developer_guide/rust.md:296`); `tracing` appears only in the Interactive Brokers adapter, not as a general convention
 - Capitalize messages, omit terminal periods
 - Rust doc comments: **indicative mood** ("Returns the client", not "Return")
 

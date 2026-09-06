@@ -161,7 +161,7 @@ Rust-backed work use `LiveNode`.
 | Actors (signal aggregation and stateful processing) | **Rust** | Signal aggregation stays in Rust; Python is migration/reference-only |
 | Strategies (order/position logic, entry/exit) | **Rust** (`nt-strategy-builder-rust`) | Explicit Python strategy requests still route to Rust under this repository's cutover policy |
 | Execution Algorithms | **Rust** (`crates/trading/src/algorithm/`, integrated by `crates/live/src/node/`) | Execution-critical path stays in Rust; add PyO3 exposure only at the owning crate boundary |
-| Portfolio Statistics | **Rust** (`crates/analysis/`) | Performance default; see `crates/analysis/src/statistics/` |
+| Portfolio Statistics | **Rust + Python** (`crates/analysis/`) | Performance default in Rust; user-defined Python statistics restored at the pin (`nautilus_trader.analysis.statistic`, upstream `7e8c9c9cd`) and registerable via `Portfolio.register_statistic` |
 | Adapter networking/parsing (HTTP/WS/normalize) | **Rust** (`crates/adapters/<venue>/`) | Networking and parse paths are always Rust in V2 |
 | Live node plumbing | **Rust** (`LiveNode`) | Prefer `LiveNode` for new production; `TradingNode` is legacy Python-live |
 

@@ -43,7 +43,7 @@ Translate research outputs (trained ML models + signal generation logic) into a 
 
 If the architecture includes a custom or modified adapter, enforce these constraints in the design doc:
 
-- **Lifecycle ordering**: the architecture must preserve the adapter 7-phase dependency order.
+- **Lifecycle ordering**: the architecture must follow the pinned developer guide's adapter implementation sequence (ten phases at `ac22d5cf4`, `docs/developer_guide/adapters.md`); the pre-cutover 7-phase order below is retained as migration/reference-only history.
 - **Boundary clarity**:
   - Rust owns production adapter contracts and implementations: `InstrumentProvider`, data/execution clients, factory wiring, networking, parsing, normalization, and execution-critical state.
   - PyO3 exposes reviewed Rust capabilities only through bounded bindings. Under this repository's cutover policy, Python strategy, research, configuration, and orchestration material is migration/reference-only.

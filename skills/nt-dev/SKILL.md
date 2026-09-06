@@ -127,7 +127,7 @@ Required for Rust/PyO3 when using Python installed via `uv`:
 
 ```bash
 # PyO3 Python interpreter path (reduces recompilation)
-export PYO3_PYTHON="$PWD/.venv/bin/python"
+export PYO3_PYTHON="$PWD/python/.venv/bin/python"
 
 # Linux only: uv-managed Python runtime library path
 PYTHON_LIB_DIR="$("$PYO3_PYTHON" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
