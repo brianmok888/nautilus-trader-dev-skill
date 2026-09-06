@@ -2,6 +2,9 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `ac22d5cf4`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth10.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+
+
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
 These data types include:
 
@@ -1050,8 +1053,8 @@ Catalogs defined this way can also be used for requesting historical data.
 **Optional Parameters:**
 
 - `fs_protocol`: Filesystem protocol ('file', 's3', 'gcs', 'azure', etc.).
-- `fs_storage_options`: Protocol-specific storage options.
 - `name`: Optional name identifier for the catalog configuration.
+- `fs_rust_storage_option_keys`: Keys for Rust-side protocol-specific storage options (pinned `persistence/__init__.pyi:63`); pass values through the Rust storage-options map, not a dict parameter.
 
 #### Basic usage examples
 

@@ -80,7 +80,7 @@ Here's a basic example of configuring the `Cache`:
 NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
 
 ```python
-from nautilus_trader.config import CacheConfig, BacktestEngineConfig, TradingNodeConfig
+from nautilus_trader.common import CacheConfig, BacktestEngineConfig, TradingNodeConfig
 
 # For backtesting
 engine_config = BacktestEngineConfig(
@@ -111,10 +111,9 @@ These limits provide a good balance between memory usage and data availability. 
 The `CacheConfig` class supports these parameters:
 
 ```python
-from nautilus_trader.config import CacheConfig
+from nautilus_trader.common import CacheConfig
 
 cache_config = CacheConfig(
-    database: DatabaseConfig | None = None,  # Database configuration for persistence
     encoding: str = "msgpack",               # Data encoding format ('msgpack' or 'json')
     timestamps_as_iso8601: bool = False,     # Store timestamps as ISO8601 strings
     buffer_interval_ms: int | None = None,   # Buffer interval for batch operations

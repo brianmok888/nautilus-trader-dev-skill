@@ -115,12 +115,16 @@ time, including *during* a backtest, or live trading session.
 The current V2 path for custom statistics is the Rust `PortfolioStatistic` trait
 (pinned source `crates/analysis/src/statistic.rs`): implement `name()` and the
 `calculate_` method matching the input data (`calculate_from_returns`,
-`calculate_from_realized_pnls`, `calculate_from_orders`,
-`calculate_from_positions`), then register the type with
-`PortfolioAnalyzer::register_statistic(Arc::new(...))`. The analyzer accepts
-`Arc<dyn PortfolioStatistic<Item = f64> + Send + Sync>` (pinned source
-`crates/analysis/src/analyzer.rs`), and built-in examples live in
+`calculate_from_realized_pnls`, `calculate_from_positions`, plus the optional
+`calculate_from_returns_with_benchmark`, which defaults to `None`), then register
+the type with `PortfolioAnalyzer::register_statistic(Arc::new(...))`. The
+analyzer accepts `Arc<dyn PortfolioStatistic<Item = f64> + Send + Sync>` (pinned
+source `crates/analysis/src/analyzer.rs`), and built-in examples live in
 `crates/analysis/src/statistics/` (Sharpe ratio, Sortino, max drawdown, etc.).
+The analyzer invokes `calculate_from_returns`, `calculate_from_realized_pnls`,
+and `calculate_from_positions` on every registered statistic, and the trait
+defaults panic, so an implementation must override all three and return `None`
+for any category it does not support.
 
 For example, a custom win-rate statistic:
 
@@ -129,6 +133,8 @@ use std::sync::Arc;
 
 use nautilus_analysis::analyzer::PortfolioAnalyzer;
 use nautilus_analysis::statistic::PortfolioStatistic;
+use nautilus_analysis::Returns;
+use nautilus_model::position::Position;
 
 #[derive(Debug, Default)]
 struct SessionWinRate;
@@ -147,17 +153,34 @@ impl PortfolioStatistic for SessionWinRate {
         let winners = realized_pnls.iter().filter(|&&pnl| pnl > 0.0).count();
         Some(winners as f64 / realized_pnls.len() as f64)
     }
+
+    fn calculate_from_returns(&self, _returns: &Returns) -> Option<f64> {
+        None // not a returns-based statistic
+    }
+
+    fn calculate_from_positions(&self, _positions: &[Position]) -> Option<f64> {
+        None // not a positions-based statistic
+    }
 }
 
 // Register with the portfolio analyzer
 analyzer.register_statistic(Arc::new(SessionWinRate));
 ```
 
-Legacy v1 Python pattern (migration/reference-only): the removed
-`nautilus_trader.analysis.statistic` module allowed defining statistics by
-inheriting from a Python `PortfolioStatistic` base class and implementing any of
-the `calculate_` methods. The quarantined v1 source is kept at
-`migration_reference/python/python/analysis/statistic.py`.
+The analyzer calls all three `calculate_` methods on every registered statistic
+(`crates/analysis/src/analyzer.rs` in the pinned tree), and the trait defaults
+panic when a method is not overridden (`crates/analysis/src/statistic.rs:32-34`),
+so always override all three and return `None` for categories the statistic does
+not support, as above.
+
+Python v2 path (current, not migration-only): subclass
+`nautilus_trader.analysis.statistic.PortfolioStatistic` (exported as
+`nautilus_trader.analysis.PortfolioStatistic` in the pinned
+`python/nautilus_trader/analysis/__init__.pyi:29`) and override the same
+`calculate_` methods; register instances via `Portfolio.register_statistic(...)`
+(`python/nautilus_trader/portfolio/__init__.pyi:136`). See the pinned
+docs/concepts/portfolio.md "Custom statistics" section for the current
+subclassing example.
 
 :::tip
 Ensure your statistic is robust to degenerate inputs such as empty slices or insufficient data.

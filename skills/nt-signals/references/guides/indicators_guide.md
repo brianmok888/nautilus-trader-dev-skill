@@ -39,11 +39,11 @@ All moving averages extend `MovingAverage(Indicator)` and share: `period`, `valu
 | `WilderMovingAverage` | `period` | EMA variant with alpha = 1/period (Wilder smoothing) | `average::rma` |
 | `VariableIndexDynamicAverage` | `period, cmo_ma_type=SIMPLE` | VIDYA: EMA with dynamic alpha from Chande Momentum Oscillator | `average::vidya` |
 
-**Factory**: `MovingAverageFactory.create(period, ma_type, **kwargs)` returns the correct MA subclass
+**Factory** (Rust-only): `MovingAverageFactory::create(moving_average_type, period)` in `nautilus_indicators::average` returns the matching `Box<dyn MovingAverage>` — the type comes first and there are no keyword arguments; the pinned Python indicators package does not export this factory
 given a `MovingAverageType` enum value (`SIMPLE`, `EXPONENTIAL`, `WEIGHTED`, `HULL`, `WILDER`,
 `DOUBLE_EXPONENTIAL`, `VARIABLE_INDEX_DYNAMIC`).
 
-Additional Rust-only averages: `average::lr` (linear regression MA), `average::vwap`.
+`LinearRegression` and `VolumeWeightedAveragePrice` are Python-visible at the pinned tip (`python/nautilus_trader/indicators/__init__.pyi:35,52`) alongside their Rust implementations in `nautilus_indicators::average`.
 
 ---
 
@@ -283,7 +283,7 @@ print(ema.initialized)  # True after 20 updates
 ### Using MovingAverageFactory
 
 ```python
-from nautilus_trader.indicators import MovingAverageFactory, MovingAverageType
+// Rust: use nautilus_indicators::average::{MovingAverageFactory, MovingAverageType};
 
 # Create any MA type with a uniform interface
 ma = MovingAverageFactory.create(20, MovingAverageType.HULL)

@@ -191,6 +191,8 @@ Portfolio statistics can also be implemented in Rust for performance. See `crate
 ## Tearsheets and Themes
 
 The current V2 Python reporting surface lives in `nautilus_trader.analysis`
+User-defined portfolio statistics are supported at the pinned baseline (upstream `7e8c9c9cd`): subclass the Python `PortfolioStatistic` base class from `nautilus_trader.analysis.statistic` (`python/nautilus_trader/analysis/statistic.py:16`) and register instances with `Portfolio.register_statistic` / the analyzer route (`crates/analysis/src/python/analyzer.rs:145`); the Rust trait (`crates/analysis/src/statistic.rs`) drives calculation and no longer exposes `calculate_from_orders`. Registering Rust-native statistics via `PortfolioApi` remains available from strategies.
+
 (pinned source `analysis/tearsheet.py`, `analysis/themes.py`,
 `analysis/config.py`):
 

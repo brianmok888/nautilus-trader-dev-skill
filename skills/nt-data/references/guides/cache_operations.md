@@ -105,7 +105,7 @@ has = self.cache.has_order_book(instrument_id)
 ### Prices and Cross Rates
 
 ```python
-from nautilus_trader.model.enums import PriceType
+from nautilus_trader.model import PriceType
 
 price = self.cache.price(instrument_id, PriceType.MID)
 
