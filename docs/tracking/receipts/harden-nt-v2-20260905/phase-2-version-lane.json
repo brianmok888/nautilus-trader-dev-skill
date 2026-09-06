@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260905",
+  "receipt": "phase-2-version-lane",
+  "finding_id": "NT-2026-09-05-014",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_active_doc_examples.py tests/test_v2_inventory_pins_versions.py",
+  "exit_code": 0,
+  "output_sha256": "b15c49307e5b942f7596a162d649c056c4c342d0cd8f70ed1775c4f132afc66e",
+  "output_excerpt": "10 passed (then 117 passed with dev-guide sync tests): nautilus-live/nautilus-okx dependency examples aligned to the pinned quickstart lane 0.63 (upstream docs/how_to/run_rust_live_trading.md:18-22 at ac22d5cf4); crates.io latest verified 0.63.0 via cargo info; workspace 0.64.0 unpublished",
+  "redactions": [],
+  "recorded_at": "2026-09-05T23:38:48Z"
+}

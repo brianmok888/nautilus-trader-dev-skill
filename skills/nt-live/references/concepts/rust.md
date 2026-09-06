@@ -106,11 +106,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.62"
-nautilus-common = "0.62"
-nautilus-execution = "0.62"
-nautilus-model = { version = "0.62", features = ["stubs"] }
-nautilus-trading = { version = "0.62", features = ["examples"] }
+nautilus-backtest = "0.63"
+nautilus-common = "0.63"
+nautilus-execution = "0.63"
+nautilus-model = { version = "0.63", features = ["stubs"] }
+nautilus-trading = { version = "0.63", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -120,8 +120,8 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.62"
-nautilus-okx = "0.62"
+nautilus-live = "0.63"
+nautilus-okx = "0.63"
 ```
 
 To track the latest development branch, point all Nautilus dependencies at the
@@ -255,7 +255,7 @@ full walkthrough.
 `LiveNode` exposes first-class registration for Python components: constructed
 instances via `node.add_actor(actor)` / `node.add_strategy(strategy)`, and
 config-driven construction via `node.add_actor_from_config(config)` /
-`node.add_strategy_from_config(config)` (pinned `4692bac35`,
+`node.add_strategy_from_config(config)` (pinned `ac22d5cf4`,
 `python/nautilus_trader/live/__init__.pyi`). Instance registration requires the
 node to be idle: actors and strategies are added before running the node, and
 registration preserves config-created component IDs while rejecting duplicates.

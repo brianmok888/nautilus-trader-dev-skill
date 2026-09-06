@@ -25,9 +25,9 @@ def test_end_to_end_guide_uses_published_release_lane() -> None:
     cargo = re.search(r"```toml\n(.*?)```", text, flags=re.DOTALL)
 
     assert cargo is not None
-    assert 'nautilus-live = "0.62"' in cargo.group(1)
-    assert 'nautilus-okx = "0.62"' in cargo.group(1)
-    assert 'nautilus-live = "0.63.0"' not in cargo.group(1)
+    assert 'nautilus-live = "0.63"' in cargo.group(1)
+    assert 'nautilus-okx = "0.63"' in cargo.group(1)
+    assert 'nautilus-live = "0.64.0"' not in cargo.group(1)
     assert "not published on crates.io" in text
     assert "source-pinned path lane" in text
 
@@ -39,5 +39,5 @@ def test_learning_setup_uses_pinned_upstream_bootstrap() -> None:
     assert "make sync" in setup
     assert "uv sync --all-extras" not in setup
     assert "rustup toolchain install nightly" not in setup
-    assert 'nautilus-live = "0.62"' in stage09
-    assert 'version = "0.61"' not in stage09
+    assert 'nautilus-live = "0.63"' in stage09
+    assert 'version = "0.62"' not in stage09
