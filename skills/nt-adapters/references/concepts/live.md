@@ -89,7 +89,8 @@ config = LiveNodeConfig(
 ```
 
 ```rust
-use nautilus_live::node::{Environment, LiveNode};
+use nautilus_common::enums::Environment;
+use nautilus_live::node::LiveNode;
 
 // data_config / exec_config are the pinned venue config structs
 // (e.g. BinanceDataClientConfig, BinanceExecutionClientConfig).
@@ -195,7 +196,8 @@ from nautilus_trader.adapters.binance import BinanceDataClientConfig, BinancePro
 ```
 
 ```rust
-use nautilus_live::node::{Environment, LiveNode};
+use nautilus_common::enums::Environment;
+use nautilus_live::node::LiveNode;
 
 let mut builder = LiveNode::builder(trader_id, Environment::Live)?;
 

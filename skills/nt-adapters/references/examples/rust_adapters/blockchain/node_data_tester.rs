@@ -19,7 +19,8 @@
 //!
 //! Run with: `cargo run --example blockchain-data-tester --package nautilus-blockchain --features hypersync`
 //!
-//! Required credential environment variables (RPC node endpoints the user must supply):
+//! Required environment variables:
+//! - `ENVIO_API_TOKEN`.
 //! - `RPC_WSS_URL`.
 //! - `RPC_HTTP_URL`.
 
@@ -71,6 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .clone();
     let wss_rpc_url = get_env_var("RPC_WSS_URL")?;
     let http_rpc_url = get_env_var("RPC_HTTP_URL")?;
+    let _ = get_env_var("ENVIO_API_TOKEN")?;
 
     let dex_pool_filter = DexPoolFilters::builder()
         .remove_pools_with_empty_erc20fields(true)
@@ -80,8 +82,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_config = BlockchainDataClientConfig::builder()
         .chain(Arc::new(chain.clone()))
         .dex_ids(vec![DEX_TYPE])
-        .http_rpc_url(http_rpc_url)
-        .wss_rpc_url(wss_rpc_url)
+        .http_rpc_url(http_rpc_url.into())
+        .wss_rpc_url(wss_rpc_url.into())
         .use_hypersync_for_live_data(true)
         .pool_filters(dex_pool_filter)
         .postgres_cache_database_config(PostgresConnectOptions::default())
@@ -114,10 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(
-        module = "nautilus_trader.core.nautilus_pyo3.blockchain",
-        from_py_object
-    )
+    pyo3::pyclass(module = "nautilus_trader.adapters.blockchain", from_py_object)
 )]
 pub struct BlockchainSubscriberActorConfig {
     /// Base data actor configuration.
@@ -187,7 +186,7 @@ impl BlockchainSubscriberActorConfig {
 #[derive(Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.blockchain", unsendable)
+    pyo3::pyclass(module = "nautilus_trader.adapters.blockchain", unsendable)
 )]
 pub struct BlockchainSubscriberActor {
     core: DataActorCore,

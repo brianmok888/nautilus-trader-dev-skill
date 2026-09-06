@@ -18,8 +18,8 @@ def test_current_develop_contract_overlays_cover_registration_reconnect_and_bloc
     for marker in (
         "SocketReconnectRegistry",
         "ReconnectSocket",
-        "AlreadyPending",
-        "Unavailable",
+        "AlreadyReconnecting",
+        "Unsupported",
         "endpoint",
     ):
         assert marker in adapters

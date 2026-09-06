@@ -249,8 +249,8 @@ order = self.order_factory.stop_market(
 )
 ```
 
-`ExecTester` example configuration also demonstrates setting `stop_trigger_type=TriggerType.MARK_PRICE`
-in `examples/live/bitmex/bitmex_exec_tester.py`.
+The [Rust execution tester](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/adapters/bitmex/examples/node_exec_tester.rs)
+also configures `ExecTester` with `TriggerType::MarkPrice` (`stop_trigger_type`).
 
 ### Trailing stops
 

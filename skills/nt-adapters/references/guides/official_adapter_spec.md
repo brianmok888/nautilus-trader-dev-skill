@@ -182,7 +182,7 @@ Validate the integration and document usage.
 |------|----------------------------|----------------------------------------------------------------------------------------------|
 | 7.1  | Rust unit tests            | Test parsers, signing helpers, and business logic in `#[cfg(test)]` blocks.                  |
 | 7.2  | Rust integration tests     | Test HTTP/WebSocket clients against mock Axum servers in `tests/`.                           |
-| 7.3  | Python integration tests   | Test data/execution clients in `tests/integration_tests/adapters/<adapter>/`.                |
+| 7.3  | Python integration tests   | Test the Python surface in `python/tests/unit/adapters/<adapter>/`.                          |
 | 7.4  | Example scripts            | Provide runnable examples demonstrating data subscription and order execution.               |
 
 See the [Testing](#testing) section for detailed test organization guidelines.
@@ -255,7 +255,7 @@ builder so defaults are defined in exactly one place:
 ```rust
 #[derive(Clone, Debug, bon::Builder)]
 pub struct VenueDataClientConfig {
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     #[builder(default = 60)]
     pub http_timeout_secs: u64,
     #[builder(default = 3)]
@@ -749,11 +749,46 @@ impl Default for InstrumentsInfoParams {
 
 Keep signing logic in a `Credential` struct under `common/credential.rs`:
 
-- Store API keys using `Ustr` for efficient comparison, secrets in `Box<[u8]>` with `#[zeroize]`.
+- Store the API key ID as `Box<str>` for efficient comparison and the secret as `Box<[u8]>`;
+  derive `Clone, ZeroizeOnDrop` and implement a redacting `Debug` so fields render `REDACTED`
+  (see `crates/adapters/bybit/src/common/credential.rs` at the pin). No pinned adapter keys
+  credentials with `Ustr`.
 - Implement `sign()` and `sign_bytes()` methods that compute HMAC-SHA256 signatures.
 - Pass the credential to the raw HTTP client; the domain client delegates signing through the inner client.
 
 For WebSocket authentication, the handler constructs login messages using the same `Credential::sign()` method with a WebSocket-specific timestamp format.
+
+### Credential handling standard
+
+Classify every sensitive value before choosing its type and diagnostic output (mirrors the pinned
+`docs/developer_guide/adapters.md` "Credentials and secret handling" standard, added upstream by
+`824241ba60`). Apply the more restrictive rule when a value has more than one role:
+
+| Value class                  | Examples                                                                                  | Diagnostic output                                                                  |
+|------------------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| Secret material              | Passwords, private keys, API secrets, passphrases, bearer/session/refresh tokens, signatures. | Always show `<redacted>`.                                                          |
+| Credential identity          | API keys, client IDs, usernames, account identifiers used during authentication.           | Redact by default; masked identity only when operational correlation requires it.   |
+| Secret-bearing location      | Proxy URLs, RPC URLs, request paths, query parameters that can contain credentials.        | Redact the complete location from logs and errors.                                 |
+| Deliberately public identity | Wallet/vault addresses, public account names the venue exposes publicly.                  | Show only when the type deliberately classifies the value as public.                |
+
+Do not infer that an API key, username, or URL is safe to print because it cannot authenticate
+by itself. Rules:
+
+- Use `nautilus_core::string::secret` (`SecretString`, `REDACTED`, `redact_option`, `mask_api_key`)
+  and `zeroize` (`ZeroizeOnDrop`, `Zeroizing`) instead of adapter-local redaction or zeroization
+  conventions.
+- Declare config credential fields as `Option<SecretString>` (e.g. `crates/adapters/binance/src/config.rs`,
+  `crates/adapters/betfair/src/config.rs`) and construct them with `.into()` / `.map(Into::into)`.
+- Treat serialization as plaintext: never serialize a config, credential, or authentication model
+  for diagnostics. Do not use `SecretString` equality to verify attacker-controlled secrets
+  (not constant-time).
+- Borrow plaintext through `expose_secret()` only at the signing, encoding, or transport boundary
+  that needs it; consume with `into_inner()` only to transfer ownership, creating any final `String`
+  copy at the call boundary. Take `&SecretString` when a function only reads the value.
+- Convert config and environment strings into zeroizing owners at the credential boundary; do not
+  retain a non-zeroizing plaintext copy in adapter state after conversion.
+- Project credentials into Python with redacting getters — `__repr__` and `__str__` follow the Rust
+  `Debug`/`Display` redaction rules — and cover redaction in tests.
 
 ### Credential module structure
 
@@ -823,7 +858,32 @@ Some venues require additional credentials:
 
 ### Error handling and retry logic
 
-Use the `RetryManager` from `nautilus_network` for consistent retry behavior.
+Use the `RetryManager` from `nautilus_network` for consistent retry behavior
+(`crates/network/src/retry.rs`; the invocation-builder API was simplified by upstream
+`08aa1b70fe`). `RetryManager::invocation()` is the single entry point — it takes the
+operation name, the operation closure, a `should_retry(&E) -> bool` predicate, and a
+`create_error(RetryError) -> E` mapper, and returns a builder finished by `execute()`.
+Set `cancellation_token(&token)` so in-flight retries unwind when the adapter disconnects
+or shuts down; create the manager with `create_default_retry_manager()`:
+
+```rust
+let retry_manager = create_default_retry_manager::<MyAdapterError>();
+
+let cancel_token = self.cancellation_token();
+
+retry_manager
+    .invocation(endpoint.as_str(), operation, should_retry, create_error)
+    .cancellation_token(&cancel_token)
+    .execute()
+    .await
+```
+
+Map every `RetryError` variant into the adapter's error enum in `create_error` — `Canceled`
+(adapter disconnecting or shutting down), `OperationTimeout { timeout_ms }` (single attempt
+exceeded its configured timeout), `ElapsedBudgetExceeded { attempt, max_attempts, last_error }`
+(total retry budget exhausted), and `InvalidConfiguration { message }` (backoff config could
+not be validated). `RetryError` describes the retry control path only; it never indicates
+whether an operation was transmitted or applied.
 
 ### Rate limiting
 
@@ -960,9 +1020,11 @@ logical socket endpoints expose a `SocketReconnectRegistry`. Register each endpo
 handle for exactly the connection lifetime and remove it on teardown. Route the `ReconnectSocket`
 system command to the selected endpoint only; never restart every socket as a side effect.
 
-The command outcome is explicit: `Accepted` means a reconnect was scheduled, `AlreadyPending`
-means that endpoint already has one in flight, and `Unavailable` means no live registration exists.
-Test two registered endpoints, selection isolation, duplicate commands, and removal on disconnect.
+The command outcome is explicit: `Accepted` means a reconnect was scheduled, `AlreadyReconnecting`
+means that endpoint already has one in flight, `Disconnected` means the transport is disconnecting,
+`Closed` means it is permanently closed, and `Unsupported` means the client uses stream mode and
+cannot replace its caller-owned reader. Test two registered endpoints, selection isolation,
+duplicate commands, and removal on disconnect.
 
 ### Authentication
 
@@ -977,16 +1039,18 @@ The `AuthTracker` struct from `nautilus_network` provides thread-safe authentica
 ```rust
 pub struct AuthTracker {
     tx: Arc<Mutex<Option<AuthResultSender>>>,
-    authenticated: Arc<AtomicBool>,
+    state: Arc<AtomicU8>,
+    state_notify: Arc<tokio::sync::Notify>,
 }
 ```
 
 `AuthTracker` is internally `Arc`-based, so cloning shares state. Both client and handler
 store `auth_tracker: AuthTracker` and receive a `.clone()` of the same instance. The tracker
 exposes a four-method lifecycle: `begin()` starts an attempt and returns a one-shot receiver,
-`succeed()` sets the authenticated flag and notifies the receiver, `fail(message)` clears
-the flag with an error, and `invalidate()` clears the flag on disconnect. Downstream
-consumers query `is_authenticated()` for lock-free reads via the internal `AtomicBool`.
+`succeed()` moves the state to `Authenticated` and resolves the receiver, `fail(message)` moves
+it to `Failed` with an error, and `invalidate()` returns an authenticated session to
+`Unauthenticated` on disconnect. Downstream consumers query `is_authenticated()` (or `auth_state()`) for lock-free reads of the `AuthState` encoded in
+the internal `AtomicU8`; `state_notify` wakes tasks waiting on a state change.
 
 **Note**: The `Authenticated` message is consumed in the client's spawn loop for reconnection
 flow coordination and is not forwarded to downstream consumers (data/execution clients).
@@ -1324,22 +1388,26 @@ and `OrderIdentity` for tracked-vs-external classification.
 adapter receives fills from multiple sources (WebSocket user data and HTTP reconciliation),
 a separate trade-ID-level dedup is needed to prevent the same fill from being emitted twice.
 
-The `BoundedDedup<T>` pattern addresses this with a fixed-capacity set backed by a
-`VecDeque` for insertion order and an `AHashSet` for O(1) lookup. When the set reaches
-capacity, the oldest entry is evicted (FIFO). The `insert()` method returns `true` if the
-value was already present, signaling a duplicate:
+Use the pinned `FifoCache<T, N>` from `nautilus_common::cache::fifo` (`crates/common/src/cache/fifo.rs`;
+the same type backs e.g. derive's `WsDispatchState` dedup sets). It is a fixed-capacity ID set
+backed by a `VecDeque` for insertion order and an `AHashSet` for O(1) lookup, with the capacity
+`N` declared as a const generic. When the cache is full, inserting a new ID evicts the oldest
+entry (FIFO). `insert()` returns `true` when the ID was newly inserted and `false` when it was
+already present, so `if !cache.insert(id)` is the duplicate signal:
 
 ```rust
-struct BoundedDedup<T> {
-    order: VecDeque<T>,
-    set: AHashSet<T>,
-    capacity: usize,
+use nautilus_common::cache::fifo::FifoCache;
+
+const TRADE_DEDUP_CAPACITY: usize = 10_000;
+
+let mut seen_trade_ids: FifoCache<TradeId, TRADE_DEDUP_CAPACITY> = FifoCache::new();
+if !seen_trade_ids.insert(report.trade_id.clone()) {
+    // Duplicate fill: already emitted from another source
 }
 ```
 
-Use this in the execution client to track trade IDs (typically as `(Ustr, i64)` tuples
-of symbol and trade ID). A capacity of 10,000 provides sufficient coverage for most
-venues without unbounded memory growth.
+Use this in the execution client to track trade IDs (`TradeId`). A capacity of 10,000
+provides sufficient coverage for most venues without unbounded memory growth.
 
 ### Error handling
 
@@ -1803,11 +1871,14 @@ crates/adapters/your_adapter/
 │   └── websocket/
 │       ├── client.rs                  # WebSocket client + unit tests
 │       └── parse.rs                   # Streaming parsers + unit tests
-├── tests/                             # Integration tests (mock servers)
-│   ├── data_client.rs                 # Data client integration tests
-│   ├── exec_client.rs                 # Execution client integration tests
-│   ├── http.rs                        # HTTP client integration tests
-│   └── websocket.rs                   # WebSocket client integration tests
+├── tests/
+│   └── integration/                   # Integration tests (single binary per adapter, mock servers)
+│       ├── main.rs                    # Harness: declares the suites below as modules
+│       ├── data_client.rs             # Data client integration tests
+│       ├── exec_client.rs             # Execution client integration tests
+│       ├── http.rs                    # HTTP client integration tests
+│       ├── websocket.rs               # WebSocket client integration tests
+│       └── python.rs                  # Python projection tests (feature = "python")
 └── test_data/                         # Canonical venue payloads used by the suites
     ├── http_{method}_{endpoint}.json  # Full venue responses with retCode/result/time
     └── ws_{message_type}.json         # WebSocket message samples
@@ -1815,12 +1886,14 @@ crates/adapters/your_adapter/
 
 #### Test file organization
 
-| File                 | Purpose                                                                                                                   |
-|----------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `tests/data_client.rs` | Integration tests for the data client. Validates data subscriptions, historical data requests, and market data parsing.    |
-| `tests/exec_client.rs` | Integration tests for the execution client. Validates order submission, modification, cancellation, and execution reports. |
-| `tests/http.rs`      | Low-level HTTP client tests. Validates request signing, error handling, and response parsing against mock Axum servers.    |
-| `tests/websocket.rs` | WebSocket client tests. Validates connection lifecycle, authentication, subscriptions, and message routing.                |
+| File                           | Purpose                                                                                                                   |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `tests/integration/main.rs`    | Harness declaring each suite as a module; Cargo builds one integration binary per adapter (per-adapter examples: bybit, betfair). |
+| `tests/integration/data_client.rs` | Integration tests for the data client. Validates data subscriptions, historical data requests, and market data parsing.    |
+| `tests/integration/exec_client.rs` | Integration tests for the execution client. Validates order submission, modification, cancellation, and execution reports. |
+| `tests/integration/http.rs`   | Low-level HTTP client tests. Validates request signing, error handling, and response parsing against mock Axum servers.    |
+| `tests/integration/websocket.rs` | WebSocket client tests. Validates connection lifecycle, authentication, subscriptions, and message routing.                |
+| `tests/integration/python.rs`  | Python projection tests behind `feature = "python"`.                                                                     |
 
 **Guidelines:**
 
@@ -1930,7 +2003,7 @@ proves the same core behaviours.
 
 ##### Data and execution client integration testing
 
-Data (`tests/data_client.rs`) and execution (`tests/exec_client.rs`) client integration tests verify the full message flow from WebSocket through parsing to event emission.
+Data (`tests/integration/data_client.rs`) and execution (`tests/integration/exec_client.rs`) client integration tests verify the full message flow from WebSocket through parsing to event emission.
 
 **Test infrastructure:**
 
@@ -1975,14 +2048,16 @@ Data (`tests/data_client.rs`) and execution (`tests/exec_client.rs`) client inte
 #### Layout
 
 ```
-tests/integration_tests/adapters/your_adapter/
-├── conftest.py           # Shared fixtures (mock clients, test instruments)
-├── test_data.py          # Data client integration tests
-├── test_execution.py     # Execution client integration tests
+python/tests/unit/adapters/your_adapter/
+├── test_data.py          # Data client parsing/projection tests
+├── test_execution.py     # Execution client tests
 ├── test_providers.py     # Instrument provider tests
-├── test_factories.py     # Factory and configuration tests
-└── __init__.py           # Package initialization
+└── test_factories.py     # Factory and configuration tests
 ```
+
+Rust-side Python-projection suites live in `crates/adapters/<venue>/tests/integration/python.rs`
+(gated on `feature = "python"`; declared from the same `tests/integration/main.rs` harness as the
+other suites).
 
 #### Test file organization
 
@@ -1995,7 +2070,8 @@ tests/integration_tests/adapters/your_adapter/
 
 **Guidelines:**
 
-- Exercise the adapter's Python surface (instrument providers, data/execution clients, factories) inside `tests/integration_tests/adapters/<adapter>/`.
+- Exercise the adapter's Python surface (instrument providers, data/execution clients, factories) inside
+  `python/tests/unit/adapters/<adapter>/`.
 - Mock the PyO3 boundary (projection shims, stubbed Rust clients) so tests stay fast while verifying that configuration, factory wiring, and error handling match the exported Rust API. (NT v2 note: `nautilus_trader.core.nautilus_pyo3` is v1 migration reference only; the pinned imports are the flat `nautilus_trader.adapters.<venue>` projections.)
 - Mirror the Rust integration coverage: when the Rust suite adds a new behaviour (e.g., reconnection replay, error propagation), assert the Python layer performs the same sequence (connect/disconnect, submit/amend/cancel translations, venue ID hand-off, failure handling). BitMEX's Python tests provide the target level of detail.
 
@@ -2610,9 +2686,9 @@ pub struct TemplateDataClientConfig {
     #[builder(default = TemplateEnvironment::Live)]
     pub environment: TemplateEnvironment,
     /// API key.
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     /// API secret.
-    pub api_secret: Option<String>,
+    pub api_secret: Option<SecretString>,
     /// Optional base URL override.
     pub base_url_http: Option<String>,
     /// Instrument loading configuration.
@@ -2623,8 +2699,8 @@ pub struct TemplateDataClientConfig {
 #[cfg(feature = "python")]
 nautilus_core::impl_pyo3_config_getters!(TemplateDataClientConfig {
     environment: TemplateEnvironment,
-    api_key: Option<String>,
-    api_secret: Option<String>,
+    api_key: Option<SecretString>,
+    api_secret: Option<SecretString>,
     base_url_http: Option<String>,
     instrument_provider: TemplateInstrumentProviderConfig,
 });

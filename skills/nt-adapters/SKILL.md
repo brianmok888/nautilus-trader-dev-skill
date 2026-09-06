@@ -479,10 +479,10 @@ pub fn normalize_symbol(raw: &str) -> String {
 // config.rs follows builder + default pattern
 #[derive(Debug, Clone)]
 pub struct YourAdapterConfig {
-    pub api_key: Option<String>,
-    pub api_secret: Option<String>,
+    pub api_key: Option<SecretString>,
+    pub api_secret: Option<SecretString>,
     pub base_url: Option<String>,
-    pub testnet: bool,
+    pub environment: YourAdapterEnvironment,
 }
 
 impl Default for YourAdapterConfig {
@@ -493,6 +493,8 @@ impl Default for YourAdapterConfig {
 **Field type rules**:
 - Required fields: `String` (no `Option`)
 - Optional fields: `Option<String>`, default via `Default`
+- Credentials and secret-bearing URLs: `Option<SecretString>` (zeroizes on drop, redacting `Debug`)
+- Environment: adapter enum (e.g. `YourAdapterEnvironment`), never `testnet: bool` flags
 - Python constructors: Always `#[new]` with defaults
 
 ### HTTP Client Patterns
@@ -596,7 +598,7 @@ follows Nautilus runtime expectations.
   an explicit per-order rejection.
 - Cover reconciliation with complete, incomplete, skipped, and malformed venue reports. For side-aware quantity-free close-all orders, pair open-order and position reports and restore a quantity only from the matching position side; an unresolved in-scope instrument or position is an error, not a silent drop.
 - Rust unit tests in `#[cfg(test)] mod tests` within source files
-- Integration tests in `tests/` directory
+- Integration tests in `tests/integration/` (single binary per adapter, `main.rs` harness)
 
 ### Adapter Naming
 

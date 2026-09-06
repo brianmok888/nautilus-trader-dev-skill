@@ -705,10 +705,10 @@ compares the report's `venue_order_id` against the last cached value for the `cl
 they differ it promotes the `ACCEPTED` to `OrderUpdated` and suppresses the paired stale cancel:
 
 :::note
-The Python `HyperliquidExecutionClient` in `nautilus_trader/adapters/hyperliquid/execution.py`
-still runs its own equivalent detection inside `_handle_order_status_report_pyo3` because the
-pyo3 WebSocket binding forwards raw reports to Python. The Rust dispatch described below is
-additive, for the Rust-native execution client.
+At the pin the Hyperliquid Python projection is flat
+(`nautilus_trader/adapters/hyperliquid/__init__.py`, no `execution.py` module): the
+`HyperliquidExecutionClient` and its report dispatch run entirely in Rust, for both
+Rust-native and Python-driven nodes. The dispatch described below is the only path.
 :::
 
 ```mermaid
