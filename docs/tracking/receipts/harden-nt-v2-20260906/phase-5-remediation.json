@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260906",
+  "receipt": "phase-5-remediation",
+  "finding_id": "NT-2026-09-06-030",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_findings_schema.py && python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "25622d1669af9938d528443a864ec2bbca989d3b36bf54ea9b2bc232beacda8d",
+  "output_excerpt": "Phase-5 reconciliation found one deficiency: the retain_order_status_reports obligation (NT-2026-09-05-016 correction -> NT-2026-09-06-030 closure) was claimed relocated/verified-present but no coverage existed. Remediated: implementer contract section added to the nt-adapters official spec citing pinned crates/live/src/execution/reports.rs:23 and three adapter call sites (bitmex:802, betfair:3755, architect_ax:1094); both ledger entries corrected truthfully; evidence regenerated for nt-adapters; pytest 452/7 green; cards PASS.",
+  "redactions": [],
+  "recorded_at": "2026-09-06T14:46:34Z"
+}
