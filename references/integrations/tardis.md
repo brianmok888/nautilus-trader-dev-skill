@@ -479,7 +479,9 @@ Rust exposes the equivalent `stream_*` functions.
 ### Streaming CSV data in Python
 
 The module-level `stream_tardis_*` functions return iterators of bounded chunks. Each function
-accepts a `chunk_size` parameter that controls how many records are read per chunk:
+accepts a `chunk_size` parameter that controls how many records are read per chunk; accepted
+values are bounded to 1..=1,000,000 (upstream `4167c6db4`,
+`crates/adapters/tardis/src/csv/stream.rs`):
 
 ```python
 from pathlib import Path

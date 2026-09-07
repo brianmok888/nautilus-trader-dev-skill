@@ -176,6 +176,9 @@ let run_config = BacktestRunConfig::builder()
     .build()?;
 ```
 
+`chunk_size` is bounded to 1..=1,000,000 (`MAX_BACKTEST_CHUNK_SIZE`, upstream `4167c6db4`,
+`crates/backtest/src/config.rs`).
+
 ### 3. Build, add strategies, and run
 
 ```rust

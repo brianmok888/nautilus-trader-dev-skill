@@ -573,7 +573,7 @@ The submit broadcaster is configured via the execution client configuration:
 
 | Option                 | Default | Description                                                                               |
 |------------------------|---------|-------------------------------------------------------------------------------------------|
-| `submitter_pool_size`  | `None`  | Size of the HTTP client pool. `None` resolves to 1 (single client, no redundancy). |
+| `submitter_pool_size`  | `None`  | Size of the HTTP client pool. `None` resolves to 1 (single client, no redundancy). Accepted range 1..=16 (upstream `4167c6db4`, `crates/adapters/bitmex/src/config.rs`). |
 | `submitter_proxy_urls` | `None`  | Optional list of proxy URLs for submit broadcaster path diversity. *Not yet wired through Python integration.* |
 
 **Example configuration**:
