@@ -8,8 +8,8 @@ Python-adapter wiring content that lived here was cleared; it is migration/refer
 history, never a production path.
 
 - All current Betfair work: [`betfair_v2.md`](betfair_v2.md) — the Rust adapter surface
-  (`crates/adapters/betfair`), tracked against the pinned baseline `6df23738`.
-- NT v2 compatibility note: the pinned upstream `docs/integrations/betfair.md` (pin `6df23738`)
+  (`crates/adapters/betfair`), tracked against the pinned baseline `1602043d`.
+- NT v2 compatibility note: the pinned upstream `docs/integrations/betfair.md` (pin `1602043d`)
   is the current v2 Rust-adapter guide (Rust adapter exposed to Python at
   `nautilus_trader.adapters.betfair`); treat it as the authoritative upstream reference, not
   v1 wiring history.

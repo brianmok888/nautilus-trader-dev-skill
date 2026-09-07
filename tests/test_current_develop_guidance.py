@@ -104,11 +104,11 @@ def test_current_baseline_abbreviation_is_consistent() -> None:
     )
 
     # Then every abbreviated citation uses the resolvable 10-character prefix
-    assert all("6df23738" in document for document in documents)
+    assert all("1602043d" in document for document in documents)
 
 
 def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
-    # Given current-develop strategy-managed contingencies (6df23738)
+    # Given current-develop strategy-managed contingencies (1602043d)
     live = read("skills/nt-adapters/references/concepts/live.md")
     orders = read("skills/nt-trading/references/concepts/orders.md")
     builder = read("skills/nt-strategy-builder-rust/SKILL.md")
@@ -123,7 +123,7 @@ def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
         "Strategy-managed contingencies",
         "OrderEmulator",
         "cumulative filled",
-        "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
+        "1602043debb82b34084d35a452c374b744b96524",
     ):
         assert marker in orders
-    assert "6df237382eb1d8411906f9b1790fa06f8ba7aad4" in builder
+    assert "1602043debb82b34084d35a452c374b744b96524" in builder

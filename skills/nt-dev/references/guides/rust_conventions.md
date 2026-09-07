@@ -57,7 +57,7 @@ The `nextest` profile is used to align with the workflow of the majority of core
 
 ### Strict Clippy audit (candidate report)
 
-Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `6df23738`,
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `1602043d`,
 `scripts/clippy-strict-audit.py`) reports candidate violations of the configured
 strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
 `indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,

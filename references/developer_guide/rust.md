@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 6df237382eb1d8411906f9b1790fa06f8ba7aad4
-sync_date: 2026-09-06
+source_commit: 1602043debb82b34084d35a452c374b744b96524
+sync_date: 2026-09-07
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only

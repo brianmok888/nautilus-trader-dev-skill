@@ -753,7 +753,7 @@ NT v2 compatibility note: the v1 data-config `environment`, `bars_timestamp_on_c
 `wallet_address` keys and the v1 exec-config `subaccount`, `environment`, `base_url_http`,
 `base_url_ws`, and `base_url_grpc` keys are migration/reference-only; the pinned surfaces use
 `network`, `subaccount_number`, and `http_endpoint`/`ws_endpoint`/`grpc_endpoint`
-(`crates/adapters/dydx/src/config.rs` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
+(`crates/adapters/dydx/src/config.rs` at pin `1602043debb82b34084d35a452c374b744b96524`).
 
 ### Basic setup
 
