@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-3-g2-execution",
+ "finding_id": "NT-2026-09-07-001",
+ "owner_stage": "phase-3",
+ "evidence_state": "verified",
+ "severity": "P1",
+ "command": "python3 tools/check_skill_g2_harnesses.py --execute --skill nt-adapters --upstream-root <disposable-1602043-worktree> (manual exercise) + readiness enumeration",
+ "exit_code": 0,
+ "output_sha256": "becd28e4d8d9193c4177000561edb344fcf789a0d76accbf5292e65fdaf0523f",
+ "output_excerpt": "G2 at the new pin verified end-to-end: original 17/17 sweep PASS; after Phase-2 content edits the 8 affected skills re-executed PASS; after review remediation nt-adapters/nt-review/nt-architect/nt-implement re-executed PASS; fresh manual nt-adapters invocation exit 0; readiness enumeration reports no stale evidence for any skill.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T19:44:52Z"
+}

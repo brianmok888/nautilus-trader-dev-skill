@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-2-pin-move",
+ "finding_id": "NT-2026-09-07-001",
+ "owner_stage": "phase-2",
+ "evidence_state": "verified",
+ "severity": "P1",
+ "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_sync.py && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_rust_trading_reference_sync.py && python3 tools/check_legacy_labelling.py",
+ "exit_code": 0,
+ "output_sha256": "10c1d07cd6cf530810d40c64b59f9a05cbf97e2d6f2fe0f78ff47378aff5ddf6",
+ "output_excerpt": "Pin moved 6df237382e -> 1602043deb: delta manifest records the 27-commit/398-path transition; pinned cache checked out at the tip (clean); rust-trading examples and vendored analysis crate re-synced byte-exact; 77-file cite sweep plus 19 sync-date bumps and CURRENT_SYNC_DATE refresh; exec-spec digest constant updated. All five validators exit 0.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T18:30:20Z"
+}

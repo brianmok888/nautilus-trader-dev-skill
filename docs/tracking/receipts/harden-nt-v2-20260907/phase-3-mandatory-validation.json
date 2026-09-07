@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-3-mandatory-validation",
+ "finding_id": "NT-2026-09-07-001",
+ "owner_stage": "phase-3",
+ "evidence_state": "verified",
+ "severity": "P1",
+ "command": "python3 -m pytest -q && python3 tools/check_dev_guide_sync.py && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_rust_trading_reference_sync.py && python3 tools/check_legacy_labelling.py && python3 tools/check_upstream_freshness.py --format json && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && python3 tools/check_governance_receipts.py && git diff --check",
+ "exit_code": 0,
+ "output_sha256": "f4ff43a52cd8d812f403d0250edc81b686ca2788ba8055f21fa685e765720592",
+ "output_excerpt": "Phase-3 fresh rerun of the full mandatory suite on the remediated tree: pytest 452 passed / 7 skipped; all eight validators and git diff --check exit 0; 315 governance receipts validated. Deterministic seam subset (findings schema, freshness, harness contracts, guidance hardening, develop overlays): 102 passed.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T19:44:52Z"
+}

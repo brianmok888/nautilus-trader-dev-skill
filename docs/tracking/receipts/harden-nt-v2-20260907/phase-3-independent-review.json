@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-3-independent-review",
+ "finding_id": "NT-2026-09-07-006",
+ "owner_stage": "phase-3",
+ "evidence_state": "verified",
+ "severity": "P2",
+ "command": "adversarial post-implementation review (full) + focused remediation verification (read-only agents)",
+ "exit_code": 0,
+ "output_sha256": "664f0ac2d26b93d01807b16972883bcf9637d2d540934adf398c5f84502aa2df",
+ "output_excerpt": "Full adversarial review found two IMPORTANT defects in the Hyperliquid guidance (most-cost-2 misstatement; per-user-address WS scope overclaim) and one mirrored overclaim in the delta manifest; all three corrected in Phase-2 round 2 with evidence regenerated. Focused reviewer then verified all five checks PASS and returned APPROVED with no residual concern. All remaining guidance areas (architecture timestamps, reconciliation rule, OKX, Kraken, Lighter, bounds, nt-dev rules, spec-exec balances) confirmed upstream-faithful with cited file:line evidence.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T19:44:52Z"
+}

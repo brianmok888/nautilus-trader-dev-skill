@@ -4,13 +4,125 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-06
-Reviewed upstream develop: `6df237382eb1d8411906f9b1790fa06f8ba7aad4`
-Pinned G2 baseline: `6df237382eb1d8411906f9b1790fa06f8ba7aad4`
+Review date: 2026-09-07
+Reviewed upstream develop: `1602043debb82b34084d35a452c374b744b96524`
+Pinned G2 baseline: `1602043debb82b34084d35a452c374b744b96524`
 
-The review manifest preserves five contiguous transitions. The newest transition reviews 61 commits and 561 net changed paths from the previously reviewed `65a168ea14976bf936d30ab67e1187db8f5703d0` through current develop `4692bac35bb11a25eeebb8d7af4d51c55afe53ec`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window standardizes adapter task lifecycles (`crates/live/src/task.rs` TaskGroup/TaskSpawner/TaskSlot), adds `LiveNode.add_actor` registration for constructed Python actor instances, refreshes Rust development-guidance docs, and refines model and engine internals; seventeen delta entries carry repository impact; correction findings NT-2026-09-02-01 through NT-2026-09-02-12 were opened and closed from this review cycle.
+The review manifest preserves eight contiguous transitions. The newest transition reviews 27 commits and 398 net changed paths from the previously reviewed `6df237382eb1d8411906f9b1790fa06f8ba7aad4` through current develop `1602043debb82b34084d35a452c374b744b96524`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window upgrades `DurationNanos` to a checked newtype with typed timestamp arithmetic, accepts uncached zero-quantity hedge-mode reports in execution reconciliation, adds OKX Spot deterministic-simulation support, account-specific Kraken Spot fee loading, Hyperliquid weighted rate limiting, Lighter post-only GTD recovery plus account-flatten tooling, bounded Python-controlled allocation sizes, and pre-flight import-isolation validation; eleven delta entries carry repository impact; findings NT-2026-09-07-001 through NT-2026-09-07-012 were opened and are tracked below.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
+
+## Open findings — 2026-09-07 upstream currency cycle
+
+NT v2 compatibility note: quoted legacy v1/Cython/`TradingNode` tokens below are historical finding evidence (migration reference only).
+Three parallel read-only delta-review groups covered all 27 commits in `6df23738..1602043deb` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (eighth transition).
+
+[NT-2026-09-07-001] [P1] [CLOSED 2026-09-07] V2 compliance: upstream develop advanced 27 commits / 398 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
+  file: tools/upstream_baseline.py:4
+  evidence: `python3 tools/check_upstream_freshness.py --format json` reported develop tip `1602043debb82b34084d35a452c374b744b96524` with reviewed_commit mismatch (exit 1) at cycle start; `tests/test_upstream_freshness.py::test_required_develop_ref_contains_current_nightly_history` and `::test_review_manifest_tracks_latest_reviewed_develop_commit` failed on clean main.
+  fix: append the 27-commit reviewed transition to `references/upstream-delta-review.json`; move `UPSTREAM_COMMIT` to the reviewed tip; re-checkout the pinned cache; re-sync the byte-mirrored trading examples and vendored analysis crate; sweep pin citations; bump the 19 developer-guide sync dates and `CURRENT_SYNC_DATE`; refresh the exec-spec digest constant.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exit 0; `python3 tools/check_dev_guide_sync.py`, `check_dev_guide_snapshot_sync.py`, `check_rust_trading_reference_sync.py`, `check_legacy_labelling.py` exit 0; `python3 tools/check_skill_g2_harnesses.py --execute --upstream-root <disposable-1602043-worktree>` 17/17 PASS with regenerated `references/g2-evidence/*.json`; `--check-cards --check-card-declarations` exit 0; full `python3 -m pytest -q` green.
+  closure: currency prerequisite complete: pin at reviewed tip with every pin-citing layer refreshed.
+  closure-proof: python3 tools/check_upstream_freshness.py --format json exit 0; all five sync validators exit 0; G2 sweep 17/17 PASS plus 8 edited skills re-executed PASS; python3 -m pytest -q 452 passed / 7 skipped; receipts docs/tracking/receipts/harden-nt-v2-20260907/phase-2-pin-move.json and phase-2-g2-execution.json.
+
+
+[NT-2026-09-07-002] [P1] [CLOSED 2026-09-07] V2 compliance: curated timestamp-arithmetic guidance still treats `DurationNanos` as a raw `u64` alias; upstream 99994a92e9 upgraded it to a checked newtype with typed constructors, so the taught pattern no longer type-checks.
+  file: references/concepts/architecture.md:146
+  evidence: upstream `crates/core/src/nanos.rs` at `1602043deb` declares `#[repr(transparent)] pub struct DurationNanos(u64)` with `DurationNanos::new/from_secs/from_millis` and typed timestamp arithmetic; architecture.md:146-153 adds a timestamp to a raw-ns value and its nt-live copy mirrors the pattern; skills/nt-trading examples and skills/nt-signals vendored analysis needed the same adaptation upstream (re-synced byte-exact in NT-2026-09-07-001).
+  fix: rewrite the architecture.md arithmetic examples to typed `DurationNanos`/`UnixNanos` operations (`checked_add_duration`/typed subtraction rather than raw u64 addition) and apply the identical correction to the `skills/nt-live/references/concepts/architecture.md` copy.
+  acceptance-test: both files teach only newtype-compatible arithmetic (verified by grep for raw-alias patterns); applicable validators and prose regression tests pass.
+  closure: typed DurationNanos arithmetic guidance in both architecture copies.
+  closure-proof: Both architecture.md copies teach only typed UnixNanos/DurationNanos arithmetic (grep confirms no raw timestamp-addition pattern remains); validators and pytest green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-003] [P1] [CLOSED 2026-09-07] Stale guidance: nt-testing live-reconciliation rule treats every unresolved in-scope identifier as an error; upstream e98237c91 now reconciles uncached hedge-mode `PositionStatusReport`s with zero signed quantity as success.
+  file: skills/nt-testing/SKILL.md:70
+  evidence: upstream `crates/execution/src/engine/mod.rs:1646-1652` at `1602043deb` accepts zero-quantity uncached hedge reports and errors only on non-zero ones; `references/integrations/lighter.md:411-413` documents adapters emitting flat position reports for disappeared cached markets.
+  fix: qualify the nt-testing reconciliation guidance (non-zero uncached reports remain errors; zero-quantity uncached hedge reports are valid already-flat states) and note the Lighter flat-report case in the integration reference.
+  acceptance-test: updated files reviewed against the pinned source; `python3 tools/check_legacy_labelling.py` and the nt-testing focused tests pass.
+  closure: reconciliation rule qualified for zero-quantity uncached hedge reports.
+  closure-proof: nt-testing SKILL.md reconciliation rule qualified and lighter.md flat-report case documented; pytest green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-004] [P2] [CLOSED 2026-09-07] Coverage gap: OKX integration guide lacks the new audited public Spot-state deterministic-simulation scope and its exclusions.
+  file: skills/nt-adapters/references/integrations/okx.md:3
+  evidence: upstream 73c1b15c0 adds the `simulation` feature routing the audited Spot state slice through deterministic clocks/timers/auth seams (`crates/adapters/okx/src/lib.rs:42-47`, `docs/concepts/dst.md:214-218`); execution and underlying transports stay outside the DST contract.
+  fix: document the DST/simulation scope and explicit execution/transport exclusions in the OKX guide.
+  acceptance-test: okx.md cites the pinned commit for every added claim; nt-adapters validators pass.
+  closure: OKX DST/simulation scope documented.
+  closure-proof: okx.md carries the DST/simulation section citing upstream 73c1b15c with explicit execution/transport exclusions; validators green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-005] [P2] [CLOSED 2026-09-07] Coverage gap: Kraken guide omits account-specific fee loading via `/0/private/TradeVolume`, its Query Funds permission requirement, and its fail-loud behavior.
+  file: skills/nt-adapters/references/integrations/kraken.md:871
+  evidence: upstream 794dbe4f7 (`crates/adapters/kraken/src/http/spot/client.rs:1273-1287`, `docs/integrations/kraken.md:70-85`) loads maker/taker rates for authenticated clients, requires Query Funds, fails on missing fee data, and keeps public base-tier fees for unauthenticated clients.
+  fix: document the fee-loading contract and permission in the Kraken credential guidance.
+  acceptance-test: kraken.md cites the pinned commit for the added claims; nt-adapters validators pass.
+  closure: Kraken fee-loading contract documented.
+  closure-proof: kraken.md documents TradeVolume fee loading, Query Funds permission, and fail-loud behavior citing upstream 794dbe4f; validators green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-006] [P2] [CLOSED 2026-09-07] Coverage gap: Hyperliquid guide has no rate-limiting section despite the new weighted shared-bucket contract.
+  file: skills/nt-adapters/references/integrations/hyperliquid.md:660
+  evidence: upstream 181233238e adds a process-shared 1200-weight/min REST bucket scoped by environment/endpoint-origin/proxy-route, endpoint weights, response-weight debt, 429 cooldowns, and route-shared WebSocket limits with a ten-unique-user-address cap (`docs/integrations/hyperliquid.md:1390-1461`, `crates/adapters/hyperliquid/src/common/rate_limits.rs:25-49`).
+  fix: add a rate-limiting section covering the shared REST scope, weights, 429 handling, and WebSocket quotas so multi-client deployments reserve capacity correctly.
+  acceptance-test: hyperliquid.md cites the pinned commit for the added claims; nt-adapters validators pass.
+  closure: Hyperliquid weighted rate-limiting contract documented.
+  closure-proof: hyperliquid.md rate-limiting section rewritten to the weighted shared-scope contract citing upstream 181233238e; validators green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-007] [P2] [CLOSED 2026-09-07] Coverage gap: Lighter guide omits recovered post-only GTD semantics and the `lighter-flatten` emergency workflow.
+  file: skills/nt-adapters/references/integrations/lighter.md:293
+  evidence: upstream 64462eacf reads both PostOnly and GoodTillTime reports with positive `order_expiry` as GTD preserving the post-only flag (`crates/adapters/lighter/src/websocket/parse.rs:1237-1252`) and documents the account-wide flatten tool with its 15-position bound and no-confirmation behavior (`docs/integrations/lighter.md:64-79`).
+  fix: extend the Lighter guide with both behaviors including the bound and the required post-run state check.
+  acceptance-test: lighter.md cites the pinned commit for the added claims; nt-adapters validators pass.
+  closure: Lighter GTD recovery and flatten workflow documented.
+  closure-proof: lighter.md documents recovered post-only GTD semantics and the lighter-flatten workflow (15-close bound, no confirmation, post-run check) citing upstream 64462eacf; validators green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-008] [P2] [CLOSED 2026-09-07] Coverage gap: partial-fill spec-exec guidance does not assert locked-funds recomputation from leaves quantity.
+  file: references/developer_guide/spec_exec_testing.md:198
+  evidence: upstream 74ee7829c computes locked balance from `order.leaves_qty()` (`crates/portfolio/src/manager.rs:418-423`), so cash reservations shrink after partial fills; the skill copy at skills/nt-testing/references/guides/spec_exec_testing.md:190 checks cumulative fill quantity only.
+  fix: extend partial-fill assertions in the curated skill guide (skills/nt-testing/references/guides/spec_exec_testing.md) to cover locked/available balance consistency after each fill; the references/developer_guide snapshot body stays byte-locked to upstream.
+  acceptance-test: both files updated consistently; snapshot/sync validators pass (body change flows through the pinned snapshot contract per repository convention).
+  closure: partial-fill locked-balance assertions added to the curated guide.
+  closure-proof: skills/nt-testing/references/guides/spec_exec_testing.md partial-fill bullet extended to locked-balance assertions citing upstream 74ee7829c; the references/developer_guide snapshot body stays byte-locked to upstream (unchanged by design); pytest green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-009] [P2] [CLOSED 2026-09-07] Coverage gap: nt-dev active guidance lacks the upstream environment rules (no root `.venv`, uv project env at `python/.venv`, evidence freshness after edits/rebases, `make pre-flight` as higher assurance).
+  file: skills/nt-dev/SKILL.md:111
+  evidence: upstream d036f0234 (`AGENTS.md:15-17`, `AGENTS.md:39-49`) forbids a root `.venv`, requires the uv project environment, requires local passing checks with explicit reporting of checks that cannot run, rerunning affected checks after edits/rebases, and names `make pre-flight` as higher assurance.
+  fix: add the environment and validation rules to nt-dev setup/validation guidance.
+  acceptance-test: nt-dev SKILL.md teaches the rules citing the pinned commit; nt-dev tests and validators pass.
+  closure: nt-dev environment rules added.
+  closure-proof: nt-dev SKILL.md teaches the no-root-.venv rule, evidence-freshness rules, and make pre-flight citing upstream d036f0234; pytest green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-010] [P2] [CLOSED 2026-09-07] Coverage gap: documented local validation surface omits the new import-isolation pre-flight check.
+  file: skills/nt-dev/SKILL.md:111
+  evidence: upstream b16f1a11f adds `scripts/test-python-isolation.bash` (clears `PYTHONPATH`/`VIRTUAL_ENV`/`UV_PROJECT_ENVIRONMENT`, validates the built package without rebuilding) invoked by `make pre-flight` after build (`Makefile:487-503`); guidance stops at `make pre-commit`.
+  fix: mention isolated-environment import validation in nt-dev/environment_setup pre-flight guidance, distinct from ordinary pytest and CI wheel isolation.
+  acceptance-test: guidance updated citing the pinned commit; validators pass.
+  closure: import-isolation pre-flight documented.
+  closure-proof: nt-dev SKILL.md documents isolated-env import validation in make pre-flight citing upstream b16f1a11f; pytest green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-011] [P2] [CLOSED 2026-09-07] Coverage gap: timestamp-boundary guidance lacks `UnixNanos::saturating_duration_since` and live-timer terminal-overflow behavior.
+  file: references/concepts/architecture.md:153
+  evidence: upstream 46a4db52f adds `UnixNanos::saturating_duration_since` and makes `LiveTimer` treat an unrepresentable successor timestamp as the final event (`crates/core/src/nanos.rs`, `crates/common/src/live/timer.rs`); architecture.md:153 (and the nt-live copy) mention `checked_add` only.
+  fix: add the saturating difference API and clean timer termination semantics next to the checked-arithmetic guidance in both copies.
+  acceptance-test: both files updated; validators pass.
+  closure: timestamp boundary APIs documented.
+  closure-proof: Both architecture.md copies teach saturating_duration_since and timer terminal-overflow behavior citing upstream 46a4db52f; validators green; receipt phase-2-fixes.json.
+
+
+[NT-2026-09-07-012] [P2] [CLOSED 2026-09-07] Coverage gap: taught sizing parameters omit the newly enforced allocation bounds.
+  file: references/integrations/bitmex.md:574
+  evidence: upstream 4167c6db4 bounds BitMEX broadcaster pools to 1..=16 (`crates/adapters/bitmex/src/config.rs`), and Tardis stream plus backtest chunk sizes to 1..=1,000,000 (`crates/adapters/tardis/src/csv/stream.rs`, `crates/backtest/src/config.rs`); bitmex.md:574-587, tardis.md:481-498, skills/nt-backtest/SKILL.md:223-274, and run_rust_backtest.md:171-175 omit the ranges.
+  fix: document the enforced ranges wherever the parameters are taught.
+  acceptance-test: all four files updated citing the pinned commit; validators pass.
+  closure: allocation bounds documented.
+  closure-proof: bitmex.md (1..=16), tardis.md (1..=1,000,000), nt-backtest SKILL.md, and run_rust_backtest.md document the enforced bounds citing upstream 4167c6db4; validators green; receipt phase-2-fixes.json.
 
 ## Open findings — 2026-09-06 full-tree audit
 
