@@ -144,17 +144,31 @@ Results or Options are used for:
 
 ```rust
 // CORRECT: Panics on overflow - prevents data corruption
-let total_ns = timestamp1 + timestamp2; // Panics if result > u64::MAX
+// (typed arithmetic: UnixNanos + DurationNanos -> UnixNanos)
+let deadline = timestamp + DurationNanos::from_secs(30); // Panics if result > u64::MAX
 
 // CORRECT: Rejects NaN during deserialization
 let price = serde_json::from_str("NaN"); // Error: "must be finite"
 
 // CORRECT: Explicit overflow handling when needed
-let total_ns = timestamp1.checked_add(timestamp2)?; // Returns Option<UnixNanos>
+let deadline = timestamp.checked_add(DurationNanos::from_secs(30))?; // Option<UnixNanos>
+
+// CORRECT: Out-of-order-safe elapsed time between timestamps
+let elapsed = later.saturating_duration_since(earlier); // DurationNanos
 ```
 
 This policy is implemented throughout the core types (`UnixNanos`, `Price`, `Quantity`, etc.)
 and helps NautilusTrader maintain strong data correctness for production trading.
+
+`DurationNanos` is a checked newtype at the pinned baseline (upstream `99994a92e`,
+`crates/core/src/nanos.rs`): construct it with `DurationNanos::new/from_millis/from_secs`
+instead of raw `u64` nanoseconds, and combine it with `UnixNanos` only through the typed
+operators — `UnixNanos + DurationNanos` panics on overflow, `checked_add`/`saturating_add`
+handle it explicitly, and `UnixNanos - UnixNanos` yields a `DurationNanos` that panics on
+out-of-order operands, so prefer `saturating_duration_since` (zero on out-of-order) when
+ordering is not guaranteed. Live timers treat an event whose successor timestamp is
+unrepresentable as the final event instead of overflowing
+(upstream `46a4db52f`, `crates/common/src/live/timer.rs`).
 
 In production deployments, the system is typically configured with `panic = abort` in release builds,
 ensuring that any panic results in a clean process termination that can be handled by process supervisors
