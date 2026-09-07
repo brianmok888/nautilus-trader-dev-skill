@@ -95,7 +95,7 @@ standard-precision mode's nine decimal places. Keep high-precision mode enabled 
 Standard-precision mode continues to support Spot, but Futures clients fail to start or return
 instruments when any definition cannot be parsed. Futures catalogue requests return no partial
 result and never round, clamp, or omit an unsupported definition (upstream
-`docs/integrations/kraken.md` at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`).
+`docs/integrations/kraken.md` at pin `1602043debb82b34084d35a452c374b744b96524`).
 :::
 
 ### Bar emission latency
@@ -892,6 +892,16 @@ does not have a demo or testnet environment.
 :::tip
 We recommend using environment variables to manage your credentials.
 :::
+
+### Fee loading for authenticated Spot clients
+
+Authenticated Kraken Spot clients request account-specific maker/taker rates from
+`/0/private/TradeVolume` when loading instruments, so the API key needs the **Query Funds**
+permission in addition to trading permissions (upstream `794dbe4f`,
+`crates/adapters/kraken/src/http/spot/client.rs`). Authenticated instrument loading fails
+loudly when TradeVolume fails or omits the pair rather than silently falling back to base
+tiers; unauthenticated clients keep public base-tier fees, which may be inaccurate for
+accounts with fee tiers negotiated below base.
 
 When starting the trading node, you'll receive immediate confirmation of whether
 your credentials are valid and have trading permissions.

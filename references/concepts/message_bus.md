@@ -417,7 +417,7 @@ The message bus within a `TradingNode` (node) is referred to as the "internal me
 A producer node is one which publishes messages onto an external stream (see [external publishing](#external-publishing)).
 The consumer node listens to external streams to receive and publish deserialized message payloads on its internal message bus.
 
-Typed external streaming (upstream `9dcf043dc`, current at pin `6df237382eb1d8411906f9b1790fa06f8ba7aad4`):
+Typed external streaming (upstream `9dcf043dc`, current at pin `1602043debb82b34084d35a452c374b744b96524`):
 control, execution, and reconciliation messages (`SubscribeCommand`, `UnsubscribeCommand`,
 `TradingCommand`, `GenerateExecutionMassStatus`, `OrderStatusReport`, `FillReport`,
 `PositionStatusReport`, `ExecutionMassStatus`) are streamed as typed payloads. Their egress is

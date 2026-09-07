@@ -907,9 +907,34 @@ Hyperliquid perpetual futures use a fixed 1-hour funding interval. The adapter s
 
 ## Rate limiting
 
-The adapter implements a token bucket rate limiter for Hyperliquid's REST API with a capacity
-of 1200 weight per minute. HTTP info requests are automatically retried with exponential
-backoff (full jitter) on rate limit (429) and server error (5xx) responses.
+Hyperliquid applies limits by IP address and user address using fixed venue limits; the adapter
+exposes no higher overrides (upstream `181233238e`, `docs/integrations/hyperliquid.md`).
+
+### REST limits
+
+Clients in the same process share one 1,200-weight-per-minute token bucket when their
+environment, HTTP endpoint origin, and proxy route match; `/info` and `/exchange` on one
+origin consume the same bucket. Separate processes, proxy routes, and HTTP clients outside
+this adapter do not coordinate through the in-memory bucket — deployments sharing an egress
+IP must leave capacity for that traffic. Endpoint weights apply: `/exchange` actions cost
+`1 + floor(batch length / 40)`; the six listed low-cost `/info` requests (`l2Book`, `allMids`,
+`clearinghouseState`, `orderStatus`, `spotClearinghouseState`, `exchangeStatus`) cost 2,
+`userRole` costs 60, and every other request costs 20, with additional weight added per
+returned items for some responses (candles,
+trades and orders, fills, funding, TWAP, delegators and validators). Each HTTP attempt
+consumes its full request weight. `/info` retries up to three times on HTTP 408/429/5xx with
+capped full-jitter backoff, honoring integer-seconds `Retry-After` headers on 429;
+`/exchange` request failures are not retried because the venue outcome may be unknown.
+
+### WebSocket limits
+
+Clients in the same process share WebSocket limits when their environment, WebSocket
+endpoint origin, and proxy route match. The shared route limiter enforces route-wide
+quotas — outbound messages 2,000/minute, 100 in-flight posts, 10 simultaneous connections,
+30 new connections per minute, 1,000 active and pending subscriptions — plus a maximum of
+ten unique user addresses for user-specific subscriptions (addresses match
+case-insensitively). Automatic reconnects retain the logical connection slot and active
+subscription reservations. Reserve capacity accordingly when running multiple clients.
 
 ## Configuration
 

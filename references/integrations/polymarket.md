@@ -11,7 +11,7 @@ Order Book (CLOB) API.
 The adapter is implemented in Rust and exposed to Python at
 `nautilus_trader.adapters.polymarket`; data, execution, signing, and WebSocket
 operations therefore have the same behavior from Rust and Python (pinned
-`6df23738`, `docs/integrations/polymarket.md`).
+`1602043d`, `docs/integrations/polymarket.md`).
 
 NautilusTrader supports multiple Polymarket signature types for order signing, which gives
 flexibility for different wallet configurations while NautilusTrader handles signing and order

@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-2-fixes",
+ "finding_id": "NT-2026-09-07-002",
+ "owner_stage": "phase-2",
+ "evidence_state": "verified",
+ "severity": "P1",
+ "command": "python3 -m pytest -q && git diff --check",
+ "exit_code": 0,
+ "output_sha256": "dee4bb53bbd971ceb4099df49a2ebf9c83f8b4eb6fec9262abe7af0c8cb143c3",
+ "output_excerpt": "Full suite 452 passed / 7 skipped after all eleven guidance corrections: typed DurationNanos arithmetic in both architecture.md copies; qualified flat-hedge reconciliation rule; OKX DST scope; Kraken TradeVolume fees; Hyperliquid weighted rate limiting; Lighter GTD recovery + flatten; allocation bounds (BitMEX/Tardis/backtest); nt-dev environment/pre-flight rules; partial-fill locked-balance assertions.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T18:30:47Z"
+}

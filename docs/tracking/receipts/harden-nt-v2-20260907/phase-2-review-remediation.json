@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-2-review-remediation",
+ "finding_id": "NT-2026-09-07-006",
+ "owner_stage": "phase-2",
+ "evidence_state": "verified",
+ "severity": "P2",
+ "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations",
+ "exit_code": 0,
+ "output_sha256": "482ca976d8e492a23b09c016b8b909123d70a8ec58d23ead77fd72027fa470e9",
+ "output_excerpt": "Phase-3 adversarial review found two Hyperliquid inaccuracies; both corrected: (1) /info weights now enumerate the six cost-2 requests with every other request at 20 (was \"most cost 2\"); (2) WebSocket guidance now states the route-shared limiter with route-wide quotas and the ten-unique-user-address cap (was \"scoped per user address\"). Delta-manifest rationale and finding -006 evidence corrected to match. nt-adapters, nt-review, nt-architect, nt-implement evidence regenerated; readiness check reports no stale evidence; full battery green: pytest 452 passed / 7 skipped, all validators exit 0.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T19:04:19Z"
+}

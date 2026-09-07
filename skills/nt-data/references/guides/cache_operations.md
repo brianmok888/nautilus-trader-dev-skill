@@ -67,7 +67,7 @@ synthetic_ids = self.cache.synthetic_ids()
 ### Instrument closes
 
 The cache keeps the latest `InstrumentClose` per instrument (upstream commit `9d45d410db`, pinned
-`6df23738`):
+`1602043d`):
 
 ```python
 self.cache.add_instrument_close(close)          # store the latest close (last write wins)

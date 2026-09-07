@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "25269060eba826696e5a6be07b4c98a05a4f3060ca5bda493cfad21f335f73af",
+  "owned_content_sha256": "8aa96cbdb19bf0294e1a8bbe308808a6195be6431921b2d10fa337545f0556ef",
   "schema_version": 2,
   "scope": "upstream:crates/adapters/sandbox-and-bitmex-examples",
   "skill": "nt-adapters",
@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.606587,
+      "duration_seconds": 0.667629,
       "returncode": 0
     },
     {
@@ -28,11 +28,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.7765,
+      "duration_seconds": 0.818946,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "6df237382eb1d8411906f9b1790fa06f8ba7aad4",
-  "verified_at": "2026-09-06T15:14:40.382728+00:00"
+  "upstream_commit": "1602043debb82b34084d35a452c374b744b96524",
+  "verified_at": "2026-09-07T19:42:34.007496+00:00"
 }

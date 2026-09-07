@@ -187,7 +187,10 @@ Test market order submission and fills. Market orders should execute immediately
 - Some adapters simulate market orders as aggressive limit IOC orders (check adapter guide).
 - The event sequence from the strategy's perspective should be identical regardless of the venue mechanism.
 - Fill price should be within the recent bid/ask spread.
-- Partial fills are valid; verify the cumulative filled quantity matches the order quantity.
+- Partial fills are valid; verify the cumulative filled quantity matches the order quantity, and
+  for cash accounts also assert that locked funds are recomputed from the order's leaves
+  quantity after each fill so available/locked balances stay consistent (upstream `74ee7829c`,
+  `crates/portfolio/src/manager.rs`).
 
 **Python config:**
 

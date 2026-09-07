@@ -1,0 +1,15 @@
+{
+ "schema_version": 1,
+ "mission": "harden-nt-v2-20260907",
+ "receipt": "phase-3-per-finding-verdicts",
+ "finding_id": "NT-2026-09-07-001",
+ "owner_stage": "phase-3",
+ "evidence_state": "verified",
+ "severity": "P1",
+ "command": "independent verification passes: mechanical verifier (path/finding mapping, upstream integrity, pin consistency, closure honesty, receipts, scope) + adversarial guidance reviewer (10 correctness areas) + focused remediation reviewer (5 checks)",
+ "exit_code": 0,
+ "output_sha256": "0733700b67aaa9027ebd6834d4d728d533e9b3da05212ac8f83894d2ceca4470",
+ "output_excerpt": "Per-finding verdicts: NT-2026-09-07-001 Verified (pin/layers/manifest mechanically exact; suite green). 002 Verified (typed DurationNanos arithmetic confirmed vs crates/core/src/nanos.rs; no API misuse). 003 Verified (zero-quantity uncached hedge reconciliation vs crates/execution/src/engine/mod.rs:1646-1652). 004 Verified (OKX DST scope vs docs/concepts/dst.md). 005 Verified (Kraken TradeVolume/Query Funds vs http/spot/client.rs + docs). 006 Verified after remediation (six cost-2 /info requests enumerated; route-shared WS quotas with ten-address cap; reviewer APPROVED all 5 checks). 007 Verified (Lighter post-only GTD recovery + flatten workflow). 008 Verified (leaves_qty locked balance vs crates/portfolio/src/manager.rs). 009/010 Verified (no-root-.venv, evidence freshness, pre-flight import isolation vs root AGENTS.md + scripts). 011 Verified (saturating_duration_since + timer terminal behavior). 012 Verified (BitMEX 1..=16, Tardis/backtest 1..=1,000,000 bounds). Mechanical verifier REJECTED flag on docs/end_to_end_guide.md resolved as false positive: the diff is exactly two pin citations mandated by the refresh-every-pin-citing-layer requirement, mapped to NT-2026-09-07-001.",
+ "redactions": [],
+ "recorded_at": "2026-09-07T19:44:52Z"
+}

@@ -12,6 +12,16 @@ This adapter is written in Rust, with optional Python bindings for Python workfl
 It does not require external OKX client libraries. The core components are compiled as
 a static library and linked automatically during the build.
 
+## Deterministic simulation (DST)
+
+The `simulation` cargo feature enables deterministic simulation testing with
+[MadSim](https://crates.io/crates/madsim) (upstream `73c1b15c`,
+`crates/adapters/okx/src/lib.rs`). The audited OKX public Spot state slice routes
+state-affecting clock reads and timers through the DST seams and sorts reconnect and
+bulk-unsubscribe subscription commands (`docs/concepts/dst.md` at the pinned baseline).
+OKX execution and its underlying HTTP and WebSocket transports remain outside the DST
+contract, and the static convention hook does not yet cover adapter crates.
+
 ## Examples
 
 Live example scripts are available in

@@ -318,6 +318,10 @@ same default expiry. The venue rejects `-1` as an invalid expiry for these TIFs.
 also shown that very short GTD expiries can be rejected by the sequencer with
 `21711 invalid expiry`; use a venue-accepted expiry horizon for live GTD tests.
 
+On recovery, both `PostOnly` and `GoodTillTime` reports carrying a positive `order_expiry` are
+interpreted as Nautilus `GTD`, preserving the independent post-only flag
+(upstream `64462eacf`, `crates/adapters/lighter/src/websocket/parse.rs`).
+
 ### Execution instructions
 
 | Instruction   | Perpetuals | Spot | Notes                                                        |
@@ -392,6 +396,26 @@ submitting a signed tx to Lighter mainnet that the sequencer accepted.
 | Position reports     | ✓          | -    | Perp only; replays cached position stream.                   |
 | Account state        | ✓          | ✓    | Replays the cached `account_all_assets` stream.              |
 | Mass status          | ✓          | ✓    | Combines orders, fills, and cached positions.                |
+
+Adapters may emit flat position reports for markets that disappeared from the local cache;
+the execution engine reconciles uncached hedge-mode reports with zero signed quantity as
+already-flat rather than erroring (upstream `e98237c91`,
+`crates/execution/src/engine/mod.rs`).
+
+### Emergency account cleanup
+
+`cargo run --bin lighter-flatten -p nautilus-lighter` cancels open orders and closes positions
+for the selected deployment account: it submits Lighter's account-wide immediate cancellation,
+reads one position snapshot, and submits reduce-only IOC closes for the positions in that
+snapshot (upstream `64462eacf`, `docs/integrations/lighter.md`). The command does not confirm
+the requests or retry until the account is flat — a successful exit means the cancellation and
+discovered close requests were submitted without a known error, so check the account state
+afterwards and rerun if anything remains. One run submits at most 15 position closes because
+the account-wide cancellation consumes one slot in the 16-transaction nonce window; an
+incomplete position snapshot or a request failure returns an error. Cleanup is account-wide,
+not strategy-scoped: stop other writers for the account before running it. Set
+`LIGHTER_DEPLOYMENT` (`lighter`/`robinhood`) and `LIGHTER_ENVIRONMENT` (`mainnet`/`testnet`);
+omitted selectors default to Lighter Mainnet.
 
 ## Account and position management
 
