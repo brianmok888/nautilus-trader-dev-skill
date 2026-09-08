@@ -1345,7 +1345,11 @@ The execution dispatch converts order and fill messages using a two-tier routing
 2. The client dispatch layer tracks which orders were submitted through this client.
 3. **Tracked order**: convert venue types to order events (`OrderAccepted`, `OrderCanceled`,
    `OrderFilled`, etc.) and synthesize any missing lifecycle events (e.g., `OrderAccepted`
-   before a fast fill).
+   before a fast fill). When the venue supplies a cancellation reason
+   (typically `OrderStatusReport.cancel_reason`), forward it into `OrderCanceled`'s
+   optional `reason` field instead of discarding it; the field is serde-defaulted so
+   existing payloads are unaffected, and venues needing filtering or shared normalization
+   may pass `None` until that normalization exists.
 4. **External/unknown order**: convert to reports (`OrderStatusReport` or `FillReport`) for
    downstream reconciliation.
 
