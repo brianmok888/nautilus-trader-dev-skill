@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-finding-005",
+  "finding_id": "NT-2026-09-08-005",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "e841e1586b6c43689a6032e76e82c7a0927df59f8d709eedfc8e0365f4b40854",
+  "output_excerpt": "Documented OKX usable-instrument readiness and abort-before-WebSockets behavior in canonical and adapter-owned integration references. Final Phase 2 verification: 452 passed, 7 skipped; G2 card/declaration validation passed; git diff --check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T09:10:00Z"
+}
