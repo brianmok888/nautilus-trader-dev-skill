@@ -692,6 +692,23 @@ instrument_id = get_polymarket_instrument_id(
 )
 ```
 
+## Numeric precision
+
+Financial wire values are decoded directly as decimals. Values outside the supported decimal or
+domain-type range fail HTTP decoding or report construction. WebSocket and RTDS handlers log and
+skip invalid updates. Report construction does not substitute zero for an invalid price or quantity.
+
+Instrument `fee_schedule` metadata stores decimal parameters as strings; readers also accept legacy
+numeric metadata. The live fee curve retains the reference SDK's floating-point power calculation;
+fee inputs remain decimals until that step, and negative rates or exponents and arithmetic overflow
+return errors.
+
+Public discovery returns stable Python mappings and lists while Rust owns validation and
+pagination. Fractional JSON numbers become `decimal.Decimal`, including nested event markets,
+fee schedules, and CLOB rewards. Integer tokens remain Python `int`, strings remain strings, and
+nulls remain `None`. A financial field can therefore be `int`, `Decimal`, or `None` depending on
+the payload; handle all three when consuming discovery results.
+
 ## Contributing
 
 :::info

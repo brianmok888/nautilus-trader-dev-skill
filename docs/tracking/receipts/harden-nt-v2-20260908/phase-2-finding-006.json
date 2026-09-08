@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-finding-006",
+  "finding_id": "NT-2026-09-08-006",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "0d028728f00352f37b5af603e6b5045de28949ec140f77cbc9c5bb2996153c40",
+  "output_excerpt": "Documented Polymarket decimal wire precision, invalid-update handling, and fail-not-zero behavior in canonical and adapter-owned integration references. Final Phase 2 verification: 452 passed, 7 skipped; G2 card/declaration validation passed; git diff --check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T09:10:00Z"
+}

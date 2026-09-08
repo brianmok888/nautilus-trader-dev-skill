@@ -527,6 +527,23 @@ last-36-character form collapsed those fills to a single id and downstream
 catalogs silently dropped duplicates. The same venue event yields the same
 trade ID across replays, keeping downstream dedup intact.
 
+## Numeric precision
+
+Financial wire values are decoded directly as decimals. Values outside the supported decimal or
+domain-type range fail HTTP decoding or report construction. WebSocket and RTDS handlers log and
+skip invalid updates. Report construction does not substitute zero for an invalid price or quantity.
+
+Instrument `fee_schedule` metadata stores decimal parameters as strings; readers also accept legacy
+numeric metadata. The live fee curve retains the reference SDK's floating-point power calculation;
+fee inputs remain decimals until that step, and negative rates or exponents and arithmetic overflow
+return errors.
+
+Public discovery returns stable Python mappings and lists while Rust owns validation and
+pagination. Fractional JSON numbers become `decimal.Decimal`, including nested event markets,
+fee schedules, and CLOB rewards. Integer tokens remain Python `int`, strings remain strings, and
+nulls remain `None`. A financial field can therefore be `int`, `Decimal`, or `None` depending on
+the payload; handle all three when consuming discovery results.
+
 ## Fees
 
 The adapter reads each instrument's `fee_schedule` and applies its `rate` and `exponent` as:
