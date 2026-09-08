@@ -3,8 +3,8 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 # Positions
 
 This guide explains how positions work in NautilusTrader, including their lifecycle, aggregation
-from order fills, profit and loss calculations, and the important concept of position snapshotting
-for netting OMS configurations.
+from order fills, profit and loss calculations, and position snapshotting for closed-cycle
+preservation on same-ID reopen.
 
 ## Overview
 
@@ -55,7 +55,8 @@ A position closes when the net quantity becomes zero (`FLAT`). At closure:
 - The closing order ID is recorded.
 - Duration is calculated from open to close.
 - Final realized PnL is computed.
-- In `NETTING` OMS, when the position later reopens, the engine snapshots the closed state to preserve historical PnL (see [Position snapshotting](#position-snapshotting)).
+- In either OMS type, when the position later reopens under the same ID, the engine
+  snapshots the closed state to preserve historical PnL (see [Position snapshotting](#position-snapshotting)).
 
 ## Order fill aggregation
 
@@ -162,7 +163,10 @@ In `HEDGING` mode, multiple positions can exist for the same instrument:
 - Each position has a unique position ID.
 - Positions are tracked independently.
 - No automatic netting across positions.
-- Closed positions remain in cache history but do not reopen; new fills create new positions.
+- A fill with a new position ID creates a separate position. If a later fill reuses a closed
+  position ID, the engine archives the closed cycle before replacing the cached state.
+- A virtual position flip creates a new ID and keeps the original closed position in the cache,
+  so that path does not need a closed-cycle snapshot.
 
 :::warning
 When using `HEDGING` mode, be aware of increased margin requirements as each position
@@ -190,19 +194,21 @@ for venue-specific OMS configuration.
 
 ## Position snapshotting
 
-Position snapshotting is an important feature for `NETTING` OMS configurations that preserves
-the state of closed positions for accurate PnL tracking and reporting.
+Position snapshotting preserves the state of closed cycles for accurate PnL tracking and reporting
+when a later fill reopens a closed position.
 
 ### Why snapshotting matters
 
-In a `NETTING` system, when a position closes (becomes `FLAT`) and then reopens with a new trade,
+When a position closes (becomes `FLAT`) and then reopens under the same ID with a new trade,
 the position object is reset to track the new exposure. Without snapshotting, the historical
 realized PnL from the previous position cycle would be lost.
 
 ### How it works
 
-When a `NETTING` position closes and then receives a new fill for the same instrument, the execution
-engine snapshots the closed position state before resetting it, preserving:
+When a fill reopens a closed position under the same ID, the execution engine archives the closed
+state before opening the next cycle. This applies to both `NETTING` and `HEDGING` OMS. A `HEDGING`
+flip using a non-virtual ID follows a separate path: it reuses the ID without archiving the
+closed cycle. The snapshot preserves:
 
 - Final quantities and prices.
 - Realized PnL.

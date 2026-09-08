@@ -46,8 +46,8 @@ the execution instructions supported for each. Advanced order types and emulated
 ## [Positions](positions.md)
 
 The **Positions** guide explains how positions work in NautilusTrader, including their lifecycle,
-aggregation from order fills, profit and loss calculations, and the important concept of position
-snapshotting for netting OMS configurations.
+aggregation from order fills, profit and loss calculations, and position snapshotting for
+closed-cycle preservation on same-ID reopen.
 
 ## [Cache](cache.md)
 

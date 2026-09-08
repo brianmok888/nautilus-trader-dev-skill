@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-fixes",
+  "finding_id": "NT-2026-09-08-002",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "fc73909ecbde64c5775f8e0eda66d790d1f78693f84583de5d949ffd55c8b0f1",
+  "output_excerpt": "Final full suite: 452 passed, 7 skipped. Developer-guide sync, snapshot sync, Rust trading reference sync, legacy labelling, upstream freshness, G2 card/declaration validation, governance receipt validation, findings schema validation, and git diff --check all passed. Manual surface QA confirmed current-pin visibility and every corrected guidance contract.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T08:50:59Z"
+}

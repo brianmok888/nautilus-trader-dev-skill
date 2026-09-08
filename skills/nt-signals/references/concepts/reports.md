@@ -123,12 +123,12 @@ Position analysis including snapshots:
 
 ```python
 # Using Trader helper method (recommended)
-# Automatically includes snapshots for NETTING OMS
+# Automatically includes snapshots for archived closed cycles
 positions_report = trader.generate_positions_report()
 
 # Or using ReportProvider directly
 positions = cache.positions()
-snapshots = cache.position_snapshots()  # For NETTING OMS
+snapshots = cache.position_snapshots()  # For archived closed cycles (either OMS)
 positions_report = ReportProvider.generate_positions_report(
     positions=positions, snapshots=snapshots
 )
@@ -208,10 +208,12 @@ Accurate PnL accounting requires careful consideration of several factors:
 - **Commission impact**: Only included when in settlement currency.
 
 :::warning
-PnL calculations depend on the OMS type. In `NETTING` OMS, position snapshots
-preserve historical PnL when positions reopen. Always include snapshots in
-reports for accurate total PnL calculation. In `HEDGING` OMS, snapshots are
-not used since each position has a unique ID and is never reopened.
+PnL calculations depend on the OMS type. Position snapshots preserve historical PnL
+when a fill reopens a closed position under the same ID, in either `NETTING` or `HEDGING` OMS.
+Always include snapshots in reports for accurate total PnL calculation. A `HEDGING` virtual flip
+creates a new position ID and needs no closed-cycle snapshot. (Version-scoped correction: the
+pinned upstream `reports.md` still carries the pre-#4908 NETTING-only wording; the engine
+behavior is defined by `docs/concepts/positions.md` and commit a384f97fac at pin c1a2310144.)
 :::
 
 ### Multi-currency accounting
@@ -422,7 +424,7 @@ The `ReportProvider` works with several system components:
 - **Cache**: Source of all trading data (orders, positions, accounts) for reports.
 - **Portfolio**: Uses reports for performance analysis and metrics calculation.
 - **BacktestEngine**: Uses reports for post-run analysis and visualization.
-- **Position snapshots**: Required for accurate PnL reporting in `NETTING` OMS.
+- **Position snapshots**: Required for accurate PnL reporting when positions reopen (either OMS type).
 
 ## Summary
 
@@ -431,7 +433,7 @@ trading performance. These reports transform raw trading data into structured Da
 enabling detailed analysis of orders, fills, positions, and account states. Understanding
 how to generate and interpret these reports is essential for strategy development,
 performance evaluation, and accurate PnL accounting, particularly when dealing with
-position snapshots in `NETTING` OMS.
+position snapshots when positions reopen (either OMS type).
 
 ## Related guides
 
