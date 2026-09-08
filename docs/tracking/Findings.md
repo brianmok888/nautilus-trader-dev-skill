@@ -4,13 +4,99 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-07
-Reviewed upstream develop: `1602043debb82b34084d35a452c374b744b96524`
-Pinned G2 baseline: `1602043debb82b34084d35a452c374b744b96524`
+Review date: 2026-09-08
+Reviewed upstream develop: `c1a2310144c37db80ad11af3d86b65b2ed300c81`
+Pinned G2 baseline: `c1a2310144c37db80ad11af3d86b65b2ed300c81`
 
-The review manifest preserves eight contiguous transitions. The newest transition reviews 27 commits and 398 net changed paths from the previously reviewed `6df237382eb1d8411906f9b1790fa06f8ba7aad4` through current develop `1602043debb82b34084d35a452c374b744b96524`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window upgrades `DurationNanos` to a checked newtype with typed timestamp arithmetic, accepts uncached zero-quantity hedge-mode reports in execution reconciliation, adds OKX Spot deterministic-simulation support, account-specific Kraken Spot fee loading, Hyperliquid weighted rate limiting, Lighter post-only GTD recovery plus account-flatten tooling, bounded Python-controlled allocation sizes, and pre-flight import-isolation validation; eleven delta entries carry repository impact; findings NT-2026-09-07-001 through NT-2026-09-07-012 were opened and are tracked below.
+The review manifest preserves nine contiguous transitions. The newest transition reviews 16 commits and 136 net changed paths from the previously reviewed `1602043debb82b34084d35a452c374b744b96524` through current develop `c1a2310144c37db80ad11af3d86b65b2ed300c81`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window adds `OrderCanceled.reason` propagation, corrects same-ID closed-cycle snapshotting and OTO child sizing, removes obsolete OKX `speedBump`, establishes OKX execution readiness, standardizes Polymarket numeric precision, bounds WMA/HMA periods, and introduces component bindings; findings NT-2026-09-08-001 through NT-2026-09-08-009 were opened and are tracked below.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
+
+## Open findings — 2026-09-08 upstream currency cycle
+
+NT v2 compatibility note: quoted legacy v1/Cython/`TradingNode` tokens below are historical finding evidence (migration reference only).
+One read-only delta-review pass covered all 16 commits in `1602043deb..c1a2310144` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (ninth transition).
+
+[NT-2026-09-08-001] [P1] [CLOSED 2026-09-08] V2 compliance: upstream develop advanced 16 commits / 136 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
+  file: tools/upstream_baseline.py:4
+  evidence: `python3 tools/check_upstream_freshness.py --format json` resolves develop tip `c1a2310144c37db80ad11af3d86b65b2ed300c81` (16 commits ahead of pin `1602043deb`, 136 changed paths).
+  fix: move `UPSTREAM_COMMIT` to the reviewed tip, refresh the pinned dev-guide snapshots and `CURRENT_SYNC_DATE`, the nt-learn curriculum pin reference, and regenerate all 17 `references/g2-evidence/*.json` via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree; `check_upstream_freshness.py` must exit 0.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_snapshot_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes.
+  closure: pin moved and every pin-citing layer refreshed.
+  closure-proof: `tools/upstream_baseline.py` now pins c1a2310144; `references/upstream-delta-review.json` carries the fully classified 16-commit transition; developer-guide snapshots, current pin citations, and all 17 G2 evidence artifacts were refreshed. `check_upstream_freshness.py`, snapshot sync, G2 card/declaration checks, and receipt validation pass; `receipts/harden-nt-v2-20260908/phase-2-pin-move.json` and `receipts/harden-nt-v2-20260908/phase-2-g2-execution.json`.
+  correction: 2026-09-08 — [currency] — MODIFIED: moved the source pin to c1a2310144, refreshed active pin citations/snapshots, updated the immutable execution-spec digest, and regenerated all G2 provenance hashes — files: tools/upstream_baseline.py, tools/check_dev_guide_sync.py, references/upstream-delta-review.json, references/developer_guide/*.md, references/g2-evidence/*.json, skills/**/SKILL.md, tests/test_exec_spec_current_overlay.py, tests/test_current_develop_guidance.py
+
+[NT-2026-09-08-002] [P1] [CLOSED 2026-09-08] V2 compliance: positions/reports/index copies teach that closed-cycle position snapshotting is NETTING-only, but upstream now archives closed cycles for both OMS types on same-ID reopen.
+  file: skills/nt-trading/references/concepts/positions.md:58
+  evidence: upstream a384f97fac and pinned `docs/concepts/positions.md` (snapshotting section) state the engine archives a closed cycle before replacing cached state when a fill reopens a closed position under the same ID in either `NETTING` or `HEDGING` OMS; a virtual flip creates a new ID keeping the original closed position cached. Stale claims: skills/nt-trading/references/concepts/positions.md:58,193; references/concepts/positions.md:58,193; reports warning "snapshots are not used since each position has a unique ID and is never reopened" at references/concepts/reports.md:214 and skills/nt-signals/references/concepts/reports.md:214 (upstream reports.md not yet updated — version-scoped overlay correction citing engine behavior and the hedging flip coverage in crates/execution/tests/integration/engine.rs); references/concepts/index.md:50.
+  fix: update both positions.md copies to the both-OMS contract (same-ID reopen archives the closed cycle; HEDGING flip via non-virtual ID reuses the ID without archiving; virtual flip creates a new ID); correct the reports warning in both copies and the index.md summary line, labelling the overlay where pinned upstream docs lag the engine.
+  acceptance-test: no "never reopened"/NETTING-only snapshotting claims remain in the five files; `python3 -m pytest -q` green.
+  closure: both-OMS snapshotting contract documented in all copies.
+  closure-proof: both positions copies, both reports copies, and the concepts index now describe same-ID reopened closed-cycle snapshots for either OMS and distinguish the virtual flip path; focused/full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-fixes.json`.
+  correction: 2026-09-08 — [P1] — MODIFIED: documented both-OMS same-ID closed-cycle snapshotting and the virtual-flip distinction — files: references/concepts/index.md, references/concepts/positions.md, references/concepts/reports.md, skills/nt-trading/references/concepts/positions.md, skills/nt-signals/references/concepts/reports.md
+
+[NT-2026-09-08-003] [P1] [CLOSED 2026-09-08] V2 compliance: orders.md copies teach unconditional OTO child-target-equals-parent-filled-quantity; upstream now caps reduce-only children at the commission-adjusted open position, rounds down to the child size increment, and zeroes sub-minimum targets.
+  file: skills/nt-trading/references/concepts/orders.md:591
+  evidence: upstream 3057bd79bd and pinned `docs/concepts/orders/advanced.md` (Child sizing section) define the ordered adjustment: (1) non-spread parent with reduce-only child caps total target at child filled + commission-adjusted position quantity; (2) round down to child instrument size increment; (3) configured minimum-quantity zeroing; state is never rounded. Stale: skills/nt-trading/references/concepts/orders.md:591-596 and the partial-trigger row references/concepts/orders.md:581.
+  fix: replace the OTO quantity-propagation paragraph with the ordered adjustment algorithm in both copies; align the partial-trigger row with capped/increment-rounded targets.
+  acceptance-test: no unconditional child-equals-parent-filled-quantity claim remains in either orders.md copy; python3 -m pytest -q green.
+  closure: OTO child-sizing algorithm documented in both copies.
+  closure-proof: both orders copies now document the commission-adjusted cap, size-increment rounding, and configured minimum-quantity zeroing; full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-003.json`.
+  correction: 2026-09-08 — [P1] — MODIFIED: aligned OTO child sizing with commission-adjusted caps, size increments, and minimum quantities — files: references/concepts/orders.md, skills/nt-trading/references/concepts/orders.md
+
+[NT-2026-09-08-004] [P1] [CLOSED 2026-09-08] V2 compliance: OKX integration copies teach the removed speedBump/speed_bump parameter as a live EVENTS-order requirement.
+  file: skills/nt-adapters/references/integrations/okx.md:751
+  evidence: upstream 1f8d87bd removed the obsolete OKX speed bump order parameters; pinned `docs/integrations/okx.md` (Event contracts section) now says OKX ignores the obsolete `speedBump` request parameter and instructs removing `speed_bump` from existing client calls and order params. Stale: skills/nt-adapters/references/integrations/okx.md:751-755 and references/integrations/okx.md:708-712.
+  fix: delete the speed bump requirement from both copies; state that the adapter omits the parameter and that existing calls should remove `speed_bump`.
+  acceptance-test: grep for speed_bump over both copies returns no requirement text; python3 tools/check_dev_guide_sync.py green.
+  closure: OKX speed bump parameter removed from both copies.
+  closure-proof: both OKX integration copies remove the obsolete speedBump requirement and instruct removal of speed_bump from existing calls; focused/full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-004.json`.
+  correction: 2026-09-08 — [P1] — MODIFIED: removed obsolete OKX speedBump guidance — files: references/integrations/okx.md, skills/nt-adapters/references/integrations/okx.md
+
+[NT-2026-09-08-005] [P2] [CLOSED 2026-09-08] Coverage gap: OKX integration copies omit the execution-connection instrument readiness contract.
+  file: skills/nt-adapters/references/integrations/okx.md:377
+  evidence: upstream 31a3f820 requires usable instruments from every requested instrument type or family before WebSockets open; a failed request or empty scope aborts the connection, pre-open instruments and unparseable entries do not count, and options without configured families stay skipped (pinned `docs/integrations/okx.md` WebSocket order operations section).
+  fix: extend the WebSocket order operations section in both okx.md copies with the readiness contract.
+  acceptance-test: both copies state the abort-before-WebSockets readiness rule citing the pinned commit.
+  closure: OKX readiness contract documented in both copies.
+  closure-proof: both OKX integration copies state the required usable-instrument readiness and abort-before-WebSockets behavior; full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-005.json`.
+  correction: 2026-09-08 — [P2] — MODIFIED: documented OKX usable-instrument readiness before WebSockets open — files: references/integrations/okx.md, skills/nt-adapters/references/integrations/okx.md
+
+[NT-2026-09-08-006] [P2] [CLOSED 2026-09-08] Coverage gap: Polymarket integration copies omit the numeric-precision contract.
+  file: references/integrations/polymarket.md:691
+  evidence: upstream 3f41fd70 decodes financial wire values directly as decimals, fails HTTP decoding or report construction outside the supported range, logs-and-skips invalid WebSocket/RTDS updates, never substitutes zero for invalid prices/quantities/fees, and surfaces fractional JSON numbers as `decimal.Decimal` in discovery mappings (pinned `docs/integrations/polymarket.md` Numeric precision and Public discovery sections).
+  fix: add the numeric-precision contract to both polymarket.md copies.
+  acceptance-test: both copies carry the fail-not-zero precision rule citing the pinned commit.
+  closure: Polymarket numeric-precision contract documented in both copies.
+  closure-proof: both Polymarket integration copies state decimal wire decoding, fail-not-zero behavior, invalid-update handling, and Decimal discovery mappings; full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-006.json`.
+  correction: 2026-09-08 — [P2] — MODIFIED: added Polymarket decimal precision and fail-not-zero contract — files: references/integrations/polymarket.md, skills/nt-adapters/references/integrations/polymarket.md
+
+[NT-2026-09-08-007] [P2] [CLOSED 2026-09-08] Coverage gap: indicators guide does not document the 8192 period bound for WMA/HMA.
+  file: skills/nt-signals/references/guides/indicators_guide.md:43
+  evidence: upstream e0c41f43 validates `period` against the ArrayDeque MAX_PERIOD capacity of 8192 for WeightedMovingAverage and HullMovingAverage; larger periods previously degraded silently with `initialized()` never true (`crates/indicators/src/average/wma.rs`, `crates/indicators/src/average/hma.rs` at pin c1a2310144).
+  fix: add the period <= 8192 bound to the WeightedMovingAverage and HullMovingAverage rows.
+  acceptance-test: guide rows state the bound; nt-signals validators pass.
+  closure: WMA/HMA period bound documented.
+  closure-proof: WeightedMovingAverage and HullMovingAverage guide rows state the 8192 period bound; full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-007.json`.
+  correction: 2026-09-08 — [P2] — MODIFIED: documented WMA/HMA 8192 period cap — files: skills/nt-signals/references/guides/indicators_guide.md
+
+[NT-2026-09-08-008] [P2] [CLOSED 2026-09-08] Coverage gap: adapter authoring guidance does not teach forwarding the venue cancellation reason into the new OrderCanceled reason field.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1346
+  evidence: upstream c44b00c5 adds `reason: Option<Ustr>` to `OrderCanceled` (serde-defaulted, event stays `Copy`), `OrderEvent::reason()` now returns it, reconciliation constructors and six adapter sites forward venue reasons, and the event doc gains the field (pinned `docs/concepts/events/order_canceled.md`).
+  fix: add reason-forwarding guidance (status-report path) to the order-event conversion section of the official adapter spec.
+  acceptance-test: spec section instructs forwarding cancel_reason into OrderCanceled citing the pinned commit.
+  closure: OrderCanceled reason-forwarding guidance added.
+  closure-proof: adapter conversion guidance now forwards OrderStatusReport.cancel_reason into OrderCanceled.reason when supplied; focused/full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-008.json`.
+  correction: 2026-09-08 — [P2] — MODIFIED: required propagation of venue cancellation reasons into OrderCanceled.reason — files: skills/nt-adapters/references/guides/official_adapter_spec.md
+
+[NT-2026-09-08-009] [P2] [CLOSED 2026-09-08] Coverage gap: component bindings API surface is uncovered guidance.
+  file: skills/nt-strategy-builder-rust/SKILL.md:1
+  evidence: upstream 76f01f95 adds `crates/common/src/actor/binding.rs`, `crates/trading/src/strategy/binding.rs`, and `crates/plugin/src/component.rs`: a typed component vtable routing actor ID, clock, and order submission with exact-build compatibility and contained panics from payload destructors and logging.
+  fix: add a scoped reference note on component bindings to the Rust strategy builder skill.
+  acceptance-test: skill references the binding modules and their contract citing the pinned commit; nt-strategy-builder-rust validators pass.
+  closure: component bindings coverage note added.
+  closure-proof: Rust strategy guidance now covers StrategyBinding, DataActorBinding, ComponentHostVTable, ComponentBuildId, and host-contained payload/logging panics; full pytest and G2 card checks pass; `receipts/harden-nt-v2-20260908/phase-2-finding-009.json`.
+  correction: 2026-09-08 — [P2] — MODIFIED: added Rust component-binding contract and source references — files: skills/nt-strategy-builder-rust/SKILL.md
 
 ## Open findings — 2026-09-07 upstream currency cycle
 
