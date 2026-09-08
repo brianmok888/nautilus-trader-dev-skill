@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-3-manual-exercises",
+  "finding_id": "NT-2026-09-08-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual surface exercise: grep/read assertions across active guidance surfaces",
+  "exit_code": 0,
+  "output_sha256": "a8ac298580d2f84dd3113a60889fc6a67ead902efe6fca8b5759c2af5cc02d54",
+  "output_excerpt": "Bounded manual steps: (1) read all 16 active current-baseline documents (end_to_end_guide, nt/nt-review/nt-dex-adapter/nt-adapters/nt-dev/nt-testing SKILL.md, nt-data x2, nt-signals data, nt-learn curriculum 12, nt-dev rust_conventions, nt-trading/nt-live rust.md, nt-live cache.md, polymarket.md): each contains pin c1a2310144c37db80ad11af3d86b65b2ed300c81 and none contains superseded 1602043d. (2) verified corrected contracts: both positions copies and both reports copies state same-ID reopen archives closed cycles in either OMS with virtual-flip distinction (positions.md:58,208; reports.md:131,212); repo-wide grep finds no \"never reopened\" stale claim; orders.md commission-adjusted cap + size increment; okx.md speedBump removal + usable-instrument readiness before WebSockets; polymarket.md Numeric precision + fail-not-zero; indicators_guide.md 8192 cap; official_adapter_spec.md cancel_reason forwarding; strategy-builder-rust ComponentHostVTable/StrategyBinding. (3) validate_mission_finding_coverage returns no errors. Observation: all manual checks pass.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T12:16:57Z"
+}

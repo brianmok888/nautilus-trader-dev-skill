@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-3-mandatory-validation",
+  "finding_id": "NT-2026-09-08-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_dev_guide_sync.py && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_rust_trading_reference_sync.py && python3 tools/check_legacy_labelling.py && python3 tools/check_upstream_freshness.py --format json && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && python3 tools/check_governance_receipts.py && python3 tools/check_findings_schema.py && git diff --check && git diff --cached --check && uv run --with ruff ruff check --no-force-exclude .",
+  "exit_code": 0,
+  "output_sha256": "781454b2d0c89eeece07781b95d8e14eb0aabc0879f21742b7916c3eac32667e",
+  "output_excerpt": "Phase-3 fresh verifier rerun on committed tree 6901c30 (11 segment commits over baseline 9a5c99d6): pytest 455 passed / 7 skipped; developer-guide sync, snapshot sync, Rust trading reference sync, legacy labelling, upstream freshness (origin/develop current at c1a2310144c37db80ad11af3d86b65b2ed300c81, commits_ahead 0), G2 card/declaration validation for all 17 skills, governance receipts (329 validated), findings schema, git diff --check, and Ruff all exit 0.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T12:16:57Z"
+}

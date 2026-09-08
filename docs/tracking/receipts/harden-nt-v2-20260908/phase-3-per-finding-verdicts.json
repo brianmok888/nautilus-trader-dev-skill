@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-3-per-finding-verdicts",
+  "finding_id": "NT-2026-09-08-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "verifier synthesis: fresh mandatory suite + manual surface exercises + upstream spot-checks + independent review (st_01a080f0)",
+  "exit_code": 0,
+  "output_sha256": "0936fe72da9c1f10148de3d39b129a65eabd4db55d9e6aa3f25c88fe511c354b",
+  "output_excerpt": "Per-finding verdicts: 001 Verified (pin c1a2310144 in tools/upstream_baseline.py; fresh freshness/snapshot/G2-card checks exit 0; snapshots and 17 G2 artifacts refreshed; receipts phase-2-pin-move + phase-2-g2-execution). 002 Verified (both-OMS same-ID archive at positions.md:58/208 both copies, reports.md:131/212; matches pinned docs/concepts/positions.md:203-207; stale claim absent repo-wide). 003 Verified (orders.md:581/595 cap+round-down+sub-minimum-zero; matches pinned order_manager/manager.rs:731-747 and position.rs:442-448 commission deduction). 004 Verified (speedBump removed; pinned okx.md:885-886). 005 Verified (usable-instruments-or-abort; pinned okx.md:383-384, execution.rs:1350). 006 Verified (Numeric precision section both copies; pinned polymarket.md matches all four sub-claims). 007 Verified (8192 cap in guide rows 43-44; pinned wma.rs:28 MAX_PERIOD=8_192, hma.rs:25,111,123). 008 Verified (cancel_reason forwarding at official_adapter_spec.md:1348-1350; pinned canceled.rs:70-72 reason: Option<Ustr>). 009 Verified (StrategyBinding/DataActorBinding/ComponentHostVTable at SKILL.md:260-271; pinned binding.rs, actor/binding.rs:40, component.rs:37,89,135). Two P3 metadata follow-ups carried, non-blocking.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T12:21:55Z"
+}
