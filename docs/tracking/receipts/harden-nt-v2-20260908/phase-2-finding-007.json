@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-finding-007",
+  "finding_id": "NT-2026-09-08-007",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "406b2ddd89f61fa069f166698f231b0f59c02c224e05f97906d7a948c3a67bb7",
+  "output_excerpt": "Documented the 8192 period bound for WMA and HMA guidance. Final Phase 2 verification: 452 passed, 7 skipped; G2 card/declaration validation passed; git diff --check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T09:10:00Z"
+}

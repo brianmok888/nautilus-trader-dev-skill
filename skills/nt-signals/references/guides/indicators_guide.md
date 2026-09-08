@@ -40,8 +40,8 @@ All moving averages implement the Rust `MovingAverage` trait, whose shared membe
 | `SimpleMovingAverage` | `period` | Arithmetic mean over rolling window | `average::sma` |
 | `ExponentialMovingAverage` | `period` | EMA with alpha = 2/(period+1) | `average::ema` |
 | `DoubleExponentialMovingAverage` | `period` | DEMA: 2*EMA1 - EMA2 for reduced lag | `average::dema` |
-| `WeightedMovingAverage` | `period, weights` | Weighted average with explicit weights (`len(weights) == period`, positive sum) | `average::wma` |
-| `HullMovingAverage` | `period` | Alan Hull's fast smooth MA using nested WMAs | `average::hma` |
+| `WeightedMovingAverage` | `period, weights` | Weighted average with explicit weights (`len(weights) == period`, positive sum; `period` capped at 8192) | `average::wma` |
+| `HullMovingAverage` | `period` | Alan Hull's fast smooth MA using nested WMAs (`period` capped at 8192) | `average::hma` |
 | `AdaptiveMovingAverage` | `period_efficiency_ratio (>=2), period_fast, period_slow` | Kaufman AMA adapting to noise via EfficiencyRatio | `average::ama` |
 | `WilderMovingAverage` | `period` | EMA variant with alpha = 1/period (Wilder smoothing) | `average::rma` |
 | `VariableIndexDynamicAverage` | `period, price_type=None, cmo_ma_type=WILDER` | VIDYA: EMA with dynamic alpha from Chande Momentum Oscillator | `average::vidya` |
