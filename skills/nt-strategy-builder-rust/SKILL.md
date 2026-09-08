@@ -257,10 +257,18 @@ existing Python strategy.
 - **Precision**: run FFI/precision-sensitive cargo commands with the
   `high-precision` feature enabled; do not hand-edit generated bindings.
 - **Error handling**: `on_*` handlers return `anyhow::Result<()>`; propagate with `?`.
+- **Component bindings**: actor ID, clock, and order submission route through the typed
+  component vtable (`crates/trading/src/strategy/binding.rs`, `crates/common/src/actor/binding.rs`,
+  `crates/plugin/src/component.rs` at the pinned baseline). The vtable requires exact-build
+  compatibility (`ComponentBuildId`), and panics from payload destructors and logging are
+  contained by the host. Do not bypass the binding to reach actor state directly.
 
 ## References
 
 - `crates/trading/src/strategy/mod.rs` — `Strategy` trait (source of truth)
+- `crates/trading/src/strategy/binding.rs` — `StrategyBinding` (component bindings)
+- `crates/common/src/actor/binding.rs` — `DataActorBinding` host bindings
+- `crates/plugin/src/component.rs` — `ComponentHostVTable`, `ComponentBuildId`, `SubmitOrderCall`
 - `crates/trading/src/strategy/config.rs` — `StrategyConfig`
 - `crates/trading/src/examples/strategies/` — `EmaCross`, `CompositeMarketMaker`,
   `GridMarketMaker`, `DeltaNeutralVol`, `HurstVpinDirectional` (reference impls)

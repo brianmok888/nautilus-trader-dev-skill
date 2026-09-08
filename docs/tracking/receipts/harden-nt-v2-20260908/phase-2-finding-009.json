@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-finding-009",
+  "finding_id": "NT-2026-09-08-009",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "53fa2f61a89c98b7dbf0131fffbabc5a54ecdeeb52b489840c8dca51638e0209",
+  "output_excerpt": "Documented StrategyBinding, DataActorBinding, ComponentHostVTable, ComponentBuildId, and host-contained panic behavior for Rust strategy construction. Final Phase 2 verification: 452 passed, 7 skipped; G2 card/declaration validation passed; git diff --check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T09:10:00Z"
+}
