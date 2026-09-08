@@ -288,7 +288,7 @@ Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpT
 `None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
 is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
 leaving both unset omits the field so the venue default applies
-(`crates/adapters/bybit/src/config.rs` at pin `1602043debb82b34084d35a452c374b744b96524`).
+(`crates/adapters/bybit/src/config.rs` at pin `c1a2310144c37db80ad11af3d86b65b2ed300c81`).
 Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
 values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
 (`crates/adapters/bybit/src/common/enums.rs`).
@@ -838,7 +838,7 @@ NT v2 compatibility note: the v1 `bars_timestamp_on_close`, `use_gtd`, `use_ws_e
 `use_http_batch_api`, `repay_queue_interval_secs`, `ignore_uncached_instrument_executions`,
 `ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are
 pinned fields (`crates/adapters/bybit/src/config.rs` at pin
-`1602043debb82b34084d35a452c374b744b96524`).
+`c1a2310144c37db80ad11af3d86b65b2ed300c81`).
 
 Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
 `BybitExecutionClientFactory`. The current Python examples show the complete

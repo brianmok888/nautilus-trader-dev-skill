@@ -161,4 +161,4 @@ class MultiVenueStrategyConfig(StrategyConfig):
 
 Source: `docs/concepts/strategies.md` (strategy configuration) and
 `MIGRATION_V2.md` (config subclass rule) at bed07c6c3e, present at the pinned
-commit 1602043debb82b34084d35a452c374b744b96524.
+commit c1a2310144c37db80ad11af3d86b65b2ed300c81.

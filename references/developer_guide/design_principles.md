@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/design_principles/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/design_principles.md
-source_commit: 1602043debb82b34084d35a452c374b744b96524
-sync_date: 2026-09-07
+source_commit: c1a2310144c37db80ad11af3d86b65b2ed300c81
+sync_date: 2026-09-08
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Design Principles
 
 These principles describe the architectural guarantees and trade-offs that users and developers

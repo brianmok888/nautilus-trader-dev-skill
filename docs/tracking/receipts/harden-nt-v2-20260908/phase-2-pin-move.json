@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-pin-move",
+  "finding_id": "NT-2026-09-08-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_dev_guide_sync.py",
+  "exit_code": 0,
+  "output_sha256": "1985afffb07253b7d5834ce08ab0ee42905c2a16c4567fc37ebae7b3fbf00077",
+  "output_excerpt": "upstream freshness: manifest_error: None; manifest_reviewed: True; origin/develop status: current; pinned commit c1a2310144c37db80ad11af3d86b65b2ed300c81. Developer guide snapshot bodies match pinned upstream. Developer guide sync checks passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T08:50:59Z"
+}

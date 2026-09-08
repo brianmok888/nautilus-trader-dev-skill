@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "upstream_ref": "origin/develop",
-  "pinned_commit": "1602043debb82b34084d35a452c374b744b96524",
-  "reviewed_commit": "1602043debb82b34084d35a452c374b744b96524",
-  "reviewed_on": "2026-09-07",
+  "pinned_commit": "c1a2310144c37db80ad11af3d86b65b2ed300c81",
+  "reviewed_commit": "c1a2310144c37db80ad11af3d86b65b2ed300c81",
+  "reviewed_on": "2026-09-08",
   "deltas": [],
   "reviewed_transitions": [
     {
@@ -9294,6 +9294,426 @@
             "crates/trading/src/strategy/mod.rs"
           ],
           "no_impact_rationale": "Mechanical simplification enabled by Ustr direct string operations (e.g. crates/adapters/binance/src/common/parse.rs:1793-1798); no public adapter API or parsing behavior change. adapters.md Ustr guidance and rust.md construction patterns remain correct."
+        }
+      ]
+    },
+    {
+      "from_commit": "1602043debb82b34084d35a452c374b744b96524",
+      "to_commit": "c1a2310144c37db80ad11af3d86b65b2ed300c81",
+      "reviewed_on": "2026-09-08",
+      "commit_count": 16,
+      "unique_path_count": 136,
+      "changed_paths": [
+        ".github/actions/common-setup/action.yml",
+        ".github/workflows/build.yml",
+        ".github/workflows/cli-binaries.yml",
+        ".github/workflows/docker.yml",
+        ".github/workflows/dst.yml",
+        ".github/workflows/nightly-docs-features-check.yml",
+        ".github/workflows/nightly-miri.yml",
+        ".github/workflows/nightly-tests.yml",
+        ".github/workflows/performance.yml",
+        ".github/workflows/security-audit.yml",
+        ".github/workflows/test.yml",
+        ".nautilus-engineering.lock",
+        ".nautilus-engineering/pre-commit/zizmor.yaml",
+        ".nautilus-engineering/tools.toml",
+        ".pre-commit-config.yaml",
+        ".pre-commit-hooks/actionlint_requirements.txt",
+        ".pre-commit-hooks/check_actionlint.py",
+        ".pre-commit-hooks/test_check_actionlint.py",
+        "Cargo.lock",
+        "Makefile",
+        "RELEASES.md",
+        "crates/adapters/architect_ax/src/execution.rs",
+        "crates/adapters/betfair/src/execution.rs",
+        "crates/adapters/binance/src/futures/execution.rs",
+        "crates/adapters/binance/src/futures/websocket/streams/dispatch.rs",
+        "crates/adapters/binance/src/spot/execution.rs",
+        "crates/adapters/bitmex/src/websocket/parse.rs",
+        "crates/adapters/blockchain/src/execution/client.rs",
+        "crates/adapters/bybit/src/websocket/dispatch.rs",
+        "crates/adapters/deribit/src/websocket/parse.rs",
+        "crates/adapters/derive/src/execution.rs",
+        "crates/adapters/dydx/src/execution/mod.rs",
+        "crates/adapters/hyperliquid/src/websocket/dispatch.rs",
+        "crates/adapters/interactive_brokers/src/execution/core.rs",
+        "crates/adapters/interactive_brokers/src/execution/core_updates.rs",
+        "crates/adapters/kraken/src/websocket/dispatch/futures.rs",
+        "crates/adapters/kraken/src/websocket/dispatch/spot.rs",
+        "crates/adapters/lighter/src/execution.rs",
+        "crates/adapters/lighter/src/websocket/parse.rs",
+        "crates/adapters/okx/benches/exec.rs",
+        "crates/adapters/okx/bin/flatten.rs",
+        "crates/adapters/okx/bin/ws_exec.rs",
+        "crates/adapters/okx/src/execution.rs",
+        "crates/adapters/okx/src/http/client.rs",
+        "crates/adapters/okx/src/http/models.rs",
+        "crates/adapters/okx/src/python/http.rs",
+        "crates/adapters/okx/src/websocket/client.rs",
+        "crates/adapters/okx/src/websocket/dispatch.rs",
+        "crates/adapters/okx/src/websocket/messages.rs",
+        "crates/adapters/okx/src/websocket/parse.rs",
+        "crates/adapters/okx/tests/integration/exec_client.rs",
+        "crates/adapters/okx/tests/integration/http.rs",
+        "crates/adapters/okx/tests/integration/websocket.rs",
+        "crates/adapters/polymarket/benches/data.rs",
+        "crates/adapters/polymarket/benches/exec.rs",
+        "crates/adapters/polymarket/benches/micros.rs",
+        "crates/adapters/polymarket/src/common/parse.rs",
+        "crates/adapters/polymarket/src/data_types.rs",
+        "crates/adapters/polymarket/src/execution/order_builder.rs",
+        "crates/adapters/polymarket/src/execution/orders.rs",
+        "crates/adapters/polymarket/src/execution/parse.rs",
+        "crates/adapters/polymarket/src/execution/reconciliation.rs",
+        "crates/adapters/polymarket/src/execution/reports.rs",
+        "crates/adapters/polymarket/src/execution/responses.rs",
+        "crates/adapters/polymarket/src/execution/submitter.rs",
+        "crates/adapters/polymarket/src/http/gamma.rs",
+        "crates/adapters/polymarket/src/http/models.rs",
+        "crates/adapters/polymarket/src/http/parse.rs",
+        "crates/adapters/polymarket/src/models.rs",
+        "crates/adapters/polymarket/src/providers.rs",
+        "crates/adapters/polymarket/src/python/loader.rs",
+        "crates/adapters/polymarket/src/resolve/parsing.rs",
+        "crates/adapters/polymarket/src/rtds.rs",
+        "crates/adapters/polymarket/src/websocket/dispatch.rs",
+        "crates/adapters/polymarket/src/websocket/parse.rs",
+        "crates/adapters/polymarket/test_data/decimal_precision_event.json",
+        "crates/adapters/polymarket/test_data/decimal_precision_market.json",
+        "crates/adapters/polymarket/test_data/decimal_precision_position.json",
+        "crates/adapters/polymarket/tests/integration/exec_client.rs",
+        "crates/adapters/sandbox/tests/integration/execution.rs",
+        "crates/backtest/src/engine.rs",
+        "crates/common/src/actor/binding.rs",
+        "crates/common/src/actor/data_actor.rs",
+        "crates/common/src/actor/mod.rs",
+        "crates/common/src/factories/event.rs",
+        "crates/common/src/live/runner.rs",
+        "crates/execution/src/engine/mod.rs",
+        "crates/execution/src/matching_core.rs",
+        "crates/execution/src/matching_engine/mod.rs",
+        "crates/execution/src/order_emulator/emulator.rs",
+        "crates/execution/src/order_manager/manager.rs",
+        "crates/execution/src/reconciliation/orders.rs",
+        "crates/execution/src/reconciliation/tests.rs",
+        "crates/execution/tests/integration/exec_engine.rs",
+        "crates/execution/tests/integration/matching_engine.rs",
+        "crates/indicators/src/average/hma.rs",
+        "crates/indicators/src/average/wma.rs",
+        "crates/indicators/src/python/average/hma.rs",
+        "crates/infrastructure/src/sql/models/orders.rs",
+        "crates/live/src/execution/emitter.rs",
+        "crates/live/src/execution/manager.rs",
+        "crates/model/src/events/order/canceled.rs",
+        "crates/model/src/events/order/spec/canceled.rs",
+        "crates/model/src/python/events/order/canceled.rs",
+        "crates/plugin/Cargo.toml",
+        "crates/plugin/README.md",
+        "crates/plugin/src/component.rs",
+        "crates/plugin/src/lib.rs",
+        "crates/plugin/src/panic.rs",
+        "crates/portfolio/src/manager.rs",
+        "crates/serialization/generated/capnp/events/order_capnp.rs",
+        "crates/serialization/schemas/capnp/events/order.capnp",
+        "crates/serialization/src/capnp/conversions.rs",
+        "crates/trading/src/algorithm/mod.rs",
+        "crates/trading/src/strategy/binding.rs",
+        "crates/trading/src/strategy/mod.rs",
+        "docs/concepts/events/order_canceled.md",
+        "docs/concepts/orders/advanced.md",
+        "docs/concepts/positions.md",
+        "docs/developer_guide/adapters.md",
+        "docs/integrations/okx.md",
+        "docs/integrations/polymarket.md",
+        "python/nautilus_trader/adapters/okx/__init__.pyi",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/unit/indicators/test_hma.py",
+        "python/tests/unit/model/test_events.py",
+        "scripts/ci/check-github-action-shas.sh",
+        "scripts/ci/check-python-isolation.bash",
+        "scripts/ci/check-python-types.bash",
+        "scripts/ci/test-python-doctests.bash",
+        "scripts/ci/test-python-isolation-setup.bash",
+        "scripts/ci/test-wheel-isolation.bash",
+        "scripts/ci/test-wheel.bash",
+        "scripts/native-path.bash",
+        "scripts/test-native-path.bash",
+        "scripts/test-python-isolation.bash"
+      ],
+      "reviewed_commits": [
+        "e0c41f43a257704be20fd023303c0a197e49e750",
+        "4568785cf2423b7e9c0652c3332403507fef563e",
+        "31a3f820db3c7a32b74cf5dee6dd55e8ef2b7a12",
+        "7ce33b994ffb14696b58ef804d622f0448c017cb",
+        "b80f175cfbdbb85e0a55251d9699a5644ffb1fa0",
+        "5932badb890ffc89da42bd3dd2cbc08b48ccd5e3",
+        "3f41fd70f404a4b5efe15fc826b6ded7e77d5b96",
+        "ae0fa9d71424f60bf2a7c2ef381540020836296a",
+        "76f01f9595993eb476aaed513a57ac96bb526c65",
+        "a317672e891691b8901d09041f99dd6d01ebf149",
+        "a384f97fac7c69197a2f6f3263b968185fce0b96",
+        "3057bd79bdc41ad451f16a164f01c7e7bd6d1459",
+        "1f8d87bdc3bcccd96a7dd1131b3869729b3a57d9",
+        "5c1352dd06941899cde65c0742525418014ec0f7",
+        "c44b00c5fde5f59ab09aae8c4da4da7f37ee9b67",
+        "c1a2310144c37db80ad11af3d86b65b2ed300c81"
+      ],
+      "deltas": [
+        {
+          "commit": "e0c41f43a257704be20fd023303c0a197e49e750",
+          "subject": "Bound WMA and HMA periods to their buffer capacity (#4887)\n",
+          "upstream_paths": [
+            "crates/indicators/src/average/hma.rs",
+            "crates/indicators/src/average/wma.rs",
+            "crates/indicators/src/python/average/hma.rs",
+            "python/tests/unit/indicators/test_hma.py"
+          ],
+          "impact_rationale": "WeightedMovingAverage and HullMovingAverage now validate period against the ArrayDeque MAX_PERIOD capacity of 8192 and reject larger periods instead of silently degrading (initialized() never becoming true). The indicators guide table documents period params without the bound.",
+          "affected_files": [
+            "skills/nt-signals/references/guides/indicators_guide.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "Indicators guide does not document the 8192 period bound for WMA/HMA introduced to prevent silent never-initialized degradation.",
+            "fix": "Add the period <= 8192 bound to the WeightedMovingAverage and HullMovingAverage rows."
+          }
+        },
+        {
+          "commit": "4568785cf2423b7e9c0652c3332403507fef563e",
+          "subject": "Fix Python validation paths on Windows\n",
+          "upstream_paths": [
+            ".github/workflows/test.yml",
+            "scripts/ci/validate_python.py",
+            "scripts/native-path.bash",
+            "scripts/test-native-path.bash",
+            "scripts/test-python-isolation.bash"
+          ],
+          "no_impact_rationale": "Developer-environment CI path handling only; no taught API, contract, or workflow guidance references these scripts."
+        },
+        {
+          "commit": "31a3f820db3c7a32b74cf5dee6dd55e8ef2b7a12",
+          "subject": "Fix OKX execution instrument readiness\n",
+          "upstream_paths": [
+            "crates/adapters/okx/src/execution.rs",
+            "crates/adapters/okx/tests/integration/exec_client.rs",
+            "docs/integrations/okx.md"
+          ],
+          "impact_rationale": "The initial OKX execution connection now requires usable instruments from every requested instrument type or family and aborts before WebSockets open when a scope has none; pre-open instruments and unparseable entries do not satisfy readiness. The integration guide copies document only the instIdCode cache failure mode.",
+          "affected_files": [
+            "references/integrations/okx.md",
+            "skills/nt-adapters/references/integrations/okx.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "OKX integration guide copies omit the execution-connection instrument readiness contract (abort before WebSockets open when any requested type/family has no usable instruments).",
+            "fix": "Extend the WebSocket order operations section in both copies with the readiness contract."
+          }
+        },
+        {
+          "commit": "7ce33b994ffb14696b58ef804d622f0448c017cb",
+          "subject": "Fix OrderMatchingEngine deferred event state\n",
+          "upstream_paths": [
+            "crates/backtest/src/engine.rs",
+            "crates/execution/src/matching_engine/mod.rs",
+            "crates/execution/tests/integration/matching_engine.rs",
+            "crates/adapters/sandbox/tests/integration/execution.rs"
+          ],
+          "no_impact_rationale": "Engine-internal correctness fixes (pending order changes preserved until cache acknowledgement, reduce-only fill budget accounting, canceled OCO fills, premature OTO activation, market-to-limit remainder retention). No taught contract pins these internals; observable deferred-command semantics taught in nt-backtest remain unchanged."
+        },
+        {
+          "commit": "b80f175cfbdbb85e0a55251d9699a5644ffb1fa0",
+          "subject": "Improve adapter development guide structure\n",
+          "upstream_paths": [
+            "docs/developer_guide/adapters.md"
+          ],
+          "impact_rationale": "Restructures wire-format modeling guidance: explicit parsing context, missing/null/empty distinction, venue-timestamp rules for ts_event/ts_init, and reorganized Decimal construction guidance replace the previous deserialization list.",
+          "affected_files": [
+            "references/developer_guide/adapters.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "The pinned dev-guide snapshot lags the restructured wire-format guidance (parsing context, timestamp assignment rules).",
+            "fix": "Re-snapshot references/developer_guide/adapters.md from the new pin and bump sync metadata (mechanical refresh bundled with the pin move)."
+          }
+        },
+        {
+          "commit": "5932badb890ffc89da42bd3dd2cbc08b48ccd5e3",
+          "subject": "Upgrade zizmor to 1.30.0\n",
+          "upstream_paths": [
+            ".nautilus-engineering/pre-commit/zizmor.yaml",
+            ".github/workflows/security-audit.yml",
+            ".pre-commit-config.yaml"
+          ],
+          "no_impact_rationale": "CI security-tooling version bump; no skill guidance pins zizmor versions."
+        },
+        {
+          "commit": "3f41fd70f404a4b5efe15fc826b6ded7e77d5b96",
+          "subject": "Standardize Polymarket numeric precision\n",
+          "upstream_paths": [
+            "crates/adapters/polymarket/src/execution.rs",
+            "crates/adapters/polymarket/src/http/decoder.rs",
+            "docs/integrations/polymarket.md"
+          ],
+          "impact_rationale": "Financial wire values are decoded directly as decimals; values outside the supported range fail HTTP decoding or report construction; WebSocket and RTDS handlers log and skip invalid updates; report construction never substitutes zero for an invalid price, quantity, or fee. Discovery mappings now surface fractional JSON numbers as decimal.Decimal.",
+          "affected_files": [
+            "references/integrations/polymarket.md",
+            "skills/nt-adapters/references/integrations/polymarket.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "Polymarket integration copies omit the numeric-precision contract (decimal wire decoding, fail-not-zero, Decimal-typed discovery).",
+            "fix": "Add the numeric precision section to both Polymarket copies."
+          }
+        },
+        {
+          "commit": "ae0fa9d71424f60bf2a7c2ef381540020836296a",
+          "subject": "Document installing the execution event sender at create (#4906)\n",
+          "upstream_paths": [
+            "crates/common/src/live/runner.rs",
+            "crates/live/src/execution/emitter.rs",
+            "docs/developer_guide/adapters.md"
+          ],
+          "impact_rationale": "LiveNodeBuilder::build binds the runner senders before ExecutionClientFactory::create on the same thread, so factories should resolve and install the ExecutionEventEmitter sender at create time; start-time installation remains sufficient only when LiveNode drives the lifecycle. The pinned dev-guide snapshot still instructs installing the sender during start (references/developer_guide/adapters.md:727).",
+          "affected_files": [
+            "references/developer_guide/adapters.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "Dev-guide snapshot carries the superseded start-time sender installation instruction; the create-time contract is the new recommendation.",
+            "fix": "Re-snapshot references/developer_guide/adapters.md from the new pin (bundled with the pin move)."
+          }
+        },
+        {
+          "commit": "76f01f9595993eb476aaed513a57ac96bb526c65",
+          "subject": "Add initial component bindings\n",
+          "upstream_paths": [
+            "crates/common/src/actor/binding.rs",
+            "crates/common/src/actor/data_actor.rs",
+            "crates/plugin/src/component.rs",
+            "crates/plugin/src/panic.rs",
+            "crates/trading/src/strategy/binding.rs"
+          ],
+          "impact_rationale": "New actor/strategy/plugin binding modules route actor ID, clock, and order submission through a typed component vtable with exact-build compatibility and contained panics from payload destructors and logging. The skill repository does not yet teach this API surface.",
+          "affected_files": [
+            "skills/nt-strategy-builder-rust/SKILL.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "New component binding vtable API (crates/common/src/actor/binding.rs, crates/trading/src/strategy/binding.rs, crates/plugin/src/component.rs) is uncovered guidance.",
+            "fix": "Add a scoped reference note on component bindings to the Rust strategy builder skill."
+          }
+        },
+        {
+          "commit": "a317672e891691b8901d09041f99dd6d01ebf149",
+          "subject": "Refine OrderMatchingCore internals and test coverage\n",
+          "upstream_paths": [
+            "crates/execution/src/matching_core.rs"
+          ],
+          "no_impact_rationale": "Internal refactor plus test coverage; no public contract or taught behavior changed."
+        },
+        {
+          "commit": "a384f97fac7c69197a2f6f3263b968185fce0b96",
+          "subject": "Apply hedging flip remainders to the flipped position (#4908)\n",
+          "upstream_paths": [
+            "crates/execution/src/portfolio.rs",
+            "crates/execution/src/engine.rs",
+            "docs/concepts/positions.md"
+          ],
+          "impact_rationale": "Position snapshotting now applies to both NETTING and HEDGING OMS when a closed position reopens under the same ID (closed cycle archived before replacement), and a virtual position flip creates a new ID keeping the original closed position cached. The skill-owned positions copy teaches NETTING-only snapshotting (skills/nt-trading/references/concepts/positions.md:58) and the concepts mirror repeats it (references/concepts/positions.md:58,193).",
+          "affected_files": [
+            "skills/nt-trading/references/concepts/positions.md",
+            "references/concepts/positions.md"
+          ],
+          "candidate_finding": {
+            "severity": "P1",
+            "category": "v2-compliance",
+            "description": "positions.md copies teach that closed-cycle snapshotting preserves NETTING cycles only; upstream now archives closed cycles for both OMS types on same-ID reopen and defines the virtual-flip path.",
+            "fix": "Update both positions.md copies: snapshotting applies to either OMS on same-ID reopen; HEDGING flip via non-virtual ID reuses the ID without archiving; virtual flip creates a new ID."
+          }
+        },
+        {
+          "commit": "3057bd79bdc41ad451f16a164f01c7e7bd6d1459",
+          "subject": "Fix OrderManager contingent exit sizing\n",
+          "upstream_paths": [
+            "crates/trading/src/order_manager.rs",
+            "docs/concepts/orders/advanced.md"
+          ],
+          "impact_rationale": "OTO child sizing after parent fills now applies an ordered adjustment: commission-adjusted position-quantity cap for reduce-only children of non-spread parents, rounding down to the child instrument size increment, and optional minimum-quantity zeroing. The skill-owned orders copy teaches the old rule that each child quantity equals the parent cumulative filled quantity (skills/nt-trading/references/concepts/orders.md:591).",
+          "affected_files": [
+            "skills/nt-trading/references/concepts/orders.md",
+            "references/concepts/orders.md"
+          ],
+          "candidate_finding": {
+            "severity": "P1",
+            "category": "v2-compliance",
+            "description": "orders.md copies teach unconditional child-target-equals-parent-filled-quantity; upstream now caps reduce-only children at the commission-adjusted open position, rounds to size increment, and zeroes sub-minimum targets.",
+            "fix": "Replace the child sizing paragraph in both copies with the ordered adjustment algorithm from the pinned docs."
+          }
+        },
+        {
+          "commit": "1f8d87bdc3bcccd96a7dd1131b3869729b3a57d9",
+          "subject": "Remove OKX obsolete speed bump parameters\n",
+          "upstream_paths": [
+            "crates/adapters/okx/src/execution.rs",
+            "docs/integrations/okx.md"
+          ],
+          "impact_rationale": "OKX ignores the obsolete speedBump request parameter; the adapter omits it and upstream instructs removing speed_bump from client calls and order params. Both integration guide copies still require speedBump=1 for non-post-only EVENTS orders and document the adapter defaulting it (references/integrations/okx.md:708, skills/nt-adapters/references/integrations/okx.md:751).",
+          "affected_files": [
+            "references/integrations/okx.md",
+            "skills/nt-adapters/references/integrations/okx.md"
+          ],
+          "candidate_finding": {
+            "severity": "P1",
+            "category": "v2-compliance",
+            "description": "OKX integration copies teach the removed speedBump/speed_bump parameter as a live requirement.",
+            "fix": "Delete the speed bump requirement from both copies and instruct removing speed_bump from existing calls."
+          }
+        },
+        {
+          "commit": "5c1352dd06941899cde65c0742525418014ec0f7",
+          "subject": "Cover ExecutionEngine hedging flip rejection\n",
+          "upstream_paths": [
+            "crates/execution/tests/integration/engine.rs"
+          ],
+          "no_impact_rationale": "Test-only coverage addition; no API or documented behavior change."
+        },
+        {
+          "commit": "c44b00c5fde5f59ab09aae8c4da4da7f37ee9b67",
+          "subject": "Standardize cancellation reason propagation to OrderCanceled (#4903)\n",
+          "upstream_paths": [
+            "crates/model/src/events/order/canceled.rs",
+            "crates/execution/src/reconciliation/orders.rs",
+            "crates/adapters/lighter/src/websocket/parse.rs",
+            "crates/adapters/kraken/src/websocket/dispatch/futures.rs",
+            "docs/concepts/events/order_canceled.md",
+            "crates/serialization/schemas/capnp/events/order.capnp"
+          ],
+          "impact_rationale": "OrderCanceled gains reason: Option<Ustr> (serde-defaulted, Copy-preserving); OrderEvent::reason() now returns it; reconciliation constructors and six adapter sites forward venue reasons. The event concept doc gains the reason field row. The adapter spec teaches OrderCanceled construction without mentioning reason forwarding.",
+          "affected_files": [
+            "skills/nt-adapters/references/guides/official_adapter_spec.md",
+            "references/concepts/orders.md"
+          ],
+          "candidate_finding": {
+            "severity": "P2",
+            "category": "coverage-gap",
+            "description": "Adapter authoring guidance does not teach forwarding the venue cancellation reason into the new OrderCanceled reason field on the status-report path.",
+            "fix": "Add reason-forwarding guidance to the order-event conversion section of the official adapter spec."
+          }
+        },
+        {
+          "commit": "c1a2310144c37db80ad11af3d86b65b2ed300c81",
+          "subject": "Fix cancellation event construction\n",
+          "upstream_paths": [
+            "crates/adapters/binance/src/spot/execution.rs"
+          ],
+          "no_impact_rationale": "One-line follow-up passing None for the order-list cancellation path of c44b00c5fd; covered by that delta's rationale."
         }
       ]
     }

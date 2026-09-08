@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-g2-execution",
+  "finding_id": "NT-2026-09-08-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root /home/mok/projects/nt-disposable-c1a2310 --execute --skill <each-in-scope-skill>",
+  "exit_code": 0,
+  "output_sha256": "f0043f4cd39d298253bb2e6d100452913f66e84a9fa01748941bd799831458d0",
+  "output_excerpt": "Executed all 17 in-scope G2 harnesses at c1a2310144c37db80ad11af3d86b65b2ed300c81: nt, nt-adapters, nt-architect, nt-backtest, nt-data, nt-dev, nt-dex-adapter, nt-implement, nt-learn, nt-live, nt-model, nt-review, nt-signals, nt-strategy-builder, nt-strategy-builder-rust, nt-testing, nt-trading. Every harness reported PASS and exit 0. Final card/declaration validation passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T08:50:59Z"
+}

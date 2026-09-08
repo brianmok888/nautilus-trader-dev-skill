@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from tools.upstream_baseline import UPSTREAM_COMMIT
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -104,11 +106,38 @@ def test_current_baseline_abbreviation_is_consistent() -> None:
     )
 
     # Then every abbreviated citation uses the resolvable 10-character prefix
-    assert all("1602043d" in document for document in documents)
+    assert all(UPSTREAM_COMMIT[:10] in document for document in documents)
+
+
+def test_current_baseline_citations_exclude_superseded_pin() -> None:
+    # Given user-facing current-baseline guides
+    documents = (
+        read("docs/end_to_end_guide.md"),
+        read("skills/nt/SKILL.md"),
+        read("skills/nt-review/SKILL.md"),
+        read("skills/nt-dex-adapter/SKILL.md"),
+        read("skills/nt-adapters/SKILL.md"),
+        read("skills/nt-data/references/guides/cache_operations.md"),
+        read("skills/nt-data/references/concepts/data.md"),
+        read("skills/nt-signals/references/concepts/data.md"),
+        read("skills/nt-learn/curriculum/12-adapter-development.md"),
+        read("skills/nt-dev/SKILL.md"),
+        read("skills/nt-testing/SKILL.md"),
+        read("skills/nt-dev/references/guides/rust_conventions.md"),
+        read("skills/nt-trading/references/concepts/rust.md"),
+        read("skills/nt-live/references/concepts/rust.md"),
+        read("skills/nt-live/references/concepts/cache.md"),
+        read("references/integrations/polymarket.md"),
+    )
+
+    # When an agent follows the active develop baseline
+    # Then no superseded active-pin citation can coexist with the current pin.
+    assert all("1602043d" not in document for document in documents)
+    assert all(UPSTREAM_COMMIT in document for document in documents)
 
 
 def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
-    # Given current-develop strategy-managed contingencies (1602043d)
+    # Given strategy-managed contingencies included in the current pinned baseline
     live = read("skills/nt-adapters/references/concepts/live.md")
     orders = read("skills/nt-trading/references/concepts/orders.md")
     builder = read("skills/nt-strategy-builder-rust/SKILL.md")
@@ -123,7 +152,7 @@ def test_contingent_order_guidance_covers_strategy_managed_semantics() -> None:
         "Strategy-managed contingencies",
         "OrderEmulator",
         "cumulative filled",
-        "1602043debb82b34084d35a452c374b744b96524",
+        UPSTREAM_COMMIT,
     ):
         assert marker in orders
-    assert "1602043debb82b34084d35a452c374b744b96524" in builder
+    assert UPSTREAM_COMMIT in builder

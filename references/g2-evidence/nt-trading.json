@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "08da312c1663a07e8ad12aeb10d040f5e4a5ca83acfdef8c7619f4b8e6512617",
+  "owned_content_sha256": "ff84e43445d73a161a7d17062ee3040e96f18afbac605c9be7d19eaa8991c03b",
   "schema_version": 2,
   "scope": "repository:rust-trading-reference-sync-and-compile",
   "skill": "nt-trading",
@@ -14,11 +14,11 @@
         "tests/test_rust_trading_reference_sync.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 1.017839,
+      "duration_seconds": 0.720427,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "1602043debb82b34084d35a452c374b744b96524",
-  "verified_at": "2026-09-07T18:22:27.705700+00:00"
+  "upstream_commit": "c1a2310144c37db80ad11af3d86b65b2ed300c81",
+  "verified_at": "2026-09-08T10:17:09.926830+00:00"
 }
