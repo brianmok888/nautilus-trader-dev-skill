@@ -15,6 +15,8 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 ## Open findings — 2026-09-08 upstream currency cycle
 
 NT v2 compatibility note: quoted legacy v1/Cython/`TradingNode` tokens below are historical finding evidence (migration reference only).
+The approved Phase 2 implementation manifest declared `spec-deltas: []`; reconciliation applied no spec edit and `docs/specs/` is unchanged from the preflight baseline.
+
 One read-only delta-review pass covered all 16 commits in `1602043deb..c1a2310144` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (ninth transition).
 
 [NT-2026-09-08-001] [P1] [CLOSED 2026-09-08] V2 compliance: upstream develop advanced 16 commits / 136 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
