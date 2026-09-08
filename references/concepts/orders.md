@@ -578,7 +578,7 @@ An OTO order involves two parts:
 | Trigger model       | When are child orders released?                                                                                                                  |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Full trigger**    | When the parent order’s cumulative quantity equals its original quantity (i.e., it is *fully* filled).                                           |
-| **Partial trigger** | Immediately upon each partial execution of the parent; the child’s quantity matches the executed amount and is increased as further fills occur. |
+| **Partial trigger** | Immediately upon each partial execution of the parent; the child target starts at the parent cumulative filled quantity, then reduce-only children are capped at the commission-adjusted open position, rounded down to the child size increment, and zeroed below the configured minimum quantity. |
 
 :::info
 The default backtest venue for NautilusTrader uses a *partial-trigger model* for OTO orders.

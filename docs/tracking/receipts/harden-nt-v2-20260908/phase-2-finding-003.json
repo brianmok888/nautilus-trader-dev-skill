@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260908",
+  "receipt": "phase-2-finding-003",
+  "finding_id": "NT-2026-09-08-003",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
+  "exit_code": 0,
+  "output_sha256": "0624a81137c0527244d516eff5238155e3bdac4a337a209289435647cddd42f6",
+  "output_excerpt": "Aligned OTO child sizing guidance with commission-adjusted position caps, valid size increments, and configured minimum quantities in canonical and trading-owned order references. Final Phase 2 verification: 452 passed, 7 skipped; G2 card/declaration validation passed; git diff --check passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-08T09:10:00Z"
+}

@@ -587,11 +587,19 @@ Ownership and scope boundaries:
 - The option adds no native venue support and never submits a non-active-local OTO child: it
   manages non-active-local orders that are already open. The active-local emulator remains
   responsible for submitting a child held locally.
-- OTO quantity propagation: before the parent's first fill, parent quantity updates propagate to
-  open, non-active-local children. After filling starts, parent events keep each child quantity
-  equal to the parent's cumulative filled quantity; a child fill or update waits for the next
-  parent event to refresh that target. Parent processing cancels an open child if the parent
-  closes without a fill or the child's cumulative fills meet or exceed the refreshed target.
+- OTO child sizing: before the parent's first fill, parent quantity updates propagate to open,
+  non-active-local children. After filling starts, each parent event starts the child target at
+  the parent's cumulative filled quantity (an execution spawn includes fills from every order in
+  the spawn). For a parent linked to a position, the manager then adjusts the target in order:
+  cap a non-spread parent's reduce-only child at the child's filled quantity plus the current
+  commission-adjusted position quantity, round the total target down to a multiple of the child
+  instrument's size increment, and, when configured, treat a rounded target below the child
+  instrument's minimum quantity as zero. The calculation does not round position or account
+  state; a remaining position too small for the size increment and optional minimum stays open
+  without reduce-only child coverage. Spread parents and non-reduce-only children skip the
+  position cap but still use the child instrument's size rules. Parent processing cancels an
+  open child if the parent closes without a fill or the child's cumulative fills meet or exceed
+  the refreshed target.
 - OCO: with strategy management enabled, the strategy requests cancellation for open,
   non-active-local siblings; otherwise the adapter or venue determines cancellation behavior.
 - OUO: strategy management applies the same update or cancellation behavior to open,
