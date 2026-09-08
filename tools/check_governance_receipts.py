@@ -17,6 +17,11 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 RECEIPTS_RELATIVE_PATH = Path("docs/tracking/receipts")
+_FINDING_HEADER = re.compile(
+    r"^\[(?P<id>NT-\d{4}-\d{2}-\d{2}-\d{2,3})\] "
+    r"\[P[0-2]\] \[CLOSED(?: \d{4}-\d{2}-\d{2})?\]"
+)
+_RECEIPT_PATH = re.compile(r"receipts/(?P<mission>[a-z0-9]+(?:-[a-z0-9]+)*)/(?P<receipt>[a-z0-9]+(?:-[a-z0-9]+)*)\.json")
 REQUIRED_FIELDS = {
     "schema_version",
     "mission",
@@ -137,6 +142,67 @@ def validate_receipt(receipt: object, path: Path) -> list[str]:
     return errors
 
 
+def validate_mission_finding_coverage(
+    findings_path: Path,
+    receipts_root: Path,
+    mission: str,
+    finding_prefix: str | None = None,
+) -> list[str]:
+    """Require each closed finding for one mission to cite a matching receipt."""
+    if finding_prefix is None:
+        match = re.fullmatch(r"harden-nt-v2-(\d{8})", mission)
+        if match is not None:
+            finding_prefix = f"NT-{match[1][:4]}-{match[1][4:6]}-{match[1][6:]}-"
+    try:
+        lines = findings_path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        return [f"{findings_path}: unable to read findings: {exc}"]
+
+    errors: list[str] = []
+    current_id: str | None = None
+    closure_proof = ""
+
+    def validate_current() -> None:
+        if current_id is None:
+            return
+        references = list(_RECEIPT_PATH.finditer(closure_proof))
+        if not references:
+            errors.append(
+                f"{findings_path}: {current_id} closure-proof must cite a receipt path"
+            )
+            return
+        for reference in references:
+            if reference["mission"] != mission:
+                continue
+            receipt_path = receipts_root / mission / f"{reference['receipt']}.json"
+            try:
+                receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                errors.append(f"{receipt_path}: {current_id} receipt is unreadable: {exc}")
+                return
+            if isinstance(receipt, dict) and receipt.get("finding_id") == current_id:
+                return
+        errors.append(
+            f"{findings_path}: {current_id} closure-proof requires a {mission} receipt "
+            "with matching finding_id"
+        )
+
+    for line in lines:
+        header = _FINDING_HEADER.match(line)
+        if header is not None:
+            validate_current()
+            current_id = (
+                header["id"]
+                if finding_prefix is None or header["id"].startswith(finding_prefix)
+                else None
+            )
+            closure_proof = ""
+        elif current_id is not None and line.startswith("  closure-proof: "):
+            closure_proof = line.removeprefix("  closure-proof: ")
+    validate_current()
+    return errors
+
+
 def validate_tree(root: Path) -> tuple[int, list[str]]:
     """Validate every tracked receipt under the repository root."""
     receipts_root = root / RECEIPTS_RELATIVE_PATH
@@ -170,6 +236,17 @@ def validate_tree(root: Path) -> tuple[int, list[str]]:
                     f"{relative_path}: path does not match receipt mission/receipt "
                     f"({expected_mission}/{expected_receipt})"
                 )
+    findings_path = root / "docs/tracking/Findings.md"
+    if findings_path.is_file():
+        current_mission = "harden-nt-v2-20260908"
+        if (receipts_root / current_mission).is_dir():
+            errors.extend(
+                validate_mission_finding_coverage(
+                    findings_path,
+                    receipts_root,
+                    current_mission,
+                )
+            )
     return count, errors
 
 

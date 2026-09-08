@@ -4,7 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from tools.check_governance_receipts import main, validate_receipt
+from tools.check_governance_receipts import (
+    main,
+    validate_mission_finding_coverage,
+    validate_receipt,
+)
 
 
 def _valid_receipt() -> dict[str, object]:
@@ -28,6 +32,85 @@ def _valid_receipt() -> dict[str, object]:
 
 def test_validate_receipt_accepts_safe_versioned_receipt() -> None:
     assert validate_receipt(_valid_receipt(), Path("receipt.json")) == []
+
+
+def test_validate_mission_finding_coverage_requires_each_closed_finding_receipt(
+    tmp_path: Path,
+) -> None:
+    receipt_root = tmp_path / "receipts"
+    mission_dir = receipt_root / "mission-a"
+    mission_dir.mkdir(parents=True)
+    receipt = _valid_receipt()
+    receipt["mission"] = "mission-a"
+    receipt["finding_id"] = "NT-2026-09-08-002"
+    (mission_dir / "phase-2-fixes.json").write_text(
+        json.dumps(receipt), encoding="utf-8"
+    )
+    findings = tmp_path / "Findings.md"
+    findings.write_text(
+        """[NT-2026-09-08-002] [P1] [CLOSED 2026-09-08] First
+  evidence: source
+  fix: applied
+  closure: closed
+  closure-proof: receipts/mission-a/phase-2-fixes.json
+  acceptance-test: pytest
+  correction: update
+[NT-2026-09-08-003] [P1] [CLOSED 2026-09-08] Second
+  evidence: source
+  fix: applied
+  closure: closed
+  closure-proof: receipts/mission-a/phase-2-fixes.json
+  acceptance-test: pytest
+  correction: update
+""",
+        encoding="utf-8",
+    )
+
+    errors = validate_mission_finding_coverage(findings, receipt_root, "mission-a")
+
+    assert any("NT-2026-09-08-003" in error for error in errors)
+
+
+def test_validate_mission_finding_coverage_uses_mission_date_prefix(
+    tmp_path: Path,
+) -> None:
+    receipt_root = tmp_path / "receipts"
+    mission_dir = receipt_root / "harden-nt-v2-20260908"
+    mission_dir.mkdir(parents=True)
+    receipt = _valid_receipt()
+    receipt["mission"] = "harden-nt-v2-20260908"
+    receipt["finding_id"] = "NT-2026-09-08-002"
+    (mission_dir / "phase-2-finding-002.json").write_text(
+        json.dumps(receipt), encoding="utf-8"
+    )
+    findings = tmp_path / "Findings.md"
+    findings.write_text(
+        """[NT-2026-09-08-002] [P1] [CLOSED 2026-09-08] Current
+  evidence: source
+  fix: applied
+  closure: closed
+  closure-proof: receipts/harden-nt-v2-20260908/phase-2-finding-002.json
+  acceptance-test: pytest
+  correction: update
+[NT-2026-09-07-001] [P1] [CLOSED 2026-09-07] Historical
+  evidence: source
+  fix: applied
+  closure: closed
+  closure-proof: receipts/harden-nt-v2-20260907/phase-2-finding-001.json
+  acceptance-test: pytest
+  correction: update
+""",
+        encoding="utf-8",
+    )
+
+    errors = validate_mission_finding_coverage(
+        findings,
+        receipt_root,
+        "harden-nt-v2-20260908",
+    )
+
+    assert errors == []
+
 
 
 def test_validate_receipt_keeps_priority_independent_from_evidence() -> None:
