@@ -5,7 +5,7 @@
   "finding_id": "NT-2026-09-08-008",
   "owner_stage": "phase-2",
   "evidence_state": "verified",
-  "severity": "P1",
+  "severity": "P2",
   "command": "python3 -m pytest -q && python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations && git diff --check",
   "exit_code": 0,
   "output_sha256": "ad3476fc2bca2f4c93e813654937df0ac2a8ff5aea01596d5d69f8e6c853471d",
