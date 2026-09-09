@@ -78,11 +78,14 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   closure-proof: verified against pinned crates/adapters/hyperliquid/src/common/parse.rs:244-258 (normalize_or_validate_wire_price: known cap -> ensure_canonical_wire_price rejection, unknown cap -> raw passthrough); dev guide sync + legacy labelling pass.
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: documented local price validation when normalization is disabled, including the raw-passthrough unknown-cap case — files: references/integrations/hyperliquid.md, skills/nt-adapters/references/integrations/hyperliquid.md
 
-[NT-2026-09-09-008] [P1] [OPEN] V2 compliance: test-dataset guidance teaches removed download-on-first-use behavior.
+[NT-2026-09-09-008] [P1] [CLOSED 2026-09-09] V2 compliance: test-dataset guidance teaches removed download-on-first-use behavior.
   file: skills/nt-testing/SKILL.md:441
   evidence: upstream commit `2f1cb4223` adds the `prepare-test-data` binary (download + checksum verification), makes `ensure_test_data_exists()` local-only, and fails missing fixtures with the preparation command. Four files teach downloads-from-R2-on-first-use: `skills/nt-testing/SKILL.md:441-446`, `skills/nt-testing/references/guides/test_datasets.md:16`, `references/developer_guide/test_datasets.md:23`, `skills/nt-data/references/guides/test_datasets.md:15`.
   fix: replace download-on-first-use claims with the prepare/execute split; document `cargo run --locked -p nautilus-testkit --bin prepare-test-data` and the local-only check.
   acceptance-test: no active guidance claims `ensure_test_data_exists()` downloads; preparation workflow documented in all four files.
+  closure: all four teaching locations now describe the prepare-test-data workflow and local-only fixture checks.
+  closure-proof: references/developer_guide/test_datasets.md was refreshed verbatim in the pin-move commit (prepare-test-data documented); the other three files updated to match upstream docs/developer_guide/test_datasets.md:14-26; `grep "download on first use"` returns nothing active; dev guide sync + snapshot sync + legacy labelling pass.
+  correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced download-on-first-use guidance with the prepare-test-data/local-only-check split and TEST_DATA_ROOT_PATH note — files: skills/nt-testing/SKILL.md, skills/nt-testing/references/guides/test_datasets.md, skills/nt-data/references/guides/test_datasets.md
 
 [NT-2026-09-09-009] [P2] [OPEN] Coverage gap: OUO and reduce-only guidance omits matching-engine maintenance and propagation semantics.
   file: references/concepts/orders.md:620

@@ -13,7 +13,16 @@ alongside a `metadata.json` file. These files are always available without netwo
 
 **Large data** (> 1 MB) is hosted as Parquet in the R2 test-data bucket.
 A SHA-256 checksum is recorded in `test_data/large/checksums.json`.
-The `ensure_test_data_exists()` function downloads the file on first use and verifies integrity.
+Prepare large fixtures before running tests that use them, from the repository root:
+
+```bash
+cargo run --locked -p nautilus-testkit --bin prepare-test-data
+```
+
+This command downloads missing files and verifies every fixture in the tracked checksum manifest.
+The `ensure_test_data_exists()` function only checks for a local file: a test that needs a missing
+fixture fails with a message naming the setup command, without downloading data. Setup and tests
+both honor `TEST_DATA_ROOT_PATH`.
 
 **User-fetched data** is used when a vendor license, entitlement model, or access control does not
 allow NautilusTrader to redistribute the data through the public repo or the public R2 bucket.

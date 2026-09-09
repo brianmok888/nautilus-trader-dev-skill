@@ -438,11 +438,14 @@ tests must skip cleanly when local user-fetched data is absent.
 
 ### Large Data: Checksums
 
-`test_data/large/checksums.json` records SHA-256 for each file. The `ensure_test_data_exists()` helper:
+`test_data/large/checksums.json` records SHA-256 for each file. Fixtures are prepared separately
+from test execution: `cargo run --locked -p nautilus-testkit --bin prepare-test-data` downloads
+missing files and verifies every checksum (replacing stale cached files, rejecting mismatched
+downloads). The `ensure_test_data_exists()` helper then only checks for a local file:
 1. Checks if file exists locally
-2. Downloads from R2 if missing
-3. Verifies SHA-256 checksum
-4. Raises on integrity failure
+2. Fails with a message naming the preparation command when the fixture is missing
+3. Never downloads during a test run
+4. Setup and tests both honor `TEST_DATA_ROOT_PATH`
 
 ### Regenerating Datasets
 
