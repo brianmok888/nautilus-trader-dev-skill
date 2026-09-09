@@ -41,6 +41,91 @@ The executing agent MUST load and apply these skills at the right phase. Invoke 
 
 ## Execution contract
 
+### Template 8 — OMO Native ULW Autonomous Completion Loop
+
+Identifier: `autonomous-ulw-completion-loop`
+
+Direct invocation:
+
+```text
+Run Template 8 from docs/prompts/master-prompt.md.
+Goal: <resolved NautilusTrader skill outcome or approved finding set>
+Scope: <authorized skills, references, templates, exclusions, and acceptance criteria>
+```
+
+Selecting Template 8 once with a resolved Goal and Scope authorizes OMO native
+ULW to dispatch the applicable workflow roles 1-7 below without another template
+selection. This is orchestration permission only. It does not expand the writable
+target beyond the resolved `nautilus-trader-dev-skill` mission worktree, make the
+upstream NautilusTrader checkout writable, approve a plan or user decision, or
+authorize commits, integration, push, release, publication, credentials, live
+financial APIs, or any other external write.
+
+The existing execution contract and Phases 0-6 remain authoritative. Invoke the
+owning phase with resolved inputs, consume its real artifact or verdict, and
+preserve every `STOP`, `Blocked`, user-approval, upstream-currency, evidence, and
+shipping gate. Do not reproduce, abbreviate, reorder, or weaken those contracts.
+Skip a role only when its required output is current and valid for the present
+mission tree, pinned upstream identity, and evidence state.
+
+Dispatch by these adapted roles:
+
+- **Template 1 — clarify goal and scope.** **Trigger:** the requested NT-skill
+  outcome, artifact inventory, repository ownership, exclusions, or acceptance
+  criteria are materially ambiguous. **Return:** resolved Goal and Scope, or one
+  precise user decision followed by `STOP`.
+- **Template 2 — research unresolved evidence.** **Trigger:** the current
+  NautilusTrader V2 baseline, pinned upstream identity, source URL, or
+  version-sensitive claim is unresolved or stale. **Return:** the upstream
+  currency/delta evidence and, only when exhaustive research was explicitly
+  requested, `/skill:ulw-research` results over authoritative sources.
+- **Template 3 — validate findings and plan remediation.** **Trigger:** Phase 1,
+  external research, independent verification, or a rescan identifies a possible
+  NT-development skill discrepancy. **Return:** validated `[NT-###]` findings
+  with concrete evidence and one dependency-ordered Phase 2 segment or blocker.
+- **Template 4 — reconcile documentation truth.** **Trigger:** skill, reference,
+  template, approved-spec, tracker, gate-card, or receipt claims disagree with
+  the current mission tree or pinned upstream. **Return:** the owning
+  documentation correction and deterministic `spec-deltas` entry, or
+  `spec-deltas: []`.
+- **Template 5 — execute one authorized implementation slice.** **Trigger:** a
+  validated finding has one in-scope correction authorized for Phase 2.
+  **Return:** one TDD-backed logical segment, tracker delta, commit when authorized
+  by the mission, and updated implementation manifest.
+- **Template 6 — independently verify the slice.** **Trigger:** Phase 2 presents
+  its manifest and the user grants the separate Phase 3 approval. **Return:** an
+  independent per-finding result plus verifier-owned receipts and an `Approved`
+  or `Rejected` verdict; rejection dispatches back to Templates 3 and 5.
+- **Template 7 — discover or rescan gaps.** **Trigger:** initial inventory/review,
+  verification rejection, upstream drift, or final fixed-point review.
+  **Return:** Phase 0, Phase 1, and Phase 5's deduplicated finding delta across
+  in-scope skills, references, templates, tests, validators, and tracking files.
+
+Repeat this controller loop:
+
+1. Run the existing preflight, resolve Goal and Scope through Template 1 when
+   needed, and establish clean worktree ownership plus upstream currency.
+2. Dispatch Template 7, then Templates 2 and 3 for gaps whose evidence or plan is
+   not current. Select exactly one highest-priority executable `[NT-###]` finding.
+3. Dispatch Template 5 for one authorized segment and stop at the existing
+   separate Phase 3 approval question.
+4. After approval, dispatch Template 6. On `Rejected`, return through Templates 3
+   and 5; never continue to later phases on failed verification.
+5. On `Approved`, run Phase 4 G0-G7 cards and dispatch Template 4 plus Phase 5
+   reconciliation for affected specs, trackers, receipts, and skill artifacts.
+6. Rescan through Template 7. Repeat while an executable in-scope gap, invalid
+   evidence, failed gate, upstream drift, or unverified completion claim remains.
+7. Treat Phase 6 as the evidence-bound fixed point and separate shipping gate.
+   Stop `Blocked` when progress requires missing evidence, a user decision,
+   expanded scope, unavailable mandatory methodology, or repeated no progress.
+
+Completion means Phase 5 reconciliation finds no unresolved in-scope gap, every
+applicable skill gate and repository validator is fresh and `Pass`, receipts and
+owned-content hashes match current artifacts and pinned upstream evidence, and
+Phase 6's separate authorization has either completed the changed-tree/no-change
+shipping path or deliberately left publication pending. An empty task list is
+not proof, and skill-pack documentation never proves application readiness.
+
 ### Preflight and ownership
 
 Before Phase 0:
