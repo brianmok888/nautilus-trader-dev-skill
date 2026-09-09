@@ -1329,8 +1329,17 @@ deserialization. The output enum drops shapes the handler consumes internally an
 variants (`Authenticated`, `SendFailed`) that originate in handler logic, not on the wire.
 
 Include `OrderResponse` for venue acknowledgements (place, cancel, amend) and `SendFailed` for
-WebSocket send failures after retries are exhausted. The execution client dispatch layer converts
-these into Nautilus rejection events (`OrderRejected`, `OrderCancelRejected`, etc.).
+WebSocket send failures after retries are exhausted. The execution client classifies every submit,
+modify, or cancel failure into `CommandFailure::{NotSent, VenueRejected, Ambiguous}`
+(`crates/live/src/execution/failure.rs`): only `NotSent` (proven never transmitted) and
+`VenueRejected` (authoritative venue rejection) may convert to terminal rejection events
+(`OrderRejected`, `OrderCancelRejected`, etc.); `Ambiguous` outcomes — transport errors, timeouts,
+send failures where transmission is unproven, retry exhaustion, or response parse failures — never
+emit a terminal event and leave the command in flight for reconciliation. This matches the outcome
+contract in [spec_exec_testing.md](spec_exec_testing.md) (`adapter request failures do not turn into
+terminal rejection events when the venue outcome is unknown`). Binance additionally limits bounded
+HTTP retries to GET/read requests, with `max_retries`, `retry_delay_initial_ms`, and
+`retry_delay_max_ms` configuration fields (exponential backoff).
 
 **Conversion in data/exec client:**
 
