@@ -271,6 +271,24 @@ order expiration by canceling the order at the specified expiry time.
 | Batch Modify       | ✓                     | Modify multiple orders in single request. |
 | Batch Cancel       | ✓                     | Cancel multiple orders in single request. |
 
+### RPI minimum notional
+
+RPI maker orders must meet both the instrument's `minSz` and the RPI minimum notional:
+
+- `SWAP` and `FUTURES`: 10,000 USD.
+- `SPOT`: 1,000 USD.
+- `EVENTS`: exempt from the RPI minimum notional.
+
+OKX rejects an order below the applicable notional threshold with `54051`; the execution client emits
+`OrderRejected` for a rejected placement. An amend that includes `newSz` is checked again, with or
+without `newPx`. A rejected amend leaves the original order active; the adapter emits
+`OrderModifyRejected` and stops tracking the amend as pending. A price-only amend does not trigger
+this check. Each sub-order in a batch place or amend request is checked independently.
+
+Orders already on the book when the rule took effect in production on August 18, 2026, are grandfathered.
+Non-RPI orders, including orders with `rpiTakerAccess: true`, are exempt from this notional rule.
+An order that meets `minSz` can still fail the RPI minimum-notional check.
+
 ### Position management
 
 | Feature           | Linear perpetual swap | Notes                                                |
@@ -685,6 +703,14 @@ The low-level HTTP client exposes OKX's public event contract discovery endpoint
 - `request_event_contract_series`.
 - `request_event_contract_events`.
 - `request_event_contract_markets`.
+
+The low-level HTTP client also exposes the authenticated account-configuration endpoint
+`GET /api/v5/account/config` through `get_account_configuration()`, returning typed
+`OKXAccountConfiguration` records: `account_level` (`OKXAccountLevel`), `position_mode`
+(`OKXPositionMode`), `auto_loan`, `fee_type` (`OKXFeeType`), and `permissions`
+(`Vec<OKXApiKeyPermission>`) of the requesting key (`crates/adapters/okx/src/http/client.rs`,
+`models.rs` at the pinned baseline). The method is read-only evidence: account-mode and
+API-key-permission policy remains the caller's responsibility.
 
 The low-level WebSocket client supports the `event-contract-markets` channel through
 `subscribe_event_contract_markets` and `unsubscribe_event_contract_markets`. This
