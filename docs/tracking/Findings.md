@@ -69,11 +69,14 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   closure-proof: matches upstream docs/integrations/binance.md:638-657 at 5e4be2edb; `grep "latest order book data subscription"` returns nothing active; dev guide sync + legacy labelling pass.
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced latest-subscription-wins guidance with depth-5/10/20 snapshot semantics and resubscribe protocol — files: skills/nt-adapters/references/integrations/binance.md, references/integrations/binance.md
 
-[NT-2026-09-09-007] [P1] [OPEN] V2 compliance: Hyperliquid guidance says `normalize_prices=False` gives full control of price formatting; over-precise prices are now denied locally before signing.
+[NT-2026-09-09-007] [P1] [CLOSED 2026-09-09] V2 compliance: Hyperliquid guidance says `normalize_prices=False` gives full control of price formatting; over-precise prices are now denied locally before signing.
   file: references/integrations/hyperliquid.md:606
   evidence: upstream commit `1af807063` validates outgoing limit/trigger prices against instrument decimal limits when `normalize_prices=false` and denies them locally (preventing the misleading wallet-not-exist venue response). Both integration copies present normalization-off as full user control.
   fix: state in both copies that disabling normalization does not bypass validation: prices beyond the instrument decimal limit are denied locally before dispatch.
   acceptance-test: both copies carry the local-validation caveat adjacent to the `normalize_prices=False` guidance.
+  closure: both Hyperliquid copies state that normalize_prices=False still validates against the instrument decimal limit.
+  closure-proof: verified against pinned crates/adapters/hyperliquid/src/common/parse.rs:244-258 (normalize_or_validate_wire_price: known cap -> ensure_canonical_wire_price rejection, unknown cap -> raw passthrough); dev guide sync + legacy labelling pass.
+  correction: 2026-09-09 — [v2-compliance] — MODIFIED: documented local price validation when normalization is disabled, including the raw-passthrough unknown-cap case — files: references/integrations/hyperliquid.md, skills/nt-adapters/references/integrations/hyperliquid.md
 
 [NT-2026-09-09-008] [P1] [OPEN] V2 compliance: test-dataset guidance teaches removed download-on-first-use behavior.
   file: skills/nt-testing/SKILL.md:441

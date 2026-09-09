@@ -614,8 +614,14 @@ having `price_precision=2`.
 
 By default, the adapter normalizes all outgoing limit and trigger prices to 5 significant
 figures to prevent order rejections. This means your submitted prices may shift slightly.
-To disable this and take full control of price formatting, set `normalize_prices=False`
-in your `HyperliquidExecutionClientConfig`.
+To disable automatic adjustment and take control of price formatting, set `normalize_prices=False`
+in your `HyperliquidExecutionClientConfig`. Disabling normalization does not bypass validation:
+when the instrument's decimal limit is known, outgoing limit and trigger prices that exceed it are
+denied locally before signing and dispatch (`normalize_or_validate_wire_price` in
+`crates/adapters/hyperliquid/src/common/parse.rs`); only an unknown instrument cap passes raw
+prices through. Supplying over-precise prices risks Hyperliquid canonicalizing the wire price
+before signature verification and returning a misleading wallet-not-found response, which the
+local denial prevents.
 
 If you disable normalization, you can apply the same rounding in your strategy:
 
