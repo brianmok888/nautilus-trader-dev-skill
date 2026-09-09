@@ -221,6 +221,9 @@ Processes and routes market data throughout the system:
 
 - Handles multiple data types (quotes, trades, bars, order books, custom data, and more).
 - Routes data to appropriate consumers based on subscriptions.
+- Keeps each client subscription active until its final owner releases it, retaining the original
+  client route and parameters; the upstream unsubscribe is sent only after the final owner
+  unsubscribes.
 - Manages data flow from external sources to internal components.
 
 #### `ExecutionEngine`
@@ -318,6 +321,8 @@ stateDiagram-v2
 
     STOPPED --> DISPOSING : dispose()
     FAULTED --> DISPOSING : dispose()
+    STOPPING --> DISPOSING : dispose()
+    FAULTING --> DISPOSING : dispose()
     DISPOSING --> DISPOSED
 
     DISPOSED --> [*]

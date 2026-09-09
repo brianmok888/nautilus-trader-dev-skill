@@ -73,10 +73,15 @@ Override these methods to hook into lifecycle events:
 | `on_start()`    | Actor is starting (subscribe to data here).                         |
 | `on_stop()`     | Actor is stopping (cancel timers, cleanup resources).               |
 | `on_resume()`   | Actor is resuming from a stopped state.                             |
-| `on_reset()`    | Reset indicators and internal state (called between backtest runs). |
+| `on_reset()`    | Actor is resetting, including between backtest runs; retained data subscriptions are released after the hook succeeds. |
 | `on_degrade()`  | Actor is entering a degraded state (partial functionality).         |
 | `on_fault()`    | Actor has encountered a critical fault.                             |
 | `on_dispose()`  | Actor is being disposed (final cleanup).                            |
+
+Component retirement is automatic: removing a component runs disposal, releases its retained
+active and pending data subscriptions, and removes its registry entries — even when a `stop` or
+`fault` hook returns an error. Shared client subscriptions stay active until their final owner
+leaves, and failed subscription attempts relinquish ownership so another component can retry.
 
 ## Timers and alerts
 
