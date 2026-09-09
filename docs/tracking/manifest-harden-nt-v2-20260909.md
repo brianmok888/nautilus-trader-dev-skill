@@ -12,7 +12,7 @@ Mission worktree: `/home/mok/projects/nautilus-trader-dev-skill-mission-20260909
 
 | Finding | Impact | Commit | Scope |
 |---|---|---|---|
-| NT-2026-09-09-001 | P1 | 71c11f0, 1e90b16, da635d4, 37cbe80 | Pin move + citation-layer refresh + all 17 G2 evidence files regenerated |
+| NT-2026-09-09-001 | P1 | 71c11f0, 1e90b16, 285a34d, da635d4, 37cbe80 | Pin move + citation-layer refresh + all 17 G2 evidence files regenerated (nt.json and nt-adapters.json in 285a34d; remaining 15 in da635d4) |
 | NT-2026-09-09-002 | P1 | 98fdc40 | nt-dev toolchain guidance → 1.98.1 |
 | NT-2026-09-09-003 | P1 | f71e126 | concepts: Python component topic-messaging facade |
 | NT-2026-09-09-004 | P1 | e107ed2 | adapters: CommandFailure classification |
@@ -30,7 +30,7 @@ Mission worktree: `/home/mok/projects/nautilus-trader-dev-skill-mission-20260909
 | NT-2026-09-09-016 | P2 | 4cadd80 | architect: DST network simulation seams |
 | NT-2026-09-09-017 | P2 | 30661f0 | concepts: instrument notional bounds |
 
-Governance receipts: 350 validated, `owner_stage: phase-2`, under `docs/tracking/receipts/harden-nt-v2-20260909/` (commit 285a34d).
+Governance receipts: 17 phase-2 receipts under `docs/tracking/receipts/harden-nt-v2-20260909/` (commit 285a34d); the repository-wide total across all missions is 350, per `python3 tools/check_governance_receipts.py`.
 
 ## Tests and manual exercises (actual results, current tree)
 
