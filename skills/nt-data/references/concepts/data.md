@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
-NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `c1a2310144c37db80ad11af3d86b65b2ed300c81`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth10.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth10.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
 
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.

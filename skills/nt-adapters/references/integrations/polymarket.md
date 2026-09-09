@@ -329,7 +329,7 @@ retries on transient failures.
 
 Polymarket supports order modification as an adapter-managed cancel-replace for
 open `LIMIT` orders (window commit `616980b15f`, included in pin
-`c1a2310144c37db80ad11af3d86b65b2ed300c81`). Polymarket has no in-place modify
+`5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`). Polymarket has no in-place modify
 endpoint: the execution client cancels the current venue order, reconciles its
 final confirmed fills, and signs a replacement for the remaining quantity. The
 `ModifyOrder.quantity` value is the absolute target for the logical order, not

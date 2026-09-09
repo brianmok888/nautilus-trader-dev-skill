@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/adapters/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/adapters.md
-source_commit: c1a2310144c37db80ad11af3d86b65b2ed300c81
-sync_date: 2026-09-08
+source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
+sync_date: 2026-09-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -465,6 +465,9 @@ zeroization conventions.
 
 - Define environment variable names once and select them from typed environment and product values.
 - Document the established environment variable names in the adapter's integration guide.
+- Register every adapter environment variable in `scripts/strip-adapter-env.bash`. `make pre-flight`
+  runs through that wrapper with all of them unset, so an unregistered variable can let a test pass
+  locally while depending on ambient credentials.
 - Resolve all fields as one credential set. Public clients may remain unauthenticated, but an
   authenticated client rejects an incomplete or invalid set before sending a request.
 - Convert config and environment strings into zeroizing owners at the credential boundary. Do not

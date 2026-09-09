@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/test_datasets/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/test_datasets.md
-source_commit: c1a2310144c37db80ad11af3d86b65b2ed300c81
-sync_date: 2026-09-08
+source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
+sync_date: 2026-09-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -20,7 +20,19 @@ alongside a `metadata.json` file. These files are always available without netwo
 
 **Large data** (> 1 MB) is hosted as Parquet in the R2 test-data bucket.
 A SHA-256 checksum is recorded in `test_data/large/checksums.json`.
-The `ensure_test_data_exists()` function downloads the file on first use and verifies integrity.
+Before running tests that use large data, prepare the fixtures from the repository root:
+
+```bash
+cargo run --locked -p nautilus-testkit --bin prepare-test-data
+```
+
+This command downloads missing files and verifies every fixture in the tracked checksum manifest.
+It replaces cached files whose checksums differ, leaves the manifest unchanged, and rejects and
+removes downloads with mismatched checksums. CI runs this setup after restoring the test-data cache.
+
+The `ensure_test_data_exists()` function only checks for a local file. A test that needs a missing
+fixture fails with a message naming the setup command, without downloading data. Setup and tests both
+honor `TEST_DATA_ROOT_PATH`.
 
 **User-fetched data** is used when a vendor license, entitlement model, or access control does not
 allow NautilusTrader to redistribute the data through the public repo or the public R2 bucket.
@@ -112,7 +124,7 @@ Examples:
 Use `scripts/curate-dataset.sh`:
 
 ```bash
-scripts/curate-dataset.sh <slug> <filename> <download-url> <licence>
+scripts/curate-dataset.sh <slug> <filename> <download-url> <license>
 ```
 
 This creates a versioned directory (`v1/<slug>/`) with the file,
@@ -219,32 +231,18 @@ if not filepath.exists():
 For Rust tests that require manual dataset preparation, prefer `#[ignore]` when the test is not
 expected to run in default CI.
 
-## Test runner serialization
-
-Tests that download large data files share target paths. Because `nextest` runs
-each test in a separate process, concurrent downloads to the same path can race.
-The nextest config at `.config/nextest.toml` defines a `large-data-tests` group with
-`max-threads = 1` to serialize these tests.
-
-When adding a new test module that downloads large shared files, add it to the
-group filter:
-
-```toml
-[[profile.default.overrides]]
-filter = 'package(your-package) & binary(integration) & test(/^your_module::/)'
-test-group = 'large-data-tests'
-```
-
 ## Regenerating datasets
 
 When a schema change invalidates a large Parquet file, regenerate it from the
 original source data using the curation tests below. After regenerating:
 
 1. `sha256sum /tmp/<output_file>.parquet`
-2. Update `test_data/large/checksums.json` with the new hash.
-3. Update the corresponding `metadata.json` (sha256, size_bytes).
-4. Upload the Parquet file to R2.
-5. Commit `checksums.json` and `metadata.json` (this also busts the CI cache).
+1. Update `test_data/large/checksums.json` with the new hash.
+1. Update the corresponding `metadata.json` (sha256, size_bytes).
+1. Upload the Parquet file to R2.
+1. Replace the cached file in `test_data/large/` with the regenerated file, then run the
+   preparation command to verify it. Use the corresponding cache under `TEST_DATA_ROOT_PATH` when set.
+1. Commit `checksums.json` and `metadata.json` (this also busts the CI cache).
 
 ### ITCH AAPL L3 deltas
 

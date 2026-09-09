@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_data_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_data_testing.md
-source_commit: c1a2310144c37db80ad11af3d86b65b2ed300c81
-sync_date: 2026-09-08
+source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
+sync_date: 2026-09-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -856,13 +856,14 @@ DataTesterConfig::builder()
 
 ## Group 9: Lifecycle
 
-Test actor lifecycle behavior: unsubscribe handling and custom parameters.
+Test actor lifecycle behavior: unsubscribe handling, retirement cleanup, and custom parameters.
 
-| TC     | Name                    | Description                                | Skip when         |
-| ------ | ----------------------- | ------------------------------------------ | ----------------- |
-| TC-D70 | Unsubscribe on stop     | Unsubscribe from data feeds on actor stop. | No unsub support. |
-| TC-D71 | Custom subscribe params | Adapter-specific subscription parameters.  | N/A.              |
-| TC-D72 | Custom request params   | Adapter-specific request parameters.       | N/A.              |
+| TC     | Name                    | Description                                     | Skip when         |
+| ------ | ----------------------- | ----------------------------------------------- | ----------------- |
+| TC-D70 | Unsubscribe on stop     | Unsubscribe from data feeds on actor stop.      | No unsub support. |
+| TC-D71 | Custom subscribe params | Adapter-specific subscription parameters.       | N/A.              |
+| TC-D72 | Custom request params   | Adapter-specific request parameters.            | N/A.              |
+| TC-D73 | Retirement cleanup      | Release an actor's retained data subscriptions. | N/A.              |
 
 ### TC-D70: Unsubscribe on stop
 
@@ -962,6 +963,28 @@ DataTesterConfig::builder()
 - `request_params` is opaque to the DataTester and passed through to the adapter.
 - The Python `DataTesterConfig` constructor does not expose this Rust-only field.
 - Consult the adapter's guide for supported parameters.
+
+### TC-D73: Retirement cleanup
+
+| Field              | Value                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Prerequisite**   | An actor has venue-backed subscriptions; two actors share an internally aggregated bar.                                               |
+| **Action**         | Retire the first actor, then retire the second actor through the trader.                                                              |
+| **Event sequence** | `on_dispose` completes; unsubscribe commands are sent; the actor is deregistered.                                                     |
+| **Pass criteria**  | The first retirement keeps shared data active; the final retirement releases the retained route and leaves no retired actor handlers. |
+| **Skip when**      | N/A.                                                                                                                                  |
+
+The shared bar must remain active after the first actor retires and stop after the final actor
+retires.
+
+**Considerations:**
+
+- `DataTesterConfig` does not cover multi-actor retirement. Create two actors manually, then remove
+  them through Python `Controller.remove_actor` or Rust `Trader::remove_actor`.
+- If `on_dispose` fails, the actor must remain registered with its subscriptions intact so a later
+  retirement can release them without invoking the failed hook again.
+- A failed `on_stop` or `on_fault` must not block retirement: disposal and deregistration must still
+  complete from the corresponding transitional state.
 
 ---
 

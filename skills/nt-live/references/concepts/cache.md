@@ -530,7 +530,7 @@ Key safeguards:
 - Linked orders keep parents in the cache until all children have closed, preventing premature removal of contingency chains.
 - Indices and reverse lookups are cleaned alongside the primary object to avoid dangling references.
 
-These methods purge in-memory cache state only and take no database argument (pinned `c1a2310144c37db80ad11af3d86b65b2ed300c81`,
+These methods purge in-memory cache state only and take no database argument (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`,
 `python/nautilus_trader/common/__init__.pyi` lines 288-293; `crates/common/src/cache/mod.rs` lines
 3400/3483/3990). NT v2 compatibility note: the `purge_from_database=True` keyword is v1-Cython
 surface that was removed from the v2 Rust Cache; passing it raises `TypeError`, and deleting

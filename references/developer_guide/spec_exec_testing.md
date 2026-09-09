@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_exec_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_exec_testing.md
-source_commit: c1a2310144c37db80ad11af3d86b65b2ed300c81
-sync_date: 2026-09-08
+source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
+sync_date: 2026-09-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only

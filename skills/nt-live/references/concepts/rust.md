@@ -264,7 +264,7 @@ full walkthrough.
 `LiveNode` exposes first-class registration for Python components: constructed
 instances via `node.add_actor(actor)` / `node.add_strategy(strategy)`, and
 config-driven construction via `node.add_actor_from_config(config)` /
-`node.add_strategy_from_config(config)` (pinned `c1a2310144c37db80ad11af3d86b65b2ed300c81`,
+`node.add_strategy_from_config(config)` (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`,
 `python/nautilus_trader/live/__init__.pyi`). Instance registration requires the
 node to be idle: actors and strategies are added before running the node, and
 registration preserves config-created component IDs while rejecting duplicates.
@@ -277,7 +277,7 @@ node.add_strategy_from_config(config) # ImportableStrategyConfig-driven
 
 Importable config dicts accept a plain string `strategy_id` (or `actor_id`): the value is converted
 to a typed ID at the config construction boundary (`config_value_to_py` in
-`crates/live/src/python/node.rs`, pinned `c1a2310144c37db80ad11af3d86b65b2ed300c81`), and a config attribute that cannot be set on
+`crates/live/src/python/node.rs`, pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`), and a config attribute that cannot be set on
 the constructed object raises `RuntimeError` instead of logging a warning and leaving the attribute
 unset (upstream commit `62b5057927`).
 
