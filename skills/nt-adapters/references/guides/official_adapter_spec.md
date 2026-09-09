@@ -2024,7 +2024,7 @@ Data (`tests/integration/data_client.rs`) and execution (`tests/integration/exec
 |------------------------------|----------------------------------------------------------------|
 | Connect/disconnect           | Connection lifecycle, WebSocket establishment, clean shutdown. |
 | Subscribe trades             | Trade tick events emitted to data channel.                     |
-| Subscribe quotes             | Quote events from ticker (LINEAR) or orderbook (SPOT).         |
+| Subscribe quotes             | Quote events from depth-1 order book snapshots (SPOT/LINEAR/INVERSE) or ticker (OPTION). Shared topic with depth-1 books; one active book depth per instrument. |
 | Subscribe book deltas        | OrderBookDeltas events from orderbook snapshots/updates.       |
 | Subscribe mark/index prices  | Filtered by subscription state (only emit when subscribed).    |
 | Reset state                  | Subscription tracking cleared, connection terminated.          |

@@ -48,11 +48,14 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: replace the blanket conversion rule with the NotSent/VenueRejected/Ambiguous contract; document Binance's GET-only bounded retry config fields (`max_retries`, `retry_delay_initial_ms`, `retry_delay_max_ms`).
   acceptance-test: `grep -n "SendFailed" skills/nt-adapters/references/guides/official_adapter_spec.md` shows no blanket rejection-conversion claim; outcome model matches spec_exec_testing.md.
 
-[NT-2026-09-09-005] [P1] [OPEN] V2 compliance: Bybit coverage matrix says LINEAR quotes derive from ticker data; all non-options venues now use depth-1 order-book snapshots.
+[NT-2026-09-09-005] [P1] [CLOSED 2026-09-09] V2 compliance: Bybit coverage matrix says LINEAR quotes derive from ticker data; all non-options venues now use depth-1 order-book snapshots.
   file: skills/nt-adapters/references/guides/official_adapter_spec.md:2027
   evidence: upstream commit `efb21acaf` routes SPOT, LINEAR, and INVERSE quotes through depth-1 book snapshots (options keep tickers), shares one WebSocket topic between quote and depth-1 book consumers with balanced ownership, and enforces one active book depth per instrument.
   fix: update the matrix row and document shared topic ownership plus the one-active-depth rule in the Bybit integration copies (`references/integrations/bybit.md`, `skills/nt-adapters/references/integrations/bybit.md`).
   acceptance-test: no guidance claims LINEAR quotes come from tickers; depth-1 snapshot + ownership rules documented.
+  closure: quote-source matrix corrected and the missing Quotes and order books section added to both Bybit integration copies.
+  closure-proof: official_adapter_spec.md coverage row now reads depth-1 order book snapshots (SPOT/LINEAR/INVERSE) or ticker (OPTION); both bybit.md copies carry the upstream section (verified against upstream docs/integrations/bybit.md:208-217 at 5e4be2edb); `grep "ticker (LINEAR)"` returns nothing active; dev guide sync + legacy labelling pass.
+  correction: 2026-09-09 — [v2-compliance] — MODIFIED: corrected Bybit quote source and documented shared topic ownership + one-active-depth rule — files: skills/nt-adapters/references/guides/official_adapter_spec.md, references/integrations/bybit.md, skills/nt-adapters/references/integrations/bybit.md
 
 [NT-2026-09-09-006] [P1] [OPEN] V2 compliance: Binance integration copies teach latest-subscription-wins order book behavior; partial depths are now replacement snapshots and depth changes require unsubscribe/confirm/resubscribe.
   file: skills/nt-adapters/references/integrations/binance.md:432
