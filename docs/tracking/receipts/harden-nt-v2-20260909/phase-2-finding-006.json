@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-006",
+  "finding_id": "NT-2026-09-09-006",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"partial-depth stream\" skills/nt-adapters/references/integrations/binance.md references/integrations/binance.md",
+  "exit_code": 0,
+  "output_sha256": "09fe91829494ba10edfb2a2e5b1cc55cd1dd2298dbd7c7d78ceeb1a787b148a0",
+  "output_excerpt": "skills/nt-adapters/references/integrations/binance.md:1\nreferences/integrations/binance.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

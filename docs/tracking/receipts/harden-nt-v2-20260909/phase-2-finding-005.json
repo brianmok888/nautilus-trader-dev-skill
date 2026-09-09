@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-005",
+  "finding_id": "NT-2026-09-09-005",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"depth-1 order book\" skills/nt-adapters/references/guides/official_adapter_spec.md references/integrations/bybit.md skills/nt-adapters/references/integrations/bybit.md",
+  "exit_code": 0,
+  "output_sha256": "d335acdfdc162f6e5dfed4a5ff844d04c069f32c3f7b38a610679cd40bc349c2",
+  "output_excerpt": "skills/nt-adapters/references/guides/official_adapter_spec.md:1\nreferences/integrations/bybit.md:1\nskills/nt-adapters/references/integrations/bybit.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

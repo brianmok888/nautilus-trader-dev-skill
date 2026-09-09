@@ -238,7 +238,7 @@ def validate_tree(root: Path) -> tuple[int, list[str]]:
                 )
     findings_path = root / "docs/tracking/Findings.md"
     if findings_path.is_file():
-        current_mission = "harden-nt-v2-20260908"
+        current_mission = "harden-nt-v2-20260909"
         if (receipts_root / current_mission).is_dir():
             errors.extend(
                 validate_mission_finding_coverage(

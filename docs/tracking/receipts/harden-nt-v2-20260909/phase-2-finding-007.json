@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-007",
+  "finding_id": "NT-2026-09-09-007",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"does not bypass validation\" references/integrations/hyperliquid.md skills/nt-adapters/references/integrations/hyperliquid.md",
+  "exit_code": 0,
+  "output_sha256": "a8fd79fa6ac305cbe1701a734437c6fbfc03caf66ed82a7fa980f919e9d7fd9c",
+  "output_excerpt": "references/integrations/hyperliquid.md:1\nskills/nt-adapters/references/integrations/hyperliquid.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

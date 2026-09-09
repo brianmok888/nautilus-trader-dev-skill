@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-002",
+  "finding_id": "NT-2026-09-09-002",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -rn \"1.98.0\" skills docs references --include=\"*.md\" | grep -v migration_reference | grep -v \"docs/tracking/Findings.md\" | wc -l",
+  "exit_code": 0,
+  "output_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+  "output_excerpt": "0",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

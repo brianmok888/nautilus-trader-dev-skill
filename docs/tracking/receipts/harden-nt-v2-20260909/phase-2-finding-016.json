@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-016",
+  "finding_id": "NT-2026-09-09-016",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"nautilus_network::dst::{time, task, net}\" skills/nt-architect/SKILL.md skills/nt-implement/SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "eea904d702985ad461b54dd7aa53e57df8aa887ed0ede3dc1163fe75977e2e31",
+  "output_excerpt": "skills/nt-architect/SKILL.md:1\nskills/nt-implement/SKILL.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

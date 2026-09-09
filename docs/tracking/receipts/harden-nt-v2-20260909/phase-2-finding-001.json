@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-001",
+  "finding_id": "NT-2026-09-09-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_upstream_freshness.py --format json",
+  "exit_code": 0,
+  "output_sha256": "ec49a43b6f534faa9d5832b4818e5f02a3b6367df702fbcf5a9cba09cc1ed18e",
+  "output_excerpt": "\"changed_commits\": [],\n      \"changed_paths\": [],\n      \"commits_ahead\": 0,\n      \"current_commit\": \"5e4be2edbf496afcfc5d0aa3a798496fa4493f2f\",\n      \"error\": null,\n      \"name\": \"origin/develop\",\n      \"pinned_is_ancestor\": true,\n      \"status\": \"current\"\n    }\n  ],\n  \"upstream_root\": \"/home/mok/.cache/nautilus-trader-dev-skill/nautilus_trader-pinned\"\n}",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

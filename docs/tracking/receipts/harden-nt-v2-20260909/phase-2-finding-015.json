@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-015",
+  "finding_id": "NT-2026-09-09-015",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"strip-adapter-env.bash\" skills/nt-testing/SKILL.md skills/nt-dex-adapter/rules/compliance_checklist.md",
+  "exit_code": 0,
+  "output_sha256": "162d04996e0162577db79174bb6946fb3a5b3aed9ef1c159ec9f754af2fc0955",
+  "output_excerpt": "skills/nt-testing/SKILL.md:1\nskills/nt-dex-adapter/rules/compliance_checklist.md:0",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

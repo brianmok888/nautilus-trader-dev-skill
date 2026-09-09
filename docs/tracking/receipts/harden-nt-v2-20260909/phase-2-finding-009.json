@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-009",
+  "finding_id": "NT-2026-09-09-009",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"propagates its remaining quantity to eligible siblings\" references/concepts/orders.md skills/nt-trading/references/concepts/orders.md",
+  "exit_code": 0,
+  "output_sha256": "14d95b1d1de4ff92fdee1eb61eb14580229eb3ec95dc40f37dfb1808bd08b8dc",
+  "output_excerpt": "references/concepts/orders.md:1\nskills/nt-trading/references/concepts/orders.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

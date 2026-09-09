@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-011",
+  "finding_id": "NT-2026-09-09-011",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"RPI minimum notional\" references/integrations/okx.md skills/nt-adapters/references/integrations/okx.md && grep -c \"get_account_configuration\" references/integrations/okx.md skills/nt-adapters/references/integrations/okx.md",
+  "exit_code": 0,
+  "output_sha256": "13844ee38c881ed512dee6485377576435aedf63fcae3243f8a80f443024c078",
+  "output_excerpt": "references/integrations/okx.md:3\nskills/nt-adapters/references/integrations/okx.md:3\nreferences/integrations/okx.md:1\nskills/nt-adapters/references/integrations/okx.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

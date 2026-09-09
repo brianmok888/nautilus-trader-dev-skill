@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-014",
+  "finding_id": "NT-2026-09-09-014",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c \"checked_add\" skills/nt-data/SKILL.md skills/nt-strategy-builder-rust/SKILL.md",
+  "exit_code": 0,
+  "output_sha256": "685a1d7dd55ebf2ddfacd2568c939fadab312d59df9bc361a94b96062c95428b",
+  "output_excerpt": "skills/nt-data/SKILL.md:1\nskills/nt-strategy-builder-rust/SKILL.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

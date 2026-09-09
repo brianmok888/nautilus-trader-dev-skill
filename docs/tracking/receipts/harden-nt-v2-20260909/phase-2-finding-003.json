@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-003",
+  "finding_id": "NT-2026-09-09-003",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"do not expose\" references/concepts/message_bus.md references/concepts/actors.md skills/nt-trading/references/concepts/actors.md",
+  "exit_code": 0,
+  "output_sha256": "19d2d47035784b81f07b8857e164a909e2c7cb43d7502df0852cb0ebef49c591",
+  "output_excerpt": "references/concepts/message_bus.md:1\nreferences/concepts/actors.md:1\nskills/nt-trading/references/concepts/actors.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}

@@ -30,7 +30,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: update all four citations to 1.98.1 (keeping the follow-the-manifest framing so future bumps stay mechanical).
   acceptance-test: `grep -rn "1.98.0" skills docs references` returns only historical/legacy-labeled contexts; the four cited locations read 1.98.1.
   closure: all four toolchain citations updated to 1.98.1; no active 1.98.0 citation remains.
-  closure-proof: `grep -rn "1.98.0" skills docs references --include='*.md'` (excluding migration_reference and this tracker) returns nothing; `python3 tools/check_dev_guide_sync.py` passes with both invariant tokens updated; upstream `rust-toolchain.toml` at 5e4be2edb pins 1.98.1.
+  closure-proof: `grep -rn "1.98.0" skills docs references --include='*.md'` (excluding migration_reference and this tracker) returns nothing; `python3 tools/check_dev_guide_sync.py` passes with both invariant tokens updated; upstream `rust-toolchain.toml` at 5e4be2edb pins 1.98.1. receipts/harden-nt-v2-20260909/phase-2-finding-002.json
   correction: 2026-09-09 — [currency] — MODIFIED: updated Rust toolchain citations from 1.98.0 to 1.98.1 and flipped the two invariant tokens — files: skills/nt-dev/SKILL.md, skills/nt-live/references/concepts/rust.md, skills/nt-learn/curriculum/09-full-rust-trading.md, docs/end_to_end_guide.md, tools/check_dev_guide_sync.py
 
 [NT-2026-09-09-003] [P1] [CLOSED 2026-09-09] V2 compliance: message-bus and actor mirrors teach direct `self.msgbus` access that upstream no longer exposes, and omit the supported component topic/endpoint messaging APIs.
@@ -39,7 +39,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: replace direct-access sections in both mirrors with the supported facade methods, add topic wildcard/priority/immutability/cleanup semantics and the endpoint request/response surface, and include `ExecutionAlgorithm` in the supported component list; cross-reference from `skills/nt-implement/SKILL.md` and `skills/nt-architect/SKILL.md` bounded Python control-plane guidance.
   acceptance-test: `grep -n "self.msgbus" references/concepts/message_bus.md references/concepts/actors.md` returns no active-guidance usage (migration/reference-only labels acceptable); facade methods documented.
   closure: direct-access guidance replaced with the supported component facade in both mirrors plus the nt-trading copy; SKILL cross-refs added.
-  closure-proof: `grep -rn "self.msgbus" skills references --include='*.md'` (excluding migration_reference) returns only the three explicit do-not-expose statements; facade methods documented in references/concepts/message_bus.md#python-topic-messaging and both actors.md copies; check_dev_guide_sync, snapshot sync, and legacy labelling pass; lane tests 39/39.
+  closure-proof: `grep -rn "self.msgbus" skills references --include='*.md'` (excluding migration_reference) returns only the three explicit do-not-expose statements; facade methods documented in references/concepts/message_bus.md#python-topic-messaging and both actors.md copies; check_dev_guide_sync, snapshot sync, and legacy labelling pass; lane tests 39/39. receipts/harden-nt-v2-20260909/phase-2-finding-003.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced self.msgbus direct-access guidance with the publish_message/subscribe_topic/unsubscribe_topic facade (verified against pinned crates/common/src/python/component_msgbus.rs:59,76,116 and upstream message_bus.md Python topic messaging section; upstream has no Python request/endpoint API — that claim from the initial review was dropped) — files: references/concepts/message_bus.md, references/concepts/actors.md, skills/nt-trading/references/concepts/actors.md, skills/nt-implement/SKILL.md, skills/nt-architect/SKILL.md
 
 [NT-2026-09-09-004] [P1] [CLOSED 2026-09-09] V2 compliance: adapter spec teaches `SendFailed`-to-rejection conversion that contradicts the current `CommandFailure` outcome model.
@@ -48,7 +48,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: replace the blanket conversion rule with the NotSent/VenueRejected/Ambiguous contract; document Binance's GET-only bounded retry config fields (`max_retries`, `retry_delay_initial_ms`, `retry_delay_max_ms`).
   acceptance-test: `grep -n "SendFailed" skills/nt-adapters/references/guides/official_adapter_spec.md` shows no blanket rejection-conversion claim; outcome model matches spec_exec_testing.md.
   closure: blanket SendFailed-to-rejection conversion replaced with the CommandFailure outcome contract; Binance GET-only retry config documented.
-  closure-proof: verified against pinned crates/live/src/execution/failure.rs (NotSent/VenueRejected may emit terminal events; Ambiguous never) and binance execution.rs mapping; official_adapter_spec.md now matches spec_exec_testing.md's contract and names max_retries/retry_delay_initial_ms/retry_delay_max_ms (pinned crates/adapters/binance/src/python/config.rs:156-158); dev guide sync + legacy labelling pass.
+  closure-proof: verified against pinned crates/live/src/execution/failure.rs (NotSent/VenueRejected may emit terminal events; Ambiguous never) and binance execution.rs mapping; official_adapter_spec.md now matches spec_exec_testing.md's contract and names max_retries/retry_delay_initial_ms/retry_delay_max_ms (pinned crates/adapters/binance/src/python/config.rs:156-158); dev guide sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-004.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced blanket rejection-conversion guidance with the NotSent/VenueRejected/Ambiguous classification and Binance retry configuration — files: skills/nt-adapters/references/guides/official_adapter_spec.md
 
 [NT-2026-09-09-005] [P1] [CLOSED 2026-09-09] V2 compliance: Bybit coverage matrix says LINEAR quotes derive from ticker data; all non-options venues now use depth-1 order-book snapshots.
@@ -57,7 +57,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: update the matrix row and document shared topic ownership plus the one-active-depth rule in the Bybit integration copies (`references/integrations/bybit.md`, `skills/nt-adapters/references/integrations/bybit.md`).
   acceptance-test: no guidance claims LINEAR quotes come from tickers; depth-1 snapshot + ownership rules documented.
   closure: quote-source matrix corrected and the missing Quotes and order books section added to both Bybit integration copies.
-  closure-proof: official_adapter_spec.md coverage row now reads depth-1 order book snapshots (SPOT/LINEAR/INVERSE) or ticker (OPTION); both bybit.md copies carry the upstream section (verified against upstream docs/integrations/bybit.md:208-217 at 5e4be2edb); `grep "ticker (LINEAR)"` returns nothing active; dev guide sync + legacy labelling pass.
+  closure-proof: official_adapter_spec.md coverage row now reads depth-1 order book snapshots (SPOT/LINEAR/INVERSE) or ticker (OPTION); both bybit.md copies carry the upstream section (verified against upstream docs/integrations/bybit.md:208-217 at 5e4be2edb); `grep "ticker (LINEAR)"` returns nothing active; dev guide sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-005.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: corrected Bybit quote source and documented shared topic ownership + one-active-depth rule — files: skills/nt-adapters/references/guides/official_adapter_spec.md, references/integrations/bybit.md, skills/nt-adapters/references/integrations/bybit.md
 
 [NT-2026-09-09-006] [P1] [CLOSED 2026-09-09] V2 compliance: Binance integration copies teach latest-subscription-wins order book behavior; partial depths are now replacement snapshots and depth changes require unsubscribe/confirm/resubscribe.
@@ -66,7 +66,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: update both copies: depth 5/10/20 are replacement snapshots; switching depth requires unsubscribe, venue confirmation, then resubscribe.
   acceptance-test: neither copy claims latest-subscription-wins; replacement-snapshot and resubscribe rules present.
   closure: both Binance integration copies now describe partial-depth replacement snapshots and the unsubscribe/confirm/resubscribe rule.
-  closure-proof: matches upstream docs/integrations/binance.md:638-657 at 5e4be2edb; `grep "latest order book data subscription"` returns nothing active; dev guide sync + legacy labelling pass.
+  closure-proof: matches upstream docs/integrations/binance.md:638-657 at 5e4be2edb; `grep "latest order book data subscription"` returns nothing active; dev guide sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-006.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced latest-subscription-wins guidance with depth-5/10/20 snapshot semantics and resubscribe protocol — files: skills/nt-adapters/references/integrations/binance.md, references/integrations/binance.md
 
 [NT-2026-09-09-007] [P1] [CLOSED 2026-09-09] V2 compliance: Hyperliquid guidance says `normalize_prices=False` gives full control of price formatting; over-precise prices are now denied locally before signing.
@@ -75,7 +75,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: state in both copies that disabling normalization does not bypass validation: prices beyond the instrument decimal limit are denied locally before dispatch.
   acceptance-test: both copies carry the local-validation caveat adjacent to the `normalize_prices=False` guidance.
   closure: both Hyperliquid copies state that normalize_prices=False still validates against the instrument decimal limit.
-  closure-proof: verified against pinned crates/adapters/hyperliquid/src/common/parse.rs:244-258 (normalize_or_validate_wire_price: known cap -> ensure_canonical_wire_price rejection, unknown cap -> raw passthrough); dev guide sync + legacy labelling pass.
+  closure-proof: verified against pinned crates/adapters/hyperliquid/src/common/parse.rs:244-258 (normalize_or_validate_wire_price: known cap -> ensure_canonical_wire_price rejection, unknown cap -> raw passthrough); dev guide sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-007.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: documented local price validation when normalization is disabled, including the raw-passthrough unknown-cap case — files: references/integrations/hyperliquid.md, skills/nt-adapters/references/integrations/hyperliquid.md
 
 [NT-2026-09-09-008] [P1] [CLOSED 2026-09-09] V2 compliance: test-dataset guidance teaches removed download-on-first-use behavior.
@@ -84,7 +84,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: replace download-on-first-use claims with the prepare/execute split; document `cargo run --locked -p nautilus-testkit --bin prepare-test-data` and the local-only check.
   acceptance-test: no active guidance claims `ensure_test_data_exists()` downloads; preparation workflow documented in all four files.
   closure: all four teaching locations now describe the prepare-test-data workflow and local-only fixture checks.
-  closure-proof: references/developer_guide/test_datasets.md was refreshed verbatim in the pin-move commit (prepare-test-data documented); the other three files updated to match upstream docs/developer_guide/test_datasets.md:14-26; `grep "download on first use"` returns nothing active; dev guide sync + snapshot sync + legacy labelling pass.
+  closure-proof: references/developer_guide/test_datasets.md was refreshed verbatim in the pin-move commit (prepare-test-data documented); the other three files updated to match upstream docs/developer_guide/test_datasets.md:14-26; `grep "download on first use"` returns nothing active; dev guide sync + snapshot sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-008.json
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced download-on-first-use guidance with the prepare-test-data/local-only-check split and TEST_DATA_ROOT_PATH note — files: skills/nt-testing/SKILL.md, skills/nt-testing/references/guides/test_datasets.md, skills/nt-data/references/guides/test_datasets.md
 
 [NT-2026-09-09-009] [P2] [CLOSED 2026-09-09] Coverage gap: OUO and reduce-only guidance omits matching-engine maintenance and propagation semantics.
@@ -93,7 +93,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: extend both orders concept copies (and the strategy-builder contingent-order pointer) with the simulated-exchange reduce-only maintenance/propagation rules: eligibility, prior-fill preservation, parent caps, zero-capacity cancel without re-entry.
   acceptance-test: both copies describe sibling propagation and maintenance semantics with upstream citation.
   closure: both orders concept copies carry reduce-only maintenance and OUO propagation semantics; strategy-builder points to them.
-  closure-proof: mirrors upstream docs/concepts/orders/advanced.md 'Backtest reduce-only resizing' and 'Backtest cancellation at zero capacity' sections (867bb10dc/576728718 code-verified); dev guide sync + legacy labelling pass.
+  closure-proof: mirrors upstream docs/concepts/orders/advanced.md 'Backtest reduce-only resizing' and 'Backtest cancellation at zero capacity' sections (867bb10dc/576728718 code-verified); dev guide sync + legacy labelling pass. receipts/harden-nt-v2-20260909/phase-2-finding-009.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: added matching-engine reduce-only maintenance and OUO sibling propagation semantics — files: references/concepts/orders.md, skills/nt-trading/references/concepts/orders.md, skills/nt-strategy-builder-rust/SKILL.md
 
 [NT-2026-09-09-010] [P2] [CLOSED 2026-09-09] Coverage gap: actor/architecture lifecycle guidance omits automatic subscription retirement, final-owner release, failed-subscription retry, and hook-failure removal.
@@ -102,7 +102,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: update actor lifecycle (stop/reset/dispose semantics incl. subscription release) and both architecture copies (final-owner unsubscribe, STOPPING/FAULTING disposal transitions, failed-hook retirement).
   acceptance-test: lifecycle sections state the automatic release rules; architecture copies carry final-owner and disposal-transition semantics.
   closure: actor lifecycle rows + retirement paragraph added; both architecture copies carry final-owner unsubscribe and disposal transitions.
-  closure-proof: actors.md on_reset row and retirement paragraph match upstream actors.md:98 and release notes; architecture diagrams now include STOPPING/FAULTING -> DISPOSING (upstream architecture.md:420,440) and the DataEngine final-owner bullet (upstream :253,488); validators pass.
+  closure-proof: actors.md on_reset row and retirement paragraph match upstream actors.md:98 and release notes; architecture diagrams now include STOPPING/FAULTING -> DISPOSING (upstream architecture.md:420,440) and the DataEngine final-owner bullet (upstream :253,488); validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-010.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented automatic subscription retirement, final-owner release, and disposal transitions — files: references/concepts/actors.md, skills/nt-trading/references/concepts/actors.md, references/concepts/architecture.md, skills/nt-live/references/concepts/architecture.md
 
 [NT-2026-09-09-011] [P2] [CLOSED 2026-09-09] Coverage gap: OKX integration guidance lacks the RPI minimum-notional contract and the raw client's account-configuration endpoint.
@@ -111,7 +111,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: add both contracts to both OKX copies.
   acceptance-test: both copies document RPI thresholds/54051/amend semantics and `get_account_configuration()` fields.
   closure: RPI minimum-notional contract and typed account-configuration endpoint documented in both OKX integration copies.
-  closure-proof: RPI section mirrors upstream docs/integrations/okx.md:333-350 at 5e4be2edb (5e4be2edb); account-config surface verified against pinned crates/adapters/okx/src/http/client.rs:1769-1773 and models.rs:532-557; validators pass.
+  closure-proof: RPI section mirrors upstream docs/integrations/okx.md:333-350 at 5e4be2edb (5e4be2edb); account-config surface verified against pinned crates/adapters/okx/src/http/client.rs:1769-1773 and models.rs:532-557; validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-011.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented OKX RPI minimum-notional rules (code 54051, amend semantics, batch independence) and get_account_configuration — files: references/integrations/okx.md, skills/nt-adapters/references/integrations/okx.md
 
 [NT-2026-09-09-012] [P2] [CLOSED 2026-09-09] Coverage gap: cache general key-value guidance does not state Postgres insert-or-replace semantics.
@@ -120,7 +120,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: state last-write-wins upsert for re-added general keys and the two failure paths.
   acceptance-test: general-store section documents insert-or-replace.
   closure: general-store insert-or-replace semantics documented in the cache guide.
-  closure-proof: matches pinned crates/infrastructure/src/sql/queries.rs ON CONFLICT (id) DO UPDATE and upstream docs/concepts clarification (d7927c24b, 3f131624c); validators pass.
+  closure-proof: matches pinned crates/infrastructure/src/sql/queries.rs ON CONFLICT (id) DO UPDATE and upstream docs/concepts clarification (d7927c24b, 3f131624c); validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-012.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented Postgres general-key upsert semantics and failure paths — files: skills/nt-data/references/guides/cache_operations.md
 
 [NT-2026-09-09-013] [P2] [CLOSED 2026-09-09] Coverage gap: PyO3 environment guidance omits stale-export cleanup and Fish-shell equivalents.
@@ -129,7 +129,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: sync the environment-setup mirror and summarize the stale-export rule plus Fish pointer in `skills/nt-dev/SKILL.md`.
   acceptance-test: mirror carries the stale-export warning and Fish guidance; nt-dev SKILL summarizes both.
   closure: stale-export cleanup and Fish guidance summarized in nt-dev; the environment-setup mirror was refreshed verbatim with the pin move.
-  closure-proof: references/developer_guide/environment_setup.md:208-235 carries the upstream stale-export warning and Fish blocks (snapshot sync passes); nt-dev SKILL summarizes both with a mirror pointer; validators pass.
+  closure-proof: references/developer_guide/environment_setup.md:208-235 carries the upstream stale-export warning and Fish blocks (snapshot sync passes); nt-dev SKILL summarizes both with a mirror pointer; validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-013.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: summarized stale-export removal and Fish activation guidance — files: skills/nt-dev/SKILL.md
 
 [NT-2026-09-09-014] [P2] [CLOSED 2026-09-09] Coverage gap: Rust model guidance does not state fixed-point effective-scale semantics.
@@ -138,7 +138,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: add concise fixed-point contract guidance to `skills/nt-data/SKILL.md` and the strategy-builder precision note.
   acceptance-test: fixed-point guidance states scale-mismatch rejection, checked alternatives, and mixed-scale multiplication semantics.
   closure: fixed-point effective-scale contract added to nt-data gates and the strategy-builder precision note.
-  closure-proof: verified against pinned crates/model/src/types/fixed.rs:221-235 (raw_scales_match, effective scale) and RELEASES.md:66 (mixed-scale add/sub panics; checked forms); validators pass.
+  closure-proof: verified against pinned crates/model/src/types/fixed.rs:221-235 (raw_scales_match, effective scale) and RELEASES.md:66 (mixed-scale add/sub panics; checked forms); validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-014.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented effective-scale equality, mixed-scale add/sub rejection, and mixed-scale multiplication semantics — files: skills/nt-data/SKILL.md, skills/nt-strategy-builder-rust/SKILL.md
 
 [NT-2026-09-09-015] [P2] [CLOSED 2026-09-09] Coverage gap: testing guidance lacks the adapter environment-isolation rule and the network-access CI gate.
@@ -147,7 +147,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: extend nt-testing (and the DEX compliance checklist) with the clean-environment rule and the CI network gate.
   acceptance-test: both rules present; no contradiction with existing deterministic-test guidance.
   closure: adapter environment isolation and the network-access CI gate documented in nt-testing and the DEX compliance checklist.
-  closure-proof: mirrors pinned scripts/strip-adapter-env.bash pre-flight gating (5e9d3c47a) and scripts/ci/check_test_network.py under make test-scripts (64831824f); validators pass.
+  closure-proof: mirrors pinned scripts/strip-adapter-env.bash pre-flight gating (5e9d3c47a) and scripts/ci/check_test_network.py under make test-scripts (64831824f); validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-015.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: added clean-environment rule, readiness-probe guidance, and network-pattern CI gate — files: skills/nt-testing/SKILL.md, skills/nt-dex-adapter/rules/compliance_checklist.md
 
 [NT-2026-09-09-016] [P2] [CLOSED 2026-09-09] Coverage gap: DST determinism guidance does not name the new network simulation seams.
@@ -156,7 +156,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: name the seams and the simulation boundary limits in all four copies.
   acceptance-test: all four copies name `nautilus_network::dst::{time,task,net}` and the simulation exclusions.
   closure: DST seams named in curated architect/implement guidance; the verbatim snapshot layer stays byte-identical to upstream.
-  closure-proof: first attempt edited the hardlinked rust.md snapshot and was reverted after check_dev_guide_snapshot_sync failed; seam naming now lives in skills/nt-architect/SKILL.md and skills/nt-implement/SKILL.md citing upstream docs/concepts/dst.md at the pin; snapshot + dev-guide sync pass.
+  closure-proof: first attempt edited the hardlinked rust.md snapshot and was reverted after check_dev_guide_snapshot_sync failed; seam naming now lives in skills/nt-architect/SKILL.md and skills/nt-implement/SKILL.md citing upstream docs/concepts/dst.md at the pin; snapshot + dev-guide sync pass. receipts/harden-nt-v2-20260909/phase-2-finding-016.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: named nautilus_network::dst::{time,task,net} and the simulation transport boundary in curated guidance — files: skills/nt-architect/SKILL.md, skills/nt-implement/SKILL.md
 
 [NT-2026-09-09-017] [P2] [CLOSED 2026-09-09] Coverage gap: execution risk validation guidance omits instrument `min_notional`.
@@ -165,7 +165,7 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: add both instrument notional bounds to the risk validation description.
   acceptance-test: execution.md validation guidance names `min_notional`, `max_notional`, and `max_notional_per_order`.
   closure: instrument min_notional/max_notional added to the execution risk-check list.
-  closure-proof: matches upstream docs/concepts/execution/index.md:186 at 5e4be2edb; validators pass.
+  closure-proof: matches upstream docs/concepts/execution/index.md:186 at 5e4be2edb; validators pass. receipts/harden-nt-v2-20260909/phase-2-finding-017.json
   correction: 2026-09-09 — [coverage-gap] — MODIFIED: risk validation list now names engine max_notional_per_order and both instrument notional bounds — files: references/concepts/execution.md
 
 ## Open findings — 2026-09-08 upstream currency cycle

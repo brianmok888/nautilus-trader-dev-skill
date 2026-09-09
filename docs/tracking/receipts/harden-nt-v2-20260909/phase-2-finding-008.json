@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-2-finding-008",
+  "finding_id": "NT-2026-09-09-008",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c \"prepare-test-data\" skills/nt-testing/SKILL.md skills/nt-testing/references/guides/test_datasets.md references/developer_guide/test_datasets.md skills/nt-data/references/guides/test_datasets.md",
+  "exit_code": 0,
+  "output_sha256": "61f787b1b8e2d516fafd3af68ee6a2e5160240eb7205d45ef64ef40d4d4e70f4",
+  "output_excerpt": "skills/nt-testing/SKILL.md:1\nskills/nt-testing/references/guides/test_datasets.md:1\nreferences/developer_guide/test_datasets.md:1\nskills/nt-data/references/guides/test_datasets.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-09T11:56:12Z"
+}
