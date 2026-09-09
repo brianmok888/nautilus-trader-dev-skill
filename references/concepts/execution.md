@@ -123,7 +123,7 @@ The `RiskEngine` includes several built-in pre-trade risk checks, including:
 - Price precisions correct for the instrument.
 - Prices are positive (unless an option type instrument)
 - Quantity precisions correct for the instrument.
-- Below maximum notional for the instrument.
+- Engine-level `max_notional_per_order` limits and the instrument's `min_notional` and `max_notional` fields.
 - Within maximum or minimum quantity for the instrument.
 - Only reducing position when a `reduce_only` execution instruction is specified for the order.
 
