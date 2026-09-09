@@ -178,6 +178,11 @@ However, the behavior in the Nautilus `SimulatedExchange` is typical of a real v
 - Order will be canceled if the associated position is closed (becomes flat).
 - Order quantity will be reduced as the associated position's size decreases.
 
+After each position-changing fill, the matching engine resynchronizes every eligible resting
+reduce-only order for that position: available closing capacity is recalculated, zero capacity
+cancels the order, excess quantity is reduced, and the new total preserves prior fills
+(`filled_qty + leaves`) under any contingent-parent cap (`parent.filled_qty - order.filled_qty`).
+
 ### Display quantity
 
 The `display_qty` specifies the portion of a *Limit* order which is displayed on the limit order book.
@@ -621,6 +626,14 @@ Both orders are live simultaneously; once one starts filling, the venue attempts
 
 An OUO order is a set of linked orders where execution of one order causes an immediate *reduction* of open quantity in the other order(s).
 Both orders are live concurrently, and each partial execution proportionally updates the remaining quantity of its peer order on a best-effort basis.
+
+In backtests with reduce-only enforcement and contingent-order support enabled, a resized
+reduce-only OUO order propagates its remaining quantity to eligible siblings (open, non-active-local
+passive orders on the same instrument's book; siblings need not themselves be `reduce_only`):
+the sibling's new total is its prior fills plus the propagated remaining quantity, capped by its
+parent's filled quantity and never below its prior fills. Zero remaining capacity cancels the
+affected siblings without re-entering matching. This propagation is bounded by parent caps and
+does not preserve ratios between unequal initial sizes.
 
 ### Contingent order validation
 

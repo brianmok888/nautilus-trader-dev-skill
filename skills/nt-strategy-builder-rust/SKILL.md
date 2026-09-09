@@ -64,7 +64,9 @@ standardizes new work on Rust.
 open, non-active-local OTO/OCO/OUO relationships; the `OrderEmulator` retains active-local orders
 (upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`, in the pinned G2 baseline).
 See `nt-trading` "Strategy-managed contingencies"
-for propagation and cancel semantics.
+for propagation and cancel semantics; with reduce-only enforcement also enabled, backtest fills resize
+resting reduce-only orders and propagate to OUO siblings under parent caps (see the OUO notes in
+`references/concepts/orders.md`).
 **Reference strategies** (official, in `crates/trading/src/examples/strategies/`):
 `EmaCross`, `CompositeMarketMaker`, `GridMarketMaker`, `DeltaNeutralVol`,
 `HurstVpinDirectional`.
@@ -255,7 +257,9 @@ existing Python strategy.
 - **No `get_runtime().block_on()` inside trait methods**: spawn work instead;
   `block_on` is only valid outside an ambient Tokio runtime (e.g. PyO3 entry).
 - **Precision**: run FFI/precision-sensitive cargo commands with the
-  `high-precision` feature enabled; do not hand-edit generated bindings.
+  `high-precision` feature enabled; do not hand-edit generated bindings. Mixed-scale fixed-point
+  add/sub fails (operator panics; `checked_add`/`checked_sub` return errors) — normalize scales or
+  use the checked forms when operand precisions may differ.
 - **Error handling**: `on_*` handlers return `anyhow::Result<()>`; propagate with `?`.
 - **Component bindings**: actor ID, clock, and order submission route through the typed
   component vtable (`crates/trading/src/strategy/binding.rs`, `crates/common/src/actor/binding.rs`,

@@ -87,59 +87,86 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   closure-proof: references/developer_guide/test_datasets.md was refreshed verbatim in the pin-move commit (prepare-test-data documented); the other three files updated to match upstream docs/developer_guide/test_datasets.md:14-26; `grep "download on first use"` returns nothing active; dev guide sync + snapshot sync + legacy labelling pass.
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced download-on-first-use guidance with the prepare-test-data/local-only-check split and TEST_DATA_ROOT_PATH note — files: skills/nt-testing/SKILL.md, skills/nt-testing/references/guides/test_datasets.md, skills/nt-data/references/guides/test_datasets.md
 
-[NT-2026-09-09-009] [P2] [OPEN] Coverage gap: OUO and reduce-only guidance omits matching-engine maintenance and propagation semantics.
+[NT-2026-09-09-009] [P2] [CLOSED 2026-09-09] Coverage gap: OUO and reduce-only guidance omits matching-engine maintenance and propagation semantics.
   file: references/concepts/orders.md:620
   evidence: upstream commits `867bb10dc` (post-fill reduce-only resync with fill-preserving reduction and parent caps) and `576728718` (propagation to OUO siblings, sibling target = filled + available leaves, cancel at zero capacity) plus the new backtest reduce-only resizing section in upstream `docs/concepts/orders/advanced.md`. The orders concept copies document only the static OUO definition and generic reduce-only rules.
   fix: extend both orders concept copies (and the strategy-builder contingent-order pointer) with the simulated-exchange reduce-only maintenance/propagation rules: eligibility, prior-fill preservation, parent caps, zero-capacity cancel without re-entry.
   acceptance-test: both copies describe sibling propagation and maintenance semantics with upstream citation.
+  closure: both orders concept copies carry reduce-only maintenance and OUO propagation semantics; strategy-builder points to them.
+  closure-proof: mirrors upstream docs/concepts/orders/advanced.md 'Backtest reduce-only resizing' and 'Backtest cancellation at zero capacity' sections (867bb10dc/576728718 code-verified); dev guide sync + legacy labelling pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: added matching-engine reduce-only maintenance and OUO sibling propagation semantics — files: references/concepts/orders.md, skills/nt-trading/references/concepts/orders.md, skills/nt-strategy-builder-rust/SKILL.md
 
-[NT-2026-09-09-010] [P2] [OPEN] Coverage gap: actor/architecture lifecycle guidance omits automatic subscription retirement, final-owner release, failed-subscription retry, and hook-failure removal.
+[NT-2026-09-09-010] [P2] [CLOSED 2026-09-09] Coverage gap: actor/architecture lifecycle guidance omits automatic subscription retirement, final-owner release, failed-subscription retry, and hook-failure removal.
   file: references/concepts/actors.md:73
   evidence: upstream commit `069566daf` releases active/pending subscriptions on retirement, keeps shared client subscriptions until the final owner, relinquishes failed-subscription ownership, releases retained subscriptions after a successful reset hook, and completes removal after stop/fault hook errors; upstream `docs/concepts/architecture.md` adds the disposal transitions and engine-managed resource cleanup. `references/concepts/actors.md:73-95` and both `architecture.md` copies (`references/concepts/architecture.md:223,300-317,339-344`; `skills/nt-live/references/concepts/architecture.md` same) predate this.
   fix: update actor lifecycle (stop/reset/dispose semantics incl. subscription release) and both architecture copies (final-owner unsubscribe, STOPPING/FAULTING disposal transitions, failed-hook retirement).
   acceptance-test: lifecycle sections state the automatic release rules; architecture copies carry final-owner and disposal-transition semantics.
+  closure: actor lifecycle rows + retirement paragraph added; both architecture copies carry final-owner unsubscribe and disposal transitions.
+  closure-proof: actors.md on_reset row and retirement paragraph match upstream actors.md:98 and release notes; architecture diagrams now include STOPPING/FAULTING -> DISPOSING (upstream architecture.md:420,440) and the DataEngine final-owner bullet (upstream :253,488); validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented automatic subscription retirement, final-owner release, and disposal transitions — files: references/concepts/actors.md, skills/nt-trading/references/concepts/actors.md, references/concepts/architecture.md, skills/nt-live/references/concepts/architecture.md
 
-[NT-2026-09-09-011] [P2] [OPEN] Coverage gap: OKX integration guidance lacks the RPI minimum-notional contract and the raw client's account-configuration endpoint.
+[NT-2026-09-09-011] [P2] [CLOSED 2026-09-09] Coverage gap: OKX integration guidance lacks the RPI minimum-notional contract and the raw client's account-configuration endpoint.
   file: references/integrations/okx.md:683
   evidence: upstream commits `5e4be2edb` (RPI minimum notional: SWAP/FUTURES 10,000 USD, SPOT 1,000 USD, EVENTS exempt, rejection code 54051, amend re-check preserving the original order, independent batch items, `minSz` independence) and `93ea53090` (typed `get_account_configuration()` over `GET /api/v5/account/config`: account level, position mode, fee type, auto-loan, key permissions). Neither appears in `references/integrations/okx.md` or `skills/nt-adapters/references/integrations/okx.md`.
   fix: add both contracts to both OKX copies.
   acceptance-test: both copies document RPI thresholds/54051/amend semantics and `get_account_configuration()` fields.
+  closure: RPI minimum-notional contract and typed account-configuration endpoint documented in both OKX integration copies.
+  closure-proof: RPI section mirrors upstream docs/integrations/okx.md:333-350 at 5e4be2edb (5e4be2edb); account-config surface verified against pinned crates/adapters/okx/src/http/client.rs:1769-1773 and models.rs:532-557; validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented OKX RPI minimum-notional rules (code 54051, amend semantics, batch independence) and get_account_configuration — files: references/integrations/okx.md, skills/nt-adapters/references/integrations/okx.md
 
-[NT-2026-09-09-012] [P2] [OPEN] Coverage gap: cache general key-value guidance does not state Postgres insert-or-replace semantics.
+[NT-2026-09-09-012] [P2] [CLOSED 2026-09-09] Coverage gap: cache general key-value guidance does not state Postgres insert-or-replace semantics.
   file: skills/nt-data/references/guides/cache_operations.md:249
   evidence: upstream commits `d7927c24b` (SQL `ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value` on `general`) and `3f131624c` (doc contract "inserts or replaces", INSERT-or-UPDATE failure paths). The guide documents general persistence without the upsert semantics; its only upsert mention targets `instrument_close`.
   fix: state last-write-wins upsert for re-added general keys and the two failure paths.
   acceptance-test: general-store section documents insert-or-replace.
+  closure: general-store insert-or-replace semantics documented in the cache guide.
+  closure-proof: matches pinned crates/infrastructure/src/sql/queries.rs ON CONFLICT (id) DO UPDATE and upstream docs/concepts clarification (d7927c24b, 3f131624c); validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented Postgres general-key upsert semantics and failure paths — files: skills/nt-data/references/guides/cache_operations.md
 
-[NT-2026-09-09-013] [P2] [OPEN] Coverage gap: PyO3 environment guidance omits stale-export cleanup and Fish-shell equivalents.
+[NT-2026-09-09-013] [P2] [CLOSED 2026-09-09] Coverage gap: PyO3 environment guidance omits stale-export cleanup and Fish-shell equivalents.
   file: skills/nt-dev/SKILL.md:137
   evidence: upstream commit `41db1568c` documents removal of stale `UV_PROJECT_ENVIRONMENT`/`PYO3_PYTHON` exports from startup files and live shells, per-shell inheritance caveats, and Fish syntax in `docs/developer_guide/environment_setup.md`; `references/developer_guide/environment_setup.md:198-224` carries only the Bash/Zsh block.
   fix: sync the environment-setup mirror and summarize the stale-export rule plus Fish pointer in `skills/nt-dev/SKILL.md`.
   acceptance-test: mirror carries the stale-export warning and Fish guidance; nt-dev SKILL summarizes both.
+  closure: stale-export cleanup and Fish guidance summarized in nt-dev; the environment-setup mirror was refreshed verbatim with the pin move.
+  closure-proof: references/developer_guide/environment_setup.md:208-235 carries the upstream stale-export warning and Fish blocks (snapshot sync passes); nt-dev SKILL summarizes both with a mirror pointer; validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: summarized stale-export removal and Fish activation guidance — files: skills/nt-dev/SKILL.md
 
-[NT-2026-09-09-014] [P2] [OPEN] Coverage gap: Rust model guidance does not state fixed-point effective-scale semantics.
+[NT-2026-09-09-014] [P2] [CLOSED 2026-09-09] Coverage gap: Rust model guidance does not state fixed-point effective-scale semantics.
   file: skills/nt-data/SKILL.md:30
   evidence: upstream commit `7bab30352` defines effective-scale equality, rejects mismatched add/sub (operator panics; `checked_add`/`checked_sub` fail; Python `saturating_sub` raises), fixes mixed-scale `Quantity` multiplication (max-precision result, truncation toward zero), and preserves native-scale sums and sentinel identity.
   fix: add concise fixed-point contract guidance to `skills/nt-data/SKILL.md` and the strategy-builder precision note.
   acceptance-test: fixed-point guidance states scale-mismatch rejection, checked alternatives, and mixed-scale multiplication semantics.
+  closure: fixed-point effective-scale contract added to nt-data gates and the strategy-builder precision note.
+  closure-proof: verified against pinned crates/model/src/types/fixed.rs:221-235 (raw_scales_match, effective scale) and RELEASES.md:66 (mixed-scale add/sub panics; checked forms); validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: documented effective-scale equality, mixed-scale add/sub rejection, and mixed-scale multiplication semantics — files: skills/nt-data/SKILL.md, skills/nt-strategy-builder-rust/SKILL.md
 
-[NT-2026-09-09-015] [P2] [OPEN] Coverage gap: testing guidance lacks the adapter environment-isolation rule and the network-access CI gate.
+[NT-2026-09-09-015] [P2] [CLOSED 2026-09-09] Coverage gap: testing guidance lacks the adapter environment-isolation rule and the network-access CI gate.
   file: skills/nt-testing/SKILL.md:98
   evidence: upstream commits `5e9d3c47a` (`scripts/strip-adapter-env.bash` gating `make pre-flight`; every new adapter env var must register there; tests must not inherit ambient credentials; bounded readiness probes replace fixed sleeps) and `64831824f` (`scripts/ci/check_test_network.py` under `make test-scripts` flagging literal non-local network calls, live-test switches, fork-RPC options).
   fix: extend nt-testing (and the DEX compliance checklist) with the clean-environment rule and the CI network gate.
   acceptance-test: both rules present; no contradiction with existing deterministic-test guidance.
+  closure: adapter environment isolation and the network-access CI gate documented in nt-testing and the DEX compliance checklist.
+  closure-proof: mirrors pinned scripts/strip-adapter-env.bash pre-flight gating (5e9d3c47a) and scripts/ci/check_test_network.py under make test-scripts (64831824f); validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: added clean-environment rule, readiness-probe guidance, and network-pattern CI gate — files: skills/nt-testing/SKILL.md, skills/nt-dex-adapter/rules/compliance_checklist.md
 
-[NT-2026-09-09-016] [P2] [OPEN] Coverage gap: DST determinism guidance does not name the new network simulation seams.
+[NT-2026-09-09-016] [P2] [CLOSED 2026-09-09] Coverage gap: DST determinism guidance does not name the new network simulation seams.
   file: references/developer_guide/rust.md:347
   evidence: upstream commits `c53a4565a` and `25635bb1e` add `nautilus_network::dst::{time,task,net}`, Madsim byte-stream wrappers, and the feature-gated `http::simulation` transport with documented TLS/HTTP/2/proxy/streaming exclusions. Four `rust.md` copies (`references/developer_guide/rust.md`, and the nt-review/nt-implement/nt-architect mirrors) require seam routing without naming them.
   fix: name the seams and the simulation boundary limits in all four copies.
   acceptance-test: all four copies name `nautilus_network::dst::{time,task,net}` and the simulation exclusions.
+  closure: DST seams named in curated architect/implement guidance; the verbatim snapshot layer stays byte-identical to upstream.
+  closure-proof: first attempt edited the hardlinked rust.md snapshot and was reverted after check_dev_guide_snapshot_sync failed; seam naming now lives in skills/nt-architect/SKILL.md and skills/nt-implement/SKILL.md citing upstream docs/concepts/dst.md at the pin; snapshot + dev-guide sync pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: named nautilus_network::dst::{time,task,net} and the simulation transport boundary in curated guidance — files: skills/nt-architect/SKILL.md, skills/nt-implement/SKILL.md
 
-[NT-2026-09-09-017] [P2] [OPEN] Coverage gap: execution risk validation guidance omits instrument `min_notional`.
+[NT-2026-09-09-017] [P2] [CLOSED 2026-09-09] Coverage gap: execution risk validation guidance omits instrument `min_notional`.
   file: references/concepts/execution.md:119
   evidence: upstream `docs/concepts/execution/index.md` (changed by commit `55dd0a65a`) expands the risk-engine validation list to instrument `min_notional` and `max_notional` alongside engine `max_notional_per_order`; the mirror's validation guidance lists none of the instrument notional bounds.
   fix: add both instrument notional bounds to the risk validation description.
   acceptance-test: execution.md validation guidance names `min_notional`, `max_notional`, and `max_notional_per_order`.
+  closure: instrument min_notional/max_notional added to the execution risk-check list.
+  closure-proof: matches upstream docs/concepts/execution/index.md:186 at 5e4be2edb; validators pass.
+  correction: 2026-09-09 — [coverage-gap] — MODIFIED: risk validation list now names engine max_notional_per_order and both instrument notional bounds — files: references/concepts/execution.md
 
 ## Open findings — 2026-09-08 upstream currency cycle
 
