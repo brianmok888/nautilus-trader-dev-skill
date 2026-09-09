@@ -152,6 +152,13 @@ export PYTHONHOME="$("$PYO3_PYTHON" -c 'import sys; print(sys.base_prefix)')"
 
 Verify: `python -c "import sys; print(sys.executable)"` and check `$PYO3_PYTHON` / `$PYTHONHOME`.
 
+Remove stale exports from shell startup files and the current shell: a leftover `UV_PROJECT_ENVIRONMENT`
+or a `PYO3_PYTHON` still pointing at a former root `.venv/bin/python` must be replaced with this
+checkout's `python/.venv/bin/python`; editing a startup file does not update existing shells, so
+repeat the exports and restart applications that inherited the old environment. Fish shells use
+`set -gx` equivalents and `source python/.venv/bin/activate.fish` (see the mirrored developer guide:
+`references/developer_guide/environment_setup.md`).
+
 ### Cap'n Proto Installation
 
 ```bash
