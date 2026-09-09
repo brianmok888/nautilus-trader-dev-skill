@@ -60,11 +60,14 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   closure-proof: official_adapter_spec.md coverage row now reads depth-1 order book snapshots (SPOT/LINEAR/INVERSE) or ticker (OPTION); both bybit.md copies carry the upstream section (verified against upstream docs/integrations/bybit.md:208-217 at 5e4be2edb); `grep "ticker (LINEAR)"` returns nothing active; dev guide sync + legacy labelling pass.
   correction: 2026-09-09 — [v2-compliance] — MODIFIED: corrected Bybit quote source and documented shared topic ownership + one-active-depth rule — files: skills/nt-adapters/references/guides/official_adapter_spec.md, references/integrations/bybit.md, skills/nt-adapters/references/integrations/bybit.md
 
-[NT-2026-09-09-006] [P1] [OPEN] V2 compliance: Binance integration copies teach latest-subscription-wins order book behavior; partial depths are now replacement snapshots and depth changes require unsubscribe/confirm/resubscribe.
+[NT-2026-09-09-006] [P1] [CLOSED 2026-09-09] V2 compliance: Binance integration copies teach latest-subscription-wins order book behavior; partial depths are now replacement snapshots and depth changes require unsubscribe/confirm/resubscribe.
   file: skills/nt-adapters/references/integrations/binance.md:432
   evidence: upstream commit `77fd56903` treats Futures depths 5/10/20 as repeated partial-book snapshots (`Clear` + `Add` + `F_LAST`), rejects a second depth while subscribed, and gates old-stream frames on venue unsubscribe confirmation. Both copies (`skills/nt-adapters/references/integrations/binance.md:427-435`, `references/integrations/binance.md:491-499`) say the client uses the latest varying subscription.
   fix: update both copies: depth 5/10/20 are replacement snapshots; switching depth requires unsubscribe, venue confirmation, then resubscribe.
   acceptance-test: neither copy claims latest-subscription-wins; replacement-snapshot and resubscribe rules present.
+  closure: both Binance integration copies now describe partial-depth replacement snapshots and the unsubscribe/confirm/resubscribe rule.
+  closure-proof: matches upstream docs/integrations/binance.md:638-657 at 5e4be2edb; `grep "latest order book data subscription"` returns nothing active; dev guide sync + legacy labelling pass.
+  correction: 2026-09-09 — [v2-compliance] — MODIFIED: replaced latest-subscription-wins guidance with depth-5/10/20 snapshot semantics and resubscribe protocol — files: skills/nt-adapters/references/integrations/binance.md, references/integrations/binance.md
 
 [NT-2026-09-09-007] [P1] [OPEN] V2 compliance: Hyperliquid guidance says `normalize_prices=False` gives full control of price formatting; over-precise prices are now denied locally before signing.
   file: references/integrations/hyperliquid.md:606

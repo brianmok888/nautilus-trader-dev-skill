@@ -495,9 +495,16 @@ available rate:
 - **Spot**: 100ms
 - **Futures**: 0ms (unthrottled)
 
-Only one order book per instrument per trader instance is supported. When
-stream subscriptions vary, the Binance data client uses the latest order book
-data subscription (deltas or snapshots).
+Only one order book per instrument per trader instance is supported. Futures `L2_MBP`
+subscriptions with depth 5, 10, or 20 use the partial-depth stream
+`<symbol>@depth<levels>@100ms`: each message is a snapshot of both sides of the book,
+emitted as a `Clear` delta followed by the snapshot levels, so absent prices are removed and
+at most the requested number of levels per side is kept. These subscriptions do not request a
+REST snapshot, including after reconnects. Futures subscriptions without a depth, or with depth
+50, 100, 500, or 1000, use the diff-depth stream, where the depth limits the initial and reconnect
+REST snapshots rather than the maintained book. Changing an instrument's subscription depth is
+not supported while subscribed: unsubscribe first, wait for the venue's unsubscribe confirmation
+(frames from the old stream are dropped until then), then resubscribe at the new depth.
 
 Order book snapshot rebuilds will be triggered on:
 
