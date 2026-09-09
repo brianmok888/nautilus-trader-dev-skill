@@ -97,6 +97,16 @@ Testing gates: Rust tests are the default readiness evidence for research, confi
 
 Rust tests are the production readiness authority. Use deterministic unit and integration tests for invariants, `DataTesterConfig::builder()` and `ExecTesterConfig::builder()` for adapter compliance, `proptest` for broad input spaces, fuzz targets for untrusted parsers, and subprocess isolation for panic/abort-prone FFI boundaries. Unknown execution outcomes remain non-terminal until reconciliation proves the venue result. Execution coverage includes marketable limits via `limit_aggressive` and rejected modify behavior via `test_modify_rejected` when supported.
 
+Adapter tests must not depend on ambient credentials or endpoints: `make pre-flight` runs under
+`scripts/strip-adapter-env.bash` with adapter credential/account/key/endpoint variables unset, so a
+test passing only against a developer's real environment fails the gate. Supply explicit dummy
+credentials when a test exercises unrelated failure modes, and register every new adapter
+environment variable in that stripping script. Await server startup with bounded readiness probes
+(`wait_until_async`), not fixed sleeps. `make test-scripts` additionally runs
+`scripts/ci/check_test_network.py`, which flags literal non-local HTTP/WebSocket/socket calls,
+live-test switches (`RUN_LIVE`, `LIVE_TEST`, `RUN_NETWORK_TEST`, `FORK_TESTS`), and fork-RPC
+options in tests; use loopback or reserved fixture destinations instead.
+
 ```rust
 use nautilus_testkit::testers::ExecTesterConfig;
 use nautilus_trading::strategy::StrategyConfig;

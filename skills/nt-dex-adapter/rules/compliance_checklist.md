@@ -116,7 +116,10 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 - [ ] **Unit: signing interface** — tx builder produces deterministic output (mock key)
 - [ ] **Integration: BacktestEngine** — adapter wired into engine with mock DEX data, runs without error
 - [ ] **Rust production contract gate** — `test_dex_compliance.py` passes Rust client/factory, PyO3, and `LiveNodeBuilder` guidance checks
-- [ ] **No live RPC required** — all tests run offline with mocks/fixtures
+- [ ] **No live RPC required** — all tests run offline with mocks/fixtures; tests must not read
+  ambient adapter environment variables (`make pre-flight` strips them), and
+  `scripts/ci/check_test_network.py` (under `make test-scripts`) must not flag literal non-local
+  network calls, live-test switches, or fork-RPC options in the new tests
 
 ---
 
