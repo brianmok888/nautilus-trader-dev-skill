@@ -31,6 +31,14 @@ Data production evidence includes `cargo nextest`, `cargo clippy`, and `cargo de
 
 Data gates: Rust owns serialization, Arrow schemas, catalog/wrangler hot paths, ordering, and fixed-point validation. Mark `Pass` only after Rust tests cover raw fixed-point overflow, schema round-trips, cache/catalog invariants, and any Python exposure remains research/config or PyO3 boundary code.
 
+Fixed-point effective-scale contract (pinned `crates/model/src/types/fixed.rs`): equality, ordering,
+and hashing compare numerically across representational scales — two precisions share an effective
+scale iff `max(precision, FIXED_PRECISION)` matches (DeFi precisions beyond `FIXED_PRECISION` store
+raw at their native `10^precision` scale). Mixed-scale addition/subtraction panics in operator form
+and fails in `checked_add`/`checked_sub` (Python `Quantity.saturating_sub` raises instead); use the
+checked forms whenever operand scales may differ. `Quantity` multiplication accepts mixed scales,
+produces the maximum operand precision, and truncates toward zero; sums preserve native scale.
+
 ## Rust production lane
 
 Implement production ingestion, normalization, aggregation, caching, serialization, and catalog access in Rust with deterministic ordering and fixed-point-safe model types. Keep high-volume data handlers and persistence boundaries Rust-owned, and verify schema compatibility, replay behavior, and relevant cargo gates.
