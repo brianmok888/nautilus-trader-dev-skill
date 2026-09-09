@@ -146,7 +146,7 @@ quickstart, but treat `test-support` as test scope: enable it only where you con
 such as `audusd_sim` (dev/test dependency paths), not on production `[dependencies]`.
 
 Follow the checked-out `rust-toolchain.toml` for the active Rust version.
-Source-aligned work as of 2026-08-22 uses Rust 1.98.0; older 1.97.x
+Source-aligned work as of the 5e4be2ed pin uses Rust 1.98.1; older 1.97.x
 release/docs references are lag notes unless the checked-out repository pins them.
 
 ### Feature flags

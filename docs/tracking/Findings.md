@@ -24,11 +24,14 @@ One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, refresh the pinned dev-guide snapshots and `CURRENT_SYNC_DATE`, the nt-learn curriculum pin references, the README pinned-baseline line, `docs/end_to_end_guide.md`, and regenerate all `references/g2-evidence/*.json` via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree; `check_upstream_freshness.py` must exit 0. Includes the Rust toolchain move to 1.98.1 required by upstream `rust-toolchain.toml` at the new pin.
   acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_sync.py` passes; `python3 tools/check_rust_trading_reference_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes; upstream freshness pytest failures clear.
 
-[NT-2026-09-09-002] [P1] [OPEN] V2 compliance: guidance cites Rust 1.98.0 as the pinned toolchain; upstream `rust-toolchain.toml` at develop tip pins 1.98.1.
+[NT-2026-09-09-002] [P1] [CLOSED 2026-09-09] V2 compliance: guidance cites Rust 1.98.0 as the pinned toolchain; upstream `rust-toolchain.toml` at develop tip pins 1.98.1.
   file: skills/nt-dev/SKILL.md:289
   evidence: upstream commit `d6b013e41` changes `rust-toolchain.toml` channel `1.98.0` to `1.98.1` and `docs/concepts/rust.md` accordingly; `skills/nt-live/references/concepts/rust.md:148-150`, `skills/nt-learn/curriculum/09-full-rust-trading.md:62`, and `docs/end_to_end_guide.md:8` carry the same stale 1.98.0 claim.
   fix: update all four citations to 1.98.1 (keeping the follow-the-manifest framing so future bumps stay mechanical).
   acceptance-test: `grep -rn "1.98.0" skills docs references` returns only historical/legacy-labeled contexts; the four cited locations read 1.98.1.
+  closure: all four toolchain citations updated to 1.98.1; no active 1.98.0 citation remains.
+  closure-proof: `grep -rn "1.98.0" skills docs references --include='*.md'` (excluding migration_reference and this tracker) returns nothing; `python3 tools/check_dev_guide_sync.py` passes with both invariant tokens updated; upstream `rust-toolchain.toml` at 5e4be2edb pins 1.98.1.
+  correction: 2026-09-09 — [currency] — MODIFIED: updated Rust toolchain citations from 1.98.0 to 1.98.1 and flipped the two invariant tokens — files: skills/nt-dev/SKILL.md, skills/nt-live/references/concepts/rust.md, skills/nt-learn/curriculum/09-full-rust-trading.md, docs/end_to_end_guide.md, tools/check_dev_guide_sync.py
 
 [NT-2026-09-09-003] [P1] [OPEN] V2 compliance: message-bus and actor mirrors teach direct `self.msgbus` access that upstream no longer exposes, and omit the supported component topic/endpoint messaging APIs.
   file: references/concepts/message_bus.md:33

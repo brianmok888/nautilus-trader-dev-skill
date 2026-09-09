@@ -337,7 +337,7 @@ NT_V2_CUTOVER_TARGETS = {
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.98.0",
+        "1.98.1",
         "Python v2 controller subclassing",
         "subclassable execution algorithms",
         "FeeModel",
@@ -393,7 +393,7 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.98.0",
+        "1.98.1",
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Rust-oriented v2.0 readiness",

@@ -286,7 +286,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
 - Officially supported Python versions are Python 3.12-3.14.
-- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.98.0. This is not a permanent MSRV promise;
+- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.98.1. This is not a permanent MSRV promise;
   upstream policy generally follows the latest stable Rust release.
 - Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
   `FillModel` subclass capabilities are compatibility facts, not authorization

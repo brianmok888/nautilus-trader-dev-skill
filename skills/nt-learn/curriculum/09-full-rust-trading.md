@@ -59,7 +59,7 @@ friends) live in `nautilus_model::stubs`, compiled under `test-support` (or in
 tests) per `crates/model/src/lib.rs`.
 
 Rust toolchain: follow the checked-out `rust-toolchain.toml`; source-aligned
-work as of 2026-08-22 uses Rust 1.98.0. Older 1.97.x release/docs
+work as of the 5e4be2ed pin uses Rust 1.98.1. Older 1.97.x release/docs
 references are lag notes unless the checked-out repository pins them.
 
 ## Writing a Rust Actor
