@@ -4,13 +4,121 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-08
-Reviewed upstream develop: `c1a2310144c37db80ad11af3d86b65b2ed300c81`
-Pinned G2 baseline: `c1a2310144c37db80ad11af3d86b65b2ed300c81`
+Review date: 2026-09-09
+Reviewed upstream develop: `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`
+Pinned G2 baseline: `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`
 
-The review manifest preserves nine contiguous transitions. The newest transition reviews 16 commits and 136 net changed paths from the previously reviewed `1602043debb82b34084d35a452c374b744b96524` through current develop `c1a2310144c37db80ad11af3d86b65b2ed300c81`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window adds `OrderCanceled.reason` propagation, corrects same-ID closed-cycle snapshotting and OTO child sizing, removes obsolete OKX `speedBump`, establishes OKX execution readiness, standardizes Polymarket numeric precision, bounds WMA/HMA periods, and introduces component bindings; findings NT-2026-09-08-001 through NT-2026-09-08-009 were opened and are tracked below.
+The review manifest preserves ten contiguous transitions. The newest transition reviews 28 commits and 422 net changed paths from the previously reviewed `c1a2310144c37db80ad11af3d86b65b2ed300c81` through current develop `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window replaces the network HTTP transport (Reqwest to Hyper), adds DST network simulation seams and OKX account-configuration access, tightens OKX RPI minimum-notional rejection, standardizes Binance/Hyperliquid/Bybit command outcomes and book maintenance, restores matching-engine reduce-only maintenance with OUO propagation, separates integration test data preparation, upgrades the Rust toolchain to 1.98.1, and adds supported Python component messaging; findings NT-2026-09-09-001 through NT-2026-09-09-017 were opened and are tracked below.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
+
+## Open findings — 2026-09-09 upstream currency cycle
+
+NT v2 compatibility note: quoted legacy v1/Cython tokens below are historical finding evidence (migration reference only).
+
+One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (tenth transition). Twenty-one commits carry affected guidance; seven are classified no-impact with recorded rationale.
+
+[NT-2026-09-09-001] [P1] [OPEN] V2 compliance: upstream develop advanced 28 commits / 422 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
+  file: tools/upstream_baseline.py:4
+  evidence: `python3 tools/check_upstream_freshness.py --format json` resolves develop tip `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f` (28 commits ahead of pin `c1a2310144`, 422 changed paths); the delta review is complete in `references/upstream-delta-review.json` (tenth transition).
+  fix: move `UPSTREAM_COMMIT` to the reviewed tip, refresh the pinned dev-guide snapshots and `CURRENT_SYNC_DATE`, the nt-learn curriculum pin references, the README pinned-baseline line, `docs/end_to_end_guide.md`, and regenerate all `references/g2-evidence/*.json` via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree; `check_upstream_freshness.py` must exit 0. Includes the Rust toolchain move to 1.98.1 required by upstream `rust-toolchain.toml` at the new pin.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_sync.py` passes; `python3 tools/check_rust_trading_reference_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes; upstream freshness pytest failures clear.
+
+[NT-2026-09-09-002] [P1] [OPEN] V2 compliance: guidance cites Rust 1.98.0 as the pinned toolchain; upstream `rust-toolchain.toml` at develop tip pins 1.98.1.
+  file: skills/nt-dev/SKILL.md:289
+  evidence: upstream commit `d6b013e41` changes `rust-toolchain.toml` channel `1.98.0` to `1.98.1` and `docs/concepts/rust.md` accordingly; `skills/nt-live/references/concepts/rust.md:148-150`, `skills/nt-learn/curriculum/09-full-rust-trading.md:62`, and `docs/end_to_end_guide.md:8` carry the same stale 1.98.0 claim.
+  fix: update all four citations to 1.98.1 (keeping the follow-the-manifest framing so future bumps stay mechanical).
+  acceptance-test: `grep -rn "1.98.0" skills docs references` returns only historical/legacy-labeled contexts; the four cited locations read 1.98.1.
+
+[NT-2026-09-09-003] [P1] [OPEN] V2 compliance: message-bus and actor mirrors teach direct `self.msgbus` access that upstream no longer exposes, and omit the supported component topic/endpoint messaging APIs.
+  file: references/concepts/message_bus.md:33
+  evidence: upstream commit `f0820b1e1` replaces raw bus access with `publish_message` / `subscribe_topic` / `unsubscribe_topic` and endpoint request/response with pending-request cancellation across `DataActor`, `Strategy`, and `ExecutionAlgorithm`; upstream `docs/concepts/message_bus.md` and `docs/concepts/actors.md` state `self.msgbus` is not exposed. `references/concepts/message_bus.md:33-42,97,101` demonstrates `self.msgbus.publish/subscribe`; `references/concepts/actors.md:116` lists `self.msgbus` as an actor property.
+  fix: replace direct-access sections in both mirrors with the supported facade methods, add topic wildcard/priority/immutability/cleanup semantics and the endpoint request/response surface, and include `ExecutionAlgorithm` in the supported component list; cross-reference from `skills/nt-implement/SKILL.md` and `skills/nt-architect/SKILL.md` bounded Python control-plane guidance.
+  acceptance-test: `grep -n "self.msgbus" references/concepts/message_bus.md references/concepts/actors.md` returns no active-guidance usage (migration/reference-only labels acceptable); facade methods documented.
+
+[NT-2026-09-09-004] [P1] [OPEN] V2 compliance: adapter spec teaches `SendFailed`-to-rejection conversion that contradicts the current `CommandFailure` outcome model.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:1331
+  evidence: upstream commit `2a2514b03` introduces `CommandFailure::{NotSent, VenueRejected, Ambiguous}`: mutating requests send once, ambiguous outcomes never manufacture rejections. The spec at lines 1328-1334 still teaches that exhausted WebSocket send failures convert to `OrderRejected`/`OrderCancelRejected`, contradicting `skills/nt-adapters/references/guides/spec_exec_testing.md:1732-1756` in the same tree.
+  fix: replace the blanket conversion rule with the NotSent/VenueRejected/Ambiguous contract; document Binance's GET-only bounded retry config fields (`max_retries`, `retry_delay_initial_ms`, `retry_delay_max_ms`).
+  acceptance-test: `grep -n "SendFailed" skills/nt-adapters/references/guides/official_adapter_spec.md` shows no blanket rejection-conversion claim; outcome model matches spec_exec_testing.md.
+
+[NT-2026-09-09-005] [P1] [OPEN] V2 compliance: Bybit coverage matrix says LINEAR quotes derive from ticker data; all non-options venues now use depth-1 order-book snapshots.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:2027
+  evidence: upstream commit `efb21acaf` routes SPOT, LINEAR, and INVERSE quotes through depth-1 book snapshots (options keep tickers), shares one WebSocket topic between quote and depth-1 book consumers with balanced ownership, and enforces one active book depth per instrument.
+  fix: update the matrix row and document shared topic ownership plus the one-active-depth rule in the Bybit integration copies (`references/integrations/bybit.md`, `skills/nt-adapters/references/integrations/bybit.md`).
+  acceptance-test: no guidance claims LINEAR quotes come from tickers; depth-1 snapshot + ownership rules documented.
+
+[NT-2026-09-09-006] [P1] [OPEN] V2 compliance: Binance integration copies teach latest-subscription-wins order book behavior; partial depths are now replacement snapshots and depth changes require unsubscribe/confirm/resubscribe.
+  file: skills/nt-adapters/references/integrations/binance.md:432
+  evidence: upstream commit `77fd56903` treats Futures depths 5/10/20 as repeated partial-book snapshots (`Clear` + `Add` + `F_LAST`), rejects a second depth while subscribed, and gates old-stream frames on venue unsubscribe confirmation. Both copies (`skills/nt-adapters/references/integrations/binance.md:427-435`, `references/integrations/binance.md:491-499`) say the client uses the latest varying subscription.
+  fix: update both copies: depth 5/10/20 are replacement snapshots; switching depth requires unsubscribe, venue confirmation, then resubscribe.
+  acceptance-test: neither copy claims latest-subscription-wins; replacement-snapshot and resubscribe rules present.
+
+[NT-2026-09-09-007] [P1] [OPEN] V2 compliance: Hyperliquid guidance says `normalize_prices=False` gives full control of price formatting; over-precise prices are now denied locally before signing.
+  file: references/integrations/hyperliquid.md:606
+  evidence: upstream commit `1af807063` validates outgoing limit/trigger prices against instrument decimal limits when `normalize_prices=false` and denies them locally (preventing the misleading wallet-not-exist venue response). Both integration copies present normalization-off as full user control.
+  fix: state in both copies that disabling normalization does not bypass validation: prices beyond the instrument decimal limit are denied locally before dispatch.
+  acceptance-test: both copies carry the local-validation caveat adjacent to the `normalize_prices=False` guidance.
+
+[NT-2026-09-09-008] [P1] [OPEN] V2 compliance: test-dataset guidance teaches removed download-on-first-use behavior.
+  file: skills/nt-testing/SKILL.md:441
+  evidence: upstream commit `2f1cb4223` adds the `prepare-test-data` binary (download + checksum verification), makes `ensure_test_data_exists()` local-only, and fails missing fixtures with the preparation command. Four files teach downloads-from-R2-on-first-use: `skills/nt-testing/SKILL.md:441-446`, `skills/nt-testing/references/guides/test_datasets.md:16`, `references/developer_guide/test_datasets.md:23`, `skills/nt-data/references/guides/test_datasets.md:15`.
+  fix: replace download-on-first-use claims with the prepare/execute split; document `cargo run --locked -p nautilus-testkit --bin prepare-test-data` and the local-only check.
+  acceptance-test: no active guidance claims `ensure_test_data_exists()` downloads; preparation workflow documented in all four files.
+
+[NT-2026-09-09-009] [P2] [OPEN] Coverage gap: OUO and reduce-only guidance omits matching-engine maintenance and propagation semantics.
+  file: references/concepts/orders.md:620
+  evidence: upstream commits `867bb10dc` (post-fill reduce-only resync with fill-preserving reduction and parent caps) and `576728718` (propagation to OUO siblings, sibling target = filled + available leaves, cancel at zero capacity) plus the new backtest reduce-only resizing section in upstream `docs/concepts/orders/advanced.md`. The orders concept copies document only the static OUO definition and generic reduce-only rules.
+  fix: extend both orders concept copies (and the strategy-builder contingent-order pointer) with the simulated-exchange reduce-only maintenance/propagation rules: eligibility, prior-fill preservation, parent caps, zero-capacity cancel without re-entry.
+  acceptance-test: both copies describe sibling propagation and maintenance semantics with upstream citation.
+
+[NT-2026-09-09-010] [P2] [OPEN] Coverage gap: actor/architecture lifecycle guidance omits automatic subscription retirement, final-owner release, failed-subscription retry, and hook-failure removal.
+  file: references/concepts/actors.md:73
+  evidence: upstream commit `069566daf` releases active/pending subscriptions on retirement, keeps shared client subscriptions until the final owner, relinquishes failed-subscription ownership, releases retained subscriptions after a successful reset hook, and completes removal after stop/fault hook errors; upstream `docs/concepts/architecture.md` adds the disposal transitions and engine-managed resource cleanup. `references/concepts/actors.md:73-95` and both `architecture.md` copies (`references/concepts/architecture.md:223,300-317,339-344`; `skills/nt-live/references/concepts/architecture.md` same) predate this.
+  fix: update actor lifecycle (stop/reset/dispose semantics incl. subscription release) and both architecture copies (final-owner unsubscribe, STOPPING/FAULTING disposal transitions, failed-hook retirement).
+  acceptance-test: lifecycle sections state the automatic release rules; architecture copies carry final-owner and disposal-transition semantics.
+
+[NT-2026-09-09-011] [P2] [OPEN] Coverage gap: OKX integration guidance lacks the RPI minimum-notional contract and the raw client's account-configuration endpoint.
+  file: references/integrations/okx.md:683
+  evidence: upstream commits `5e4be2edb` (RPI minimum notional: SWAP/FUTURES 10,000 USD, SPOT 1,000 USD, EVENTS exempt, rejection code 54051, amend re-check preserving the original order, independent batch items, `minSz` independence) and `93ea53090` (typed `get_account_configuration()` over `GET /api/v5/account/config`: account level, position mode, fee type, auto-loan, key permissions). Neither appears in `references/integrations/okx.md` or `skills/nt-adapters/references/integrations/okx.md`.
+  fix: add both contracts to both OKX copies.
+  acceptance-test: both copies document RPI thresholds/54051/amend semantics and `get_account_configuration()` fields.
+
+[NT-2026-09-09-012] [P2] [OPEN] Coverage gap: cache general key-value guidance does not state Postgres insert-or-replace semantics.
+  file: skills/nt-data/references/guides/cache_operations.md:249
+  evidence: upstream commits `d7927c24b` (SQL `ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value` on `general`) and `3f131624c` (doc contract "inserts or replaces", INSERT-or-UPDATE failure paths). The guide documents general persistence without the upsert semantics; its only upsert mention targets `instrument_close`.
+  fix: state last-write-wins upsert for re-added general keys and the two failure paths.
+  acceptance-test: general-store section documents insert-or-replace.
+
+[NT-2026-09-09-013] [P2] [OPEN] Coverage gap: PyO3 environment guidance omits stale-export cleanup and Fish-shell equivalents.
+  file: skills/nt-dev/SKILL.md:137
+  evidence: upstream commit `41db1568c` documents removal of stale `UV_PROJECT_ENVIRONMENT`/`PYO3_PYTHON` exports from startup files and live shells, per-shell inheritance caveats, and Fish syntax in `docs/developer_guide/environment_setup.md`; `references/developer_guide/environment_setup.md:198-224` carries only the Bash/Zsh block.
+  fix: sync the environment-setup mirror and summarize the stale-export rule plus Fish pointer in `skills/nt-dev/SKILL.md`.
+  acceptance-test: mirror carries the stale-export warning and Fish guidance; nt-dev SKILL summarizes both.
+
+[NT-2026-09-09-014] [P2] [OPEN] Coverage gap: Rust model guidance does not state fixed-point effective-scale semantics.
+  file: skills/nt-data/SKILL.md:30
+  evidence: upstream commit `7bab30352` defines effective-scale equality, rejects mismatched add/sub (operator panics; `checked_add`/`checked_sub` fail; Python `saturating_sub` raises), fixes mixed-scale `Quantity` multiplication (max-precision result, truncation toward zero), and preserves native-scale sums and sentinel identity.
+  fix: add concise fixed-point contract guidance to `skills/nt-data/SKILL.md` and the strategy-builder precision note.
+  acceptance-test: fixed-point guidance states scale-mismatch rejection, checked alternatives, and mixed-scale multiplication semantics.
+
+[NT-2026-09-09-015] [P2] [OPEN] Coverage gap: testing guidance lacks the adapter environment-isolation rule and the network-access CI gate.
+  file: skills/nt-testing/SKILL.md:98
+  evidence: upstream commits `5e9d3c47a` (`scripts/strip-adapter-env.bash` gating `make pre-flight`; every new adapter env var must register there; tests must not inherit ambient credentials; bounded readiness probes replace fixed sleeps) and `64831824f` (`scripts/ci/check_test_network.py` under `make test-scripts` flagging literal non-local network calls, live-test switches, fork-RPC options).
+  fix: extend nt-testing (and the DEX compliance checklist) with the clean-environment rule and the CI network gate.
+  acceptance-test: both rules present; no contradiction with existing deterministic-test guidance.
+
+[NT-2026-09-09-016] [P2] [OPEN] Coverage gap: DST determinism guidance does not name the new network simulation seams.
+  file: references/developer_guide/rust.md:347
+  evidence: upstream commits `c53a4565a` and `25635bb1e` add `nautilus_network::dst::{time,task,net}`, Madsim byte-stream wrappers, and the feature-gated `http::simulation` transport with documented TLS/HTTP/2/proxy/streaming exclusions. Four `rust.md` copies (`references/developer_guide/rust.md`, and the nt-review/nt-implement/nt-architect mirrors) require seam routing without naming them.
+  fix: name the seams and the simulation boundary limits in all four copies.
+  acceptance-test: all four copies name `nautilus_network::dst::{time,task,net}` and the simulation exclusions.
+
+[NT-2026-09-09-017] [P2] [OPEN] Coverage gap: execution risk validation guidance omits instrument `min_notional`.
+  file: references/concepts/execution.md:119
+  evidence: upstream `docs/concepts/execution/index.md` (changed by commit `55dd0a65a`) expands the risk-engine validation list to instrument `min_notional` and `max_notional` alongside engine `max_notional_per_order`; the mirror's validation guidance lists none of the instrument notional bounds.
+  fix: add both instrument notional bounds to the risk validation description.
+  acceptance-test: execution.md validation guidance names `min_notional`, `max_notional`, and `max_notional_per_order`.
 
 ## Open findings — 2026-09-08 upstream currency cycle
 
