@@ -31,7 +31,7 @@ Implementation gates: no new component starts until the status gate before codin
 
 ## Rust production lane
 
-Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings.
+Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings. On the deterministic simulation path, route clocks, randomness, task spawning, and network access through the DST seams `nautilus_network::dst::{time, task, net}`; with the `simulation` feature, HTTP/1.1 and WebSocket transports run over simulated byte streams, while HTTPS/TLS, HTTP/2, proxies, and streaming responses stay outside the simulated transport.
 
 For adapters, complete provider, data, execution, reconciliation, factory, and shutdown contracts. Rust owns order commands and state transitions; fail closed on invalid input, overflow, stale state, unknown execution outcomes, and unsupported venue capabilities.
 
