@@ -18,11 +18,12 @@ NT v2 compatibility note: quoted legacy v1/Cython tokens below are historical fi
 
 One read-only delta-review pass covered all 28 commits in `c1a2310144..5e4be2edb` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (tenth transition). Twenty-one commits carry affected guidance; seven are classified no-impact with recorded rationale.
 
-[NT-2026-09-09-001] [P1] [OPEN] V2 compliance: upstream develop advanced 28 commits / 422 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
+[NT-2026-09-09-001] [P1] [CLOSED 2026-09-09] V2 compliance: upstream develop advanced 28 commits / 422 paths past the reviewed pin; currency prerequisite requires pin move plus refresh of every pin-citing layer.
   file: tools/upstream_baseline.py:4
   evidence: `python3 tools/check_upstream_freshness.py --format json` resolves develop tip `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f` (28 commits ahead of pin `c1a2310144`, 422 changed paths); the delta review is complete in `references/upstream-delta-review.json` (tenth transition).
   fix: move `UPSTREAM_COMMIT` to the reviewed tip, refresh the pinned dev-guide snapshots and `CURRENT_SYNC_DATE`, the nt-learn curriculum pin references, the README pinned-baseline line, `docs/end_to_end_guide.md`, and regenerate all `references/g2-evidence/*.json` via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree; `check_upstream_freshness.py` must exit 0. Includes the Rust toolchain move to 1.98.1 required by upstream `rust-toolchain.toml` at the new pin.
   acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_sync.py` passes; `python3 tools/check_rust_trading_reference_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes; upstream freshness pytest failures clear.
+  correction: 2026-09-09 — [v2-compliance] — MODIFIED: moved UPSTREAM_COMMIT to 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f, refreshed pin-citing layers (dev-guide snapshots, CURRENT_SYNC_DATE, nt-learn curriculum pins, README baseline, end_to_end guide), Rust toolchain 1.98.1, and regenerated all 17 g2-evidence files at the new pin — files: tools/upstream_baseline.py, references/g2-evidence/*, docs/learning/*, README.md, docs/end_to_end_guide.md
 
 [NT-2026-09-09-002] [P1] [CLOSED 2026-09-09] V2 compliance: guidance cites Rust 1.98.0 as the pinned toolchain; upstream `rust-toolchain.toml` at develop tip pins 1.98.1.
   file: skills/nt-dev/SKILL.md:289
