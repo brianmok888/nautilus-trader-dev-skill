@@ -30,41 +30,80 @@ def publish_signal(self, name: str, value, ts_event: int | None = None) -> None:
 
 These methods allow you to publish custom data and signals efficiently without needing to work directly with the `MessageBus` interface.
 
-## Direct access
+## Python topic messaging
 
-For advanced users or specialized use cases, direct access to the message bus is available within `Actor` and `Strategy`
-classes through the `self.msgbus` reference, which provides the full message bus interface.
-
-To publish a custom message directly, you can specify a topic as a `str` and any Python `object` as the message payload, for example:
+Registered Python `DataActor`, `Strategy`, and `ExecutionAlgorithm` components exchange arbitrary
+Python objects through the component messaging facade:
 
 ```python
-
-self.msgbus.publish("MyTopic", "MyMessage")
+def publish_message(self, topic: str, message: object) -> None:
+def subscribe_topic(self, topic: str, handler, priority: int = 0) -> None:
+def unsubscribe_topic(self, topic: str, handler) -> None:
 ```
+
+These methods do not construct, replace, or dispose the bus, and do not expose `self.msgbus`.
+Subscribe from a component callback such as `on_start`:
+
+```python
+from nautilus_trader.common import DataActor
+
+class RiskObserver(DataActor):
+    def on_start(self) -> None:
+        self.subscribe_topic("app.risk.*", self.on_risk, priority=10)
+
+    def on_risk(self, message: object) -> None:
+        self.log.info(f"Risk update: {message}")
+```
+
+From another registered component, publish on a matching topic:
+
+```python
+self.publish_message("app.risk.limit", {"instrument": "BTCUSDT", "limit": 3})
+```
+
+Key rules:
+
+- Publication requires a non-empty concrete topic without wildcards. Subscription patterns
+  accept `*` (zero or more characters) and `?` (exactly one); wildcards can cross dots, so
+  `app.risk.*` also matches `app.risk.limit.eu`.
+- Handlers receive the original object without copying or serialization; treat published objects
+  as immutable. Use application-owned topics such as `app.risk.limit`; system data and event
+  topics carry their own payload types, and typed market data or signals use the corresponding
+  typed subscription methods instead.
+- Delivery is synchronous: nested publication finishes before the publishing callback continues.
+- Subscriptions belong to the subscribing component. Repeating the same pattern and callable is a
+  no-op (unsubscribe first to change priority); unsubscription removes only that component's exact
+  pattern/callable pair. Stopping retains subscriptions; successful reset and disposal release them.
+- These methods raise `RuntimeError` before runtime registration, after disposal, from a foreign
+  thread, or when the registered bus is unavailable; invalid topics/patterns raise `ValueError`,
+  a non-callable handler raises `TypeError`, and priority must be an integer in `[0, 4294967295]`.
 
 ## Messaging styles
 
 NautilusTrader is an **event-driven** framework where components communicate by sending and receiving messages.
 Understanding the different messaging styles is crucial for building effective trading systems.
 
-This guide explains the three primary messaging patterns available in NautilusTrader:
+This guide explains the four primary messaging patterns available in NautilusTrader:
 
-| **Messaging Style**                          | **Purpose**                                 | **Best For**                                          |
-|:---------------------------------------------|:--------------------------------------------|:------------------------------------------------------|
-| **MessageBus - Publish/Subscribe to topics** | Low-level, direct access to the message bus | Custom events, system-level communication             |
-| **Actor-Based - Publish/Subscribe Data**     | Structured trading data exchange            | Trading metrics, indicators, data needing persistence |
-| **Actor-Based - Publish/Subscribe Signal**   | Lightweight notifications                   | Simple alerts, flags, status updates                  |
+| **Messaging Style**                                            | **Purpose**                          | **Best For**                                          |
+|:---------------------------------------------------------------|:-------------------------------------|:------------------------------------------------------|
+| [**Python object publish/subscribe**](#python-topic-messaging) | In-process Python object exchange    | Application topics shared by Python components        |
+| **MessageBus - Publish/Subscribe to topics** (Rust)            | Low-level, typed topic communication | Native runtime components                             |
+| **Actor-Based - Publish/Subscribe Data**                        | Structured trading data exchange     | Trading metrics, indicators, data needing persistence |
+| **Actor-Based - Publish/Subscribe Signal**                      | Lightweight notifications            | Simple alerts, flags, status updates                  |
 
 Each approach serves different purposes and offers unique advantages. This guide will help you decide which messaging
 pattern to use in your NautilusTrader applications.
 
-### MessageBus publish/subscribe to topics
+### Rust MessageBus publish/subscribe to topics
 
 #### Concept
 
-The `MessageBus` is the central hub for all messages in NautilusTrader. It enables a **publish/subscribe** pattern
-where components can publish events to **named topics**, and other components can subscribe to receive those messages.
-This decouples components, allowing them to interact indirectly via the message bus.
+The `MessageBus` is the central hub for all messages in NautilusTrader. Rust components can publish
+typed messages to named topics and subscribe handlers to those topics. This low-level interface is
+not part of the Python actor or strategy surface; Python components use the component messaging
+facade (`publish_message` / `subscribe_topic` / `unsubscribe_topic`) documented in
+[Python topic messaging](#python-topic-messaging).
 
 #### Key benefits and use cases
 
@@ -94,11 +133,11 @@ class Each10thBarEvent(Event):
         self.bar = bar
 
 # Subscribe in a component (in Strategy)
-self.msgbus.subscribe(Each10thBarEvent.TOPIC, self.on_each_10th_bar)
+self.subscribe_topic(Each10thBarEvent.TOPIC, self.on_each_10th_bar)
 
 # Publish an event (in Strategy)
 event = Each10thBarEvent(bar)
-self.msgbus.publish(Each10thBarEvent.TOPIC, event)
+self.publish_message(Each10thBarEvent.TOPIC, event)
 
 # Handler (in Strategy)
 def on_each_10th_bar(self, event: Each10thBarEvent):

@@ -116,7 +116,12 @@ Actors have access to core system components:
 | `self.portfolio`  | Portfolio state and calculations.                        |
 | `self.clock`      | Current time and timer/alert scheduling.                 |
 | `self.log`        | Structured logging.                                      |
-| `self.msgbus`     | Publish/subscribe to custom messages.                    |
+| `publish_message()` | Publish a Python object on an application topic.        |
+| `subscribe_topic()` / `unsubscribe_topic()` | Manage Python object callbacks on topics. |
+
+The Python `DataActor` and `Strategy` APIs do not expose `self.msgbus`. Use custom data for
+structured payloads, signals for lightweight values, or topic messaging
+(`publish_message` / `subscribe_topic` / `unsubscribe_topic`) for arbitrary in-process Python objects.
 
 For custom messaging between components, see the [Message Bus](https://nautilustrader.io/docs/latest/concepts/message_bus/) guide.
 

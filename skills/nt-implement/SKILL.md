@@ -41,6 +41,8 @@ PyO3 is a narrow boundary for validated configuration, component registration, l
 
 Prefer `Py<T>`/`Py<PyAny>` for callback handles, document cleanup and cycle behavior, acquire the GIL only at Python call boundaries, and avoid `Arc<Py<T>>` unless an independent Rust shared-owner design requires it.
 
+For Python component coordination, the supported in-process messaging surface is the component facade `publish_message` / `subscribe_topic` / `unsubscribe_topic` (`references/concepts/message_bus.md#python-topic-messaging`); the raw `MessageBus` is not exposed to Python components.
+
 ## Migration/reference lane
 
 Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-implement`. Use those templates only to map an existing Python component to its Rust owner. New work remains Rust-first.

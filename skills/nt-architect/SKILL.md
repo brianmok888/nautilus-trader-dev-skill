@@ -77,7 +77,7 @@ The architecture handoff is complete only when it includes the ownership matrix,
 
 ## PyO3 control-plane lane
 
-PyO3 is a bounded control plane over Rust-owned behavior, not an alternate implementation lane. Design bindings for configuration construction, lifecycle invocation, read-only inspection, and non-execution callbacks. Rust remains authoritative for validation, state transitions, order submission, risk, adapter liveness, and reconciliation.
+PyO3 is a bounded control plane over Rust-owned behavior, not an alternate implementation lane. Design bindings for configuration construction, lifecycle invocation, read-only inspection, and non-execution callbacks. Rust remains authoritative for validation, state transitions, order submission, risk, adapter liveness, and reconciliation. Python components coordinate in-process through the component messaging facade (`publish_message` / `subscribe_topic` / `unsubscribe_topic`); raw `MessageBus` access is Rust-only.
 
 There are no active Python examples in this root skill. Specify the Rust `#[pyclass]`/`#[pymethods]` owner, module registration path, conversion/error contract, GIL boundary, and cleanup behavior. Prefer owned `Py<T>` handles; justify shared ownership, use weak references for back-references, and provide traversal/clear hooks where Python cycles are possible. Route callbacks from Tokio work through the supported live-runner/channel boundary rather than attaching Python on worker tasks.
 
