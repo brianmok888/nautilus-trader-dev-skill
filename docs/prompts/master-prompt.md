@@ -63,10 +63,14 @@ financial APIs, or any other external write.
 
 The existing execution contract and Phases 0-6 remain authoritative. Invoke the
 owning phase with resolved inputs, consume its real artifact or verdict, and
-preserve every `STOP`, `Blocked`, user-approval, upstream-currency, evidence, and
-shipping gate. Do not reproduce, abbreviate, reorder, or weaken those contracts.
-Skip a role only when its required output is current and valid for the present
-mission tree, pinned upstream identity, and evidence state.
+preserve every `STOP`, `Blocked`, user-decision, upstream-currency, evidence, and
+shipping gate. Template 8 is one autonomous implementation and verification
+loop: once Phase 2 has a complete manifest, continue through Phases 3-5 without
+an intermediate user approval. Any unresolved implementation, review,
+verification, gate-card, or reconciliation issue starts another Phase 2→5 cycle
+with fresh evidence. Do not reproduce, abbreviate, reorder, or weaken those
+contracts. Skip a role only when its required output is current and valid for
+the present mission tree, pinned upstream identity, and evidence state.
 
 Dispatch by these adapted roles:
 
@@ -93,9 +97,10 @@ Dispatch by these adapted roles:
   **Return:** one TDD-backed logical segment, tracker delta, commit when authorized
   by the mission, and updated implementation manifest.
 - **Template 6 — independently verify the slice.** **Trigger:** Phase 2 presents
-  its manifest and the user grants the separate Phase 3 approval. **Return:** an
-  independent per-finding result plus verifier-owned receipts and an `Approved`
-  or `Rejected` verdict; rejection dispatches back to Templates 3 and 5.
+  a complete implementation manifest. **Return:** an independent per-finding
+  result plus verifier-owned receipts and an `Approved` or `Rejected` verdict;
+  rejection dispatches back to Templates 3 and 5 without waiting for user
+  approval.
 - **Template 7 — discover or rescan gaps.** **Trigger:** initial inventory/review,
   verification rejection, upstream drift, or final fixed-point review.
   **Return:** Phase 0, Phase 1, and Phase 5's deduplicated finding delta across
@@ -107,17 +112,23 @@ Repeat this controller loop:
    needed, and establish clean worktree ownership plus upstream currency.
 2. Dispatch Template 7, then Templates 2 and 3 for gaps whose evidence or plan is
    not current. Select exactly one highest-priority executable `[NT-###]` finding.
-3. Dispatch Template 5 for one authorized segment and stop at the existing
-   separate Phase 3 approval question.
-4. After approval, dispatch Template 6. On `Rejected`, return through Templates 3
-   and 5; never continue to later phases on failed verification.
+3. Dispatch Template 5 for one authorized segment. When Phase 2 records a
+   complete implementation manifest, dispatch Template 6 automatically; do not
+   pause for user approval.
+4. On `Rejected`, return through Templates 3 and 5, fix each deficiency, and
+   rerun invalidated verification with fresh evidence; never continue to later
+   phases on failed verification.
 5. On `Approved`, run Phase 4 G0-G7 cards and dispatch Template 4 plus Phase 5
    reconciliation for affected specs, trackers, receipts, and skill artifacts.
-6. Rescan through Template 7. Repeat while an executable in-scope gap, invalid
-   evidence, failed gate, upstream drift, or unverified completion claim remains.
+6. Rescan through Template 7. Any executable in-scope gap, invalid evidence,
+   failed or pending gate, upstream drift, reconciliation residual, or unverified
+   completion claim returns to implementation and fresh verification. Repeat
+   until every in-scope finding is `CLOSED`, every required gate is `Pass`, and
+   reconciliation finds no unresolved issue.
 7. Treat Phase 6 as the evidence-bound fixed point and separate shipping gate.
-   Stop `Blocked` when progress requires missing evidence, a user decision,
-   expanded scope, unavailable mandatory methodology, or repeated no progress.
+   Stop `Blocked` only when progress requires missing evidence, a user decision,
+   expanded scope, unavailable mandatory methodology, or repeated no progress;
+   an ordinary defect or failed check is work for the next loop cycle.
 
 Completion means Phase 5 reconciliation finds no unresolved in-scope gap, every
 applicable skill gate and repository validator is fresh and `Pass`, receipts and
@@ -204,7 +215,7 @@ not implementation guidance.
 1. **Current findings update** — evidence-backed changes in `docs/tracking/Findings.md`, without session plans or historical reports.
 2. **Legacy lint gate** — `tools/check_legacy_labelling.py` remains green for retained migration/reference-only Cython/v1 migration references.
 3. **Skill repository corrections** — source-backed changes to current skills, references, templates, tests, and validators only.
-4. **Post-implementation verification verdict** — user-approved independent validation of the implementation manifest and actual tree.
+4. **Post-implementation verification verdict** — independent validation of the implementation manifest and actual tree within the autonomous completion loop.
 5. **Per-skill gate checklist** — G0-G7 readiness cards for all retained NT-development skills, indexed by `docs/tracking/Components.md`.
 6. **Closure summary** — verification evidence, residual NT-development risks, and confirmation that upstream was not modified.
 
@@ -298,22 +309,18 @@ commit hashes, and a top-level YAML `spec-deltas` field. Use `spec-deltas: []`
 when no approved stable behavior specification changes. Otherwise, list exact
 `file`, `operation`, `section`, and `summary` entries using the deterministic
 `add`, `amend`, and `remove` contract in `docs/specs/README.md`. A missing field
-or unresolved target blocks Phase 3 approval. Present the manifest to the user
-and **STOP**. Ask exactly:
-
-> Approve Phase 3 post-implementation verification and validation? This permits
-> read-only inspection and non-destructive validation only; it does not permit
-> fixes, commits, merges, pushes, releases, or publication.
-
-Do not enter Phase 3 without explicit approval given after this manifest.
-Earlier implementation approval does not satisfy this gate.
+or unresolved target returns the manifest to Phase 2 for correction. When the
+manifest is complete, record it and continue directly into Phase 3. This
+transition is part of the authorized Template 8 completion loop and does not
+require or imply shipping approval.
 
 ---
 
-## Phase 3 — Post-Implementation Verification Approval Gate
+## Phase 3 — Post-Implementation Verification Loop
 
-**Approval required:** explicit user approval of Phase 3 after the Phase 2
-implementation manifest. Record the approval in the final report.
+**Entry requirement:** enter automatically when Phase 2 records a complete
+implementation manifest. Missing or unresolved manifest fields return to Phase
+2 for correction; there is no intermediate approval stop.
 
 Treat the manifest, implementation claims, recorded test results, and review
 claims as unverified assertions. Independently verify against the current
@@ -332,8 +339,8 @@ implementation artifacts.
    invocation surface. Recorded Phase 2 output is context, never fresh evidence.
 5. Invoke `/skill:requesting-code-review` for independent post-implementation
    review when available. Use `/skill:receiving-code-review` only to evaluate
-   feedback; any fix requires returning to Phase 2 and repeating this approval
-   gate after a new manifest.
+   feedback; any fix requires returning to Phase 2, recording a new manifest,
+   and rerunning this verification phase with fresh evidence.
 6. Classify every Finding ID as `Verified`, `Deficient`, `Missing`, or
    `Not verifiable`, with file/symbol references and a receipt (rules below).
 
@@ -369,9 +376,11 @@ Receipts (machine-checkable evidence):
 - `Approved` only when every original finding is receipt-verified, mandatory
   validation is green, user-facing behavior is exercised, upstream is
   unchanged, and no unresolved P0/P1 finding remains.
-- Otherwise `Rejected`: record deficiencies in `docs/tracking/Findings.md`,
-  return to Phase 2, and **STOP**. Do not enter later phases, commit, merge, push,
-  release, or publish.
+- Otherwise `Rejected`: record every deficiency as an actionable finding in
+  `docs/tracking/Findings.md`, return to Phase 2, fix it, and rerun every
+  invalidated Phase 3 check with fresh evidence. Continue the loop without
+  waiting for user approval. Do not enter later phases, merge, push, release,
+  or publish while the verdict is `Rejected`.
 
 Final output before continuing:
 - Per-finding verdicts, independent impact/evidence classifications, and validated JSON receipt paths
@@ -380,7 +389,8 @@ Final output before continuing:
 - Tracker files updated, if any
 - Gate verdict and blockers
 
-An `Approved` verdict unlocks Phase 4 only; it is not shipping authorization.
+An `Approved` verdict advances the current loop cycle to Phase 4 only; it is
+not shipping authorization.
 
 ---
 
@@ -418,7 +428,10 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 - Every `Pass` MUST cite a measurable command, file, or URL that proves it.
 - G2 is `Pass` only after every in-scope `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` run passes, `python3 tools/check_skill_g2_harnesses.py --check-cards` passes, `python3 tools/check_skill_g2_harnesses.py --check-card-declarations` passes, and each durable evidence file's owned-content hash matches current skill-owned content and the pinned baseline.
 - A skill is "cutover-ready" only when ALL gates are `Pass`.
-- `Pending` gates carry into a follow-up TODO list at the end of Phase 4.
+- A `Pending` or `Blocked` gate prevents loop convergence. Register the
+  underlying issue in `docs/tracking/Findings.md`; resolvable issues return to
+  Phase 2 for another fix-and-verification cycle, while genuine inaccessible
+  capability or external-state blockers use the controller's `Blocked` rule.
 
 ---
 
@@ -426,19 +439,19 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 
 **Invoke:** `/skill:requesting-code-review` for independent post-fix review.
 
-1. Reconcile the post-fix tree against the Phase 3 verdict and original findings ledger by stable Finding ID. Confirm every verified finding is `CLOSED`; keep residuals `OPEN` with follow-up TODOs in `docs/tracking/Findings.md`.
-2. Apply the approved implementation manifest's `spec-deltas` entries in listed order using `docs/specs/README.md`. Missing, duplicate, or unresolved targets block closure; `spec-deltas: []` makes no spec edit.
+1. Reconcile the post-fix tree against the Phase 3 verdict and original findings ledger by stable Finding ID. Confirm every verified finding is `CLOSED`; keep each residual `OPEN`, record its concrete acceptance evidence in `docs/tracking/Findings.md`, and return it to Phase 2.
+2. Apply the verified implementation manifest's `spec-deltas` entries in listed order using `docs/specs/README.md`. Missing, duplicate, or unresolved targets return to Phase 2 and block loop convergence; `spec-deltas: []` makes no spec edit.
 3. Regenerate each affected gate card from the accepted Phase 3 evidence. Do not rerun unchanged passing commands; run only gate-specific checks not already covered or checks invalidated by reconciliation edits.
-4. Invoke independent reconciliation review. Resolve all P0/P1 findings before shipping; any implementation fix returns to Phase 2 and requires a new Phase 3 approval. If review cannot run, record the infrastructure failure and keep shipping `Blocked`.
+4. Invoke independent reconciliation review. Every in-scope review finding or reconciliation residual returns to Phase 2 for implementation, then flows through fresh Phase 3 verification and affected Phase 4 gates before reconciliation runs again. Continue until all findings are `CLOSED`, every gate is `Pass`, and independent reconciliation review has no unresolved finding. If review cannot run, record the infrastructure failure and keep shipping `Blocked` under the controller's genuine-blocker rule.
 
 ---
 
 ## Phase 6 — Shipping Approval Gate
 
-After Phase 5 reconciliation passes, present the closure summary and exact
+After the Phase 2→5 loop converges, present the closure summary and exact
 proposed commit, merge, push, release, and publication actions. **STOP** and
-request explicit shipping approval. Verification approval does not authorize
-shipping. Do not enter this phase or perform any external write without that
+request explicit shipping approval. Automatic verification and reconciliation
+do not authorize shipping. Do not perform any external write without that
 approval.
 
 ### Mission-owned changes exist

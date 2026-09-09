@@ -19,7 +19,7 @@ def test_master_prompt_preserves_required_execution_sections() -> None:
         "### Upstream currency prerequisite",
         "### States and stop conditions",
         "### Finding format (every finding)",
-        "## Phase 3 — Post-Implementation Verification Approval Gate",
+        "## Phase 3 — Post-Implementation Verification Loop",
         "## Phase 4 — Progressive Gate Checklist (PRIMARY DELIVERABLE)",
         "## Phase 5 — Reconciliation",
         "## Phase 6 — Shipping Approval Gate",
