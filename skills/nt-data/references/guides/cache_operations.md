@@ -257,7 +257,10 @@ value = self.cache.get("my_key")  # list[int] | None
 ```
 
 When a backing store is configured, these values are persisted through the
-infrastructure backing store (see below).
+infrastructure backing store (see below). With PostgreSQL, general entries use insert-or-replace
+(upsert) semantics: re-adding an existing key replaces the stored value instead of failing on the
+`general.id` primary key, matching in-memory behavior. The operation can fail while performing
+either the insert or the conflict-driven update.
 
 ---
 
