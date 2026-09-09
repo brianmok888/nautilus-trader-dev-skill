@@ -20,11 +20,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 73.751142,
+      "duration_seconds": 0.640777,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "5e4be2edbf496afcfc5d0aa3a798496fa4493f2f",
-  "verified_at": "2026-09-09T11:58:02.784438+00:00"
+  "verified_at": "2026-09-09T17:42:43.836407+00:00"
 }

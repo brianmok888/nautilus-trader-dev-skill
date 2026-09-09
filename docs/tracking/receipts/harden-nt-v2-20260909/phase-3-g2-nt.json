@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt",
+  "finding_id": "NT-2026-09-09-003",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt",
+  "exit_code": 0,
+  "output_sha256": "bd8cace8a656f3a3e0065ca70d733fb64506bed8a929d07e25f3b3512c0bb2ce",
+  "output_excerpt": "[repository] /usr/bin/python3 -m pytest -q tests/test_rust_trading_reference_sync.py\nPASS nt",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

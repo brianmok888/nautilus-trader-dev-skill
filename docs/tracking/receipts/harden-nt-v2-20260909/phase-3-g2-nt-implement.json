@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-implement",
+  "finding_id": "NT-2026-09-09-010",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-implement",
+  "exit_code": 0,
+  "output_sha256": "ba6cf8ffaff4d79d71e70886df36850562c9e4cba5a45e1de0691abe7cb94429",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 0.56s\nPASS nt-implement",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

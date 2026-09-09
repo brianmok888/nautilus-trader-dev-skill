@@ -12,7 +12,7 @@
         "skills/nt-dex-adapter/tests/test_dex_compliance.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.742078,
+      "duration_seconds": 0.72395,
       "returncode": 0
     },
     {
@@ -26,7 +26,7 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 259.146569,
+      "duration_seconds": 1.009989,
       "returncode": 0
     },
     {
@@ -40,11 +40,11 @@
         "hypersync"
       ],
       "cwd": "upstream",
-      "duration_seconds": 114.125156,
+      "duration_seconds": 1.048039,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "5e4be2edbf496afcfc5d0aa3a798496fa4493f2f",
-  "verified_at": "2026-09-09T12:32:40.879519+00:00"
+  "verified_at": "2026-09-09T17:43:14.091826+00:00"
 }

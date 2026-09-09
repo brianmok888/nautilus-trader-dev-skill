@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-upstream-readonly",
+  "finding_id": "NT-2026-09-09-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "git -C <pinned-cache> status --porcelain (expect empty)",
+  "exit_code": 0,
+  "output_sha256": "701279f2a214b713788075818c2e0121c1b7b8c20ae30a71930dd7c85e027853",
+  "output_excerpt": "(clean: no modifications)",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

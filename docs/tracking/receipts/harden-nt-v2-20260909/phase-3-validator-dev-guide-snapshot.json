@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-validator-dev-guide-snapshot",
+  "finding_id": "NT-2026-09-09-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_dev_guide_snapshot_sync.py",
+  "exit_code": 0,
+  "output_sha256": "c045b35dcfdbfa31ab25afadbbb9392de265868fd5a0df5272f02c20d9f33ae9",
+  "output_excerpt": "Developer guide snapshot bodies match pinned upstream.",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:45:59Z"
+}

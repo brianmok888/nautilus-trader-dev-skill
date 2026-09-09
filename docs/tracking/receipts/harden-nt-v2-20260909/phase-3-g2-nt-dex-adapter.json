@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-dex-adapter",
+  "finding_id": "NT-2026-09-09-015",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-dex-adapter",
+  "exit_code": 0,
+  "output_sha256": "12e183138db3144d4bf80f439254a28b608c068f11201d7474f411e1ca456f3b",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 0.95s\nPASS nt-dex-adapter",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

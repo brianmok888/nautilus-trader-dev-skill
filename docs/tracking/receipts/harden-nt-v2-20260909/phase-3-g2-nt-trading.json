@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-trading",
+  "finding_id": "NT-2026-09-09-017",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-trading",
+  "exit_code": 0,
+  "output_sha256": "163c8f22c5fbf045919d353e0a13be86061686f263901b0c5ce17690a48213dd",
+  "output_excerpt": "3 passed in 0.30s\nPASS nt-trading",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

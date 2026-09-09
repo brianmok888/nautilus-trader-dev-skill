@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-architect",
+  "finding_id": "NT-2026-09-09-016",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-architect",
+  "exit_code": 0,
+  "output_sha256": "f8ec55eda48d3405d1938f0404a9aee0f166fb0f79c81f6045d6c33c8028afac",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 0.56s\nPASS nt-architect",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

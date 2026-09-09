@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-strategy-builder",
+  "finding_id": "NT-2026-09-09-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-strategy-builder",
+  "exit_code": 0,
+  "output_sha256": "6e6d1c6f1b7ac3ef36972a467a3f5f819ee228f0742872687e8c058db93366cb",
+  "output_excerpt": "99 passed, 6 skipped in 83.53s (0:01:23)\nPASS nt-strategy-builder",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

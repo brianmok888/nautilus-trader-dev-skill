@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-adapters",
+  "finding_id": "NT-2026-09-09-004",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-adapters",
+  "exit_code": 0,
+  "output_sha256": "05ab7a4d4b82e724ff959cb5f05cdea298a5f81fecc7b8870a5ed233889af141",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 0.65s\nPASS nt-adapters",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

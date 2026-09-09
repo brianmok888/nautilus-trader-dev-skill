@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-validator-governance",
+  "finding_id": "NT-2026-09-09-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_governance_receipts.py",
+  "exit_code": 0,
+  "output_sha256": "396cdb10365de2c25233fba7e37cb91f0d68798618769568474308cc614811cc",
+  "output_excerpt": "validated 356 governance receipts",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:02Z"
+}

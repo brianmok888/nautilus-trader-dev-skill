@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-data",
+  "finding_id": "NT-2026-09-09-012",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-data",
+  "exit_code": 0,
+  "output_sha256": "33d4fc06504c3ca6b068eb657e3975cb40ccd23174d58933bd0146e090cffe6b",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 1.45s\nPASS nt-data",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

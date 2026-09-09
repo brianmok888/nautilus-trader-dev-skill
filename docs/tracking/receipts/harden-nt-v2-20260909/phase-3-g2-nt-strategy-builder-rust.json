@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-strategy-builder-rust",
+  "finding_id": "NT-2026-09-09-008",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-strategy-builder-rust",
+  "exit_code": 0,
+  "output_sha256": "5fc3507b7905f7bfe0ccdabbf3a13ce6691113bd7747e5a28f2efa7140eaf87f",
+  "output_excerpt": "1 passed in 1.34s\nPASS nt-strategy-builder-rust",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260909",
+  "receipt": "phase-3-g2-nt-learn",
+  "finding_id": "NT-2026-09-09-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_skill_g2_harnesses.py --upstream-root <disposable> --execute --skill nt-learn",
+  "exit_code": 0,
+  "output_sha256": "b6d34ffb2aa587c4131691a5cfa4e11af6d0c5ff434dfd56565178cd688fd90e",
+  "output_excerpt": "Finished `dev` profile [unoptimized] target(s) in 0.73s\nPASS nt-learn",
+  "redactions": [],
+  "recorded_at": "2026-09-09T17:46:03Z"
+}
