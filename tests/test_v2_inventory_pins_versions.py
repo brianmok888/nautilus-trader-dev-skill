@@ -77,7 +77,7 @@ def test_pinned_nautilus_rust_dependencies_match_upstream_quickstart() -> None:
 
     assert dependencies
     assert [(path, version) for path, version in dependencies if version != expected_version] == []
-    assert "Rust 1.98.0" in read("docs/end_to_end_guide.md")
+    assert "Rust 1.98.1" in read("docs/end_to_end_guide.md")
 
 def test_documented_inventory_lists_all_seventeen_nt_skills() -> None:
     expected = {
@@ -203,7 +203,7 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
     dev = read("skills/nt-dev/SKILL.md")
 
     assert "Python 3.12-3.14" in dev
-    assert "repository toolchain is pinned to Rust 1.98.0" in dev
+    assert "repository toolchain is pinned to Rust 1.98.1" in dev
     assert "not a permanent MSRV promise" in dev
 
     # README stays descriptive: version/commit pins live in skills and tools,
@@ -212,7 +212,7 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
         "Pinned reproducible baseline",
         "Current develop observation",
         "Python 3.12-3.14",
-        "Rust 1.98.0",
+        "Rust 1.98.1",
         "Current release baseline",
     ):
         assert pattern not in readme

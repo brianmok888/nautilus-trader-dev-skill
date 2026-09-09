@@ -794,7 +794,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
             + "rustup toolchain install nightly\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs uv version pinned by `required-version` bon::bon try_order.\n"
-            + "rust-toolchain.toml 1.98.0 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
+            + "rust-toolchain.toml 1.98.1 2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "scripts/cargo-features.bash --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
             + "export TAG= export REPO= gh attestation verify.\n",
@@ -816,7 +816,7 @@ def test_reports_missing_current_skill_alignment_deltas(tmp_path: Path) -> None:
     )
     write(
         tmp_path / "skills/nt-dev/SKILL.md",
-        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.98.0 "
+        "1.231.0 2.0.0rc1 2.0.0rcN release-candidate rust-toolchain.toml 1.98.1 "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         'PYTHON_LIB_DIR uses sysconfig.get_config_var("LIBDIR").\n',
@@ -1984,7 +1984,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
     write(tmp_path / "skills/nt-testing/SKILL.md", "Use DataTester and ExecTester.\n")
     write(
         tmp_path / "references/developer_guide/rust.md",
-        "Rust guidance with rust-toolchain.toml 1.98.0 "
+        "Rust guidance with rust-toolchain.toml 1.98.1 "
         "Generated Python bindings Propagate `high-precision` py-stubs "
         "ffi,python,high-precision,defi "
         "scripts/cargo-features.bash.\n",
@@ -2002,7 +2002,7 @@ def test_reports_missing_nt_v2_cutover_alignment(tmp_path: Path) -> None:
         in result.errors
     )
     assert (
-        "missing NT v2 cutover term '1.98.0' in skills/nt-dev/SKILL.md"
+        "missing NT v2 cutover term '1.98.1' in skills/nt-dev/SKILL.md"
         in result.errors
     )
     assert (
@@ -2138,7 +2138,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             "pip-audit maturin\n"
         ),
         "rust.md": (
-            "rust-toolchain.toml 1.98.0 "
+            "rust-toolchain.toml 1.98.1 "
             "Generated FFI bindings and precision mode Propagate `high-precision`\n"
             "Generated Python artifacts make py-stubs bon::bon try_order.\n"
             "Generated Python bindings scripts/cargo-features.bash\n"
@@ -2215,7 +2215,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "NT v2 compatibility note: legacy Cython/v1 reference-only; "
         "prefer Rust v2/PyO3 for new work.\n"
         "Rust-oriented v2.0 readiness: v1.231.0 latest release, 1.231.0 develop source, "
-        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.98.0. "
+        "2.0.0rc1 readiness, 2.0.0rcN release-candidate line, rust-toolchain.toml 1.98.1. "
         "Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
         "Use tools.toml for Cap'n Proto.\n"
         "Do not copy current version numbers into docs. Generated FFI bindings and precision mode "
@@ -2223,7 +2223,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
         "Tokio worker threads from running Python code. Typed CVec wrappers and Send are required "
         "for capsule payloads.\n"
         "Fuzz targets require rustup toolchain install nightly.\n"
-        "v1.231.0 rust-toolchain.toml 1.98.0 "
+        "v1.231.0 rust-toolchain.toml 1.98.1 "
         "Generated Python artifacts make py-stubs scripts/cargo-features.bash.\n"
         "Run Rust checks with cargo nextest, cargo clippy, cargo deny, and rstest.\n"
         "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n"
@@ -2306,7 +2306,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
             + "Never use `block_on` in trait methods for DataClient or ExecutionClient; spawn the operation and return.\n"
             + "get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work.\n"
             + "Generated Python artifacts make py-stubs bon::bon try_order.\n"
-            + "rust-toolchain.toml 1.98.0 Generated Python bindings Propagate `high-precision` py-stubs.\n"
+            + "rust-toolchain.toml 1.98.1 Generated Python bindings Propagate `high-precision` py-stubs.\n"
             + "2.0.0rc1 2.0.0rcN release-candidate Python v2 controller subclassing subclassable execution algorithms FeeModel FillModel.\n"
             + "scripts/cargo-features.bash --lib --tests.\n"
             + "ExecTesterConfig::builder() StrategyConfig build()? .\n"
