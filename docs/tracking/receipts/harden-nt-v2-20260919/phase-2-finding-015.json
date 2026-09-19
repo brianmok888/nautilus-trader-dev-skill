@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-015",
+  "finding_id": "NT-2026-09-19-015",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c 'python/nautilus_trader/model/__init__.pyi' skills/nt-model/references/guides/value_type_patterns.md",
+  "exit_code": 0,
+  "output_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+  "output_excerpt": "2",
+  "redactions": [],
+  "recorded_at": "2026-09-19T21:32:23Z"
+}

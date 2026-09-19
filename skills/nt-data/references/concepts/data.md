@@ -1611,7 +1611,7 @@ already in the required replay order.
 ### Same-binary Rust custom data
 
 Rust-defined custom data uses the `#[custom_data]` proc macro
-(`nautilus_persistence_macros`, source under `crates/persistence/macros`) to generate the
+(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`) to generate the
 constructor, `HasTsInit`, `CustomDataTrait`, serde/JSON support, Arrow encode/decode, and
 `From`/`TryFrom` conversions for the engine-level `Data` enum:
 

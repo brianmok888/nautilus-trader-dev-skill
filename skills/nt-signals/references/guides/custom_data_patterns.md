@@ -49,7 +49,7 @@ to work.
 
 Rust custom data types derive their model implementation from the `#[custom_data]`
 attribute macro in `nautilus-persistence-macros` (pinned source:
-`crates/persistence/macros/src/custom.rs`). Applied to a struct with named fields
+`crates/persistence/src/common/custom.rs`). Applied to a struct with named fields
 — including required `ts_event` and `ts_init` `UnixNanos` fields — it implements
 `nautilus_model::data::CustomDataTrait` (`type_name_static`, `from_json`),
 `HasTsInit`, the Arrow schema and record-batch traits, and the catalog path

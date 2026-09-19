@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-013",
+  "finding_id": "NT-2026-09-19-013",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest tests/test_v2_current_api_spellings.py::test_stale_upstream_citations_removed_from_active_guidance -q && grep -c 'crates/persistence/src/common/custom.rs' skills/nt-data/references/concepts/data.md skills/nt-signals/references/guides/custom_data_patterns.md",
+  "exit_code": 0,
+  "output_sha256": "7931f8695b4801be63dfe6730753dcf543719e5b7442ab277725de536a01d02b",
+  "output_excerpt": ".                                                                        [100%]\n1 passed in 0.02s\nskills/nt-data/references/concepts/data.md:1\nskills/nt-signals/references/guides/custom_data_patterns.md:1",
+  "redactions": [],
+  "recorded_at": "2026-09-19T21:32:23Z"
+}

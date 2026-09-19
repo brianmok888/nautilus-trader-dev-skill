@@ -71,3 +71,29 @@ def test_nautilusdatatype_teaching_uses_current_variants() -> None:
     assert "NautilusDataType::OrderBook" not in combined
     assert "persistence import NautilusDataType" not in combined
     assert "from nautilus_trader.persistence import NautilusDataType" not in combined
+
+def test_stale_upstream_citations_removed_from_active_guidance() -> None:
+    stale_citations = {
+        "crates/persistence/macros": [
+            "skills/nt-data/references/concepts/data.md",
+            "skills/nt-signals/references/guides/custom_data_patterns.md",
+        ],
+        "examples/live/bitmex/bitmex_exec_tester.py": [
+            "references/integrations/bitmex.md",
+        ],
+        "examples/backtest/polymarket_simple_quoter.py": [
+            "skills/nt-adapters/references/integrations/polymarket.md",
+        ],
+        "python/nautilus_trader/model/instruments/__init__.pyi": [
+            "skills/nt-model/references/guides/value_type_patterns.md",
+        ],
+    }
+    for stale_token, files in stale_citations.items():
+        for rel in files:
+            text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+            assert stale_token not in text, f"{rel} still cites removed {stale_token}"
+
+    data_concepts = (REPO_ROOT / "skills/nt-data/references/concepts/data.md").read_text(encoding="utf-8")
+    assert "crates/persistence/src/common/custom.rs" in data_concepts
+    polymarket = (REPO_ROOT / "skills/nt-adapters/references/integrations/polymarket.md").read_text(encoding="utf-8")
+    assert "examples/live/polymarket/exec_tester.py" in polymarket

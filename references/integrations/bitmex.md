@@ -246,7 +246,7 @@ order = self.order_factory.stop_market(
 ```
 
 `ExecTester` example configuration also demonstrates setting `stop_trigger_type=TriggerType.MARK_PRICE`
-in `examples/live/bitmex/bitmex_exec_tester.py`.
+the adapter's integration tests under `crates/adapters/bitmex/tests/` at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; upstream no longer ships a bitmex live example.
 
 ### Trailing stops
 

@@ -368,7 +368,7 @@ restored = AccountBalance.from_dict(d)
 
 Instruments expose their specifications through the same value types, keeping precision
 handling uniform across the model (pinned
-`python/nautilus_trader/model/instruments/__init__.pyi`):
+`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7``):
 
 - Precision and increments: `price_precision` / `size_precision` (`int`) with the
   matching `price_increment` (`Price`) and `size_increment` (`Quantity`).

@@ -606,7 +606,7 @@ data source if you need full coverage of a heavily traded market.
 
 ### Complete backtest example
 
-See `examples/backtest/polymarket_simple_quoter.py` for a full example:
+See the live examples under `examples/live/polymarket/` (`data_tester.py`, `exec_tester.py`, `updown_smoke_tester.py`) at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`:
 
 ```python
 import asyncio
@@ -675,7 +675,7 @@ asyncio.run(run_backtest())
 **Run the complete example**:
 
 ```bash
-python examples/backtest/polymarket_simple_quoter.py
+python examples/live/polymarket/exec_tester.py
 ```
 
 ### Helper functions

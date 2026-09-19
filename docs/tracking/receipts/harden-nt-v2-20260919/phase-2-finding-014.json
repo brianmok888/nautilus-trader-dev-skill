@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-014",
+  "finding_id": "NT-2026-09-19-014",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "grep -c 'examples/live/polymarket/exec_tester.py' skills/nt-adapters/references/integrations/polymarket.md && grep -c 'crates/adapters/bitmex/tests/' references/integrations/bitmex.md",
+  "exit_code": 0,
+  "output_sha256": "c553228271d4cf65305957e97cd75da60964776a9e615c702bd6a4c077d266c0",
+  "output_excerpt": "1\n1",
+  "redactions": [],
+  "recorded_at": "2026-09-19T21:32:23Z"
+}

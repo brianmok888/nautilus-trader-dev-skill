@@ -14,6 +14,37 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 ## Open findings — 2026-09-19 upstream currency cycle
 
+## Open findings — 2026-09-19 second-cycle rescan
+
+NT v2 compatibility note: quoted legacy tokens below are audit evidence (migration reference only).
+
+A zero-drift second cycle (develop tip equals pin `9bafb63e7d`): a citation-existence rescan of every upstream code path cited in active guidance found three stale-citation discrepancies; all other unresolved citations are sanctioned (tombstone docs documenting non-existence, template placeholders, build-environment paths, migration-labelled lanes).
+
+[NT-2026-09-19-013] [P1] [CLOSED 2026-09-19] Stale guidance: the pinned Parquet refactor (`a2032f9f4f`) removed `crates/persistence/macros`, but nt-data/nt-signals custom-data teaching still cited `crates/persistence/macros/src/custom.rs` as the macro source.
+  file: skills/nt-data/references/concepts/data.md:1614
+  evidence: `git ls-tree` at pin `9bafb63e7d` has no `crates/persistence/macros`; the macro source now lives at `crates/persistence/src/common/custom.rs` (present at pin). The old path existed at the prior pin `5e4be2edb`, so the citation became stale inside the reviewed transition and was missed by the cycle-one fix pass.
+  fix: update the three citation sites to `crates/persistence/src/common/custom.rs` citing the pin.
+  acceptance-test: `python3 -m pytest tests/test_v2_current_api_spellings.py::test_stale_upstream_citations_removed_from_active_guidance -q` passes.
+  closure: citations updated in skills/nt-data/references/concepts/data.md (covers the nt-signals symlinked copy) and skills/nt-signals/references/guides/custom_data_patterns.md; guard test green.
+  correction: 2026-09-19 — [P1] — MODIFIED: persistence-macro source citations moved to crates/persistence/src/common/custom.rs — files: skills/nt-data/references/concepts/data.md, skills/nt-signals/references/guides/custom_data_patterns.md, tests/test_v2_current_api_spellings.py
+
+[NT-2026-09-19-014] [P2] [CLOSED 2026-09-19] Stale guidance: integration mirrors cited example files that do not exist at the pin — `examples/live/bitmex/bitmex_exec_tester.py` (bitmex mirror; upstream ships no bitmex live example) and `examples/backtest/polymarket_simple_quoter.py` (polymarket mirror; the real examples live under `examples/live/polymarket/`).
+  file: references/integrations/bitmex.md:249
+  evidence: `git ls-tree -r --name-only 9bafb63e7d -- examples` contains no bitmex entries and no `polymarket_simple_quoter.py`; `examples/live/polymarket/{data_tester,exec_tester,updown_smoke_tester}.py` exist.
+  fix: point the bitmex mirror at the adapter's integration tests under `crates/adapters/bitmex/tests/` and the polymarket mirror at `examples/live/polymarket/`.
+  acceptance-test: guard test in `tests/test_v2_current_api_spellings.py` passes.
+  closure: both mirrors updated citing the pin; guard test green.
+  correction: 2026-09-19 — [P2] — MODIFIED: example citations corrected in bitmex and polymarket mirrors — files: references/integrations/bitmex.md, skills/nt-adapters/references/integrations/polymarket.md
+
+[NT-2026-09-19-015] [P2] [CLOSED 2026-09-19] Stale guidance: nt-model value-type guidance cited `python/nautilus_trader/model/instruments/__init__.pyi`, which does not exist at the pin; instrument stubs are flattened into `python/nautilus_trader/model/__init__.pyi`.
+  file: skills/nt-model/references/guides/value_type_patterns.md:1
+  evidence: `git ls-tree -r --name-only 9bafb63e7d python | grep .pyi` shows 41 stubs including the flat `python/nautilus_trader/model/__init__.pyi` and no instruments-directory stub.
+  fix: cite the flat model stub path at the pin.
+  acceptance-test: guard test in `tests/test_v2_current_api_spellings.py` passes.
+  closure: citation updated; guard test green.
+  correction: 2026-09-19 — [P2] — MODIFIED: model stub citation flattened — files: skills/nt-model/references/guides/value_type_patterns.md
+
+
 NT v2 compatibility note: quoted legacy v1/Cython tokens below are historical finding evidence (migration reference only).
 
 One read-only delta-review pass covered all 178 commits in `5e4be2edb..9bafb63e7` against the skill tree; classifications and per-commit rationales live in `references/upstream-delta-review.json` (eleventh transition). Seventy commits carry affected guidance; one hundred eight are classified no-impact with recorded rationale. Candidate findings are consolidated into twelve findings below; each delta entry keeps its per-commit evidence and affected-file mapping.
