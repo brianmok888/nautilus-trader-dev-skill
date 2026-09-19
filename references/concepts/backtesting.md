@@ -446,6 +446,8 @@ repeatedly drains venue command queues and any newly generated commands until no
 for the current timestamp. Simulation modules are run only once per cycle, after all commands have settled.
 
 When a `LatencyModel` is configured, commands are placed in the venue's inflight queue with a future
+Latency applies in both directions at the pinned baseline (`9bafb63e7d`, upstream `1f156b66a0`): the sandbox execution client models inbound (request-side) latency in addition to response-side latency, so simulations can delay order submission separately from fill delivery.
+Precision and validation at the pinned baseline (`9bafb63e7d`): the matching engine accepts lower-precision order price/quantity fields within the same fixed-point scale, backtest data requests warn again on invalid data types or a missing engine, and trailing-stop orders already in the market are rejected under `reject_stop_orders` instead of being silently accepted.
 timestamp derived from the simulated latency. The settle loop considers inflight commands that are due
 at the current timestamp as pending, so zero-latency or same-tick latency configurations still settle
 correctly. Commands with future timestamps are deferred and processed when the engine reaches that time.

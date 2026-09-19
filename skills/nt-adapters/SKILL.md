@@ -73,6 +73,7 @@ impl AdapterConfigBinding {
 Quarantined Python examples and prior Python adapter guidance live under `migration_reference/python/` and `references/examples/migration_reference/`. They are migration/reference-only, never the production default.
 
 ## Source-pinned upstream lane
+Python custom adapter support is available at the pinned baseline (`9bafb63e7d`, upstream `e9848a98ca`): adapter factories expose a Python registration path for custom adapters. Prefer the Rust core + PyO3 lane for production; use the Python path only for Python-side custom adapters.
 
 Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 

@@ -216,6 +216,7 @@ Next, ensure you have a configuration JSON file available.
 | Field                  | Type              | Description                                                                         | Default                                                        |
 |:-----------------------|:------------------|:------------------------------------------------------------------------------------|:---------------------------------------------------------------|
 | `tardis_ws_url`        | string (optional) | The Tardis Machine WebSocket URL.                                                   | Uses `TARDIS_MACHINE_WS_URL` when `null`.                      |
+| `tardis_http_url`       | string (optional) | The Tardis HTTP API base URL.                                                       | Defaults to the public Tardis API endpoint when `null`.         |
 | `normalize_symbols`    | bool (optional)   | If Nautilus [symbol normalization](#symbology-and-normalization) should be applied. | Defaults to `true` when `null`.                                |
 | `output_path`          | string (optional) | The output directory path to write Nautilus Parquet data to.                        | Uses `NAUTILUS_PATH` when set, otherwise current working dir.   |
 | `book_snapshot_output` | string (optional) | Output format for `book_snapshot_*` data: `"deltas"` or `"depth"`.                | Defaults to `"deltas"` when `null`.                            |

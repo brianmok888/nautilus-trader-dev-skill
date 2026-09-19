@@ -20,6 +20,12 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   adapter limitation makes it impossible.
 - Refresh account state and satisfy startup reconciliation before announcing a
   production live client as connected.
+- Honor the queued-callback lifecycle: callback delivery requires exclusive
+  access to the component and a delivery boundary at which enclosing mutable
+  runtime borrows have ended; callback ownership is cleared during LiveNode
+  disposal; drain outcomes at backtest and live running-loop boundaries follow
+  the pinned callback-dispatch contract
+  (`references/developer_guide/callback_dispatch.md`).
 
 ## Review rule
 

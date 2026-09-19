@@ -138,6 +138,7 @@ the Binance Futures `BTCUSDT` perpetual contract becomes `BTCUSDT-PERP`
 within Nautilus.
 
 ## Order capability
+RPI (retail price improvement) order support is available on Binance Futures at the pinned baseline (`9bafb63e7d`, upstream `f05a1bee63`); check the pinned `docs/integrations/binance.md` for eligibility rules and examples before configuring RPI orders.
 
 The following tables detail order types, execution instructions, and
 time-in-force options across Binance account types.

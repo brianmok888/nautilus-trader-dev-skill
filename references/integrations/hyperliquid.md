@@ -8,6 +8,7 @@ HyperCore provides a fully on-chain order book and matching engine. This integra
 live market data ingest and order execution on Hyperliquid.
 
 ## Overview
+At the pinned baseline (`9bafb63e7d`): reconciliation is fail-closed on venue snapshots, instruments refresh at runtime, and inferred fills carry no commission estimate (a documented limitation — see the pinned integration guide).
 
 This adapter is implemented in Rust with Python bindings. It provides direct integration
 with Hyperliquid's REST and WebSocket APIs without requiring external client libraries.
@@ -912,6 +913,7 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 | Option              | Default | Description                                     |
 |---------------------|---------|-------------------------------------------------|
 | `environment`       | `None`  | Environment enum (`MAINNET` or `TESTNET`).      |
+| `base_url_http`     | `None`  | Override for the HTTP info URL; declared before `base_url_ws` in the Python config parameter order. |
 | `base_url_ws`       | `None`  | Override for the WebSocket base URL.            |
 | `http_timeout_secs` | `10`    | Timeout (seconds) applied to REST calls.        |
 | `proxy_url`         | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
@@ -924,6 +926,8 @@ backoff (full jitter) on rate limit (429) and server error (5xx) responses.
 | `vault_address`                | `None`  | Vault address; loaded from `HYPERLIQUID_VAULT` or `HYPERLIQUID_TESTNET_VAULT` if omitted. |
 | `account_address`              | `None`  | Main account address for agent wallet trading; loaded from `HYPERLIQUID_ACCOUNT_ADDRESS`. |
 | `environment`                  | `None`  | Environment enum (`MAINNET` or `TESTNET`); resolves to `MAINNET` when unset.              |
+| `base_url_http`                 | `None`  | Override for the HTTP info base URL; declared before `base_url_ws` in the Python config parameter order. |
+| `base_url_exchange`             | `None`  | Override for the exchange API base URL.                                                   |
 | `base_url_ws`                  | `None`  | Override for the WebSocket base URL.                                                      |
 | `max_retries`                  | `None`  | Maximum retry attempts for submit, cancel, or modify order requests.                      |
 | `retry_delay_initial_ms`       | `None`  | Initial delay (milliseconds) between retries.                                             |

@@ -75,6 +75,7 @@ Use PyO3 only for typed configuration, Rust component registration, lifecycle co
 Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-trading`.
 
 ## Source-pinned upstream lane
+Order event history is read-only at the pinned baseline (`9bafb63e7d`, upstream `21ecc5f854`): construct order cores with `OrderCore::new` and read history through `events()`; never assume direct field access or that `avg_px` is a running float average (it is a fixed-point fold rebuilt on corrections).
 
 Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`.
 

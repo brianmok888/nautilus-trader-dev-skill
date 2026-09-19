@@ -87,6 +87,13 @@ stake in the numerator and total stake in the denominator, and cover both back
 and lay increases. Source: upstream develop commit
 `fa507199deb34430a983144e4af028046f2af926`.
 
+Order accounting at the pinned baseline: order event history is read-only through
+`events()` (construct order cores with `OrderCore::new`; the `events` field is private),
+and `avg_px`/`slippage` use a chronological fixed-point fold that rebuilds — rather than
+subtracts — on corrections and deserialization, so incremental averages agree with
+full-history recomputation. Source: pinned upstream commit
+`9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7` (`21ecc5f854`).
+
 ## What This Skill Covers
 
 NautilusTrader **domain model** — instruments, identifiers, value types, enums, and currencies.

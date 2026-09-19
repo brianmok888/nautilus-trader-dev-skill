@@ -59,6 +59,7 @@ Polymarket offers resources for different audiences:
   documentation for developers interacting with the Polymarket CLOB API.
 
 ## Overview
+Polymarket capability at the pinned baseline (`9bafb63e7d`): the Data API client is on v2 with cursor pagination; session keys support owner-operated session signing, authorization, listing, and revocation; Deposit Wallet position operations are available; and book recovery applies snapshot gating with stale-feed detection. `SignatureType` is renamed `PolymarketSignatureType` at this pin.
 
 This guide assumes a trader is setting up for both live market data feeds and trade execution.
 The pinned adapter (Rust, exposed to Python at `nautilus_trader.adapters.polymarket`) exposes these public components:

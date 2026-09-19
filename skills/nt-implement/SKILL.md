@@ -30,6 +30,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
 ## Rust production lane
+Cap'n Proto schemas for instruments ship with the pinned baseline (`9bafb63e7d`, upstream `fb605401ef`); use the generated schemas for instrument serialization work instead of hand-written wire formats.
 
 Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings. On the deterministic simulation path, route clocks, randomness, task spawning, and network access through the DST seams `nautilus_network::dst::{time, task, net}`; with the `simulation` feature, HTTP/1.1 and WebSocket transports run over simulated byte streams, while HTTPS/TLS, HTTP/2, proxies, and streaming responses stay outside the simulated transport.
 

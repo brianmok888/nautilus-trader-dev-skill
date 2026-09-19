@@ -103,7 +103,11 @@ The `MessageBus` is the central hub for all messages in NautilusTrader. Rust com
 typed messages to named topics and subscribe handlers to those topics. This low-level interface is
 not part of the Python actor or strategy surface; Python components use the component messaging
 facade (`publish_message` / `subscribe_topic` / `unsubscribe_topic`) documented in
-[Python topic messaging](#python-topic-messaging).
+[Python topic messaging](#python-topic-messaging). Publication is reentrant-safe: nested
+publications do not overtake an earlier publication's pending deliveries, and synchronous
+message-bus reentry does not activate queued actor or strategy callbacks — see the pinned
+[Callback dispatch contract](../developer_guide/callback_dispatch.md) for the full ordering,
+reentrancy, and drain-boundary requirements.
 
 #### Key benefits and use cases
 

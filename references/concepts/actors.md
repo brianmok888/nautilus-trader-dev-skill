@@ -120,6 +120,8 @@ Actors have access to core system components:
 | `self.log`        | Structured logging.                                      |
 | `publish_message()` | Publish a Python object on an application topic.        |
 | `subscribe_topic()` / `unsubscribe_topic()` | Manage Python object callbacks on topics. |
+| `subscribe_queue_state()` / `unsubscribe_queue_state()` | Track live runner queue-pressure state changes (optionally filtered by system channel and priority). |
+| `subscribe_socket_state()` / `unsubscribe_socket_state()` | Track live socket transport state changes (optionally filtered by client ID or endpoint). |
 
 The Python `DataActor` and `Strategy` APIs do not expose `self.msgbus`. Use custom data for
 structured payloads, signals for lightweight values, or topic messaging

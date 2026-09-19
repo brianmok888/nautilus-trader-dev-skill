@@ -911,6 +911,8 @@ node = (
 | `bars_timestamp_on_close` | `True`  | Timestamp bars on the close (`ts_event`/`ts_init`). `False` timestamps on the open.                                 |
 | `reconnect_timeout_mins`  | `10`    | Minutes to attempt reconnection before giving up. `None` retries indefinitely. See [Connection stability](#connection-stability). |
 | `venue_dataset_map`       | `None`  | Optional Nautilus venue to Databento dataset code mapping.                                                            |
+| `historical_base_url`     | `None`  | Override the Historical API base URL.                                                                                 |
+| `live_gateway_addr`       | `None`  | Override the live gateway socket address (`host:port`).                                                               |
 | `parent_symbols`          | `None`  | Optional `{dataset: {parent symbols}}` to preload definition trees (e.g., `{"GLBX.MDP3": {"ES.FUT", "ES.OPT"}}`).   |
 | `instrument_ids`          | `None`  | Nautilus `InstrumentId` values to preload definitions for at startup.                                                |
 

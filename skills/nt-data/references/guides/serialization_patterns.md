@@ -29,6 +29,7 @@ There is no public `nautilus_trader.serialization.arrow` package, `ArrowSerializ
 **Module**: `nautilus_trader.serialization`
 
 Call `get_arrow_schema_map(data_cls)` to inspect the schema metadata exported for a supported
+Crate feature note at the pinned baseline (`9bafb63e7d`, upstream `368d86a781`): the Arrow display feature is named `arrow-display`; enable it on the relevant crate when rendering Arrow data for inspection. Catalog file extensions validate before rename, and the Parquet catalog/Arrow encoding layer was refactored at `a2032f9f4f` — verify catalog loader snippets against the pinned source before reuse.
 NautilusTrader data type:
 
 ```python

@@ -11,6 +11,7 @@ Rust data and execution clients, typed REST and WebSocket models, and an in-tree
 signer for the venue's Schnorr / ECgFp5 signing flow.
 
 ## Overview
+At the pinned baseline (`9bafb63e7d`): market IDs are 64-bit (IDs at and above 4095 are supported), `use_gtd` selects GTD time-in-force for the execution client, and `book_snapshot_timeout_secs` overrides snapshot timing with `0` disabling the timeout.
 
 The adapter consists of the following main components:
 

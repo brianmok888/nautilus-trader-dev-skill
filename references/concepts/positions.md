@@ -245,6 +245,24 @@ BUY 50 units at $52    # Position closes, PnL = $100
 Without snapshotting, only the most recent cycle's PnL would be available, leading to
 incorrect reporting and analysis.
 
+### Reversal fills split into closing and opening portions
+
+A fill that flips the position's side (a reversal fill) is split into a closing portion and an
+opening portion. Only the closing portion realizes PnL against the previous entry price; the
+opening residual starts a new accounting episode on the same position object:
+
+- `avg_px_open` becomes the reversal fill price and `avg_px_close` resets until a subsequent
+  closing fill.
+- `buy_qty` and `sell_qty` restart with only the opening residual on the new entry side.
+- `realized_pnl` and commission totals stay cumulative across the reversal, with the fill's
+  commission counted once.
+
+A reversal differs from a same-ID reopen after `FLAT`: the reopen archives a snapshot and fully
+resets the cycle (including realized PnL and commissions), while the in-place reversal keeps
+cumulative totals and does not clear fill history or opening timestamps. Quantity adjustments
+that change the position's side do not perform the reversal episode reset. The netting reopen
+cost basis is computed from the archived cycle state, independent of event replay history.
+
 ## PnL calculations
 
 NautilusTrader provides PnL calculations that account for instrument
