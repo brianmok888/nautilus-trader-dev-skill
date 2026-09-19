@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-007",
+  "finding_id": "NT-2026-09-19-007",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest tests/test_v2_guidance_hardening.py -q",
+  "exit_code": 0,
+  "output_sha256": "dec28853d6884bf5b2a87c0e6d772fceb88acc23cce0c86845e9359b119927b9",
+  "output_excerpt": "..........                                                               [100%]\n10 passed in 0.04s",
+  "redactions": [],
+  "recorded_at": "2026-09-19T16:21:43Z"
+}

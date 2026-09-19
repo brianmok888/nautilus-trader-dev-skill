@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-003",
+  "finding_id": "NT-2026-09-19-003",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest tests/test_dev_guide_sync.py -q",
+  "exit_code": 0,
+  "output_sha256": "7504eb58a32d2a038adf2e5a805814360018ca42ad7bb98376ddaf6bfdfbcdac",
+  "output_excerpt": "........................................................................ [ 67%]\n...................................                                      [100%]\n107 passed in 1.43s",
+  "redactions": [],
+  "recorded_at": "2026-09-19T16:21:40Z"
+}

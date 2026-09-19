@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-001",
+  "finding_id": "NT-2026-09-19-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_upstream_freshness.py --format json > /tmp/r1.json && python3 tools/check_skill_g2_harnesses.py --check-cards > /dev/null && echo FRESHNESS_AND_CARDS_OK",
+  "exit_code": 0,
+  "output_sha256": "681220dafc649e90793cb42aadd45c0600d562326d66612435893b1313281b2b",
+  "output_excerpt": "FRESHNESS_AND_CARDS_OK",
+  "redactions": [],
+  "recorded_at": "2026-09-19T17:07:46Z"
+}

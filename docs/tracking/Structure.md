@@ -42,7 +42,7 @@ Review date: 2026-09-04
 
 1. `tools/upstream_baseline.py` defines the reproducible pin.
 2. `references/upstream-delta-review.json` records reviewed post-pin changes.
-3. `references/developer_guide/contracts/` holds canonical local contracts; the adapter snapshot carries field-contract precision rules and the Rust skills carry LiveNode reconciliation/lifecycle acceptance criteria.
+3. `references/developer_guide/contracts/` holds canonical local contracts; the adapter snapshot carries field-contract precision rules, the pinned `references/developer_guide/callback_dispatch.md` snapshot defines callback ordering/reentrancy and drain-boundary requirements, and the Rust skills carry LiveNode reconciliation/lifecycle acceptance criteria.
 4. `references/g2-evidence/` records per-skill executable evidence and owned-content hashes.
 5. `references/api_reference/` (45 pages incl. `model/` and `adapters/`) mirrors the pinned upstream `docs/api_reference/` v2 surfaces: flat `nautilus_trader.<pkg>` automodules with per-page owning-crate pointers, last fully regenerated against pin `4692bac` (NT-2026-09-04-119/128/131); drift against the `ac22d5cf` pin is tracked by the 2026-09-05 audit. Legacy v1 snapshots survive only in sanctioned migration zones.
 6. `docs/tracking/` records current invariants, structure, components, and findings.

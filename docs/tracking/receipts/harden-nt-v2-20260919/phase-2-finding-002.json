@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-002",
+  "finding_id": "NT-2026-09-19-002",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_dev_guide_sync.py",
+  "exit_code": 0,
+  "output_sha256": "f27cf1a4c7d144b14873d2e4719d13a5afabe838585465f6f4a9600d49613518",
+  "output_excerpt": "Developer guide snapshot bodies match pinned upstream.\nDeveloper guide sync checks passed.",
+  "redactions": [],
+  "recorded_at": "2026-09-19T16:21:38Z"
+}

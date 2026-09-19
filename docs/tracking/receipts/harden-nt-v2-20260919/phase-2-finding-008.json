@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-008",
+  "finding_id": "NT-2026-09-19-008",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "grep -c 'base_url_http' references/integrations/hyperliquid.md && grep -c 'tardis_http_url' references/integrations/tardis.md",
+  "exit_code": 0,
+  "output_sha256": "56d4275def58246bd5d0cc057d91b21648992ecee6fc1947058fba34683a7c3b",
+  "output_excerpt": "2\n1",
+  "redactions": [],
+  "recorded_at": "2026-09-19T16:21:43Z"
+}

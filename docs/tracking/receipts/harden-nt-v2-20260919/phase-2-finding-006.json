@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "harden-nt-v2-20260919",
+  "receipt": "phase-2-finding-006",
+  "finding_id": "NT-2026-09-19-006",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_rust_trading_reference_sync.py",
+  "exit_code": 0,
+  "output_sha256": "1d7b7d5619e9fed80e975f00adc431cdb54b124ba290cb2723ed8ff885b593be",
+  "output_excerpt": "Rust trading references match pinned upstream examples.",
+  "redactions": [],
+  "recorded_at": "2026-09-19T16:21:42Z"
+}
