@@ -122,7 +122,7 @@ The following market data types can be requested historically, and also subscrib
 
 - `OrderBookDelta` (L1/L2/L3)
 - `OrderBookDeltas` (container type)
-- `OrderBookDepth10` (fixed depth of 10 levels per side)
+- `OrderBookDepth` (fixed depth of 10 levels per side)
 - `QuoteTick`
 - `TradeTick`
 - `Bar`

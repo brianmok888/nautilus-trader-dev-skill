@@ -192,7 +192,7 @@ Mainnet onboarding mirrors testnet against the production dashboard. Use real fu
 | Request all instruments (REST) | ✓         | `public/get_instruments`; fetches each currency in `currencies`.        |
 | Instrument subscription        | -         | *Not supported.* Use the configured REST refresh interval.              |
 | Order book deltas (L2_MBP)     | ✓         | Channel: `orderbook.{instrument}.{group}.{depth}`.                      |
-| Order book depth10 (L2_MBP)    | ✓         | Same order book channel with `depth=10`.                                |
+| Order book depth (L2_MBP)      | ✓         | Same order book channel with `depth=10`.                                |
 | Order book at interval         | -         | *Not supported.* Maintain interval books from deltas locally.           |
 | Order book snapshot (REST)     | -         | *Not supported.* Not exposed by the adapter.                            |
 | Historical book deltas (REST)  | -         | *Not supported.* Not exposed by the adapter.                            |
@@ -216,10 +216,10 @@ Mainnet onboarding mirrors testnet against the production dashboard. Use real fu
 caches the returned definition before emitting the response. The cached instrument carries
 the precision and increment fields used by later quote, trade, book, and bar parsing.
 
-Derive exposes book deltas and depth10 snapshots through the same
+Derive exposes book deltas and depth snapshots through the same
 `orderbook.{instrument}.{group}.{depth}` channel family. `subscribe_book_deltas` publishes
-snapshot deltas as `OrderBookDeltas`, while `subscribe_book_depth10` fixes `depth=10` and
-publishes `OrderBookDepth10` snapshots.
+snapshot deltas as `OrderBookDeltas`, while `subscribe_book_depth` fixes `depth=10` and
+publishes `OrderBookDepth` snapshots.
 
 ### Execution
 
@@ -350,7 +350,7 @@ unplaced order hanging in `Submitted` forever because no WebSocket frame will ar
 
 ## Subscription parameters
 
-`subscribe_book_deltas` and `subscribe_book_depth10` accept these `subscribe_params` keys:
+`subscribe_book_deltas` and `subscribe_book_depth` accept these `subscribe_params` keys:
 
 | Key      | Type   | Default | Allowed              |
 |----------|--------|---------|----------------------|

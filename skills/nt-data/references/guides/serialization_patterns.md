@@ -45,7 +45,7 @@ include the following fields:
 | Type | Key Fields |
 |------|-----------|
 | `OrderBookDelta` | action, side, price, size, order_id, flags, sequence, ts_event, ts_init |
-| `OrderBookDepth10` | bid/ask prices, sizes and counts for levels 0..9, flags, sequence, ts_event, ts_init |
+| `OrderBookDepth` | bid/ask prices, sizes and counts for levels 0..9, flags, sequence, ts_event, ts_init |
 | `QuoteTick` | bid_price, ask_price, bid_size, ask_size, ts_event, ts_init |
 | `TradeTick` | price, size, aggressor_side, trade_id, ts_event, ts_init |
 | `Bar` | open, high, low, close, volume, ts_event, ts_init |
@@ -68,7 +68,7 @@ The flat `nautilus_trader.serialization` module exports these Arrow IPC writers:
 |----------|-----------|
 | `bars_to_arrow_record_batch_bytes()` | `Bar` |
 | `book_deltas_to_arrow_record_batch_bytes()` | `OrderBookDelta` |
-| `book_depth10_to_arrow_record_batch_bytes()` | `OrderBookDepth10` |
+| `book_depths_to_arrow_record_batch_bytes()` | `OrderBookDepth` |
 | `index_prices_to_arrow_record_batch_bytes()` | `IndexPriceUpdate` |
 | `instrument_closes_to_arrow_record_batch_bytes()` | `InstrumentClose` |
 | `instrument_status_to_arrow_record_batch_bytes()` | `InstrumentStatus` |
@@ -124,7 +124,7 @@ an instrument ID.
 | Wrangler | Output Type | Constructor Args |
 |----------|-------------|------------------|
 | `OrderBookDeltaDataWrangler` | `list[OrderBookDelta]` | instrument_id, price_precision, size_precision |
-| `OrderBookDepth10DataWrangler` | `list[OrderBookDepth10]` | instrument_id, price_precision, size_precision |
+| `OrderBookDepthDataWrangler` | `list[OrderBookDepth]` | instrument_id, price_precision, size_precision |
 | `QuoteTickDataWrangler` | `list[QuoteTick]` | instrument_id, price_precision, size_precision |
 | `TradeTickDataWrangler` | `list[TradeTick]` | instrument_id, price_precision, size_precision |
 | `BarDataWrangler` | `list[Bar]` | bar_type, price_precision, size_precision |

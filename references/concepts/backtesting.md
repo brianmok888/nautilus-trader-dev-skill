@@ -356,7 +356,7 @@ the data engine regardless of `book_type`.
 | `Bar`              | Updates book      | *Ignored*         | *Ignored*         |
 | `OrderBookDelta`   | *Ignored*         | Updates book      | Updates book      |
 | `OrderBookDeltas`  | *Ignored*         | Updates book      | Updates book      |
-| `OrderBookDepth10` | Updates book      | Updates book      | Updates book      |
+| `OrderBookDepth` | Updates book      | Updates book      | Updates book      |
 
 :::note
 The granularity of the data must match the specified order `book_type`. Nautilus

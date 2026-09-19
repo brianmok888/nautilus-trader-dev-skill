@@ -306,7 +306,7 @@ Key requirements:
 | `on_trade` | `TradeTick` |
 | `on_bar` | `Bar` |
 | `on_book_deltas` | `OrderBookDeltas` |
-| `on_book_depth` | `OrderBookDepth10` |
+| `on_book_depth` | `OrderBookDepth` |
 | `on_book` | `OrderBook` (at interval) |
 | `on_instrument` | `InstrumentAny` |
 | `on_mark_price` | `MarkPriceUpdate` |
@@ -324,7 +324,7 @@ Key requirements:
 | `on_pool_flash` | `PoolFlash` (DeFi) |
 | `on_historical_data` | `CustomData` (scalar or batch list) |
 | `on_historical_book_deltas` | `[OrderBookDelta]` batch |
-| `on_historical_book_depth` | `[OrderBookDepth10]` batch |
+| `on_historical_book_depth` | `[OrderBookDepth]` batch |
 | `on_historical_quotes` | `[QuoteTick]` batch |
 | `on_historical_trades` | `[TradeTick]` batch |
 | `on_historical_bars` | `[Bar]` batch |

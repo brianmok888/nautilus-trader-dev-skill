@@ -473,7 +473,7 @@ The adapter supports the following data subscriptions. All perpetual data types
 | Trade ticks       | ✓    | -        | -     | `TradeTick`          | WebSocket trades.            |
 | Quote ticks       | ✓    | -        | -     | `QuoteTick`          | Best bid/offer.              |
 | Order book deltas | ✓    | ✓        | -     | `OrderBookDelta`     | L2 snapshots.                |
-| Order book depth  | ✓    | -        | -     | `OrderBookDepth10`   | Top-10 L2 snapshots.         |
+| Order book depth  | ✓    | -        | -     | `OrderBookDepth`   | Top-10 L2 snapshots.         |
 | Bars              | ✓    | -        | ✓     | `Bar`                | Supported intervals below.   |
 | Mark prices       | ✓    | -        | -     | `MarkPriceUpdate`    | Perpetual mark price ticks.  |
 | Index prices      | ✓    | -        | -     | `IndexPriceUpdate`   | Underlying reference prices. |

@@ -294,7 +294,7 @@ Handlers have default no-op implementations. Override only what the component ne
 | `on_instrument_status` | `InstrumentStatus` |
 | `on_data` | `CustomData` |
 | `on_signal` | `Signal` |
-| `on_book_depth` | `OrderBookDepth10` |
+| `on_book_depth` | `OrderBookDepth` |
 | `on_time_event` | `TimeEvent` |
 | `on_save` / `on_load` / `on_reset` | component state lifecycle |
 

@@ -7,7 +7,7 @@ These data types include:
 
 - `OrderBookDelta` (L1/L2/L3): Represents the most granular order book updates.
 - `OrderBookDeltas` (L1/L2/L3): Batches multiple order book deltas for more efficient processing.
-- `OrderBookDepth10`: Aggregated order book snapshot (up to 10 levels per bid and ask side).
+- `OrderBookDepth`: Aggregated order book snapshot (up to 10 levels per bid and ask side).
 - `QuoteTick`: Represents the best bid and ask prices along with their sizes at the top-of-book.
 - `TradeTick`: A single trade/match event between counterparties.
 - `Bar`: OHLCV (Open, High, Low, Close, Volume) bar/candle, aggregated using a specified *aggregation method*.
@@ -574,7 +574,7 @@ Data wranglers are implemented per specific Nautilus data type, and can be found
 Currently there exists:
 
 - `OrderBookDeltaDataWrangler`
-- `OrderBookDepth10DataWrangler`
+- `OrderBookDepthDataWrangler`
 - `QuoteTickDataWrangler`
 - `TradeTickDataWrangler`
 - `BarDataWrangler`
@@ -878,7 +878,7 @@ The following data types use optimized Rust implementations:
 
 - `OrderBookDelta`.
 - `OrderBookDeltas`.
-- `OrderBookDepth10`.
+- `OrderBookDepth`.
 - `QuoteTick`.
 - `TradeTick`.
 - `Bar`.
@@ -1188,7 +1188,7 @@ The catalog's query system uses a dual-backend architecture that selects the que
 
 **Rust backend (high performance):**
 
-- **Supported Types**: OrderBookDelta, OrderBookDeltas, OrderBookDepth10, QuoteTick, TradeTick, Bar, MarkPriceUpdate.
+- **Supported Types**: OrderBookDelta, OrderBookDeltas, OrderBookDepth, QuoteTick, TradeTick, Bar, MarkPriceUpdate.
 - **Conditions**: Used when `files` parameter is None (automatic file discovery).
 - **Benefits**: Optimized performance, memory efficiency, native Arrow integration.
 

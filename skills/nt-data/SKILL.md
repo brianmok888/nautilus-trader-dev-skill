@@ -167,7 +167,7 @@ round-trip payloads, metadata, `ts_event`, and `ts_init`.
 - Construct with `(instrument_id, price_precision, size_precision)`; precisions
   are required (no inference)
 - Use `BarDataWrangler`, `QuoteTickDataWrangler`, `TradeTickDataWrangler`,
-  `OrderBookDeltaDataWrangler`, `OrderBookDepth10DataWrangler` (flat exports of
+  `OrderBookDeltaDataWrangler`, `OrderBookDepthDataWrangler` (flat exports of
   `nautilus_trader.persistence`)
 - The legacy DataFrame-based `process(pd.DataFrame)` framing is documented in the
   serialization patterns guide (`serialization_patterns.md` in this skill's guides tree)

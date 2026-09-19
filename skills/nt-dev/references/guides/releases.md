@@ -183,7 +183,7 @@ New features and user-visible improvements.
 ```markdown
 - Added `subscribe_order_fills(...)` and `unsubscribe_order_fills(...)` for `Actor`
 - Added BitMEX conditional orders support
-- Added support for `OrderBookDepth10` requests (#2955), thanks @faysou
+- Added support for `OrderBookDepth` requests (#2955), thanks @faysou
 ```
 
 **Guidelines**:

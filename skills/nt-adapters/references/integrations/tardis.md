@@ -45,7 +45,7 @@ The following normalized Tardis formats are supported by NautilusTrader:
 | Tardis format                                                                                                               | Nautilus data type                                                   |
 |:----------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------|
 | [book_change](https://docs.tardis.dev/api/tardis-machine#book_change)                                                       | `OrderBookDelta`                                                     |
-| [book_snapshot_*](https://docs.tardis.dev/api/tardis-machine#book_snapshot_-number_of_levels-_-snapshot_interval-time_unit) | `OrderBookDepth10` or `OrderBookDeltas` (see [book snapshot output](#book-snapshot-output)) |
+| [book_snapshot_*](https://docs.tardis.dev/api/tardis-machine#book_snapshot_-number_of_levels-_-snapshot_interval-time_unit) | `OrderBookDepth` or `OrderBookDeltas` (see [book snapshot output](#book-snapshot-output)) |
 | [quote](https://docs.tardis.dev/api/tardis-machine#book_snapshot_-number_of_levels-_-snapshot_interval-time_unit)           | `QuoteTick`                                                          |
 | [quote_10s](https://docs.tardis.dev/api/tardis-machine#book_snapshot_-number_of_levels-_-snapshot_interval-time_unit)       | `QuoteTick`                                                          |
 | [trade](https://docs.tardis.dev/api/tardis-machine#trade)                                                                   | `Trade`                                                              |
@@ -218,7 +218,7 @@ Next, ensure you have a configuration JSON file available.
 | `tardis_ws_url`        | string (optional) | The Tardis Machine WebSocket URL.                                                   | Uses `TARDIS_MACHINE_WS_URL` when `null`.                      |
 | `normalize_symbols`    | bool (optional)   | If Nautilus [symbol normalization](#symbology-and-normalization) should be applied. | Defaults to `true` when `null`.                                |
 | `output_path`          | string (optional) | The output directory path to write Nautilus Parquet data to.                        | Uses `NAUTILUS_PATH` when set, otherwise current working dir.   |
-| `book_snapshot_output` | string (optional) | Output format for `book_snapshot_*` data: `"deltas"` or `"depth10"`.                | Defaults to `"deltas"` when `null`.                            |
+| `book_snapshot_output` | string (optional) | Output format for `book_snapshot_*` data: `"deltas"` or `"depth"`.                | Defaults to `"deltas"` when `null`.                            |
 | `compression`          | string (optional) | Compression for written data files: `"zstd"`, `"snappy"`, or `"uncompressed"`.      | Defaults to `"zstd"` level 3 when `null`.                      |
 | `proxy_url`            | string (optional) | Optional proxy URL for the Tardis HTTP API client.                                  | No proxy when `null`.                                          |
 | `options`              | JSON[]            | Replay normalized request option objects.                                           | Required.                                                      |
@@ -253,23 +253,23 @@ The `book_snapshot_output` configuration option controls how Tardis `book_snapsh
 | Value     | Nautilus Type       | Output Directory      | Description                                                 |
 |:----------|:--------------------|:----------------------|:------------------------------------------------------------|
 | `deltas`  | `OrderBookDeltas`   | `order_book_deltas/`  | Individual price level updates with snapshot flag set (default) |
-| `depth10` | `OrderBookDepth10`  | `order_book_depths/`  | Periodic depth snapshots with up to 10 price levels        |
+| `depth` | `OrderBookDepth`  | `order_book_depths/`  | Periodic depth snapshots with up to 10 price levels        |
 
 **When to use each format:**
 
 - **`deltas` (default)**: Best when you need to reconstruct the full order book state or when working with `book_change` data. Each price level becomes a separate delta record.
-- **`depth10`**: Best for strategies that need periodic order book snapshots. More memory-efficient as each snapshot is a single record containing all levels. Snapshots with more than 10 levels will have only the first 10 preserved.
+- **`depth`**: Best for strategies that need periodic order book snapshots. More memory-efficient as each snapshot is a single record containing all levels. Snapshots preserve all levels the source provides (25 for `snapshot25`).
 
 **Avoiding file overwrites:**
 
-When downloading both `book_snapshot_*` and `book_change` data for the same instrument and date range, using `depth10` format ensures they are written to separate directories (`order_book_depths/` vs `order_book_deltas/`), preventing file overwrites.
+When downloading both `book_snapshot_*` and `book_change` data for the same instrument and date range, using `depth` format ensures they are written to separate directories (`order_book_depths/` vs `order_book_deltas/`), preventing file overwrites.
 
 Example configuration with explicit format:
 
 ```json
 {
   "tardis_ws_url": "ws://localhost:8001",
-  "book_snapshot_output": "depth10",
+  "book_snapshot_output": "depth",
   "options": [
     {
       "exchange": "binance-futures",
@@ -349,7 +349,7 @@ Loading mixed-instrument CSV files is challenging due to precision requirements 
 
 You can load Tardis-format CSV data in Python using the flat loader functions
 (`load_tardis_trades`, `load_tardis_quotes`, `load_tardis_deltas`,
-`load_tardis_depth10_from_snapshot25` / `load_tardis_depth10_from_snapshot5`,
+`load_tardis_depth_from_snapshot25` / `load_tardis_depth_from_snapshot5`,
 `load_tardis_funding_rates`, `load_tardis_options_chain`).
 When loading data, you can optionally specify the instrument ID but must specify
 both the price precision and size precision. Providing the instrument ID
@@ -428,7 +428,7 @@ The streaming functionality is available for all supported Tardis data types:
 - Order book deltas (`stream_deltas`).
 - Quote ticks (`stream_quotes`).
 - Trade ticks (`stream_trades`).
-- Order book depth snapshots (`stream_depth10`).
+- Order book depth snapshots (`stream_tardis_depth_from_snapshot5`/`25`).
 
 ### Streaming CSV Data in Python
 
@@ -672,7 +672,7 @@ The `TardisDataClient` enables integration of a Tardis Machine with a running Na
 It supports subscriptions to the following data types:
 
 - `OrderBookDelta` (L2 granularity from Tardis, includes all changes or full-depth snapshots)
-- `OrderBookDepth10` (L2 granularity from Tardis, provides snapshots up to 10 levels)
+- `OrderBookDepth` (L2 granularity from Tardis, provides snapshots up to 10 levels)
 - `QuoteTick`
 - `TradeTick`
 - `Bar` (trade bars with [Tardis-supported bar aggregations](#bars))

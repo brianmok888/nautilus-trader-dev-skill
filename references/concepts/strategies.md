@@ -118,12 +118,12 @@ from nautilus_trader.model import OptionGreeks
 from nautilus_trader.model import OrderBook
 from nautilus_trader.model import OrderBookDelta
 from nautilus_trader.model import OrderBookDeltas
-from nautilus_trader.model import OrderBookDepth10
+from nautilus_trader.model import OrderBookDepth
 from nautilus_trader.model import QuoteTick
 from nautilus_trader.model import TradeTick
 
 def on_book_deltas(self, deltas: OrderBookDeltas) -> None:
-def on_book_depth(self, depth: OrderBookDepth10) -> None:
+def on_book_depth(self, depth: OrderBookDepth) -> None:
 def on_book(self, order_book: OrderBook) -> None:
 def on_quote(self, tick: QuoteTick) -> None:
 def on_trade(self, tick: TradeTick) -> None:

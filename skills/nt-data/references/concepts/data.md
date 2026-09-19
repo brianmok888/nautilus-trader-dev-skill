@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
-NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth10.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
 
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
@@ -10,7 +10,7 @@ These data types include:
 
 - `OrderBookDelta` (L1/L2/L3): Represents the most granular order book updates.
 - `OrderBookDeltas` (L1/L2/L3): Batches multiple order book deltas for more efficient processing.
-- `OrderBookDepth10`: Aggregated order book snapshot (up to 10 levels per bid and ask side).
+- `OrderBookDepth`: Aggregated order book snapshot (up to 10 levels per bid and ask side).
 - `QuoteTick`: Represents the best bid and ask prices along with their sizes at the top-of-book.
 - `TradeTick`: A single trade/match event between counterparties.
 - `Bar`: OHLCV (Open, High, Low, Close, Volume) bar/candle, aggregated using a specified *aggregation method*.
@@ -581,7 +581,7 @@ Data wranglers are implemented per specific Nautilus data type, and are exported
 Currently there exists:
 
 - `OrderBookDeltaDataWrangler`
-- `OrderBookDepth10DataWrangler`
+- `OrderBookDepthDataWrangler`
 - `QuoteTickDataWrangler`
 - `TradeTickDataWrangler`
 - `BarDataWrangler`
@@ -845,7 +845,7 @@ The following data types use optimized Rust implementations:
 
 - `OrderBookDelta`.
 - `OrderBookDeltas`.
-- `OrderBookDepth10`.
+- `OrderBookDepth`.
 - `QuoteTick`.
 - `TradeTick`.
 - `Bar`.
@@ -887,7 +887,7 @@ The `BacktestDataConfig` class is the primary mechanism for specifying data requ
 **Required parameters:**
 
 - `catalog_path`: Path to the data catalog directory.
-- `data_type`: The data type name as a string (e.g., `"QuoteTick"`, `"TradeTick"`, `"OrderBookDelta"`, `"Bar"`). One of `QuoteTick`, `TradeTick`, `Bar`, `OrderBookDelta`, `OrderBookDepth10`, `MarkPriceUpdate`, `IndexPriceUpdate`, `FundingRateUpdate`, `InstrumentStatus`, `OptionGreeks`, or `InstrumentClose`.
+- `data_type`: The data type name as a string (e.g., `"QuoteTick"`, `"TradeTick"`, `"OrderBookDelta"`, `"Bar"`). One of `QuoteTick`, `TradeTick`, `Bar`, `OrderBookDelta`, `OrderBookDepth`, `MarkPriceUpdate`, `IndexPriceUpdate`, `FundingRateUpdate`, `InstrumentStatus`, `OptionGreeks`, or `InstrumentClose`.
 
 **Optional parameters:**
 
@@ -1155,7 +1155,7 @@ The catalog's query system uses a dual-backend architecture that selects the que
 
 **Rust backend (high performance):**
 
-- **Supported Types**: OrderBookDelta, OrderBookDeltas, OrderBookDepth10, QuoteTick, TradeTick, Bar, MarkPriceUpdate.
+- **Supported Types**: OrderBookDelta, OrderBookDeltas, OrderBookDepth, QuoteTick, TradeTick, Bar, MarkPriceUpdate.
 - **Conditions**: Used when `files` parameter is None (automatic file discovery).
 - **Benefits**: Optimized performance, memory efficiency, native Arrow integration.
 
