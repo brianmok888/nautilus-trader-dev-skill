@@ -17,7 +17,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -74,7 +74,7 @@ Quarantined Python examples and prior Python adapter guidance live under `migrat
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 
 ## What This Skill Covers
 
@@ -539,7 +539,7 @@ account channels on a timer, and cancel the refresh loop with `CancellationToken
 ### Task Management
 
 Classify every production task by its owner before choosing storage and
-shutdown (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`, `docs/developer_guide/adapters.md` "Task
+shutdown (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, `docs/developer_guide/adapters.md` "Task
 management"; `crates/live/src/task.rs`):
 
 | Ownership | Use | Required behavior |
@@ -652,6 +652,6 @@ Rust adapter code must include:
 - `references/examples/` — Per-adapter runnable examples
 - `references/integrations/` — Per-adapter integration docs
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

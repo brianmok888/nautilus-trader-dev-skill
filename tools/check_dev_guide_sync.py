@@ -31,6 +31,7 @@ else:  # Direct script execution adds tools/ to sys.path.
 CURRENT_DEV_GUIDE_FILES = [
     "adapters.md",
     "benchmarking.md",
+    "callback_dispatch.md",
     "coding_standards.md",
     "design_principles.md",
     "docs.md",
@@ -40,7 +41,9 @@ CURRENT_DEV_GUIDE_FILES = [
     "markdown_style.md",
     "plugins.md",
     "python.md",
+    "python_adapters.md",
     "releases.md",
+    "runtime_conformance.md",
     "rust.md",
     "security.md",
     "shell.md",
@@ -63,7 +66,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-09-09"
+CURRENT_SYNC_DATE = "2026-09-19"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.231.0"
 CURRENT_RELEASE_DATE = "2026-08-02"

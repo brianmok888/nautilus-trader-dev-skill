@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/adapters/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/adapters.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Adapters
 
 ## Introduction
@@ -18,9 +19,8 @@ client traits in Rust, then expose configs, factories, and selected low-level AP
 through PyO3.
 
 :::note
-The public Python API does not yet define an interface for implementing an out-of-tree
-adapter entirely in Python. An out-of-tree Python adapter surface is planned. This guide
-covers in-tree Rust adapters.
+For out-of-tree adapters implemented in Python or an independent Rust/PyO3 package, use the
+[Python adapter interface](python_adapters.md). This guide covers in-tree Rust adapters.
 :::
 
 Use reference adapters selectively. Their layouts reflect different venue protocols, product
@@ -68,6 +68,7 @@ work that proves conformance.
 | [Data events and request freshness](#data-client)     | Data clients               |
 | [Backpressure](#backpressure)                         | Every adapter              |
 | [Task management](#task-management)                   | Every adapter              |
+| [Deterministic simulation](#deterministic-simulation) | Maintained adapters        |
 
 ### Execution and reconciliation
 
@@ -111,8 +112,12 @@ comparable across venues, so a local structure has to prove the same contract on
 Two execution clients implement the same trait without trading through a venue API, so the baseline
 does not apply to them: [sandbox](../../crates/adapters/sandbox/src/execution.rs) simulates fills
 locally, and [blockchain](../../crates/adapters/blockchain/src/execution/client.rs) executes
-on-chain behind the `defi` feature. Deterministic simulation eligibility also sits outside the
-baseline, as an optional capability proven per adapter rather than a requirement.
+on-chain behind the `defi` feature. Deterministic simulation is a maintained-adapter requirement
+rather than an optional capability: every maintained adapter must satisfy the
+[adapter DST contract](../concepts/dst.md#adapter-dst-contract) or carry a venue-scoped migration
+record tracking the gap. OKX is the reference implementation;
+[deterministic simulation](#deterministic-simulation) defines the seams, gates, and the bar for new
+adapters.
 
 | Target                     | Shared piece                                                                                           | Contract                                                                      |
 | -------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
@@ -128,6 +133,8 @@ baseline, as an optional capability proven per adapter rather than a requirement
 | Reconnect requests         | [`request_reconnect`](../../crates/network/src/websocket/client.rs)                                    | [Reconnection and shutdown](#reconnection-and-shutdown)                       |
 | Retry machinery            | [`RetryManager`](../../crates/network/src/retry.rs)                                                    | [Error handling and retry logic](#error-handling-and-retry-logic)             |
 | Inferred fill commission   | [`ExecutionClient`](../../crates/common/src/clients/execution.rs)                                      | [Commission failure handling](#commission-failure-handling)                   |
+| Time, tasks, and runtime   | [`nautilus_common::live::dst`](../../crates/common/src/live/dst.rs)                                    | [Deterministic simulation](#deterministic-simulation)                         |
+| Wall-clock reads           | [`duration_since_unix_epoch`](../../crates/core/src/time.rs)                                           | [Deterministic simulation](#deterministic-simulation)                         |
 
 Where a venue transmits a discrete value as an IEEE-754 field rather than a decimal string or JSON
 number, contain that at the parsing boundary as a documented exception instead of letting `f64`
@@ -136,6 +143,36 @@ spread inward from it.
 Retry classification is the exception to this table: it stays adapter-owned because venue status
 codes and rate-limit semantics differ. The shared machinery around it is not. See
 [error handling and retry logic](#error-handling-and-retry-logic) for both halves.
+
+### Deterministic simulation
+
+Every maintained adapter, an Official-tier adapter per
+[ADAPTERS.md](../../ADAPTERS.md#adapter-tiers), must satisfy the
+[adapter DST contract](../concepts/dst.md#adapter-dst-contract). An adapter that does not yet
+conform carries a venue-scoped migration record tracking the gap. Unclaimed capabilities stay
+outside the contract until a slice proves them.
+
+OKX is the reference implementation. It proves the contract through shared seams, static gates, and
+behavioral gates:
+
+- **Seams:** the `nautilus_common::live::dst` facade for time, tasks, runtime, and signals; the
+  `nautilus_core::time` wall-clock seam; the simulated HTTP and WebSocket transport in
+  `nautilus-network`; and the shared subscription, reconnect, and retry machinery in the baseline
+  table above.
+- **Static gates:** `check-dst-conventions` covers every DST-path production file (`ADAPTER_PATHS`
+  in `.pre-commit-hooks/check_dst_conventions.sh`), and the nightly `dst-smoke` gate runs the
+  simulation Clippy and test legs.
+- **Behavioral gates:** `crates/adapters/okx/tests/integration/dst.rs` pins exact subscribe bytes
+  and exact per-operation wire fields against controlled local peers; complete wire-to-domain
+  fresh-process comparison lives in the downstream harness.
+
+The [OKX integration guide's DST section](../integrations/okx.md#deterministic-simulation-testing)
+records the audited slice.
+
+A new adapter proves the contract from its first transport: gate DST-path files as they are added,
+drive every endpoint from configuration to a local peer, and pin wire bytes before expanding the
+slice. Do not introduce a shared abstraction until a second adapter proves the same boundary is
+needed.
 
 ## Structure of an adapter
 
@@ -403,6 +440,23 @@ Centralize default HTTP and WebSocket endpoint resolution so one environment sel
 live and test endpoints. Keep explicit URL overrides only where custom gateways, mock servers, or
 venue deployments require them. Test every supported environment and any precedence between an
 environment choice and an explicit override.
+
+Lay out config fields in this order:
+
+| Order | Field group                                | Placement rule                                                         |
+| ----- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| 1     | Account identity, credentials, environment | Venue equivalents count: `network`, `deployment`, `region`.            |
+| 2     | URL overrides                              | One contiguous block: `base_url_http` first, then each `base_url_ws*`. |
+| 3     | `proxy_url`                                | Immediately after the URL block.                                       |
+| 4     | Everything else                            | Timeouts, retries, venue-specific behavior.                            |
+
+Resolve each `None` override to the environment default in a config helper method, and pass the
+resolved URL to the client constructor; constructors never read the `Option` fields directly.
+Keep the same relative order across the struct fields, `bon::Builder` accessors, pyo3 getter lists,
+and Python `__init__` signatures. Published Python signatures keep their positional order: new
+parameters are appended, and existing ones are not reordered, so a signature may lag the struct
+order. An intentional reorder of a published signature is a breaking change; note it under
+Breaking Changes in `RELEASES.md`.
 
 ### Credentials and secret handling
 
@@ -819,6 +873,65 @@ snapshot according to the venue contract. Map removal to `NotAvailableForTrading
 disappearance means the instrument is unavailable. Update the full private cache even when
 emissions are filtered to active subscriptions.
 
+### Order book recovery ownership
+
+[`nautilus_live::book`](../../crates/live/src/book/mod.rs) provides the recovery machinery shared by
+OKX and Lighter. Keep venue-specific book synchronization and recovery in each adapter's `src/book/`,
+with WebSocket handlers dispatching commands and frames.
+
+#### Recovery state and retry budgets
+
+Keep one `BookRecoveryState` per subscribed book under the adapter's existing state lock or owning
+task. It admits one recovery owner, rejects stale failure reports, cancels obsolete work, and
+suppresses output after terminal failure.
+
+`BookRecovery::run` owns replacement attempts, child cancellation tokens, snapshot waits, backoff,
+and the total retry budget. The adapter supplies its replacement operation and error classifier.
+Keep the same invocation alive across reconnects so reconnect cannot replenish the budget.
+
+#### Snapshot acceptance
+
+A confirmed write alone never establishes a usable book. Coordinate replacement and acceptance in
+this order:
+
+1. Close `SnapshotGate` before replacement.
+1. Open the gate after the intended connection confirms the subscription write.
+1. Accept the snapshot under the same ownership boundary that starts and fails recovery, then
+   replace all levels, including for an empty snapshot.
+
+`PendingSnapshot` cancels initial waits when the snapshot is accepted or the pending owner is removed.
+
+#### Venue rules and shared decisions
+
+The adapter owns sequencing, channel routing, wire commands, acknowledgement correlation, and
+snapshot parsing. The shared types describe the result of validation and monitoring:
+
+- `BookSequenceOutcome`: accept, suppress, or recover. Adapters retain their validation rules and
+  gap diagnostics.
+- `BookSyncSignalKind`: stale feeds and missing snapshots.
+
+Lighter retains its subscription generations and control-ack/typed-snapshot correlation. OKX retains
+its documented [acknowledgement-correlation limits](../integrations/okx.md#snapshot-correlation-limitation).
+
+#### Task lifetime and cancellation
+
+Run asynchronous work inside the client's task scope or handler-owned futures. The handler must
+continue draining commands and frames while writes wait, allowing unsubscribe, shutdown, and
+recovery deadlines to cancel obsolete operations.
+
+#### Naming and configuration
+
+Adapters implementing this machinery share names and tuning so operators move between venues
+without relearning behavior:
+
+- Keep book sync state in `src/book/sync.rs` behind `BookSyncTracker`.
+- Wait for snapshots with `book_snapshot_timeout_secs`, defaulting to the shared
+  `DEFAULT_BOOK_SNAPSHOT_TIMEOUT_SECS` (10 seconds) in `nautilus_live::book`; the value stays
+  tunable per deployment.
+- Honor a zero timeout as disabled deadlines on every wait path, including adapter-owned sends
+  and snapshot waits outside the shared runner: with no deadline, waits resolve only on
+  cancellation.
+
 ### Execution client
 
 Execution clients translate commands, preserve order identity, publish account state, and generate
@@ -871,6 +984,33 @@ client declares a history bound, as described in
 [bounded mass-status reports](#bounded-mass-status-reports), or when it does not use the realtime
 clock. Returning `Ok(None)` logs a warning and leaves that client unreconciled, while an error
 fails startup.
+
+##### Mass-status timestamp contract
+
+`ExecutionMassStatus.ts_init` marks the start of snapshot collection. For every producer,
+including reconnect snapshots and custom `generate_mass_status` implementations:
+
+- **Capture before collection:** Read the adapter's local clock before the first request,
+  cache read, or concurrent collection task.
+- **Use a consistent clock:** Use the same local clock as execution fill and fill-void
+  initialization timestamps. Never substitute a venue timestamp or zero.
+- **Preserve the boundary:** Keep that value through snapshot construction and publication.
+  Neither completion time nor individual report timestamps replace it.
+
+Runtime reconciliation skips an order snapshot when a cached fill or fill void has `ts_init`
+at or after this boundary. Companion trades still process normally.
+
+Incorrect timestamps change reconciliation behavior:
+
+- A **completion timestamp** can make an older snapshot appear newer than an overlapping fill,
+  causing the engine to void that fill incorrectly.
+- A **zero timestamp** can suppress legitimate snapshot corrections indefinitely.
+
+**Test custom producers:** Delay a report response and assert that the mass-status timestamp
+is captured before collection starts and remains unchanged when collection finishes.
+
+See [Snapshot freshness and fill corrections](../concepts/execution/reconciliation.md#snapshot-freshness-and-fill-corrections)
+for the startup distinction and limits when venue state is already stale.
 
 ##### Bulk report filters
 

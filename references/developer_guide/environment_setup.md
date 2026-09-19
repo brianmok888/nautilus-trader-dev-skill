@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/environment_setup/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/environment_setup.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Environment Setup
 
 Use an editor with current Rust and Python language support, such as PyCharm or Visual Studio Code.
@@ -317,6 +318,45 @@ To support a new uv minor series, change `required-version` in `python/pyproject
 exact project version within that range, update Nautilus Engineering's `[uv].version`, sync the
 shared catalog, then update the `rev` in `.pre-commit-config.yaml` and each digest-pinned uv Docker
 image. Run `make update-uv` to install the project version locally.
+
+### Rust dependency cooldown before compilation
+
+Repository builds must check every resolved registry dependency before Cargo can execute dependency
+build scripts or procedural macros. `make check-cargo-cooldown` checks all tracked `Cargo.lock`
+files against `[workspace.metadata.cooldown]` in `Cargo.toml`, including versions already committed
+or pulled from another branch. It does not need a Git comparison base or full checkout history.
+
+The Rust build, stub, check, Clippy, test, coverage, documentation, benchmark, and local CLI install
+targets require this check. Stub generation counts as compilation because it runs the Rust
+`python-stub-gen` binary through Cargo. Each compilation target waits for the gate, including under
+parallel Make. Compilation uses the checked lockfile without resolving replacements. Pre-flight
+also checks early, and CI common setup checks before repository compilation begins.
+
+A version inside the cooldown window requires both an exact entry in
+`[workspace.metadata.cooldown.allow]` and a matching cargo-vet audit. Unsupported registries fail
+the check. Publication dates come from the committed database at
+`.supply-chain/crate-dates.json`. Recorded dates are trusted offline; versions missing from the
+database are looked up on crates.io and fail closed when the registry is unreachable. The
+pre-commit hook checks all resolved versions using these recorded dates, including entries added
+since the comparison base. A clean Git diff does not establish that dependencies are old enough.
+
+`make cargo-update` records dates for every change it accepts. After a manual lockfile edit, run
+`bash scripts/check-cargo-cooldown.sh --update-db` to reconcile the database, which also prunes
+entries no tracked lock resolves. The dependency-update command separately re-verifies newly added
+dates against crates.io; routine pre-commit and full checks use the committed database offline.
+
+Successful full checks are cached as `.cargo-cooldown.json` in `CARGO_TARGET_DIR`, or the Make
+`TARGET_DIR` when no Cargo target directory is set. CI uses its configured Cargo target directory
+so persistent runners retain the cache between jobs. Changes to any checked lockfile,
+the policy, audits, database, or the check script invalidate the cache. Failed checks are not
+cached. Treat this file as local verification state; do not restore it from an untrusted source.
+
+This gate reduces exposure to newly published malicious registry releases. It does not establish
+that older releases are safe, sandbox build scripts, or vet Git and local path dependencies.
+Development-tool bootstrap commands such as `make install-tools` install external packages with
+separate dependency resolutions and are outside this repository-lockfile gate. Direct Cargo and
+Maturin invocations also bypass Make: run the full check first and pass `--locked` when building
+repository code. Keep manifests and lockfiles unchanged between the check and compilation.
 
 ## Builds
 

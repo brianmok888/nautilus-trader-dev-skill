@@ -34,7 +34,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -102,7 +102,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`.
 
 ## What This Skill Covers
 
@@ -157,11 +157,11 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.63"
-nautilus-live = "0.63"
-nautilus-model = "0.63"
-nautilus-okx = "0.63"          # or any venue adapter
-nautilus-trading = { version = "0.63", features = ["examples"] }
+nautilus-common = "0.64"
+nautilus-live = "0.64"
+nautilus-model = "0.64"
+nautilus-okx = "0.64"          # or any venue adapter
+nautilus-trading = { version = "0.64", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"

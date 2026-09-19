@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/docs/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/docs.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Docs Style
 
 This guide outlines the style conventions and best practices for writing documentation for NautilusTrader.
@@ -109,6 +110,10 @@ than line numbers, which become stale as code changes.
 
 Heading style, case, and hierarchy follow the [Markdown Style](markdown_style.md#headings) guide:
 title case for the page heading, sentence case below it.
+
+NautilusTrader makes one exception for `index.md` pages: headings and navigation links that name
+individual documents use the target document's exact H1 title, including its capitalization.
+General section headings retain sentence case.
 
 Always capitalize proper nouns regardless of heading level (product names, technologies,
 companies, acronyms).

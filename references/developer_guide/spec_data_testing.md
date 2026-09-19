@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_data_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_data_testing.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Data Testing Spec
 
 This section defines a rigorous test matrix for validating adapter data
@@ -98,6 +99,49 @@ quotes, trades, bars, book deltas, book depth, mark and index prices, funding ra
 instrument status and close, option greeks, and historical batches of those types.
 It does not check reconstructed books in `on_book`. Treat a warning as a failure for the
 case that produced the message.
+
+---
+
+## Live validation levels
+
+Unit and integration suites cannot reproduce venue timing, so changes to book
+sync and recovery machinery also need live validation against a real venue.
+Validation here means market-data-only observation: subscribe, request, and
+fault-inject, never place orders. A dark book is a subscribed book that never
+receives data. Match the level to the riskiest aspect of the change; higher
+levels include the bars of every level below.
+
+| Level              | Trigger                                                                                          | Method                                                           | Acceptance                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| L1 Conformance     | Any change to previously validated sync/recovery code                                            | Rerun the established oracle for the venue                       | PASS at the documented bar, zero dark books, zero unexplained errors                                            |
+| L2 Edge probe      | Boundary behavior changes (timeouts, disabled paths, exhaustion, terminal suppression)           | Targeted boundary scenarios, including each new tuning extreme   | Every scenario passes; disabled paths stay quiet; exhaustion suppresses and resubscribes cleanly                |
+| L3 Race probe      | Concurrency or ordering changes (gates, epochs, reconnect interplay), or any live-found race fix | Fault injection plus subscribe churn under an independent oracle | Dozens of forced recoveries complete with zero dark books; the reported race scenario passes with no recurrence |
+| L4 Full validation | New sync/recovery implementation                                                                 | L1-L3 plus a sustained churn and reconnect-fault soak            | All lower bars hold for the full soak; recovery latencies stay bounded                                          |
+
+Record the level, venue, oracle, and result with the change. A fix that live
+validation finds restarts at the level that found it: the rerun must clear the
+same bar, not a lighter one.
+
+### Forcing techniques
+
+Prefer distinct orderings over raw volume: a probe earns its place by forcing
+an ordering the suite cannot produce (reconnect mid-recovery, a snapshot racing
+gate-open, an unsubscribe racing an in-flight subscribe), not by message count.
+
+| Technique                                                                   | Stresses                                                             | Figures that proved effective                                                           | Caught in practice                                                        |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Subscribe churn (rotating unsubscribe/resubscribe with periodic full flaps) | Recovery initiation, gate/epoch rollover, in-flight cancel races     | 20 s ticks over a 10-15 min run; dozens of forced recoveries (40+) with zero dark books | Duplicate-subscribe flaw that could not recover (forced a design revisit) |
+| Traffic freeze (STOP the tunnel ~40 s)                                      | Dead-connection detection, reconnect replay, post-reconnect recovery | 2-3 freezes per run, spaced minutes apart                                               | Proves reconnect recovery under total packet loss; no defect caught yet   |
+| Proxy fault injection (drop/hold/cut frames by rule)                        | Gap handling, held-frame release, oracle conformance                 | Thousands of oracle batches per run (6k+), per-round gap counts                         | Timeout-scaled harness race (fixed observe window vs new default)         |
+| Tuning extremes (0 plus a short non-default value)                          | Disabled-deadline branches, param threading end to end               | One short run per extreme (4-5 min) with churn active                                   | Confirmed the review-found zero-timeout fix live; proves threading        |
+| Client-issued reconnect (public reconnect command, then exercise)           | Reconnect recovery without touching host networking                  | 5+ consecutive reconnect/reconcile passes                                               | Proves recovery without host faults; no defect caught yet                 |
+| Serial repetition of the race scenario                                      | Scheduler sensitivity                                                | 5+ consecutive live passes; 100x repetition for deterministic harnesses                 | Flakes that pass once and fail rarely                                     |
+
+Route each venue the way it accepts: Polymarket requires the HK tunnel exit
+(see the agent-ops runbook); OKX and Lighter validate direct. Confirm the route
+delivers venue data before a long run: sockets can connect while the venue
+stays silent. Branches the venue never produces live belong in a captured-wire
+deterministic harness, not in the live run.
 
 ---
 
@@ -199,7 +243,7 @@ Test order book subscription modes and snapshot requests.
 | ------ | -------------------------- | ----------------------------------- | ----------------- |
 | TC-D10 | Subscribe book deltas      | Stream `OrderBookDeltas` updates.   | No book support.  |
 | TC-D11 | Subscribe book at interval | Periodic `OrderBook` snapshots.     | No book support.  |
-| TC-D12 | Subscribe book depth       | `OrderBookDepth10` snapshots.       | No book depth.    |
+| TC-D12 | Subscribe book depth       | `OrderBookDepth` snapshots.         | No book depth.    |
 | TC-D13 | Request book snapshot      | One-time book snapshot request.     | No book snapshot. |
 | TC-D14 | Managed book from deltas   | Build local book from delta stream. | No book support.  |
 
@@ -275,8 +319,8 @@ DataTesterConfig::builder()
 | Field              | Value                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------ |
 | **Prerequisite**   | Adapter connected, instrument loaded.                                                |
-| **Action**         | DataTester subscribes to `OrderBookDepth10` snapshots.                               |
-| **Event sequence** | `OrderBookDepth10` events received in `on_book_depth`.                               |
+| **Action**         | DataTester subscribes to `OrderBookDepth` snapshots.                                 |
+| **Event sequence** | `OrderBookDepth` events received in `on_book_depth`.                                 |
 | **Pass criteria**  | Depth snapshots received with up to 10 bid/ask levels; prices are correctly ordered. |
 | **Skip when**      | Adapter does not support book depth subscriptions.                                   |
 
@@ -1037,5 +1081,3 @@ The Rust builder also exposes these parameters:
 | `book_type`        | `BookType` | `L2_MBP` | 2              |
 | `subscribe_params` | `Params?`  | `None`   | 9              |
 | `request_params`   | `Params?`  | `None`   | 9              |
-
----

@@ -1,22 +1,23 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Rust
+
+This page defines NautilusTrader conventions for Rust source, Cargo manifests, PyO3 bindings, and tests.
 
 NautilusTrader uses Rust for its mission-critical core because the language combines a strong type
 system, an ownership model, and predictable performance. Safe Rust prevents data races and many
 memory errors at compile time. `unsafe` code must make explicit the invariants that the compiler
 cannot check.
 
-Use this reference when changing hand-written Rust source, Cargo manifests, PyO3 bindings, or Rust
-tests. `rustfmt` and the workspace lints own general Rust style; this page documents the
-NautilusTrader-specific rules that supplement them.
+`rustfmt` and the workspace lints own general Rust style; the rules below supplement them.
 
 ## Sources of truth
 
@@ -106,6 +107,8 @@ exception.
 - Separate dependency groups with a blank line and alphabetize each group. Manifests normally group
   internal `nautilus-*` crates, required external crates, and optional external crates, but preserve
   a manifest's meaningful local groups.
+- Keep optional crates in their own blank-line group, except when every crate in the group is a
+  `nautilus-*` crate.
 - Keep the standard section order: package, lints, library, features, `cargo-machete` metadata,
   docs.rs metadata, dependencies, development dependencies, build dependencies, benches, binaries,
   examples, and tests.
@@ -158,7 +161,8 @@ Place the optional `publish`, `build`, and `include` fields after `homepage.work
   to `"pyo3/extension-module"`.
 - Propagate `high-precision` to dependent Nautilus crates that store or construct fixed-point
   domain values.
-- Document public features in the crate-level documentation.
+- Document each public non-default feature once, in alphabetical order, under `## Feature flags` in the
+  crate README and `# Feature Flags` in the crate-level library docs.
 
 ### Targets
 
@@ -186,10 +190,37 @@ Leave one blank line:
 - Between functions, including tests.
 - Above each `///` or `//!` doc comment.
 - Above standalone `if`, `match`, `for`, `while`, and `loop` expressions.
-- Above task spawn calls.
+- Above task spawn calls, including `spawn_local` and `spawn_blocking`.
+- Before a `let` that contains a multiline braced expression, unless it starts a block.
+- Before a multiline struct literal or a direct qualified `Type::new(...)` call, unless it starts a block.
+- After a statement that contains a multiline braced expression, before the next statement in the same block.
 
 The control-flow and spawn rules do not apply when the expression starts a block, continues the
-previous operation, or has an attached comment or attribute.
+previous operation, or has an attached comment or attribute. Wrapped calls and method chains alone
+do not need a separator. Construction spacing also applies to assignments, explicit returns, and
+calls followed by `?` or `.await`. Construction must span multiple lines after rustfmt layout;
+one-line initializers stay together.
+
+Keep comments and attributes attached to their statement when inserting a separator. Skip macro
+bodies and `rustfmt::skip` regions. Apply the multiline statement rules around changed code; leave
+unrelated code alone. Add only blank lines that `rustfmt` preserves.
+
+The formatting hook:
+
+- Checks existing control-flow, spawn, and module-ordering rules at changed boundaries.
+- Compares staged and unstaged changes against `HEAD`, or against the merge base with `CHANGED_BASE_SHA` when set.
+- Falls back to checking all tracked Rust files when a CI base is unavailable.
+- Reads complete changed files for context and includes lines used by exemption checks when selecting diagnostics.
+- Does not modify files.
+
+These remain review conventions:
+
+- Multiline statement spacing.
+- Construction spacing.
+- `spawn_local` and `spawn_blocking` spacing.
+
+Keep changed code readable for a human reader, and add further blank lines when those separators
+still leave a dense block hard to follow.
 
 Use inline format arguments for existing variables:
 
@@ -210,6 +241,9 @@ the lint does not apply:
     reason = "result type is retained for API compatibility but no error is returned",
 )]
 ```
+
+Use `try_update` instead of the deprecated `fetch_update` on standard atomics. The pre-commit hook
+rejects `fetch_update`.
 
 ## Type qualification
 
@@ -299,6 +333,38 @@ The audit also reports `clippy::panic_in_result_fn`, which the required workspac
 already enforces. Remove a panic when the failure is recoverable; retain a justified invariant
 panic, with a scoped lint reason when needed. The audit uses forced warnings, so its totals include
 deliberate sites with local lint allowances and diagnostics from macro expansions.
+
+### Failure contract examples
+
+APIs with a documented panic contract use panics for:
+
+- Programmer errors (logic bugs, incorrect API usage).
+- Data that violates fundamental invariants (negative timestamps, NaN prices).
+- Arithmetic that would silently produce incorrect results.
+
+APIs return `Result` or `Option` when callers, including downstream crates, can handle a failure or
+absence, including:
+
+- Expected runtime failures (network errors, file I/O).
+- Business logic validation (order constraints, risk limits).
+- User input validation.
+
+The API determines how an invalid operation fails:
+
+```rust
+let later = timestamp + duration_ns; // Panics on overflow.
+
+let price = Price::new_checked(f64::NAN, precision); // Returns Err.
+
+let later = timestamp.checked_add(duration_ns); // Returns None on overflow.
+```
+
+This policy is implemented throughout the core types (`UnixNanos`, `Price`, `Quantity`, etc.)
+and helps NautilusTrader maintain strong data correctness for production trading.
+
+The repository release profile sets `panic = "abort"`, so a panic terminates the process for a
+supervisor or orchestration system to handle. Downstream Rust binaries control their own release
+profile.
 
 ## Logging
 
@@ -438,6 +504,71 @@ Preserve discrete financial values as decimals from ingestion:
 Do not route wire values through `f64` constructors. In tests, compare `.as_decimal()` with
 `dec!(value)`.
 
+## Identifier storage
+
+### How string interning works
+
+String interning stores one shared copy of each distinct string in a central cache. Repeated values
+refer to the same cached bytes instead of allocating another copy. Small handles make the values
+cheap to copy and compare, while a cached hash avoids reading the full string again during hashing.
+
+NautilusTrader uses `Ustr` for its interned identifier components. Each `Ustr` is a pointer-sized
+`Copy` handle with a precomputed hash and stable direct string access. Composite types such as
+`InstrumentId` preserve the same cheap copy semantics by storing these handles.
+
+### Reclamation boundary
+
+The string cache retains every unique value for the process lifetime. This retention keeps copied
+handles and returned string slices valid without reference counting, access guards, or explicit
+lifetime parameters on identifier types. Process teardown is the normal reclamation boundary.
+
+These guarantees rule out safe reclamation of individual entries. Rust can copy a `Copy` value
+without executing code, so an atomic reference count cannot observe every copy. Designs that add
+reclamation change the identifier contract:
+
+- Reference counting requires `Clone` and `Drop`, which removes `Copy` from identifiers and types
+  that contain them.
+- Borrowed or epoch-protected storage requires lifetimes or access guards at string access points.
+- Generational handles permit reclamation but make lookup fallible and invalidate stale handles.
+- A global cache reset is safe only at a proven quiescent point after all handles, references, and
+  foreign pointers have been destroyed and no task or thread can retain one.
+
+### Storage boundaries
+
+Interning is best suited to identifiers drawn from a bounded process-scoped universe and values that
+repeat enough to benefit from deduplication. Identifiers whose distinct values can grow with every
+order, trade, or message increase the cache for the process lifetime.
+
+Fixed-capacity inline storage retains `Copy` when the external protocol supplies a suitable maximum.
+`TradeId`, for example, uses a 36-character `StackStr`. Owned or reference-counted storage provides
+dynamic capacity when reclamation matters more than `Copy`.
+
+The domain model also contains compatibility exceptions. `ClientOrderId`, `VenueOrderId`,
+`PositionId`, and `OrderListId` remain `Ustr`-backed and therefore retain every distinct value.
+Identifier storage participates in the supported by-value C ABI, so a broader redesign depends on
+conversion-based bindings replacing raw layout sharing.
+
+The storage boundary includes an up-front estimate of every unique value and all intermediate
+strings interned during parsing. The cache is shared by every `Ustr` use in the process, so its
+memory cost is the aggregate set rather than a separate budget for each identifier type.
+
+### Polymarket scale example
+
+A Polymarket instrument symbol combines a 66-byte condition ID with a 77- or 78-byte token ID, for
+a 144- or 145-byte interned symbol. With the 64-bit `ustr` 1.1.0 layout, 600,000 unique
+`InstrumentId` values require roughly 150 MiB for the retained identifier values, cache lookup
+table, and reserved string storage.
+
+The Polymarket parsing path also interns each raw token ID and each condition ID. For 600,000
+instruments from about 300,000 markets, these entries raise the estimate to roughly 300 MiB before
+instrument objects, descriptions, maps, and other metadata. The estimate assumes unique instrument
+and token IDs and includes capacity reserved by the cache's geometric allocator, so it is not an
+exact resident-set measurement.
+
+NautilusTrader accepts this bounded cost to preserve `Copy`, stable direct access, and global
+deduplication across the instrument universe. Unbounded streams of unique external IDs remain
+outside this storage model.
+
 ## Collections
 
 Choose a hash collection by iteration semantics and trust boundary:
@@ -561,7 +692,7 @@ Keep each submodule registration as `let n = "<name>"` followed by one
 
 ### PyO3 enums
 
-Python-exposed integer enums use `frozen`, `eq`, `eq_int`, `from_py_object`, and
+Nautilus domain integer enums use `frozen`, `eq`, `eq_int`, `from_py_object`, and
 `rename_all = "SCREAMING_SNAKE_CASE"`.
 
 Do not add PyO3's `hash` attribute to an `eq_int` enum. Its generated hash differs from Python's hash
@@ -664,7 +795,7 @@ fn test_symbol_is_composite(#[case] input: &str, #[case] expected: bool) {
 ### Test specs
 
 Events with many constructor arguments use a fluent `bon` spec next to the event under
-`events/<event>/spec/`. Gate the module with `#[cfg(any(test, feature = "test-support"))]` so downstream
+`events/order/spec/`. Gate the module with `#[cfg(any(test, feature = "test-support"))]` so downstream
 tests can opt in without adding the spec to production builds.
 
 - Derive `bon::Builder` with `finish_fn = into_spec`.

@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/testing.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Testing
 
 Our automated tests serve as executable specifications for the trading platform.
@@ -292,8 +293,6 @@ is under test.
 Prefer hand-written stubs that return fixed values over mocking frameworks. Use `MagicMock` only when you need to assert call counts/arguments or simulate complex state changes. Avoid mocking the objects you're actually testing.
 
 ## Code coverage
-
-We generate coverage reports with `coverage` and publish them to [codecov](https://about.codecov.io/).
 
 Aim for high coverage without sacrificing appropriate error handling or causing "test induced damage" to the architecture.
 

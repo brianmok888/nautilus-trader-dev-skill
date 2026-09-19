@@ -88,4 +88,4 @@ Legacy Python architecture prose and examples are physically quarantined at [`mi
 
 ## Source-pinned upstream lane
 
-Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. Treat newer upstream behavior as version-scoped until the repository pin advances.
+Validate architecture decisions against the immutable developer-guide snapshot under [`references/developer_guide/`](../../references/developer_guide/), especially `rust.md`, `ffi.md`, `adapters.md`, and `contracts/design_principles.md`, pinned to commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Treat newer upstream behavior as version-scoped until the repository pin advances.

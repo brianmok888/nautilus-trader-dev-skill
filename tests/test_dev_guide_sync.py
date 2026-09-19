@@ -35,6 +35,7 @@ def test_current_developer_guide_inventory_matches_pinned_upstream() -> None:
     assert CURRENT_DEV_GUIDE_FILES == [
         "adapters.md",
         "benchmarking.md",
+        "callback_dispatch.md",
         "coding_standards.md",
         "design_principles.md",
         "docs.md",
@@ -44,7 +45,9 @@ def test_current_developer_guide_inventory_matches_pinned_upstream() -> None:
         "markdown_style.md",
         "plugins.md",
         "python.md",
+        "python_adapters.md",
         "releases.md",
+        "runtime_conformance.md",
         "rust.md",
         "security.md",
         "shell.md",

@@ -31,7 +31,7 @@ Review behavior before style. Classify findings as **Blocker** (unsafe or incorr
 **Correctness and lifecycle**
 - Verify deterministic startup, warmup, reset, stop, and shutdown behavior.
 - Confirm order rejection, cancellation, expiration, partial fill, reconciliation, position limits, and circuit-breaker paths.
-- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
+- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
 - Ensure `DataActor`, strategy, adapter, cache, and message bus responsibilities are separated and messages remain immutable after publication.
 - Check current V2 shapes: `TryFrom<OrderInitialized>`, owned cache snapshots at boundaries, `RecencyMap` behavior, v2 wranglers, and raw fixed-point overflow handling.
 
@@ -72,4 +72,4 @@ Legacy Python review prose, checklists, and examples are physically quarantined 
 
 ## Source-pinned upstream lane
 
-Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. Version-scope any newer upstream guidance until the pin advances.
+Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Version-scope any newer upstream guidance until the pin advances.

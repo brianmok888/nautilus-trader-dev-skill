@@ -15,7 +15,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-learn` passed the skill domain's scoped examples and owners against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-learn.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -44,7 +44,7 @@ NT v2 compatibility note: older Python and v1 curriculum material belongs under 
 
 ## Source-pinned upstream lane
 
-Anchor lessons and API exercises to [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`, and identify newer upstream examples as version-scoped before using them.
+Anchor lessons and API exercises to [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, and identify newer upstream examples as version-scoped before using them.
 
 ## Overview
 

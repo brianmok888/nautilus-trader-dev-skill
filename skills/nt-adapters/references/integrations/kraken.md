@@ -95,7 +95,7 @@ standard-precision mode's nine decimal places. Keep high-precision mode enabled 
 Standard-precision mode continues to support Spot, but Futures clients fail to start or return
 instruments when any definition cannot be parsed. Futures catalogue requests return no partial
 result and never round, clamp, or omit an unsupported definition (upstream
-`docs/integrations/kraken.md` at pin `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`).
+`docs/integrations/kraken.md` at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`).
 :::
 
 ### Bar emission latency

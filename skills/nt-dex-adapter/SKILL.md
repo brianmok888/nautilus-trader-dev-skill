@@ -17,7 +17,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No migration/reference-only Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dex-adapter` passed the skill domain's scoped examples and owners against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dex-adapter.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -50,7 +50,7 @@ clients. Do not copy them into a new adapter. Active Python remains limited to
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 
@@ -233,12 +233,12 @@ See `rules/dos_and_donts.md` for the full ruleset.
 - ❌ Do not use `Arc<PyObject>` for ordinary callbacks — prefer direct `PyObject`/`Py<T>` with `clone_py_object()`; justify any exception and audit cycles, weakrefs, cleanup, and PyO3 GC hooks when applicable
 - ❌ Don't treat AMM spot price as fill price without modelling slippage
 
-Runtime-spawn rule source (upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
+Runtime-spawn rule source (upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`): `.pre-commit-hooks/check_tokio_usage.sh` rejects `tokio::spawn` in adapter production code while skipping `/tests/` files and `#[cfg(test)]` regions, so deterministic tests may use `tokio::spawn()` on their own runtime.
 
 ### DEX task ownership (standardized lifecycle)
 
 Own DEX background work with the standardized Nautilus task lifecycle (pinned
-`5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`, `crates/live/src/task.rs`; see `nt-adapters` "Task Management" for
+`9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, `crates/live/src/task.rs`; see `nt-adapters` "Task Management" for
 the full ownership table). Named task identity (upstream `eb42e2bfc`) lets you hold a `TaskRef` from `spawn_named` without taking `TaskGroup` ownership — prefer it for receipt-monitoring handles that outlive a single command, and for shared task-state checks instead of per-adapter flags: one session `TaskGroup` for the WebSocket stream,
 keepalive, and receipt-monitoring loop; a separate command `TaskGroup` for
 work spawned by execution commands so a disconnect never reclassifies an

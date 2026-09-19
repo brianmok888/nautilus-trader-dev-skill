@@ -94,7 +94,7 @@ Migration/reference-only legacy material is physically quarantined under each sk
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+The authoritative pinned upstream commit is `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 

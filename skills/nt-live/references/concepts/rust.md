@@ -106,11 +106,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.63"
-nautilus-common = "0.63"
-nautilus-execution = "0.63"
-nautilus-model = { version = "0.63", features = ["test-support"] }
-nautilus-trading = { version = "0.63", features = ["examples"] }
+nautilus-backtest = "0.64"
+nautilus-common = "0.64"
+nautilus-execution = "0.64"
+nautilus-model = { version = "0.64", features = ["test-support"] }
+nautilus-trading = { version = "0.64", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -120,8 +120,8 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.63"
-nautilus-okx = "0.63"
+nautilus-live = "0.64"
+nautilus-okx = "0.64"
 ```
 
 To track the latest development branch, point all Nautilus dependencies at the
@@ -264,7 +264,7 @@ full walkthrough.
 `LiveNode` exposes first-class registration for Python components: constructed
 instances via `node.add_actor(actor)` / `node.add_strategy(strategy)`, and
 config-driven construction via `node.add_actor_from_config(config)` /
-`node.add_strategy_from_config(config)` (pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`,
+`node.add_strategy_from_config(config)` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`,
 `python/nautilus_trader/live/__init__.pyi`). Instance registration requires the
 node to be idle: actors and strategies are added before running the node, and
 registration preserves config-created component IDs while rejecting duplicates.
@@ -277,7 +277,7 @@ node.add_strategy_from_config(config) # ImportableStrategyConfig-driven
 
 Importable config dicts accept a plain string `strategy_id` (or `actor_id`): the value is converted
 to a typed ID at the config construction boundary (`config_value_to_py` in
-`crates/live/src/python/node.rs`, pinned `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`), and a config attribute that cannot be set on
+`crates/live/src/python/node.rs`, pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`), and a config attribute that cannot be set on
 the constructed object raises `RuntimeError` instead of logging a warning and leaving the attribute
 unset (upstream commit `62b5057927`).
 

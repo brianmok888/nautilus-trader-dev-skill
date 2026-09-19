@@ -17,7 +17,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
 | G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped examples and owners against `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
@@ -45,7 +45,7 @@ it is not a template for new production implementation.
 
 ## Source-pinned upstream lane
 
-Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`; label newer upstream behavior as version-scoped drift.
+Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; label newer upstream behavior as version-scoped drift.
 
 ## What This Skill Covers
 
@@ -299,7 +299,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
   `migration_reference/`; implement new orchestration, routed-order,
-  fee, and fill behavior in Rust. At the pinned develop `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f` (in-pin
+  fee, and fill behavior in Rust. At the pinned develop `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7` (in-pin
   since `d2b62d35a7`), change `e4d3ac7f37` additionally accepts any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs; that
   duck-typed path stays reference-only.

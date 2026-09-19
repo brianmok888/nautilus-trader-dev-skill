@@ -6,7 +6,7 @@
 
 Review date: 2026-09-19
 Reviewed upstream develop: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
-Pinned G2 baseline: `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f` (moving to `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7` under NT-2026-09-19-001)
+Pinned G2 baseline: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
 
 The review manifest preserves ten contiguous transitions. The newest transition reviews 28 commits and 422 net changed paths from the previously reviewed `c1a2310144c37db80ad11af3d86b65b2ed300c81` through current develop `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window replaces the network HTTP transport (Reqwest to Hyper), adds DST network simulation seams and OKX account-configuration access, tightens OKX RPI minimum-notional rejection, standardizes Binance/Hyperliquid/Bybit command outcomes and book maintenance, restores matching-engine reduce-only maintenance with OUO propagation, separates integration test data preparation, upgrades the Rust toolchain to 1.98.1, and adds supported Python component messaging; findings NT-2026-09-09-001 through NT-2026-09-09-017 were opened and are tracked below.
 

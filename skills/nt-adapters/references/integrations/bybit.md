@@ -300,7 +300,7 @@ Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpT
 `None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
 is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
 leaving both unset omits the field so the venue default applies
-(`crates/adapters/bybit/src/config.rs` at pin `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`).
+(`crates/adapters/bybit/src/config.rs` at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`).
 Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
 values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
 (`crates/adapters/bybit/src/common/enums.rs`).

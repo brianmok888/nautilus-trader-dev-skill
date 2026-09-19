@@ -1,12 +1,13 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 5e4be2edbf496afcfc5d0aa3a798496fa4493f2f
-sync_date: 2026-09-09
+source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
+sync_date: 2026-09-19
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
+
 # Coding Standards
 
 ## Code Style
@@ -75,7 +76,7 @@ documentation feel natural to end-users.
    public names, historical release entries, and source names in migration tables.
 
 5. **Runtime qualifiers**: Use `Live` when a type selects or configures real-time runtime semantics,
-   such as `LiveNode` versus `BacktestNode`, `LiveClock` versus `TestClock`, and the
+   such as `LiveNode` versus `BacktestNode`, `LiveClock` versus `VirtualClock`, and the
    `LiveDataEngineConfig`, `LiveRiskEngineConfig`, and `LiveExecutionEngineConfig` family versus
    reusable core engine configs. Omit `Live` from the ordinary adapter client family because a
    connected client is the default. Qualify alternate implementations by their behavior, such as
