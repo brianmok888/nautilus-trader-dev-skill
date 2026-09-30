@@ -62,7 +62,7 @@ Fail review if missing:
 - Testing doctrine: real payload fixtures, no sleep-based timing, cover providers/data/execution/factories
 
 G2 `cargo check` is compilation only. Never treat it as spec, testnet, resilience, fuzz, or
-operations acceptance evidence; require separate Phase 8-10 evidence for those claims.
+operations acceptance evidence; require the applicable Phase 6-9 evidence for those claims.
 
 ## QUICK CHECK (<5 min)
 

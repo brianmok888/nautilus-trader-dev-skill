@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-008-phase-3-specific",
+  "finding_id": "NT-2026-09-30-008",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -c 'import re,decimal,pathlib\nr=pathlib.Path('\\''/home/mok/projects/nautilus-trader-dev-skill-mission-20260930'\\''); u=pathlib.Path('\\''/tmp/nt-currency-20260930'\\'')\nt=(r/'\\''skills/nt-model/references/guides/value_type_patterns.md'\\'').read_text(); raw=int(re.search(r'\\''Quantity.from_raw\\((\\d+), 1\\)'\\'',t)[1]); s=(u/'\\''crates/model/src/types/fixed.rs'\\'').read_text(); assert '\\''#[cfg(not(feature = \"high-precision\"))]\\npub(crate) const FIXED_SCALAR_RAW: QuantityRaw = 1_000_000_000;'\\'' in s; value=decimal.Decimal(raw)/decimal.Decimal(1000000000); assert value==decimal.Decimal('\\''100.5'\\''); print('\\''documented standard raw='\\'',raw,'\\''; pinned standard scalar=1000000000; value='\\'',value)'",
+  "exit_code": 0,
+  "output_sha256": "2f945b7f34d1b8d1aba95d452f06e0fdafee3057bded54b25e663cbfd13e37f5",
+  "output_excerpt": "documented standard raw= 100500000000 ; pinned standard scalar=1000000000; value= 100.5\nChecked documented raw value against pinned cfg(not(high-precision)) scalar; source-bound Decimal arithmetic, not a standard-mode Rust binary. Current V2 binding is high-precision and is not used to assert the standard-mode raw result.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

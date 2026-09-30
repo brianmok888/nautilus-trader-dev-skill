@@ -74,10 +74,10 @@ DataTesterConfig::builder()
 | `book_depth`                 | PositiveInt?      | None            | 2              |
 | `book_interval_ms`           | PositiveInt       | 1000            | 2              |
 | `book_levels_to_print`       | PositiveInt       | 10              | 2              |
-| `manage_book`                | bool              | False           | 2              |
+| `manage_book`                | bool?             | None → True     | 2              |
 | `log_data`                   | bool              | True            | All            |
 
-Note: `manage_book` accepts `None`, `True`, or `False`; `None` resolves to the Rust builder default (pinned `crates/testkit/src/python/testers.rs:155`). Set it explicitly when the venue test owns book management.
+Note: the Python constructor's `manage_book` argument accepts `None`, `True`, or `False`; omission or `None` resolves to the Rust builder default `true` (pinned `crates/testkit/src/testers/data/config.rs:142` and `crates/testkit/src/python/testers.rs:155`). The resolved property is a Boolean. Set it explicitly when the venue test owns book management.
 
 ## Rust Builder Methods
 
@@ -132,13 +132,13 @@ An adapter that passes groups 1–4 is considered **baseline data compliant**.
 
 ### Python
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+Python/PyO3 control-plane lane: configure `LiveNode` and register the Rust-owned built-in tester by name.
 
 ```python
 from nautilus_trader.live import LiveNode
 from nautilus_trader.testkit import DataTesterConfig
 
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+# Python configures the node; the built-in DataTester actor executes in Rust.
 
 node = LiveNode.builder("DATA-TESTER-001", TRADER_ID, Environment.LIVE).build()
 node.add_builtin_actor("DataTester", config_tester)

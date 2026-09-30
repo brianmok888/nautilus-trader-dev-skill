@@ -4,15 +4,190 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
-Review date: 2026-09-19
-Reviewed upstream develop: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
-Pinned G2 baseline: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
+Review date: 2026-09-30
+Reviewed upstream develop: `81d0449da0e353d702d88019dc73d231d67923cd`
+Pinned G2 baseline: `81d0449da0e353d702d88019dc73d231d67923cd`
 
 The review manifest preserves ten contiguous transitions. The newest transition reviews 28 commits and 422 net changed paths from the previously reviewed `c1a2310144c37db80ad11af3d86b65b2ed300c81` through current develop `5e4be2edbf496afcfc5d0aa3a798496fa4493f2f`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window replaces the network HTTP transport (Reqwest to Hyper), adds DST network simulation seams and OKX account-configuration access, tightens OKX RPI minimum-notional rejection, standardizes Binance/Hyperliquid/Bybit command outcomes and book maintenance, restores matching-engine reduce-only maintenance with OUO propagation, separates integration test data preparation, upgrades the Rust toolchain to 1.98.1, and adds supported Python component messaging; findings NT-2026-09-09-001 through NT-2026-09-09-017 were opened and are tracked below.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
 ## Open findings — 2026-09-19 upstream currency cycle
+
+## Open findings — 2026-09-30 current baseline audit
+
+[NT-2026-09-30-001] [P1] [CLOSED 2026-09-30] V2 compliance: refresh the reviewed upstream baseline and all dependent evidence.
+  file: tools/upstream_baseline.py:4
+  evidence: references/upstream-delta-review.json reviews develop 81d0449da; freshness exits 0 with zero drift.
+  fix: refresh pin citations, snapshots, and all affected durable G2 evidence.
+  closure: all repository validators and G2 card declarations pass at the new pin.
+  acceptance-test: all repository validators and G2 card declarations pass at the new pin.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-001-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-002] [P1] [CLOSED 2026-09-30] V2 compliance: instrument guides expose removed maker_fee and taker_fee properties.
+  file: skills/nt-model/references/guides/instrument_types.md:60
+  evidence: upstream 042f71e removes instrument fees; crates/execution/src/models/fee.rs owns fee schedules at the pin.
+  fix: teach execution fee-model ownership and synchronize affected references.
+  closure: model and backtest guidance checks and affected G2 evidence pass.
+  acceptance-test: model and backtest guidance checks and affected G2 evidence pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-002-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-003] [P1] [CLOSED 2026-09-30] V2 compliance: current live guidance advertises the retired BitMEX adapter.
+  file: skills/nt-live/SKILL.md:393
+  evidence: upstream 3adf5a8 removes crates/adapters/bitmex.
+  fix: use current adapters and explicitly scope retained historical references.
+  closure: current live guidance has no runnable BitMEX dependency and nt-live G2 passes.
+  acceptance-test: current live guidance has no runnable BitMEX dependency and nt-live G2 passes.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-003-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-004] [P1] [CLOSED 2026-09-30] Domain correctness: backtest data processing order is described as ts_event.
+  file: skills/nt-backtest/SKILL.md:447
+  evidence: pinned crates/backtest/src/data_iterator.rs orders by ts_init, priority, and stream index.
+  fix: distinguish processing timestamps from market event timestamps.
+  closure: corrected ordering guidance matches the pinned iterator and backtest checks pass.
+  acceptance-test: corrected ordering guidance matches the pinned iterator and backtest checks pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-004-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-005] [P1] [CLOSED 2026-09-30] Scope boundary: Python simulation callbacks are presented as production control-plane extensions.
+  file: skills/nt-backtest/SKILL.md:338
+  evidence: pinned crates/backtest/src/python/modules.rs invokes Python pre_process and process callbacks.
+  fix: classify the callback bridge as migration/reference and retain Rust-owned production callbacks.
+  closure: lane classification, legacy labeling, and nt-backtest G2 pass.
+  acceptance-test: lane classification, legacy labeling, and nt-backtest G2 pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-005-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-006] [P1] [CLOSED 2026-09-30] V2 compliance: live skill inventories a nonexistent Python system package.
+  file: skills/nt-live/SKILL.md:111
+  evidence: pinned Python node bindings are exported by live and backtest; crates/system is Rust ownership.
+  fix: align the inventory with references/api_reference/system.md.
+  closure: module inventory source review and nt-live G2 pass.
+  acceptance-test: module inventory source review and nt-live G2 pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-006-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-007] [P2] [CLOSED 2026-09-30] Availability: live persistence, CustomData injection, and checked order initialization are incorrectly described as post-pin.
+  file: skills/nt-live/SKILL.md:58
+  evidence: commits 9a9e5fe7 and 99800512 are ancestors of the current pin; OrderInitialized::new_checked exists there.
+  fix: update pinned availability without inventing stable release availability.
+  closure: source review of all three boundaries and affected G2 evidence pass.
+  acceptance-test: source review of all three boundaries and affected G2 evidence pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-007-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-008] [P2] [CLOSED 2026-09-30] Example correctness: Quantity.from_raw uses a tenfold incorrect standard-precision value.
+  file: skills/nt-model/references/guides/value_type_patterns.md:150
+  evidence: crates/model/src/types/fixed.rs standard scalar is 10^9.
+  fix: use 100500000000 for standard-precision 100.5.
+  closure: machine-consumed example check and model evidence pass.
+  acceptance-test: machine-consumed example check and model evidence pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-008-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-009] [P2] [CLOSED 2026-09-30] Domain correctness: historical portfolio example falsely describes direct broker queries.
+  file: skills/nt-backtest/migration_reference/python/examples/portfolio/README.md:9
+  evidence: pinned crates/portfolio/src/portfolio.rs queries shared Cache and receives message-bus updates.
+  fix: explain the actual portfolio/cache relationship.
+  closure: example/source review and migration labeling checks pass.
+  acceptance-test: example/source review and migration labeling checks pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-009-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-010] [P1] [CLOSED 2026-09-30] Validation drift: adapter and live G2 harnesses compile the removed BitMEX crate.
+  file: tools/check_skill_g2_harnesses.py:143
+  evidence: regression fails git source lookup at the current pin; replacement Bybit adapter and live harnesses pass.
+  fix: select current Bybit targets and validate both crate presence and declared example names.
+  closure: focused regression, diagnostics, full suite, and G2 cards pass.
+  acceptance-test: focused regression, diagnostics, full suite, and G2 cards pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-010-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-011] [P1] [CLOSED 2026-09-30] FFI safety: capsule examples use raw-pointer payloads that do not implement Send and misstate destructor ownership.
+  file: skills/nt-dev/references/guides/ffi_memory.md:59
+  evidence: pinned PyO3 0.29.2 capsule payload requires Send; raw-pointer reproduction fails E0277.
+  fix: teach typed owning payloads and exact destructor behavior with current API.
+  closure: corrected examples compile with warnings denied and nt-dev G2 passes.
+  acceptance-test: corrected examples compile with warnings denied and nt-dev G2 passes.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-011-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-012] [P1] [CLOSED 2026-09-30] API contract: DataTester manage_book omission is documented as false rather than resolving to true.
+  file: skills/nt-testing/references/api/data_tester_config.md:77
+  evidence: Rust config defaults true; Python Option<bool> defaults None and resolves through Rust defaults.
+  fix: distinguish optional constructor input from resolved property.
+  closure: omitted, true, and false inputs exercised through the pinned binding.
+  acceptance-test: omitted, true, and false inputs exercised through the pinned binding.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-012-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-013] [P1] [CLOSED 2026-09-30] Error policy: async guidance unconditionally requires anyhow instead of boundary-specific errors.
+  file: skills/nt-dev/references/guides/rust_conventions.md:273
+  evidence: pinned docs/developer_guide/rust.md specifies typed library errors and anyhow orchestration errors.
+  fix: apply the same boundary policy to async and synchronous functions.
+  closure: source review, developer-guide sync, and focused tests pass.
+  acceptance-test: source review, developer-guide sync, and focused tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-013-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-014] [P2] [CLOSED 2026-09-30] Routing consistency: generic contribution routing conflicts with an unqualified maintenance-only upstream prohibition.
+  file: skills/nt/SKILL.md:14
+  evidence: the same router allows separately authorized contributions at line 74.
+  fix: qualify the prohibition by maintenance mission and read-only evidence cache.
+  closure: routing scope tests and boundary review pass.
+  acceptance-test: routing scope tests and boundary review pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-014-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+NT v2 compatibility note: the legacy TradingNode token in the following finding is migration/reference-only audit evidence.
+
+[NT-2026-09-30-015] [P2] [CLOSED 2026-09-30] Lane classification: a current PyO3 LiveNode example is labeled as legacy TradingNode.
+  file: skills/nt-testing/references/api/data_tester_config.md:135
+  evidence: the example imports and constructs nautilus_trader.live.LiveNode.
+  fix: classify the bounded current Python control-plane example correctly.
+  closure: lane and template classification plus legacy checks pass.
+  acceptance-test: lane and template classification plus legacy checks pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-015-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-016] [P2] [CLOSED 2026-09-30] Workflow: review instructions request Phase 10 although adapter phases end at 9.
+  file: skills/nt-review/AGENTS.md:48
+  evidence: the enumerated lifecycle defines phases 0 through 9.
+  fix: align evidence requirements with the defined lifecycle.
+  closure: phase-reference review and git diff --check pass.
+  acceptance-test: phase-reference review and git diff --check pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-016-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-017] [P1] [CLOSED 2026-09-30] API drift: streaming examples pass removed catalog_path and direct rotation keywords.
+  file: references/concepts/data.md:1149
+  evidence: pinned persistence Python config requires writer_path with optional catalog and rotation_config.
+  fix: update shared and skill-local examples to current exported constructors.
+  closure: documented constructors and deterministic staging/catalog promotion run through pinned bindings.
+  acceptance-test: documented constructors and deterministic staging/catalog promotion run through pinned bindings.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-017-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-018] [P1] [CLOSED 2026-09-30] Availability: current integration/API inventories and runnable Rust examples retain removed BitMEX support.
+  file: references/integrations/index.md:13
+  evidence: upstream 3adf5a8 removes the crate and current upstream inventories omit it.
+  fix: remove current support declarations and quarantine retained historical examples.
+  closure: adapter inventory checks, historical scope review, and G2 evidence pass.
+  acceptance-test: adapter inventory checks, historical scope review, and G2 evidence pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-018-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
+
+[NT-2026-09-30-019] [P2] [CLOSED 2026-09-30] Fixture drift: vendored analysis MockAccount omits the current fee_rates parameter.
+  file: skills/nt-signals/references/rust/analysis/src/analyzer.rs:1221
+  evidence: pinned Account trait requires MakerTakerFeeRates in calculate_commission.
+  fix: synchronize the fixture import and method signature.
+  closure: vendored cfg(test) fixture compiles and analysis tests pass with current dependencies.
+  acceptance-test: vendored cfg(test) fixture compiles and analysis tests pass with current dependencies.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20260930/nt-2026-09-30-019-phase-3-specific.json independently verifies the correction; aggregate validation passes with 465 tests and all 17 G2 harnesses.
+  correction: 2026-09-30 — source-aligned correction verified against pinned upstream; implementation provenance is documented by the manifest and fresh Phase 3 receipts, with absent Phase 2 receipt provenance disclosed.
 
 ## Open findings — 2026-09-19 second-cycle rescan
 

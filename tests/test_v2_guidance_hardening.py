@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
+
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,6 +20,7 @@ def test_current_guidance_rejects_verified_obsolete_paths_and_defaults() -> None
             "skills/nt-adapters/references/guides/rust.md",
             "skills/nt-dev/references/guides/rust_conventions.md",
             "skills/nt-model/references/concepts/instruments.md",
+            "skills/nt-model/references/guides/instrument_types.md",
             "skills/nt-signals/references/guides/custom_data_patterns.md",
             "skills/nt-architect/references/concepts/instruments.md",
             "skills/nt-implement/references/concepts/instruments.md",
@@ -38,12 +42,23 @@ def test_current_guidance_rejects_verified_obsolete_paths_and_defaults() -> None
     for current in (
         "crates/trading/src/algorithm/",
         "crates/execution/src/matching_core.rs",
-        "crates/model/src/accounts/margin.rs",
-        "crates/model/src/python/account/margin.rs",
         "CustomDataTrait",
         "register_custom_data_class",
     ):
         assert current in combined
+
+    for path in (
+        "crates/model/src/accounts/margin.rs",
+        "crates/model/src/python/account/margin.rs",
+    ):
+        result = subprocess.run(
+            ["git", "-C", str(default_upstream_root()), "cat-file", "-e",
+             f"{UPSTREAM_COMMIT}:{path}"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
 
 def test_copy_paste_rust_guidance_uses_current_v2_api_shapes() -> None:
     backtest = read("skills/nt-backtest/SKILL.md")

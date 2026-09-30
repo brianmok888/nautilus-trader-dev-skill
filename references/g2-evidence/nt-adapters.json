@@ -1,7 +1,7 @@
 {
-  "owned_content_sha256": "969d6175755c97d9ee2002b573b653c14b54d150e40867b5672053952362f1bb",
+  "owned_content_sha256": "10b653235342edb4350c9f254c4c4e2ae3b15e02f19b1c16bcd7853c48452f1d",
   "schema_version": 2,
-  "scope": "upstream:crates/adapters/sandbox-and-bitmex-examples",
+  "scope": "upstream:crates/adapters/sandbox-and-bybit-examples",
   "skill": "nt-adapters",
   "status": "pass",
   "steps": [
@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 71.32016,
+      "duration_seconds": 0.668491,
       "returncode": 0
     },
     {
@@ -22,17 +22,17 @@
         "cargo",
         "check",
         "-p",
-        "nautilus-bitmex",
+        "nautilus-bybit",
         "--examples",
         "--features",
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 101.771358,
+      "duration_seconds": 0.75277,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7",
-  "verified_at": "2026-09-19T21:37:04.486916+00:00"
+  "upstream_commit": "81d0449da0e353d702d88019dc73d231d67923cd",
+  "verified_at": "2026-09-30T11:25:54.941203+00:00"
 }

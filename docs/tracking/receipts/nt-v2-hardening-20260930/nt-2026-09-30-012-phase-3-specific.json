@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-012-phase-3-specific",
+  "finding_id": "NT-2026-09-30-012",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "PYTHONPATH=/tmp/nt-currency-20260930/python python3 -c 'from nautilus_trader.testkit import DataTesterConfig; values=[DataTesterConfig().manage_book,DataTesterConfig(manage_book=True).manage_book,DataTesterConfig(manage_book=False).manage_book]; assert values==[True,True,False]; print(\"omitted, explicit True, explicit False:\",values)'",
+  "exit_code": 0,
+  "output_sha256": "0988da81f6e533b87bd8990f4964776f4f7ccb31dfa213b49b67cad8b2198f87",
+  "output_excerpt": "omitted, explicit True, explicit False: [True, True, False]\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

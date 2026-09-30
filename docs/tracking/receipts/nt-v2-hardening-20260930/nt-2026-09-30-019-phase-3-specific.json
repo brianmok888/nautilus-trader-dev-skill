@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-019-phase-3-specific",
+  "finding_id": "NT-2026-09-30-019",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "cmp /home/mok/projects/nautilus-trader-dev-skill-mission-20260930/skills/nt-signals/references/rust/analysis/src/analyzer.rs /tmp/nt-currency-20260930/crates/analysis/src/analyzer.rs && /tmp/nt-vendored-analysis-tests --test-threads=1",
+  "exit_code": 0,
+  "output_sha256": "bd9aea5a4424162109759e5f4a3371398a08211b93551f10431a863ac2d64dd0",
+  "output_excerpt": "cmp exited0: vendored analyzer source equals pinned current crates/analysis/src/analyzer.rs. Inspected MakerTakerFeeRates import and calculate_commission argument at lines1005/1228. Executable timestamp is newer than source. test result: ok. 280 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

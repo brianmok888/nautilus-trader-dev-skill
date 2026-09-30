@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-001-phase-3-specific",
+  "finding_id": "NT-2026-09-30-001",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "cd /home/mok/projects/nautilus-trader-dev-skill-mission-20260930 && NT_UPSTREAM_ROOT=/tmp/nt-currency-20260930 python3 tools/check_upstream_freshness.py --format json && NT_UPSTREAM_ROOT=/tmp/nt-currency-20260930 python3 tools/check_skill_g2_harnesses.py --check-cards",
+  "exit_code": 0,
+  "output_sha256": "4a0bd07a9a66de78b0b28f742f58bc65c5042eb30adc2bd32bd6b4be33dc7f56",
+  "output_excerpt": "Fresh upstream freshness result: manifest_reviewed=true; manifest_error=null; pinned/current origin/develop=81d0449da0e353d702d88019dc73d231d67923cd; commits_ahead=0; changed_commits=[]; changed_paths=[]. check_skill_g2_harnesses.py --check-cards completed exit0. Owned upstream remained read-only at prior inspected clean status.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-005-phase-3-specific",
+  "finding_id": "NT-2026-09-30-005",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 005; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "ec1e3a1c73a4b18c06fa658cabf502f2e8f155b01f2a14eaf7d9bb5d4beba36b",
+  "output_excerpt": "Inspected skills/nt-live/SKILL.md:284: Python simulation callback snippet is migration/reference-only. Current production strategy ownership remains Rust; bounded PyO3 control plane is separately classified.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

@@ -57,7 +57,7 @@ The `nextest` profile is used to align with the workflow of the majority of core
 
 ### Strict Clippy audit (candidate report)
 
-Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`,
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `81d0449da0e353d702d88019dc73d231d67923cd`,
 `scripts/clippy-strict-audit.py`) reports candidate violations of the configured
 strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
 `indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,
@@ -270,7 +270,7 @@ Use consistent async/await patterns:
 
 1. **Async function naming**: No special suffix is required; prefer natural names.
 2. **Tokio usage**: Fully qualify tokio types (e.g., `tokio::time::timeout`). See [Adapter runtime patterns](#adapter-runtime-patterns) for spawn rules.
-3. **Error handling**: Return `anyhow::Result` from async functions to match the synchronous conventions.
+3. **Error handling**: Use the same API-boundary policy as synchronous functions: typed `Result<T, E>` for reusable library/domain APIs and `anyhow::Result<T>` for application/adapter orchestration.
 4. **Cancellation safety**: Call out whether the function is cancellation-safe and what invariants still hold when it is cancelled.
 5. **Stream handling**: Use `tokio_stream` (or `futures::Stream`) for async iterators to make back-pressure explicit.
 6. **Timeout patterns**: Wrap network or long-running awaits with timeouts (`tokio::time::timeout`) and propagate or handle the timeout error.

@@ -6,7 +6,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Non-negotiable repository and skill invariants. -->
 <!-- Does NOT contain: closures, plans, historical attestations, or per-skill detail. -->
 
-Review date: 2026-08-28
+Review date: 2026-09-30
 
 ## Scope authority
 

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-013-phase-3-specific",
+  "finding_id": "NT-2026-09-30-013",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 013; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "d82c05ccaf14c647382d46a86d667976167b48734cecac7ab2b493f40efd4ee9",
+  "output_excerpt": "Inspected rust_conventions.md:273: reusable library/domain APIs use typed Result<T,E>; application/adapter orchestration may use anyhow::Result<T>. Async does not override boundary policy.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

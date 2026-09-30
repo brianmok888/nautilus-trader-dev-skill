@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-009-phase-3-specific",
+  "finding_id": "NT-2026-09-30-009",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P2",
+  "command": "manual-source-review: 009; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "171d05b5e6baf53113dfa0d65a0bfd23c19f817c6e52e49f648617fc5fc680a3",
+  "output_excerpt": "Inspected migration portfolio README.md:9 and :47-60: portfolio derives views from cache and message-bus events, does not query broker per request, and makes no broker-freshness guarantee.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

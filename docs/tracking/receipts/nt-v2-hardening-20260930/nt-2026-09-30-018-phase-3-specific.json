@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-018-phase-3-specific",
+  "finding_id": "NT-2026-09-30-018",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 018; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "6c42be0d1b2fd770aefbb7101e6a8825669723c8e50f65a26020ecbc2955e545",
+  "output_excerpt": "Inspected current integration/API inventories: BitMEX omitted. Historical automodule pages are tombstones; retained Rust examples are historical-only. skills/nt-adapters/SKILL.md:155-159 explicitly states crate/module unavailable at pin 81d0449da and examples cannot provide current production wiring.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

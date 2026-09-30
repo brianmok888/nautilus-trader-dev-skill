@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
-sync_date: 2026-09-19
+source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
+sync_date: 2026-09-30
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -71,7 +71,7 @@ documentation feel natural to end-users.
 4. **Execution terminology**: Use `Execution` in public, project-owned PascalCase type names, such
    as `BinanceExecutionClientConfig`. Internal implementation types may retain established `Exec`
    names. Also reserve `Exec` for the `ExecAlgorithmId` and `ExecTester` families, established
-   `exec_*` names, and venue or protocol terms such as `BitmexExecType`. Name protocol-specific
+   `exec_*` names, and venue or protocol terms such as `OkxExecType`. Name protocol-specific
    wire models after the venue concept, such as `HyperliquidExchangeAction`. Preserve established
    public names, historical release entries, and source names in migration tables.
 

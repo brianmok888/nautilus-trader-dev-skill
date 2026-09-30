@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-010-phase-3-specific",
+  "finding_id": "NT-2026-09-30-010",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "cd /home/mok/projects/nautilus-trader-dev-skill-mission-20260930 && NT_UPSTREAM_ROOT=/tmp/nt-currency-20260930 python3 -m pytest -q tests/test_skill_g2_harnesses.py::test_adapter_and_live_harness_targets_exist_at_current_pin",
+  "exit_code": 0,
+  "output_sha256": "011cc9faf36bcbe5c21360975e530567d98a15140ed27af71e5eb8961c068aab",
+  "output_excerpt": ".                                                                        [100%]\n1 passed in 0.10s\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

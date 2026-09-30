@@ -57,8 +57,6 @@ parameters and/or read-only properties:
 | `multiplier`        | `Quantity`      | Contract value multiplier (determines tick value)        |
 | `margin_init`       | `Decimal`       | Initial margin requirement (% of order value)            |
 | `margin_maint`      | `Decimal`       | Maintenance margin (% of position value)                 |
-| `maker_fee`         | `Decimal`       | Fee rate for liquidity makers (% of order value)         |
-| `taker_fee`         | `Decimal`       | Fee rate for liquidity takers (% of order value)         |
 | `ts_event`          | `uint64`        | UNIX timestamp (nanoseconds) when event occurred         |
 | `ts_init`           | `uint64`        | UNIX timestamp (nanoseconds) when object initialized     |
 

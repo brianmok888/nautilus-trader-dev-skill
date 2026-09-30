@@ -10,7 +10,6 @@ The following integrations are currently supported:
 | [Betfair](https://betfair.com)                                               | `BETFAIR`             | Sports Betting Exchange | ![status](https://img.shields.io/badge/stable-green)    | [Guide](betfair_v2.md) · [legacy](betfair.md)|
 | [Binance](https://binance.com)                                               | `BINANCE`             | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](binance.md)      |
 | [Coinbase](https://coinbase.com)                                             | `COINBASE`            | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)   | [Guide](coinbase.md)     |
-| [BitMEX](https://www.bitmex.com)                                             | `BITMEX`              | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](bitmex.md)       |
 | [Blockchain](blockchain.md)                                                 | `BLOCKCHAIN`          | DeFi Data Provider      | ![status](https://img.shields.io/badge/stable-green)    | [Guide](blockchain.md)   |
 | [Bybit](https://www.bybit.com)                                               | `BYBIT`               | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](bybit.md)        |
 | [Databento](https://databento.com)                                           | `DATABENTO`           | Data Provider           | ![status](https://img.shields.io/badge/stable-green)    | [Guide](databento.md)    |
@@ -74,6 +73,11 @@ Swap in each venue's flat `nautilus_trader.adapters.<venue>` exports: the pinned
 exposes `{Venue}DataClientConfig`/`{Venue}ExecutionClientConfig` and
 `{Venue}DataClientFactory`/`{Venue}ExecutionClientFactory`. Pass the config directly to
 `add_data_client`/`add_exec_client`; pass `None` as the client name to use the adapter default.
+
+## Retired integrations
+
+BitMEX historical [Guide](bitmex.md): removed in upstream `3adf5a8dc` following
+exchange closure; not available at the current pin.
 
 ## Status
 

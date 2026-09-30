@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-014-phase-3-specific",
+  "finding_id": "NT-2026-09-30-014",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P2",
+  "command": "manual-source-review: 014; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "c06802874294b17a0f51a7853a33b1c0c069634c1244e761cc95414be4056fc9",
+  "output_excerpt": "Inspected skills/nt/SKILL.md:14-18: upstream implementation prohibition applies to maintenance mission and read-only evidence cache; separately authorized contribution routing remains available.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

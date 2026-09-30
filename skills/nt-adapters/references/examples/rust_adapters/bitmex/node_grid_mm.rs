@@ -21,7 +21,9 @@
 //! Edit the constants below to change the environment, target instrument, and grid
 //! market-making parameters.
 //!
-//! Run with: `cargo run --example bitmex-grid-mm --package nautilus-bitmex --features examples`
+//! Historical reference only: BitMEX was removed in upstream `3adf5a8dc`.
+//! This example cannot build at the current pin and is not a production template.
+//! Historical command: `cargo run --example bitmex-grid-mm --package nautilus-bitmex --features examples`
 //!
 //! Credentials are resolved from environment variables automatically when not passed
 //! explicitly in the config (`api_key` / `api_secret` fields):

@@ -77,7 +77,7 @@ qty = Quantity.from_str("100.50")  # precision=2
 qty = Quantity.from_int(100)  # "100"
 
 # From raw fixed-point value (advanced/internal use)
-qty = Quantity.from_raw(1005000000000, 1)  # "100.5" in standard mode
+qty = Quantity.from_raw(100500000000, 1)  # "100.5" in standard mode
 
 # From Decimal (precision inferred)
 from decimal import Decimal
@@ -368,15 +368,16 @@ restored = AccountBalance.from_dict(d)
 
 Instruments expose their specifications through the same value types, keeping precision
 handling uniform across the model (pinned
-`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7``):
+`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `81d0449da0e353d702d88019dc73d231d67923cd``):
 
 - Precision and increments: `price_precision` / `size_precision` (`int`) with the
   matching `price_increment` (`Price`) and `size_increment` (`Quantity`).
 - Sizing: `multiplier` and `lot_size` (`Quantity`); optional exchange limits
   `max_quantity` / `min_quantity` (`Quantity | None`), `max_notional` /
   `min_notional` (`Money | None`), and `max_price` / `min_price` (`Price | None`).
-- Margins and fees: `margin_init`, `margin_maint`, `maker_fee`, `taker_fee` -- all
-  `decimal.Decimal` values crossed from `rust_decimal` on the Rust side.
+- Margins: `margin_init` and `margin_maint` are `decimal.Decimal` values crossed
+  from `rust_decimal` on the Rust side. Maker/taker rates belong to execution fee
+  models and `MakerTakerFeeSchedule`, not instrument properties.
 - Dated instruments (e.g. `FuturesContract`, `OptionContract`, `CryptoOption`)
   expose activation and expiry twice: `activation_utc` / `expiration_utc` as
   `datetime.datetime` properties for display, and `activation_ns` /

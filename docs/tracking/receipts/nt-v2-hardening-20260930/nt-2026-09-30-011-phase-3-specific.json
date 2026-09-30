@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-011-phase-3-specific",
+  "finding_id": "NT-2026-09-30-011",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "cd /home/mok/projects/nautilus-trader-dev-skill-mission-20260930 && NT_UPSTREAM_ROOT=/tmp/nt-currency-20260930 python3 -m pytest -q tests/test_rust_first_end_to_end.py::test_nt_dev_capsule_examples_compile_against_pinned_pyo3",
+  "exit_code": 0,
+  "output_sha256": "02dd7890e62084334777cd0c121616f55e346a472713ee64a6e885e35a2b95c4",
+  "output_excerpt": "1 passed in 13.22s\nRegression extracts both actual documented capsule snippets; pinned PyO3 version; cargo check offline; deny(warnings).\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

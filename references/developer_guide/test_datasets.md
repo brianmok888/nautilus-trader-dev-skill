@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/test_datasets/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/test_datasets.md
-source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
-sync_date: 2026-09-19
+source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
+sync_date: 2026-09-30
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -273,7 +273,7 @@ wget -O test_data/large/tardis_deribit_incremental_book_L2_2020-04-01_BTC-PERPET
   "https://datasets.tardis.dev/v1/deribit/incremental_book_L2/2020/04/01/BTC-PERPETUAL.csv.gz"
 
 # Regenerate parquet (output: /tmp/tardis_BTC-PERPETUAL.DERIBIT_2020-04-01_deltas.parquet)
-cargo test -p nautilus-tardis test_curate_deribit_deltas -- --ignored --nocapture
+cargo test -p nautilus-tardis --features arrow test_curate_deribit_deltas -- --ignored --nocapture
 ```
 
 ## Tutorial test data

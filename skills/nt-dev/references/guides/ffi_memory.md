@@ -56,10 +56,11 @@ free.
 
 ## Capsules created on the Rust side *(PyO3 bindings)*
 
-When Rust code pushes a heap-allocated value into Python it **must** use
-`PyCapsule::new_with_destructor` so that Python knows how to free the allocation
-once the capsule becomes unreachable. The closure/destructor is responsible
-for reconstructing the original `Box<T>` or `Vec<T>` and letting it drop.
+Use `PyCapsule::new_with_value` with an owning, typed `Send` payload and a static
+capsule name in pinned PyO3 0.29.2. Capsule destruction automatically drops the
+payload. A raw `*mut T` is not `Send`; do not turn an owning `Box<T>` into a bare
+raw-pointer payload. Use `new_with_value_and_destructor` only when additional
+cleanup is required; its closure receives the owning value.
 
 ```rust
 use pyo3::types::PyCapsule;
@@ -67,28 +68,19 @@ use pyo3::types::PyCapsule;
 Python::attach(|py| {
     // Allocate the value on the heap
     let my_data = Box::new(MyStruct::new());
-    let ptr = Box::into_raw(my_data);
-
-    // Move it into the capsule and register a destructor that frees the memory
-    let capsule = PyCapsule::new_with_destructor(
-        py,
-        ptr,
-        None,
-        |ptr, _| {
-            // Reconstruct the Box and let it drop, freeing the allocation
-            let _ = unsafe { Box::from_raw(ptr) };
-        },
-    )
-    .expect("capsule creation failed");
+    // The capsule owns the Box and drops it when the capsule is destroyed.
+    let capsule = PyCapsule::new_with_value(py, my_data, c"nautilus.MyStruct")
+        .expect("capsule creation failed");
 
     // ... pass `capsule` back to Python ...
+    drop(capsule);
 });
 ```
 
-Do **not** use `PyCapsule::new(…, None)`; that variant registers *no* destructor
-and will leak memory unless the recipient manually extracts and frees the
-pointer (something we never rely on). The codebase has been updated to follow
-this rule everywhere – adding new FFI modules must follow the same pattern.
+The deprecated `PyCapsule::new` also drops its owning payload; its `None`
+argument is the optional name, not a missing destructor. Prefer the current
+named APIs. Raw foreign pointers require the unsafe pointer constructor and a
+matching type-specific destructor, with exactly-once ownership documented.
 
 ## Why there is no generic `cvec_drop` anymore
 
@@ -152,9 +144,10 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 3. The *Python/Cython* binding must guarantee that `*_drop` is invoked
     exactly once. Two approaches exist:
 
-    • **Preferred for new code**: Wrap the pointer in a `PyCapsule` created with
-      `PyCapsule::new_with_destructor`, passing a destructor that calls
-      the drop helper.
+    • **Preferred for new code**: Keep an owning typed `Send` value in
+      `PyCapsule::new_with_value`. For an existing foreign allocation, use
+      `new_with_pointer_and_destructor` with a static name and a destructor that
+      calls the matching drop helper; document its unsafe ownership contract.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 

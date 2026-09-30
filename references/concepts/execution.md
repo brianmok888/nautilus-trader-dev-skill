@@ -438,7 +438,7 @@ The likelihood of reconciliation race conditions increases when:
   provides time for WebSocket connections to stabilize before continuous reconciliation begins.
   Reducing this increases the chance of duplicate fills during the startup window.
 
-Since upstream `80938b7723` (at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`), the live
+Since upstream `80938b7723` (at pin `81d0449da0e353d702d88019dc73d231d67923cd`), the live
 `ExecutionManager` absorbs the same-fill ordering race engine-side before these thresholds are
 relevant: it queries exact fills before applying terminal mass-status order reports, deduplicates
 fills arriving via both the report and stream channels across ordering races, preserves newer

@@ -31,9 +31,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-trading` passed the skill domain's scoped examples and owners against `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-trading.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-trading` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-trading.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -47,10 +47,10 @@ Trading gates: Rust owns execution-critical order, risk, position, portfolio, an
 
 Keep strategy execution, order lifecycle, risk checks, positions, portfolio state, accounting, and execution algorithms in Rust. Enforce fail-closed decisions and terminal-event invariants, then verify order, fill, void, cancel, reconciliation, and precision behavior with targeted Rust tests and the required cargo gates.
 
-### Develop/nightly-only Rust component state lifecycle
+### Pinned Rust component state lifecycle
 
 Source: upstream develop commit `9a9e5fe7b762410229b380d5af92d32c13169c3a`.
-This support is **develop/nightly only** and is not available in the pinned baseline or stable releases; gate configuration and deployments by the actual upstream revision.
+This support is included in the pinned baseline. Its availability in stable releases must be checked separately.
 
 Across backtest and live, state-enabled kernels use
 `Cache::load_actor_state` and `Cache::load_strategy_state` to load before component startup, then call Rust `DataActor::on_load` and
@@ -75,9 +75,9 @@ Use PyO3 only for typed configuration, Rust component registration, lifecycle co
 Python migration material is pointer-only here and physically quarantined under `migration_reference/python/` for `nt-trading`.
 
 ## Source-pinned upstream lane
-Order event history is read-only at the pinned baseline (`9bafb63e7d`, upstream `21ecc5f854`): construct order cores with `OrderCore::new` and read history through `events()`; never assume direct field access or that `avg_px` is a running float average (it is a fixed-point fold rebuilt on corrections).
+Order event history is read-only at the pinned baseline (`81d0449da0`, upstream `21ecc5f854`): construct order cores with `OrderCore::new` and read history through `events()`; never assume direct field access or that `avg_px` is a running float average (it is a fixed-point fold rebuilt on corrections).
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81d0449da0e353d702d88019dc73d231d67923cd`.
 
 ## What This Skill Covers
 
@@ -117,7 +117,7 @@ See [Python Extension migration reference](migration_reference/python/python-ext
 New production work follows the Rust or bounded PyO3 sections below.
 
 ## v1.227.0 Rust trading deltas
-Source: upstream NautilusTrader pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`.
+Source: upstream NautilusTrader pin `81d0449da0e353d702d88019dc73d231d67923cd`.
 
 - `PortfolioSnapshot` events provide per-account mark-to-market snapshots when `snapshot_interval_ms` is configured; subscribe through the portfolio message-bus APIs when snapshot streams are part of the strategy contract.
 - Rust `Strategy` order APIs take optional `Params`; pass `None` when no custom params are needed to avoid needless `IndexMap` allocation.

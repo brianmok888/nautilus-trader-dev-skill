@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-002-phase-3-specific",
+  "finding_id": "NT-2026-09-30-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 002; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "304738bf8c56de5a18d55159d1abd688b46f29565b87efef9a1d58e660bf0f08",
+  "output_excerpt": "Inspected instrument_types.md:45-75: removed maker_fee/taker_fee fields. references/concepts/instruments.md:225-229 assigns backtest/sandbox commission to fee models and live commission to venue fills. Pinned accounts/base.rs:373-389 resolves explicit fee rates, not instrument fee properties.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

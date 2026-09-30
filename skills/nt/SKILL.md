@@ -11,7 +11,7 @@ NT v2 compatibility note: legacy, Cython/v1, Python `TradingNode`, and migration
 
 This repository is the generic NT skill layer and covers **NautilusTrader development only**. It teaches agents to architect, implement, test, integrate, operate, and review NautilusTrader components. It is independent of downstream project-specific skills and companion repositories; this router never composes downstream consumers.
 
-Upstream NautilusTrader source, developer guides, examples, and tests are **read-only ground truth**. Inspect them to verify APIs and standards. Do not modify the upstream repository, implement upstream features, prepare upstream commits, or treat upstream evidence as this repository's output.
+During maintenance of this skill repository, upstream NautilusTrader source, developer guides, examples, and tests are **read-only ground truth**. Do not modify the upstream evidence cache. Inspect it to verify APIs and standards; do not implement upstream features, prepare upstream commits, or treat upstream evidence as this repository's output. Separately authorized core contribution tasks use a disposable writable checkout as described below; the pinned evidence cache remains read-only.
 
 Route all strategy implementation in this repository to Rust-first skills.
 
@@ -34,7 +34,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
 | G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the aggregate router harness at `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/g2-evidence/nt.json` records provenance. Every retained child has current durable G2 evidence, including hybrid executable/static evidence for the migration-only `nt-strategy-builder` lane. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the aggregate router harness at `81d0449da0e353d702d88019dc73d231d67923cd`; `references/g2-evidence/nt.json` records provenance. Every retained child has current durable G2 evidence, including hybrid executable/static evidence for the migration-only `nt-strategy-builder` lane. |
 | G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
 | G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
 | G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
@@ -94,7 +94,7 @@ Migration/reference-only legacy material is physically quarantined under each sk
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+The authoritative pinned upstream commit is `81d0449da0e353d702d88019dc73d231d67923cd`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 

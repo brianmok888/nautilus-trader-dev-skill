@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-004-phase-3-specific",
+  "finding_id": "NT-2026-09-30-004",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 004; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "bdd15a167176508846fd2402a80e3c1febe2e14881d43ee79a2352a0a37e13d5",
+  "output_excerpt": "Inspected skills/nt-backtest/SKILL.md:447-453: processing uses ts_init; equal timestamps use priority and stream index, with DeFi replay-key tie-breakers. Compared pinned crates/backtest/src/data_iterator.rs:41-75 and :142-148.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

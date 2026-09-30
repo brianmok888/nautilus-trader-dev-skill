@@ -151,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Owned and hosted run modes (Python `LiveNode`)
 
 NT v2 compatibility note: upstream commit `e166a5e57c` finalized two run modes for the Python
-`LiveNode` and is included in the pinned baseline `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`;
+`LiveNode` and is included in the pinned baseline `81d0449da0e353d702d88019dc73d231d67923cd`;
 older pins through `6e59fd74ea`
 still exposed the historical `start`/`poll` entry points.
 
@@ -181,7 +181,6 @@ testers:
 | Architect AX        | `crates/adapters/architect_ax/examples/`        |
 | Betfair             | `crates/adapters/betfair/examples/`             |
 | Binance             | `crates/adapters/binance/examples/`             |
-| BitMEX              | `crates/adapters/bitmex/examples/`              |
 | Blockchain          | `crates/adapters/blockchain/examples/`          |
 | Bybit               | `crates/adapters/bybit/examples/`               |
 | Coinbase            | `crates/adapters/coinbase/examples/`            |

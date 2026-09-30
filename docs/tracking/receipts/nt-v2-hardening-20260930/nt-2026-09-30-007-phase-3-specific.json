@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-007-phase-3-specific",
+  "finding_id": "NT-2026-09-30-007",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P2",
+  "command": "manual-source-review: 007; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "3ebdcc84d1425ace15b78009186db5febbaf6fd0c29a5094028bf23f1e9c1332",
+  "output_excerpt": "Inspected skills/nt-live/SKILL.md:58-65, cache.md:853-866, and skills/nt-implement/SKILL.md:475: persistence, CustomData injection, and OrderInitialized::new_checked are available at pin 81d0449da; direct trader hooks are distinguished from node-managed persistence.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

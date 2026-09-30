@@ -20,6 +20,42 @@ NT_RUST_STRATEGY = REPO_ROOT / "skills/nt-strategy-builder-rust/SKILL.md"
 UPSTREAM_ROOT = default_upstream_root()
 EXPECTED_UPSTREAM_COMMIT = UPSTREAM_COMMIT
 
+def test_nt_dev_capsule_examples_compile_against_pinned_pyo3(tmp_path: Path) -> None:
+    package = (UPSTREAM_ROOT / "Cargo.lock").read_text().split('name = "pyo3"\n', 1)[1]
+    version = re.search(r'^version = "([^"]+)"', package)
+    assert version is not None
+    examples = (
+        ("skills/nt-dev/SKILL.md", "### PyCapsule Pattern"),
+        ("skills/nt-dev/references/guides/ffi_memory.md", "## Capsules created on the Rust side"),
+    )
+    crate = tmp_path / "capsule-smoke"
+    (crate / "src").mkdir(parents=True)
+    _ = (crate / "Cargo.toml").write_text(
+        '[package]\nname = "capsule-smoke"\nversion = "0.1.0"\nedition = "2024"\n'
+        + f'[dependencies]\npyo3 = "={version.group(1)}"\n',
+        encoding="utf-8",
+    )
+    functions: list[str] = []
+    for index, (path, heading) in enumerate(examples):
+        body = read(REPO_ROOT / path).split(heading, 1)[1]
+        snippet = re.search(r"```rust\n(.*?)\n```", body, re.DOTALL)
+        assert snippet is not None, path
+        argument = "" if "Python::attach" in snippet.group(1) else "py: Python<'_>"
+        functions.append(f"pub fn example_{index}({argument}) {{\n{snippet.group(1)}\n}}")
+    _ = (crate / "src/lib.rs").write_text(
+        "#![deny(warnings)]\nuse pyo3::{Python, types::PyCapsule};\n"
+        + "pub struct MyStruct;\nimpl MyStruct { pub fn new() -> Self { Self } }\n"
+        + "\n".join(functions),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [shutil.which("cargo") or str(Path.home() / ".cargo/bin/cargo"), f"+{_pinned_toolchain()}", "check", "--offline", "--manifest-path", str(crate / "Cargo.toml")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
 def _pinned_toolchain() -> str:
     channel = "stable"
     for line in (UPSTREAM_ROOT / "rust-toolchain.toml").read_text().splitlines():

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-015-phase-3-specific",
+  "finding_id": "NT-2026-09-30-015",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P2",
+  "command": "manual-source-review: 015; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "6bdbe8a517c33bf2a29086576cd6f4cd007e9ce1f7abb577f59576efcff27bd3",
+  "output_excerpt": "Inspected data_tester_config.md:135-144: LiveNode snippet is classified as bounded current Python control-plane use, not legacy TradingNode.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

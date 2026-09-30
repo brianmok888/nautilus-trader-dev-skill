@@ -11,7 +11,7 @@ Order Book (CLOB) API.
 The adapter is implemented in Rust and exposed to Python at
 `nautilus_trader.adapters.polymarket`; data, execution, signing, and WebSocket
 operations therefore have the same behavior from Rust and Python (pinned
-`9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, `docs/integrations/polymarket.md`).
+`81d0449da0e353d702d88019dc73d231d67923cd`, `docs/integrations/polymarket.md`).
 
 NautilusTrader supports multiple Polymarket signature types for order signing, which gives
 flexibility for different wallet configurations while NautilusTrader handles signing and order
@@ -59,7 +59,7 @@ Polymarket offers resources for different audiences:
   documentation for developers interacting with the Polymarket CLOB API.
 
 ## Overview
-Polymarket capability at the pinned baseline (`9bafb63e7d`): the Data API client is on v2 with cursor pagination; session keys support owner-operated session signing, authorization, listing, and revocation; Deposit Wallet position operations are available; and book recovery applies snapshot gating with stale-feed detection. `SignatureType` is renamed `PolymarketSignatureType` at this pin.
+Polymarket capability at the pinned baseline (`81d0449da0`): the Data API client is on v2 with cursor pagination; session keys support owner-operated session signing, authorization, listing, and revocation; Deposit Wallet position operations are available; and book recovery applies snapshot gating with stale-feed detection. `SignatureType` is renamed `PolymarketSignatureType` at this pin.
 
 This guide assumes a trader is setting up for both live market data feeds and trade execution.
 The pinned adapter (Rust, exposed to Python at `nautilus_trader.adapters.polymarket`) exposes these public components:

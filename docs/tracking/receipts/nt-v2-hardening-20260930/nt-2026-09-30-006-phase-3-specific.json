@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-006-phase-3-specific",
+  "finding_id": "NT-2026-09-30-006",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P2",
+  "command": "manual-source-review: 006; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "828113722206ed282e07a2aa8efca9ea2fdd255265ffbe905b39702b19d60d2f",
+  "output_excerpt": "Inspected references/api_reference/system.md:3-11 and live skill module inventory: unavailable nautilus_trader.system is not advertised; Rust kernel and flat live/backtest node exports are documented.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -73,9 +73,9 @@ impl AdapterConfigBinding {
 Quarantined Python examples and prior Python adapter guidance live under `migration_reference/python/` and `references/examples/migration_reference/`. They are migration/reference-only, never the production default.
 
 ## Source-pinned upstream lane
-Python custom adapter support is available at the pinned baseline (`9bafb63e7d`, upstream `e9848a98ca`): adapter factories expose a Python registration path for custom adapters. Prefer the Rust core + PyO3 lane for production; use the Python path only for Python-side custom adapters.
+Python custom adapter support is available at the pinned baseline (`81d0449da0`, upstream `e9848a98ca`): adapter factories expose a Python registration path for custom adapters. Prefer the Rust core + PyO3 lane for production; use the Python path only for Python-side custom adapters.
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `81d0449da0e353d702d88019dc73d231d67923cd`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
 
 ## What This Skill Covers
 
@@ -152,10 +152,11 @@ Current venue safety overlays:
   the first heartbeat fails, and treat a later failure as execution-channel
   loss. Source: upstream develop commit
   `276e5410115edb40baac9270876c970550c086ee`.
-- BitMEX is scheduled to close on 23 September 2026 at 04:00 UTC. Treat the
-  adapter as migration-only for new deployments and verify the current venue
-  status before planning production use. Source: upstream develop commit
-  `90b3d71b0e2e5ec8fa4b366cbf68a8f04996b4c1`.
+- BitMEX is historical/reference-only: its Rust crate and Python adapter module
+  are unavailable at pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`.
+  Retained examples cannot provide current production wiring. The adapter was
+  removed following exchange closure in upstream commit
+  `3adf5a8dc0c9e676eb1e131911a73ad693ea7b42`.
 
 Adapters follow a layered architecture:
 
@@ -540,7 +541,7 @@ account channels on a timer, and cancel the refresh loop with `CancellationToken
 ### Task Management
 
 Classify every production task by its owner before choosing storage and
-shutdown (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`, `docs/developer_guide/adapters.md` "Task
+shutdown (pinned `81d0449da0e353d702d88019dc73d231d67923cd`, `docs/developer_guide/adapters.md` "Task
 management"; `crates/live/src/task.rs`):
 
 | Ownership | Use | Required behavior |
@@ -653,6 +654,6 @@ Rust adapter code must include:
 - `references/examples/` — Per-adapter runnable examples
 - `references/integrations/` — Per-adapter integration docs
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `81d0449da0e353d702d88019dc73d231d67923cd`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

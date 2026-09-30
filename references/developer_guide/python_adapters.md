@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/python_adapters/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/python_adapters.md
-source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
-sync_date: 2026-09-19
+source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
+sync_date: 2026-09-30
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -399,8 +399,10 @@ make an unchanged Cython adapter source-compatible.
   subscription methods.
 - **Database cache backing**: unsupported with custom Python clients in either launch mode. See
   [startup](#startup-scheduling-and-shutdown) and [hosted event loops](../concepts/live.md#hosted-event-loops).
-- **Revised bars**: config retains `handle_revised_bars`, but the v2 core lacks the v1 bar revision
-  marker and revision overwrite behavior.
+- **Revised bars**: config retains `handle_revised_bars`, and the v2 core cache now replaces a
+  cached time bar when a later bar arrives with an equal `ts_event`, skipping older bars. The v1
+  `Bar.is_revision` marker is still absent, so whether revised bars are emitted at all remains
+  adapter-level filtering.
 - **Networking**: this interface does not restore removed HTTP/WebSocket bindings.
 
 ## Independent Rust/PyO3 packages

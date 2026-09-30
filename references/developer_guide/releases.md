@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/releases/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/releases.md
-source_commit: 9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7
-sync_date: 2026-09-19
+source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
+sync_date: 2026-09-30
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -264,7 +264,7 @@ New features and user-visible improvements.
 
 ```markdown
 - Added `subscribe_order_fills(...)` and `unsubscribe_order_fills(...)` for `Actor`
-- Added BitMEX conditional orders support
+- Added Bybit conditional orders support
 - Added support for `OrderBookDepth10` requests (#2955), thanks @faysou
 ```
 
@@ -423,13 +423,13 @@ Note: Plain logic panics belong in Fixes unless they threaten system stability o
 **Enhancements** (user-facing):
 
 ```markdown
-- Added BitMEX conditional orders support
+- Added Bybit conditional orders support
 ```
 
 **Internal** (implementation):
 
 ```markdown
-- Implemented BitMEX ping/pong handling
+- Implemented Bybit ping/pong handling
 ```
 
 ## Release notes template

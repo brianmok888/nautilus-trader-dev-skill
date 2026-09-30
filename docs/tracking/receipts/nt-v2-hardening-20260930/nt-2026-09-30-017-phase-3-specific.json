@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-017-phase-3-specific",
+  "finding_id": "NT-2026-09-30-017",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "PYTHONPATH=/tmp/nt-currency-20260930/python python3 -c 'import tempfile,pathlib,decimal\nfrom nautilus_trader.execution import MakerTakerFeeModel\nfrom nautilus_trader.backtest import BacktestEngine,BacktestEngineConfig\nfrom nautilus_trader.persistence import StreamingConfig,DataCatalogConfig,ParquetDataCatalog\nfrom nautilus_trader.model import CurrencyPair,InstrumentId,Symbol,Currency,Price,Quantity,QuoteTick,Venue,OmsType,AccountType,Money\nwith tempfile.TemporaryDirectory(prefix='\\''nt-phase3-stream-'\\'') as tmp:\n p=pathlib.Path(tmp); staging=p/'\\''staging'\\''; catalog=p/'\\''catalog'\\''\n config=StreamingConfig(writer_path=str(staging),catalog=DataCatalogConfig(path=str(catalog)),promote_on_close=True)\n engine=BacktestEngine(BacktestEngineConfig(streaming=config,bypass_logging=True))\n instrument=CurrencyPair(InstrumentId.from_str('\\''EURUSD.SIM'\\''),Symbol('\\''EURUSD'\\''),Currency.from_str('\\''EUR'\\''),Currency.from_str('\\''USD'\\''),5,0,Price.from_str('\\''0.00001'\\''),Quantity.from_str('\\''1'\\''),0,0)\n engine.add_venue(Venue('\\''SIM'\\''),OmsType.NETTING,AccountType.CASH,[Money.from_str('\\''100000 USD'\\'')],fee_model=MakerTakerFeeModel(decimal.Decimal('\\''0'\\''),decimal.Decimal('\\''0'\\'')))\n engine.add_instrument(instrument)\n quotes=[QuoteTick(instrument.id,Price.from_str('\\''1.10000'\\''),Price.from_str('\\''1.10001'\\''),Quantity.from_str('\\''100'\\''),Quantity.from_str('\\''100'\\''),n,n) for n in (1000000000,2000000000,3000000000)]\n engine.add_data(quotes);engine.run();engine.dispose()\n feather=list(staging.rglob('\\''*.feather'\\'')); parquet=list(catalog.rglob('\\''*.parquet'\\''))\n result=ParquetDataCatalog(str(catalog)).query_quote_ticks()\n assert len(result)==3,(len(result),feather,parquet)\n assert feather and parquet,(feather,parquet)\n print('\\''input=3; synchronous dispose; staged Feather files='\\''+str(len(feather))+'\\''; promoted Parquet files='\\''+str(len(parquet))+'\\''; catalog quotes='\\''+str(len(result))+'\\''; separate staging/catalog paths'\\'')\n'",
+  "exit_code": 0,
+  "output_sha256": "2b305e89886075130bae4d2400a6fefa3f85f189cd4ba1325259e9ebfe4f2fa9",
+  "output_excerpt": "input=3; synchronous dispose; staged Feather files=2; promoted Parquet files=2; catalog quotes=3; separate staging/catalog paths\nEarlier setup attempts failed on InstrumentId constructor, explicit fee-model requirement, and single-currency cash restriction; corrected setup above exited0. Manual source review confirms current constructors in shared and both skill-local examples.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

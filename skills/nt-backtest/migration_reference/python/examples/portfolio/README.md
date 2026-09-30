@@ -3,7 +3,8 @@
 A simple strategy demonstrating how to use Portfolio in NautilusTrader.
 
 The Portfolio is a central component that tracks the state of your trading account.
-It connects directly to the broker to get real-time positions, balances, and P&L.
+It derives account, position, and P&L views from the engine cache and event updates;
+these queries do not connect directly to a broker.
 
 ## Example Highlights
 
@@ -46,18 +47,17 @@ Key differences between `Portfolio` and `Cache`:
 
 `Portfolio`:
 
-- Gets data directly from broker for maximum accuracy.
-- Best for real-time position and risk management.
-- Provides authoritative account state (margins, balances).
-- Should be used for critical trading decisions.
+- Calculates account, P&L, exposure, and margin views from cached state.
+- Receives account, order, and position updates through the engine message bus.
+- Does not perform a broker request for each query.
 
 `Cache`:
 
 - Stores all trading data in system memory.
 - Useful for quick access to historical data and market state.
-- More efficient for frequent queries as it avoids broker round-trips.
+- Provides direct access to cached objects; portfolio queries also use this cache.
 - Updates automatically as new data arrives.
-- Might have minimal delay compared to broker data.
+- Reflects events processed by the engine, not a separate broker-freshness guarantee.
 
 ## Additional Resources
 

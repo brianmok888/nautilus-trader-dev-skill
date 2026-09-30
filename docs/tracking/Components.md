@@ -6,9 +6,9 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Current per-skill behavior, ownership, and executable readiness. -->
 <!-- Does NOT contain: plans, historical attestations, or removed lanes. -->
 
-Review date: 2026-09-19
-Reviewed upstream develop: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
-Pinned G2 baseline: `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`
+Review date: 2026-09-30
+Reviewed upstream develop: `81d0449da0e353d702d88019dc73d231d67923cd`
+Pinned G2 baseline: `81d0449da0e353d702d88019dc73d231d67923cd`
 
 The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its G2 harness requires a separately prepared writable checkout with the pinned Python V2 PyO3 runtime. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
@@ -34,12 +34,14 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 
 ## Final readiness summary
 
-- Upstream delta: Pass - reviewed exactly through `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`.
+- Upstream delta: Pass - reviewed exactly through `81d0449da0e353d702d88019dc73d231d67923cd`.
 - Repository scope: Pass - 17 retained NautilusTrader-development skills; active removed-lane routes absent.
 - Readiness cards: Pass - all 136 G0-G7 declarations are structurally complete.
 - G2 execution: Pass - all 17 harnesses completed against the pin and their durable evidence matches final owned content.
 - Repository validation: Pass - focused regressions, legacy labelling, guide snapshots, and Rust reference sync are green.
-- Release readiness: Pass - all 17 NautilusTrader-development skill cards are green.
+- Skill-pack readiness: Pass - all 19 current findings have independent specific receipts, all 17 G2 harnesses pass, and all 136 gate declarations validate. Phase 2 receipt provenance is absent; fresh Phase 3 verification records that limitation.
+- Shipping: Pending - commits, integration, push, and publication require separate authorization.
+- Production strategy readiness: Not assessed - downstream strategies must run the ExecTester capability matrix and deployment acceptance gates; skill-pack evidence does not establish application readiness.
 
 ## Shared boundaries
 

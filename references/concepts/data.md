@@ -1146,17 +1146,15 @@ node_config = TradingNodeConfig(
 For streaming data to catalogs during live trading or backtesting, use `StreamingConfig`:
 
 ```python
-from nautilus_trader.persistence.config import StreamingConfig, RotationMode
-import pandas as pd
+from nautilus_trader.config import DataCatalogConfig
+from nautilus_trader.persistence import StreamingConfig, RotationConfig
 
 streaming_config = StreamingConfig(
-    catalog_path="/path/to/streaming/catalog",
-    fs_protocol="file",
+    writer_path="/path/to/streaming/staging",
+    catalog=DataCatalogConfig(path="/path/to/streaming/catalog"),
     flush_interval_ms=1000,  # Flush every second
     replace_existing=False,
-    rotation_mode=RotationMode.DAILY,
-    rotation_interval=pd.Timedelta(hours=1),
-    max_file_size=1024 * 1024 * 100,  # 100MB max file size
+    rotation_config=RotationConfig.size(1024 * 1024 * 100),
 )
 ```
 
@@ -1387,12 +1385,13 @@ The catalog supports streaming data to temporary feather files during backtests,
 
 ```python
 from option_trader.greeks import GreeksData
-from nautilus_trader.persistence.config import StreamingConfig
+from nautilus_trader.config import DataCatalogConfig
+from nautilus_trader.persistence import StreamingConfig
 
 # 1. Configure streaming for custom data
 streaming = StreamingConfig(
-    catalog_path=catalog.path,
-    include_types=[GreeksData],
+    writer_path=str(catalog.path),
+    catalog=DataCatalogConfig(path=str(catalog.path)),
     flush_interval_ms=1000,
 )
 

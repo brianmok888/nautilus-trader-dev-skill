@@ -1,41 +1,141 @@
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
 # Instruments
 
-The `Instrument` base class represents the core specification for any tradable asset/contract. There are
-currently a number of subclasses representing a range of *asset classes* and *instrument classes* which are supported by the platform:
+An instrument represents the specification for a tradable asset, contract, or local
+synthetic market. Market data, orders, positions, accounting, portfolio calculations,
+and adapter symbology all refer back to an `InstrumentId` and its instrument definition.
 
-- `Equity`: Listed shares or ETFs traded on cash markets.
-- `CurrencyPair`: Spot FX or crypto pair in BASE/QUOTE format traded in cash markets.
-- `Commodity`: Spot commodity instrument (e.g., gold or oil) traded in cash markets.
-- `IndexInstrument`: Spot index calculated from constituents; used as a reference price and not directly tradable.
-- `FuturesContract`: Deliverable futures contract with defined underlying, expiry, and multiplier.
-- `FuturesSpread`: Exchange-defined multi-leg futures strategy (e.g., calendar or inter-commodity) quoted as one instrument.
-- `CryptoFuture`: Dated, deliverable crypto futures contract with fixed expiry, underlying crypto, and settlement currency.
-- `CryptoPerpetual`: Perpetual futures contract (perpetual swap) on crypto with no expiry; can be inverse or quanto-settled.
-- `PerpetualContract`: Asset-class agnostic perpetual swap for any underlying (FX, equities, commodities, indexes, crypto).
-- `OptionContract`: Exchange-traded option (put or call) on an underlying with strike and expiry.
-- `OptionSpread`: Exchange-defined multi-leg options strategy (e.g., vertical, calendar, straddle) quoted as one instrument.
-- `CryptoOption`: Option on a crypto underlying with crypto quote/settlement; supports inverse or quanto styles.
-- `BinaryOption`: Fixed-payout option that settles to 0 or 1 based on a binary outcome.
-- `Cfd`: Over-the-counter Contract for Difference that tracks an underlying and is cash-settled.
-- `BettingInstrument`: Sports/gaming market selection (e.g., team or runner) tradable on betting venues.
-- `SyntheticInstrument`: Synthetic instrument with prices derived from component instruments using a formula.
+NautilusTrader exposes the same instrument model to Rust and Python users. Rust
+examples use `nautilus_model`; Python examples use `nautilus_trader.model`.
+
+## Instrument types
+
+| Instrument type                                   | `InstrumentClass` | Description                                          | Typical adapters                |
+| ------------------------------------------------- | ----------------- | ---------------------------------------------------- | ------------------------------- |
+| [`Equity`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/equity.md)                             | `SPOT`            | Listed share or ETF traded on a cash market.         | Databento, Interactive Brokers. |
+| [`CurrencyPair`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/currency_pair.md)                | `SPOT`            | Fiat FX or crypto spot pair in base/quote form.      | Binance, Kraken, OKX, Tardis.   |
+| [`Commodity`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/commodity.md)                       | `SPOT`            | Spot commodity such as gold or oil.                  | Interactive Brokers.            |
+| [`Cfd`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/cfd.md)                                   | `CFD`             | Contract for difference tracking an underlying.      | Interactive Brokers.            |
+| [`IndexInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/index_instrument.md)          | `SPOT`            | Reference index, not directly tradable.              | Interactive Brokers.            |
+| [`TokenizedAsset`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/tokenized_asset.md)            | `SPOT`            | Tokenized asset on a crypto venue.                   | Kraken.                         |
+| [`FuturesContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/futures_contract.md)          | `FUTURE`          | Dated futures contract.                              | Databento, Interactive Brokers. |
+| [`FuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/futures_spread.md)              | `FUTURES_SPREAD`  | Exchange defined futures strategy with several legs. | Databento, Interactive Brokers. |
+| [`CryptoFuture`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_future.md)                | `FUTURE`          | Dated crypto futures contract.                       | Bybit, Deribit, OKX.            |
+| [`CryptoFuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_futures_spread.md) | `FUTURES_SPREAD`  | Exchange defined crypto futures spread.              | Deribit, OKX.                   |
+| [`CryptoPerpetual`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_perpetual.md)          | `SWAP`            | Crypto perpetual futures contract.                   | Binance, Bybit, dYdX.           |
+| [`PerpetualContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/perpetual_contract.md)      | `SWAP`            | Perpetual futures contract across asset classes.     | Architect AX, Binance.          |
+| [`OptionContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/option_contract.md)            | `OPTION`          | Exchange traded put or call option.                  | Databento, Interactive Brokers. |
+| [`OptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/option_spread.md)                | `OPTION_SPREAD`   | Exchange defined options strategy with several legs. | Databento, Interactive Brokers. |
+| [`CryptoOption`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_option.md)                | `OPTION`          | Option on a crypto underlying.                       | Bybit, Deribit, OKX, Tardis.    |
+| [`CryptoOptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_option_spread.md)   | `OPTION_SPREAD`   | Exchange defined crypto option spread.               | Deribit, OKX.                   |
+| [`BinaryOption`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/binary_option.md)                | `BINARY_OPTION`   | Binary instrument that settles to 0 or 1.            | Hyperliquid, OKX, Polymarket.   |
+| [`BettingInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/betting_instrument.md)      | `SPORTS_BETTING`  | Sports or gaming market selection.                   | Betfair.                        |
+| [`SyntheticInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/synthetic_instrument.md)  | n/a               | Formula derived local instrument.                    | Local only.                     |
+
+## Taxonomy
+
+NautilusTrader groups instruments by the market structure they represent:
+
+```mermaid
+flowchart TD
+    I[Instrument Types]
+    I --> Spot
+    I --> Derivatives
+    I --> Other
+
+    Spot --> Equity
+    Spot --> CurrencyPair
+    Spot --> Commodity
+    Spot --> IndexInstrument
+    Spot --> TokenizedAsset
+
+    Derivatives --> Futures
+    Derivatives --> Options
+    Derivatives --> Swaps
+    Derivatives --> Cfd
+
+    Futures --> FuturesContract
+    Futures --> FuturesSpread
+    Futures --> CryptoFuture
+    Futures --> CryptoFuturesSpread
+
+    Options --> OptionContract
+    Options --> OptionSpread
+    Options --> CryptoOption
+    Options --> CryptoOptionSpread
+    Options --> BinaryOption
+
+    Swaps --> CryptoPerpetual
+    Swaps --> PerpetualContract
+
+    Other --> BettingInstrument
+    Other --> SyntheticInstrument
+```
+
+## Common fields
+
+Most concrete instruments share the same core shape. Individual type pages list the
+complete constructor and struct fields for that type.
+
+| Field             | Meaning                                                             |
+| ----------------- | ------------------------------------------------------------------- |
+| `id`              | Nautilus `InstrumentId`, formed from a symbol and venue.            |
+| `raw_symbol`      | Native venue symbol before Nautilus normalization.                  |
+| `price_precision` | Configured number of decimal places for price values.               |
+| `size_precision`  | Configured number of decimal places for quantity values.            |
+| `price_increment` | Smallest valid price step.                                          |
+| `size_increment`  | Smallest valid quantity step.                                       |
+| `multiplier`      | Contract multiplier used in notional and PnL calculations.          |
+| `lot_size`        | Rounded lot or board size when the venue publishes one.             |
+| `margin_init`     | Initial margin rate as a decimal fraction of notional value.        |
+| `margin_maint`    | Maintenance margin rate as a decimal fraction of notional value.    |
+| `max_quantity`    | Maximum order quantity when known.                                  |
+| `min_quantity`    | Minimum order quantity when known.                                  |
+| `max_notional`    | Maximum order notional value when known.                            |
+| `min_notional`    | Minimum order notional value when known.                            |
+| `max_price`       | Maximum valid quote or order price when known.                      |
+| `min_price`       | Minimum valid quote or order price when known.                      |
+| `tick_scheme`     | Registered variable tick scheme name where the type supports one.   |
+| `info`            | Adapter metadata preserved from the venue or data source.           |
+| `ts_event`        | UNIX nanosecond timestamp for when the definition event occurred.   |
+| `ts_init`         | UNIX nanosecond timestamp for when Nautilus initialized the object. |
 
 ## Symbology
 
-All instruments should have a unique `InstrumentId`, which is made up of both the native symbol, and venue ID, separated by a period.
-For example, on the Binance Futures crypto exchange, the Ethereum Perpetual Futures Contract has the instrument ID `ETHUSDT-PERP.BINANCE`.
+Every instrument has a unique `InstrumentId` made from a Nautilus symbol and venue,
+separated by a period. The separate `raw_symbol` field preserves the venue's native
+symbol. For example, Binance Futures represents the Ethereum perpetual contract as:
 
-All native symbols *should* be unique for a venue (this is not always the case e.g. Binance share native symbols between spot and futures markets),
-and the `{symbol.venue}` combination *must* be unique for a Nautilus system.
+```text
+ETHUSDT-PERP.BINANCE
+```
+
+Native symbols should be unique for a venue, but this is not guaranteed by every
+exchange. The Nautilus `{symbol}.{venue}` pair must be unique inside a system.
 
 :::warning
-The correct instrument must be matched to a market dataset such as ticks or order book data for logically sound operation.
-An incorrectly specified instrument may truncate data or otherwise produce surprising results.
+The instrument definition must match the market data and venue order semantics. An
+incorrect instrument can truncate prices or quantities, calculate notional values with
+the wrong currency, or make a backtest accept prices a live venue would reject.
 :::
 
-## Backtesting
+## Rust and Python surfaces
+
+Rust users work with the `nautilus_model` instrument structs and `InstrumentAny`:
+
+```rust
+use nautilus_model::instruments::{CurrencyPair, InstrumentAny};
+```
+
+Python users normally work with instrument classes from `nautilus_trader.model`:
+
+```python
+from nautilus_trader.model import CurrencyPair
+```
+
+Both surfaces represent the same instrument contract: identity, precision, increments,
+currencies, limits, margins, fees, metadata, and timestamps.
+
+## Loading instruments
 
 Generic test instruments can be instantiated through the `TestInstrumentProvider`:
 
@@ -45,142 +145,55 @@ from nautilus_trader.testkit.providers import TestInstrumentProvider
 audusd = TestInstrumentProvider.default_fx_ccy("AUD/USD")
 ```
 
-Live integration adapters expose `InstrumentProvider` objects that cache the latest
-instrument definitions for the exchange automatically (Rust adapters at the pin do this
-without a user-facing Python provider class; configure loading via
-`InstrumentProviderConfig(load_all=True)` or `load_ids` where the integration supports it).
-Order submission requires the matching instrument definition to exist in the central cache.
-
-Or flexibly defined by the user through an `Instrument` constructor, or one of its more specific subclasses:
-
-```python
-from nautilus_trader.model import Instrument
-
-instrument = Instrument(...)  # <-- provide all necessary parameters
-```
-
-See the full instrument [API Reference](https://nautilustrader.io/docs/latest/api_reference/model/instruments/).
-
-## Live trading
-
-Live integration adapters have defined `InstrumentProvider` classes which work in an automated way to cache the
-latest instrument definitions for the exchange. Refer to a particular `Instrument`
-object by passing the matching `InstrumentId` to data and execution related methods and classes that require one.
+Live integration adapters expose `InstrumentProvider` objects that cache instrument
+definitions. Use `InstrumentProviderConfig(load_all=True)` where the integration
+supports it, or `load_ids` to load a known set of instruments. Order submission requires
+the matching instrument definition to exist in the central cache.
 
 ## Finding instruments
 
-Since the same actor/strategy classes can be used for both backtest and live trading, you can
-get instruments in exactly the same way through the central cache:
+Strategies and actors retrieve instruments from the central cache:
 
-```python
+```rust tab="Rust"
+use nautilus_model::identifiers::InstrumentId;
+
+let instrument_id = InstrumentId::from("ETHUSDT-PERP.BINANCE");
+let instrument = cache.instrument(&instrument_id);
+```
+
+```python tab="Python"
 from nautilus_trader.model import InstrumentId
 
 instrument_id = InstrumentId.from_str("ETHUSDT-PERP.BINANCE")
 instrument = self.cache.instrument(instrument_id)
 ```
 
-It's also possible to subscribe to any changes to a particular instrument:
+It is also possible to subscribe to one instrument or all instruments for a venue:
 
 ```python
 self.subscribe_instrument(instrument_id)
+self.subscribe_instruments(venue)
 ```
 
-Or subscribe to all instrument changes for an entire venue:
-
-```python
-from nautilus_trader.model import Venue
-
-binance = Venue("BINANCE")
-self.subscribe_instruments(binance)
-```
-
-When an update to the instrument(s) is received by the `DataEngine`, the object(s) will
-be passed to the actors/strategies `on_instrument()` method. A user can override this method with actions
-to take upon receiving an instrument update:
-
-```python
-from nautilus_trader.model import Instrument
-
-
-def on_instrument(self, instrument: Instrument) -> None:
-    # Take some action on an instrument update
-    pass
-```
+When the `DataEngine` receives an instrument update, it passes the object to the
+`on_instrument()` handler.
 
 ## Precision
 
-Precision defines the number of decimal places allowed for prices and quantities on a
-given instrument. Every instrument specifies a `price_precision` and `size_precision`
-that determine the valid fractional resolution for that market.
+For order validation, `price_precision` and `size_precision` set the maximum number of
+decimal places that the `RiskEngine` accepts. `price_increment` and `size_increment`
+record the corresponding minimum steps.
 
-NautilusTrader enforces precision strictly by design. This section explains the rationale
-and mechanics behind this approach.
+| Field             | Constrains                           | Example           |
+| ----------------- | ------------------------------------ | ----------------- |
+| `price_precision` | Order prices, trigger prices, fills. | `2` -> `50000.01` |
+| `size_precision`  | Order quantities and fill sizes.     | `5` -> `1.00001`  |
 
-### Why precision is enforced
+The price increment precision must match `price_precision`, and the size increment
+precision must match `size_precision`. For example, `price_precision=2` pairs with
+`price_increment=Price(0.01, 2)`.
 
-**Realistic market simulation.** Real exchanges only accept prices and sizes at specific
-precisions. A crypto spot market may support prices to 2 decimal places (e.g., `50000.01`)
-while a different market supports 8 (e.g., `0.00012345`). Allowing arbitrary precision
-in a backtest would produce fills at price levels that could never exist in production,
-leading to misleading performance metrics.
-
-**Venue compatibility.** Most exchanges validate price and size precision on incoming
-orders and reject those that exceed the instrument's specification. Enforcing precision
-at the platform level catches a common class of these issues early. Note that venues may
-also enforce tick-multiple or step-size constraints beyond what the `RiskEngine` currently
-validates, so precision compliance alone does not guarantee venue acceptance.
-
-**Deterministic calculations.** Fixed-point arithmetic with explicit precision eliminates
-floating-point drift and ensures calculations are reproducible across platforms and
-environments. Two systems processing the same data will always produce identical results.
-
-**Data integrity.** The backtesting matching engine validates that all incoming market
-data (quotes, trades, bars) matches the instrument's declared precision. This catches
-mismatches between instrument definitions and data sources early, preventing silent
-corruption of fill prices and quantities.
-
-### How precision works
-
-Each instrument defines two precision values:
-
-| Field             | Constrains                           | Example            |
-|-------------------|--------------------------------------|--------------------|
-| `price_precision` | Order prices, trigger prices, fills. | `2` → `50000.01`  |
-| `size_precision`  | Order quantities, fill quantities.   | `5` → `1.00001`   |
-
-These precisions are paired with minimum increments:
-
-| Field             | Purpose                                  |
-|-------------------|------------------------------------------|
-| `price_increment` | Smallest valid price change (tick size). |
-| `size_increment`  | Smallest valid quantity change.          |
-
-The increment's own precision must exactly match the instrument's declared precision.
-For example, an instrument with `price_precision=2` and `price_increment=Price(0.01, 2)`
-is valid, but a mismatch between these values will raise an error at instrument creation.
-
-### Where precision is enforced
-
-Precision is validated at multiple levels throughout the platform:
-
-1. **Instrument creation**: The precision of `price_increment` and `size_increment` must
-   match `price_precision` and `size_precision` respectively.
-2. **Risk engine**: Before an order reaches the venue, the `RiskEngine` checks that the
-   order's price and quantity precision do not exceed the instrument's limits. Orders that
-   fail this check are denied.
-3. **Matching engine**: During backtesting, the matching engine validates that all incoming
-   market data matches the instrument's precision. Mismatches raise a `RuntimeError`
-   immediately.
-
-:::warning
-The `RiskEngine` does not round values automatically. If you create a `Price` with
-5 decimal places on an instrument that supports 2, the order will be denied. Use
-`instrument.make_price()` and `instrument.make_qty()` to round explicitly.
-:::
-
-### Working with instrument precision
-
-Use the instrument's factory methods to create values with correct precision:
+Use the instrument factory methods to round values to the configured precision:
 
 ```python
 instrument = self.cache.instrument(instrument_id)
@@ -189,337 +202,46 @@ price = instrument.make_price(0.90500)
 quantity = instrument.make_qty(150)
 ```
 
-These methods round the input to the instrument's declared precision, ensuring the
-result will pass precision checks. Other validation rules still apply (e.g., min/max
-quantity limits), and `make_qty()` will raise if the rounded value is zero.
+These methods round to the corresponding increment precision, which instrument
+construction requires to match the declared precision. They do not ensure that the
+result is a multiple of an increment such as `0.25`.
 
-:::tip
-Always use `instrument.make_price()` and `instrument.make_qty()` when creating order
-parameters. This avoids precision mismatch errors and ensures your values have the
-correct number of decimal places for the instrument.
+:::warning
+The `RiskEngine` does not round values automatically. If you create a `Price` with
+5 decimal places for an instrument that supports 2, the order is denied. Use
+`instrument.make_price()` and `instrument.make_qty()` to round explicitly. The
+`RiskEngine` also does not validate increment multiples, so ensure that prices and
+quantities match the venue steps before submission.
 :::
 
-If you encounter precision mismatch errors during backtesting, verify that:
+## Limits, margins, and fees
 
-1. The instrument definition matches your data source's precision.
-2. Data was not inadvertently rounded or truncated during loading.
-3. Custom data loaders preserve the original precision metadata.
+Venue and adapter definitions can include optional limits:
 
-## Limits
+- `max_quantity` and `min_quantity`.
+- `max_notional` and `min_notional`.
+- `max_price` and `min_price`.
 
-Certain value limits are optional for instruments and can be `None`, these are exchange
-dependent and can include:
+Margin models use `margin_init` and `margin_maint` to calculate initial and maintenance
+margin. Instruments do not carry maker or taker fee rates. Backtest and sandbox
+commission uses a [fee model](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/behavioral_models.md). Live commissions come from
+venue fills. Fee models use one rate convention:
 
-- `max_quantity` (maximum quantity for a single order).
-- `min_quantity` (minimum quantity for a single order).
-- `max_notional` (maximum value of a single order).
-- `min_notional` (minimum value of a single order).
-- `max_price` (maximum valid quote or order price).
-- `min_price` (minimum valid quote or order price).
+- Positive fee rates represent commissions.
+- Negative fee rates represent rebates.
 
-:::note
-Most of these limits are checked by the Nautilus `RiskEngine`, otherwise exceeding
-published limits *can* result in the exchange rejecting orders.
-:::
+For deeper accounting behavior, see [Accounting](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/accounting.md).
 
-## Margins and fees
+## Metadata
 
-Margin calculations are handled by the `MarginAccount` class. This section explains how margins work and introduces key concepts you need to know.
-
-### When margins apply?
-
-Each exchange (e.g., CME or Binance) operates with a specific account type that determines whether margin calculations are applicable.
-When setting up an exchange venue, you'll specify one of these account types:
-
-- `AccountType.MARGIN`: Accounts that use margin calculations, which are explained below.
-- `AccountType.CASH`: Simple accounts where margin calculations do not apply.
-- `AccountType.BETTING`: Accounts designed for betting, which also do not involve margin calculations.
-
-### Vocabulary
-
-To understand trading on margin, let’s start with some key terms:
-
-**Notional Value**: The total contract value in the quote currency. It represents the full market value of your position. For example, with EUR/USD futures on CME (symbol 6E).
-
-- Each contract represents 125,000 EUR (EUR is base currency, USD is quote currency).
-- If the current market price is 1.1000, the notional value equals 125,000 EUR × 1.1000 (price of EUR/USD) = 137,500 USD.
-
-**Leverage** (`leverage`): The ratio that determines how much market exposure you can control relative to your account deposit. For example, with 10× leverage, you can control 10,000 USD worth of positions with 1,000 USD in your account.
-
-**Initial Margin** (`margin_init`): The margin rate required to open a position. It represents the minimum amount of funds that must be available in your account to open new positions. This is only a pre-check; no funds are actually locked.
-
-**Maintenance Margin** (`margin_maint`): The margin rate required to keep a position open. This amount is locked in your account to maintain the position. It is always lower than the initial margin. You can view the total blocked funds (sum of maintenance margins for open positions) using the following in your strategy:
-
-```python
-self.portfolio.balances_locked(venue)
-```
-
-**Maker/Taker Fees**: The fees charged by exchanges based on your order's interaction with the market:
-
-- Maker Fee (`maker_fee`): A fee (typically lower) charged when you "make" liquidity by placing an order that remains on the order book. For example, a limit buy order below the current price adds liquidity, and the *maker* fee applies when it fills.
-- Taker Fee (`taker_fee`): A fee (typically higher) charged when you "take" liquidity by placing an order that executes immediately. For instance, a market buy order or a limit buy above the current price removes liquidity, and the *taker* fee applies.
-
-**Fee rate sign convention**: Nautilus uses a consistent sign convention for fee rates across all adapters and the backtesting engine:
-
-- **Positive fee rate** = commission (fee charged, reducing account balance).
-- **Negative fee rate** = rebate (fee earned, increasing account balance).
-
-For example, a maker fee of `-0.00025` means you receive a 0.025% rebate for providing liquidity, while a taker fee of `0.00075` means you pay a 0.075% commission for taking liquidity.
-
-:::note
-Different exchanges use different sign conventions in their APIs. Nautilus adapters normalize these to the convention above. If you're manually specifying fee rates for backtesting, ensure you follow this convention.
-:::
-
-:::tip
-Not all exchanges or instruments implement maker/taker fees. If absent, set both `maker_fee` and `taker_fee` to 0 for the `Instrument` (e.g., `FuturesContract`, `Equity`, `CurrencyPair`, `Commodity`, `Cfd`, `BinaryOption`, `BettingInstrument`).
-:::
-
-### Margin calculation formula
-
-The `MarginAccount` class calculates margins using the following formulas:
-
-```python
-# Initial margin calculation
-margin_init = (notional_value / leverage * margin_init) + (
-    notional_value / leverage * taker_fee
-)
-
-# Maintenance margin calculation
-margin_maint = (notional_value / leverage * margin_maint) + (
-    notional_value / leverage * taker_fee
-)
-```
-
-**Key Points**:
-
-- Both formulas follow the same structure but use their respective margin rates (`margin_init` and `margin_maint`).
-- Each formula consists of two parts:
-  - **Primary margin calculation**: Based on notional value, leverage, and margin rate.
-  - **Fee Adjustment**: Accounts for the maker/taker fee.
-
-### Implementation details
-
-For those interested in exploring the technical implementation:
-
-NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
-
-- Rust implementation: [`crates/model/src/accounts/margin.rs`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/model/src/accounts/margin.rs)
-- PyO3 binding: [`crates/model/src/python/account/margin.rs`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/model/src/python/account/margin.rs)
-- Key methods: `calculate_margin_init(...)` and `calculate_margin_maint(...)`
-
-## Commissions
-
-Trading commissions represent the fees charged by exchanges or brokers for executing trades.
-While maker/taker fees are common in cryptocurrency markets, traditional exchanges like CME often
-employ other fee structures, such as per-contract commissions.
-NautilusTrader supports multiple commission models to accommodate diverse fee structures across different markets.
-
-### Built-in fee models
-
-The framework provides several built-in fee model implementations, importable from
-`nautilus_trader.execution` at the pinned tree:
-
-1. `MakerTakerFeeModel`: Implements the maker/taker fee structure common in cryptocurrency exchanges, where fees are
-    calculated as a percentage of the trade value.
-2. `FixedFeeModel`: Applies a fixed commission per trade, regardless of the trade size.
-3. `PerContractFeeModel`: Charges a fixed commission per contract traded (taking leg ratios of
-    generic spread instruments into account).
-
-### Creating custom fee models
-
-While the built-in fee models cover common scenarios, you might encounter situations requiring specific commission structures.
-NautilusTrader's flexible architecture allows you to implement custom fee models by inheriting from the base `FeeModel` class.
-
-For example, if you're trading futures on exchanges that charge per-contract commissions (like CME) and the built-in
-`PerContractFeeModel` does not fit, you can implement your own model. The Python `FeeModel` base class exposes two methods:
-
-- `get_commission(order, fill_quantity, fill_px, instrument)` returning the commission `Money` for a fill.
-- `get_commission_with_context(order, fill_quantity, fill_px, instrument, underlying_px=None)`, which additionally
-  receives the underlying price for derivatives fills.
-
-Here's how you could create a custom per-contract commission model:
-
-```python
-from nautilus_trader.execution import FeeModel
-from nautilus_trader.model import Currency, Money, Price, Quantity
-
-
-class MyPerContractFeeModel(FeeModel):
-    def __init__(self, commission: Money):
-        super().__init__()
-        self.commission = commission
-
-    def get_commission(
-        self,
-        _order,
-        fill_quantity: Quantity,
-        _fill_px: Price,
-        _instrument,
-    ) -> Money:
-        total_commission = Money(
-            self.commission * fill_quantity, self.commission.currency
-        )
-        return total_commission
-```
-
-This custom implementation calculates the total commission by multiplying a `fixed per-contract fee` by the `number
-of contracts` traded. The `get_commission(...)` method receives information about the order, fill quantity, fill price
-and instrument, allowing for flexible commission calculations based on these parameters; override
-`get_commission_with_context(...)` instead when the calculation needs the underlying price of a derivatives instrument.
-
-### Using fee models in practice
-
-To use any fee model in your trading system, whether built-in or custom, you specify it when setting up the venue.
-Here's an example using the built-in per-contract fee model:
-
-```python
-from nautilus_trader.execution import PerContractFeeModel
-from nautilus_trader.model import Currency, Money
-
-USD = Currency.from_str("USD")
-
-engine.add_venue(
-    venue=venue,
-    oms_type=OmsType.NETTING,
-    account_type=AccountType.MARGIN,
-    base_currency=USD,
-    fee_model=PerContractFeeModel(Money(2.50, USD)),  # 2.50 USD per contract
-    starting_balances=[Money(1_000_000, USD)],  # Starting with 1,000,000 USD balance
-)
-```
-
-:::tip
-When implementing custom fee models, ensure they accurately reflect the fee structure of your target exchange.
-Even small discrepancies in commission calculations can significantly impact strategy performance metrics during backtesting.
-:::
-
-### Additional info
-
-The raw instrument definition as provided by the exchange (typically from JSON serialized data) is also
-included as a generic Python dictionary. This is to retain all information
-which is not necessarily part of the unified Nautilus API, and is available to the user
-at runtime by calling the `.info` property.
-
-## Synthetic instruments
-
-The platform supports creating customized synthetic instruments, which can generate synthetic quote
-and trades. These are useful for:
-
-- Enabling `Actor` and `Strategy` components to subscribe to quote or trade feeds.
-- Triggering emulated orders.
-- Constructing bars from synthetic quotes or trades.
-
-Synthetic instruments cannot be traded directly, as they are constructs that only exist locally
-within the platform. They serve as analytical tools, providing useful metrics based on their component
-instruments.
-
-In the future, we plan to support order management for synthetic instruments, enabling trading of
-their component instruments based on the synthetic instrument's behavior.
-
-:::info
-The venue for a synthetic instrument is always designated as `'SYNTH'`.
-:::
-
-### Formula
-
-A synthetic instrument is composed of a combination of two or more component instruments (which
-can include instruments from multiple venues), as well as a "derivation formula".
-Utilizing the dynamic expression engine powered by the [evalexpr](https://github.com/ISibboI/evalexpr)
-Rust crate, the platform can evaluate the formula to calculate the latest synthetic price tick
-from the incoming component instrument prices.
-
-See the `evalexpr` documentation for a full description of available features, operators and precedence.
-
-:::tip
-Before defining a new synthetic instrument, ensure that all component instruments are already defined and exist in the cache.
-:::
-
-### Subscribing
-
-The following example demonstrates the creation of a new synthetic instrument with an actor/strategy.
-This synthetic instrument will represent a simple spread between Bitcoin and
-Ethereum spot prices on Binance. For this example, it is assumed that spot instruments for
-`BTCUSDT.BINANCE` and `ETHUSDT.BINANCE` are already present in the cache.
-
-```python
-from nautilus_trader.model import SyntheticInstrument
-
-btcusdt_binance_id = InstrumentId.from_str("BTCUSDT.BINANCE")
-ethusdt_binance_id = InstrumentId.from_str("ETHUSDT.BINANCE")
-
-# Define the synthetic instrument
-synthetic = SyntheticInstrument(
-    symbol=Symbol("BTC-ETH:BINANCE"),
-    price_precision=8,
-    components=[
-        btcusdt_binance_id,
-        ethusdt_binance_id,
-    ],
-    formula=f"{btcusdt_binance_id} - {ethusdt_binance_id}",
-    ts_event=self.clock.timestamp_ns(),
-    ts_init=self.clock.timestamp_ns(),
-)
-
-# Recommended to store the synthetic instruments ID somewhere
-self._synthetic_id = synthetic.id
-
-# Add the synthetic instrument for use by other components
-self.add_synthetic(synthetic)
-
-# Subscribe to quotes for the synthetic instrument
-self.subscribe_quote_ticks(self._synthetic_id)
-```
-
-:::note
-The `instrument_id` for the synthetic instrument in the above example will be structured as `{symbol}.{SYNTH}`, resulting in `'BTC-ETH:BINANCE.SYNTH'`.
-:::
-
-### Updating formulas
-
-It's also possible to update a synthetic instrument formulas at any time. The following example
-shows how to achieve this with an actor/strategy.
-
-```python
-# Recover the synthetic instrument from the cache (assuming `synthetic_id` was assigned)
-synthetic = self.cache.synthetic(self._synthetic_id)
-
-# Update the formula to take the average
-new_formula = "(BTCUSDT.BINANCE + ETHUSDT.BINANCE) / 2"
-synthetic.change_formula(new_formula)
-
-# Now update the synthetic instrument
-self.update_synthetic(synthetic)
-```
-
-### Trigger instrument IDs
-
-The platform allows for emulated orders to be triggered based on synthetic instrument prices. In
-the following example, we build upon the previous one to submit a new emulated order.
-This order will be retained in the emulator until a trigger from synthetic quotes releases it.
-It will then be submitted to Binance as a MARKET order:
-
-```python
-order = self.strategy.order_factory.limit(
-    instrument_id=ETHUSDT_BINANCE.id,
-    order_side=OrderSide.BUY,
-    quantity=Quantity.from_str("1.5"),
-    price=Price.from_str("30000.00000000"),  # <-- Synthetic instrument price
-    emulation_trigger=TriggerType.DEFAULT,
-    trigger_instrument_id=self._synthetic_id,  # <-- Synthetic instrument identifier
-)
-
-self.strategy.submit_order(order)
-```
-
-### Error handling
-
-Considerable effort has been made to validate inputs, including the derivation formula for
-synthetic instruments. Despite this, caution is advised as invalid or erroneous inputs may lead to
-undefined behavior.
-
-See the [`SyntheticInstrument` API Reference](https://nautilustrader.io/docs/latest/api_reference/model/instruments/#class-syntheticinstrument-1) for input requirements and potential exceptions.
+The `info` field preserves raw or adapter-specific metadata as a JSON-serializable
+dictionary. Use it when the venue publishes useful details that do not belong in the
+unified Nautilus instrument API.
 
 ## Related guides
 
-- [Data](https://nautilustrader.io/docs/latest/concepts/data/) - Market data types for instruments.
-- [Orders](https://nautilustrader.io/docs/latest/concepts/orders/) - Orders reference instruments.
+- [Data](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/data) covers market data types that reference instruments.
+- [Orders](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/orders) covers order fields that reference instruments.
+- [Synthetics](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/synthetics.md) covers local formula-derived instruments.
+- [Python API Reference](https://nautilustrader.io/docs/python-api-latest/model/instruments.html) lists Python
+  constructors and members.

@@ -1,6 +1,7 @@
+import subprocess
 from pathlib import Path
 
-from tools.upstream_baseline import UPSTREAM_COMMIT
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -66,7 +67,14 @@ def test_adapter_guidance_covers_current_retry_and_venue_safety_contracts() -> N
     assert "ElapsedBudgetExceeded" in text
     assert "replacement ID" in text
     assert "five seconds" in text
-    assert "23 September 2026 at 04:00 UTC" in text
+    removed_adapter = subprocess.run(
+        ["git", "-C", str(default_upstream_root()), "cat-file", "-e",
+         f"{UPSTREAM_COMMIT}:crates/adapters/bitmex/Cargo.toml"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert removed_adapter.returncode != 0
 
 
 def test_backtest_guidance_covers_current_window_boundary_semantics() -> None:

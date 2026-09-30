@@ -1,6 +1,10 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
-# BitMEX
+# BitMEX (historical reference)
+
+Historical pre-removal APIs only: upstream removed the BitMEX adapter in
+`3adf5a8dc` following exchange closure. The clients, factories, examples, and
+tests below are unavailable at the current pin; do not use them for new work.
 
 Founded in 2014, BitMEX (Bitcoin Mercantile Exchange) is a cryptocurrency derivatives
 trading platform offering spot, perpetual contracts, traditional futures, prediction

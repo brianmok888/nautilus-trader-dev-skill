@@ -329,7 +329,7 @@ retries on transient failures.
 
 Polymarket supports order modification as an adapter-managed cancel-replace for
 open `LIMIT` orders (window commit `616980b15f`, included in pin
-`9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`). Polymarket has no in-place modify
+`81d0449da0e353d702d88019dc73d231d67923cd`). Polymarket has no in-place modify
 endpoint: the execution client cancels the current venue order, reconciles its
 final confirmed fills, and signs a replacement for the remaining quantity. The
 `ModifyOrder.quantity` value is the absolute target for the logical order, not
@@ -606,7 +606,7 @@ data source if you need full coverage of a heavily traded market.
 
 ### Complete backtest example
 
-See the live examples under `examples/live/polymarket/` (`data_tester.py`, `exec_tester.py`, `updown_smoke_tester.py`) at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`:
+See the live examples under `examples/live/polymarket/` (`data_tester.py`, `exec_tester.py`, `updown_smoke_tester.py`) at pin `81d0449da0e353d702d88019dc73d231d67923cd`:
 
 ```python
 import asyncio

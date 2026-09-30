@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20260930",
+  "receipt": "nt-2026-09-30-003-phase-3-specific",
+  "finding_id": "NT-2026-09-30-003",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "P1",
+  "command": "manual-source-review: 003; inspect current mission-owned guidance and compare pinned source",
+  "exit_code": 0,
+  "output_sha256": "8f3b9d97be2acd179ecebfd6dd5ad6a463c57e5b6c661ae52a3f9f0298f85eaa",
+  "output_excerpt": "Inspected skills/nt-live/SKILL.md current client example: Bybit config and factories replace retired BitMEX; no runnable BitMEX dependency remains in the live example.\nProvenance limitation: Phase2 implementation receipts are absent; this is fresh independent Phase3 evidence, not reconstructed implementation provenance.",
+  "redactions": [],
+  "recorded_at": "2026-09-30T11:40:14Z"
+}

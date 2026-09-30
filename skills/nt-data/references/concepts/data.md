@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
-NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `81d0449da0e353d702d88019dc73d231d67923cd`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
 
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
@@ -1115,15 +1115,15 @@ node_config = TradingNodeConfig(
 For streaming data to catalogs during live trading or backtesting, use `StreamingConfig`:
 
 ```python
-from nautilus_trader.persistence import StreamingConfig
+from nautilus_trader.config import DataCatalogConfig
+from nautilus_trader.persistence import StreamingConfig, RotationConfig
 
 streaming_config = StreamingConfig(
-    catalog_path="/path/to/streaming/catalog",
-    fs_protocol="file",
+    writer_path="/path/to/streaming/staging",
+    catalog=DataCatalogConfig(path="/path/to/streaming/catalog"),
     flush_interval_ms=1000,  # Flush every second
     replace_existing=False,
-    rotation_mode="NO_ROTATION",  # or "SIZE", "INTERVAL", "SCHEDULED_DATES"
-    max_file_size=1024 * 1024 * 100,  # 100MB max file size (rotation_mode="SIZE")
+    rotation_config=RotationConfig.size(1024 * 1024 * 100),
 )
 ```
 
@@ -1343,16 +1343,18 @@ The catalog supports streaming data to temporary feather files during backtests,
 **Example: option greeks streaming**
 
 ```python
+from nautilus_trader.config import DataCatalogConfig
 from nautilus_trader.persistence import StreamingConfig
 
 # 1. Configure streaming
 streaming = StreamingConfig(
-    catalog_path=catalog.path,
+    writer_path=str(catalog.path),
+    catalog=DataCatalogConfig(path=str(catalog.path)),
     flush_interval_ms=1000,
 )
 
 # 2. Run backtest with streaming enabled (the node owns the writer lifecycle
-#    and writes each run below <catalog_path>/backtest/<instance_id>)
+#    and writes each run below <writer_path>/backtest/<instance_id>)
 engine_config = BacktestEngineConfig(streaming=streaming)
 results = node.run()
 
@@ -1611,7 +1613,7 @@ already in the required replay order.
 ### Same-binary Rust custom data
 
 Rust-defined custom data uses the `#[custom_data]` proc macro
-(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7`) to generate the
+(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `81d0449da0e353d702d88019dc73d231d67923cd`) to generate the
 constructor, `HasTsInit`, `CustomDataTrait`, serde/JSON support, Arrow encode/decode, and
 `From`/`TryFrom` conversions for the engine-level `Data` enum:
 

@@ -5,14 +5,14 @@
 <!-- Updated when: skill inventory, repository boundaries, or validation wiring changes. -->
 <!-- Does NOT contain: plans, historical attestations, or session state. -->
 
-Review date: 2026-09-04
+Review date: 2026-09-30
 
 ## Repository shape
 
 - **Mission:** reusable NautilusTrader development skills only
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
-- **Upstream:** pinned reproducible checkout at `9bafb63e7d75ab7033aff2e04cd6b4d45d14e9b7` plus preserved reviewed transition history; read-only evidence
+- **Upstream:** pinned reproducible baseline `81d0449da0e353d702d88019dc73d231d67923cd` plus preserved reviewed transition history; the source evidence cache remains read-only and builds use a disposable writable checkout
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 
@@ -46,6 +46,7 @@ Review date: 2026-09-04
 4. `references/g2-evidence/` records per-skill executable evidence and owned-content hashes.
 5. `references/api_reference/` (45 pages incl. `model/` and `adapters/`) mirrors the pinned upstream `docs/api_reference/` v2 surfaces: flat `nautilus_trader.<pkg>` automodules with per-page owning-crate pointers, last fully regenerated against pin `4692bac` (NT-2026-09-04-119/128/131); drift against the `ac22d5cf` pin is tracked by the 2026-09-05 audit. Legacy v1 snapshots survive only in sanctioned migration zones.
 6. `docs/tracking/` records current invariants, structure, components, and findings.
+7. `docs/tracking/receipts/` retains finding-specific verification separately from aggregate validation. Current executable example regressions cover capsule ownership and streaming constructor contracts.
 
 ## Validation surfaces
 

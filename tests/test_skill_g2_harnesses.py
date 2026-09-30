@@ -7,6 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+import tomllib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -62,6 +63,33 @@ def test_example_steps_enable_the_manifest_required_feature() -> None:
             if "--examples" not in step.command and "--example" not in step.command:
                 continue
             assert "--features" in step.command, (harness.skill, step.command)
+
+
+def test_adapter_and_live_harness_targets_exist_at_current_pin() -> None:
+    upstream = g2.default_upstream_root()
+    for name in ("nt-adapters", "nt-live"):
+        for step in g2.HARNESSES[name].steps:
+            command = step.command
+            if "-p" not in command:
+                continue
+            package = command[command.index("-p") + 1]
+            crate = Path("crates/adapters") / package.removeprefix("nautilus-")
+            if package == "nautilus-live":
+                crate = Path("crates/live")
+            result = subprocess.run(
+                [
+                    "git", "-C", str(upstream), "show",
+                    f"{g2.UPSTREAM_COMMIT}:{crate}/Cargo.toml",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            assert result.returncode == 0, (name, package, result.stderr)
+            if "--example" in command:
+                example = command[command.index("--example") + 1]
+                manifest = tomllib.loads(result.stdout)
+                assert example in {entry["name"] for entry in manifest["example"]}
 
 
 def test_unrelated_shared_trading_compile_is_rejected() -> None:
