@@ -6,7 +6,7 @@
 
 Review date: 2026-10-14
 Reviewed upstream develop: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
-Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a` (pending the NT-2026-10-14-065 pin move)
+Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
 
 The review manifest preserves twelve contiguous transitions. The newest transition reviews 6 commits and 50 changed paths from the previously reviewed `52eef7955cbdb8d95667c838c3e43907e0da8e9a` through current develop `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` (yield curves become `YieldCurve` custom data; ordered backtest replay centralizes into `crates/data/src/replay`; network ref-count clones become explicit). The preceding transition reviews 292 commits and 1,578 changed paths from `81d0449da0e353d702d88019dc73d231d67923cd` through `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window releases Python `2.0.0rc7`/workspace `0.66.0`, raises the Rust toolchain to 1.99.0, drops Python 3.12 support (`requires-python >=3.13`), migrates Derive to API v3, ports Interactive Brokers onto ibapi 5.0.0, adds the CoinAPI market-data adapter, migrates Polymarket reference prices to PolyBolt, adds Lighter native contingent orders, standardizes venue book recovery on shared machinery, adds Kraken Spot L2 checksum resynchronization, restructures the execution reconciliation guide, refines the Parquet catalog API and typed configuration, adds calendar timers and local-time bar boundaries, native Greeks/yield-curve recording, option contract identity and chain selection, same-trade fill-price restatements, funding settlement semantics, and parallel `make pytest`; findings NT-2026-10-14-001 through NT-2026-10-14-058 were opened and are tracked below.
 
@@ -16,8 +16,7 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 [NT-2026-10-14-061] [P1] [OPEN] V2 compliance: yield-curve guidance names the removed YieldCurveData type and a Feather dispatch boundary that upstream deleted.
   file: skills/nt-data/references/guides/cache_operations.md:7
-  file: skills/nt-data/references/concepts/data.md:29
-  evidence: upstream `de7940536` renames `YieldCurveData` to `YieldCurve` and converts yield curves to custom data: `crates/persistence/src/writer/feather.rs` drops the `try_write!(message, YieldCurveData)` arm and its import, `crates/persistence/src/catalog/types.rs` removes the record selector, `crates/common/src/python/cache.rs` exposes `Cache.add_yield_curve`, and `docs/concepts/greeks.md` documents the new shape at tip `2ceb2a9a6`.
+  evidence: upstream `de7940536` renames `YieldCurveData` to `YieldCurve` and converts yield curves to custom data: `crates/persistence/src/writer/feather.rs` drops the `try_write!(message, YieldCurveData)` arm and its import, `crates/persistence/src/catalog/types.rs` removes the record selector, `crates/common/src/python/cache.rs` exposes `Cache.add_yield_curve`, and `docs/concepts/greeks.md` documents the new shape at tip `2ceb2a9a6`; the same stale sentences appear at `skills/nt-data/references/concepts/data.md:29`.
   fix: rename the type in guidance, restate yield curves as `YieldCurve` custom data (catalog replay to subscribers) instead of a native record family, and refresh the Feather boundary sentence to the tip's writer arms.
   acceptance-test: no `YieldCurveData` token remains under `skills/`; nt-data guidance matches the tip's feather/catalog sources; suite green.
 

@@ -4,7 +4,116 @@
   "pinned_commit": "52eef7955cbdb8d95667c838c3e43907e0da8e9a",
   "reviewed_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
   "reviewed_on": "2026-10-14",
-  "deltas": [],
+  "deltas": [
+    {
+      "commit": "8c21964c5fd58ed881b7944528247040b5ebc4a5",
+      "subject": "Clarify RFC submission requirements",
+      "upstream_paths": [
+        ".github/ISSUE_TEMPLATE/rfc.md",
+        "ROADMAP.md"
+      ],
+      "review_summary": "Clarify RFC submission requirements\n\n- Clarify the RFC issue template and roadmap wording",
+      "no_impact_rationale": "Repository meta documentation; no taught surface references the RFC template or roadmap wording."
+    },
+    {
+      "commit": "ee611d7c5dadcefe33ac76ba38e5cf78e541c476",
+      "subject": "Fix analysis position report timestamp precision",
+      "upstream_paths": [
+        "RELEASES.md",
+        "python/nautilus_trader/analysis/reporter.py",
+        "python/tests/unit/analysis/test_reporter.py"
+      ],
+      "review_summary": "Fix analysis position report timestamp precision\n\n- Correct Python analysis reporter timestamp precision",
+      "no_impact_rationale": "Bug fix in reporter precision; inspected guidance does not teach the affected reporter timestamp formatting."
+    },
+    {
+      "commit": "9d473980e543383c28a4687718d5a6055c92a2c4",
+      "subject": "Simplify live channel context restoration tests",
+      "upstream_paths": [
+        "crates/common/src/actor/dispatch.rs"
+      ],
+      "review_summary": "Simplify live channel context restoration tests\n\n- Restructure actor dispatch channel-restoration tests",
+      "no_impact_rationale": "Test-only restructuring; no production API or documented behavior changed."
+    },
+    {
+      "commit": "1ed1c445e0c75cc85cc12417c9b9f77d20c257df",
+      "subject": "Centralize ordered backtest replay consumption",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/backtest/benches/node.rs",
+        "crates/backtest/src/data_batch.rs",
+        "crates/backtest/src/data_iterator.rs",
+        "crates/backtest/src/defi/mod.rs",
+        "crates/backtest/src/defi/replay.rs",
+        "crates/backtest/src/lib.rs",
+        "crates/backtest/src/node.rs",
+        "crates/data/src/lib.rs",
+        "crates/data/src/replay/batch.rs",
+        "crates/data/src/replay/iterator.rs",
+        "crates/data/src/replay/mod.rs",
+        "crates/model/src/data/mod.rs"
+      ],
+      "review_summary": "Centralize ordered backtest replay consumption\n\n- Share ordered replay batches and cursors across backtests\n- Validate stream refills without changing equal-key priority\n- Preserve borrowed replay and move assembled book events\n- Move data_batch.rs into crates/data/src/replay/batch.rs and add crates/data/src/replay/iterator.rs (DataIterator) replacing crates/backtest/src/data_iterator.rs\n- BacktestNode/BacktestDataConfig batch book deltas by default; batched replay rejects deltas without a closing F_LAST; batch_deltas=False opts out",
+      "affected_files": [
+        "skills/nt-backtest/references/concepts/backtesting.md"
+      ]
+    },
+    {
+      "commit": "de794053685c3a3b7ae74eb995e2b31215786b25",
+      "subject": "Convert yield curves to YieldCurve custom data",
+      "upstream_paths": [
+        "RELEASES.md",
+        "crates/common/src/cache/database.rs",
+        "crates/common/src/cache/mod.rs",
+        "crates/common/src/cache/tests.rs",
+        "crates/common/src/greeks.rs",
+        "crates/common/src/python/cache.rs",
+        "crates/event_store/tests/integration/lifecycle.rs",
+        "crates/execution/tests/integration/matching_engine/cache_database.rs",
+        "crates/model/src/data/greeks.rs",
+        "crates/model/src/data/mod.rs",
+        "crates/model/src/python/data/greeks.rs",
+        "crates/model/src/python/mod.rs",
+        "crates/persistence/src/backend/parquet/writer.rs",
+        "crates/persistence/src/catalog/types.rs",
+        "crates/persistence/src/common/arrow.rs",
+        "crates/persistence/src/test_data.rs",
+        "crates/persistence/src/writer/feather.rs",
+        "crates/serialization/src/arrow/greeks.rs",
+        "crates/serialization/src/python/mod.rs",
+        "crates/system/src/builder.rs",
+        "crates/testkit/src/cache.rs",
+        "docs/api_reference/model/data.md",
+        "docs/concepts/greeks.md",
+        "python/nautilus_trader/common/__init__.pyi",
+        "python/nautilus_trader/model/__init__.pyi",
+        "python/tests/persistence/test_parquet_catalog_pyo3.py",
+        "python/tests/unit/backtest/test_backtest_engine_custom_data.py",
+        "python/tests/unit/model/test_greeks.py"
+      ],
+      "review_summary": "Convert yield curves to YieldCurve custom data\n\n- Rename YieldCurveData to YieldCurve\n- Replay yield curves from the catalog and deliver them to subscribers\n- Remove the YieldCurveData record selector and Feather writer arms\n- Expose YieldCurve and Cache.add_yield_curve to Python\n- Reject curves the Greeks calculator cannot evaluate when cached\n- PortfolioGreeks::from(GreeksData) now applies the contract multiplier",
+      "affected_files": [
+        "skills/nt-data/references/guides/cache_operations.md",
+        "skills/nt-data/references/concepts/data.md"
+      ]
+    },
+    {
+      "commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
+      "subject": "Make network ref-count clones explicit (#5294)",
+      "upstream_paths": [
+        "crates/network/src/http/tests.rs",
+        "crates/network/src/http/transport.rs",
+        "crates/network/src/lib.rs",
+        "crates/network/src/retry.rs",
+        "crates/network/src/socket/client.rs",
+        "crates/network/src/websocket/client.rs",
+        "crates/network/tests/integration/main.rs",
+        "crates/network/tests/simulation.rs"
+      ],
+      "review_summary": "Make network ref-count clones explicit\n\n- Replace implicit Arc clones with explicit .clone() calls across HTTP transport, socket and websocket clients, and the retry policy internals\n- Add integration/simulation test touch-ups",
+      "no_impact_rationale": "Mechanical ref-count refactor with no public API, type, or construction-signature change; inspected adapter guidance constructs HttpClient/WebSocketClient/RetryPolicy through unchanged public APIs."
+    }
+  ],
   "reviewed_transitions": [
     {
       "from_commit": "8ecab1ce90d9790b1e18e162842decbae4d9de57",
@@ -29818,12 +29927,12 @@
       "commit_count": 6,
       "unique_path_count": 50,
       "reviewed_commits": [
-        "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-        "de794053685c3a3b7ae74eb995e2b31215786b25",
-        "1ed1c445e0c75cc85cc12417c9b9f77d20c257df",
-        "9d473980e543383c28a4687718d5a6055c92a2c4",
+        "8c21964c5fd58ed881b7944528247040b5ebc4a5",
         "ee611d7c5dadcefe33ac76ba38e5cf78e541c476",
-        "8c21964c5fd58ed881b7944528247040b5ebc4a5"
+        "9d473980e543383c28a4687718d5a6055c92a2c4",
+        "1ed1c445e0c75cc85cc12417c9b9f77d20c257df",
+        "de794053685c3a3b7ae74eb995e2b31215786b25",
+        "2ceb2a9a624e174a5160c10f8188afbdd57ecb99"
       ],
       "changed_paths": [
         ".github/ISSUE_TEMPLATE/rfc.md",
@@ -29879,20 +29988,57 @@
       ],
       "deltas": [
         {
-          "commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-          "subject": "Make network ref-count clones explicit (#5294)",
+          "commit": "8c21964c5fd58ed881b7944528247040b5ebc4a5",
+          "subject": "Clarify RFC submission requirements",
           "upstream_paths": [
-            "crates/network/src/http/tests.rs",
-            "crates/network/src/http/transport.rs",
-            "crates/network/src/lib.rs",
-            "crates/network/src/retry.rs",
-            "crates/network/src/socket/client.rs",
-            "crates/network/src/websocket/client.rs",
-            "crates/network/tests/integration/main.rs",
-            "crates/network/tests/simulation.rs"
+            ".github/ISSUE_TEMPLATE/rfc.md",
+            "ROADMAP.md"
           ],
-          "review_summary": "Make network ref-count clones explicit\n\n- Replace implicit Arc clones with explicit .clone() calls across HTTP transport, socket and websocket clients, and the retry policy internals\n- Add integration/simulation test touch-ups",
-          "no_impact_rationale": "Mechanical ref-count refactor with no public API, type, or construction-signature change; inspected adapter guidance constructs HttpClient/WebSocketClient/RetryPolicy through unchanged public APIs."
+          "review_summary": "Clarify RFC submission requirements\n\n- Clarify the RFC issue template and roadmap wording",
+          "no_impact_rationale": "Repository meta documentation; no taught surface references the RFC template or roadmap wording."
+        },
+        {
+          "commit": "ee611d7c5dadcefe33ac76ba38e5cf78e541c476",
+          "subject": "Fix analysis position report timestamp precision",
+          "upstream_paths": [
+            "RELEASES.md",
+            "python/nautilus_trader/analysis/reporter.py",
+            "python/tests/unit/analysis/test_reporter.py"
+          ],
+          "review_summary": "Fix analysis position report timestamp precision\n\n- Correct Python analysis reporter timestamp precision",
+          "no_impact_rationale": "Bug fix in reporter precision; inspected guidance does not teach the affected reporter timestamp formatting."
+        },
+        {
+          "commit": "9d473980e543383c28a4687718d5a6055c92a2c4",
+          "subject": "Simplify live channel context restoration tests",
+          "upstream_paths": [
+            "crates/common/src/actor/dispatch.rs"
+          ],
+          "review_summary": "Simplify live channel context restoration tests\n\n- Restructure actor dispatch channel-restoration tests",
+          "no_impact_rationale": "Test-only restructuring; no production API or documented behavior changed."
+        },
+        {
+          "commit": "1ed1c445e0c75cc85cc12417c9b9f77d20c257df",
+          "subject": "Centralize ordered backtest replay consumption",
+          "upstream_paths": [
+            "RELEASES.md",
+            "crates/backtest/benches/node.rs",
+            "crates/backtest/src/data_batch.rs",
+            "crates/backtest/src/data_iterator.rs",
+            "crates/backtest/src/defi/mod.rs",
+            "crates/backtest/src/defi/replay.rs",
+            "crates/backtest/src/lib.rs",
+            "crates/backtest/src/node.rs",
+            "crates/data/src/lib.rs",
+            "crates/data/src/replay/batch.rs",
+            "crates/data/src/replay/iterator.rs",
+            "crates/data/src/replay/mod.rs",
+            "crates/model/src/data/mod.rs"
+          ],
+          "review_summary": "Centralize ordered backtest replay consumption\n\n- Share ordered replay batches and cursors across backtests\n- Validate stream refills without changing equal-key priority\n- Preserve borrowed replay and move assembled book events\n- Move data_batch.rs into crates/data/src/replay/batch.rs and add crates/data/src/replay/iterator.rs (DataIterator) replacing crates/backtest/src/data_iterator.rs\n- BacktestNode/BacktestDataConfig batch book deltas by default; batched replay rejects deltas without a closing F_LAST; batch_deltas=False opts out",
+          "affected_files": [
+            "skills/nt-backtest/references/concepts/backtesting.md"
+          ]
         },
         {
           "commit": "de794053685c3a3b7ae74eb995e2b31215786b25",
@@ -29928,56 +30074,26 @@
             "python/tests/unit/model/test_greeks.py"
           ],
           "review_summary": "Convert yield curves to YieldCurve custom data\n\n- Rename YieldCurveData to YieldCurve\n- Replay yield curves from the catalog and deliver them to subscribers\n- Remove the YieldCurveData record selector and Feather writer arms\n- Expose YieldCurve and Cache.add_yield_curve to Python\n- Reject curves the Greeks calculator cannot evaluate when cached\n- PortfolioGreeks::from(GreeksData) now applies the contract multiplier",
-          "impact": "V2 compliance: nt-data guidance documents YieldCurveData as a native catalog record family and describes the Feather dispatch boundary in those terms; the rename, the custom-data conversion, the selector/writer removals, and the multiplier semantics change invalidate that guidance (NT-2026-10-14-061, NT-2026-10-14-064)."
+          "affected_files": [
+            "skills/nt-data/references/guides/cache_operations.md",
+            "skills/nt-data/references/concepts/data.md"
+          ]
         },
         {
-          "commit": "1ed1c445e0c75cc85cc12417c9b9f77d20c257df",
-          "subject": "Centralize ordered backtest replay consumption",
+          "commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
+          "subject": "Make network ref-count clones explicit (#5294)",
           "upstream_paths": [
-            "RELEASES.md",
-            "crates/backtest/benches/node.rs",
-            "crates/backtest/src/data_iterator.rs",
-            "crates/backtest/src/defi/mod.rs",
-            "crates/backtest/src/lib.rs",
-            "crates/backtest/src/node.rs",
-            "crates/data/src/lib.rs",
-            "crates/data/src/replay/batch.rs",
-            "crates/data/src/replay/iterator.rs",
-            "crates/data/src/replay/mod.rs",
-            "crates/model/src/data/mod.rs"
+            "crates/network/src/http/tests.rs",
+            "crates/network/src/http/transport.rs",
+            "crates/network/src/lib.rs",
+            "crates/network/src/retry.rs",
+            "crates/network/src/socket/client.rs",
+            "crates/network/src/websocket/client.rs",
+            "crates/network/tests/integration/main.rs",
+            "crates/network/tests/simulation.rs"
           ],
-          "review_summary": "Centralize ordered backtest replay consumption\n\n- Share ordered replay batches and cursors across backtests\n- Validate stream refills without changing equal-key priority\n- Preserve borrowed replay and move assembled book events\n- Move data_batch.rs into crates/data/src/replay/batch.rs and add crates/data/src/replay/iterator.rs (DataIterator) replacing crates/backtest/src/data_iterator.rs\n- BacktestNode/BacktestDataConfig batch book deltas by default; batched replay rejects deltas without a closing F_LAST; batch_deltas=False opts out",
-          "impact": "V2 compliance: nt-backtest guidance cites crates/backtest/src/data_iterator.rs and the BacktestDataIterator symbol, both removed at this tip (NT-2026-10-14-062); the delta-batching default and opt-out are untaught (NT-2026-10-14-063)."
-        },
-        {
-          "commit": "9d473980e543383c28a4687718d5a6055c92a2c4",
-          "subject": "Simplify live channel context restoration tests",
-          "upstream_paths": [
-            "crates/common/src/actor/dispatch.rs"
-          ],
-          "review_summary": "Simplify live channel context restoration tests\n\n- Restructure actor dispatch channel-restoration tests",
-          "no_impact_rationale": "Test-only restructuring; no production API or documented behavior changed."
-        },
-        {
-          "commit": "ee611d7c5dadcefe33ac76ba38e5cf78e541c476",
-          "subject": "Fix analysis position report timestamp precision",
-          "upstream_paths": [
-            "RELEASES.md",
-            "python/nautilus_trader/analysis/reporter.py",
-            "python/tests/unit/analysis/test_reporter.py"
-          ],
-          "review_summary": "Fix analysis position report timestamp precision\n\n- Correct Python analysis reporter timestamp precision",
-          "no_impact_rationale": "Bug fix in reporter precision; inspected guidance does not teach the affected reporter timestamp formatting."
-        },
-        {
-          "commit": "8c21964c5fd58ed881b7944528247040b5ebc4a5",
-          "subject": "Clarify RFC submission requirements",
-          "upstream_paths": [
-            ".github/ISSUE_TEMPLATE/rfc.md",
-            "ROADMAP.md"
-          ],
-          "review_summary": "Clarify RFC submission requirements\n\n- Clarify the RFC issue template and roadmap wording",
-          "no_impact_rationale": "Repository meta documentation; no taught surface references the RFC template or roadmap wording."
+          "review_summary": "Make network ref-count clones explicit\n\n- Replace implicit Arc clones with explicit .clone() calls across HTTP transport, socket and websocket clients, and the retry policy internals\n- Add integration/simulation test touch-ups",
+          "no_impact_rationale": "Mechanical ref-count refactor with no public API, type, or construction-signature change; inspected adapter guidance constructs HttpClient/WebSocketClient/RetryPolicy through unchanged public APIs."
         }
       ]
     }

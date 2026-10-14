@@ -2,17 +2,24 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Cache Operations Reference
 
-## Native analytics records at reviewed tip `52eef7955c`
+## Native analytics records and yield curves at reviewed tip `2ceb2a9a6`
 
-Treat `GreeksData`, `PortfolioGreeks` and `YieldCurveData` as native catalog
-families, not custom-data payloads. Cache handling, catalog query/write support
-and streaming support are separate contracts: the Python Feather writer directly
-accepts GreeksData and PortfolioGreeks but not YieldCurveData at this tip.
+Treat `GreeksData` and `PortfolioGreeks` as native catalog families, not
+custom-data payloads. Yield curves moved to custom data at upstream
+`de7940536`: the type is now `YieldCurve` (renamed from `YieldCurveData`), the
+catalog record selector and the Feather writer arm were removed, and curves
+replay from the catalog to subscribers like other custom data. The Python
+Feather writer still accepts GreeksData and PortfolioGreeks only; cache
+handling exposes `Cache.add_yield_curve`. Portfolio-level aggregation applies
+the instrument contract multiplier (`PortfolioGreeks::from(GreeksData)` since
+`de7940536`), and the Greeks calculator rejects curves it cannot evaluate when
+cached.
 Preserve the record family/schema when promoting streamed analytics into a
 catalog; do not infer a cache getter or streaming method from catalog support.
 See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-52eef7955c).
-Source: upstream `crates/persistence/src/catalog/types.rs` and
-`crates/persistence/src/python/backend/feather.rs`.
+Source: upstream `crates/persistence/src/catalog/types.rs`,
+`crates/persistence/src/writer/feather.rs`, `crates/common/src/python/cache.rs`,
+and `crates/common/src/greeks.rs`.
 
 ## Overview
 

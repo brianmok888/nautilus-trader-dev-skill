@@ -26,11 +26,16 @@ compression codes: uncompressed=0, snappy=1, gzip=2, brotli=3, lz4=5, zstd=6.
 Names are case-insensitive and `lz4_raw` aliases lz4; gzip/lz4 are not interchangeable
 with their codes in typed config. Default compression is zstd level 1.
 
-`GreeksData`, `PortfolioGreeks` and `YieldCurveData` are native catalog record
-families, with native Arrow schemas and typed queries. Do not wrap them as custom
-records. Feather streaming explicitly dispatches GreeksData and PortfolioGreeks;
-its direct Python writer at this tip does not dispatch YieldCurveData, so do not
-promise identical streaming support merely because catalog writes support it.
+`GreeksData` and `PortfolioGreeks` are native catalog record families, with
+native Arrow schemas and typed queries; do not wrap them as custom records.
+Feather streaming explicitly dispatches GreeksData and PortfolioGreeks, so do
+not promise identical streaming support merely because catalog writes support
+it. Yield curves moved to `YieldCurve` custom data at upstream `de7940536`
+(renamed from `YieldCurveData`; record selector and Feather writer arm
+removed; catalog replay delivers curves to subscribers and the cache exposes
+`Cache.add_yield_curve`). Portfolio-level aggregation applies the instrument
+contract multiplier when converting from per-instrument GreeksData
+(`PortfolioGreeks::from(GreeksData)` since `de7940536`).
 Preserve native family identity when promoting streamed records into the catalog.
 
 `DataEngineConfig.time_bars_time_zone` defaults to `UTC`. IANA zones align
