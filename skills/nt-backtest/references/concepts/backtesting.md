@@ -50,12 +50,19 @@ can significantly impact performance.
 
 At the pin, each `BacktestEngine.add_data()` call sorts only its own batch (by `ts_init`)
 when `sort=True` (the default); it never re-sorts previously added data. Each added batch
-becomes its own stream, and cross-stream ordering is handled at replay time by
-`BacktestDataIterator`, which orders every stream by replay key and merges the streams
-through a min-heap (`crates/backtest/src/data_iterator.rs`). The `sort` argument also sets
+becomes its own stream, and cross-stream ordering is handled at replay time by the
+shared `DataIterator`, which orders every stream by replay key and merges the streams
+through a min-heap (`crates/data/src/replay/iterator.rs` since upstream `1ed1c445e`,
+which centralized ordered replay consumption into the data crate and removed
+`crates/backtest/src/data_iterator.rs`). The `sort` argument also sets
 the engine's `sorted` flag, which `run()` enforces: an unsorted engine errors with "Data
 has been added but not sorted, call `engine.sort_data()` or use `engine.add_data(...,
 sort=true)` before running" (`crates/backtest/src/engine.rs`).
+
+`BacktestNode` batches book-delta replay by default since upstream `1ed1c445e`:
+`BacktestDataConfig.batch_deltas` defaults on, fills can differ from unbatched replay,
+batched replay rejects deltas without a closing `F_LAST` flag, and `batch_deltas=False`
+restores the previous per-delta behavior.
 
 The per-batch sort is redundant when every batch is already ordered (e.g. catalog/Parquet
 reads), and skipping it avoids one full pass over each batch during loading.
@@ -153,7 +160,8 @@ At the pinned baseline each `add_data` call sorts only its own batch (pinned
 `BacktestEngine::add_data`); `sort_data()` just sets the flag `run()` requires.
 Pre-sorted batches with `sort=False` plus a single `sort_data()` avoid repeated
 per-batch sorts entirely - the engine merges already-sorted batches in a
-replay-key heap (`BacktestDataIterator`) without a cumulative re-sort. legacy:
+replay-key heap (`DataIterator` in `crates/data/src/replay/iterator.rs` at this tip)
+without a cumulative re-sort. legacy:
 the pre-cut-over cumulative 1M/2M/.../10M re-sort narrative below this box in
 older material is migration/reference-only and does not describe the pinned
 engine.
