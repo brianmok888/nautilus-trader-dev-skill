@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-057-phase-3-specific",
+  "finding_id": "NT-2026-10-14-057",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_rust_lane_cutover.py tests/test_quality_gates.py",
+  "exit_code": 0,
+  "output_sha256": "d5c56c5e36b16d2fefb74793449f76bb6253916dd1f9896198c38e2cccd8ad96",
+  "output_excerpt": "Audit premise retracted: BitMEX tester mirrors exist in the repository; curriculum references restored to skills/nt-adapters/references/examples/rust_adapters/bitmex/node_data_tester.rs and node_exec_tester.rs; markdown link resolution and full cutover suites pass.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:55:00Z"
+}

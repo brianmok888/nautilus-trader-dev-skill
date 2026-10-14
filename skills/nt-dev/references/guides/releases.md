@@ -83,12 +83,12 @@ The project maintains two version numbers:
 
 | File                      | Scope          | Example    |
 |--------------------------|----------------|------------|
-| `python/pyproject.toml`   | Python package | `2.0.0rc5` |
-| `Cargo.toml` (workspace)  | Rust crates    | `0.64.0`   |
+| `python/pyproject.toml`   | Python package | `2.0.0rc7` |
+| `Cargo.toml` (workspace)  | Rust crates    | `0.66.0`   |
 
-These are bumped independently. The Python version drives the release tag (`v2.0.0rc5`).
+These are bumped independently. The Python version drives the release tag (`v2.0.0rc7`).
 The Rust workspace version can run ahead of crates.io releases: the pinned upstream tree
-(`81d0449da0e353d702d88019dc73d231d67923cd`) carries workspace version `0.64.0`, while `0.63.0`
+(`52eef7955cbdb8d95667c838c3e43907e0da8e9a`) carries workspace version `0.66.0`, while `0.65.0`
 is the latest version published to crates.io.
 
 ## Crates.io publishing

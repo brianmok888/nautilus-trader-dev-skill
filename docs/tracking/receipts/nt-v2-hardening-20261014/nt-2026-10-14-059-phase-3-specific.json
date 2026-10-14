@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-059-phase-3-specific",
+  "finding_id": "NT-2026-10-14-059",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_strategy_routing_scope.py tests/test_v2_guidance_hardening.py",
+  "exit_code": 0,
+  "output_sha256": "f4c5df76504eba95ca57ca2e571aab488024568721337e8fab0da30dccbda823",
+  "output_excerpt": "Registration receiver corrected to DataActorCore with explicit manual-update allowance; 122 passed.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-007-phase-3-specific",
+  "finding_id": "NT-2026-10-14-007",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_dev_guide_sync.py",
+  "exit_code": 0,
+  "output_sha256": "51ea6fbd3630355b7a41bdf9ef774686788ee53a80c9230c5bcf1cadfba16caf",
+  "output_excerpt": "Native GreeksData/PortfolioGreeks/YieldCurveData catalog families verified at crates/persistence/src/catalog/types.rs; Feather dispatch boundary (no YieldCurveData) documented; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

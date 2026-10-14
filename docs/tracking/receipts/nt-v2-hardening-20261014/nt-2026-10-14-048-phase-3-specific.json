@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-048-phase-3-specific",
+  "finding_id": "NT-2026-10-14-048",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_exec_spec_current_overlay.py",
+  "exit_code": 0,
+  "output_sha256": "b83e4237f398b5a5fea998a1ac31dc7096b0e63e76730fcf511939a00cd32731",
+  "output_excerpt": "Pinned execution-spec snapshot hash advanced to the 52eef7955c body with overlay deltas verified; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

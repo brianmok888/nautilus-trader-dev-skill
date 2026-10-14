@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-051-phase-3-specific",
+  "finding_id": "NT-2026-10-14-051",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "cargo +1.99.0 test --manifest-path /home/mok/projects/nt-mission-example-smoke-20261014/Cargo.toml --lib",
+  "exit_code": 0,
+  "output_sha256": "a21e5b6dd0056036792e08fd4b0f56f9218dfdf48e40cdca750bbc7a2c2ceea0",
+  "output_excerpt": "test result: ok. 1 passed; 0 failed — bounded Price property example compiles and runs at the pin.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

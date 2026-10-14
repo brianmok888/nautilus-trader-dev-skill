@@ -6,9 +6,9 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 <!-- Role: Current per-skill behavior, ownership, and executable readiness. -->
 <!-- Does NOT contain: plans, historical attestations, or removed lanes. -->
 
-Review date: 2026-09-30
-Reviewed upstream develop: `81d0449da0e353d702d88019dc73d231d67923cd`
-Pinned G2 baseline: `81d0449da0e353d702d88019dc73d231d67923cd`
+Review date: 2026-10-14
+Reviewed upstream develop: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
+Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
 
 The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its G2 harness requires a separately prepared writable checkout with the pinned Python V2 PyO3 runtime. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
@@ -34,12 +34,12 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 
 ## Final readiness summary
 
-- Upstream delta: Pass - reviewed exactly through `81d0449da0e353d702d88019dc73d231d67923cd`.
+- Upstream delta: Pass - reviewed exactly through `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 - Repository scope: Pass - 17 retained NautilusTrader-development skills; active removed-lane routes absent.
 - Readiness cards: Pass - all 136 G0-G7 declarations are structurally complete.
-- G2 execution: Pass - all 17 harnesses completed against the pin and their durable evidence matches final owned content.
-- Repository validation: Pass - focused regressions, legacy labelling, guide snapshots, and Rust reference sync are green.
-- Skill-pack readiness: Pass - all 19 current findings have independent specific receipts, all 17 G2 harnesses pass, and all 136 gate declarations validate. Phase 2 receipt provenance is absent; fresh Phase 3 verification records that limitation.
+- G2 execution: Pending - the baseline advanced to `52eef7955c`; all 17 durable evidence files require re-execution against final owned content.
+- Repository validation: Pending - focused baseline regressions pass, but the full final validation battery has not completed.
+- Skill-pack readiness: Pending - 49 current-cycle findings await implementation verification and specific Phase 2/Phase 3 receipts.
 - Shipping: Pending - commits, integration, push, and publication require separate authorization.
 - Production strategy readiness: Not assessed - downstream strategies must run the ExecTester capability matrix and deployment acceptance gates; skill-pack evidence does not establish application readiness.
 

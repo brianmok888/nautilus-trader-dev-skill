@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.upstream_baseline import UPSTREAM_COMMIT
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def read(path: str) -> str:
@@ -22,7 +24,7 @@ def test_repository_scope_routes_python_only_as_nt_migration_reference() -> None
     python_builder = read("skills/nt-strategy-builder/SKILL.md")
     implement = read("skills/nt-implement/SKILL.md")
 
-    assert "ideal for strategy development" in upstream_python
+    assert f"source_commit: {UPSTREAM_COMMIT}" in upstream_python
     assert "migration/reference-only" in router
     assert "migration/reference-only" in python_builder
     assert "Explicit Python strategy requests still route to Rust" in implement

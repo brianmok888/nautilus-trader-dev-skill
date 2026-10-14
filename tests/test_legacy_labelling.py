@@ -9,6 +9,22 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_current_derive_v3_config_exports_are_not_removed(tmp_path: Path) -> None:
+    path = tmp_path / "references/example.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "Configure DeriveDataClientConfig and DeriveExecutionClientConfig.\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools/check_legacy_labelling.py"),
+         "--root", str(tmp_path)],
+        check=False, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_clean_tree_passes_legacy_labelling_gate() -> None:
     result = subprocess.run(
         [sys.executable, "tools/check_legacy_labelling.py"],

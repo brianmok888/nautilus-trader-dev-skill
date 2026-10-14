@@ -2,6 +2,19 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Positions
 
+## Virtual hedging history at reviewed tip `52eef7955c`
+
+A virtual HEDGING flip creates a new position ID and retains the original
+closed position in cache, so that path does not need a closed-cycle snapshot.
+Later fills for the same order follow the destination position even if they
+carry the original ID. Resolution uses retained order/position history after
+cache recovery and fill-void corrections; incomplete or ambiguous history is
+rejected. Virtual HEDGING positions always retain replay history across
+reopens even when `snapshot_closed_positions=false`. That option controls
+ordinary closed-cycle snapshot storage, not replay history required to resolve
+virtual positions. Reusing a closed ID archives the closed cycle before
+replacing cached state. Source: upstream `docs/concepts/positions.md` (HEDGING).
+
 This guide explains how positions work in NautilusTrader, including their lifecycle, aggregation
 from order fills, profit and loss calculations, and position snapshotting for closed-cycle
 preservation on same-ID reopen.

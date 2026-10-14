@@ -2,6 +2,16 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Rust
 
+## Rustdoc failure sections at reviewed tip `52eef7955c`
+
+Start `# Errors` descriptions with `Returns an error if`, or
+``Returns `None` if`` for an Option return. Start `# Panics` with `Panics if`.
+For one condition use a complete sentence. For multiple conditions use a
+colon-terminated lead-in (`Returns an error if:`, ``Returns `None` if:``,
+`Panics if:`) and bullets beginning with a capital letter and ending with a
+period. Describe actual failure conditions, not implementation chronology.
+Source: upstream `docs/developer_guide/rust.md` (Documentation comments).
+
 The [Rust](https://www.rust-lang.org/learn) programming language is an ideal fit for implementing the mission-critical core of the platform and systems.
 Its strong type system, ownership model, and compile-time checks eliminate memory errors and data races by construction,
 while zero-cost abstractions and the absence of a garbage collector deliver C-like performance, important for high-frequency trading workloads.
@@ -57,7 +67,7 @@ The `nextest` profile is used to align with the workflow of the majority of core
 
 ### Strict Clippy audit (candidate report)
 
-Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `81d0449da0e353d702d88019dc73d231d67923cd`,
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
 `scripts/clippy-strict-audit.py`) reports candidate violations of the configured
 strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
 `indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,

@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/docs/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/docs.md
-source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
-sync_date: 2026-09-30
+source_commit: 52eef7955cbdb8d95667c838c3e43907e0da8e9a
+sync_date: 2026-10-14
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -10,7 +10,7 @@ legacy_policy: source-pinned upstream snapshot; historical guidance is migration
 
 # Docs Style
 
-This guide outlines the style conventions and best practices for writing documentation for NautilusTrader.
+Use this guide for NautilusTrader documentation style and writing practices.
 
 The [Markdown Style](markdown_style.md) guide is the shared baseline for Markdown syntax and
 formatting, and `.markdownlint.jsonc` enforces its mechanical subset. This guide covers what is
@@ -18,10 +18,9 @@ specific to NautilusTrader documentation rather than repeating that baseline.
 
 ## General principles
 
-- We favor simplicity over complexity, less is more.
-- We favor concise yet readable prose and documentation.
-- We value standardization in conventions, style, patterns, etc.
-- Documentation should be accessible to users of varying technical backgrounds.
+- Prefer simple structure and concise, readable prose.
+- Use consistent conventions, style, and patterns.
+- Write for users of varying technical backgrounds.
 
 ## Documentation types
 
@@ -36,10 +35,12 @@ Mixing types in a single page makes it harder to read and harder to maintain.
 | **Explanation**  | Clarify design and architecture | `concepts/`      |
 | **Reference**    | Describe the machinery          | `api_reference/` |
 
-Two sections are exceptions: `getting_started/` is an onboarding path that
-combines tutorial-style walkthroughs with setup instructions, and
-`integrations/` pages mix reference (capabilities, symbology) with how-to
-content (setup, configuration) so each venue page is self-contained.
+Two sections are exceptions:
+
+- `getting_started/` combines tutorial-style walkthroughs with setup instructions for onboarding.
+- `integrations/` pages combine reference (capabilities, symbology) with how-to content (setup,
+  configuration). Thus, each venue page is self-contained.
+
 Standalone how-to content that is not venue-specific belongs in `how_to/`.
 
 ### Choosing the right type
@@ -65,9 +66,9 @@ API reference for field definitions rather than listing them again.
 - Use active voice when possible ("Configure the adapter" vs "The adapter should be configured").
 - Write in present tense for describing current functionality.
 - Use future tense only for planned features.
-- Avoid unnecessary jargon; define technical terms on first use.
-- Be direct and concise; avoid filler words like "basically", "simply", "just".
-- Use parallel structure in lists; keep grammatical patterns consistent across items.
+- Avoid unnecessary jargon. Define technical terms on first use.
+- Be direct and concise. Avoid filler words like "basically", "simply", "just".
+- Use parallel structure in lists. Keep grammatical patterns consistent across items.
 
 ## Markdown tables
 
@@ -150,13 +151,13 @@ Use admonition blocks to highlight important information:
 
 | Admonition   | Purpose                                                       |
 | ------------ | ------------------------------------------------------------- |
-| `:::note`    | Supplementary context that clarifies but isn't essential.     |
+| `:::note`    | Supplementary context that clarifies but is not essential.    |
 | `:::info`    | Important information the reader should be aware of.          |
 | `:::tip`     | Helpful suggestions or best practices.                        |
 | `:::warning` | Potential pitfalls or important caveats.                      |
 | `:::danger`  | Critical issues that could cause data loss or system failure. |
 
-Avoid overusing admonitions; too many diminish their impact.
+Avoid overusing admonitions. Too many diminish their impact.
 
 ## MDX components
 

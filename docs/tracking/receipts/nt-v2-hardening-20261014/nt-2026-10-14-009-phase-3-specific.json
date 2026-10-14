@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-009-phase-3-specific",
+  "finding_id": "NT-2026-10-14-009",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "951d553f2366fd08e4aa2fe8f86ea314b2d9ebb418cee6cf37eb73de46873cac",
+  "output_excerpt": "Same-trade restatement economics resolved from source: open cost-basis update, PositionChanged, no second cash fill; reconciliation drops recorded trade IDs; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

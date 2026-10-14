@@ -1,5 +1,29 @@
 # Execution
 
+## Fill corrections at reviewed tip `52eef7955c`
+
+`allow_overfills=false` rejects ordinary overfills, but not a reconciliation
+fill on a FILLED order when there are no recorded fills and the candidate
+quantity is <= the order quantity. That narrow missing-history exception
+must not authorize general overfills.
+
+On the core engine stream, an OrderFilled with a recorded trade ID and new
+price restates order avg_px without adding quantity or changing status. It must
+match the original instrument, side, order type and quantity; commissions may
+differ but are not reapplied as a cash fill. The engine updates an eligible
+open position only when that trade belongs to its entry side/current cycle.
+It skips account balance, commission and cash-fill updates, emits a
+PositionChanged event for the changed position, and the portfolio subscriber
+recalculates cached PnL from the updated position. Open cost basis and unrealized
+PnL can therefore change; this is not a fresh realized cash settlement.
+
+Reconciliation FillReports are different: an already recorded trade ID is
+dropped regardless of changed price/quantity. Do not infer a same-trade
+restatement from a reconciliation report or order-status avg_px. Sources:
+upstream `docs/concepts/execution/index.md`,
+`crates/execution/src/engine/mod.rs`, `crates/model/src/orders/mod.rs`,
+`crates/model/src/position.rs` and `crates/portfolio/src/portfolio.rs`.
+
 > **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
 
 NautilusTrader can handle trade execution and order management for multiple strategies and venues
@@ -441,7 +465,7 @@ The likelihood of reconciliation race conditions increases when:
   provides time for WebSocket connections to stabilize before continuous reconciliation begins.
   Reducing this increases the chance of duplicate fills during the startup window.
 
-Since upstream `80938b7723` (at pin `81d0449da0e353d702d88019dc73d231d67923cd`), the live
+Since upstream `80938b7723` (at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`), the live
 `ExecutionManager` absorbs the same-fill ordering race engine-side before these thresholds are
 relevant: it queries exact fills before applying terminal mass-status order reports, deduplicates
 fills arriving via both the report and stream channels across ordering races, preserves newer
@@ -459,7 +483,7 @@ The `allow_overfills` configuration option (default: `False`) controls how overf
 
 | `allow_overfills` | Behavior                                                                   |
 |-------------------|----------------------------------------------------------------------------|
-| `False`           | Logs an error and rejects the fill, preserving the order's current state.  |
+| `False`           | Rejects ordinary overfills; permits only the FILLED-order missing-history reconciliation exception described above. |
 | `True`            | Logs a warning, applies the fill, and tracks the excess in `overfill_qty`. |
 
 When overfills are allowed, the order's `overfill_qty` field tracks the excess quantity.
@@ -468,8 +492,8 @@ The order transitions to `FILLED` status and `leaves_qty` is clamped to zero.
 ### Duplicate fill detection
 
 The `Order` model enforces that each `trade_id` can only be applied once. Inside `Order.apply()`,
-a hard check raises an error if the incoming fill's `trade_id` already exists on the order.
-This is the invariant that prevents double-counting executions.
+a repeated `trade_id` cannot add quantity. A changed price with matching original
+instrument, side, type and quantity can restate the recorded price instead.
 
 **Core engine path (backtest and real-time event processing)**
 
@@ -483,13 +507,13 @@ calling `apply()`, the engine checks `Order.is_duplicate_fill()` which compares:
 
 If all fields match an existing fill exactly, the event is skipped gracefully with a warning log.
 This avoids raising an error for benign exact replays (e.g., from WebSocket reconnection).
-If the `trade_id` matches but other fields differ ("noisy replay"), the 4-field check passes
-but `Order.apply()` will raise an error due to the duplicate `trade_id`. The engine catches
-this error, logs the exception with full context, and drops the fill - it does not crash.
+If the `trade_id` matches but price differs, matching original instrument, side,
+type and quantity permits the price-only restatement described above. Other
+incompatible reused-ID fills fail `Order.apply()` and are logged and dropped.
 
 **Live reconciliation sanitizer**
 
-During live reconciliation, `LiveExecutionEngine` pre-filters on `trade_id` alone *before*
+During live reconciliation, the Rust reconciliation path pre-filters on `trade_id` alone *before*
 generating fill events. This check runs before the 4-field check described above. If a fill
 report arrives with a `trade_id` that already exists on the order, it is skipped regardless
 of whether the price or quantity differs. When the data does differ, a warning is logged to

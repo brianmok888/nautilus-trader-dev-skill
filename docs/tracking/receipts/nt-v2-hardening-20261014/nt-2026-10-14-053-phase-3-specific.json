@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-053-phase-3-specific",
+  "finding_id": "NT-2026-10-14-053",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "cargo +1.99.0 test --manifest-path /home/mok/projects/nt-mission-example-smoke-20261014/Cargo.toml --lib",
+  "exit_code": 0,
+  "output_sha256": "3ab1b8ce2a11944f1e744f1786bb15545379fa0980c5b93cfe272cf83d8d6bcd",
+  "output_excerpt": "Corrected fill-model example with Instrument trait import and Option<Price> signature compiles and runs: test result ok, 1 passed.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

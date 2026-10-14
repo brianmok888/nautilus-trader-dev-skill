@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/security/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/security.md
-source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
-sync_date: 2026-09-30
+source_commit: 52eef7955cbdb8d95667c838c3e43907e0da8e9a
+sync_date: 2026-10-14
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -112,28 +112,20 @@ flowchart TD
     source --> docker
 ```
 
-The Docker workflow is separate from the package release workflow, but it follows
-the same identity model: image signatures and SBOM attestations bind the image
-digest to the expected GitHub Actions workflow identity.
+The Docker workflow is separate from the package release workflow, but uses the same identity model. Image
+signatures and SBOM attestations bind the image digest to the expected GitHub Actions workflow identity.
 
 ## Artifact records
 
-- Python wheels are published to GitHub Releases, PyPI, and the Nautech Systems
-  package index (`packages.nautechsystems.io`). `SHA256SUMS`, per-asset
-  `.sha256` files, and `dist-manifest.json` record integrity. GitHub artifact
-  attestations, PyPI publish attestations, `.sigstore` bundles, and
-  `.intoto.jsonl` envelopes record provenance.
-- Python sdists are published to GitHub Releases and PyPI. They use the same integrity and
-  provenance records as wheels but are not published to the wheel-only package index.
-- Rust crates are published to crates.io. The crates.io checksum and
-  `crates-manifest.json` record integrity. crates.io `trustpub_data` records
-  provenance unless an explicit manual exception is present.
-- Docker images are published to GitHub Container Registry. The image digest is
-  the integrity record. Sigstore cosign signatures and SPDX SBOM attestations
-  record provenance.
-- The GitHub release record is published through GitHub Releases. Published
-  release assets and the immutable tag record integrity. The GitHub release
-  attestation records provenance.
+| Artifact              | Published to                                                                        | Integrity records                                             | Provenance records                                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Python wheels         | GitHub Releases, PyPI, and the Nautech Systems index (`packages.nautechsystems.io`) | `SHA256SUMS`, per-asset `.sha256` files, `dist-manifest.json` | GitHub artifact attestations, PyPI publish attestations, `.sigstore` bundles, `.intoto.jsonl` envelopes |
+| Python sdists         | GitHub Releases and PyPI                                                            | Same as wheels                                                | Same as wheels                                                                                          |
+| Rust crates           | crates.io                                                                           | crates.io checksum, `crates-manifest.json`                    | crates.io `trustpub_data`, unless an explicit manual exception is present                               |
+| Docker images         | GitHub Container Registry                                                           | Image digest                                                  | Sigstore cosign signatures, SPDX SBOM attestations                                                      |
+| GitHub release record | GitHub Releases                                                                     | Published release assets, immutable tag                       | GitHub release attestation                                                                              |
+
+The Nautech Systems package index publishes wheels only. Sdists are not published there.
 
 ## Consumer verification map
 
@@ -288,7 +280,6 @@ and PyPI publish attestations. Docker images carry Sigstore signatures and SPDX 
 attestations. Rust crates rely on crates.io Trusted Publishing metadata and the
 release `crates-manifest.json`.
 
-This page does not assert a named SLSA level for all artifact classes. Any future
-SLSA level claim must cite this architecture, name the artifact classes it covers,
-and include CI validation that the published provenance parses as the claimed
-predicate type.
+This page does not assert a named SLSA level for all artifact classes. A future SLSA level claim must cite
+this architecture and name the artifact classes that it covers. It must also include CI validation that the
+published provenance parses as the claimed predicate type.

@@ -25,16 +25,16 @@ NautilusTrader's v2 Rust path provides:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.64", features = ["streaming"] }
-nautilus-common = "0.64"
-nautilus-execution = "0.64"
-nautilus-live = "0.64"
-nautilus-model = "0.64"
-nautilus-persistence = "0.64"
-nautilus-trading = { version = "0.64", features = ["examples"] }
+nautilus-backtest = { version = "0.65", features = ["streaming"] }
+nautilus-common = "0.65"
+nautilus-execution = "0.65"
+nautilus-live = "0.65"
+nautilus-model = "0.65"
+nautilus-persistence = "0.65"
+nautilus-trading = { version = "0.65", features = ["examples"] }
 
 # Add venue adapter for live trading
-nautilus-okx = "0.64"
+nautilus-okx = "0.65"
 
 ahash = "0.8"
 anyhow = "1"

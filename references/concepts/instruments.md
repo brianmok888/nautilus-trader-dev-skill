@@ -11,25 +11,25 @@ examples use `nautilus_model`; Python examples use `nautilus_trader.model`.
 
 | Instrument type                                   | `InstrumentClass` | Description                                          | Typical adapters                |
 | ------------------------------------------------- | ----------------- | ---------------------------------------------------- | ------------------------------- |
-| [`Equity`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/equity.md)                             | `SPOT`            | Listed share or ETF traded on a cash market.         | Databento, Interactive Brokers. |
-| [`CurrencyPair`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/currency_pair.md)                | `SPOT`            | Fiat FX or crypto spot pair in base/quote form.      | Binance, Kraken, OKX, Tardis.   |
-| [`Commodity`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/commodity.md)                       | `SPOT`            | Spot commodity such as gold or oil.                  | Interactive Brokers.            |
-| [`Cfd`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/cfd.md)                                   | `CFD`             | Contract for difference tracking an underlying.      | Interactive Brokers.            |
-| [`IndexInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/index_instrument.md)          | `SPOT`            | Reference index, not directly tradable.              | Interactive Brokers.            |
-| [`TokenizedAsset`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/tokenized_asset.md)            | `SPOT`            | Tokenized asset on a crypto venue.                   | Kraken.                         |
-| [`FuturesContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/futures_contract.md)          | `FUTURE`          | Dated futures contract.                              | Databento, Interactive Brokers. |
-| [`FuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/futures_spread.md)              | `FUTURES_SPREAD`  | Exchange defined futures strategy with several legs. | Databento, Interactive Brokers. |
-| [`CryptoFuture`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_future.md)                | `FUTURE`          | Dated crypto futures contract.                       | Bybit, Deribit, OKX.            |
-| [`CryptoFuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_futures_spread.md) | `FUTURES_SPREAD`  | Exchange defined crypto futures spread.              | Deribit, OKX.                   |
-| [`CryptoPerpetual`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_perpetual.md)          | `SWAP`            | Crypto perpetual futures contract.                   | Binance, Bybit, dYdX.           |
-| [`PerpetualContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/perpetual_contract.md)      | `SWAP`            | Perpetual futures contract across asset classes.     | Architect AX, Binance.          |
-| [`OptionContract`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/option_contract.md)            | `OPTION`          | Exchange traded put or call option.                  | Databento, Interactive Brokers. |
-| [`OptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/option_spread.md)                | `OPTION_SPREAD`   | Exchange defined options strategy with several legs. | Databento, Interactive Brokers. |
-| [`CryptoOption`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_option.md)                | `OPTION`          | Option on a crypto underlying.                       | Bybit, Deribit, OKX, Tardis.    |
-| [`CryptoOptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/crypto_option_spread.md)   | `OPTION_SPREAD`   | Exchange defined crypto option spread.               | Deribit, OKX.                   |
-| [`BinaryOption`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/binary_option.md)                | `BINARY_OPTION`   | Binary instrument that settles to 0 or 1.            | Hyperliquid, OKX, Polymarket.   |
-| [`BettingInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/betting_instrument.md)      | `SPORTS_BETTING`  | Sports or gaming market selection.                   | Betfair.                        |
-| [`SyntheticInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/instruments/synthetic_instrument.md)  | n/a               | Formula derived local instrument.                    | Local only.                     |
+| [`Equity`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/equity.md)                             | `SPOT`            | Listed share or ETF traded on a cash market.         | Databento, Interactive Brokers. |
+| [`CurrencyPair`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/currency_pair.md)                | `SPOT`            | Fiat FX or crypto spot pair in base/quote form.      | Binance, Kraken, OKX, Tardis.   |
+| [`Commodity`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/commodity.md)                       | `SPOT`            | Spot commodity such as gold or oil.                  | Interactive Brokers.            |
+| [`Cfd`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/cfd.md)                                   | `CFD`             | Contract for difference tracking an underlying.      | Interactive Brokers.            |
+| [`IndexInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/index_instrument.md)          | `SPOT`            | Reference index, not directly tradable.              | Interactive Brokers.            |
+| [`TokenizedAsset`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/tokenized_asset.md)            | `SPOT`            | Tokenized asset on a crypto venue.                   | Kraken.                         |
+| [`FuturesContract`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/futures_contract.md)          | `FUTURE`          | Dated futures contract.                              | Databento, Interactive Brokers. |
+| [`FuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/futures_spread.md)              | `FUTURES_SPREAD`  | Exchange defined futures strategy with several legs. | Databento, Interactive Brokers. |
+| [`CryptoFuture`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/crypto_future.md)                | `FUTURE`          | Dated crypto futures contract.                       | Bybit, Deribit, OKX.            |
+| [`CryptoFuturesSpread`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/crypto_futures_spread.md) | `FUTURES_SPREAD`  | Exchange defined crypto futures spread.              | Deribit, OKX.                   |
+| [`CryptoPerpetual`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/crypto_perpetual.md)          | `SWAP`            | Crypto perpetual futures contract.                   | Binance, Bybit, dYdX.           |
+| [`PerpetualContract`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/perpetual_contract.md)      | `SWAP`            | Perpetual futures contract across asset classes.     | Architect AX, Binance.          |
+| [`OptionContract`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/option_contract.md)            | `OPTION`          | Exchange traded put or call option.                  | Databento, Interactive Brokers. |
+| [`OptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/option_spread.md)                | `OPTION_SPREAD`   | Exchange defined options strategy with several legs. | Databento, Interactive Brokers. |
+| [`CryptoOption`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/crypto_option.md)                | `OPTION`          | Option on a crypto underlying.                       | Bybit, Deribit, OKX, Tardis.    |
+| [`CryptoOptionSpread`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/crypto_option_spread.md)   | `OPTION_SPREAD`   | Exchange defined crypto option spread.               | Deribit, OKX.                   |
+| [`BinaryOption`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/binary_option.md)                | `BINARY_OPTION`   | Binary instrument that settles to 0 or 1.            | Hyperliquid, OKX, Polymarket.   |
+| [`BettingInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/betting_instrument.md)      | `SPORTS_BETTING`  | Sports or gaming market selection.                   | Betfair.                        |
+| [`SyntheticInstrument`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/instruments/synthetic_instrument.md)  | n/a               | Formula derived local instrument.                    | Local only.                     |
 
 ## Taxonomy
 
@@ -224,13 +224,13 @@ Venue and adapter definitions can include optional limits:
 
 Margin models use `margin_init` and `margin_maint` to calculate initial and maintenance
 margin. Instruments do not carry maker or taker fee rates. Backtest and sandbox
-commission uses a [fee model](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/behavioral_models.md). Live commissions come from
+commission uses a [fee model](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/behavioral_models.md). Live commissions come from
 venue fills. Fee models use one rate convention:
 
 - Positive fee rates represent commissions.
 - Negative fee rates represent rebates.
 
-For deeper accounting behavior, see [Accounting](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/accounting.md).
+For deeper accounting behavior, see [Accounting](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/accounting.md).
 
 ## Metadata
 
@@ -240,8 +240,8 @@ unified Nautilus instrument API.
 
 ## Related guides
 
-- [Data](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/data) covers market data types that reference instruments.
-- [Orders](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/orders) covers order fields that reference instruments.
-- [Synthetics](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/synthetics.md) covers local formula-derived instruments.
+- [Data](https://github.com/nautechsystems/nautilus_trader/tree/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/data) covers market data types that reference instruments.
+- [Orders](https://github.com/nautechsystems/nautilus_trader/tree/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/orders) covers order fields that reference instruments.
+- [Synthetics](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/synthetics.md) covers local formula-derived instruments.
 - [Python API Reference](https://nautilustrader.io/docs/python-api-latest/model/instruments.html) lists Python
   constructors and members.

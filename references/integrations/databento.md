@@ -1,5 +1,160 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/databento.md:361-425,557-604,882-912`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+### Depth, bar, and custom data subscriptions
+
+`subscribe_book_depth()` streams `mbp-10` depth snapshots for one instrument. Databento serves a
+depth of 10 only, so an explicit depth other than 10 is rejected. The bar aggregation in the
+`BarType` selects the OHLCV schema for `subscribe_bars()` (`ohlcv-1s`, `ohlcv-1m`, `ohlcv-1h`, or
+`ohlcv-1d`). The step must be 1 and the price type must be `LAST`, the only price type the decoder
+emits. `subscribe_data()` streams `DatabentoStatistics` or `DatabentoImbalance` records for the
+instrument ID given as the data type identifier, and rejects a data type with metadata. Records are
+published with that identifier, so a subscriber receives only the records of its own instrument.
+
+These three subscriptions accept raw symbols such as `ESM4.GLBX` only. Records resolve to the
+underlying contract, so continuous (`ES.c.0`) and parent (`ES.FUT`) symbols are rejected rather than
+published on topics the subscriber does not listen on. The examples use a raw symbol:
+
+```python
+raw_instrument_id = InstrumentId.from_str("ESM4.GLBX")
+
+self.subscribe_book_depth(
+    instrument_id=raw_instrument_id,
+    book_type=BookType.L2_MBP,
+    client_id=DATABENTO_CLIENT_ID,
+)
+
+self.subscribe_bars(
+    BarType.from_str(f"{raw_instrument_id}-1-MINUTE-LAST-EXTERNAL"),
+    client_id=DATABENTO_CLIENT_ID,
+)
+
+self.subscribe_data(
+    DataType("DatabentoStatistics", identifier=str(raw_instrument_id)),
+    client_id=DATABENTO_CLIENT_ID,
+)
+```
+
+Databento live subscriptions cannot be removed one at a time, so the matching `unsubscribe_*`
+commands are ignored.
+
+### Historical requests for depth and bars
+
+MBP-10 depth and OHLCV bars are available as historical requests. The bar aggregation in the
+`BarType` selects the OHLCV schema (`ohlcv-1s`, `ohlcv-1m`, `ohlcv-1h`, or `ohlcv-1d`), and depth
+requests use `mbp-10`:
+
+```python
+import pandas as pd
+
+
+# Request 1-minute bars (uses the ohlcv-1m schema)
+self.request_bars(
+    bar_type=BarType.from_str(f"{instrument_id}-1-MINUTE-LAST-EXTERNAL"),
+    start=pd.Timestamp("2024-03-06", tz="UTC"),
+    end=pd.Timestamp("2024-03-07", tz="UTC"),
+    client_id=DATABENTO_CLIENT_ID,
+)
+
+# Request top 10 levels of market depth (Databento serves depth=10 only)
+self.request_book_depth(
+    instrument_id=instrument_id,
+    depth=10,
+    start=pd.Timestamp("2024-03-06T14:30", tz="UTC"),
+    end=pd.Timestamp("2024-03-06T14:31", tz="UTC"),
+    client_id=DATABENTO_CLIENT_ID,
+)
+```
+
+
+### Price precision
+
+Databento raw prices are fixed-point integers scaled by 1e-9. The adapter derives
+price precision from the instrument's tick size in the definition message.
+
+For live feeds, the feed handler maintains a per-instrument precision map populated
+from `InstrumentDefMsg` records as they arrive. Market data handlers resolve
+precision in this order:
+
+1. Precision from an `InstrumentDefMsg` already seen for the Databento record `instrument_id`.
+2. Subscription-supplied precision matched to the record `instrument_id` through a symbol mapping message.
+3. Subscription-supplied precision matched directly on the Nautilus symbol.
+4. The USD default precision of 2.
+
+Supply precision with the `price_precision` parameter on `subscribe_quotes()` or
+`subscribe_trades()`, or with `price_precisions` on the direct live client. No other subscription
+method reads the parameter. Steps 2 and 3 key the same override two ways: matching the record
+`instrument_id` after symbol mapping lets parent, continuous, and other non-raw symbology
+subscriptions apply the override before definition metadata arrives.
+
+**Instrument definitions must arrive before market data** for correct precision on
+instruments with non-standard tick sizes (e.g., treasury futures with fractional
+ticks like 1/256). Subscribe to instrument definitions (the Databento `definition`
+schema) before or alongside market data subscriptions.
+
+For historical requests and file-based loading, precision is resolved per
+record in this order:
+
+1. An explicit `price_precision` argument on the call.
+2. A per-symbol cache populated by loading definitions (`load_instruments`
+   on the file loader, `get_range_instruments` on the historical client) or
+   by an explicit `set_price_precision(symbol, precision)` call.
+
+The data client fetches the requested instrument's definition when neither
+source supplies precision. The lookup starts at UTC midnight on the request's
+start date to include Databento's midnight definition snapshots. The market data
+request keeps its original time range.
+
+Unresolved precision never defaults to USD precision. Historical client and loader calls return an error. Data
+client requests log the error and return an empty response.
+
+:::tip
+Call `subscribe_instrument()` for each instrument at strategy start so definition messages populate the live
+precision map. The feed handler keeps a `price_precision` override per symbol for the whole dataset session.
+An override on one quote or trade subscription also covers that symbol's order book deltas, depth, bars,
+statistics, and imbalance. `InstrumentStatus` carries no prices and needs no precision.
+:::
+
+
+All reconnections include:
+
+- **Jitter**: Random delay (up to 1 second) to prevent simultaneous reconnection storms.
+- **Automatic resubscription**: Restores all active subscriptions after reconnecting.
+- **Cycle reset**: Each successful session (>60s) resets the timeout clock and the backoff delay.
+- **Command buffering**: Commands received during backoff are applied to the next session.
+
+Individual unsubscribe requests log a warning and are ignored because Databento
+live sessions do not support granular unsubscribe. Stop the session to remove a
+subscription from the live gateway.
+
+#### Scheduled maintenance
+
+Databento restarts live gateways on this schedule (all clients disconnect):
+
+| Dataset            | Restart time      |
+| ------------------ | ----------------- |
+| CME Globex         | Saturday 02:15 CT |
+| All ICE venues     | Sunday 09:45 UTC  |
+| All other datasets | Sunday 10:30 UTC  |
+
+The internal 10-minute timeout covers typical restarts. See the
+[Databento Maintenance Schedule](https://databento.com/docs/api-reference-live/basics/maintenance-schedule)
+for details.
+
+## Contributing
+
+:::info
+To contribute, see the
+[contributing guide](https://github.com/nautechsystems/nautilus_trader/blob/develop/CONTRIBUTING.md).
+:::
+
+## Historical reference (superseded where noted above)
+
 # Databento
 
 NautilusTrader includes an adapter for the [Databento](https://databento.com/) API
@@ -753,7 +908,7 @@ for details.
 :::
 
 :::info
-See also the [Data concepts guide](../concepts/data.md).
+See also the [Data concepts guide](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/data/index.md).
 :::
 
 ### Historical loader options

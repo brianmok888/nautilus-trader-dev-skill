@@ -1,6 +1,17 @@
 # Value Types
 
-> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `81d0449da0e353d702d88019dc73d231d67923cd`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
+## Float conversion boundary at reviewed tip `52eef7955c`
+
+PyO3 Price/Quantity `as_double()` and float-producing mixed arithmetic reject
+precision 17 or 18 with ValueError: float arithmetic supports precision <=16.
+This includes `float(value)`; declaring a float result does not bypass the
+precision guard. Use `as_decimal()` or integer/Decimal arithmetic to preserve
+high-precision values. Rust `as_f64()` is a different, lossy conversion
+contract; do not assume the Python guard exists there.
+Sources: upstream `crates/model/src/types/fixed.rs` and
+`crates/model/src/python/types/{fixed,price,quantity}.rs`.
+
+> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
 
 NautilusTrader provides specialized value types for representing core trading concepts:
 `Price`, `Quantity`, and `Money`. These types use fixed-point arithmetic internally
@@ -108,8 +119,8 @@ unsigned and cannot represent a negative value.
 
 When operating with other numeric types, the result type follows Python's
 [numeric tower](https://docs.python.org/3/library/numbers.html) conventions. The general
-principle is that operations widen to the more general type: `float` operations return
-`float`, while `int` and `Decimal` operations return `Decimal` for precision preservation.
+principle is that supported `float` operations return `float` (precision 17/18 raises
+ValueError), while `int` and `Decimal` operations return `Decimal` for precision preservation.
 
 | Left operand | Right operand | Result type |
 |--------------|---------------|-------------|

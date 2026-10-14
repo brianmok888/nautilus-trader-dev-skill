@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tomllib
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
-import tomllib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

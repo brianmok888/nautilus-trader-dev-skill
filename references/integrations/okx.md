@@ -1,5 +1,56 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/okx.md:1241-1269`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Regional endpoints
+
+OKX serves distinct endpoints per region, and an API key is only valid against the region
+where it was registered (using a key against another region's endpoints returns
+`API key doesn't exist`). Set `region` to select the correct endpoint set:
+
+| Region   | Registered on | REST          | WebSocket host  |
+| -------- | ------------- | ------------- | --------------- |
+| `GLOBAL` | `www.okx.com` | `www.okx.com` | `ws.okx.com`    |
+| `EEA`    | `my.okx.com`  | `eea.okx.com` | `wseea.okx.com` |
+| `US`     | `app.okx.com` | `us.okx.com`  | `wsus.okx.com`  |
+
+Despite its enum name, `US` also selects the endpoints for Australian accounts registered on
+`app.okx.com`.
+
+`region` defaults to `GLOBAL`. For example, an EEA account:
+
+```python
+from nautilus_trader.adapters.okx import OKXDataClientConfig
+from nautilus_trader.adapters.okx import OKXRegion
+
+
+data_config = OKXDataClientConfig(region=OKXRegion.EEA)
+```
+
+`region` selects the regional defaults, and combines with `environment` to pick the demo
+hosts (for example `wseeapap.okx.com` for EEA demo). Explicit `base_url_http` and
+`base_url_ws` overrides always take precedence over the region defaults.
+
+
+### Default WebSocket ports and fee scope
+
+Pinned `crates/adapters/okx/src/common/urls.rs:21-43` resolves global, EEA, US,
+and demo WebSocket URLs without an explicit port: WSS therefore uses port 443,
+not the historical 8443 URLs below. Regional HTTP and WebSocket endpoints are
+selected together; manual overrides remain operator-owned.
+
+Pinned `crates/adapters/okx/src/http/query.rs:741-785` scopes account trade-fee
+queries by `instType`, optionally `instId` and/or `instFamily`. Spot fees use
+instrument IDs; futures/swap/options use families. Do not assume one account
+rate applies to every product. The source establishes request scope, not a new
+automatic fee-resolution guarantee for the execution client.
+
+## Historical reference (superseded where noted above)
+
 # OKX
 
 Founded in 2017, OKX is a cryptocurrency exchange that offers spot, margin, perpetual
@@ -155,7 +206,7 @@ A: Use `OKXInstrumentType.EVENTS`. To scope loading, pass OKX `seriesId` values 
 `BTC-ABOVE-DAILY` through `instrument_families`.
 
 ## Orders capability
-OKX behavior at the pinned baseline (`81d0449da0`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
+OKX behavior at the pinned baseline (`52eef7955cb`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
 
 Below are the order types, execution instructions, and time-in-force options supported
 for linear perpetual swap products on OKX.

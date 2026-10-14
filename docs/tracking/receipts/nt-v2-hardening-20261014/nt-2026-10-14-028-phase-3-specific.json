@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-028-phase-3-specific",
+  "finding_id": "NT-2026-10-14-028",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "6a0f9925fe5534640292db215309e23deea93fdb18fc925a8c1081c8a2907f7f",
+  "output_excerpt": "Polymarket settlement authority, terminal REST resolution, BUY/GTD/idle-socket contracts refreshed in both mirrors; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

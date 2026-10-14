@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-032-phase-3-specific",
+  "finding_id": "NT-2026-10-14-032",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py",
+  "exit_code": 0,
+  "output_sha256": "ace2eadc53a35cd70fa161c42d135054bb49d31cecd40feb0e8169f158dfc344",
+  "output_excerpt": "Bybit liquidation custom data, bars_timestamp_on_close default, shared recovery documented in both mirrors; shipped copies green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

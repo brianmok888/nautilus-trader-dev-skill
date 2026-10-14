@@ -39,7 +39,7 @@ LABEL_DISTANCE: Final = 5
 # `testkit` naming, and the Live*Config → Execution/DataClientConfig renames.
 REMOVED_V2_SYMBOL_PATTERNS: Final = (
     re.compile(
-        r"(?<![A-Za-z0-9_])(?:LiveExecEngineConfig|LiveExecClientConfig|LiveDataClientConfig|LiveExecFactoryConfig|LiveDataFactoryConfig|FillModelConfig|ImportableFillModelConfig|DeriveExecClientConfig|DeriveDataClientConfig)(?![A-Za-z0-9_])",
+        r"(?<![A-Za-z0-9_])(?:LiveExecEngineConfig|LiveExecClientConfig|LiveDataClientConfig|LiveExecFactoryConfig|LiveDataFactoryConfig|FillModelConfig|ImportableFillModelConfig|DeriveExecClientConfig)(?![A-Za-z0-9_])",
     ),
     re.compile(
         r"(?<![A-Za-z0-9_])(?:[A-Za-z]+LiveDataClientFactory|[A-Za-z]+LiveExecClientFactory|TardisCSVDataLoader|HistoricInteractiveBrokersClient|IBMarketDataTypeEnum|AxExecClientConfig|get_log_guard|get_target_px_for_quantity|DataFfiCVec|FixedPrecisionBytes|from_internal_map|params_init)(?![A-Za-z0-9_])",

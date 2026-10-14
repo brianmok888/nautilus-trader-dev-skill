@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-041-phase-3-specific",
+  "finding_id": "NT-2026-10-14-041",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py",
+  "exit_code": 0,
+  "output_sha256": "6a2a0d7b9b9b99607ee682f322cd2b84cdbb17165263251ef1446ed0a77285a5",
+  "output_excerpt": "Binance custom-data subscription examples updated to current syntax in both mirrors; shipped copies green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

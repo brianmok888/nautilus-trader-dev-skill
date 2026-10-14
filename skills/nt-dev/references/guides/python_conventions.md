@@ -43,7 +43,7 @@ def get_instrument(self, id: InstrumentId) -> Instrument | None:
 def get_instrument(self, id: InstrumentId) -> Optional[Instrument]:
 ```
 
-**Generic types**: Use Python 3.12 (PEP 695) type parameter syntax for reusable functions and classes (the project requires Python >=3.12):
+**Generic types**: Use Python 3.12 (PEP 695) type parameter syntax for reusable functions and classes (PEP 695 landed in Python 3.12; the project now requires Python >=3.13, having dropped 3.12 support at `a7a2facd0`):
 
 ```python
 class Registry[T]:

@@ -5,6 +5,26 @@ description: "Use when working with live trading nodes, system boot, NautilusKer
 
 # nt-live
 
+## Shutdown and calendar timing at reviewed tip `52eef7955c`
+
+Rust `LiveNode::stop().await` and `run()` can return an error when retained
+submissions remain unresolved at the end of `delay_post_stop`, even though
+teardown completed. `LiveNodeHandle::stop()` acknowledges a stop request,
+not successful completion; inspect the node's final result. Python exposes
+`stop_async()` for asynchronous shutdown. Shutdown drains
+retained execution work during the grace window before final disconnect and
+resource disposal. Do not erase pending submissions to make shutdown look clean.
+
+Fixed timers use elapsed durations; `set_timer_zoned` accepts calendar spans
+and a timezone-aware start. `TimerInterval`/`CalendarSchedule` preserve local
+wall-clock alignment across DST rather than treating a local day as always
+24 hours. `DataEngineConfig.time_bars_time_zone` (not time_bars_timezone)
+defaults to UTC; subscription/request overrides must agree for a shared BarType.
+`TestClock` deterministically advances scheduled events without sleeping.
+Event timestamps remain UTC UnixNanos. Sources: upstream
+`crates/live/src/node/mod.rs`, `crates/common/src/{calendar,timer}.rs`,
+`crates/common/src/clock/api.rs` and `docs/concepts/strategies.md`.
+
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` material in this whole file is migration/reference-only; prefer current Rust v2/PyO3 and `LiveNode` guidance for new Rust-backed work.
 
 ## V2 callback and nightly migration hardening
@@ -34,9 +54,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-live` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-live.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -102,7 +122,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81d0449da0e353d702d88019dc73d231d67923cd`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 
 ## What This Skill Covers
 
@@ -157,11 +177,11 @@ The `LiveNode` connects to real venues through adapter clients. It uses a builde
 
 ```toml
 [dependencies]
-nautilus-common = "0.64"
-nautilus-live = "0.64"
-nautilus-model = "0.64"
-nautilus-okx = "0.64"          # or any venue adapter
-nautilus-trading = { version = "0.64", features = ["examples"] }
+nautilus-common = "0.65"
+nautilus-live = "0.65"
+nautilus-model = "0.65"
+nautilus-okx = "0.65"          # or any venue adapter
+nautilus-trading = { version = "0.65", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"

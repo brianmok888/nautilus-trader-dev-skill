@@ -9,6 +9,7 @@ The following integrations are currently supported:
 | [AX Exchange](https://architect.exchange)                                    | `AX`                  | Perpetuals Exchange     | ![status](https://img.shields.io/badge/stable-green)    | [Guide](architect_ax.md) |
 | [Betfair](https://betfair.com)                                               | `BETFAIR`             | Sports Betting Exchange | ![status](https://img.shields.io/badge/stable-green)    | [Guide](betfair_v2.md) · [legacy](betfair.md)|
 | [Binance](https://binance.com)                                               | `BINANCE`             | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](binance.md)      |
+| [CoinAPI](https://www.coinapi.io/)                        | `COINAPI`       | Data Provider           | ![status](https://img.shields.io/badge/beta-yellow)       | [Guide](coinapi.md)      |
 | [Coinbase](https://coinbase.com)                                             | `COINBASE`            | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)   | [Guide](coinbase.md)     |
 | [Blockchain](blockchain.md)                                                 | `BLOCKCHAIN`          | DeFi Data Provider      | ![status](https://img.shields.io/badge/stable-green)    | [Guide](blockchain.md)   |
 | [Bybit](https://www.bybit.com)                                               | `BYBIT`               | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](bybit.md)        |
@@ -18,6 +19,7 @@ The following integrations are currently supported:
 | [dYdX](https://dydx.exchange/)                                               | `DYDX`                | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](dydx.md)         |
 | [Hyperliquid](https://hyperliquid.xyz)                                       | `HYPERLIQUID`         | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](hyperliquid.md)  |
 | [Interactive Brokers](https://www.interactivebrokers.com)                    | `INTERACTIVE_BROKERS` | Brokerage (multi-venue) | ![status](https://img.shields.io/badge/stable-green)    | [Guide](ib.md)           |
+| [Kalshi](https://kalshi.com)                              | `KALSHI`        | Prediction Market (CEX) | ![status](https://img.shields.io/badge/planned-lightgrey) | -                       |
 | [Kraken](https://kraken.com)                                                 | `KRAKEN`              | Crypto Exchange (CEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](kraken.md)       |
 | [Lighter](https://lighter.xyz)                                             | `LIGHTER`             | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/beta-yellow)     | [Guide](lighter.md)     |
 | [Lighter on Robinhood](https://robinhoodchain.lighter.xyz)                  | `LIGHTER_ROBINHOOD`   | Crypto Exchange (DEX)   | ![status](https://img.shields.io/badge/stable-green)    | [Guide](lighter.md)     |

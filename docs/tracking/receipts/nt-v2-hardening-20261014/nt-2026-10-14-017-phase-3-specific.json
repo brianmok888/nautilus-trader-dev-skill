@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-017-phase-3-specific",
+  "finding_id": "NT-2026-10-14-017",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 tools/check_dev_guide_snapshot_sync.py",
+  "exit_code": 0,
+  "output_sha256": "40b65b886fc3365ef5ddf8cc78941f0859aa8510dab2f795cbba9ce0d8dc5e3c",
+  "output_excerpt": "Developer guide snapshot bodies match pinned upstream — 22 snapshot bodies refreshed at 52eef7955c with regenerated frontmatter.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

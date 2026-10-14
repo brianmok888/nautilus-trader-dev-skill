@@ -1,12 +1,85 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+Legacy Python live-node examples belong to the `migration_reference` lane;
+use Rust `LiveNode` for current production wiring.
+
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/interactive_brokers.md:15-43,524-623,702-734`.
+This section supersedes contradictory historical guidance below at this pin.
+
+### Dependency version boundary
+
+The Rust adapter uses the Rust `ibapi` crate **5.0.0** at this pin
+(`Cargo.toml:347,423`, `crates/adapters/interactive_brokers/Cargo.toml:80`;
+upstream `f81f95177`). The Python package dependency remains `ibapi` **4.0.1**
+in `pyproject.toml:61` and the integration guide. These are separate dependency
+lanes; the Python package version does not describe the Rust adapter migration.
+
+### Order-ID partition failures
+
+Each process needs a distinct API `client_id`; an execution client ID cannot be
+a multiple of 1000. Order IDs are partitioned by `client_id % 1000`. Connect
+starts above the highest open/completed ID and fails if IB's next valid ID is
+above that partition, or if completed orders do not arrive in full within
+`request_timeout`. Choose another client ID for an exhausted partition. IB's
+limited completed-history window can hide older used IDs; returned history
+does not prove an ID has never been used.
+
+### Option contract discovery
+
+Use `IBInstrumentProviderConfig.load_ids` or `load_contracts` for fully specified
+option contracts. Required entries that cannot be resolved fail initialization.
+Provider defaults `build_options_chain=False` and `build_futures_chain=False`
+keep discovery bounded; enable each chain explicitly with expiry bounds.
+An option contract specifies security type, symbol, exchange, expiry, strike,
+and right. Verify `reqContractDetails` in TWS before requesting a full chain.
+`CONTFUT` without a chain flag is historical-only, not live or orderable.
+
+| `track_option_exercise_from_position_update` | `False`                 | Track option exercise through position updates.      |
+| `instrument_provider`                        | Default provider config | Configure contract and instrument loading.           |
+| `dockerized_gateway`                         | `None`                  | Reserved and rejected; start the gateway separately. |
+
+### Dockerized gateway
+
+| Option            | Default                            | Purpose                                                              |
+| ----------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `username`        | `TWS_USERNAME`                     | Set the IB login username.                                           |
+| `password`        | `TWS_PASSWORD`                     | Set the IB login password; debug output and serialization redact it. |
+| `trading_mode`    | `TradingMode.PAPER`                | Select paper or live login and port mapping.                         |
+| `read_only_api`   | `True`                             | Disable order entry through the Gateway API.                         |
+| `timeout`         | `300` seconds                      | Bound startup readiness; valid values are `1` through `3600`.        |
+| `container_image` | `ghcr.io/gnzsnz/ib-gateway:stable` | Select the container image reference.                                |
+| `vnc_port`        | `None`                             | Expose VNC on a port from `5900` through `5999`; `None` disables it. |
+
+`DockerizedIBGateway` exposes asynchronous and blocking `start`, `safe_start`, and `stop` methods,
+plus `container_status`. The safe start variants reuse a ready container and replace an unhealthy
+one.
+
+## Python enum reference
+
+All public Python enum names use `SCREAMING_SNAKE_CASE`. IB conversion enums expose `as_str()` or
+`as_i32()` when callers need the corresponding wire value.
+
+### Connection, contracts, and instruments
+
+| Enum                                | Purpose and key members                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ContainerStatus`                   | Gateway lifecycle: `NO_CONTAINER`, `CONTAINER_CREATED`, `CONTAINER_STARTING`, `CONTAINER_STOPPED`, `NOT_LOGGED_IN`, `READY`, or `UNKNOWN`.             |
+| `MarketDataType`                    | Subscription mode: `REALTIME`, `FROZEN`, `DELAYED`, or `DELAYED_FROZEN`.                                                                               |
+| `SymbologyMethod`                   | Instrument ID mapping: `SIMPLIFIED` or `RAW`.                                                                                                          |
+| `TradingMode`                       | Gateway login mode: `PAPER` or `LIVE`.                                                                                                                 |
+
+## Historical reference (superseded where noted above)
+
 # Interactive Brokers
 
-Interactive Brokers (IB) is a trading platform providing market access across a wide range of financial instruments, including stocks, options, futures, currencies, bonds, funds, and cryptocurrencies. NautilusTrader offers an adapter to integrate with IB using their [Trader Workstation (TWS) API](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/) through their Python library, [ibapi](https://github.com/nautechsystems/ibapi).
+Interactive Brokers (IB) is a trading platform providing market access across a wide range of financial instruments, including stocks, options, futures, currencies, bonds, funds, and cryptocurrencies. NautilusTrader offers an adapter to integrate with IB using their [Trader Workstation (TWS) API](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/). The adapter provides live market data, execution, historical data, instrument loading, and optional Dockerized IB Gateway management through the same Rust implementation and Python bindings.
 
 The TWS API is an interface to IB's standalone trading applications: TWS and IB Gateway. Both can be downloaded from the IB website. If you haven't installed TWS or IB Gateway yet, refer to the [Initial Setup](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/#tws-download) guide. In NautilusTrader, you'll establish a connection to one of these applications via the `InteractiveBrokersClient`.
 
-Alternatively, you can start with a [dockerized version](https://github.com/gnzsnz/ib-gateway-docker) of the IB Gateway, which is particularly useful when deploying trading strategies on a hosted cloud platform. This requires having [Docker](https://www.docker.com/) installed on your machine, along with the [docker](https://pypi.org/project/docker/) Python package, which NautilusTrader conveniently includes as an extra package.
+Alternatively, you can start with a [dockerized version](https://github.com/gnzsnz/ib-gateway-docker) of the IB Gateway, which is particularly useful when deploying trading strategies on a hosted cloud platform.
 
 :::note
 The standalone TWS and IB Gateway applications require manually inputting username, password, and trading mode (live or paper) at startup. The dockerized version of the IB Gateway handles these steps programmatically.
@@ -14,21 +87,7 @@ The standalone TWS and IB Gateway applications require manually inputting userna
 
 ## Installation
 
-To install NautilusTrader with Interactive Brokers (and Docker) support:
-
-```bash
-uv pip install "nautilus_trader[ib,docker]"
-```
-
-To build from source with all extras (including IB and Docker):
-
-```bash
-uv sync --all-extras
-```
-
-:::note
-Because IB does not provide wheels for `ibapi`, NautilusTrader [repackages](https://pypi.org/project/nautilus-ibapi/) it for release on PyPI.
-:::
+Install NautilusTrader using the [installation guide](https://nautilustrader.io/latest/getting-started/installation/). The Interactive Brokers adapter and Docker gateway support are included in the Python package; no adapter-specific extra is required.
 
 ## Examples
 
@@ -60,18 +119,13 @@ Interactive Brokers uses different default ports depending on the application an
 
 ### Establish connection to an existing gateway or TWS
 
-When connecting to a pre-existing gateway or TWS, specify the `host`, `port`,
-and `client_id` parameters in both the `InteractiveBrokersDataClientConfig`
-and `InteractiveBrokersExecutionClientConfig` (the v1 `ibg_host`/`ibg_port`/
-`ibg_client_id` kwargs are migration/reference-only):
+Import the public configuration types from `nautilus_trader.adapters.interactive_brokers`. When
+connecting to a pre-existing gateway or TWS, specify the `host`, `port`, and `client_id` parameters
+in both the `InteractiveBrokersDataClientConfig` and `InteractiveBrokersExecutionClientConfig`:
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientConfig,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersExecutionClientConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientConfig
 
 # Example for TWS paper trading (default port 7497)
 data_config = InteractiveBrokersDataClientConfig(
@@ -88,76 +142,39 @@ exec_config = InteractiveBrokersExecutionClientConfig(
 )
 ```
 
-Register both clients on a live node with the PyO3 factories (NT v2 compatibility note: the v1
-`TradingNodeConfig(data_clients={...})` flow is migration/reference-only):
-
-```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientConfig,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientFactory,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersExecutionClientConfig,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersExecutionClientFactory,
-)
-from nautilus_trader.live import Environment, LiveNode
-
-node = (
-    LiveNode.builder("INTERACTIVE_BROKERS", trader_id, Environment.LIVE)
-    .add_data_client(
-        None,
-        InteractiveBrokersDataClientFactory(),
-        InteractiveBrokersDataClientConfig(host="127.0.0.1", port=7497, client_id=1),
-    )
-    .add_exec_client(
-        None,
-        InteractiveBrokersExecutionClientFactory(),
-        InteractiveBrokersExecutionClientConfig(
-            host="127.0.0.1",
-            port=7497,
-            client_id=1,
-            account_id="DU123456",
-        ),
-    )
-    .build()
-)
-```
+Use a distinct client ID for each process connected to the same TWS or IB Gateway session. An
+execution client ID cannot be a multiple of `1000` because the adapter partitions order IDs by
+`client_id % 1000`.
 
 ### Establish connection to Dockerized IB Gateway
 
-The adapter can manage the
-[gnzsnz IB Gateway container](https://github.com/gnzsnz/ib-gateway-docker).
-Supply credentials in the config or through `TWS_USERNAME` and `TWS_PASSWORD`:
+For automated deployments, the dockerized gateway is recommended. Supply credentials in the config
+or through `TWS_USERNAME` and `TWS_PASSWORD`:
 
 ```python
 from nautilus_trader.adapters.interactive_brokers import DockerizedIBGateway
 from nautilus_trader.adapters.interactive_brokers import DockerizedIBGatewayConfig
 from nautilus_trader.adapters.interactive_brokers import TradingMode
 
-gateway = DockerizedIBGateway(
-    DockerizedIBGatewayConfig(
-        trading_mode=TradingMode.PAPER,
-        read_only_api=True,  # Set to False to allow order execution
-        timeout=300,  # Startup timeout in seconds
-    ),
+gateway_config = DockerizedIBGatewayConfig(
+    username="your_username",  # Or set TWS_USERNAME env var
+    password="your_password",  # Or set TWS_PASSWORD env var
+    trading_mode=TradingMode.PAPER,
+    read_only_api=True,  # Set to False to allow order execution
+    timeout=300,  # Startup timeout in seconds
 )
+
+# This may take a short while to start up, especially the first time
+gateway = DockerizedIBGateway(gateway_config)
 gateway.start_blocking()
 
-print(gateway.host)
-print(gateway.port)
+# Inspect the container status
+print(gateway.container_status())
 ```
 
-Start `DockerizedIBGateway` separately, then pass its `host` and `port` to the
-data and execution configs. Passing a non-`None` `dockerized_gateway` argument
-to either client config raises `ValueError` because Python does not own the
-container lifecycle. The default container is
-`ghcr.io/gnzsnz/ib-gateway:stable`; `vnc_port` accepts ports from `5900`
-through `5999` when remote desktop access is required.
-
+Start `DockerizedIBGateway` separately, then pass its `host` and `port` to the data and execution
+configs. Passing a non-`None` `dockerized_gateway` argument to either client config raises
+`ValueError` because Python does not own the container lifecycle.
 
 ### Environment variables
 
@@ -182,7 +199,7 @@ The Interactive Brokers adapter provides an integration with IB's TWS API. The a
 
 ### Core components
 
-- **`InteractiveBrokersClient`**: The central client that executes TWS API requests using `ibapi`. Manages connections, handles errors, and coordinates all API interactions.
+- **`InteractiveBrokersClient`**: The central client that executes TWS API requests. Manages connections, handles errors, and coordinates all API interactions.
 - **`InteractiveBrokersDataClient`**: Connects to the Gateway for streaming market data including quotes, trades, and bars.
 - **`InteractiveBrokersExecutionClient`**: Handles account information, order management, and trade execution.
 - **`InteractiveBrokersInstrumentProvider`**: Retrieves and manages instrument definitions, including support for options and futures chains.
@@ -192,7 +209,7 @@ The Interactive Brokers adapter provides an integration with IB's TWS API. The a
 
 - **`DockerizedIBGateway`**: Manages dockerized IB Gateway instances for automated deployments.
 - **Configuration classes**: Provide configuration options for all components.
-- **Factory classes**: Create and configure client instances with the necessary dependencies.
+- **`InteractiveBrokersDataClientFactory` / `InteractiveBrokersExecutionClientFactory`**: Create live data and execution clients for the node.
 
 ### Supported asset classes
 
@@ -276,9 +293,9 @@ The `InteractiveBrokersInstrumentProvider` supports three methods for constructi
 
 ### Symbology methods
 
-#### 1. Simplified symbology (`SIMPLIFIED`) - default
+#### 1. Simplified symbology (`SymbologyMethod.SIMPLIFIED`) - default
 
-When `symbology_method` is set to `SIMPLIFIED` (the default setting), the system uses intuitive, human-readable symbology rules:
+When `symbology_method` is set to `SymbologyMethod.SIMPLIFIED` (the default setting), the system uses intuitive, human-readable symbology rules:
 
 **Format Rules by Asset Class:**
 
@@ -306,9 +323,9 @@ When `symbology_method` is set to `SIMPLIFIED` (the default setting), the system
 - **Cryptocurrencies**: `{symbol}/{currency}.{exchange}`
   - Example: `BTC/USD.PAXOS`, `ETH/USD.PAXOS`
 
-#### 2. Raw symbology (`RAW`)
+#### 2. Raw symbology (`SymbologyMethod.RAW`)
 
-Setting `symbology_method` to `RAW` enforces stricter parsing rules that align directly with the fields defined in the IB API. This method provides maximum compatibility across all regions and instrument types:
+Setting `symbology_method` to `SymbologyMethod.RAW` enforces stricter parsing rules that align directly with the fields defined in the IB API. This method provides maximum compatibility across all regions and instrument types:
 
 **Format Rules:**
 
@@ -354,21 +371,16 @@ Symbol-prefix to MIC venue overrides. Applied **first** in venue resolution, ind
 instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
     symbol_to_mic_venue={
         "SPX": "XCBO",  # OPT with exchange SMART -> XCBO
-        "ES": "XCME",  # All ES futures/options use CME MIC
+        "ES": "XCME",   # All ES futures/options use CME MIC
         "SPY": "ARCX",  # SPY specifically uses ARCA
     },
 )
 # convert_exchange_to_mic_venue can be True or False; symbol_to_mic_venue is applied first
 ```
 
-#### Venue resolution
+#### Venue resolution and `_process_contract_details`
 
-When loading instruments via contract definitions, each contract detail resolves
-its own venue (via `symbol_to_mic_venue`, `validExchanges`, and MIC conversion
-when `convert_exchange_to_mic_venue` is enabled). NT v2 compatibility note: the
-v1 `IBContract` class and the internal `_process_contract_details` signature
-described here are migration/reference-only; the pinned provider config takes
-`load_contracts` as JSON dictionaries.
+When loading instruments via contract dictionaries, the provider passes `venue=None` into `_process_contract_details`, so each contract detail gets its own venue (via `symbol_to_mic_venue`, validExchanges, and MIC conversion). Callers that pass a single venue string still get one venue for all details. To get per-detail resolution when you have mixed or SMART-routed results, pass `venue=None`.
 
 ### Supported instrument formats
 
@@ -404,37 +416,13 @@ The adapter supports various instrument formats based on Interactive Brokers' co
 
 ### Choosing the right symbology method
 
-- **Use `SIMPLIFIED`** (default) for most use cases - provides clean, readable instrument IDs
-- **Use `RAW`** when dealing with complex international instruments or when simplified parsing fails
+- **Use `SymbologyMethod.SIMPLIFIED`** (default) for most use cases - provides clean, readable instrument IDs
+- **Use `SymbologyMethod.RAW`** when dealing with complex international instruments or when simplified parsing fails
 - **Enable `convert_exchange_to_mic_venue`** when you need standardized MIC venue codes for compliance or data consistency
 
 ## Instruments and contracts
 
-In Interactive Brokers, a NautilusTrader `Instrument` corresponds to an IB [Contract](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/#contracts). The adapter handles two types of contract representations:
-
-### Contract types
-
-NT v2 compatibility note: the v1 `IBContract` / `IBContractDetails` Python
-classes below are migration/reference-only; the pinned surface passes contracts
-as JSON dictionaries through `InteractiveBrokersInstrumentProviderConfig.load_contracts`
-(the Rust provider stores them as `Vec<serde_json::Value>`).
-
-#### Basic contract (v1 `IBContract`)
-
-- Contains essential contract identification fields
-- Used for contract searches and basic operations
-- Cannot be directly converted to a NautilusTrader `Instrument`
-
-#### Contract details (v1 `IBContractDetails`)
-
-- Contains contract information including:
-  - Order types supported
-  - Trading hours and calendar
-  - Margin requirements
-  - Price increments and multipliers
-  - Market data permissions
-- Can be converted to a NautilusTrader `Instrument`
-- Required for trading operations
+In Interactive Brokers, a NautilusTrader `Instrument` corresponds to an IB [Contract](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/#contracts). The adapter represents contracts as JSON dictionaries with IB API field names (for example `secType`, `symbol`, `exchange`, `currency`, `strike`, `right`, and `lastTradeDateOrContractMonth`).
 
 ### Contract discovery
 
@@ -449,63 +437,57 @@ There are two primary methods for loading instruments:
 Use `symbology_method=SymbologyMethod.SIMPLIFIED` (default) with `load_ids` for clean, intuitive instrument identification:
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
 from nautilus_trader.adapters.interactive_brokers import SymbologyMethod
 
 instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
     symbology_method=SymbologyMethod.SIMPLIFIED,
-    load_ids=frozenset(
-        [
-            "EUR/USD.IDEALPRO",  # Forex
-            "SPY.ARCA",  # Stock
-            "ESM24.CME",  # Future
-            "BTC/USD.PAXOS",  # Crypto
-            "^SPX.CBOE",  # Index
-        ]
-    ),
+    load_ids=frozenset([
+        "EUR/USD.IDEALPRO",    # Forex
+        "SPY.ARCA",            # Stock
+        "ESM24.CME",           # Future
+        "BTC/USD.PAXOS",       # Crypto
+        "^SPX.CBOE",           # Index
+    ]),
 )
 ```
 
 #### 2. Using `load_contracts` (for complex instruments)
 
-Use `load_contracts` with JSON contract dictionaries for complex scenarios like options/futures chains:
+Use `load_contracts` with contract dictionaries for complex scenarios like options/futures chains.
+Set chain flags on a contract dictionary to use that contract as the underlying or chain seed. The
+provider-level `min_expiry_days` and `max_expiry_days` values limit the contracts loaded:
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
 
-# Contracts are JSON dictionaries (Rust Vec<serde_json::Value>); chain-building
-# switches live on the provider config, not on each contract.
-instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
+provider_config = InteractiveBrokersInstrumentProviderConfig(
     load_contracts=[
-        # Load options chain for specific expiry
         {
-            "secType": "IND",
-            "symbol": "SPX",
-            "exchange": "CBOE",
-            "lastTradeDateOrContractMonth": "20240718",
+            "symbol": "SPY",
+            "secType": "STK",
+            "exchange": "SMART",
+            "currency": "USD",
+            "build_options_chain": True,
         },
-        # Load futures chain
         {
+            "symbol": "ES",
             "secType": "CONTFUT",
             "exchange": "CME",
-            "symbol": "ES",
+            "currency": "USD",
+            "build_futures_chain": True,
         },
     ],
-    build_options_chain=True,
-    min_expiry_days=0,
-    max_expiry_days=30,
-    build_futures_chain=True,
+    min_expiry_days=7,
+    max_expiry_days=60,
 )
 ```
 
-### Contract examples by asset class
+When `CONTFUT` has a chain flag, the adapter qualifies it and loads the matching dated futures or
+futures options. Without a chain flag, it represents IB's continuous future, which IB limits to
+historical data. It cannot provide live market data or accept orders.
 
-NT v2 compatibility note: these are the pinned JSON-dictionary shapes
-(v1 spelled them as `IBContract(...)` constructor calls).
+### Contract dictionary examples by asset class
 
 ```python
 # Stocks
@@ -516,57 +498,77 @@ NT v2 compatibility note: these are the pinned JSON-dictionary shapes
 {"secType": "BOND", "secIdType": "ISIN", "secId": "US03076KAA60"}
 {"secType": "BOND", "secIdType": "CUSIP", "secId": "912828XE8"}
 
-# Individual options
-{
-    "secType": "OPT",
-    "exchange": "SMART",
-    "symbol": "SPY",
-    "lastTradeDateOrContractMonth": "20251219",
-    "strike": 500,
-    "right": "C",
-}
+# Individual Options
+{"secType": "OPT", "exchange": "SMART", "symbol": "SPY",
+ "lastTradeDateOrContractMonth": "20251219", "strike": 500, "right": "C"}
+
+# Options Chain (loads all strikes/expirations)
+{"secType": "STK", "exchange": "SMART", "primaryExchange": "ARCA", "symbol": "SPY",
+ "build_options_chain": True, "min_expiry_days": 10, "max_expiry_days": 60}
 
 # CFDs
 {"secType": "CFD", "symbol": "IBUS30"}
 {"secType": "CFD", "symbol": "DE40EUR", "exchange": "SMART"}
 
-# Individual futures
-{"secType": "FUT", "exchange": "CME", "symbol": "ES", "lastTradeDateOrContractMonth": "20240315"}
+# Individual Futures
+{"secType": "FUT", "exchange": "CME", "symbol": "ES",
+ "lastTradeDateOrContractMonth": "20240315"}
+
+# Futures Chain (loads all expirations)
+{"secType": "CONTFUT", "exchange": "CME", "symbol": "ES", "build_futures_chain": True}
+
+# Options on Futures (FOP) - Individual
+{"secType": "FOP", "exchange": "CME", "symbol": "ES",
+ "lastTradeDateOrContractMonth": "20240315", "strike": 4200, "right": "C"}
+
+# Options on Futures Chain (loads all strikes/expirations)
+{"secType": "CONTFUT", "exchange": "CME", "symbol": "ES",
+ "build_options_chain": True, "min_expiry_days": 7, "max_expiry_days": 60}
+
+# Forex
+{"secType": "CASH", "exchange": "IDEALPRO", "symbol": "EUR", "currency": "USD"}
+{"secType": "CASH", "exchange": "IDEALPRO", "symbol": "GBP", "currency": "JPY"}
+
+# Crypto
+{"secType": "CRYPTO", "symbol": "BTC", "exchange": "PAXOS", "currency": "USD"}
+{"secType": "CRYPTO", "symbol": "ETH", "exchange": "PAXOS", "currency": "USD"}
+
+# Indices
+{"secType": "IND", "symbol": "SPX", "exchange": "CBOE"}
+{"secType": "IND", "symbol": "NDX", "exchange": "NASDAQ"}
 
 # Commodities
 {"secType": "CMDTY", "symbol": "XAUUSD", "exchange": "SMART"}
+
+# Continuous Futures
+{"secType": "CONTFUT", "exchange": "CME", "symbol": "ES"}  # -> ES.CME
+{"secType": "CONTFUT", "exchange": "NYMEX", "symbol": "CL"} # -> CL.NYMEX
 ```
 
 ### Advanced configuration options
 
-Chain building and expiry windows are provider-level settings (the v1
-per-contract `build_options_chain` / `min_expiry_days` kwargs are
-migration/reference-only):
-
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
+# Options chain with custom exchange
+{
+    "secType": "STK",
+    "symbol": "AAPL",
+    "exchange": "SMART",
+    "primaryExchange": "NASDAQ",
+    "build_options_chain": True,
+    "options_chain_exchange": "CBOE",  # Use CBOE for options instead of SMART
+    "min_expiry_days": 7,
+    "max_expiry_days": 45,
+}
 
-# Options chain over a bounded expiry window
-provider_config = InteractiveBrokersInstrumentProviderConfig(
-    load_contracts=[
-        {"secType": "STK", "symbol": "AAPL", "exchange": "SMART"},
-    ],
-    build_options_chain=True,
-    min_expiry_days=7,
-    max_expiry_days=45,
-)
-
-# Futures chain with a wider window
-provider_config = InteractiveBrokersInstrumentProviderConfig(
-    load_contracts=[
-        {"secType": "CONTFUT", "exchange": "NYMEX", "symbol": "CL"},  # Crude Oil
-    ],
-    build_futures_chain=True,
-    min_expiry_days=30,
-    max_expiry_days=180,
-)
+# Futures chain with specific months
+{
+    "secType": "CONTFUT",
+    "exchange": "NYMEX",
+    "symbol": "CL",  # Crude Oil
+    "build_futures_chain": True,
+    "min_expiry_days": 30,
+    "max_expiry_days": 180,
+}
 ```
 
 ### Continuous futures
@@ -574,9 +576,9 @@ provider_config = InteractiveBrokersInstrumentProviderConfig(
 For continuous futures contracts (using `secType='CONTFUT'`), the adapter creates instrument IDs using just the symbol and venue:
 
 ```python
-# Continuous futures examples (JSON contract dictionaries)
+# Continuous futures examples
 {"secType": "CONTFUT", "exchange": "CME", "symbol": "ES"}  # -> ES.CME
-{"secType": "CONTFUT", "exchange": "NYMEX", "symbol": "CL"}  # -> CL.NYMEX
+{"secType": "CONTFUT", "exchange": "NYMEX", "symbol": "CL"} # -> CL.NYMEX
 
 # With MIC venue conversion enabled
 instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
@@ -602,30 +604,15 @@ Interactive Brokers supports option spreads through BAG contracts, which combine
 
 ### Creating option spread instrument IDs
 
-Option spreads are created using the `new_generic_spread_id()` function, which combines individual option legs with their respective ratios:
+Spread instrument IDs combine the individual option legs with their respective ratios. Single
+parentheses mark a positive leg ratio; double parentheses mark a negative ratio. All legs must
+use the same venue:
 
 ```python
-from nautilus_trader.model.identifiers import InstrumentId, new_generic_spread_id
+from nautilus_trader.model import InstrumentId
 
-# Create individual option instrument IDs
-call_leg = InstrumentId.from_str("SPY C400.SMART")
-put_leg = InstrumentId.from_str("SPY P390.SMART")
-
-# Create a 1:1 call spread (long call, short call)
-call_spread_id = new_generic_spread_id(
-    [
-        (call_leg, 1),  # Long 1 contract
-        (put_leg, -1),  # Short 1 contract
-    ]
-)
-
-# Create a 1:2 ratio spread
-ratio_spread_id = new_generic_spread_id(
-    [
-        (call_leg, 1),  # Long 1 contract
-        (put_leg, 2),  # Long 2 contracts
-    ]
-)
+# Long 1x "SPY C400" and short 1x "SPY C410" (double parentheses mark a negative ratio)
+spread_id = InstrumentId.from_str("(1)SPY C400_((1))SPY C410.SMART")
 ```
 
 ### Dynamic spread loading
@@ -637,7 +624,6 @@ Option spreads must be requested before they can be traded or subscribed to for 
 def on_start(self):
     # Request the spread instrument
     self.request_instrument(spread_id)
-
 
 def on_instrument(self, instrument):
     # Handle the loaded spread instrument
@@ -675,35 +661,32 @@ The `HistoricalInteractiveBrokersClient` provides methods for retrieving histori
 
 ### Historical data client
 
+`HistoricalInteractiveBrokersClient` connects with an instrument provider and data client config:
+
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    HistoricalInteractiveBrokersClient,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientConfig,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProvider,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import HistoricalInteractiveBrokersClient
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProvider
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
 from nautilus_trader.adapters.interactive_brokers import MarketDataType
 
-# Initialize the client from a provider and a data client config
-instrument_provider = InteractiveBrokersInstrumentProvider(
-    InteractiveBrokersInstrumentProviderConfig(),
+provider = InteractiveBrokersInstrumentProvider(
+    InteractiveBrokersInstrumentProviderConfig(load_all=True),
 )
-client = HistoricalInteractiveBrokersClient(
-    instrument_provider=instrument_provider,
-    config=InteractiveBrokersDataClientConfig(
-        host="127.0.0.1",
-        port=7497,
-        client_id=1,
-        market_data_type=MarketDataType.DELAYED_FROZEN,  # Use delayed data if no subscription
-    ),
+
+config = InteractiveBrokersDataClientConfig(
+    host="127.0.0.1",
+    port=7497,
+    client_id=1,
+    market_data_type=MarketDataType.DELAYED_FROZEN,  # Use delayed data if no subscription
 )
+
+client = HistoricalInteractiveBrokersClient(provider, config)
 ```
+
+Its async Python methods support `request_instruments` for contract and instrument discovery,
+`request_bars` for one or more bar specifications, and `request_ticks` for historical trade or
+bid-ask ticks.
 
 ### Retrieving instruments
 
@@ -717,21 +700,21 @@ contracts = [
     {"secType": "CASH", "symbol": "EUR", "currency": "USD", "exchange": "IDEALPRO"},
 ]
 
-# Request instrument definitions (await from an async context)
+# Request instrument definitions
 instruments = await client.request_instruments(contracts=contracts)
 ```
 
 #### Option chain retrieval with catalog storage
 
-You can download entire option chains using `request_instruments` in your strategy, with the added benefit of saving the data to the catalog using `update_catalog=True`:
+You can download entire option chains using `request_instruments` in your strategy, with the added benefit of saving the data to the catalog by passing `"update_catalog": True` in `params`:
 
 ```python
 # In your strategy's on_start method
 def on_start(self):
     self.request_instruments(
         venue=IB_VENUE,
-        update_catalog=True,
         params={
+            "update_catalog": True,
             "ib_contracts": (
                 # SPY options
                 {
@@ -803,16 +786,16 @@ import datetime
 # Request historical bars
 bars = await client.request_bars(
     bar_specifications=[
-        "1-MINUTE-LAST",  # 1-minute bars using last price
-        "5-MINUTE-MID",  # 5-minute bars using midpoint
-        "1-HOUR-LAST",  # 1-hour bars using last price
-        "1-DAY-LAST",  # Daily bars using last price
+        "1-MINUTE-LAST",    # 1-minute bars using last price
+        "5-MINUTE-MID",     # 5-minute bars using midpoint
+        "1-HOUR-LAST",      # 1-hour bars using last price
+        "1-DAY-LAST",       # Daily bars using last price
     ],
     start_date_time=datetime.datetime(2023, 11, 1, 9, 30),
     end_date_time=datetime.datetime(2023, 11, 6, 16, 30),
     contracts=contracts,
     use_rth=True,  # Regular Trading Hours only
-    timeout=120,  # Request timeout in seconds
+    timeout=120,   # Request timeout in seconds
 )
 ```
 
@@ -851,49 +834,27 @@ The adapter supports various bar specifications:
 ### Complete example
 
 ```python
+import asyncio
 import datetime
 
-from nautilus_trader.adapters.interactive_brokers import (
-    HistoricalInteractiveBrokersClient,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientConfig,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProvider,
-)
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
-from nautilus_trader.persistence.catalog import ParquetDataCatalog
+from nautilus_trader.adapters.interactive_brokers import HistoricalInteractiveBrokersClient
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProvider
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
+from nautilus_trader.persistence import ParquetDataCatalog
 
 
 async def download_historical_data():
-    # Initialize client from a provider and a data client config
-    instrument_provider = InteractiveBrokersInstrumentProvider(
-        InteractiveBrokersInstrumentProviderConfig(),
+    # Initialize client from an instrument provider and data client config
+    provider = InteractiveBrokersInstrumentProvider(
+        InteractiveBrokersInstrumentProviderConfig(load_all=True),
     )
-    client = HistoricalInteractiveBrokersClient(
-        instrument_provider=instrument_provider,
-        config=InteractiveBrokersDataClientConfig(
-            host="127.0.0.1",
-            port=7497,
-            client_id=5,
-        ),
+    config = InteractiveBrokersDataClientConfig(
+        host="127.0.0.1",
+        port=7497,
+        client_id=5,
     )
-
-    # Initialize client from a provider and a data client config
-    instrument_provider = InteractiveBrokersInstrumentProvider(
-        InteractiveBrokersInstrumentProviderConfig(),
-    )
-    client = HistoricalInteractiveBrokersClient(
-        instrument_provider=instrument_provider,
-        config=InteractiveBrokersDataClientConfig(
-            host="127.0.0.1",
-            port=7497,
-            client_id=5,
-        ),
-    )
+    client = HistoricalInteractiveBrokersClient(provider, config)
 
     # Define contracts as JSON dictionaries
     contracts = [
@@ -932,7 +893,6 @@ async def download_historical_data():
     print(f"Downloaded {len(ticks)} ticks")
 
 
-
 # Run the example
 if __name__ == "__main__":
     asyncio.run(download_historical_data())
@@ -949,7 +909,7 @@ Be aware of Interactive Brokers' historical data limitations:
 
 ### Best practices
 
-1. **Use Delayed Data**: For backtesting, `MarketDataTypeEnum.DELAYED_FROZEN` is often sufficient
+1. **Use Delayed Data**: For backtesting, `MarketDataType.DELAYED_FROZEN` is often sufficient
 2. **Batch Requests**: Group multiple instruments in single requests when possible
 3. **Handle Timeouts**: Set appropriate timeout values for large data requests
 4. **Respect Rate Limits**: Add delays between requests to avoid hitting rate limits
@@ -961,13 +921,10 @@ Interactive Brokers enforces pacing limits; excessive historical-data or order r
 
 ## Live trading
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-Active live trading with Interactive Brokers uses Rust `LiveNode` with the
-adapter data and execution clients shown in upstream
-`crates/adapters/interactive_brokers/examples/`. Python live-node wiring is
-migration/reference-only under
-`skills/nt-adapters/migration_reference/python/`.
+Live trading with Interactive Brokers wires `InteractiveBrokersDataClientFactory` and
+`InteractiveBrokersExecutionClientFactory` into a `LiveNode` (see
+[Complete trading node configuration](#complete-trading-node-configuration)). The clients resolve
+instruments through the `InteractiveBrokersInstrumentProvider`.
 
 ### Architecture overview
 
@@ -984,32 +941,28 @@ The `InteractiveBrokersInstrumentProvider` provides access to financial instrume
 #### Basic configuration
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersInstrumentProviderConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
 from nautilus_trader.adapters.interactive_brokers import SymbologyMethod
 
 instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
     symbology_method=SymbologyMethod.SIMPLIFIED,
     build_futures_chain=False,  # Set to True if fetching futures chains
     build_options_chain=False,  # Set to True if fetching options chains
-    min_expiry_days=10,  # Minimum days to expiry for derivatives
-    max_expiry_days=60,  # Maximum days to expiry for derivatives
+    min_expiry_days=10,         # Minimum days to expiry for derivatives
+    max_expiry_days=60,         # Maximum days to expiry for derivatives
     convert_exchange_to_mic_venue=False,  # Use MIC codes for venue mapping
-    cache_validity_days=1,  # Cache instrument data for 1 day
-    load_ids=frozenset(
-        [
-            # Individual instruments using simplified symbology
-            "EUR/USD.IDEALPRO",  # Forex
-            "BTC/USD.PAXOS",  # Cryptocurrency
-            "SPY.ARCA",  # Stock ETF
-            "V.NYSE",  # Individual stock
-            "ESM4.CME",  # Future contract (single digit year)
-            "^SPX.CBOE",  # Index
-        ]
-    ),
+    cache_validity_days=1,      # Cache instrument data for 1 day
+    load_ids=frozenset([
+        # Individual instruments using simplified symbology
+        "EUR/USD.IDEALPRO",     # Forex
+        "BTC/USD.PAXOS",        # Cryptocurrency
+        "SPY.ARCA",             # Stock ETF
+        "V.NYSE",               # Individual stock
+        "ESM4.CME",             # Future contract (single digit year)
+        "^SPX.CBOE",            # Index
+    ]),
     load_contracts=[
-        # Complex instruments as JSON dictionaries
+        # Complex instruments as JSON contract dictionaries
         {"secType": "STK", "symbol": "AAPL", "exchange": "SMART", "primaryExchange": "NASDAQ"},
         {"secType": "CASH", "symbol": "GBP", "currency": "USD", "exchange": "IDEALPRO"},
     ],
@@ -1022,15 +975,26 @@ instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
 # Configuration for options and futures chains
 advanced_config = InteractiveBrokersInstrumentProviderConfig(
     symbology_method=SymbologyMethod.SIMPLIFIED,
-    build_futures_chain=True,  # Enable futures chain loading
-    build_options_chain=True,  # Enable options chain loading
-    min_expiry_days=7,  # Load contracts expiring in 7+ days
-    max_expiry_days=90,  # Load contracts expiring within 90 days
+    build_futures_chain=True,   # Enable futures chain loading
+    build_options_chain=True,   # Enable options chain loading
+    min_expiry_days=7,          # Load contracts expiring in 7+ days
+    max_expiry_days=90,         # Load contracts expiring within 90 days
     load_contracts=[
         # Load SPY options chain
-        {"secType": "STK", "symbol": "SPY", "exchange": "SMART", "primaryExchange": "ARCA"},
+        {
+            "secType": "STK",
+            "symbol": "SPY",
+            "exchange": "SMART",
+            "primaryExchange": "ARCA",
+            "build_options_chain": True,
+        },
         # Load ES futures chain
-        {"secType": "CONTFUT", "exchange": "CME", "symbol": "ES"},
+        {
+            "secType": "CONTFUT",
+            "exchange": "CME",
+            "symbol": "ES",
+            "build_futures_chain": True,
+        },
     ],
 )
 ```
@@ -1077,9 +1041,7 @@ Interactive Brokers supports several market data types:
 #### Basic data client configuration
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersDataClientConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
 from nautilus_trader.adapters.interactive_brokers import MarketDataType
 
 data_client_config = InteractiveBrokersDataClientConfig(
@@ -1091,7 +1053,7 @@ data_client_config = InteractiveBrokersDataClientConfig(
     ignore_quote_tick_size_updates=False,  # Include size-only updates
     instrument_provider=instrument_provider_config,
     connection_timeout=300,  # 5 minutes
-    request_timeout=60,  # 1 minute
+    request_timeout=60,      # 1 minute
 )
 ```
 
@@ -1113,10 +1075,6 @@ production_data_config = InteractiveBrokersDataClientConfig(
 )
 ```
 
-When using the Dockerized gateway, start it separately and pass its `host` and
-`port` here; passing `dockerized_gateway` to a client config raises
-`ValueError` (Python does not own the container lifecycle).
-
 ### Data client configuration options
 
 | Option                          | Default                                         | Description |
@@ -1129,10 +1087,9 @@ When using the Dockerized gateway, start it separately and pass its `host` and
 | `market_data_type`              | `REALTIME`                                      | Market data feed type (`REALTIME`, `DELAYED`, `DELAYED_FROZEN`, etc.). |
 | `ignore_quote_tick_size_updates`| `False`                                         | Suppress quote ticks where only size changes when `True`. |
 | `handle_revised_bars`           | `False`                                         | When `True`, processes bar revisions from IB (bars can be updated after initial publication). |
-| `dockerized_gateway`            | `None`                                          | `DockerizedIBGatewayConfig` for containerized setups (Rust struct); Python configs raise `ValueError` when it is set. |
+| `dockerized_gateway`            | `None`                                          | Reserved; passing a non-`None` value raises `ValueError` (start the gateway separately and pass `host`/`port`). |
 | `connection_timeout`            | `300`                                           | Seconds to wait for the initial API connection. |
 | `request_timeout`               | `60`                                            | Seconds to wait for historical data requests before timing out. |
-| `batch_quotes`                  | `False`                                         | Batch quote requests for multiple instruments when `True` (Rust struct). |
 
 #### Notes
 
@@ -1140,7 +1097,7 @@ When using the Dockerized gateway, start it separately and pass its `host` and
 - **`ignore_quote_tick_size_updates`**: When `True`, filters out quote ticks where only the size changed (not price), reducing data volume.
 - **`handle_revised_bars`**: When `True`, processes bar revisions from IB (bars can be updated after initial publication).
 - **`connection_timeout`**: Maximum time to wait for initial connection establishment.
-- **`request_timeout`**: Maximum time to wait for historical data requests.
+- **`request_timeout_secs`**: Maximum time to wait for historical data requests.
 
 ### Execution client configuration options
 
@@ -1151,7 +1108,7 @@ When using the Dockerized gateway, start it separately and pass its `host` and
 | `port`                                  | `None`                                          | Port for TWS/IB Gateway (`7497`/`7496` for TWS, `4002`/`4001` for IBG). |
 | `client_id`                             | `1`                                             | Unique client identifier used when connecting to TWS/IB Gateway. |
 | `account_id`                            | `None`                                          | Interactive Brokers account identifier (falls back to `TWS_ACCOUNT` env var). |
-| `dockerized_gateway`                    | `None`                                          | `DockerizedIBGatewayConfig` for containerized setups (Rust struct); Python configs raise `ValueError` when it is set. |
+| `dockerized_gateway`                    | `None`                                          | Reserved; passing a non-`None` value raises `ValueError` (start the gateway separately and pass `host`/`port`). |
 | `connection_timeout`                    | `300`                                           | Seconds to wait for the initial API connection. |
 | `request_timeout`                       | `60`                                            | Seconds to wait for request responses (contract details, etc.). |
 | `fetch_all_open_orders`                 | `False`                                         | When `True`, pulls open orders for every API client ID (not just this session). |
@@ -1233,9 +1190,7 @@ The adapter supports most Interactive Brokers order types:
 #### Basic execution client configuration
 
 ```python
-from nautilus_trader.adapters.interactive_brokers import (
-    InteractiveBrokersExecutionClientConfig,
-)
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientConfig
 
 exec_client_config = InteractiveBrokersExecutionClientConfig(
     host="127.0.0.1",
@@ -1247,10 +1202,14 @@ exec_client_config = InteractiveBrokersExecutionClientConfig(
 )
 ```
 
+When registering the client on a `LiveNode`, pass routing through
+`LiveNodeBuilder.add_exec_client(..., routing=RoutingConfig(default=True))` to route all orders
+through this client.
+
 #### Advanced execution client configuration
 
 ```python
-# Production configuration against a running gateway
+# Production configuration
 production_exec_config = InteractiveBrokersExecutionClientConfig(
     host="127.0.0.1",
     port=4001,  # IB Gateway live trading port
@@ -1260,9 +1219,6 @@ production_exec_config = InteractiveBrokersExecutionClientConfig(
     connection_timeout=300,
 )
 ```
-
-When using the Dockerized gateway, start it separately and pass its `host` and
-`port` here; passing `dockerized_gateway` to the config raises `ValueError`.
 
 #### Account ID configuration
 
@@ -1277,7 +1233,6 @@ exec_config = InteractiveBrokersExecutionClientConfig(
 
 # Option 2: Use environment variable
 import os
-
 os.environ["TWS_ACCOUNT"] = "DU123456"
 exec_config = InteractiveBrokersExecutionClientConfig(
     account_id=None,  # Will use TWS_ACCOUNT env var
@@ -1299,23 +1254,20 @@ Leave `exchange` unset, or set it to an empty string, to use the cached contract
 
 #### Order tags and advanced features
 
-Pass IB-specific order attributes as an order tag prefixed with `IBOrderTags:`
-and followed by a JSON object (the pinned mechanism; the v1
-`from nautilus_trader.adapters.interactive_brokers.common import IBOrderTags`
-class and its `.value` attribute are migration/reference-only). The adapter
-overlays recognized IB order fields and supports price, time, margin, execution,
-volume, and percent-change conditions:
+The adapter supports IB-specific order attributes through order tags. Pass them as a tag prefixed
+with `IBOrderTags:` followed by a JSON object. The adapter overlays recognized IB order fields and
+supports price, time, margin, execution, volume, and percent-change conditions:
 
 ```python
 import json
 
 ib_attributes = {
-    "allOrNone": True,  # All-or-none order
-    "ocaGroup": "MY_OCA_GROUP",  # One-cancels-all group
-    "ocaType": 1,  # Cancel with block
+    "allOrNone": True,          # All-or-none order
+    "ocaGroup": "MyGroup1",     # One-cancels-all group
+    "ocaType": 1,               # Cancel with block
     "activeStartTime": "20240315 09:30:00 EST",  # GTC activation time
-    "activeStopTime": "20240315 16:00:00 EST",  # GTC deactivation time
-    "goodAfterTime": "20240315 09:35:00 EST",  # Good after time
+    "activeStopTime": "20240315 16:00:00 EST",   # GTC deactivation time
+    "goodAfterTime": "20240315 09:35:00 EST",    # Good after time
 }
 tags = [f"IBOrderTags:{json.dumps(ib_attributes)}"]
 
@@ -1331,12 +1283,15 @@ order = order_factory.limit(
 
 #### OCA (one-cancels-all) orders
 
-All OCA functionality must be explicitly configured through the `IBOrderTags:`
-JSON tag:
+The adapter provides support for OCA orders through the `ocaGroup` and `ocaType` order attributes
+in the `IBOrderTags:` JSON payload.
+
+### Basic OCA configuration
 
 ```python
 import json
 
+# Create OCA configuration
 oca_attributes = {
     "ocaGroup": "MY_OCA_GROUP",
     "ocaType": 1,  # Type 1: Cancel All with Block (recommended)
@@ -1355,6 +1310,30 @@ bracket_order = order_factory.bracket(
 )
 ```
 
+### Advanced OCA configuration
+
+You can specify different OCA types and behaviors through `ocaType`:
+
+```python
+import json
+
+# Create custom OCA configuration
+custom_oca_attributes = {
+    "ocaGroup": "MY_CUSTOM_GROUP",
+    "ocaType": 2,  # Use Type 2: Reduce with Block
+}
+custom_oca_tags = [f"IBOrderTags:{json.dumps(custom_oca_attributes)}"]
+
+# Apply to individual orders
+order = order_factory.limit(
+    instrument_id=instrument.id,
+    order_side=OrderSide.BUY,
+    quantity=instrument.make_qty(100),
+    price=instrument.make_price(100.0),
+    tags=custom_oca_tags,
+)
+```
+
 ### OCA types
 
 Interactive Brokers supports three OCA types:
@@ -1363,21 +1342,54 @@ Interactive Brokers supports three OCA types:
 |------|------|----------|----------|
 | **1** | Cancel All with Block | Cancel all remaining orders with block protection | **Default** - Safest option, prevents overfills |
 | **2** | Reduce with Block | Proportionally reduce remaining orders with block protection | Partial fills with overfill protection |
-| **3** | Reduce without Block | Proportionally reduce remaining orders without block protection | No overfill protection |
+| **3** | Reduce without Block | Proportionally reduce remaining orders without block protection | Fastest execution, higher overfill risk |
+
+#### Multiple orders in same OCA group
+
+```python
+import json
+
+# Create multiple orders with the same OCA group
+oca_attributes = {
+    "ocaGroup": "MULTI_ORDER_GROUP",
+    "ocaType": 3,  # Use Type 3: Reduce without Block
+}
+oca_tags = [f"IBOrderTags:{json.dumps(oca_attributes)}"]
+
+order1 = order_factory.limit(
+    instrument_id=instrument.id,
+    order_side=OrderSide.BUY,
+    quantity=instrument.make_qty(50),
+    price=instrument.make_price(99.0),
+    tags=oca_tags,
+)
+
+order2 = order_factory.limit(
+    instrument_id=instrument.id,
+    order_side=OrderSide.BUY,
+    quantity=instrument.make_qty(50),
+    price=instrument.make_price(101.0),
+    tags=oca_tags,
+)
+```
+
+### OCA configuration requirements
+
+OCA functionality is **only** available through explicit configuration through the `IBOrderTags:`
+JSON payload: OCA settings must be explicitly specified in order tags.
 
 ### Conditional orders
 
-The adapter supports Interactive Brokers conditional orders through the
-`conditions` list in the `IBOrderTags:` JSON tag. Conditional orders allow you
-to specify criteria that must be met before an order is transmitted or
-cancelled.
+The adapter supports Interactive Brokers conditional orders through the `conditions` list in the
+`IBOrderTags:` JSON payload. Conditional orders allow you to specify criteria that must be met
+before an order is transmitted or cancelled.
 
 #### Supported condition types
 
-- **Price Conditions**: Trigger based on price movements of a specific instrument
-- **Time Conditions**: Trigger at a specific date and time
-- **Volume Conditions**: Trigger based on trading volume thresholds
-- **Execution Conditions**: Trigger when trades occur for a specific instrument
+- **Price Conditions**: Trigger based on price levels
+- **Time Conditions**: Trigger based on specific times
+- **Volume Conditions**: Trigger based on traded volume
+- **Execution Conditions**: Trigger based on trades of a specific instrument
 - **Margin Conditions**: Trigger based on account margin levels
 - **Percent Change Conditions**: Trigger based on percentage price changes
 
@@ -1386,6 +1398,7 @@ cancelled.
 ```python
 import json
 
+# Create a price condition: trigger when SPY goes above $250
 price_condition = {
     "type": "price",
     "conId": 265598,  # SPY contract ID
@@ -1396,26 +1409,27 @@ price_condition = {
     "conjunction": "and",
 }
 
+# Create order tags with condition
 ib_attributes = {
     "conditions": [price_condition],
     "conditionsCancelOrder": False,  # Transmit order when condition is met
 }
-tags = [f"IBOrderTags:{json.dumps(ib_attributes)}"]
+order_tags = [f"IBOrderTags:{json.dumps(ib_attributes)}"]
 
+# Apply to order
 order = order_factory.limit(
     instrument_id=instrument.id,
     order_side=OrderSide.BUY,
     quantity=instrument.make_qty(100),
     price=instrument.make_price(251.00),
-    tags=tags,
+    tags=order_tags,
 )
 ```
 
 #### Multiple conditions with logic
 
 ```python
-import json
-
+# Create multiple conditions with AND/OR logic
 conditions = [
     {
         "type": "price",
@@ -1432,110 +1446,190 @@ conditions = [
         "isMore": True,
         "conjunction": "or",  # OR with next condition
     },
+    {
+        "type": "volume",
+        "conId": 265598,
+        "exchange": "SMART",
+        "isMore": True,
+        "volume": 10000000,
+        "conjunction": "and",
+    },
 ]
 
 ib_attributes = {
     "conditions": conditions,
     "conditionsCancelOrder": False,
 }
-tags = [f"IBOrderTags:{json.dumps(ib_attributes)}"]
+order_tags = [f"IBOrderTags:{json.dumps(ib_attributes)}"]
 ```
 
-#### All six condition types
+#### Condition parameters
 
-```python
-# 1. Price Condition - trigger when price > threshold
-price_condition = {
-    "type": "price",
-    "conId": 265598,
-    "exchange": "SMART",
-    "isMore": True,
-    "price": 6000.0,
-    "triggerMethod": 0,
-    "conjunction": "and",
-}
+**Price Condition:**
 
-# 2. Time Condition - trigger at specific time
-time_condition = {
-    "type": "time",
-    "time": "20250315-09:30:00",  # UTC format
-    "isMore": True,
-    "conjunction": "and",
-}
+- `conId`: Contract ID of the instrument to monitor
+- `exchange`: Exchange to monitor (e.g., "SMART", "NASDAQ")
+- `isMore`: True for >=, False for <=
+- `price`: Price threshold
+- `triggerMethod`: Trigger method for price conditions
+- `conjunction`: Logical connection to the next condition ("and"/"or")
 
-# 3. Volume Condition - trigger when volume > 100,000
-volume_condition = {
-    "type": "volume",
-    "conId": 495512563,
-    "exchange": "CME",
-    "isMore": True,
-    "volume": 100000,
-    "conjunction": "and",
-}
+**Time Condition:**
 
-# 4. Execution Condition - trigger when SPY trades
-execution_condition = {
-    "type": "execution",
-    "symbol": "SPY",
-    "secType": "STK",
-    "exchange": "SMART",
-    "conjunction": "and",
-}
+- `time`: Time string in UTC format "YYYYMMDD-HH:MM:SS" (e.g., "20250315-09:30:00")
+- `isMore`: True for after time, False for before time
 
-# 5. Margin Condition - trigger when margin cushion > 75%
-margin_condition = {
-    "type": "margin",
-    "percent": 75,
-    "isMore": True,
-    "conjunction": "and",
-}
+**Volume Condition:**
 
-# 6. Percent Change Condition - trigger when price changes > 5%
-percent_change_condition = {
-    "type": "percent_change",
-    "conId": 495512563,
-    "exchange": "CME",
-    "changePercent": 5.0,
-    "isMore": True,
-    "conjunction": "and",
-}
+- `conId`: Contract ID of the instrument to monitor
+- `exchange`: Exchange to monitor
+- `isMore`: True for >=, False for <=
+- `volume`: Volume threshold
 
-# Use any combination of conditions
-ib_attributes = {
-    "conditions": [price_condition, time_condition],  # Multiple conditions
-    "conditionsCancelOrder": False,  # Transmit when conditions met
-}
-```
+**Execution Condition:**
 
-#### Order behavior
+- `symbol`: Symbol to monitor for trades
+- `secType`: Security type (e.g., "STK", "OPT", "FUT")
+- `exchange`: Exchange to monitor
 
-Set `conditionsCancelOrder` to control what happens when conditions are met:
+**Margin Condition:**
 
-- `False`: Transmit the order when conditions are satisfied
-- `True`: Cancel the order when conditions are satisfied
+- `percent`: Margin cushion percentage threshold
+- `isMore`: True for >=, False for <=
 
-#### Implementation notes
+**Percent Change Condition:**
 
-- **All 6 condition types are fully supported** and tested with live Interactive Brokers orders
-- **Time conditions** use UTC format with dash separator (`YYYYMMDD-HH:MM:SS`) for reliable parsing
-- **Conjunction logic** allows complex condition combinations using "and"/"or" operators
+- `conId`: Contract ID of the instrument to monitor
+- `exchange`: Exchange to monitor
+- `isMore`: True for >=, False for <=
+- `changePercent`: Percentage change threshold
 
-### Legacy Python trading-node configuration
+### Complete trading node configuration
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-The former copyable Python node examples are quarantined behind the migration
-pointer below. Use the upstream Rust `LiveNode` examples for active work.
+Setting up a complete trading environment involves wiring the IB data and execution clients into a `LiveNode` (the shared pattern is documented in [index.md](index.md#live-node-wiring)). These examples mirror the upstream `examples/live/interactive_brokers` scripts at the pinned revision.
 
 #### Paper trading configuration
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+```python
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientFactory
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientFactory
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
+from nautilus_trader.adapters.interactive_brokers import MarketDataType
+from nautilus_trader.adapters.interactive_brokers import SymbologyMethod
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
 
-> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
+# Instrument provider configuration
+instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
+    symbology_method=SymbologyMethod.SIMPLIFIED,
+    load_ids=frozenset([
+        "EUR/USD.IDEALPRO",
+        "GBP/USD.IDEALPRO",
+        "SPY.ARCA",
+        "QQQ.NASDAQ",
+        "AAPL.NASDAQ",
+        "MSFT.NASDAQ",
+    ]),
+)
+
+# Data client configuration
+data_client_config = InteractiveBrokersDataClientConfig(
+    host="127.0.0.1",
+    port=7497,  # TWS paper trading
+    client_id=1,
+    use_regular_trading_hours=True,
+    market_data_type=MarketDataType.DELAYED_FROZEN,
+    instrument_provider=instrument_provider_config,
+)
+
+# Execution client configuration
+exec_client_config = InteractiveBrokersExecutionClientConfig(
+    host="127.0.0.1",
+    port=7497,  # TWS paper trading
+    client_id=1,
+    account_id="DU123456",  # Your paper trading account
+    instrument_provider=instrument_provider_config,
+)
+
+# Create and configure the trading node
+trader_id = TraderId("PAPER-TRADER-001")
+
+node = (
+    LiveNode.builder("PAPER-TRADER-001", trader_id, Environment.LIVE)
+    .with_timeout_connection(90)
+    .with_timeout_reconciliation(5)
+    .with_timeout_portfolio(5)
+    .with_timeout_disconnection_secs(5)
+    .with_delay_post_stop_secs(2)
+    .add_data_client(None, InteractiveBrokersDataClientFactory(), data_client_config)
+    .add_exec_client(None, InteractiveBrokersExecutionClientFactory(), exec_client_config)
+    .build()
+)
+
+if __name__ == "__main__":
+    try:
+        node.run()
+    finally:
+        node.dispose()
+```
+
+For IB-standard bar-open timestamps and sequence validation, build the node from a `LiveNodeConfig` (`LiveNode.build`) with `data_engine=LiveDataEngineConfig(time_bars_timestamp_on_close=False, validate_data_sequence=True)`; both options remain on the pinned `LiveDataEngineConfig`.
 
 ## Live trading with Dockerized gateway
 
-> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
+```python
+import os
+
+from nautilus_trader.adapters.interactive_brokers import DockerizedIBGatewayConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientFactory
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientFactory
+from nautilus_trader.adapters.interactive_brokers import MarketDataType
+from nautilus_trader.adapters.interactive_brokers import TradingMode
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
+
+# Dockerized gateway configuration
+dockerized_gateway_config = DockerizedIBGatewayConfig(
+    username=os.environ.get("TWS_USERNAME"),
+    password=os.environ.get("TWS_PASSWORD"),
+    trading_mode=TradingMode.LIVE,  # TradingMode.PAPER or TradingMode.LIVE
+    read_only_api=False,  # Allow order execution
+    timeout=300,
+)
+
+# Data client with dockerized gateway
+data_client_config = InteractiveBrokersDataClientConfig(
+    client_id=1,
+    use_regular_trading_hours=False,  # Include extended hours
+    market_data_type=MarketDataType.REALTIME,
+    instrument_provider=instrument_provider_config,
+    dockerized_gateway=dockerized_gateway_config,
+)
+
+# Execution client with dockerized gateway
+exec_client_config = InteractiveBrokersExecutionClientConfig(
+    client_id=1,
+    account_id=os.environ.get("TWS_ACCOUNT"),  # Live account ID
+    instrument_provider=instrument_provider_config,
+    dockerized_gateway=dockerized_gateway_config,
+)
+
+# Live trading node
+trader_id = TraderId("LIVE-TRADER-001")
+
+node = (
+    LiveNode.builder("LIVE-TRADER-001", trader_id, Environment.LIVE)
+    .add_data_client(None, InteractiveBrokersDataClientFactory(), data_client_config)
+    .add_exec_client(None, InteractiveBrokersExecutionClientFactory(), exec_client_config)
+    .build()
+)
+```
 
 ### Multi-client configuration
 
@@ -1547,7 +1641,7 @@ data_client_config = InteractiveBrokersDataClientConfig(
     host="127.0.0.1",
     port=7497,
     client_id=1,  # Data client uses ID 1
-    market_data_type=IBMarketDataTypeEnum.REALTIME,
+    market_data_type=MarketDataType.REALTIME,
     instrument_provider=instrument_provider_config,
 )
 
@@ -1561,6 +1655,8 @@ exec_client_config = InteractiveBrokersExecutionClientConfig(
 )
 ```
 
+`RoutingConfig` is exported flat from `nautilus_trader.live` and is accepted as the optional `routing` argument of `add_data_client`/`add_exec_client`.
+
 ### Multiple IB execution clients for different accounts
 
 NautilusTrader supports using multiple Interactive Brokers execution clients simultaneously, each connected to a different IB account. This is useful when you need to trade with multiple accounts, such as:
@@ -1569,15 +1665,92 @@ NautilusTrader supports using multiple Interactive Brokers execution clients sim
 - Paper trading and live trading accounts running simultaneously
 - Multiple managed accounts under the same IB login
 
-To configure multiple IB execution clients, provide multiple entries in the `exec_clients` dictionary with unique keys. Each entry specifies a different `account_id`:
+To configure multiple IB execution clients, register one execution client per account with `add_exec_client`, each under a unique client name. Each config specifies a different `account_id`:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+```python
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersDataClientFactory
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientConfig
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersExecutionClientFactory
+from nautilus_trader.adapters.interactive_brokers import InteractiveBrokersInstrumentProviderConfig
+from nautilus_trader.adapters.interactive_brokers import MarketDataType
+from nautilus_trader.adapters.interactive_brokers import SymbologyMethod
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.live import RoutingConfig
+from nautilus_trader.model import TraderId
 
-> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
+# Shared instrument provider configuration
+instrument_provider_config = InteractiveBrokersInstrumentProviderConfig(
+    symbology_method=SymbologyMethod.SIMPLIFIED,
+)
+
+# Data client (shared across all accounts)
+data_client_config = InteractiveBrokersDataClientConfig(
+    host="127.0.0.1",
+    port=7497,
+    client_id=1,
+    market_data_type=MarketDataType.REALTIME,
+    instrument_provider=instrument_provider_config,
+)
+
+trader_id = TraderId("MULTI-ACCOUNT-001")
+
+node = LiveNode.builder("MULTI-ACCOUNT-001", trader_id, Environment.LIVE)
+
+# Single data client shared across accounts
+node = node.add_data_client(
+    None,
+    InteractiveBrokersDataClientFactory(),
+    data_client_config,
+)
+
+# Multiple execution clients, one per account
+node = node.add_exec_client(
+    "IB-PAPER",  # First account: Paper trading account
+    InteractiveBrokersExecutionClientFactory(),
+    InteractiveBrokersExecutionClientConfig(
+        host="127.0.0.1",
+        port=7497,
+        client_id=2,  # Unique IB API client ID
+        account_id="DU123456",  # Paper trading account ID
+        instrument_provider=instrument_provider_config,
+        routing=RoutingConfig(default=False),  # Not default
+    ),
+)
+
+node = node.add_exec_client(
+    "IB-LIVE",  # Second account: Live trading account
+    InteractiveBrokersExecutionClientFactory(),
+    InteractiveBrokersExecutionClientConfig(
+        host="127.0.0.1",
+        port=7497,
+        client_id=3,  # Unique IB API client ID
+        account_id="U987654",  # Live account ID
+        instrument_provider=instrument_provider_config,
+        routing=RoutingConfig(default=True),  # Set as default
+    ),
+)
+
+node = node.add_exec_client(
+    "IB-ACCOUNT3",  # Third account: Another managed account
+    InteractiveBrokersExecutionClientFactory(),
+    InteractiveBrokersExecutionClientConfig(
+        host="127.0.0.1",
+        port=7497,
+        client_id=4,  # Unique IB API client ID
+        account_id="U456789",  # Another account ID
+        instrument_provider=instrument_provider_config,
+        routing=RoutingConfig(default=False),
+    ),
+)
+
+node = node.build()
+```
 
 **Key points for multiple IB execution clients:**
 
-1. **Unique keys**: Each entry in `exec_clients` must have a unique key (e.g., `"IB-PAPER"`, `"IB-LIVE"`). This key becomes the `account_issuer` for that client.
+1. **Unique client names**: Register each execution client under a unique client name passed to `add_exec_client` (e.g., `"IB-PAPER"`, `"IB-LIVE"`). This name becomes the `account_issuer` for that client.
 
 2. **Unique client IDs**: Each execution client must use a different `client_id` (2, 3, 4, etc.). IB Gateway/TWS requires each API connection to use a unique client ID.
 
@@ -1591,7 +1764,7 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 5. **Routing**: Orders and queries are automatically routed to the correct execution client based on:
    - Explicit `client_id` in the command
    - `account_id` issuer (for `QueryAccount` commands or orders with account_id set)
-   - Default client (if one is marked with `routing=RoutingConfig(default=True)`)
+   - Default client (the one `add_exec_client` call that passes `routing=RoutingConfig(default=True)`)
 
 6. **Portfolio queries**: When querying portfolio properties, you can specify either:
    - `account_id` for account-specific queries: `portfolio.realized_pnls(account_id=AccountId("IB-PAPER-DU123456"))`
@@ -1600,9 +1773,8 @@ NT v2 compatibility note: Python live/integration-specific TradingNode; use Live
 **Example: Using multiple IB execution clients in a strategy:**
 
 ```python
-from nautilus_trader.model.identifiers import AccountId, ClientId
-from nautilus_trader.trading.strategy import Strategy
-
+from nautilus_trader.model import AccountId, ClientId
+from nautilus_trader.trading import Strategy
 
 class MultiAccountStrategy(Strategy):
     """Example strategy using multiple IB accounts."""
@@ -1615,9 +1787,7 @@ class MultiAccountStrategy(Strategy):
         # Query paper account balance
         paper_account_state = self.cache.account(self.paper_account)
         if paper_account_state:
-            self.log.info(
-                f"Paper account balance: {paper_account_state.balance_total()}"
-            )
+            self.log.info(f"Paper account balance: {paper_account_state.balance_total()}")
 
         # Query live account balance
         live_account_state = self.cache.account(self.live_account)
@@ -1635,14 +1805,16 @@ class MultiAccountStrategy(Strategy):
     def check_paper_pnl(self, instrument_id):
         """Check realized PnL for paper account."""
         pnl = self.portfolio.realized_pnl(
-            instrument_id=instrument_id, account_id=self.paper_account
+            instrument_id=instrument_id,
+            account_id=self.paper_account
         )
         return pnl
 
     def check_live_pnl(self, instrument_id):
         """Check realized PnL for live account."""
         pnl = self.portfolio.realized_pnl(
-            instrument_id=instrument_id, account_id=self.live_account
+            instrument_id=instrument_id,
+            account_id=self.live_account
         )
         return pnl
 ```
@@ -1650,7 +1822,7 @@ class MultiAccountStrategy(Strategy):
 **Example: Querying account information with multiple IB clients:**
 
 ```python
-from nautilus_trader.model.identifiers import AccountId
+from nautilus_trader.model import AccountId, Venue
 
 # Query specific account
 paper_account = cache.account(AccountId("IB-PAPER-DU123456"))
@@ -1666,7 +1838,8 @@ paper_account_via_account_id = cache.account_for_venue(
 
 # Query portfolio properties by account
 paper_realized_pnl = portfolio.realized_pnl(
-    instrument_id=instrument_id, account_id=AccountId("IB-PAPER-DU123456")
+    instrument_id=instrument_id,
+    account_id=AccountId("IB-PAPER-DU123456")
 )
 
 # Query portfolio properties aggregated across all IB accounts
@@ -1674,11 +1847,33 @@ paper_realized_pnl = portfolio.realized_pnl(
 all_ib_realized_pnl = portfolio.realized_pnls(venue=Venue("IB"))
 ```
 
-### Legacy Python node runner
+### Running the trading node
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+```python
+def run_trading_node():
+    """Run the trading node with proper error handling."""
+    node = None
+    try:
+        # Build the node with one of the configurations above
+        node = build_node()
 
-> Python Interactive Brokers live-node wiring is migration/reference-only. See `skills/nt-adapters/migration_reference/python/guidance.md`; use the Rust `LiveNode` examples under upstream `crates/adapters/interactive_brokers/examples/` for active work.
+        # Add your strategies here
+        # node.add_strategy(YourStrategy())
+
+        # Run the node
+        node.run()
+
+    except KeyboardInterrupt:
+        print("Shutting down...")
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        if node:
+            node.dispose()
+
+if __name__ == "__main__":
+    run_trading_node()
+```
 
 ### Additional configuration options
 
@@ -1696,12 +1891,12 @@ export IB_MAX_CONNECTION_ATTEMPTS="5"  # Optional: limit reconnection attempts
 #### Logging configuration
 
 ```python
-# Enhanced logging configuration
-logging_config = LoggingConfig(
-    log_level="INFO",
-    log_level_file="DEBUG",
-    log_file_format="json",  # JSON format for structured logging
-    log_component_levels={
+from nautilus_trader.common import LogLevel, LoggerConfig
+
+# Enhanced logging configuration (pass as `logging` to a LiveNodeConfig)
+logging_config = LoggerConfig(
+    stdout_level=LogLevel.INFO,
+    component_levels={
         "InteractiveBrokersClient": "DEBUG",
         "InteractiveBrokersDataClient": "INFO",
         "InteractiveBrokersExecutionClient": "INFO",
@@ -1734,7 +1929,7 @@ You can find additional examples here: <https://github.com/nautechsystems/nautil
 #### Market data permissions
 
 - **Cause**: Insufficient market data subscriptions
-- **Solution**: Use `IBMarketDataTypeEnum.DELAYED_FROZEN` for testing or subscribe to required data feeds
+- **Solution**: Use `MarketDataType.DELAYED_FROZEN` for testing or subscribe to required data feeds
 
 ### Error codes
 
@@ -1766,7 +1961,7 @@ data_config = InteractiveBrokersDataClientConfig(
 # Set reasonable timeouts
 config = InteractiveBrokersDataClientConfig(
     connection_timeout=300,  # 5 minutes
-    request_timeout_secs=60,  # 1 minute
+    request_timeout_secs=60,      # 1 minute
     # ... other config
 )
 ```
@@ -1815,9 +2010,11 @@ config = InteractiveBrokersDataClientConfig(
 #### Enable debug logging
 
 ```python
-logging_config = LoggingConfig(
-    log_level="DEBUG",
-    log_component_levels={
+from nautilus_trader.common import LogLevel, LoggerConfig
+
+logging_config = LoggerConfig(
+    stdout_level=LogLevel.DEBUG,
+    component_levels={
         "InteractiveBrokersClient": "DEBUG",
     },
 )

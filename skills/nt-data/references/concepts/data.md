@@ -2,7 +2,49 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
-NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `81d0449da0e353d702d88019dc73d231d67923cd`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+## Catalog and time-bar contracts at reviewed tip `52eef7955c`
+
+Current market-data writes use Arrow `Decimal128(38, 16)` for prices/sizes,
+UTC nanosecond timestamps and integer durations. Raw Arrow queries return exact
+decimal values; display output may use floats. Raw querying is not migration:
+runtime queries reject recognized legacy schemas in selected files and skip
+legacy directory layouts. Use `nautilus catalog migrate-parquet SOURCE DEST`
+to transcode into a new empty, nonoverlapping destination; the source remains
+unchanged. `--dry-run` validates schema/layout only, not row values or destination
+writability. Numeric precision above 16 is rejected by catalog
+encoding even though in-memory model values can represent precision 17/18.
+
+`storage_options` is the Rust object-store option surface. Legacy
+`fs_storage_options` is only a strict fsspec-shaped translation: supported aliases
+translate, conflicting aliases fail, and unknown keys fail by name. Remote base
+paths reject spaces, non-ASCII and encoded-path characters such as `~%#?^|`.
+Do not silently forward arbitrary fsspec settings.
+
+`DataCatalogConfig` uses `batch_size` (10,000), `max_row_group_size` (131,072),
+and codec names; `ParquetDataCatalog` uses the same sizing fields but numeric
+compression codes: uncompressed=0, snappy=1, gzip=2, brotli=3, lz4=5, zstd=6.
+Names are case-insensitive and `lz4_raw` aliases lz4; gzip/lz4 are not interchangeable
+with their codes in typed config. Default compression is zstd level 1.
+
+`GreeksData`, `PortfolioGreeks` and `YieldCurveData` are native catalog record
+families, with native Arrow schemas and typed queries. Do not wrap them as custom
+records. Feather streaming explicitly dispatches GreeksData and PortfolioGreeks;
+its direct Python writer at this tip does not dispatch YieldCurveData, so do not
+promise identical streaming support merely because catalog writes support it.
+Preserve native family identity when promoting streamed records into the catalog.
+
+`DataEngineConfig.time_bars_time_zone` defaults to `UTC`. IANA zones align
+intraday/day/week boundaries in local time and change duration across DST.
+Month/year bars remain unsupported. Python subscribe/request `time_zone`
+overrides the engine default; shared aggregator instances require the same zone
+for a given `BarType`. Persisted timestamps remain UTC Unix nanoseconds.
+
+Sources: upstream `docs/concepts/data/{catalog,index}.md`,
+`docs/how_to/migrate_parquet_catalog.md`,
+`crates/persistence/src/catalog/types.rs`,
+`crates/persistence/src/python/backend/feather.rs` at this tip.
+
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `52eef7955cbdb8d95667c838c3e43907e0da8e9a`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
 
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
@@ -1613,7 +1655,7 @@ already in the required replay order.
 ### Same-binary Rust custom data
 
 Rust-defined custom data uses the `#[custom_data]` proc macro
-(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `81d0449da0e353d702d88019dc73d231d67923cd`) to generate the
+(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`) to generate the
 constructor, `HasTsInit`, `CustomDataTrait`, serde/JSON support, Arrow encode/decode, and
 `From`/`TryFrom` conversions for the engine-level `Data` enum:
 

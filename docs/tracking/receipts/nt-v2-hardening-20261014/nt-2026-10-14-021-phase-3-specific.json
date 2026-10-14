@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-021-phase-3-specific",
+  "finding_id": "NT-2026-10-14-021",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "8bdcfd5d5940b9925d28c504686667fb830d92e29c29755bce5599d55e99d515",
+  "output_excerpt": "Catalog migration distinction (raw Arrow correction vs nautilus catalog migrate-parquet) documented; Decimal128(38,16) representation stated; overlay suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

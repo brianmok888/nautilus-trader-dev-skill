@@ -1,10 +1,203 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/betfair.md:86-141,292-321,419-458,630-684`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Order book recovery
+
+### Market images
+
+The data client streams every subscribed market on one market subscription per connection.
+Subscribing another market rewrites the subscription with every subscribed market, so Betfair
+images all of them again. The client queues each write at once, so subscriptions reach Betfair in
+command order and the latest carries every market.
+
+Betfair images whole markets. A market change with `img` set replaces the books of every runner in the market.
+Thus, the adapter tracks book synchronization per market. A market emits no book deltas until its image
+arrives after the subscription write is queued. A market change that reaches a market before its image, or a
+runner change the adapter cannot parse, suppresses the market's book output and requests a fresh image. A
+request starts recovery only when no running recovery already owns the market.
+
+Each image replaces the book of every runner it carries. A runner that the image's market
+definition lists but the image omits receives an empty snapshot, since an image carries all of the
+market's prices. Betfair change messages carry no per-market sequence, so the stream connection's
+ordering stands in for gap detection. A market whose definition reports `CLOSED` stops tracking,
+since Betfair sends it no further changes or images.
+
+Book subscriptions last until the client disconnects: unsubscribing does not change the market
+subscription.
+
+### Snapshot deadlines
+
+Initial and recovery subscriptions wait up to `book_snapshot_timeout_secs` (default **10 seconds**)
+for each market's image after the subscription write is queued. A missing image starts or retries
+recovery.
+
+Set `book_snapshot_timeout_secs` to `0` to disable snapshot deadlines. A market change before an image still
+starts recovery. If its image never arrives, the recovery attempt waits until the 180-second retry budget
+ends. Each later attempt at the retry ceiling waits up to one minute.
+
+### Retry limits and reconnects
+
+Recovery reissues the market subscription without clocks under a new ID. Each subscription replaces the last,
+so Betfair answers with a fresh image of every subscribed market. A recovery joins a subscription written
+within the snapshot timeout whose image has not started instead of writing another, so markets that need
+recovery together share one image. With snapshot deadlines disabled, every attempt writes.
+
+Each recovery episode makes **up to eight attempts within 180 seconds**, with exponential backoff and jitter.
+It then retries until it accepts an image. The retry interval doubles from one minute to fifteen minutes.
+Recovery never ends in a failed state. Disconnect and shutdown cancel it. A venue rejection of a
+resubscription is logged, and the attempt retries once its snapshot deadline passes.
+
+A reconnect replays the market subscription with its latest `clk` and `initialClk`. Thus, Betfair patches
+synced books in place with `RESUB_DELTA` changes. It images any market it cannot patch. Synced books stay
+synced across the reconnect. A replayed subscription without clocks, such as a recovery subscription whose
+image has not arrived or one cleared after `INVALID_CLOCK`, receives a full image instead. A running recovery
+keeps its remaining budget, and one waiting between attempts after its budget retries at once on the new
+connection.
+
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+for the shared recovery machinery and adapter responsibilities.
+
+
+## Execution control flow
+
+Startup:
+
+1. Connect the HTTP client and fetch initial account funds.
+2. Seed OCM state from cached orders.
+3. Connect the Betfair execution stream and subscribe to order updates.
+4. Generate order and fill reports from the same `listCurrentOrders` observations.
+5. Reconcile order and fill reports into the execution engine.
+
+Cached open orders with venue identity are restored as already accepted. The adapter also restores
+retained identity for up to 10,000 recent closed cached orders. Neither path emits another
+`OrderAccepted`.
+
+On every stream reconnect, the adapter repeats the order-and-fill mass-status fetch over a recent
+window. It halts new-order submissions after transport loss or a server `connectionClosed` status
+until the latest recovery generation dispatches its mass status.
+
+For the full transition sequence, see
+[post-reconnect reconciliation](#post-reconnect-reconciliation).
+
+Reconciliation behavior:
+
+- `stream_market_ids_filter` filters live OCM updates.
+- Reconciliation uses `reconcile_market_ids` only when `reconcile_market_ids_only=True` and
+  `reconcile_market_ids` is set.
+- In every other case, including `reconcile_market_ids_only=True` with no `reconcile_market_ids`,
+  the adapter falls back to `stream_market_ids_filter` for reconciliation scope.
+- `ignore_external_orders=True` skips OCM updates with no `rfo`.
+
+
+## Open-only order discovery
+
+Open-only reconciliation discovers executable bets and all orders in BSP-enabled markets.
+
+### Replacement history
+
+The adapter queries known replacement Bet IDs for discovered orders and unresolved modifications.
+These extra lookups recover cumulative fills and confirmed quantities:
+
+- If required replacement or pending-modification Bet IDs remain missing after the extra queries,
+  the scan fails rather than treating their fills as zero.
+- A cached open order absent from venue discovery does not by itself cause this failure.
+
+### Market scope
+
+Discovery queries use the [configured reconciliation market scope](#execution-control-flow). A
+command for a specific instrument narrows discovery to that instrument's market and returns no
+reports when the market is outside the configured scope.
+
+Extra lookups by Bet ID and `customerOrderRef` are not market-filtered. They also query unresolved
+modifications for tracked orders outside the discovery scope. Those rows are excluded from reports,
+but missing required history still fails the scan.
+
+### Resting BSP bets
+
+To recover resting [BSP bets](#order-types), including bets the adapter does not track, the adapter
+also discovers BSP-enabled markets containing execution-complete account orders. It queries these
+markets with `listCurrentOrders` using `ALL` and reports resting BSP bets as `ACCEPTED`.
+
+BSP market discovery depends on the query scope:
+
+- **Account-wide**: `listEvents` finds events, then `listMarketCatalogue` queries each event with
+  `maxResults=1000`. If an event returns 1,000 markets, the scan fails rather than risking an
+  incomplete set of open orders.
+- **Market-scoped**: each catalog request contains at most 250 market IDs.
+
+Markets without BSP are not scanned for unrelated order history. Historical orders within discovered
+BSP-enabled markets, including ordinary limit bets, can still add required replacement history and
+increase scan work.
+
+
+### Fill handling
+
+The adapter handles several edge cases when processing fills from the stream:
+
+- **Incremental fills**: Betfair reports cumulative matched sizes per Bet ID. The adapter tracks a
+  separate fill cursor for every current or historical Bet ID and restores those cursors from
+  cached events during reconciliation.
+- **Overfill protection**: fills that would exceed the order quantity are rejected.
+- **Race conditions**: when stream fills arrive before the HTTP order response, the adapter
+  caches the venue order ID immediately to ensure correct order matching.
+- **Replacement fills**: a fill reported against an old Bet ID updates the same logical order once
+  without replacing its current Bet ID. A partial fill received while an order is `PENDING_UPDATE`
+  or `PENDING_CANCEL` updates its filled quantity while preserving the pending command state.
+- **Price restatements**: a Rule 4 withdrawal republishes a matched Bet with a reduced average matched price
+  and unchanged matched size. The adapter emits the new price as a fill carrying the Bet's trade ID, which
+  restates the order and open position averages without changing quantity. A restatement applies when exactly
+  one fill lot survives on the Bet. An update where more than one lot survives, or a void and a new average
+  arrive together, emits nothing.
+
+  Restating a closing fill corrects the order average only. Position close accounting keeps its original
+  values. Restating an opening fill after a partial close updates the open average only. Realized PnL for
+  already-closed quantity keeps its original value. A restatement on a canceled Bet does not emit another
+  cancel.
+- **Late terminal corrections**: the adapter retains correlation and per-Bet fill and void state for
+  the 10,000 most recent terminal identities, including identities restored from closed cached
+  orders. Locally owned identities and external terminal Bet IDs share this bound. Delayed fills and
+  void corrections for an unambiguous retained order emit direct order events. After applying a
+  delayed fill to a canceled order, the adapter emits `OrderCanceled` again to preserve the terminal
+  state. If the same update carries void corrections, the cancel precedes those corrections.
+  Correlation and deduplication state expire together, so an older replay can return through the
+  report path.
+- **Gap-window fills**: a fill that completes and rolls off the unmatched book during a stream disconnect is
+  recovered by the post-reconnect mass-status reconciliation. See
+  [Post-reconnect reconciliation](#post-reconnect-reconciliation).
+
+### Voided fills
+
+Betfair can void matched bets after reporting them, for example after an integrity ruling or a VAR
+decision. The order stream carries the running total in `sv` (size voided). Voids caused by runner
+removal settle instead of streaming, so they do not reach this path.
+
+The adapter allocates each `sv` increase to locally applied fill lots newest-first and emits one
+cumulative [`OrderFillVoided`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/events/order_fill_voided.md) per affected `trade_id`. A
+first-seen snapshot seeds its cumulative void state without reversing exposure Nautilus never
+applied, so a reconnect does not double-correct. Any `sv` increase also triggers an account refresh.
+
+An `EXECUTION_COMPLETE` update with no locally applied fill lots takes the terminal path instead: one
+correction under a synthetic `VOID-{bet_id}` trade ID that carries the order to `VOIDED`. That status
+resolves only when `sv` is positive and both cancelled and lapsed quantities are zero, so a mixed
+update carrying `sc` or `sl` alongside `sv` emits no correction. Betfair voids never set
+`is_reopened`, so `VOIDED` is final.
+
+The adapter also publishes the [`BetfairOrderVoided`](#custom-data-types) custom data type carrying
+the venue's raw void detail.
+
+
+## Historical reference (superseded where noted above)
+
 # Betfair v2
 
 The Betfair Rust adapter is in active parity work. This page is the **primary Betfair guide**
 (user-directed cutover, 2026-08-26): active Betfair routing resolves here first. The upstream
-`docs/integrations/betfair.md` in the read-only pinned snapshot (pin `81d0449da0`) is itself the
+`docs/integrations/betfair.md` in the read-only pinned snapshot (pin `52eef7955cb`) is itself the
 current v2 Rust-adapter guide (Rust implementation exposed to Python at
 `nautilus_trader.adapters.betfair`); treat it as the authoritative upstream reference, and this
 page as the repo-local delta/cutover tracker.
@@ -16,7 +209,7 @@ small edits instead of a full rewrite.
 ## Scope
 
 - Source of truth for this page: `crates/adapters/betfair`
-- Upstream reference: pinned `docs/integrations/betfair.md` (current v2 Rust-adapter guide at pin `81d0449da0`); repo-local entry point in [betfair.md](betfair.md)
+- Upstream reference: pinned `docs/integrations/betfair.md` (current v2 Rust-adapter guide at pin `52eef7955cb`); repo-local entry point in [betfair.md](betfair.md)
 - Purpose of this page: track the current Rust surface and the current Rust-vs-v1 differences
 
 ## Current Rust status
@@ -25,7 +218,7 @@ small edits instead of a full rewrite.
 |--------------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|-----------------------------------------------------|
 | Order types              | `MARKET` only supports `AT_THE_CLOSE`; `LIMIT` supports BSP on close flows.                                  | Stable guide is still Python shaped in this area.                         | Decide final Betfair market order model.            |
 | Batch operations         | `SubmitOrderList` and `BatchCancelOrders` are implemented.                                                   | Stable guide used to mark these as unsupported.                           | Keep and promote.                                   |
-| Reconciliation scope     | `reconcile_market_ids_only` uses `reconcile_market_ids`; otherwise falls back to `stream_market_ids_filter`. | The pinned upstream doc at `81d0449da0` documents the same coupling.          | Resolved - keep current.                             |
+| Reconciliation scope     | `reconcile_market_ids_only` uses `reconcile_market_ids`; otherwise falls back to `stream_market_ids_filter`. | The pinned upstream doc at `52eef7955cb` documents the same coupling.          | Resolved - keep current.                             |
 | Full image cache checks  | Rust uses `generate_mass_status()` at startup and on every stream reconnect; no `check_cache_against_order_image`. | Stable guide describes the Python full image cache check.                 | Add parity or document the Rust path as final.      |
 | Post-reconnect halt      | `submit_order` and `submit_order_list` emit `OrderDenied STREAM_RECONCILING` while the reconcile is in flight. | Python keeps trading during reconnect.                                    | Cutover done — keep current.                        |
 | Terminal order identity  | Retained local identity for up to 10,000 recent closed cached orders (`OcmState::DEDUP_RETENTION`): late fills/voids route through retained local identity, closed-order identity is restored across reconnects, and replace state resolves across REST, OCM, and startup reconciliation; terminal replace/reduction reports reconcile without duplicates; `customerOrderRef` collision checks compare against every tracked order; historical Bet IDs are suppressed once terminal. | Landed upstream at `8ecab1ce9` ("Retain Betfair terminal order identity"); the pinned upstream doc documents the same behavior. | Landed at `8ecab1ce9` - keep current.               |
@@ -122,7 +315,7 @@ The data client reconnect handler also updates the race stream auth when a race 
 is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
-session logic above and is included in the pinned baseline `81d0449da0` (upstream commit
+session logic above and is included in the pinned baseline `52eef7955cb` (upstream commit
 `98e6c39d8` "Add Betfair socket-state reporting and reconnect control"; already present at the
 earlier develop snapshot `d2b62d35a7`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
@@ -352,29 +545,9 @@ keep-alive interval.
 | `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post-reconnect mass-status reconciliation. |
 
 NT v2 compatibility note: the `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs` names
-(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `81d0449da0`;
+(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `52eef7955cb`;
 older pins through `6e59fd74ea` used the pre-rename millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
-
-Register the Betfair clients on a Rust `LiveNode` (pinned example:
-`crates/adapters/betfair/examples/node_data_tester.rs`):
-
-```rust
-use nautilus_betfair::{config::BetfairDataClientConfig, factories::BetfairDataClientFactory};
-use nautilus_common::enums::Environment;
-use nautilus_live::node::LiveNode;
-use nautilus_model::identifiers::TraderId;
-
-let data_config = BetfairDataClientConfig {
-    account_currency: "GBP".to_string(),
-    ..Default::default()
-};
-
-let mut node = LiveNode::builder(TraderId::from("BETFAIR-001"), Environment::Live)?
-    .with_name("BETFAIR-DATA")
-    .add_data_client(None, Box::new(BetfairDataClientFactory::new()), Box::new(data_config))?
-    .build()?;
-```
 
 ## Cutover plan
 

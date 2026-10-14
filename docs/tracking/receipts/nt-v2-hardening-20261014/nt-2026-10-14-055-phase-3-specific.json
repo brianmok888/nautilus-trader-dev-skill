@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-055-phase-3-specific",
+  "finding_id": "NT-2026-10-14-055",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "pinned .venv/bin/python -c",
+  "exit_code": 0,
+  "output_sha256": "3c9279d6057048f840dc94b8caeb21d551e0d901cf40ff10e48b3cdbe588f325",
+  "output_excerpt": "WRANGLER_AND_FACTORY_API_PASS — external adapter factory boundary exercised in the built pinned runtime.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

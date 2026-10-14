@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -45,7 +45,7 @@ it is not a template for new production implementation.
 
 ## Source-pinned upstream lane
 
-Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81d0449da0e353d702d88019dc73d231d67923cd`; label newer upstream behavior as version-scoped drift.
+Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; label newer upstream behavior as version-scoped drift.
 
 ## What This Skill Covers
 
@@ -285,21 +285,24 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   Rust v2 / PyO3 for new Rust-backed work only when the required engine,
   adapter, and test coverage exist.
 - Upstream `develop` source label is 1.231.0 and `python/pyproject.toml` is
-  `2.0.0rc5`; upstream release notes identify 2.0.0rc1 as the first public
+  `2.0.0rc7`; upstream release notes identify 2.0.0rc1 as the first public
   candidate and describe the rolling `2.0.0rcN` line before final 2.0.0.
 - Rust-oriented v2.0 readiness is the default: Rust core first and bounded PyO3
   configuration/inspection second. Python production guidance remains migration/reference-only; bounded PyO3 control-plane bindings are allowed.
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
-- Officially supported Python versions are Python 3.12-3.14.
-- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.98.1. This is not a permanent MSRV promise;
+- Officially supported Python versions are Python 3.13-3.14 (upstream
+  dropped Python 3.12 support at `a7a2facd0`; `requires-python` is
+  `>=3.13,<3.15` at the pinned baseline).
+- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.99.0 (raised from 1.98.1 at
+  `2adc66f26`, which also bumped the documented MSRV). This is not a permanent MSRV promise;
   upstream policy generally follows the latest stable Rust release.
 - Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
   `migration_reference/`; implement new orchestration, routed-order,
-  fee, and fill behavior in Rust. At the pinned develop `81d0449da0e353d702d88019dc73d231d67923cd` (in-pin
+  fee, and fill behavior in Rust. At the pinned develop `52eef7955cbdb8d95667c838c3e43907e0da8e9a` (in-pin
   since `d2b62d35a7`), change `e4d3ac7f37` additionally accepts any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs; that
   duck-typed path stays reference-only.

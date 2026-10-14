@@ -136,7 +136,7 @@ Build data subscriptions and historical data requests.
 |------|----------------------------|----------------------------------------------------------------------------------------------|
 | 3.1  | Public WebSocket streams   | Subscribe to order books, trades, tickers, and other public channels.                        |
 | 3.2  | Historical data requests   | Fetch historical bars, trades, and order book snapshots via HTTP.                            |
-| 3.3  | Data client (Python)       | Implement `LiveDataClient` or `LiveMarketDataClient` wiring Rust clients to the data engine. |
+| 3.3  | Data client (Rust)         | Implement the owning Rust data-client traits and wire their factory into the data engine. |
 
 **Milestone**: Data client connects, subscribes to instruments, and emits market data to the platform.
 
@@ -149,7 +149,7 @@ Build order management and account state.
 | 4.1  | Private WebSocket streams  | Subscribe to order updates, fills, positions, and account balance changes.                   |
 | 4.2  | Basic order submission     | Implement market and limit orders via HTTP or WebSocket.                                     |
 | 4.3  | Order modification/cancel  | Implement order amendment and cancellation.                                                  |
-| 4.4  | Execution client (Python)  | Implement `LiveExecutionClient` wiring Rust clients to the execution engine.                 |
+| 4.4  | Execution client (Rust)    | Implement the owning Rust execution-client trait and factory; expose bounded PyO3 configuration where required. |
 | 4.5  | Execution reconciliation   | Generate order, fill, and position status reports for startup reconciliation.                |
 
 **Milestone**: Execution client submits orders, receives fills, and reconciles state on connect.

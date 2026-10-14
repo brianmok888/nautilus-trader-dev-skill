@@ -1,6 +1,6 @@
 # Rust
 
-Source snapshot: `docs/concepts/rust.md` at upstream commit `81d0449da0e353d702d88019dc73d231d67923cd`.
+Source snapshot: `docs/concepts/rust.md` at upstream commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 
 Nautilus has a complete Rust implementation under the `crates/` directory.
 You can write actors, strategies, run backtests, and trade live without Python.
@@ -18,7 +18,7 @@ Nautilus has two paths. Choose the one that matches how you want to author
 and deploy the system.
 
 - **Rust**: Pure Rust under `crates/`. Runs without Python.
-- **Python**: [Python user components](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/python.md) running on the Rust core through PyO3
+- **Python**: [Python user components](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/python.md) running on the Rust core through PyO3
   bindings under `python/nautilus_trader/`.
 
 ### Capability matrix
@@ -90,11 +90,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.64"
-nautilus-common = "0.64"
-nautilus-execution = "0.64"
-nautilus-model = { version = "0.64", features = ["test-support"] }
-nautilus-trading = { version = "0.64", features = ["examples"] }
+nautilus-backtest = "0.65"
+nautilus-common = "0.65"
+nautilus-execution = "0.65"
+nautilus-model = { version = "0.65", features = ["test-support"] }
+nautilus-trading = { version = "0.65", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -104,8 +104,8 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.64"
-nautilus-okx = "0.64"
+nautilus-live = "0.65"
+nautilus-okx = "0.65"
 ```
 
 To track the latest development branch, point all Nautilus dependencies at the
@@ -120,7 +120,7 @@ nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git"
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
-The minimum supported Rust version (MSRV) is **1.98.1**.
+The minimum supported Rust version (MSRV) is **1.99.0**.
 
 ### Feature flags
 
@@ -166,7 +166,7 @@ Registration **only updates the header metadata**; it does not select the alloca
 
 The default system allocator also works. Measure throughput and resident memory on your workload
 and platform when comparing allocator choices.
-See the [architecture guide](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/architecture.md#memory-allocation) for background.
+See the [architecture guide](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/architecture.md#memory-allocation) for background.
 
 ## Actors
 
@@ -202,7 +202,7 @@ override what you need.
 | `on_time_event`        | `TimeEvent`               |
 
 For a step-by-step walkthrough, see the
-[Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/write_rust_actor.md) how-to guide.
+[Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/write_rust_actor.md) how-to guide.
 For a complete example, see
 [`BookImbalanceActor`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/actors/imbalance).
 
@@ -332,7 +332,7 @@ Use `try_cache_ref()` and `try_clock_mut()` to handle failed native borrows with
 Both return `ComponentAccessError::NotRegistered` when registration has not supplied the resource.
 Import the error type from `nautilus_common::component`. The error identifies the resource and
 attempted operation. Callback reentry can cause a conflict, but a conflict alone does not establish its cause.
-See [reentrancy diagnostics](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/developer_guide/callback_dispatch.md#reentrancy-and-dispatch-diagnostics)
+See [reentrancy diagnostics](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/callback_dispatch.md#reentrancy-and-dispatch-diagnostics)
 for message meanings and corrective action.
 
 #### `StrategyNative` methods
@@ -353,7 +353,7 @@ for message meanings and corrective action.
 | `exec_algorithm_core_mut()` | `&mut ExecutionAlgorithmCore` | Mutate execution algorithm internals. |
 
 For a step-by-step walkthrough, see the
-[Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/write_rust_strategy.md) how-to guide.
+[Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/write_rust_strategy.md) how-to guide.
 For complete examples, see
 [`EmaCross`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/strategies/ema_cross)
 and
@@ -376,7 +376,7 @@ node.add_strategy(strategy)?;
 node.run().await?;
 ```
 
-See [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/run_rust_live_trading.md) for a
+See [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/run_rust_live_trading.md) for a
 full walkthrough.
 
 #### Built-in examples from Python
@@ -425,7 +425,7 @@ Built-in actor configs (via `add_builtin_actor`):
 ## Backtesting
 
 For annotated walkthroughs of both APIs, see the
-[Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/run_rust_backtest.md) how-to guide.
+[Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/run_rust_backtest.md) how-to guide.
 
 ### `BacktestEngine` (low-level API)
 
@@ -455,7 +455,7 @@ Source:
 ## Live trading
 
 For an annotated walkthrough, see the
-[Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/run_rust_live_trading.md) how-to guide.
+[Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/run_rust_live_trading.md) how-to guide.
 
 The `LiveNode` connects to real venues and data sources through adapter clients. The builder
 pattern configures data and execution clients, then `run()` starts the async
@@ -488,13 +488,13 @@ against live venues.
 
 ## Related guides
 
-- [Python](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/python.md) - Python ownership, runtime, and public API boundaries.
-- [Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/write_rust_actor.md) - Step-by-step actor walkthrough.
-- [Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/write_rust_strategy.md) - Step-by-step strategy walkthrough.
-- [Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/run_rust_backtest.md) - BacktestEngine and BacktestNode usage.
-- [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/how_to/run_rust_live_trading.md) - LiveNode setup and venue connection.
-- [Architecture](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/architecture.md) - System design and data/execution flow.
-- [Actors](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/actors.md) - Actor concepts (applies to both Python and Rust).
-- [Strategies](https://github.com/nautechsystems/nautilus_trader/blob/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/strategies.md) - Strategy concepts and handler reference.
-- [Events](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/events) - Event types and handler dispatch.
-- [Backtesting](https://github.com/nautechsystems/nautilus_trader/tree/81d0449da0e353d702d88019dc73d231d67923cd/docs/concepts/backtesting) - Backtest concepts and matching engine behavior.
+- [Python](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/python.md) - Python ownership, runtime, and public API boundaries.
+- [Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/write_rust_actor.md) - Step-by-step actor walkthrough.
+- [Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/write_rust_strategy.md) - Step-by-step strategy walkthrough.
+- [Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/run_rust_backtest.md) - BacktestEngine and BacktestNode usage.
+- [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/run_rust_live_trading.md) - LiveNode setup and venue connection.
+- [Architecture](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/architecture.md) - System design and data/execution flow.
+- [Actors](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/actors.md) - Actor concepts (applies to both Python and Rust).
+- [Strategies](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/strategies.md) - Strategy concepts and handler reference.
+- [Events](https://github.com/nautechsystems/nautilus_trader/tree/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/events) - Event types and handler dispatch.
+- [Backtesting](https://github.com/nautechsystems/nautilus_trader/tree/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/backtesting) - Backtest concepts and matching engine behavior.

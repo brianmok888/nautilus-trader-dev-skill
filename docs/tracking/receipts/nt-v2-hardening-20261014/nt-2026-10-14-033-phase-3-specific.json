@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-033-phase-3-specific",
+  "finding_id": "NT-2026-10-14-033",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py",
+  "exit_code": 0,
+  "output_sha256": "aecce901a244334b00535b1b1ac2beb35769aed523bdc05d0aad3516a670e16a",
+  "output_excerpt": "Blockchain submission retention until finality replaces disable-inflight-checks advice; pool orientation/accounting updated; shipped copies green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

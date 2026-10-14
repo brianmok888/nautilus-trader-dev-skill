@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-002-phase-3-specific",
+  "finding_id": "NT-2026-10-14-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 tools/check_upstream_freshness.py --format json && python3 tools/check_dev_guide_snapshot_sync.py && python3 tools/check_dev_guide_sync.py && python3 tools/check_rust_trading_reference_sync.py",
+  "exit_code": 0,
+  "output_sha256": "5325f5cd08c3a89d218eae278c9989be3e6589463c464db01489aed084e26a0e",
+  "output_excerpt": "manifest_error null; error null; snapshot bodies match pinned upstream; Rust trading references match pinned examples — pin advanced to 52eef7955c with the 292-commit transition recorded.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

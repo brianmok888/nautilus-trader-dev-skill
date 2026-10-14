@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-018-phase-3-specific",
+  "finding_id": "NT-2026-10-14-018",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "5414950f07aa1163b3e601cb69411e519e983ef1f79c43ca9cd3d9e3d0adcb1f",
+  "output_excerpt": "Zoned bar boundaries and set_timer_zoned guidance verified from docs/concepts/data/index.md; overlay suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

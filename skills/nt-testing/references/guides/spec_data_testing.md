@@ -2,6 +2,19 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data Testing Spec
 
+## Option-chain acceptance at reviewed tip `52eef7955c`
+
+Test series identity independently from contract identity: `OptionSeriesId`
+is the series; candidate contract symbols use `OptionContractSpec`,
+`OptionSymbologyScheme` and `OptionInstrumentId`. Verify exact strike,
+underlying, expiration and kind, venue qualification, and definition validation
+for CME holiday/listing exceptions. Selection uses
+`StrikeRange` (Fixed, AtmRelative, AtmPercent, Delta). Cover missing Greeks
+and deterministic ATM fallback separately from data-engine Greek-aware delta
+selection. Do not assert that the model-level resolver enforces delta bounds.
+Source: upstream `crates/model/src/identifiers/option_instrument_id.rs` and
+`crates/model/src/data/option_chain.rs`.
+
 This section defines a rigorous test matrix for validating adapter data
 functionality using the Rust `DataTester` actor. Python exposes it as a built-in
 actor configured through `nautilus_trader.testkit.DataTesterConfig`; Rust code

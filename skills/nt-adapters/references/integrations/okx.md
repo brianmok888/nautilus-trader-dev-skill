@@ -1,5 +1,56 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/okx.md:1241-1269`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Regional endpoints
+
+OKX serves distinct endpoints per region, and an API key is only valid against the region
+where it was registered (using a key against another region's endpoints returns
+`API key doesn't exist`). Set `region` to select the correct endpoint set:
+
+| Region   | Registered on | REST          | WebSocket host  |
+| -------- | ------------- | ------------- | --------------- |
+| `GLOBAL` | `www.okx.com` | `www.okx.com` | `ws.okx.com`    |
+| `EEA`    | `my.okx.com`  | `eea.okx.com` | `wseea.okx.com` |
+| `US`     | `app.okx.com` | `us.okx.com`  | `wsus.okx.com`  |
+
+Despite its enum name, `US` also selects the endpoints for Australian accounts registered on
+`app.okx.com`.
+
+`region` defaults to `GLOBAL`. For example, an EEA account:
+
+```python
+from nautilus_trader.adapters.okx import OKXDataClientConfig
+from nautilus_trader.adapters.okx import OKXRegion
+
+
+data_config = OKXDataClientConfig(region=OKXRegion.EEA)
+```
+
+`region` selects the regional defaults, and combines with `environment` to pick the demo
+hosts (for example `wseeapap.okx.com` for EEA demo). Explicit `base_url_http` and
+`base_url_ws` overrides always take precedence over the region defaults.
+
+
+### Default WebSocket ports and fee scope
+
+Pinned `crates/adapters/okx/src/common/urls.rs:21-43` resolves global, EEA, US,
+and demo WebSocket URLs without an explicit port: WSS therefore uses port 443,
+not the historical 8443 URLs below. Regional HTTP and WebSocket endpoints are
+selected together; manual overrides remain operator-owned.
+
+Pinned `crates/adapters/okx/src/http/query.rs:741-785` scopes account trade-fee
+queries by `instType`, optionally `instId` and/or `instFamily`. Spot fees use
+instrument IDs; futures/swap/options use families. Do not assume one account
+rate applies to every product. The source establishes request scope, not a new
+automatic fee-resolution guarantee for the execution client.
+
+## Historical reference (superseded where noted above)
+
 # OKX
 
 Founded in 2017, OKX is a cryptocurrency exchange that offers spot, margin, perpetual
@@ -12,20 +63,12 @@ This adapter is written in Rust, with optional Python bindings for Python workfl
 It does not require external OKX client libraries. The core components are compiled as
 a static library and linked automatically during the build.
 
-## Deterministic simulation (DST)
-
-The `simulation` cargo feature enables deterministic simulation testing with
-[MadSim](https://crates.io/crates/madsim) (upstream `73c1b15c`,
-`crates/adapters/okx/src/lib.rs`). The audited OKX public Spot state slice routes
-state-affecting clock reads and timers through the DST seams and sorts reconnect and
-bulk-unsubscribe subscription commands (`docs/concepts/dst.md` at the pinned baseline).
-OKX execution and its underlying HTTP and WebSocket transports remain outside the DST
-contract, and the static convention hook does not yet cover adapter crates.
-
 ## Examples
 
-Live example scripts are available in
-[examples/live/okx](https://github.com/nautechsystems/nautilus_trader/tree/develop/examples/live/okx/).
+Active Rust `LiveNode` examples are available in
+[crates/adapters/okx/examples](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/adapters/okx/examples/).
+Python live-node wiring is migration/reference-only under
+`skills/nt-strategy-builder/migration_reference/python/`.
 
 ### Product support
 
@@ -163,6 +206,7 @@ A: Use `OKXInstrumentType.EVENTS`. To scope loading, pass OKX `seriesId` values 
 `BTC-ABOVE-DAILY` through `instrument_families`.
 
 ## Orders capability
+OKX behavior at the pinned baseline (`52eef7955cb`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
 
 Below are the order types, execution instructions, and time-in-force options supported
 for linear perpetual swap products on OKX.
@@ -193,7 +237,7 @@ OKX has specific requirements for client order IDs:
 When configuring your strategy, ensure you set:
 
 ```python
-use_hyphens_in_client_order_ids = False
+use_hyphens_in_client_order_ids=False
 ```
 
 :::
@@ -357,7 +401,7 @@ The adapter selects the trade mode from:
 
 ```python
 # Simple SPOT trading without leverage (uses 'cash' mode)
-exec_clients = {
+exec_clients={
     OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT,),
         use_spot_margin=False,  # Default - simple SPOT
@@ -366,7 +410,7 @@ exec_clients = {
 }
 
 # SPOT trading WITH margin/leverage (uses 'isolated' or 'cross' mode)
-exec_clients = {
+exec_clients={
     OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT,),
         use_spot_margin=True,  # Enable margin trading for SPOT
@@ -380,7 +424,7 @@ exec_clients = {
 
 ```python
 # Derivatives with isolated margin (default - uses 'isolated' mode)
-exec_clients = {
+exec_clients={
     OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SWAP,),
         margin_mode=OKXMarginMode.ISOLATED,  # Or omit - ISOLATED is default
@@ -389,7 +433,7 @@ exec_clients = {
 }
 
 # Derivatives with cross margin (uses 'cross' mode)
-exec_clients = {
+exec_clients={
     OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SWAP,),
         margin_mode=OKXMarginMode.CROSS,  # Share margin across all positions
@@ -405,10 +449,10 @@ mode per order based on the instrument being traded:
 
 ```python
 # Mixed SPOT + SWAP configuration
-exec_clients = {
+exec_clients={
     OKX: OKXExecutionClientConfig(
         instrument_types=(OKXInstrumentType.SPOT, OKXInstrumentType.SWAP),
-        use_spot_margin=True,  # Applies to SPOT orders only
+        use_spot_margin=True,           # Applies to SPOT orders only
         margin_mode=OKXMarginMode.CROSS,  # Applies to SWAP orders only
         # ... other config
     ),
@@ -636,7 +680,6 @@ adapter falls back to emitting both.
 # Default (both conventions, receiver branches)
 self.subscribe_option_greeks(instrument_id)
 
-
 def on_option_greeks(self, greeks: OptionGreeks) -> None:
     if greeks.convention == GreeksConvention.BLACK_SCHOLES:
         self._handle_bs(greeks)
@@ -683,26 +726,9 @@ pipeline.
 
 Options require the `instrument_families` config parameter to scope which underlyings to load:
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
-```python
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            instrument_types=(OKXInstrumentType.OPTION,),
-            instrument_families=("BTC-USD", "ETH-USD"),
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecutionClientConfig(
-            instrument_types=(OKXInstrumentType.OPTION,),
-            instrument_families=("BTC-USD", "ETH-USD"),
-            margin_mode=OKXMarginMode.CROSS,
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ## Event contracts
 
@@ -718,26 +744,9 @@ Use `OKXInstrumentType.EVENTS` in the data or execution client config. The
 `instrument_families` is omitted, the adapter requests the event contract series list
 first, then requests instruments for each series.
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
-```python
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            instrument_types=(OKXInstrumentType.EVENTS,),
-            instrument_families=("BTC-ABOVE-DAILY",),
-            instrument_provider=InstrumentProviderConfig(load_all=True),
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecutionClientConfig(
-            instrument_types=(OKXInstrumentType.EVENTS,),
-            instrument_families=("BTC-ABOVE-DAILY",),
-            margin_mode=OKXMarginMode.CROSS,
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ### Event contract market data
 
@@ -835,26 +844,7 @@ export OKX_API_PASSPHRASE="your_demo_passphrase"
 
 Set `environment=OKXEnvironment.DEMO` in your client configuration:
 
-```python
-from nautilus_trader.adapters.okx import OKXEnvironment
-
-# NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-config = TradingNodeConfig(
-    data_clients={
-        OKX: OKXDataClientConfig(
-            environment=OKXEnvironment.DEMO,
-            # ... other config
-        ),
-    },
-    exec_clients={
-        OKX: OKXExecutionClientConfig(
-            environment=OKXEnvironment.DEMO,
-            # ... other config
-        ),
-    },
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 When demo mode is enabled:
 
@@ -939,25 +929,18 @@ The OKX data client provides the following configuration options:
 | `contract_types`                   | `None`                      | Contract styles to load.                     |
 | `instrument_families`              | `None`                      | Families or event `seriesId` values.         |
 | `base_url_http`                    | `None`                      | Override for the OKX REST endpoint.          |
-| `base_url_ws_public`               | `None`                      | Override for the public market data WebSocket URL. |
-| `base_url_ws_business`             | `None`                      | Override for the business WebSocket URL.     |
+| `base_url_ws`                      | `None`                      | Override for the market data WebSocket URL.  |
 | `api_key`                          | `None`                      | Falls back to `OKX_API_KEY` when unset.      |
 | `api_secret`                       | `None`                      | Falls back to `OKX_API_SECRET` when unset.   |
 | `api_passphrase`                   | `None`                      | Falls back to `OKX_API_PASSPHRASE`.          |
 | `environment`                      | `None`                      | Environment enum (`LIVE` or `DEMO`).         |
-| `region`                           | `None`                      | Regional endpoint selection (`OKXRegion`).   |
 | `http_timeout_secs`                | `60`                        | REST market data request timeout.            |
 | `max_retries`                      | `3`                         | Retry attempts for recoverable REST errors.  |
 | `retry_delay_initial_ms`           | `1,000`                     | Initial delay before retrying.               |
 | `retry_delay_max_ms`               | `10,000`                    | Maximum exponential backoff delay.           |
 | `update_instruments_interval_mins` | `60`                        | Background instrument refresh interval.      |
 | `vip_level`                        | `None`                      | Enables higher-depth books by VIP tier.      |
-| `load_spreads`                     | `False`                     | Load spread data for instruments.            |
-| `book_stale_check_interval_secs`   | `5`                         | Interval for order book staleness checks.    |
-| `book_stale_threshold_secs`        | `30`                        | Staleness threshold for order books.         |
-| `book_snapshot_timeout_secs`       | `3`                         | Timeout awaiting order book snapshots.       |
 | `proxy_url`                        | `None`                      | Optional HTTP and WebSocket proxy URL.       |
-| `transport_backend`                | default                     | Transport backend selection.                 |
 
 `instrument_families` is required for `OPTION`, optional for `FUTURES`, `SWAP`, and
 `EVENTS`, and ignored for `SPOT` and `MARGIN`. For `EVENTS`, pass OKX `seriesId`
@@ -969,76 +952,36 @@ The OKX execution client provides the following configuration options:
 
 | Option                            | Default                     | Description                                 |
 |-----------------------------------|-----------------------------|---------------------------------------------|
-| `account_id`                      | `OKX-001`                   | Account ID for the execution client.        |
 | `instrument_types`                | `(OKXInstrumentType.SPOT,)` | Tradable OKX instrument types.              |
 | `contract_types`                  | `None`                      | Tradable contract styles to load.           |
 | `instrument_families`             | `None`                      | Families or event `seriesId` values.        |
 | `base_url_http`                   | `None`                      | Override for the OKX trading REST endpoint. |
-| `base_url_ws_private`             | `None`                      | Override for the private WebSocket URL.     |
-| `base_url_ws_business`            | `None`                      | Override for the business WebSocket URL.    |
-| `region`                          | `None`                      | Regional endpoint selection (`OKXRegion`). |
+| `base_url_ws`                     | `None`                      | Override for the private WebSocket URL.     |
 | `api_key`                         | `None`                      | Falls back to `OKX_API_KEY` when unset.     |
 | `api_secret`                      | `None`                      | Falls back to `OKX_API_SECRET` when unset.  |
 | `api_passphrase`                  | `None`                      | Falls back to `OKX_API_PASSPHRASE`.         |
 | `environment`                     | `None`                      | Environment enum (`LIVE` or `DEMO`).        |
 | `margin_mode`                     | `None`                      | Margin mode (`ISOLATED` or `CROSS`).        |
+| `use_spot_margin`                 | `False`                     | Enables spot-style margin or leverage.      |
 | `http_timeout_secs`               | `60`                        | REST trading request timeout.               |
+| `use_fills_channel`               | `False`                     | Subscribes to fills channel (VIP5+).        |
 | `use_mm_mass_cancel`              | `False`                     | Uses the market-maker bulk cancel endpoint. |
 | `max_retries`                     | `3`                         | Retry attempts for recoverable REST errors. |
 | `retry_delay_initial_ms`          | `1,000`                     | Initial delay before retrying.              |
 | `retry_delay_max_ms`              | `10,000`                    | Maximum exponential backoff delay.          |
-| `load_spreads`                    | `False`                     | Load spread data for instruments.           |
-| `auth_timeout_secs`               | `None`                      | WebSocket authentication timeout.           |
+| `use_spot_cash_position_reports`  | `False`                     | Generates SPOT cash positions from wallet.  |
 | `proxy_url`                       | `None`                      | Optional HTTP and WebSocket proxy URL.      |
-| `transport_backend`               | default                     | Transport backend selection.                |
 
 `instrument_families` has the same meaning for execution clients as it does for data
 clients.
 
-Rust-backed Python v2 nodes use `LiveNode.builder(...)` and pass concrete
-factory instances with the plain config structs (NT v2 compatibility note: the v1
-`TradingNodeConfig(data_clients=..., exec_clients=...)` +
-`node.add_data_client_factory(...)` flow is migration/reference-only; the v1
-`.factories` submodule and `nautilus_trader.live.node` import path no longer
-exist):
+For active OKX data and execution wiring, use the upstream Rust `LiveNode`
+examples. The former copyable Python live-node configuration is quarantined by
+the migration-reference pointer below.
 
-```python
-from nautilus_trader.adapters.okx import OKXDataClientConfig
-from nautilus_trader.adapters.okx import OKXDataClientFactory
-from nautilus_trader.adapters.okx import OKXEnvironment
-from nautilus_trader.adapters.okx import OKXExecutionClientConfig
-from nautilus_trader.adapters.okx import OKXExecutionClientFactory
-from nautilus_trader.adapters.okx import OKXInstrumentType
-from nautilus_trader.live import Environment, LiveNode
-from nautilus_trader.model import AccountId
+NT v2 compatibility note: legacy v1 Python live `TradingNode`; use `LiveNode` for Rust v2/Rust-backed live work. Retained as migration/reference-only context.
 
-data_config = OKXDataClientConfig(
-    api_key=None,  # Falls back to OKX_API_KEY env var
-    api_secret=None,  # Falls back to OKX_API_SECRET env var
-    api_passphrase=None,  # Falls back to OKX_API_PASSPHRASE env var
-    base_url_http=None,
-    environment=OKXEnvironment.LIVE,
-    instrument_types=(OKXInstrumentType.SWAP,),
-)
-
-exec_config = OKXExecutionClientConfig(
-    account_id=AccountId("OKX-001"),
-    api_key=None,
-    api_secret=None,
-    api_passphrase=None,
-    base_url_http=None,
-    base_url_ws_private=None,
-    environment=OKXEnvironment.LIVE,
-    instrument_types=(OKXInstrumentType.SWAP,),
-)
-
-node = (
-    LiveNode.builder("OKX", trader_id, Environment.LIVE)
-    .add_data_client(None, OKXDataClientFactory(), data_config)
-    .add_exec_client(None, OKXExecutionClientFactory(), exec_config)
-    .build()
-)
-```
+> Python OKX live-node wiring is migration/reference-only. See `skills/nt-strategy-builder/migration_reference/python/venue-and-simulation-examples.md`; use the Rust OKX `LiveNode` examples under upstream `crates/adapters/okx/examples/` for active work.
 
 ## Contributing
 

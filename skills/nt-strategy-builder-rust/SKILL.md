@@ -15,9 +15,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | NT v2 compatibility note: No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder-rust` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder-rust` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-strategy-builder-rust.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -41,7 +41,7 @@ Existing Python strategy material belongs under `migration_reference/` and is us
 
 ## Source-pinned upstream lane
 
-Validate strategy APIs and registration patterns against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81d0449da0e353d702d88019dc73d231d67923cd`; treat later upstream examples as version-scoped evidence.
+Validate strategy APIs and registration patterns against [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; treat later upstream examples as version-scoped evidence.
 
 ## What This Skill Covers
 
@@ -62,7 +62,7 @@ standardizes new work on Rust.
 **Config**: `StrategyConfig` (`bon::Builder`, serde, `deny_unknown_fields`)
 **Contingent orders**: set `StrategyConfig.manage_contingent_orders` (default `False`) to manage
 open, non-active-local OTO/OCO/OUO relationships; the `OrderEmulator` retains active-local orders
-(upstream `81d0449da0e353d702d88019dc73d231d67923cd`, in the pinned G2 baseline).
+(upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`, in the pinned G2 baseline).
 See `nt-trading` "Strategy-managed contingencies"
 for propagation and cancel semantics; with reduce-only enforcement also enabled, backtest fills resize
 resting reduce-only orders and propagate to OUO siblings under parent caps (see the OUO notes in
@@ -101,7 +101,7 @@ component actually supports.
 
 ```rust
 pub trait Strategy: DataActor {
-    fn external_order_claims(&self) -> Option<Vec<InstrumentId>> { None }
+    fn external_order_instrument_ids(&self) -> Option<Vec<InstrumentId>> { None }
     fn strategy_id(&self) -> Option<StrategyId> where Self: StrategyNative { ... }
     fn order(&self) -> OrderApi<'_> where Self: StrategyNative { ... }
     fn portfolio(&self) -> PortfolioApi<'_> where Self: StrategyNative { ... }
@@ -125,6 +125,8 @@ pub trait Strategy: DataActor {
     // Lifecycle and market-data handlers belong to `impl DataActor`.
 }
 ```
+
+`external_order_instrument_ids` supplies registration-time claims; `set_external_order_instrument_ids` replaces active claims at runtime.
 
 Key points:
 - `on_start`/`on_stop` return `anyhow::Result<()>`; subscribe/unsubscribe there.
@@ -260,7 +262,10 @@ existing Python strategy.
   `high-precision` feature enabled; do not hand-edit generated bindings. Mixed-scale fixed-point
   add/sub fails (operator panics; `checked_add`/`checked_sub` return errors) — normalize scales or
   use the checked forms when operand precisions may differ.
-- **Error handling**: `on_*` handlers return `anyhow::Result<()>`; propagate with `?`.
+- **Error handling**: data callbacks such as `on_quote`, `on_trade`, and `on_bar` return
+  `anyhow::Result<()>`; propagate with `?`. Execution-event callbacks such as
+  `on_order_filled` and `on_order_canceled` return unit and cannot propagate errors
+  with `?`; log errors or track them in strategy state instead.
 - **Component bindings**: actor ID, clock, and order submission route through the typed
   component vtable (`crates/trading/src/strategy/binding.rs`, `crates/common/src/actor/binding.rs`,
   `crates/plugin/src/component.rs` at the pinned baseline). The vtable requires exact-build

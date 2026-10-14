@@ -7,6 +7,25 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-backtest
 
+## Funding settlement at reviewed tip `52eef7955c`
+
+`SimulatedExchange.apply_funding_settlement` adds signed cash-flow amounts to
+position realized PnL through `PositionAdjusted`: it does not move funding
+into average prices or fill commissions. Long exposure pays a positive rate;
+short exposure receives it, with the signs reversed for negative rates.
+Calculate all deltas first, mutate cached positions in place, and rollback
+already-applied position adjustments if a later application fails. For an
+unfrozen account, aggregate position payments and apply one account adjustment
+and one AccountState settlement, not one balance update per position.
+
+Account settlement is gated by `frozen_account`. FundingSettlement and
+PositionAdjusted do not carry a per-adjustment balance-impact flag.
+The betting-account `balance_impact` method is a separate contract.
+Sources: upstream
+`crates/backtest/src/exchange.rs`,
+`crates/model/src/events/funding/settlement.rs` and
+`crates/model/src/events/position/adjusted.rs`.
+
 ## NT V2 Rust readiness gates
 
 This repository cutover card records the current state of this skill. For future work, re-run the cited evidence and change a row to `Pending` or `Blocked` whenever that work lacks proof; `Pass` requires an explicit command, file, or official URL.
@@ -17,9 +36,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -61,7 +80,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `81d0449da0e353d702d88019dc73d231d67923cd`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 
 ## What This Skill Covers
 
@@ -98,12 +117,12 @@ engine is no longer retained. A cache-backed chart still needs live node state,
 and multi-currency analysis should pass an explicit currency where the
 tearsheet API requires one.
 
-The property is present at the pinned G2 baseline `81d0449da0e353d702d88019dc73d231d67923cd`.
+The property is present at the pinned G2 baseline `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 The pinned result statistics (`stats_pnls`, `stats_returns`, and
 `stats_general`) remain available.
 
 ## v1.227.0 backtest/matching deltas
-Source: upstream NautilusTrader pin `81d0449da0e353d702d88019dc73d231d67923cd`.
+Source: upstream NautilusTrader pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
@@ -134,11 +153,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nautilus-backtest = { version = "0.64", features = ["streaming"] }
-nautilus-execution = "0.64"
-nautilus-model = { version = "0.64", features = ["test-support"] }
-nautilus-persistence = "0.64"
-nautilus-trading = { version = "0.64", features = ["examples"] }
+nautilus-backtest = { version = "0.65", features = ["streaming"] }
+nautilus-execution = "0.65"
+nautilus-model = { version = "0.65", features = ["test-support"] }
+nautilus-persistence = "0.65"
+nautilus-trading = { version = "0.65", features = ["examples"] }
 
 ahash = "0.8"
 anyhow = "1"
@@ -352,7 +371,7 @@ use nautilus_execution::models::fill::{FillModel, FillModelHandle, Probabilistic
 use nautilus_model::{
     data::order::BookOrder,
     enums::{BookType, OrderSide},
-    instruments::InstrumentAny,
+    instruments::{Instrument, InstrumentAny},
     orderbook::OrderBook,
     orders::OrderAny,
     types::{Price, Quantity},
@@ -384,9 +403,12 @@ impl FillModel for MyFillModel {
         &mut self,
         instrument: &InstrumentAny,
         _order: &OrderAny,
-        best_bid: Price,
-        best_ask: Price,
+        best_bid: Option<Price>,
+        best_ask: Option<Price>,
     ) -> anyhow::Result<Option<OrderBook>> {
+        let (Some(best_bid), Some(best_ask)) = (best_bid, best_ask) else {
+            return Ok(None);
+        };
         // Build the liquidity view yourself; the trait has no helper for this.
         let mut book = OrderBook::new(instrument.id(), BookType::L2_MBP);
         let size_prec = instrument.size_precision();

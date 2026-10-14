@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-025-phase-3-specific",
+  "finding_id": "NT-2026-10-14-025",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "e582af0dd69d18801cb940097db847373c6e17062a2361c69e7fe96042222079",
+  "output_excerpt": "Derive v3 overlay in both mirrors: api.derive.xyz/v3 endpoints, EOA/multisig subaccounts, signing model; legacy v2 text preserved beneath; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

@@ -2,6 +2,17 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Value Type Patterns Reference Guide
 
+## Float conversion boundary at reviewed tip `52eef7955c`
+
+PyO3 Price/Quantity `as_double()` and float-producing mixed arithmetic reject
+precision 17 or 18 with ValueError: float arithmetic supports precision <=16.
+This includes `float(value)`; declaring a float result does not bypass the
+precision guard. Use `as_decimal()` or integer/Decimal arithmetic to preserve
+high-precision values. Rust `as_f64()` is a different, lossy conversion
+contract; do not assume the Python guard exists there.
+Sources: upstream `crates/model/src/types/fixed.rs` and
+`crates/model/src/python/types/{fixed,price,quantity}.rs`.
+
 Comprehensive guide to NautilusTrader's core value types: Price, Quantity, Money,
 Currency, and AccountBalance. Covers precision handling, construction patterns,
 arithmetic, and Rust interop.
@@ -96,7 +107,7 @@ qty = Quantity.zero(precision=2)  # "0.00"
 ### Conversion Methods
 
 - `as_decimal()` -- returns Python `Decimal`
-- `as_double()` -- returns `float`
+- `as_double()` -- returns `float` at precision <=16; Price/Quantity precision 17/18 raises ValueError
 - `to_formatted_str()` -- returns underscore-separated string (e.g., "1_000_000.50")
 
 ### Arithmetic
@@ -368,7 +379,7 @@ restored = AccountBalance.from_dict(d)
 
 Instruments expose their specifications through the same value types, keeping precision
 handling uniform across the model (pinned
-`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `81d0449da0e353d702d88019dc73d231d67923cd``):
+`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a``):
 
 - Precision and increments: `price_precision` / `size_precision` (`int`) with the
   matching `price_increment` (`Price`) and `size_increment` (`Quantity`).

@@ -2,6 +2,18 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Cache Operations Reference
 
+## Native analytics records at reviewed tip `52eef7955c`
+
+Treat `GreeksData`, `PortfolioGreeks` and `YieldCurveData` as native catalog
+families, not custom-data payloads. Cache handling, catalog query/write support
+and streaming support are separate contracts: the Python Feather writer directly
+accepts GreeksData and PortfolioGreeks but not YieldCurveData at this tip.
+Preserve the record family/schema when promoting streamed analytics into a
+catalog; do not infer a cache getter or streaming method from catalog support.
+See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-52eef7955c).
+Source: upstream `crates/persistence/src/catalog/types.rs` and
+`crates/persistence/src/python/backend/feather.rs`.
+
 ## Overview
 
 The `Cache` class (`nautilus_trader.common.Cache`) is the central in-memory store for all
@@ -67,7 +79,7 @@ synthetic_ids = self.cache.synthetic_ids()
 ### Instrument closes
 
 The cache keeps the latest `InstrumentClose` per instrument (upstream commit `9d45d410db`, pinned
-`81d0449da0e353d702d88019dc73d231d67923cd`):
+`52eef7955cbdb8d95667c838c3e43907e0da8e9a`):
 
 ```python
 self.cache.add_instrument_close(close)          # store the latest close (last write wins)

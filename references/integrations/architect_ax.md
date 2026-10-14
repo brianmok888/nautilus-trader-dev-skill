@@ -1,5 +1,142 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/architect_ax.md:43-61,229-275,596-655`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Products
+
+The production catalog lists perpetual and dated futures contracts in these venue categories:
+
+| Venue category   | Examples                     | Nautilus asset class |
+| ---------------- | ---------------------------- | -------------------- |
+| Foreign exchange | `EURUSD-PERP`, `JPYUSD-PERP` | FX                   |
+| Equities         | `AAPL-PERP`, `NVDA-PERP`     | Equity               |
+| Metals           | `XAU-PERP`, `XAU-2026-DEC`   | Commodity            |
+| Energy           | `WTIOIL-PERP`                | Commodity            |
+| Treasuries       | `UST10Y-PERP`                | Debt                 |
+| Compute          | `NVDA-H100-2027-MAR`         | Alternative          |
+
+The sandbox catalog differs. It also lists `energy_etfs` contracts such as `USO-PERP` and
+`UNG-PERP`, which map to the Equity asset class, and compute perpetuals such as `OCPI-H100-PERP`.
+
+The adapter maps a `crypto` venue category to the `CRYPTOCURRENCY` asset class, and any category it
+does not recognize to `ALTERNATIVE`.
+
+
+### Order book recovery
+
+The data client tracks each order book delta subscription with the
+[shared book recovery machinery](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership). AX L2 and L3
+messages carry a full snapshot and no sequence number. AX sends one immediately after each subscribe
+acknowledgement, including for an empty or unchanged book. The client accepts every message as a snapshot. It
+suppresses book output while a subscription write is in flight and drops frames for a book that is no longer
+subscribed.
+
+Recovery replaces the symbol's subscription with an unsubscribe and a subscribe on the same connection. The
+replacement retains its current level and trade and ticker flags. AX carries all market data for a symbol on
+one stream, so trades, quotes, mark prices, and instrument status for that symbol pause while the replacement
+runs. Recovery starts when:
+
+- An initial subscription write fails.
+- No snapshot arrives within `book_snapshot_timeout_secs` (default 10 seconds) after the initial
+  subscription write completes or the connection is re-established. A data client `connect` after
+  `disconnect` counts too: the client keeps its books, and the WebSocket client replays their
+  subscriptions.
+- An L2 or L3 frame cannot be converted, such as an incremental (`st: false`) frame. The book stops
+  emitting until a replacement snapshot arrives, and a running recovery's current attempt fails
+  without waiting for its snapshot deadline.
+
+A subscription AX rejects delivers no snapshot, so its snapshot deadline starts recovery. A
+subscription the client cannot queue because the WebSocket handler has stopped starts no recovery,
+and its book emits nothing. Subscribing to deltas for a book whose stream is already open replaces
+the stream, so the book starts from a fresh snapshot.
+
+Each recovery makes up to eight attempts within 180 seconds, with exponential backoff. It then retries until
+it accepts a snapshot. The retry interval doubles from one minute to fifteen minutes. A running recovery
+continues across reconnects with its remaining budget, and unsubscribe or shutdown cancels it. A recovery
+waiting between attempts after its budget retries at once on the new connection. Recovery never ends in a
+failed state.
+
+The client does not correlate subscription acknowledgements with recovery attempts. A snapshot
+queued before a replacement can complete recovery once the replacement write finishes. AX sends no
+frames while a book is unchanged, so the client does not treat a silent book as stale.
+
+Setting `book_snapshot_timeout_secs` to `0` disables snapshot deadlines. Recovery then starts only from a
+failed initial write or an invalid frame. Within the retry budget, a replacement that delivers no snapshot
+waits until one of these events:
+
+- The client accepts a snapshot.
+- An invalid frame fails the attempt.
+- Recovery is cancelled.
+- The 180-second initial budget ends.
+
+
+## Implementation notes
+
+- **Whole contracts only**: AX uses integer contract quantities. The adapter models a one-contract
+  size increment and lot size, while enforcing each instrument's separate `minimum_order_size`.
+  Fractional quantities generate `OrderDenied` locally.
+- **Dated futures activation**: AX publishes expiration but not activation timestamps. The adapter
+  uses zero for the unknown activation time and preserves that limitation in instrument metadata.
+- **Rate limiting**: The adapter applies a conservative rate limit of 10 requests/second with
+  automatic exponential backoff on rate limit responses.
+- **Market orders**: AX does not support native market orders. The adapter uses a preview endpoint
+  to determine the take-through price and submits an aggressive IOC limit order. Because the book
+  can move between the preview and the submission, a simulated market order may fill partially.
+- **Stop-limit orders**: The adapter rejects venue-native stop-limit submissions because sandbox
+  testing did not confirm conditional semantics. Use local order emulation when a strategy
+  requires a stop-limit order.
+- **Order modification**: AX supports atomic order replacement via `POST /replace-order`. The execution client
+  maps `modify_order` to this endpoint and records the new venue order ID it returns. The adapter rejects a
+  modification locally if it carries a trigger price, because AX has no field for one. It also rejects a
+  modification if the order has no venue order ID yet.
+- **Funding rate polling**: The data client polls `GET /funding-rates` for each subscribed instrument at
+  `funding_rate_poll_interval_mins`. It requests a seven-day lookback to find a rate across weekends and
+  holidays. It emits the latest rate only when it differs from the last one emitted.
+- **Cancel on disconnect**: Set `cancel_on_disconnect=True` in the execution client config
+  to have the exchange cancel all open orders if the orders WebSocket disconnects.
+- **Account fee rates**: Instruments do not carry maker or taker fee rates. An
+  authenticated client resolves account rates from `GET /whoami` and fails to connect
+  if that lookup fails. The execution client caches rates per AX account, apart from
+  instruments, and refreshes them each time it connects. Automatic WebSocket reconnects
+  keep the cached rates.
+- **Fill commissions**: Real-time fill events from the WebSocket do not include fee data. The adapter
+  estimates commission for both tracked fill events and untracked fill reports using the fill quantity,
+  absolute fill price, contract multiplier, and account's maker or taker rate. It uses the trade's account ID,
+  then the order's account ID if absent, or the first `/whoami` account if neither ID is present. It keeps the
+  calculation in decimal arithmetic and rounds only the final fee into USD `Money`, whose precision is 2.
+
+  A fill whose instrument or complete account fee schedule is not cached, or whose commission cannot be
+  represented, is logged and skipped. Tracked order metadata remains available for reconciliation. Recovery
+  depends on configured reconciliation checks or an explicit order query. Skipped fills do not trigger an
+  immediate REST request.
+
+  Reconciliation does not replace an applied commission, so a streamed estimate remains even when the
+  venue-reported `/fills` fee differs. That endpoint supplies the fee for a fill that was not already applied
+  from the stream. The adapter converts it with `Money::from_decimal` into USD, so a sub-cent fee such as
+  `0.012188` is stored as `0.01`. An unrepresentable REST fee fails the fill-report request and mass status.
+  During startup, that error prevents the node from starting.
+- **Fill reconciliation window**: The `/fills` endpoint requires a bounded time range and caps the span at
+  seven days. Reconciliation requests the most recent seven days of fills. Fills older than that are not
+  reconciled.
+- **Fill order identity**: AX can omit `order_id` for block trades and final settlement fills. The
+  adapter derives a deterministic reconciliation order ID from `trade_id` for those classified
+  records. Classification fields are optional for regular fills with a valid `order_id`. The adapter
+  rejects rows with neither an order ID nor explicit special-fill classification, and rejects
+  inconsistent classification.
+- **Unfilled IOC/FOK**: AX reports an unfilled immediate order as an expiry. The adapter maps it to
+  `OrderCanceled` to match NautilusTrader semantics.
+- **One-tick quotes**: Example testers place post-only limits one tick from top of book.
+  Those quotes can still fill. Flatten leftovers with
+  `cargo run --bin ax-flatten -p nautilus-architect-ax` (`AX_IS_SANDBOX` defaults to true).
+  That binary cancels all open orders on the account, then closes every position.
+
+
+## Historical reference (superseded where noted above)
+
 # AX Exchange
 
 [AX Exchange](https://architect.exchange) is the world's first centralized and regulated exchange

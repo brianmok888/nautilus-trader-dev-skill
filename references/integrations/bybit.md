@@ -1,5 +1,111 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/bybit.md:223-275,854-896`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+
+### Sequence validation
+
+Each delta must carry the update ID `u` that follows the book's last accepted frame. Any other delta
+suppresses book output and requests recovery. So does a delta that reaches a book before its first snapshot.
+For example, an update sent before a quick resubscribe can reach the new subscription. A request starts
+recovery only when neither a running recovery nor a snapshot deadline already owns the book.
+
+Every snapshot replaces the book, as the
+[Bybit order book contract](https://bybit-exchange.github.io/docs/v5/websocket/public/orderbook) requires. The
+venue sends one after each subscribe and after a service restart, which can reset `u` to 1, and pushes only
+snapshots at depth 1. A replacement snapshot can carry an update ID below the book's last delta, since the
+venue serves it from an earlier state. Deltas then continue from it. A snapshot that arrives while the book's
+subscription or replacement write is still in flight is discarded.
+
+### Snapshot deadlines
+
+Initial and recovery subscriptions wait up to `book_snapshot_timeout_secs` (default **10 seconds**)
+for a snapshot after the subscription write completes. Books on a reconnected socket wait the same
+time from the reconnect. A missing snapshot starts or retries recovery.
+
+Set `book_snapshot_timeout_secs` to `0` to disable snapshot deadlines. A gap still starts recovery,
+but a recovery attempt whose snapshot never arrives then waits until the 180-second retry budget
+ends.
+
+A depth-1 book shares its topic with quotes. When quotes already hold the topic, subscribing the book
+sends nothing, and the next depth-1 snapshot synchronizes it.
+
+### Retry limits and reconnects
+
+Recovery unsubscribes and resubscribes the book's topic on the same connection, and the venue answers with a
+fresh snapshot. Each recovery episode makes **up to eight attempts within 180 seconds**, with exponential
+backoff and jitter. It then retries until it accepts a snapshot. The retry interval doubles from one minute to
+fifteen minutes. Recovery never ends in a failed state. Unsubscribe and shutdown cancel it.
+
+Recovering a depth-1 book also pauses quotes on the shared topic until the replacement snapshot
+arrives. A venue rejection of a replacement subscription is logged, and the attempt retries once
+its snapshot deadline passes.
+
+A reconnect resynchronizes every book on the reconnected product type's socket from the snapshot of its
+replayed subscription. It keeps a running recovery with its remaining budget. A recovery waiting between
+attempts after its budget retries at once on the new connection.
+
+If the client cannot queue the initial subscription, it logs an error and releases the book instead of
+recovering it. For example, the subscription can exceed the option connection's topic limit. A queued initial
+subscription whose write fails starts recovery at once.
+
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+for the shared recovery machinery and adapter responsibilities.
+
+### Live recovery validation
+
+The `bybit-book-stress` harness is a development tool for changes to book synchronization and recovery. It
+
+
+The UID limiter includes the documented lower-rate account and user routes, 50-request read
+routes, product-specific order routes, cancel-all limits, and weighted batch operations. HTTP and
+trade WebSocket responses update the configured UID limit from `X-Bapi-Limit`, track
+`X-Bapi-Limit-Status`, and honor a future `X-Bapi-Limit-Reset-Timestamp` when the remaining count
+reaches zero.
+
+The execution client's `recv_window_ms` applies to signed REST requests and trade WebSocket order
+commands. A queued WebSocket order gets its timestamp and receive-window header only after all
+applicable quotas allow the send. A reconnect retry rebuilds the command with a fresh header and
+uses a connection-bound write, so the transport cannot replay a stale order payload.
+
+:::warning
+Bybit returns `retCode` `10006` ("Too many visits") when the API rate limit is exceeded.
+Exceeding the IP ceiling of 600 requests per 5 seconds returns HTTP 403 and bans the IP for at
+least 10 minutes. A matching 403 discards the affected pooled HTTP session and starts a shared
+10-minute cooldown. Other 403 responses do not activate the cooldown.
+:::
+
+:::warning
+Coordination is process-local. Another process or host using the same API key or public IP can
+consume venue quota that this adapter cannot reserve in advance. Response headers reduce this
+gap for UID limits, but separate processes still require operational coordination.
+:::
+
+Explicit venue rate-limit responses are terminal rejections for the affected order operation.
+Transport timeouts, service restarts, and duplicate request identifiers remain subject to order
+reconciliation because they do not prove whether the venue accepted the order.
+
+:::info
+For more details on rate limiting, see the official documentation: <https://bybit-exchange.github.io/docs/v5/rate-limit>.
+:::
+
+## Account types
+
+The execution client factory determines the account type and OMS type from the configured product
+types:
+
+- **Spot only**: `CASH` account type with a `HEDGING` OMS type.
+- **Derivatives or mixed products**: `MARGIN` account type (UTA - Unified Trading Account) with a
+  `NETTING` OMS type.
+
+This allows you to trade Spot alongside derivatives in a single Unified Trading Account, which is the standard account type for most Bybit users.
+
+## Historical reference (superseded where noted above)
+
 # Bybit
 
 Founded in 2018, Bybit is one of the largest cryptocurrency exchanges in terms
@@ -300,7 +406,7 @@ Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpT
 `None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
 is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
 leaving both unset omits the field so the venue default applies
-(`crates/adapters/bybit/src/config.rs` at pin `81d0449da0e353d702d88019dc73d231d67923cd`).
+(`crates/adapters/bybit/src/config.rs` at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
 Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
 values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
 (`crates/adapters/bybit/src/common/enums.rs`).
@@ -850,7 +956,7 @@ NT v2 compatibility note: the v1 `bars_timestamp_on_close`, `use_gtd`, `use_ws_e
 `use_http_batch_api`, `repay_queue_interval_secs`, `ignore_uncached_instrument_executions`,
 `ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are
 pinned fields (`crates/adapters/bybit/src/config.rs` at pin
-`81d0449da0e353d702d88019dc73d231d67923cd`).
+`52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
 
 Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
 `BybitExecutionClientFactory`. The current Python examples show the complete

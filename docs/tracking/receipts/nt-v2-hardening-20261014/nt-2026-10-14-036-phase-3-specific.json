@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-036-phase-3-specific",
+  "finding_id": "NT-2026-10-14-036",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py",
+  "exit_code": 0,
+  "output_sha256": "b487b40299334be36f677173593c50eeb2c0f76a83fd54c13a034dab057e186b",
+  "output_excerpt": "Databento live subscriptions and date-scoped historical precision documented; shipped copies green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

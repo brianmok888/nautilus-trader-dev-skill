@@ -15,7 +15,7 @@ surfaces are current; this skill repository still routes new production work to
 Rust and keeps Python execution examples migration/reference-only.
 
 The pinned baseline matches the reviewed `origin/develop` head
-`81d0449da0e353d702d88019dc73d231d67923cd` (verified 2026-09-02 via
+`52eef7955cbdb8d95667c838c3e43907e0da8e9a` (verified 2026-09-02 via
 `tools/upstream_freshness.py`; consult `references/upstream-delta-review.json`
 before relying on equality — develop moves independently of this pin). The
 immutable snapshot now contains the contracts that previously differed from
@@ -81,9 +81,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `81d0449da0e353d702d88019dc73d231d67923cd`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped examples and owners against `81d0449da0e353d702d88019dc73d231d67923cd`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-testing` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-testing.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -128,7 +128,7 @@ do not import the private compiled root `nautilus_trader._libnautilus`.
 
 Backtest data loading gained typed batch input (`BacktestEngine::add_data_batch`, `crates/backtest/src/engine.rs:436`), typed batch replay, and lazy multi-config streaming (upstream `3c9ad2ef4`, `dabe39d77`, `ec1894d6f`) — cover these paths when testing data-heavy strategies.
 
-Current-develop overlay (reviewed through `81d0449da0e353d702d88019dc73d231d67923cd`): every public PyO3
+Current-develop overlay (reviewed through `52eef7955cbdb8d95667c838c3e43907e0da8e9a`): every public PyO3
 actor `subscribe_*` and `unsubscribe_*` entry point calls `ensure_registered()` before mutating
 subscription state and returns `PyResult`. Test that a call fails before actor registration, leaves
 no retained subscription, and succeeds after registration.
@@ -139,7 +139,7 @@ The previous Python `DataTesterConfig` and `ExecTesterConfig` examples are quara
 
 ## Source-pinned upstream lane
 
-Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `81d0449da0e353d702d88019dc73d231d67923cd`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
+Use `references/developer_guide/testing.md`, `references/developer_guide/spec_data_testing.md`, `references/developer_guide/spec_exec_testing.md`, and `references/developer_guide/rust.md` as source-pinned upstream snapshots at commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. Keep the execution-spec freshness and nightly migration notes explicitly version-scoped.
 
 ## What This Skill Covers
 
@@ -180,7 +180,7 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
   algorithms**, `FeeModel`, and `FillModel` tests as source-pinned or
   migration/reference evidence. This repository's active behavior tests
   target Rust ownership and bounded PyO3 configuration/error boundaries.
-  At the pinned develop `81d0449da0e353d702d88019dc73d231d67923cd` (in-pin since `d2b62d35a7`), change
+  At the pinned develop `52eef7955cbdb8d95667c838c3e43907e0da8e9a` (in-pin since `d2b62d35a7`), change
   `e4d3ac7f37` additionally lets
   `pyobject_to_fee_model_any` accept any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs
@@ -285,8 +285,8 @@ use proptest::prelude::*;
 
 proptest! {
     #[test]
-    fn test_price_round_trip(value in any::<f64>().prop_filter("positive", |v| *v > 0.0)) {
-        let price = Price::new(value, 8).unwrap();
+    fn test_price_round_trip(value in 0.0_f64..1_000_000.0) {
+        let price = Price::new(value, 8);
         let parsed = Price::from_str(&price.to_string()).unwrap();
         assert_eq!(price, parsed);
     }
@@ -393,7 +393,7 @@ them.
   batch outcomes. Unknown outcomes must remain in-flight until venue updates,
   query results, or reconciliation resolve them; emit terminal reject events
   only for explicit per-order venue rejections, except the upstream
-  local prepare-failure carve-out: local cancel/modify prepare failures that
+  exception for local prepare failures: local cancel/modify prepare failures that
   prove the command was not sent may emit `OrderCancelRejected` or
   `OrderModifyRejected` when attributable to exactly one command.
 - For post-only crossing rejects, assert `due_post_only=true` when the adapter

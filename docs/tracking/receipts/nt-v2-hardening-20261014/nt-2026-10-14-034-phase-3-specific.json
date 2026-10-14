@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-034-phase-3-specific",
+  "finding_id": "NT-2026-10-14-034",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py",
+  "exit_code": 0,
+  "output_sha256": "30a567b2513ef89983be621a9c78a369ede74a6fd782cfed0f6f9c195b1b419c",
+  "output_excerpt": "Architect AX shared recovery, authenticated fee lookup, retry/cancel semantics documented; shipped copies green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

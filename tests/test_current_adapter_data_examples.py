@@ -16,6 +16,21 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize(
+    "name",
+    [
+        "architect_ax", "betfair_v2", "binance", "blockchain", "bybit",
+        "coinapi", "databento", "derive", "hyperliquid", "ib", "index",
+        "kraken", "lighter", "okx", "polymarket", "tardis",
+    ],
+)
+def test_current_integration_guides_match_shipped_copies(name: str) -> None:
+    canonical = REPO_ROOT / "references/integrations" / f"{name}.md"
+    shipped = REPO_ROOT / "skills/nt-adapters/references/integrations" / f"{name}.md"
+
+    assert canonical.read_bytes() == shipped.read_bytes()
+
+
+@pytest.mark.parametrize(
     "path",
     [
         "references/concepts/data.md",

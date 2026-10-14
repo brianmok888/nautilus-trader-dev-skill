@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-038-phase-3-specific",
+  "finding_id": "NT-2026-10-14-038",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_current_adapter_data_examples.py tests/test_v2_inventory_pins_versions.py",
+  "exit_code": 0,
+  "output_sha256": "345b0e05b527a1d851bf1774adfa323f69c8d7e56175fa9c36a7f1d0db260c87",
+  "output_excerpt": "CoinAPI guide added to both mirrors with routing entry; shipped-copy and inventory suites green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-060-phase-3-specific",
+  "finding_id": "NT-2026-10-14-060",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_strategy_routing_scope.py",
+  "exit_code": 0,
+  "output_sha256": "ec075d631a19c53d96d6f92ff80019452b645d38fe3fff5f05fe64c518758790",
+  "output_excerpt": "Backtest/paper-live routing split (BacktestEngine/BacktestNode vs LiveNode) matches upstream semantics; 122 passed.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

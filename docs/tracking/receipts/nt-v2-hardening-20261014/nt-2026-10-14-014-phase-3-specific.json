@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-014-phase-3-specific",
+  "finding_id": "NT-2026-10-14-014",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P2",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "da3ee3a681aa7805e9d2819549381ca77318fdcb9abb0862031acc124e4a8835",
+  "output_excerpt": "Fill restatement detection rule (same trade_id, different event_id) documented from pinned order-filled docs; overlay suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

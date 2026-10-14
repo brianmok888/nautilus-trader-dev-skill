@@ -66,7 +66,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-09-30"
+CURRENT_SYNC_DATE = "2026-10-14"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.231.0"
 CURRENT_RELEASE_DATE = "2026-08-02"
@@ -340,7 +340,7 @@ NT_V2_CUTOVER_TARGETS = {
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.98.1",
+        "1.99.0",
         "Python v2 controller subclassing",
         "subclassable execution algorithms",
         "FeeModel",
@@ -396,7 +396,7 @@ RUST_ORIENTED_V2_READINESS_TARGETS = {
         "2.0.0rc1",
         "2.0.0rcN",
         "rust-toolchain.toml",
-        "1.98.1",
+        "1.99.0",
     ],
     Path("skills/nt-review/SKILL.md"): [
         "Rust-oriented v2.0 readiness",
@@ -710,7 +710,7 @@ CURRENT_GUIDE_DELTA_TARGETS = {
     ],
     Path("references/developer_guide/spec_exec_testing.md"): [
         "Ambiguous outcome failures",
-        "local prepare-failure carve-out",
+        "exception for local prepare failures",
         "OrderCancelRejected",
         "OrderModifyRejected",
         "TC-E74",
@@ -719,7 +719,7 @@ CURRENT_GUIDE_DELTA_TARGETS = {
         "trigger-order signing expiry",
     ],
     Path("references/developer_guide/environment_setup.md"): [
-        "current version numbers into docs",
+        "Single source of truth for versions",
         "rustup toolchain install nightly",
         "pip-audit",
     ],
@@ -757,7 +757,7 @@ CURRENT_SKILL_DELTA_TARGETS = {
     Path("skills/nt-testing/SKILL.md"): [
         "TC-E74",
         "TC-E78",
-        "local prepare-failure carve-out",
+        "exception for local prepare failures",
         "OrderCancelRejected",
         "OrderModifyRejected",
         "due_post_only=true",

@@ -1,5 +1,78 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+Legacy Python live-node examples belong to the `migration_reference` lane;
+use Rust `LiveNode` for current production wiring.
+
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/interactive_brokers.md:15-43,524-623,702-734`.
+This section supersedes contradictory historical guidance below at this pin.
+
+### Dependency version boundary
+
+The Rust adapter uses the Rust `ibapi` crate **5.0.0** at this pin
+(`Cargo.toml:347,423`, `crates/adapters/interactive_brokers/Cargo.toml:80`;
+upstream `f81f95177`). The Python package dependency remains `ibapi` **4.0.1**
+in `pyproject.toml:61` and the integration guide. These are separate dependency
+lanes; the Python package version does not describe the Rust adapter migration.
+
+### Order-ID partition failures
+
+Each process needs a distinct API `client_id`; an execution client ID cannot be
+a multiple of 1000. Order IDs are partitioned by `client_id % 1000`. Connect
+starts above the highest open/completed ID and fails if IB's next valid ID is
+above that partition, or if completed orders do not arrive in full within
+`request_timeout`. Choose another client ID for an exhausted partition. IB's
+limited completed-history window can hide older used IDs; returned history
+does not prove an ID has never been used.
+
+### Option contract discovery
+
+Use `IBInstrumentProviderConfig.load_ids` or `load_contracts` for fully specified
+option contracts. Required entries that cannot be resolved fail initialization.
+Provider defaults `build_options_chain=False` and `build_futures_chain=False`
+keep discovery bounded; enable each chain explicitly with expiry bounds.
+An option contract specifies security type, symbol, exchange, expiry, strike,
+and right. Verify `reqContractDetails` in TWS before requesting a full chain.
+`CONTFUT` without a chain flag is historical-only, not live or orderable.
+
+| `track_option_exercise_from_position_update` | `False`                 | Track option exercise through position updates.      |
+| `instrument_provider`                        | Default provider config | Configure contract and instrument loading.           |
+| `dockerized_gateway`                         | `None`                  | Reserved and rejected; start the gateway separately. |
+
+### Dockerized gateway
+
+| Option            | Default                            | Purpose                                                              |
+| ----------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `username`        | `TWS_USERNAME`                     | Set the IB login username.                                           |
+| `password`        | `TWS_PASSWORD`                     | Set the IB login password; debug output and serialization redact it. |
+| `trading_mode`    | `TradingMode.PAPER`                | Select paper or live login and port mapping.                         |
+| `read_only_api`   | `True`                             | Disable order entry through the Gateway API.                         |
+| `timeout`         | `300` seconds                      | Bound startup readiness; valid values are `1` through `3600`.        |
+| `container_image` | `ghcr.io/gnzsnz/ib-gateway:stable` | Select the container image reference.                                |
+| `vnc_port`        | `None`                             | Expose VNC on a port from `5900` through `5999`; `None` disables it. |
+
+`DockerizedIBGateway` exposes asynchronous and blocking `start`, `safe_start`, and `stop` methods,
+plus `container_status`. The safe start variants reuse a ready container and replace an unhealthy
+one.
+
+## Python enum reference
+
+All public Python enum names use `SCREAMING_SNAKE_CASE`. IB conversion enums expose `as_str()` or
+`as_i32()` when callers need the corresponding wire value.
+
+### Connection, contracts, and instruments
+
+| Enum                                | Purpose and key members                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ContainerStatus`                   | Gateway lifecycle: `NO_CONTAINER`, `CONTAINER_CREATED`, `CONTAINER_STARTING`, `CONTAINER_STOPPED`, `NOT_LOGGED_IN`, `READY`, or `UNKNOWN`.             |
+| `MarketDataType`                    | Subscription mode: `REALTIME`, `FROZEN`, `DELAYED`, or `DELAYED_FROZEN`.                                                                               |
+| `SymbologyMethod`                   | Instrument ID mapping: `SIMPLIFIED` or `RAW`.                                                                                                          |
+| `TradingMode`                       | Gateway login mode: `PAPER` or `LIVE`.                                                                                                                 |
+
+## Historical reference (superseded where noted above)
+
 # Interactive Brokers
 
 Interactive Brokers (IB) is a trading platform providing market access across a wide range of financial instruments, including stocks, options, futures, currencies, bonds, funds, and cryptocurrencies. NautilusTrader offers an adapter to integrate with IB using their [Trader Workstation (TWS) API](https://ibkrcampus.com/ibkr-api-page/trader-workstation-api/). The adapter provides live market data, execution, historical data, instrument loading, and optional Dockerized IB Gateway management through the same Rust implementation and Python bindings.

@@ -207,7 +207,10 @@ V1_WHEEL=$(find "$COMPARE_ROOT/wheels-v1" -type f -name 'nautilus_trader-*.whl')
 UV_LINK_MODE=copy uv pip install --no-cache \
     --python "$COMPARE_ROOT/env-v1/bin/python" "$V1_WHEEL"
 
-uv venv --python /usr/bin/python3.12 "$COMPARE_ROOT/env-v2"
+# v2 dropped Python 3.12 support (`requires-python >=3.13` since `a7a2facd0`),
+# so env-v2 must use a separate 3.13+ interpreter. Benchmark comparability is
+# affected by the interpreter difference; report the interpreter pair with results.
+uv venv --python /usr/bin/python3.13 "$COMPARE_ROOT/env-v2"
 uv pip install --python "$COMPARE_ROOT/env-v2/bin/python" maturin==1.14.1 patchelf
 (
     cd python
@@ -220,7 +223,7 @@ UV_LINK_MODE=copy uv pip install --no-cache \
 
 V1_COMMIT=$(git -C "$COMPARE_ROOT/v1" rev-parse HEAD)
 V2_COMMIT=$(git rev-parse HEAD)
-python3.12 scripts/benchmark-backtest-versions.py compare \
+"$COMPARE_ROOT/env-v2/bin/python" scripts/benchmark-backtest-versions.py compare \
     --v1-python "$COMPARE_ROOT/env-v1/bin/python" \
     --v1-artifact "$V1_WHEEL" \
     --v1-source "$COMPARE_ROOT/v1" \

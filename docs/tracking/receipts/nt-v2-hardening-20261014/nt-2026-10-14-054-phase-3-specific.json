@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-054-phase-3-specific",
+  "finding_id": "NT-2026-10-14-054",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "pinned .venv/bin/python -c",
+  "exit_code": 0,
+  "output_sha256": "8ddff72b5ff526a207381f74a27f01bea51f09e09fb318de4de2ea95d28d2208",
+  "output_excerpt": "WRANGLER_AND_FACTORY_API_PASS — BarDataWrangler(bar_type string, precisions) constructed; DataClientFactory/ExecutionClientFactory imported from nautilus_trader.live.clients.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

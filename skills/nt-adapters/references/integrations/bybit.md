@@ -1,5 +1,111 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/bybit.md:223-275,854-896`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+
+### Sequence validation
+
+Each delta must carry the update ID `u` that follows the book's last accepted frame. Any other delta
+suppresses book output and requests recovery. So does a delta that reaches a book before its first snapshot.
+For example, an update sent before a quick resubscribe can reach the new subscription. A request starts
+recovery only when neither a running recovery nor a snapshot deadline already owns the book.
+
+Every snapshot replaces the book, as the
+[Bybit order book contract](https://bybit-exchange.github.io/docs/v5/websocket/public/orderbook) requires. The
+venue sends one after each subscribe and after a service restart, which can reset `u` to 1, and pushes only
+snapshots at depth 1. A replacement snapshot can carry an update ID below the book's last delta, since the
+venue serves it from an earlier state. Deltas then continue from it. A snapshot that arrives while the book's
+subscription or replacement write is still in flight is discarded.
+
+### Snapshot deadlines
+
+Initial and recovery subscriptions wait up to `book_snapshot_timeout_secs` (default **10 seconds**)
+for a snapshot after the subscription write completes. Books on a reconnected socket wait the same
+time from the reconnect. A missing snapshot starts or retries recovery.
+
+Set `book_snapshot_timeout_secs` to `0` to disable snapshot deadlines. A gap still starts recovery,
+but a recovery attempt whose snapshot never arrives then waits until the 180-second retry budget
+ends.
+
+A depth-1 book shares its topic with quotes. When quotes already hold the topic, subscribing the book
+sends nothing, and the next depth-1 snapshot synchronizes it.
+
+### Retry limits and reconnects
+
+Recovery unsubscribes and resubscribes the book's topic on the same connection, and the venue answers with a
+fresh snapshot. Each recovery episode makes **up to eight attempts within 180 seconds**, with exponential
+backoff and jitter. It then retries until it accepts a snapshot. The retry interval doubles from one minute to
+fifteen minutes. Recovery never ends in a failed state. Unsubscribe and shutdown cancel it.
+
+Recovering a depth-1 book also pauses quotes on the shared topic until the replacement snapshot
+arrives. A venue rejection of a replacement subscription is logged, and the attempt retries once
+its snapshot deadline passes.
+
+A reconnect resynchronizes every book on the reconnected product type's socket from the snapshot of its
+replayed subscription. It keeps a running recovery with its remaining budget. A recovery waiting between
+attempts after its budget retries at once on the new connection.
+
+If the client cannot queue the initial subscription, it logs an error and releases the book instead of
+recovering it. For example, the subscription can exceed the option connection's topic limit. A queued initial
+subscription whose write fails starts recovery at once.
+
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+for the shared recovery machinery and adapter responsibilities.
+
+### Live recovery validation
+
+The `bybit-book-stress` harness is a development tool for changes to book synchronization and recovery. It
+
+
+The UID limiter includes the documented lower-rate account and user routes, 50-request read
+routes, product-specific order routes, cancel-all limits, and weighted batch operations. HTTP and
+trade WebSocket responses update the configured UID limit from `X-Bapi-Limit`, track
+`X-Bapi-Limit-Status`, and honor a future `X-Bapi-Limit-Reset-Timestamp` when the remaining count
+reaches zero.
+
+The execution client's `recv_window_ms` applies to signed REST requests and trade WebSocket order
+commands. A queued WebSocket order gets its timestamp and receive-window header only after all
+applicable quotas allow the send. A reconnect retry rebuilds the command with a fresh header and
+uses a connection-bound write, so the transport cannot replay a stale order payload.
+
+:::warning
+Bybit returns `retCode` `10006` ("Too many visits") when the API rate limit is exceeded.
+Exceeding the IP ceiling of 600 requests per 5 seconds returns HTTP 403 and bans the IP for at
+least 10 minutes. A matching 403 discards the affected pooled HTTP session and starts a shared
+10-minute cooldown. Other 403 responses do not activate the cooldown.
+:::
+
+:::warning
+Coordination is process-local. Another process or host using the same API key or public IP can
+consume venue quota that this adapter cannot reserve in advance. Response headers reduce this
+gap for UID limits, but separate processes still require operational coordination.
+:::
+
+Explicit venue rate-limit responses are terminal rejections for the affected order operation.
+Transport timeouts, service restarts, and duplicate request identifiers remain subject to order
+reconciliation because they do not prove whether the venue accepted the order.
+
+:::info
+For more details on rate limiting, see the official documentation: <https://bybit-exchange.github.io/docs/v5/rate-limit>.
+:::
+
+## Account types
+
+The execution client factory determines the account type and OMS type from the configured product
+types:
+
+- **Spot only**: `CASH` account type with a `HEDGING` OMS type.
+- **Derivatives or mixed products**: `MARGIN` account type (UTA - Unified Trading Account) with a
+  `NETTING` OMS type.
+
+This allows you to trade Spot alongside derivatives in a single Unified Trading Account, which is the standard account type for most Bybit users.
+
+## Historical reference (superseded where noted above)
+
 # Bybit
 
 Founded in 2018, Bybit is one of the largest cryptocurrency exchanges in terms
@@ -291,7 +397,7 @@ onto fills when Bybit execution messages do not include `positionIdx`.
 To override, pass `position_idx` via `params`:
 
 ```python
-params = {"position_idx": 1}  # 0 one-way, 1 long, 2 short
+params={"position_idx": 1}  # 0 one-way, 1 long, 2 short
 ```
 
 #### Self-match prevention (SMP)
@@ -300,7 +406,7 @@ Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpT
 `None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
 is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
 leaving both unset omits the field so the venue default applies
-(`crates/adapters/bybit/src/config.rs` at pin `81d0449da0e353d702d88019dc73d231d67923cd`).
+(`crates/adapters/bybit/src/config.rs` at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
 Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
 values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
 (`crates/adapters/bybit/src/common/enums.rs`).
@@ -326,8 +432,9 @@ Bybit emits venue-initiated fills with `execType` set to:
 The adapter flags each as exchange-generated and logs a warning containing the
 execution ID, symbol, side, quantity, and price. Fills flow through the normal
 `FillReport` path; because these orders carry an empty `orderLinkId`, the
-execution engine treats them as external and assigns them via
-`external_order_claims` (or the `EXTERNAL` strategy by default).
+execution engine treats them as external and assigns them through the
+instrument's active external order claim, configured initially with
+`external_order_instrument_ids` (or the `EXTERNAL` strategy by default).
 
 Funding settlements use `execType=Funding`, but they are balance adjustments rather than fills.
 The adapter ignores them in historical fill reports and standard private `execution` messages, so
@@ -436,7 +543,7 @@ order = strategy.order_factory.market(
     instrument_id=InstrumentId.from_str("BTCUSDT-SPOT.BYBIT"),
     order_side=OrderSide.BUY,
     quantity=Quantity.from_str("0.1"),
-    params={"is_leverage": True},  # Enable margin for this order
+    params={"is_leverage": True}  # Enable margin for this order
 )
 strategy.submit_order(order)
 ```
@@ -543,7 +650,7 @@ from nautilus_trader.adapters.bybit import BybitMarginAction
 from nautilus_trader.adapters.bybit import BybitMarginBorrowResult
 from nautilus_trader.adapters.bybit import BybitMarginRepayResult
 from nautilus_trader.adapters.bybit import BybitMarginStatusResult
-from nautilus_trader.model.data import DataType
+from nautilus_trader.model import DataType
 
 
 class MyStrategy(Strategy):
@@ -799,59 +906,62 @@ The product types for each client must be specified in the configurations.
 
 | Option                           | Default | Description |
 |----------------------------------|---------|-------------|
+| `product_types`                  | `[LINEAR]` | Sequence of `BybitProductType` values to enable (pinned default: linear only). |
+| `environment`                    | `MAINNET` | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `api_key`                        | `None`  | API key; loaded from the matching environment variable when omitted. |
 | `api_secret`                     | `None`  | API secret; loaded from the matching environment variable when omitted. |
-| `product_types`                  | `None`  | Sequence of `BybitProductType` values to enable; loads all products when `None`. |
-| `environment`                    | `None`  | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `base_url_http`                  | `None`  | Override for the REST base URL. |
 | `base_url_ws_public`             | `None`  | Override for the public WebSocket base URL. |
 | `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
-| `http_timeout_secs`              | `None`  | HTTP request timeout (seconds). |
-| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
-| `instrument_status_poll_secs`    | `None`  | Interval (seconds) for polling instrument status changes. |
-| `transport_backend`              | default | Transport backend selection. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
-| `update_instruments_interval_mins` | `60`  | Interval (minutes) between instrument catalogue refreshes. |
+| `http_timeout_secs`              | `60`    | HTTP request timeout (seconds). |
+| `max_retries`                    | `3`     | Maximum retry attempts for REST requests. |
+| `retry_delay_initial_ms`         | `1,000` | Initial retry delay (milliseconds). |
+| `retry_delay_max_ms`             | `10,000` | Maximum retry delay (milliseconds). |
+| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
 | `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `max_retries`                    | `None`  | Maximum retry attempts for REST/WebSocket recovery. |
-| `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
-| `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
+| `update_instruments_interval_mins` | `60`  | Interval (minutes) between instrument catalogue refreshes. |
+| `instrument_status_poll_secs`    | `60`    | Interval (seconds) between instrument and status polls; `0` disables polling (Rust field `instrument_poll_interval_secs`). |
+| `transport_backend`              | `Sockudo` | WebSocket transport backend. |
 
 ### Execution client configuration options
 
 | Option                           | Default | Description |
 |----------------------------------|---------|-------------|
+| `product_types`                  | `[LINEAR]` | Sequence of `BybitProductType` values to enable (Spot cannot be mixed with derivatives for execution). |
+| `environment`                    | `MAINNET` | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `api_key`                        | `None`  | API key; loaded from the matching environment variable when omitted. |
 | `api_secret`                     | `None`  | API secret; loaded from the matching environment variable when omitted. |
-| `product_types`                  | `None`  | Sequence of `BybitProductType` values to enable (Spot cannot be mixed with derivatives for execution). |
-| `environment`                    | `None`  | Bybit environment enum. Use `BybitEnvironment.MAINNET`, `BybitEnvironment.DEMO`, or `BybitEnvironment.TESTNET`. |
 | `base_url_http`                  | `None`  | Override for the REST base URL. |
 | `base_url_ws_private`            | `None`  | Override for the private WebSocket base URL. |
 | `base_url_ws_trade`              | `None`  | Override for the trade WebSocket base URL. |
 | `proxy_url`                      | `None`  | Optional proxy URL for HTTP and WebSocket transports. |
-| `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions when `True`. |
-| `auto_repay_spot_borrows`        | `True`  | Automatically repay Spot margin borrows after BUY orders fully fill (Spot only). |
-| `max_retries`                    | `None`  | Maximum retry attempts for order submission/cancel/modify calls. |
-| `retry_delay_initial_ms`         | `None`  | Initial delay (milliseconds) between retries. |
-| `retry_delay_max_ms`             | `None`  | Maximum delay (milliseconds) between retries. |
-| `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST requests. |
-| `heartbeat_interval_secs`         | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
-| `auth_timeout_secs`               | `None`  | Timeout (seconds) waiting for auth WebSocket acknowledgements. |
-| `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings (Rust struct). |
-| `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode (Rust struct). See [Hedge mode](#hedge-mode-bothsides). |
-| `margin_mode`                    | `None`  | Margin mode setting for the account. |
+| `http_timeout_secs`              | `60`    | HTTP request timeout (seconds). |
+| `max_retries`                    | `3`     | Maximum retry attempts for REST requests. |
+| `retry_delay_initial_ms`         | `1,000` | Initial retry delay (milliseconds). |
+| `retry_delay_max_ms`             | `10,000` | Maximum retry delay (milliseconds). |
+| `heartbeat_interval_secs`        | `20`    | WebSocket heartbeat/keepalive interval (seconds). |
+| `auth_timeout_secs`              | `None`  | Optional WebSocket authentication timeout (seconds). |
+| `recv_window_ms`                 | `5,000` | Receive window (milliseconds) for signed REST and trade WebSocket requests. |
+| `account_id`                     | `None`  | Optional account ID associated with this client. |
+| `use_spot_position_reports`      | `False` | Report Spot wallet balances as positions for scoped requests; bulk reports omit Spot (no pair attribution). |
+| `auto_repay_spot_borrows`        | `False` | Automatically repay tracked Spot margin borrows after BUY orders fully fill. |
+| `futures_leverages`              | `None`  | Mapping of `BybitSymbol` to leverage settings. |
+| `position_mode`                  | `None`  | Mapping of `BybitSymbol` to position mode. See [Hedge mode](#hedge-mode-bothsides). |
+| `margin_mode`                    | `None`  | Unified margin mode setting for the account. |
 | `smp_type`                       | `None`  | Self-match prevention type (`BybitOrderSmpType`) sent on every submitted order; the per-order `smp_type` parameter overrides it, and both unset omits the field. See [Self-match prevention (SMP)](#self-match-prevention-smp). |
-| `auto_repay_spot_borrows`         | `None`  | Automatically repay Spot borrow balances. |
-| `account_id`                      | `None`  | Optional account ID for the execution client. |
+| `transport_backend`              | `Sockudo` | WebSocket transport backend. |
 
-NT v2 compatibility note: the v1 `use_gtd`, `use_ws_execution_fast`, `use_http_batch_api`, `repay_queue_interval_secs`, `ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are pinned fields (Bybit has no passphrase field; only OKX uses `api_passphrase`).
+NT v2 compatibility note: the v1 `bars_timestamp_on_close`, `use_gtd`, `use_ws_execution_fast`,
+`use_http_batch_api`, `repay_queue_interval_secs`, `ignore_uncached_instrument_executions`,
+`ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are
+pinned fields (`crates/adapters/bybit/src/config.rs` at pin
+`52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
 
-NT v2 compatibility note: Python live/integration-specific TradingNode; use LiveNode for Rust v2/Rust-backed work.
-
-The most common use case is to register Bybit data and execution clients on a
-live node. Rust-backed Python v2 nodes use `LiveNode.builder(...)` with concrete
-factory instances (the v1 `TradingNodeConfig(data_clients={...})` +
-`node.add_data_client_factory(...)` flow is migration/reference-only):
+Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
+`BybitExecutionClientFactory`. The current Python examples show the complete
+`LiveNode.builder(...)` configuration for data and execution clients (see the shared
+[Live node wiring](index.md#live-node-wiring) pattern):
 
 ```python
 from nautilus_trader.adapters.bybit import BybitDataClientConfig
@@ -860,25 +970,24 @@ from nautilus_trader.adapters.bybit import BybitEnvironment
 from nautilus_trader.adapters.bybit import BybitExecutionClientConfig
 from nautilus_trader.adapters.bybit import BybitExecutionClientFactory
 from nautilus_trader.adapters.bybit import BybitProductType
-from nautilus_trader.live import Environment, LiveNode
+from nautilus_trader.common import Environment
+from nautilus_trader.live import LiveNode
+from nautilus_trader.model import TraderId
+
+trader_id = TraderId("TESTER-001")
 
 data_config = BybitDataClientConfig(
-    api_key="YOUR_BYBIT_API_KEY",
-    api_secret="YOUR_BYBIT_API_SECRET",
-    base_url_http=None,  # Override with custom endpoint
-    environment=BybitEnvironment.MAINNET,
     product_types=[BybitProductType.LINEAR],
+    environment=BybitEnvironment.MAINNET,
 )
+
 exec_config = BybitExecutionClientConfig(
-    api_key="YOUR_BYBIT_API_KEY",
-    api_secret="YOUR_BYBIT_API_SECRET",
-    base_url_http=None,  # Override with custom endpoint
-    environment=BybitEnvironment.MAINNET,
     product_types=[BybitProductType.LINEAR],
+    environment=BybitEnvironment.MAINNET,
 )
 
 node = (
-    LiveNode.builder("BYBIT", trader_id, Environment.LIVE)
+    LiveNode.builder("BYBIT-001", trader_id, Environment.LIVE)
     .add_data_client(None, BybitDataClientFactory(), data_config)
     .add_exec_client(None, BybitExecutionClientFactory(), exec_config)
     .build()

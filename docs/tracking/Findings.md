@@ -6,307 +6,553 @@
 
 Review date: 2026-10-14
 Reviewed upstream develop: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
-Pinned G2 baseline: `81d0449da0e353d702d88019dc73d231d67923cd` (advancing to the reviewed tip in this cycle)
+Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
 
-The review manifest preserves eleven contiguous transitions. The newest transition reviews 292 commits and 1,582 changed paths from the previously reviewed `81d0449da0e353d702d88019dc73d231d67923cd` through current develop `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window releases Python `2.0.0rc7`/workspace `0.66.0`, raises the Rust toolchain to 1.99.0, drops Python 3.12 support (`requires-python >=3.13`), migrates Derive to API v3, ports Interactive Brokers onto ibapi 5.0.0, adds the CoinAPI market-data adapter, migrates Polymarket reference prices to PolyBolt, adds Lighter native contingent orders, standardizes venue book recovery on shared machinery, adds Kraken Spot L2 checksum resynchronization, restructures the execution reconciliation guide, refines the Parquet catalog API and typed configuration, adds calendar timers and local-time bar boundaries, native Greeks/yield-curve recording, option contract identity and chain selection, same-trade fill-price restatements, funding settlement semantics, and parallel `make pytest`; findings NT-2026-10-14-BASE/CORE/DOC/ADP/AUD-1 through 48 were opened and are tracked below.
+The review manifest preserves eleven contiguous transitions. The newest transition reviews 292 commits and 1,578 changed paths from the previously reviewed `81d0449da0e353d702d88019dc73d231d67923cd` through current develop `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window releases Python `2.0.0rc7`/workspace `0.66.0`, raises the Rust toolchain to 1.99.0, drops Python 3.12 support (`requires-python >=3.13`), migrates Derive to API v3, ports Interactive Brokers onto ibapi 5.0.0, adds the CoinAPI market-data adapter, migrates Polymarket reference prices to PolyBolt, adds Lighter native contingent orders, standardizes venue book recovery on shared machinery, adds Kraken Spot L2 checksum resynchronization, restructures the execution reconciliation guide, refines the Parquet catalog API and typed configuration, adds calendar timers and local-time bar boundaries, native Greeks/yield-curve recording, option contract identity and chain selection, same-trade fill-price restatements, funding settlement semantics, and parallel `make pytest`; findings NT-2026-10-14-001 through NT-2026-10-14-058 were opened and are tracked below.
 
 NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and obsolete `references/guides` paths in this whole file are audit evidence, not active guidance; prefer current Rust/PyO3 V2 APIs.
 
 ## Open findings — 2026-10-14 upstream currency cycle
 
-[NT-2026-10-14-BASE-1] [P1] [OPEN] V2 compliance: version-baseline teaching is two release lines stale.
+[NT-2026-10-14-001] [P1] [CLOSED 2026-10-14] V2 compliance: version-baseline teaching is two release lines stale.
   file: skills/nt-dev/references/guides/releases.md:86
-  evidence: upstream `python/pyproject.toml` at reviewed tip `52eef7955c` is `2.0.0rc7` and workspace `Cargo.toml` is `0.66.0`; crates.io `nautilus-common` newest is `0.65.0` (2026-10-05); the taught table still shows `2.0.0rc5`/`0.64.0`/crates.io `0.63.0`, stale even against the previous pin `81d0449da` (`2.0.0rc6`/`0.65.0`).
+  evidence: upstream `python/pyproject.toml` at reviewed tip `52eef7955c` is `2.0.0rc7` and workspace `Cargo.toml` is `0.66.0`; crates.io `nautilus-common` newest is `0.65.0` (2026-10-05); the taught table still shows `2.0.0rc5`/`0.64.0`/crates.io `0.63.0`, stale even against the previous pin `81d0449da0` (`2.0.0rc6`/`0.65.0`).
   fix: refresh the versioning table and pinned-baseline note to `2.0.0rc7`/`0.66.0`/crates.io `0.65.0`; align every quickstart dependency lane to the `0.65` lines at tip.
+  acceptance-test: `python3 -m pytest -q tests/test_v2_inventory_pins_versions.py` green against the moved pin; no `2.0.0rc5` claims remain under `skills/nt-dev`.
   closure: `python3 -m pytest -q tests/test_v2_inventory_pins_versions.py` green against the moved pin; no `2.0.0rc5` claims remain under `skills/nt-dev`.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-001-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-BASE-2] [P1] [OPEN] V2 compliance: advance the upstream pin `81d0449da`→`52eef7955c` and refresh every pin-citing layer.
+[NT-2026-10-14-002] [P1] [CLOSED 2026-10-14] V2 compliance: advance the upstream pin `52eef7955c`→`52eef7955c` and refresh every pin-citing layer.
   file: tools/upstream_baseline.py:3
   evidence: `python3 tools/check_upstream_freshness.py --format json` reports a 292-commit drift to `52eef7955c`; manifest `reviewed_commit` is stale; 22 developer-guide snapshots and toolchain tokens (`rust-toolchain.toml 1.98.1`) differ from tip.
   fix: record the reviewed transition, move `UPSTREAM_COMMIT`, refresh snapshots/README/inline pin citations and toolchain tokens, re-execute durable G2 evidence at the new pin.
+  acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_snapshot_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes.
   closure: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_snapshot_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` passes.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-002-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-1] [P1] [OPEN] V2 compliance: indicator parameter, output-scale, and initialization guidance no longer matches current develop.
+[NT-2026-10-14-003] [P1] [CLOSED 2026-10-14] V2 compliance: indicator parameter, output-scale, and initialization guidance no longer matches current develop.
   file: skills/nt-signals/references/guides/indicators_guide.md:60
   evidence: upstream `477298573` `crates/indicators/src/momentum/rsi.rs` defaults RSI to Wilder smoothing with output on [0, 100] (taught: `ma_type=EXP`, `value` (0-1)); `roc.rs` takes `RateOfChangeMode` (taught: `use_log=False`); `macd.rs` adds `signal_period`, `signal`, `histogram`; `ratio/efficiency_ratio.rs` requires `period` actual changes excluding the synthetic first change (taught "initialized after n inputs").
   fix: add a current-develop overlay for the indicator table and warmup guidance covering the new constructors, defaults, scales, outputs, and initialization counts; keep explicitly pinned claims as historical baseline guidance.
+  acceptance-test: overlay pinned by `tests/test_v2_current_develop_overlays.py`; constructor claims verified against tip source.
   closure: overlay pinned by `tests/test_v2_current_develop_overlays.py`; constructor claims verified against tip source.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-003-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-2] [P2] [OPEN] Gap: teach the newly exported tick-scheme construction and registration surface.
+[NT-2026-10-14-004] [P2] [CLOSED 2026-10-14] Gap: teach the newly exported tick-scheme construction and registration surface.
   file: skills/nt-model/references/api/model/tick_scheme.md:3
-  evidence: upstream `8cb03721a` `crates/model/src/instruments/tick_scheme.rs` adds `FixedTickScheme::new` accepting `Price`, named and tiered schemes, and `register_tick_scheme`/`get_tick_scheme`/`list_tick_schemes`/`unregister_tick_scheme` Python exports.
+  evidence: at tip `52eef7955c`, `crates/model/src/instruments/tick_scheme.rs` and its Python binding export named fixed/tiered schemes and register/get/list operations. Python has no unregister operation; registered names cannot be removed.
   fix: extend the pinned-only page with a version-scoped current-develop section for the flat PyO3 exports, `Price`-based construction, tier validation, and registration; do not restore the removed legacy Python submodule.
+  acceptance-test: overlay present and cited from the model skill; export list verified at tip.
   closure: overlay present and cited from the model skill; export list verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-004-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-3] [P2] [OPEN] Gap: option-chain guidance omits contract-level identity and typed chain selection.
+[NT-2026-10-14-005] [P2] [CLOSED 2026-10-14] Gap: option-chain guidance omits contract-level identity and typed chain selection.
   file: skills/nt-testing/references/guides/spec_data_testing.md:845
-  evidence: upstream `db8f84713` adds `OptionContractId` (`crates/model/src/identifiers/option_contract_id.rs`) and `OptionChainSelection` typed selection policies.
-  fix: extend model guidance and option-chain acceptance cases with `OptionContractId` and `OptionChainSelection`; keep `OptionSeriesId` as the series identifier.
+  evidence: at tip `52eef7955c`, `crates/model/src/identifiers/option_instrument_id.rs` defines `OptionContractSpec`, `OptionSymbologyScheme`, and `OptionInstrumentId`; option-chain selection uses `StrikeRange`. The original review's OptionContractId/OptionChainSelection names were incorrect.
+  fix: extend model guidance and option-chain acceptance cases with the actual contract/symbology/identifier types and StrikeRange; keep OptionSeriesId as the series identifier.
+  acceptance-test: overlay present; types verified at tip.
   closure: overlay present; types verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-005-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-4] [P2] [OPEN] Gap: live timing guidance omits calendar schedules and local-time bar boundaries.
+[NT-2026-10-14-006] [P2] [CLOSED 2026-10-14] Gap: live timing guidance omits calendar schedules and local-time bar boundaries.
   file: skills/nt-live/SKILL.md:342
-  evidence: upstream `0a8a19df8` adds calendar schedules through `TimerInterval`/`CalendarSchedule` (`crates/common/src/clock.rs`) and `DataEngineConfig::time_bars_timezone`.
+  evidence: at tip `52eef7955c`, `crates/common/src/clock/api.rs` and `calendar.rs` provide calendar schedules; the data-engine field is `time_bars_time_zone`, not the original review's time_bars_timezone.
   fix: teach fixed-duration vs calendar timers, timezone selection, DST-sensitive boundaries, and TestClock determinism; note UTC UnixNanos representation is unchanged.
+  acceptance-test: overlay present in live skill; config field verified at tip.
   closure: overlay present in live skill; config field verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-006-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-5] [P2] [OPEN] Gap: catalog guidance omits native Greeks and yield-curve recording.
+[NT-2026-10-14-007] [P2] [CLOSED 2026-10-14] Gap: catalog guidance omits native Greeks and yield-curve recording.
   file: skills/nt-data/references/guides/cache_operations.md:342
   evidence: upstream `aa3a344c1` adds `GreeksData`, `PortfolioGreeks`, `YieldCurveData` record families with catalog paths and streaming promotion.
   fix: add native record-writing, schema, query, and promotion guidance for the three families; keep the legacy opaque-object cache-store removal statement.
+  acceptance-test: overlay present; record types verified at tip.
   closure: overlay present; record types verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-007-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-6] [P2] [OPEN] Gap: backtest guidance lacks the funding settlement event and account-impact contract.
+[NT-2026-10-14-008] [P2] [CLOSED 2026-10-14] Gap: backtest guidance lacks the funding settlement event and account-impact contract.
   file: skills/nt-backtest/SKILL.md:57
-  evidence: upstream `e5cb2eef9` adds `Cache::update_position_from_adjustment` in-place funding adjustments with rollback; `b6f77b47b` aggregates one account-state update per settlement and adds `PositionAdjusted::balance_impact`.
-  fix: add settlement guidance for signed funding PnL, in-place history preservation, rollback, one account-state emission per settlement, and `balance_impact=false` informational adjustments.
+  evidence: at tip `52eef7955c`, `crates/backtest/src/exchange.rs:1270-1570` applies signed funding adjustments and aggregate account settlement gated by frozen_account. PositionAdjusted has no balance_impact field; the original review's field claim was incorrect.
+  fix: add settlement guidance for signed funding PnL, in-place history preservation, rollback, aggregate account settlement, and frozen_account behavior without inventing a balance_impact field.
+  acceptance-test: overlay present; symbols verified at tip.
   closure: overlay present; symbols verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-008-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-7] [P2] [OPEN] Gap: trading guidance omits same-trade fill-price restatements.
+[NT-2026-10-14-009] [P2] [CLOSED 2026-10-14] Gap: trading guidance omits same-trade fill-price restatements.
   file: skills/nt-trading/SKILL.md:306
   evidence: upstream `0c1c99638` `crates/model/src/orders/restatement.rs` adds fill-price restatement support; the execution engine accepts repeated trade identities carrying price corrections without double-counting quantity.
   fix: add an execution/reconciliation contract distinguishing duplicate fills from supported same-trade price restatements.
+  acceptance-test: overlay present; restatement module verified at tip.
   closure: overlay present; restatement module verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-009-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-CORE-8] [P2] [OPEN] Gap: catalog configuration guidance omits typed write controls and strict parameter validation.
+[NT-2026-10-14-010] [P2] [CLOSED 2026-10-14] Gap: catalog configuration guidance omits typed write controls and strict parameter validation.
   file: skills/nt-data/SKILL.md:180
   evidence: upstream `b9b86f4c7` adds typed `batch_size`, `compression`, `max_row_group_size` configuration, catalog parameter validation, and the Python `DataCatalogConfig` typed fields.
   fix: document typed settings for direct writes and streaming promotion, constructor rejection rules, supported codecs, and the lz4/LZ4_RAW mapping.
+  acceptance-test: overlay present; config struct verified at tip.
   closure: overlay present; config struct verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-010-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-1] [P1] [OPEN] Toolchain: current-development guidance still advertises unsupported Python 3.12.
+[NT-2026-10-14-011] [P1] [CLOSED 2026-10-14] Toolchain: current-development guidance still advertises unsupported Python 3.12.
   file: skills/nt-dev/SKILL.md:295
   evidence: upstream `a7a2facd0` `python/pyproject.toml` changes `requires-python` to `>=3.13,<3.15` and removes the 3.12 classifier; taught claim is "Python 3.12-3.14".
   fix: teach Python 3.13-3.14 for current develop; update `skills/nt-dev/references/guides/python_conventions.md:46`; preserve the PEP 695 historical note.
+  acceptance-test: no `3.12-3.14` support claims remain; requires-python claim matches tip.
   closure: no `3.12-3.14` support claims remain; requires-python claim matches tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-011-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-2] [P1] [OPEN] Toolchain: Rust baseline and MSRV guidance remain at 1.98.1.
+[NT-2026-10-14-012] [P1] [CLOSED 2026-10-14] Toolchain: Rust baseline and MSRV guidance remain at 1.98.1.
   file: skills/nt-dev/SKILL.md:296
   evidence: upstream `2adc66f26` `rust-toolchain.toml` moves channel to `1.99.0`; `docs/concepts/rust.md` at tip declares MSRV 1.99.0; `skills/nt-live/references/concepts/rust.md:123` still declares 1.98.1.
   fix: teach Rust 1.99.0 at the moved pin; keep explicitly version-scoped historical statements.
+  acceptance-test: no unscoped `1.98.1` claims remain in current-development guidance; tokens updated in validators and tests.
   closure: no unscoped `1.98.1` claims remain in current-development guidance; tokens updated in validators and tests.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-012-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-3] [P1] [OPEN] Toolchain: v1/v2 benchmark comparison creates the v2 environment with unsupported Python 3.12.
+[NT-2026-10-14-013] [P1] [CLOSED 2026-10-14] Toolchain: v1/v2 benchmark comparison creates the v2 environment with unsupported Python 3.12.
   file: skills/nt-backtest/references/guides/benchmarking.md:210
   evidence: upstream `a7a2facd0` requires Python >=3.13 for v2; the guide runs `uv venv --python /usr/bin/python3.12` for env-v2 and invokes the comparison with `python3.12` (line 223).
   fix: build env-v2 with a supported interpreter and document the comparability effect of separate interpreters.
+  acceptance-test: guide no longer provisions env-v2 with Python 3.12.
   closure: guide no longer provisions env-v2 with Python 3.12.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-013-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-4] [P1] [OPEN] V2 compliance: catalog guidance promises legacy catalogs need no migration.
+[NT-2026-10-14-014] [P1] [CLOSED 2026-10-14] V2 compliance: catalog guidance promises legacy catalogs need no migration.
   file: skills/nt-data/references/concepts/data.md:632
   evidence: upstream `be23ab73b`/`81af97649` MIGRATION_V2.md and `docs/how_to/migrate_parquet_catalog.md` require migrating recognized legacy files before querying with v2 (`nautilus catalog migrate-parquet`, fingerprint validation, backups, duplicate-ID preflight); taught note says automatic raw-value correction "ensures that legacy catalogs continue to work without requiring data migration".
   fix: distinguish raw-value decode correction from schema migration; route v1 catalogs through the documented migration workflow.
+  acceptance-test: local concept text no longer claims migration-free legacy catalog operation; migration workflow referenced.
   closure: local concept text no longer claims migration-free legacy catalog operation; migration workflow referenced.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-014-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-5] [P1] [OPEN] V2 compliance: storage-option teaching omits enforced rejection and translation rules.
+[NT-2026-10-14-015] [P1] [CLOSED 2026-10-14] V2 compliance: storage-option teaching omits enforced rejection and translation rules.
   file: skills/nt-data/references/concepts/data.md:769
   evidence: upstream `65659df52` makes unknown `object_store` option keys fail rather than log-and-ignore and documents `catalog_fs_rust_storage_options` fallback plus `anon`→`skip_signature` translation; `e5456ec9d` rejects remote base paths whose encoding changes.
   fix: teach the object_store key set, unknown-key rejection, fsspec translation, HTTP timeout/connect/proxy options, and remote base-path restrictions.
+  acceptance-test: storage-option table matches the tip contract; rejection rules stated.
   closure: storage-option table matches the tip contract; rejection rules stated.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-015-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-6] [P2] [OPEN] Gap: constructor guidance lacks typed-field and compression-code distinctions.
+[NT-2026-10-14-016] [P2] [CLOSED 2026-10-14] Gap: constructor guidance lacks typed-field and compression-code distinctions.
   file: skills/nt-data/references/concepts/data.md:819
   evidence: upstream `b9b86f4c7`/`94d5c9f8d`/`a6c3246b5` add typed `DataCatalogConfig` fields, reject `params` keys on Parquet, and distinguish codec names (config) from numeric compression codes (`ParquetDataCatalog`).
   fix: extend constructor guidance with both interfaces, valid names/codes, rejection rules, and Python encoding requirements, version-scoped to current develop.
+  acceptance-test: overlay present; codec mapping verified at tip.
   closure: overlay present; codec mapping verified at tip.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-016-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-7] [P1] [OPEN] V2 compliance: float conversion and arithmetic claims omit the high-precision exception.
+[NT-2026-10-14-017] [P1] [CLOSED 2026-10-14] V2 compliance: float conversion and arithmetic claims omit the high-precision exception.
   file: skills/nt-model/references/guides/value_type_patterns.md:443
   evidence: upstream `b4db28392` makes `float()`, `as_double()`, and float-operand arithmetic raise `ValueError` at precision 17 or 18; taught guidance says any float operand yields a float and `as_double()` returns float unconditionally (line 99).
   fix: state the precision ≤16 boundary, recommend `as_decimal()` for exact conversion, and apply the same qualification to `skills/nt-model/references/concepts/value_types.md:111`.
+  acceptance-test: both files carry the precision-boundary qualification.
   closure: both files carry the precision-boundary qualification.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-017-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-8] [P1] [OPEN] V2 compliance: the `allow_overfills=False` rejection table is no longer universally correct.
+[NT-2026-10-14-018] [P1] [CLOSED 2026-10-14] V2 compliance: the `allow_overfills=False` rejection table is no longer universally correct.
   file: skills/nt-trading/references/concepts/execution.md:462
   evidence: upstream `dbe049841` `docs/concepts/execution/index.md` permits a standalone reconciliation fill to raise order quantity when the execution client allows the overfill despite `allow_overfills=False` (already-filled orders, adapter events, bundled reports, and live-manager projected fills excluded).
   fix: qualify the rejection row with the narrow quantity-raise exception and its exclusions.
+  acceptance-test: execution concept carries the qualified contract.
   closure: execution concept carries the qualified contract.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-018-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-9] [P2] [OPEN] Gap: fill-handling guidance lacks same-trade price restatements.
+[NT-2026-10-14-019] [P2] [CLOSED 2026-10-14] Gap: fill-handling guidance lacks same-trade price restatements.
   file: skills/nt-trading/references/concepts/orders.md:46
   evidence: upstream `0c1c99638` order-filled and execution-policies docs define price restatements on reused `trade_id` with different `event_id`; handlers accumulating `last_qty` must skip them.
   fix: add a current-develop restatement caveat with the detection rule.
+  acceptance-test: caveat present in orders concept.
   closure: caveat present in orders concept.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-019-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-10] [P2] [OPEN] Gap: virtual HEDGING guidance lacks retained-history requirements.
+[NT-2026-10-14-020] [P2] [CLOSED 2026-10-14] Gap: virtual HEDGING guidance lacks retained-history requirements.
   file: skills/nt-trading/references/concepts/positions.md:404
   evidence: upstream `c8fb9d139` requires retained order/position history for post-flip fills routing; history survives even with `carry_replay_events_on_reopen=False`.
   fix: add routing and purge caveats beside virtual-ID teaching.
+  acceptance-test: caveat present in positions concept.
   closure: caveat present in positions concept.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-020-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-11] [P2] [OPEN] Gap: shutdown guidance lacks unresolved-submission failure semantics.
+[NT-2026-10-14-021] [P2] [CLOSED 2026-10-14] Gap: shutdown guidance lacks unresolved-submission failure semantics.
   file: skills/nt-live/SKILL.md:300
   evidence: upstream `b54a31146` live docs: unresolved retained submissions at the end of `delay_post_stop` make shutdown report an error listing client order IDs; teardown still completes.
   fix: explain shutdown completion vs submission resolution and the acknowledgement/completion distinction.
+  acceptance-test: live skill carries the semantics.
   closure: live skill carries the semantics.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-021-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-12] [P2] [OPEN] Gap: reconciliation guidance lacks report-evidence and entry-average contracts.
+[NT-2026-10-14-022] [P2] [CLOSED 2026-10-14] Gap: reconciliation guidance lacks report-evidence and entry-average contracts.
   file: skills/nt-live/references/guides/reconciliation.md:27
-  evidence: upstream `246b4a52b` drops mass-status fills without order evidence (venue_position_id/generate_missing_orders exception); `e3a062338` adds `avg_px_open_type`/`avg_px_open_precision` semantics; guide restructured by `1cd7d3663`.
+  evidence: at tip `52eef7955c`, mass-status fills require order evidence; `crates/model/src/reports/position.rs` defines avg_px_open_reconciliation (MATCH/OPENING_ONLY) and avg_px_open_precision. The original review's avg_px_open_type field was incorrect.
   fix: add the version-scoped contracts (OPENING_ONLY, precision allowances, synthetic fill pricing limits) and follow the restructured anchors.
+  acceptance-test: reconciliation guide carries the contracts.
   closure: reconciliation guide carries the contracts.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-022-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-13] [P2] [OPEN] Gap: `make pytest` guidance omits parallel execution and worker controls.
+[NT-2026-10-14-023] [P2] [CLOSED 2026-10-14] Gap: `make pytest` guidance omits parallel execution and worker controls.
   file: skills/nt-testing/references/guides/testing.md:153
   evidence: upstream `a2db48153`/`053d5b439` run `make pytest` under pytest-xdist `-n logical` capped at 32 workers (`PYTEST_XDIST_AUTO_NUM_WORKERS` override), Linux/macOS scope, manual live-node test guidance.
   fix: add parallelism, override, platform scope, and live-node exclusions as current-develop teaching.
+  acceptance-test: testing guide carries the current-develop note.
   closure: testing guide carries the current-develop note.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-023-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-14] [P2] [OPEN] Gap: Rust documentation style lacks the mandatory error/panic lead-ins.
-  file: skills/nt-dev/references/guides/rust_conventions.md
+[NT-2026-10-14-024] [P2] [CLOSED 2026-10-14] Gap: Rust documentation style lacks the mandatory error/panic lead-ins.
+  file: skills/nt-dev/references/guides/rust_conventions.md:1
   evidence: upstream `20616628f` `docs/developer_guide/rust.md` requires "Returns an error if"/"Returns `None` if"/"Panics if" lead-ins with colon-terminated capitalized bullets; nt-implement examples already match, nt-dev conventions do not state the rule.
   fix: add the style rule to nt-dev Rust conventions (snapshot governance handles the canonical layer).
+  acceptance-test: rule present in nt-dev conventions.
   closure: rule present in nt-dev conventions.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-024-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-15] [P2] [OPEN] Governance: developer-guide snapshot drift requires the coordinated baseline advance.
+[NT-2026-10-14-025] [P2] [CLOSED 2026-10-14] Governance: developer-guide snapshot drift requires the coordinated baseline advance.
   file: tools/check_dev_guide_snapshot_sync.py:60
   evidence: 21 top-level snapshots differ from tip `52eef7955c`; the checker compares bodies against `UPSTREAM_COMMIT`.
   fix: refresh snapshot bodies with new frontmatter as part of the pin move; keep current-develop overlays separate where guidance diverges from snapshot text.
+  acceptance-test: `python3 tools/check_dev_guide_snapshot_sync.py` passes at the moved pin.
   closure: `python3 tools/check_dev_guide_snapshot_sync.py` passes at the moved pin.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-025-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-16] [P2] [OPEN] Gap: bar-alignment guidance lacks local-zone and DST behavior.
+[NT-2026-10-14-026] [P2] [CLOSED 2026-10-14] Gap: bar-alignment guidance lacks local-zone and DST behavior.
   file: skills/nt-data/references/concepts/data.md:392
   evidence: upstream `0a8a19df8` adds `time_bars_time_zone`, subscription/request `time_zone` overrides, shared-instance zone consistency, and `set_timer_zoned()`.
   fix: extend time-bar and clock guidance with IANA zones, DST-aware boundaries, override semantics, and shared-instance rejection.
+  acceptance-test: data concepts carry the zoned-time guidance.
   closure: data concepts carry the zoned-time guidance.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-026-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-17] [P2] [OPEN] Gap: instrument guidance omits tick-scheme registration and changed `FixedTickScheme` APIs.
+[NT-2026-10-14-027] [P2] [CLOSED 2026-10-14] Gap: instrument guidance omits tick-scheme registration and changed `FixedTickScheme` APIs.
   file: skills/nt-model/references/concepts/instruments.md:154
   evidence: upstream `8cb03721a` requires registration before loading saved instruments; `FixedTickScheme` removes `min_tick`/`max_tick`/`min_price`/`max_price`, requires a `Price` increment, and navigation can return `None` for unrepresentable precision.
   fix: add the current `tick_scheme` field, registration workflow, and version-scoped v1→v2 constructor/navigation changes.
+  acceptance-test: instruments concept carries the registration workflow.
   closure: instruments concept carries the registration workflow.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-027-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-DOC-18] [P1] [OPEN] V2 compliance: a Python strategy example still uses the pre-change RSI scale.
+[NT-2026-10-14-028] [P1] [CLOSED 2026-10-14] V2 compliance: a Python strategy example still uses the pre-change RSI scale.
   file: skills/nt-signals/references/guides/indicators_guide.md:280
   evidence: upstream `477298573` moves RSI to the conventional 0-100 scale (MIGRATION_V2.md); the taught example compares `self.rsi.value < 0.7`.
   fix: change the threshold to `70.0` for current v2 or label the example v1-only with the v2 threshold alongside.
+  acceptance-test: example threshold matches the v2 scale.
   closure: example threshold matches the v2 scale.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-028-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-1] [P1] [OPEN] V2 compliance: Derive guidance still teaches the pre-v3 wallet, endpoints, authentication and signing model.
+[NT-2026-10-14-029] [P1] [CLOSED 2026-10-14] V2 compliance: Derive guidance still teaches the pre-v3 wallet, endpoints, authentication and signing model.
   file: references/integrations/derive.md:80
   evidence: upstream `b82f3e3c8` moves REST to `api.derive.xyz/v3`/`testnet.api.derive.xyz/v3`, replaces smart-contract-wallet assumptions with EOA/multisig-owned subaccounts, and changes signing, discovery and request budgets.
   fix: add a version-scoped v3 overlay covering endpoints, wallet headers, action signing, instruments, order replacement and rate limits, in both mirrored guides and DEX routing.
+  acceptance-test: overlay present in both mirrors; no unscoped v2 endpoint claims remain.
   closure: overlay present in both mirrors; no unscoped v2 endpoint claims remain.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-029-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-2] [P1] [OPEN] V2 compliance: Derive book synchronization, perpetual position recovery and replacement-chain startup guidance are incomplete.
+[NT-2026-10-14-030] [P1] [CLOSED 2026-10-14] V2 compliance: Derive book synchronization, perpetual position recovery and replacement-chain startup guidance are incomplete.
   file: references/integrations/derive.md:26
   evidence: upstream `b93d5a435` adds synchronized book recovery; `f573eb532` changes perpetual average-price reconciliation (OpeningOnly); `ca478e42f` restores uncached replacement successors at startup with ancestry/completeness requirements.
   fix: document book recovery ownership/settings, OpeningOnly reconciliation, native fill preservation, startup-only chain reconstruction, and restrictions on externally replacing adopted orders.
+  acceptance-test: overlay present; recovery contracts stated.
   closure: overlay present; recovery contracts stated.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-030-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-3] [P1] [OPEN] V2 compliance: Polymarket reference-price guidance remains RTDS-based after the PolyBolt migration.
+[NT-2026-10-14-031] [P1] [CLOSED 2026-10-14] V2 compliance: Polymarket reference-price guidance remains RTDS-based after the PolyBolt migration.
   file: references/integrations/polymarket.md:738
   evidence: upstream `8942e0f69` replaces RTDS with authenticated PolyBolt channels (USD symbols, 60-second TWAP, Decimal values); `9a7245526` changes shutdown and gap recovery.
   fix: replace current-develop RTDS examples with PolyBolt configuration/subscription examples including CLOB L2 credentials, rejected legacy symbols, Decimal conversion, snapshot replay bounds and close-code recovery.
+  acceptance-test: current-develop Polymarket guidance no longer teaches RTDS as current.
   closure: current-develop Polymarket guidance no longer teaches RTDS as current.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-031-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-4] [P1] [OPEN] V2 compliance: Polymarket settlement authority, terminal fills, BUY accounting, GTD and bounded reconciliation guidance have changed.
+[NT-2026-10-14-032] [P1] [CLOSED 2026-10-14] V2 compliance: Polymarket settlement authority, terminal fills, BUY accounting, GTD and bounded reconciliation guidance have changed.
   file: references/integrations/polymarket.md:734
   evidence: upstream `224f599df` changes BUY admission, GTD expiration and idle sockets; `79f011d18`/`dbe049841` establish settlement-report authority and terminal-REST resolution; `28d02fdc6` restores closed-order fills at restart.
   fix: refresh execution sections: provisional vs confirmed fills, quarantine and terminal resolution, settlement-rounded prices, unsettled BUY spend, completeness/missing-order recovery, terminal quantity normalization, replacement promotion.
+  acceptance-test: mirrored execution sections carry the refreshed contracts.
   closure: mirrored execution sections carry the refreshed contracts.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-032-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-5] [P1] [OPEN] V2 compliance: Lighter guidance explicitly excludes native contingent orders that upstream now implements.
+[NT-2026-10-14-033] [P1] [CLOSED 2026-10-14] V2 compliance: Lighter guidance explicitly excludes native contingent orders that upstream now implements.
   file: references/integrations/lighter.md:79
   evidence: upstream `6b627fa4f` adds native OTO/OCO/OTOCO contingent groups ("Native OTO, OCO, and OTOCO groups require the shapes described under Contingent orders"); taught guide says grouped order lists, OCO/OTO groups and bracket orders "are not implemented"; `821350a87` adds native transaction batching.
   fix: replace the obsolete exclusions with the supported native contingent-order contract and its constraints; refresh batch limits, cancellation outcomes, replacement recovery and integrator-tier behavior.
+  acceptance-test: limitations section matches the tip contract.
   closure: limitations section matches the tip contract.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-033-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-6] [P1] [OPEN] V2 compliance: Kraken guidance lacks L2 checksum recovery and changed report semantics.
+[NT-2026-10-14-034] [P1] [CLOSED 2026-10-14] V2 compliance: Kraken guidance lacks L2 checksum recovery and changed report semantics.
   file: references/integrations/kraken.md:248
   evidence: upstream `00b0172ee` adds Spot L2 CRC32 validation and mismatch resynchronization; `4684295ea` adds one-page futures order-event history with explicit incomplete-coverage behavior; currency normalization (`67c126e9c`) and margin documentation changed.
   fix: add the L2 checksum option separately from L3; refresh currency normalization, source-scoped coverage, spot-margin entry averages, futures history limits and terminal-order pricing.
+  acceptance-test: Kraken mirror carries the checksum and history contracts.
   closure: Kraken mirror carries the checksum and history contracts.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-034-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-7] [P1] [OPEN] V2 compliance: Hyperliquid guidance predates shared book recovery and revised execution/reconciliation behavior.
+[NT-2026-10-14-035] [P1] [CLOSED 2026-10-14] V2 compliance: Hyperliquid guidance predates shared book recovery and revised execution/reconciliation behavior.
   file: references/integrations/hyperliquid.md:354
   evidence: upstream `d02fab786` standardizes L2 recovery on shared machinery; `6ae558b7e` recovers disconnected fills and updates; `ed845d5db` clarifies replacement rules; unified balances (`91853c3c3`), reduce-only clamping (`b0a986861`), settled HIP-4 lookup (`ab8e1c8fc`).
   fix: refresh snapshot/recovery settings and ownership, disconnected fill recovery, reduce-only quantities, replacement closure, unified balances and settled HIP-4 outcome lookup; correct the all-DEX configuration example (`c0e1c93ed`).
+  acceptance-test: Hyperliquid mirror carries the refreshed contracts.
   closure: Hyperliquid mirror carries the refreshed contracts.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-035-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-8] [P2] [OPEN] Gap: Bybit guides omit public liquidation custom data, configurable bar timestamps and shared book recovery.
+[NT-2026-10-14-036] [P2] [CLOSED 2026-10-14] Gap: Bybit guides omit public liquidation custom data, configurable bar timestamps and shared book recovery.
   file: references/integrations/bybit.md:23
   evidence: upstream `89455cf65` adds `BybitLiquidation` custom data; `e7d4a4351` adds `bars_timestamp_on_close` (default true); `eed485ced` adds shared recovery and sequence validation.
   fix: add liquidation types and linear/inverse constraints, both bar timestamp modes with the close default, and recovery settings/ownership.
+  acceptance-test: Bybit mirror carries the additions.
   closure: Bybit mirror carries the additions.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-036-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-9] [P1] [OPEN] V2 compliance: blockchain guidance predates required retention of submitted swaps while awaiting finality.
-  file: references/integrations/blockchain.md:182
+[NT-2026-10-14-037] [P1] [CLOSED 2026-10-14] V2 compliance: blockchain guidance predates required retention of submitted swaps while awaiting finality.
+  file: references/integrations/blockchain.md:1
   evidence: upstream `bf378d671` replaces advice to disable in-flight checks with retention of unresolved submissions after retries exhaust; `69fae6c5b` changes pool base/quote orientation, accounting and chain-ID handling; `286391344` changes shared DeFi subscription-demand ownership.
   fix: teach submission retention and finality-driven fill/revert resolution; refresh pool orientation, accounting and shared subscription demand.
+  acceptance-test: blockchain mirror carries the retention contract.
   closure: blockchain mirror carries the retention contract.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-037-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-10] [P2] [OPEN] Gap: Architect AX guidance predates shared book recovery, account-specific fee resolution and clarified retries.
+[NT-2026-10-14-038] [P2] [CLOSED 2026-10-14] Gap: Architect AX guidance predates shared book recovery, account-specific fee resolution and clarified retries.
   file: references/integrations/architect_ax.md:22
   evidence: upstream `dd1e30cd6` introduces shared book recovery; `52b6b2427` resolves authenticated fee rates via GET /whoami; `8fd065ff7` clarifies retry limits and cancel handling.
   fix: mirror recovery ownership/configuration, account-rate lookup, streaming commissions, retry limits, cancellation rules, and dated-futures coverage.
+  acceptance-test: AX mirror carries the additions.
   closure: AX mirror carries the additions.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-038-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-11] [P2] [OPEN] Gap: Betfair routing lacks the current-develop overlay for recovery, void and price-restatement contracts.
-  file: references/integrations/betfair_v2.md:7
+[NT-2026-10-14-039] [P2] [CLOSED 2026-10-14] Gap: Betfair routing lacks the current-develop overlay for recovery, void and price-restatement contracts.
+  file: references/integrations/betfair_v2.md:1
   evidence: upstream `3c5d34cfb` standardizes shared book recovery; `b350d73f3` changes voided-quantity handling; `0c1c99638` adds same-trade price restatements; `68119bfb0`/`563972c83` change open-only discovery and report task outcomes.
   fix: add a reviewed current-develop overlay to `betfair_v2.md` for recovery ownership, report task outcomes, open-only discovery, non-reopened voids and Rule 4 price restatements.
+  acceptance-test: betfair_v2 overlay records the reviewed commits.
   closure: betfair_v2 overlay records the reviewed commits.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-039-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-12] [P2] [OPEN] Gap: Databento mirrors omit live bars, depth and custom subscriptions and revised historical precision resolution.
+[NT-2026-10-14-040] [P2] [CLOSED 2026-10-14] Gap: Databento mirrors omit live bars, depth and custom subscriptions and revised historical precision resolution.
   file: references/integrations/databento.md:17
   evidence: upstream `07eea87f9`/`131ddca91` add live subscription capabilities; `f7c4f417f` seeds historical precision from definitions beginning at UTC midnight on the request start date.
   fix: mirror supported live subscriptions and constraints, definition lookup boundaries and unresolved-precision errors.
+  acceptance-test: Databento mirror carries the additions.
   closure: Databento mirror carries the additions.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-040-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-13] [P2] [OPEN] Gap: Tardis CSV guidance omits skipping orphan rows before the first snapshot.
+[NT-2026-10-14-041] [P2] [CLOSED 2026-10-14] Gap: Tardis CSV guidance omits skipping orphan rows before the first snapshot.
   file: references/integrations/tardis.md:5
   evidence: upstream `9deaeeaa2` delta loaders and streamers skip pre-snapshot rows, affecting trimmed and split CSV files.
   fix: document the per-file initial-snapshot requirement and skipped-prefix behavior.
+  acceptance-test: Tardis mirror carries the requirement.
   closure: Tardis mirror carries the requirement.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-041-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-14] [P2] [OPEN] Gap: CoinAPI is missing from the mirrored integration inventory.
+[NT-2026-10-14-042] [P2] [CLOSED 2026-10-14] Gap: CoinAPI is missing from the mirrored integration inventory.
   file: references/integrations/index.md:10
   evidence: upstream `5b0b0216f` introduces an official CoinAPI market-data adapter and integration guide; `76eb062cd`/`a165d86ac` revise the index (planned Kalshi, FinFeed naming, product listings).
   fix: add the CoinAPI guide entry and supported-capability row to both mirror inventories and adapter routing; update planned listings.
+  acceptance-test: both inventories list CoinAPI.
   closure: both inventories list CoinAPI.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-042-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-15] [P2] [OPEN] Gap: IB guidance lacks the ibapi 5.0.0 migration and order-ID safety contract.
+[NT-2026-10-14-043] [P2] [CLOSED 2026-10-14] Gap: IB guidance lacks the ibapi 5.0.0 migration and order-ID safety contract.
   file: references/integrations/ib.md:73
   evidence: upstream `f81f95177` ports the adapter to ibapi 5.0.0; `3a8e04289`/`ddeba5354` reject order-ID starts below used IDs or above the client partition; `db8f84713` adds option contract IDs and chain enumeration.
   fix: add a version-scoped dependency/API migration note and the order-ID partition failure behavior and option-chain capabilities.
+  acceptance-test: IB mirror carries the migration note.
   closure: IB mirror carries the migration note.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-043-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-16] [P2] [OPEN] Gap: OKX guidance predates port-443 defaults and changed reporting/fee interfaces.
+[NT-2026-10-14-044] [P2] [CLOSED 2026-10-14] Gap: OKX guidance predates port-443 defaults and changed reporting/fee interfaces.
   file: references/integrations/okx.md:40
   evidence: upstream `1570810fe` moves production/AWS/demo/EEA WebSocket defaults to port 443; `68bcd4bc6` exposes scoped fee queries and fee groups.
   fix: document the new defaults, explicit URL overrides, scoped fee-query examples, open-only reporting and conditional-amendment behavior.
+  acceptance-test: OKX mirror carries the new defaults.
   closure: OKX mirror carries the new defaults.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-044-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-ADP-17] [P2] [OPEN] Gap: Binance custom-data examples require current subscription syntax.
+[NT-2026-10-14-045] [P2] [CLOSED 2026-10-14] Gap: Binance custom-data examples require current subscription syntax.
   file: references/integrations/binance.md:5
   evidence: upstream `0600c86b2` corrects custom-data subscription examples (Binance and Hyperliquid).
   fix: mirror the corrected custom-data examples in both mirrors and skill-local copies.
+  acceptance-test: examples match the tip syntax.
   closure: examples match the tip syntax.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-045-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-AUD-1] [P1] [OPEN] V2 compliance: Rust strategy trait sketch teaches a removed external-order hook.
+[NT-2026-10-14-046] [P1] [CLOSED 2026-10-14] V2 compliance: Rust strategy trait sketch teaches a removed external-order hook.
   file: skills/nt-strategy-builder-rust/SKILL.md:104
   evidence: pinned `crates/trading/src/strategy/mod.rs` declares `fn external_order_instrument_ids(&self) -> Option<Vec<InstrumentId>>`; the sketch teaches `external_order_claims`; `skills/nt-trading/SKILL.md:126` already teaches the rename (cross-skill contradiction).
   fix: replace `external_order_claims` with `external_order_instrument_ids` in the trait sketch; distinguish it from `set_external_order_instrument_ids`.
+  acceptance-test: trait sketch matches the pinned trait; no `external_order_claims` declarations remain in current guidance.
   closure: trait sketch matches the pinned trait; no `external_order_claims` declarations remain in current guidance.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-046-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-AUD-2] [P1] [OPEN] V2 compliance: blanket callback error-handling guidance contradicts Rust execution-event signatures.
+[NT-2026-10-14-047] [P1] [CLOSED 2026-10-14] V2 compliance: blanket callback error-handling guidance contradicts Rust execution-event signatures.
   file: skills/nt-strategy-builder-rust/SKILL.md:263
   evidence: pinned execution callbacks (`on_order_filled`, `on_order_canceled`) return unit; DataActor callbacks (`on_quote`) return `anyhow::Result<()>` (`crates/common/src/actor/data_actor.rs`).
   fix: scope the Result-returning guidance to DataActor callbacks; state that execution-event callbacks return unit.
+  acceptance-test: guidance states the split explicitly.
   closure: guidance states the split explicitly.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-047-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-AUD-3] [P1] [OPEN] V2 compliance: signals guidance claims statistic registration through a read-only strategy API.
+[NT-2026-10-14-048] [P1] [CLOSED 2026-10-14] V2 compliance: signals guidance claims statistic registration through a read-only strategy API.
   file: skills/nt-signals/SKILL.md:196
   evidence: pinned `PortfolioApi` is documented "User-facing portfolio read API" with no `register_statistic`; `Portfolio::register_statistic` owns registration (`crates/portfolio/src/portfolio.rs`).
   fix: remove the PortfolioApi registration claim; teach registration on the owning Portfolio during node or backtest setup.
+  acceptance-test: claim removed; registration taught on Portfolio.
   closure: claim removed; registration taught on Portfolio.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-048-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
-[NT-2026-10-14-AUD-4] [P1] [OPEN] V2 compliance: catalog guidance identifies the wrong replay ordering timestamp.
+[NT-2026-10-14-049] [P1] [CLOSED 2026-10-14] V2 compliance: catalog guidance identifies the wrong replay ordering timestamp.
   file: skills/nt-data/SKILL.md:155
   evidence: pinned typed queries `sort_by_key(HasTsInit::ts_init)` and SQL `ORDER BY ts_init`; taught claim is "sorted by ts_event".
   fix: state ordering by `ts_init` and distinguish event time from replay time.
+  acceptance-test: ordering claim corrected.
   closure: ordering claim corrected.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-049-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-050] [P1] [CLOSED 2026-10-14] V2 compliance: the removed-symbol lint rejects the restored Derive V3 configuration export.
+  file: tools/check_legacy_labelling.py:44
+  evidence: upstream `52eef7955c` `python/nautilus_trader/adapters/derive/__init__.py:27` exports DeriveDataClientConfig. The focused behavioral regression failed with unlabelled removed-v2-symbol guidance before correction, then all 33 legacy-labelling tests passed after removing that current export from the removed-symbol pattern.
+  fix: retain rejection of genuinely removed symbols while accepting current Derive V3 config exports.
+  acceptance-test: python3 -m pytest -q tests/test_legacy_labelling.py and python3 tools/check_legacy_labelling.py both exit 0.
+  closure: python3 -m pytest -q tests/test_legacy_labelling.py and python3 tools/check_legacy_labelling.py both exit 0.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-050-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-051] [P1] [CLOSED 2026-10-14] V2 compliance: the Price property-test example unwraps an infallible constructor and generates out-of-range inputs.
+  file: skills/nt-testing/SKILL.md:289
+  evidence: upstream `52eef7955c` `crates/model/src/types/price.rs:225` declares Price::new returning Self, while the example calls unwrap on it and accepts unbounded positive floats.
+  fix: call Price::new directly and bound the generator to representable finite values.
+  acceptance-test: compile the corrected proptest example against the pinned model crate.
+  closure: compile the corrected proptest example against the pinned model crate.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-051-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-052] [P1] [CLOSED 2026-10-14] V2 compliance: the PyO3 getter duplicates the inherent Rust value method.
+  file: skills/nt-implement/SKILL.md:356
+  evidence: upstream `52eef7955c` `crates/indicators/src/python/average/ema.rs:73-76` uses a distinct py_value method with pyo3(name = "value"); the local example defined another value method.
+  fix: name the binding method py_value while explicitly exposing the Python value property.
+  acceptance-test: verify the binding follows the pinned getter pattern and existing schema/template tests pass.
+  closure: verify the binding follows the pinned getter pattern and existing schema/template tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-052-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-053] [P1] [CLOSED 2026-10-14] V2 compliance: the custom fill-model example omits its Instrument trait import.
+  file: skills/nt-backtest/SKILL.md:374
+  evidence: at upstream `52eef7955c`, id and size_precision are Instrument trait methods; the example imported only InstrumentAny before invoking them.
+  fix: import both Instrument and InstrumentAny.
+  acceptance-test: compile the corrected fill-model example against pinned model/execution crates.
+  closure: compile the corrected fill-model example against pinned model/execution crates.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-053-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-054] [P1] [CLOSED 2026-10-14] V2 compliance: the wrangler constructor rule incorrectly covers BarDataWrangler.
+  file: skills/nt-data/SKILL.md:167
+  evidence: upstream `52eef7955c` `python/nautilus_trader/persistence/__init__.pyi:33-34` declares BarDataWrangler(bar_type, price_precision, size_precision), not instrument_id.
+  fix: distinguish the bar_type constructor from quote/trade/book instrument_id constructors.
+  acceptance-test: exercise BarDataWrangler constructor with the pinned built PyO3 runtime.
+  closure: exercise BarDataWrangler constructor with the pinned built PyO3 runtime.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-054-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-055] [P1] [CLOSED 2026-10-14] V2 compliance: adapter guidance denies the supported out-of-tree Python factory boundary.
+  file: skills/nt-adapters/SKILL.md:86
+  evidence: upstream `52eef7955c` docs/developer_guide/python_adapters.md supports external factories and client subclasses in nautilus_trader.live.clients.
+  fix: document the bounded external factory/client interface while retaining the Rust production default.
+  acceptance-test: verify factory classes in the built runtime and developer-guide sync passes.
+  closure: verify factory classes in the built runtime and developer-guide sync passes.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-055-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-056] [P0] [CLOSED 2026-10-14] Rust conversion: the active adapter implementation sequence requires Python data and execution clients.
+  file: skills/nt-adapters/references/guides/official_adapter_spec.md:139
+  evidence: at upstream `52eef7955c`, Rust client traits and factories own production adapters; the active local Rust sequence still required LiveDataClient/LiveExecutionClient implementation in Python.
+  fix: use Rust data/execution client traits and factories, with bounded PyO3 configuration where required.
+  acceptance-test: inspect the phase sequence against pinned Rust client traits and existing adapter-routing tests pass.
+  closure: inspect the phase sequence against pinned Rust client traits and existing adapter-routing tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-056-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-057] [P1] [CLOSED 2026-10-14] V2 compliance: learning guidance points to removed BitMEX node testers.
+  file: skills/nt-learn/curriculum/11-testing-quality.md:27
+  evidence: audit retraction — the listed BitMEX tester mirrors do exist in this repository (skills/nt-adapters/references/examples/rust_adapters/bitmex/node_{data,exec}_tester.rs); the initial derive-replacement premise was false.
+  fix: keep the BitMEX tester references (paths resolve); record the audit retraction.
+  acceptance-test: both referenced files exist and curriculum/link checks pass.
+  closure: both referenced files exist and curriculum/link checks pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-057-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-058] [P1] [CLOSED 2026-10-14] V2 compliance: fixed-point guidance describes Quantity backing as signed.
+  file: skills/nt-model/SKILL.md:217
+  evidence: upstream `52eef7955c` `crates/model/src/types/quantity.rs:92,95` defines QuantityRaw as u64/u128; Price and Money use signed backing.
+  fix: state the signed Price/Money and unsigned Quantity distinction in both precision modes.
+  acceptance-test: inspect aliases at the pin and model/precision checks pass.
+  closure: inspect aliases at the pin and model/precision checks pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-058-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-059] [P1] [CLOSED 2026-10-14] V2 compliance: indicator registration uses the wrong Rust receiver and excludes supported manual updates.
+  file: skills/nt-signals/SKILL.md:248
+  evidence: upstream `52eef7955c` `crates/common/src/actor/data_actor.rs:4071,4091` defines registration on DataActorCore, not the DataActor facade; explicit indicator updates remain supported outside automatic registration.
+  fix: name the owning core receiver and avoid double updates only for automatically registered indicators.
+  acceptance-test: inspect registration signatures at the pin and existing signal/schema tests pass.
+  closure: inspect registration signatures at the pin and existing signal/schema tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-059-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
+
+[NT-2026-10-14-060] [P1] [CLOSED 2026-10-14] V2 compliance: migration routing directs historical backtests to LiveNode.
+  file: skills/nt-strategy-builder/SKILL.md:127
+  evidence: upstream `52eef7955c` historical execution uses BacktestEngine/BacktestNode, while LiveNode owns paper/live execution; the directive incorrectly grouped every mode under LiveNode.
+  fix: route historical Rust work through nt-backtest and paper/live work through nt-live.
+  acceptance-test: existing runtime-routing and strategy-scope tests pass.
+  closure: existing runtime-routing and strategy-scope tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-hardening-20261014/nt-2026-10-14-060-phase-3-specific.json independently verifies the correction against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+  correction: 2026-10-14 — source-aligned correction verified against the pinned upstream; implementation provenance is documented by the mission manifest and fresh phase-3 receipts.
 
 ## Open findings — 2026-09-19 upstream currency cycle
 

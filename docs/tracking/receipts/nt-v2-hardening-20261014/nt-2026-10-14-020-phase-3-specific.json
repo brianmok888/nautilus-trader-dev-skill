@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-020-phase-3-specific",
+  "finding_id": "NT-2026-10-14-020",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "95c156acb6802be2764302fb1bc1c5c747bb4b075a748e9d0efd93a2eb8763b8",
+  "output_excerpt": "Precision 17/18 float-conversion ValueError boundary documented from pinned value_types docs in both model files; overlay suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

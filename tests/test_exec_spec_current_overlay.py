@@ -6,7 +6,7 @@ from tools.upstream_baseline import UPSTREAM_COMMIT
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATH = REPO_ROOT / "skills/nt-testing/SKILL.md"
 PINNED_SPEC_PATH = REPO_ROOT / "references/developer_guide/spec_exec_testing.md"
-PINNED_SPEC_SHA256 = "8a1bd2e9852940bf32620267ea83878b9dd4f72f9c6a021bdc69e87d09444a29"
+PINNED_SPEC_SHA256 = "c1a9137752255f0c9e23b78c19e64df0edba31348f8ade9bb5644320768112c0"
 
 
 def read(path: Path) -> str:

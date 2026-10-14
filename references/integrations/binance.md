@@ -1,5 +1,184 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/binance.md:907-1076`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Binance specific data
+
+Bars, mark prices, index prices, and funding rates are subscribed to in the normal way. The custom
+data types below expose additional venue-specific fields that the core data types do not carry.
+
+Binance Futures mark-price payloads preserve the venue `P` estimated settlement price in
+`BinanceFuturesMarkPriceUpdate`. Nautilus also emits standard mark-price, index-price, and
+funding-rate updates from the same stream. The optional USD-M `ap` moving-average field is
+parsed at the transport boundary but is not exposed as domain or custom data.
+
+### `BinanceSpotTicker`
+
+Spot 24-hour ticker custom data requires public JSON market-data mode and an
+`instrument_id` metadata value:
+
+```python
+from nautilus_trader.adapters.binance import BinanceSpotTicker
+from nautilus_trader.model import ClientId
+from nautilus_trader.model import DataType
+
+self.subscribe_data(
+    data_type=DataType(
+        BinanceSpotTicker.__name__,
+        metadata={"instrument_id": "BTCUSDT.BINANCE"},
+    ),
+    client_id=ClientId.from_str("BINANCE"),
+)
+```
+
+The adapter subscribes to the instrument `@ticker` stream. SBE mode rejects this
+subscription because Binance Spot SBE does not provide the stream.
+
+### `BinanceFuturesTicker`
+
+Subscribe to 24-hour ticker statistics for a specific Futures instrument:
+
+```python
+from nautilus_trader.adapters.binance import BinanceFuturesTicker
+from nautilus_trader.model import ClientId
+from nautilus_trader.model import DataType
+
+client_id = ClientId.from_str("BINANCE")
+
+self.subscribe_data(
+    data_type=DataType(
+        BinanceFuturesTicker.__name__,
+        metadata={"instrument_id": "BTCUSDT-PERP.BINANCE"},
+    ),
+    client_id=client_id,
+)
+```
+
+The adapter subscribes to the instrument `@ticker` stream and emits `BinanceFuturesTicker` custom data with
+`metadata={"instrument_id": "<instrument_id>"}`. Ticker custom data requires `instrument_id`. All-market
+ticker subscriptions are not supported.
+
+### `BinanceFuturesMarkPriceUpdate`
+
+Subscribe to `BinanceFuturesMarkPriceUpdate` (including funding rate info)
+from your actor or strategy:
+
+```python
+from nautilus_trader.adapters.binance import BinanceFuturesMarkPriceUpdate
+from nautilus_trader.model import DataType
+from nautilus_trader.model import ClientId
+
+# In your `on_start` method
+self.subscribe_data(
+    data_type=DataType(
+        BinanceFuturesMarkPriceUpdate.__name__,
+        metadata={"instrument_id": str(self.instrument.id)},
+    ),
+    client_id=ClientId("BINANCE"),
+)
+```
+
+Received `BinanceFuturesMarkPriceUpdate` objects are passed to your `on_data`
+method wrapped in `CustomData`. Unwrap the payload with `data.data` and check its
+type, as this method handles all custom/generic data.
+
+```python
+from nautilus_trader.adapters.binance import BinanceFuturesMarkPriceUpdate
+from nautilus_trader.model import CustomData
+
+
+def on_data(self, data: CustomData) -> None:
+    # Unwrap the payload, then check its type
+    payload = data.data
+    if isinstance(payload, BinanceFuturesMarkPriceUpdate):
+        self.log.info(
+            f"{payload.instrument_id} mark_price={payload.mark_price} "
+            f"funding_rate={payload.funding_rate}",
+        )
+```
+
+### `BinanceFuturesLiquidation`
+
+Subscribe to liquidation updates for either:
+
+- a specific instrument (`<symbol>@forceOrder`), or
+- all symbols (`!forceOrder@arr`) by omitting `instrument_id`.
+
+```python
+from nautilus_trader.adapters.binance import BinanceFuturesLiquidation
+from nautilus_trader.model import ClientId
+from nautilus_trader.model import DataType
+
+client_id = ClientId.from_str("BINANCE")
+
+# Instrument-specific
+self.subscribe_data(
+    data_type=DataType(
+        BinanceFuturesLiquidation.__name__,
+        metadata={"instrument_id": "BTCUSDT-PERP.BINANCE"},
+    ),
+    client_id=client_id,
+)
+
+# All-market (no instrument_id metadata)
+self.subscribe_data(
+    data_type=DataType(BinanceFuturesLiquidation.__name__),
+    client_id=client_id,
+)
+```
+
+For instrument-specific subscriptions, `CustomData.data_type` includes
+`metadata={"instrument_id": "<instrument_id>"}`. For all-market subscriptions,
+the data type has no metadata.
+
+When both modes are subscribed concurrently, all-market takes precedence. The
+adapter suspends per-symbol liquidation streams while all-market is active, and
+restores active per-symbol streams after all-market is unsubscribed.
+
+### Futures open interest
+
+Open interest is request-only. The Futures data client has no open interest subscription. Both types require
+`instrument_id` metadata, and `BinanceFuturesOpenInterestHist` also requires a Binance `period` string such as
+`"5m"`:
+
+```python
+from nautilus_trader.adapters.binance import BinanceFuturesOpenInterest
+from nautilus_trader.adapters.binance import BinanceFuturesOpenInterestHist
+from nautilus_trader.model import ClientId
+from nautilus_trader.model import DataType
+
+client_id = ClientId.from_str("BINANCE")
+
+# Current open interest snapshot
+self.request_data(
+    data_type=DataType(
+        BinanceFuturesOpenInterest.__name__,
+        metadata={"instrument_id": "BTCUSDT-PERP.BINANCE"},
+    ),
+    client_id=client_id,
+)
+
+# Historical open interest series
+self.request_data(
+    data_type=DataType(
+        BinanceFuturesOpenInterestHist.__name__,
+        metadata={"instrument_id": "BTCUSDT-PERP.BINANCE", "period": "5m"},
+    ),
+    client_id=client_id,
+)
+```
+
+`BinanceFuturesOpenInterestHist` returns a batch of points, each carrying the summed open interest
+and its notional value for one bucket. COIN-M history is keyed by pair and contract type, which
+the adapter derives from the symbol for perpetuals and from the cached instrument definition for
+delivery contracts.
+
+## Historical reference (superseded where noted above)
+
 # Binance
 
 Founded in 2017, Binance is one of the largest cryptocurrency exchanges in terms
@@ -138,7 +317,7 @@ the Binance Futures `BTCUSDT` perpetual contract becomes `BTCUSDT-PERP`
 within Nautilus.
 
 ## Order capability
-RPI (retail price improvement) order support is available on Binance Futures at the pinned baseline (`81d0449da0`, upstream `f05a1bee63`); check the pinned `docs/integrations/binance.md` for eligibility rules and examples before configuring RPI orders.
+RPI (retail price improvement) order support is available on Binance Futures at the pinned baseline (`52eef7955cb`, upstream `f05a1bee63`); check the pinned `docs/integrations/binance.md` for eligibility rules and examples before configuring RPI orders.
 
 The following tables detail order types, execution instructions, and
 time-in-force options across Binance account types.

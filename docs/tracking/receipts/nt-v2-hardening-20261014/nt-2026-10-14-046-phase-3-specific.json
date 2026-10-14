@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-hardening-20261014",
+  "receipt": "nt-2026-10-14-046-phase-3-specific",
+  "finding_id": "NT-2026-10-14-046",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "python3 -m pytest -q tests/test_v2_current_develop_overlays.py",
+  "exit_code": 0,
+  "output_sha256": "c0b69dd8dfda9e3dd20d6c6d8472dfcc1a3aff67c37108669a95ad260a912c23",
+  "output_excerpt": "Python 3.13-3.14 current support and Rust 1.99.0 taught with upstream commit citations; benchmarking env-v2 no longer provisions Python 3.12; suite green.",
+  "redactions": [],
+  "recorded_at": "2026-10-14T10:12:00Z"
+}

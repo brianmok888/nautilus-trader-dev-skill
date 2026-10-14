@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "10b653235342edb4350c9f254c4c4e2ae3b15e02f19b1c16bcd7853c48452f1d",
+  "owned_content_sha256": "679e3f8cd6704866b3450fed5b5d474ea0ad562308ef3199bc94780e569bbdfd",
   "schema_version": 2,
   "scope": "upstream:crates/adapters/sandbox-and-bybit-examples",
   "skill": "nt-adapters",
@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.668491,
+      "duration_seconds": 0.524596,
       "returncode": 0
     },
     {
@@ -28,11 +28,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.75277,
+      "duration_seconds": 0.797076,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "81d0449da0e353d702d88019dc73d231d67923cd",
-  "verified_at": "2026-09-30T11:25:54.941203+00:00"
+  "upstream_commit": "52eef7955cbdb8d95667c838c3e43907e0da8e9a",
+  "verified_at": "2026-10-14T14:25:05.162344+00:00"
 }

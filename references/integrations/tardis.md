@@ -1,5 +1,36 @@
 NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
 
+## Reviewed current-develop overlay (2026-10-14)
+
+Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+`docs/integrations/tardis.md:493-514`.
+The reviewed sections below supersede conflicting historical guidance at this pin.
+
+## Loading Tardis CSV data
+
+Tardis-format CSV data can be loaded using either Python or Rust. The loader reads the CSV text data
+from disk and parses it into Nautilus data. Both interfaces call the same Rust loader.
+
+You can also specify a `limit` parameter for the `load_*` functions to control the maximum number
+of rows loaded.
+
+The delta loaders and streamers skip any rows before the first snapshot row in the file, per the
+[Tardis FAQ](https://docs.tardis.dev/faq/order-books). A CSV that has been trimmed or split so it
+no longer starts with a snapshot row will produce zero deltas.
+
+:::note
+Loading mixed-instrument CSV files is challenging due to precision requirements and is not
+recommended. Use single-instrument CSV files instead.
+
+The `load_tardis_options_chain`, `stream_tardis_options_chain`, and
+`convert_tardis_options_chain_csv` functions are the exception: Tardis `options_chain` files are
+mixed-instrument chain files, and these paths track precision per instrument. Explicit precisions
+are still recommended for deterministic output.
+:::
+
+
+## Historical reference (superseded where noted above)
+
 # Tardis
 
 Tardis provides granular data for cryptocurrency markets including tick-by-tick order book snapshots & updates,

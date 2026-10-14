@@ -1,5 +1,29 @@
 # Orders
 
+## Fill corrections at reviewed tip `52eef7955c`
+
+`allow_overfills=false` rejects ordinary overfills, but not a reconciliation
+fill on a FILLED order when there are no recorded fills and the candidate
+quantity is <= the order quantity. That narrow missing-history exception
+must not authorize general overfills.
+
+On the core engine stream, an OrderFilled with a recorded trade ID and new
+price restates order avg_px without adding quantity or changing status. It must
+match the original instrument, side, order type and quantity; commissions may
+differ but are not reapplied as a cash fill. The engine updates an eligible
+open position only when that trade belongs to its entry side/current cycle.
+It skips account balance, commission and cash-fill updates, emits a
+PositionChanged event for the changed position, and the portfolio subscriber
+recalculates cached PnL from the updated position. Open cost basis and unrealized
+PnL can therefore change; this is not a fresh realized cash settlement.
+
+Reconciliation FillReports are different: an already recorded trade ID is
+dropped regardless of changed price/quantity. Do not infer a same-trade
+restatement from a reconciliation report or order-status avg_px. Sources:
+upstream `docs/concepts/execution/index.md`,
+`crates/execution/src/engine/mod.rs`, `crates/model/src/orders/mod.rs`,
+`crates/model/src/position.rs` and `crates/portfolio/src/portfolio.rs`.
+
 > **NT v2 compatibility note:** Python examples in this file are retained pre-V2 migration/reference-only content (whole file); current V2 APIs are the flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces documented in the pinned upstream docs.
 
 This guide provides further details about the available order types for the platform, along with
@@ -579,7 +603,7 @@ These contingency types relate to ContingencyType FIX tag <1385> <https://www.on
 ### Strategy-managed contingencies
 
 Upstream commit
-[`81d0449da0e353d702d88019dc73d231d67923cd`](https://github.com/nautechsystems/nautilus_trader/commit/81d0449da0e353d702d88019dc73d231d67923cd)
+[`52eef7955cbdb8d95667c838c3e43907e0da8e9a`](https://github.com/nautechsystems/nautilus_trader/commit/52eef7955cbdb8d95667c838c3e43907e0da8e9a)
 defines precise semantics for `StrategyConfig.manage_contingent_orders`. Enable it to manage open
 OTO, OCO, and OUO relationships for orders that are **not active local**. The strategy sends the
 resulting cancel and quantity-update commands through the normal execution path before it calls
@@ -611,7 +635,7 @@ Ownership and scope boundaries:
   non-active-local peers.
 
 These semantics are included in the pinned G2 baseline
-`81d0449da0e353d702d88019dc73d231d67923cd`. The manual partial-trigger recipe below remains the
+`52eef7955cbdb8d95667c838c3e43907e0da8e9a`. The manual partial-trigger recipe below remains the
 portable fallback when the flag is disabled.
 
 #### One-Triggers-Other (OTO)

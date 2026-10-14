@@ -2,6 +2,19 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Testing
 
+## Upstream Python test execution at reviewed tip `52eef7955c`
+
+Upstream `make pytest` runs `cd python && uv run --active --no-sync pytest -n logical`.
+The default worker count is logical CPU count capped at 32 via
+`PYTEST_XDIST_AUTO_NUM_WORKERS`; override that environment variable for a
+smaller worker budget. This target covers Linux/macOS, not Windows. Preserve
+xdist isolation: avoid shared mutable files/ports/global state between workers.
+Live-node integration tests requiring live runtime behavior run manually with
+their documented environment; do not imply the ordinary parallel unit target
+validates live operation. Repository-local skill tests still run with
+`python3 -m pytest`, not the upstream target.
+Source: upstream `Makefile` and `docs/developer_guide/testing.md`.
+
 Our automated tests serve as executable specifications for the trading platform.
 A healthy suite documents intended behaviour, gives contributors confidence to refactor, and catches regressions before they reach production.
 Tests also double as living examples that clarify complex flows and provide rapid CI feedback so issues surface early.

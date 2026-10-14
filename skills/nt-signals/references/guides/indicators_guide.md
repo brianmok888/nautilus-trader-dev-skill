@@ -6,6 +6,27 @@ NT v2 compatibility note: only the historical Cython/v1 naming noted in the over
 
 ## Overview
 
+## Indicator contracts at reviewed tip `52eef7955c`
+
+- RSI defaults to Wilder smoothing and reports values on 0..100, not 0..1.
+  Flat warmed-up input yields 50; require `initialized()` before comparing with 30 or 70.
+- Rust ROC keeps `RateOfChange::new(period, use_log: Option<bool>)`: false/None
+  selects Percentage, true selects Log. `new_with_mode(period, RateOfChangeMode)`
+  selects Percentage, Fraction, Ratio, RatioPercent, or Log explicitly. The
+  `new_checked(period, mode)` constructor is crate-private, not a public Rust API.
+  For `r = current / lagged`, outputs are respectively `100*(r-1)`, `r-1`,
+  `r`, `100*r`, and `ln(r)`. Percentage 100 -> 110 is 10, not 1.1.
+  Log rejects non-positive input; all modes ignore non-finite input.
+- Rust MACD construction is `MovingAverageConvergenceDivergence::new(fast_period,
+  slow_period, signal_period, ma_type, price_type)`; the last three arguments
+  are optional, with signal period 9 and exponential averages by default.
+  `value` is fast minus slow, `signal` smooths that difference, and
+  `histogram = value - signal`. Signal receives input only after both price
+  averages initialize; MACD initializes only after its signal average also
+  initializes. Test that condition rather than assuming slow-period warmup.
+
+Source: upstream `crates/indicators/src/momentum/{roc,rsi,macd}.rs` at this tip.
+
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 
 All indicators are implemented in Rust under `crates/indicators/src/` and re-exported to Python
@@ -57,8 +78,8 @@ All moving averages implement the Rust `MovingAverage` trait, whose shared membe
 
 | Class | Params | Output | Description | Rust path |
 |---|---|---|---|---|
-| `RelativeStrengthIndex` | `period, ma_type=EXP` | `value` (0-1) | RSI via average gain/loss ratio | `momentum::rsi` |
-| `RateOfChange` | `period, use_log=False` | `value` | Price ROC: simple or log returns | `momentum::roc` |
+| `RelativeStrengthIndex` | `period, ma_type=WILDER` | `value` (0-100) | RSI via average gain/loss ratio; flat warmed-up input gives 50 | `momentum::rsi` |
+| `RateOfChange` | `period, use_log=False` | `value` | Percentage change by default; log ratio when true; Rust explicit modes via `new_with_mode` | `momentum::roc` |
 | `ChandeMomentumOscillator` | `period, ma_type=WILDER` | `value` (-100..100) | CMO: momentum with overbought/oversold at +/-50 | `momentum::cmo` |
 | `Stochastics` | `period_k, period_d, slowing=1, ma_type=EXP, d_method="ratio"` | `value_k, value_d` | %K/%D oscillator; supports "ratio" and "moving_average" D methods | `momentum::stochastics` |
 | `CommodityChannelIndex` | `period, scalar=0.015, ma_type=SIMPLE` | `value` | CCI: deviation of typical price from its MA | `momentum::cci` |
@@ -75,7 +96,7 @@ All moving averages implement the Rust `MovingAverage` trait, whose shared membe
 | `ArcherMovingAveragesTrends` | `fast_period, slow_period, signal_period, ma_type=EXP` | `long_run, short_run` | Detects trend runs from fast/slow MA divergence | `momentum::amat` |
 | `AroonOscillator` | `period` | `aroon_up, aroon_down, value` | Periods since highest high / lowest low over the full `period+1` window, scanned newest-to-oldest; ties resolve to the most recent occurrence | `momentum::aroon` |
 | `DirectionalMovement` | `period, ma_type=EXP` | `pos, neg` | +DI / -DI directional movement lines | `momentum::dm` |
-| `MovingAverageConvergenceDivergence` | `fast_period, slow_period, ma_type=SIMPLE` | `value` | MACD: difference of fast and slow MAs | `momentum::macd` |
+| `MovingAverageConvergenceDivergence` | `fast_period, slow_period, signal_period=9, ma_type=EXP, price_type=BID` | `value, signal, histogram` | Fast minus slow; initializes after signal warmup | `momentum::macd` |
 | `IchimokuCloud` | `tenkan=9, kijun=26, senkou=52, displacement=26` | `tenkan_sen, kijun_sen, senkou_span_a, senkou_span_b, chikou_span` | Full Ichimoku Kinko Hyo with 5 components | `momentum::ichimoku` |
 | `LinearRegression` | `period` | `value, slope, intercept, degree, cfo, r2` | OLS regression over rolling window | `average::lr` |
 | `Bias` | `period, ma_type=SIMPLE` | `value` | Rate of change between price and its MA: (price/MA) - 1 | `momentum::bias` |
@@ -277,7 +298,7 @@ class MyStrategy(Strategy):
         if not self.ema_slow.initialized:
             return  # Wait for warmup
         # Access computed values
-        if self.ema_fast.value > self.ema_slow.value and self.rsi.value < 0.7:
+        if self.ema_fast.value > self.ema_slow.value and self.rsi.value < 70.0:
             # Trading logic...
             pass
 ```

@@ -1,8 +1,8 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/index/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/index.md
-source_commit: 81d0449da0e353d702d88019dc73d231d67923cd
-sync_date: 2026-09-30
+source_commit: 52eef7955cbdb8d95667c838c3e43907e0da8e9a
+sync_date: 2026-10-14
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
@@ -12,7 +12,7 @@ legacy_policy: source-pinned upstream snapshot; historical guidance is migration
 
 Guidance on developing and extending NautilusTrader, or contributing back to the project.
 
-NautilusTrader uses a **Rust core with Python bindings** architecture:
+NautilusTrader has a **Rust core with Python bindings**:
 
 - **Rust** handles networking, data parsing, order matching, and other performance-critical operations.
 - **Python** provides the user-facing API for strategy development, configuration, and system integration.
