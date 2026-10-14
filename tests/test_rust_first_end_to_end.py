@@ -172,7 +172,7 @@ nautilus-trading = { path = "UPSTREAM/crates/trading", features = ["examples"] }
         encoding="utf-8",
     )
 
-    cargo = ["rustup", "run", _pinned_toolchain(), "cargo"] if shutil.which("rustup") else ["cargo"]
+    cargo = [shutil.which("cargo") or str(Path.home() / ".cargo/bin/cargo"), f"+{_pinned_toolchain()}"]
     result = subprocess.run(
         [*cargo, "check", "--manifest-path", str(crate / "Cargo.toml")],
         capture_output=True,
@@ -231,7 +231,7 @@ nautilus-trading = { path = "UPSTREAM/crates/trading" }
         encoding="utf-8",
     )
 
-    cargo = ["rustup", "run", _pinned_toolchain(), "cargo"] if shutil.which("rustup") else ["cargo"]
+    cargo = [shutil.which("cargo") or str(Path.home() / ".cargo/bin/cargo"), f"+{_pinned_toolchain()}"]
     result = subprocess.run(
         [*cargo, "check", "--manifest-path", str(crate / "Cargo.toml")],
         capture_output=True,
