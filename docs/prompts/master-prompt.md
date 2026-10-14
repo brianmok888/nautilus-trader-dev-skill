@@ -159,6 +159,22 @@ Missions validate guidance against the **current** upstream `origin/develop`, no
 3. **Refresh the delta review whenever `reviewed_commit` differs from the resolved tip.** Review every commit in `pinned_commit..tip` that touches paths this repository teaches about, and update `references/upstream-delta-review.json` (`reviewed_commit`, `reviewed_on`, per-commit deltas). Open P1 findings for any delta that invalidates current guidance. `python3 tools/check_upstream_freshness.py --format json` must exit 0 before the mission may ship.
 4. **Move the pin when develop has moved.** Update `UPSTREAM_COMMIT` in `tools/upstream_baseline.py` to the reviewed tip, then refresh every pin-citing layer: the README pinned-baseline line, `skills/nt-learn/curriculum/` pin references, and each affected `references/g2-evidence/*.json` re-executed via `python3 tools/check_skill_g2_harnesses.py --execute --skill <skill>` in the disposable worktree. `python3 tools/check_skill_g2_harnesses.py --check-cards --check-card-declarations` must pass afterwards. Deferring the pin move requires an OPEN P2 finding recording the drift count and a re-run date; deferral blocks any `Pass` claim whose evidence depends on behavior newer than the pin.
 
+### Dependency currency (registry-versioned dependencies)
+
+When guidance records, teaches, or validates a dependency identity (a crate,
+package, toolchain, or protocol version), resolve it from the authoritative
+upstream registry queried live — PyPI for Python packages, crates.io for Rust
+crates — never from a downstream lockfile, a cache, or memory. A downstream
+repository's lockfile is a fact about that repository, never the ceiling:
+state the latest available upstream version alongside the locked version in
+every version-sensitive claim. When a mission adopts a newer dependency
+identity into guidance, re-verify the dependent guidance against the adopted
+release within the same mission and record receipts; pre-release and unstable
+channels remain discovery-only. This rule governs registry-versioned
+dependencies only; the upstream source pin moves exclusively through the
+Upstream currency prerequisite's reviewed re-pin step, never by silently
+tracking a moving commit.
+
 ### Storage hygiene (build and test caches)
 
 Upstream builds and G2 harness runs are mission infrastructure, not deliverables. A full cargo workspace target plus a rebuilt Python venv can consume 30-60 GB; unmanaged caches filled the disk to 100% during a prior mission and froze every tool call. Prevent recurrence:
