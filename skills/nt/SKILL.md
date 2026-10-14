@@ -70,10 +70,11 @@ Python strategy ("build a strategy in Python") -> `nt-strategy-builder-rust` ONL
 
 1. Classify the request by NT subsystem and lifecycle stage; record the NT runtime version and implementation language when stated or detectable.
 2. Load the smallest matching skill set from the table.
-3. Confirm version-sensitive APIs from pinned and reviewed upstream evidence.
-4. Implement in the user's target repository. Upstream contribution work uses a disposable writable clone or worktree; the pinned cache is evidence-only and is never an edit or build target.
-5. Run the selected skill's G2 harness and task-level tests.
-6. Finish with `nt-review` for production-facing, live, adapter, or cross-component changes.
+3. Before substantive work in the target repository, pull the latest dependency versions as a prerequisite: query the authoritative upstream registry live (PyPI for Python packages, crates.io for Rust crates), refresh the target repository's lockfile to the latest upstream versions for the affected surface, and run the target repository's validation gates for it. The local lock state is a fact about the repository, never the ceiling; a companion skill's pinned versions are evidence about upstream, not the target repository's dependency truth. Exact-version compatibility gates in the target repository are re-validated and updated as part of the same change, never weakened to pass.
+4. Confirm version-sensitive APIs from pinned and reviewed upstream evidence.
+5. Implement in the user's target repository. Upstream contribution work uses a disposable writable clone or worktree; the pinned cache is evidence-only and is never an edit or build target.
+6. Run the selected skill's G2 harness and task-level tests.
+7. Finish with `nt-review` for production-facing, live, adapter, or cross-component changes.
 
 Example: route backtest wiring plus validation to `nt-strategy-builder-rust`,
 `nt-backtest`, and `nt-testing` together.
