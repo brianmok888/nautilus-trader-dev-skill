@@ -1,147 +1,70 @@
 # PROJECT KNOWLEDGE BASE
 
-## Agent Workflow
+**Generated:** 2026-10-15
+**Commit:** 329f5b3 (skills digest baseline; not independently rechecked)
+**Branch:** main (working tree carries local knowledge-base updates; metadata records HEAD 329f5b3)
 
-This workflow applies only within `nautilus-trader-dev-skill`. Repository-specific mission, scope, and commands elsewhere in this file remain authoritative.
+## OVERVIEW
+Reusable AI-agent skills for NautilusTrader development only: Rust V2, PyO3, and `LiveNode`, supported by Python validators and Markdown references. `docs/prompts/master-prompt.md` defines the maintenance mission and scope.
 
-### Communication
-
-- Be concise, direct, and candid.
-- Distinguish verified facts, uncertainty, and recommendations. Challenge assumptions that conflict with repository evidence.
-- When explaining complex behavior, invoke the `Visualize` skill. If it is unavailable, use a compact Mermaid or ASCII diagram and disclose the fallback.
-
-### Sources and Research
-
-- Ground version-sensitive claims in current authoritative sources: this repository, the read-only upstream NautilusTrader checkout, official documentation, specifications, release notes, or primary maintainer statements.
-- Link important external evidence and cite repository evidence as `path/to/file.ext:line`.
-- Never present memory or inference as verified fact.
-
-### Execution
-
-For authorized implementation work:
-
-1. Read every applicable `AGENTS.md`; deeper files override broader files.
-2. Preserve the user's original goal, the NT-only scope, the read-only upstream boundary, and all stated constraints.
-3. Inspect the relevant implementation, callers, tests, and repository status.
-4. Load relevant skills before acting.
-5. Plan the smallest complete change.
-6. Add a failing behavioral regression test for a bug or behavior change.
-7. Implement the minimal correction in this skill repository only.
-8. Run diagnostics, related tests, and the repository validation commands documented below.
-9. Exercise the changed behavior through its real user-facing interface when one exists.
-10. Review substantial changes before reporting completion.
-
-Do not stop at a proposal when implementation was authorized.
-
-### Decisions and Questions
-
-- Make ordinary, reversible implementation decisions independently.
-- Ask one focused question only when different answers materially change the result, the action is destructive or externally visible, or credentials, approval, or unavailable information are required.
-- State the blocked decision and its consequences.
-
-### Skills and Delegation
-
-- Use a skill when it materially applies to the task.
-- Spawn subagents only for genuinely independent work that can run concurrently.
-- Give each subagent one bounded deliverable and required evidence.
-- Independently verify and synthesize subagent findings; do not forward reports uncritically.
-
-### Change Discipline
-
-- Keep changes focused on the requested NT-skill outcome.
-- Avoid unrelated cleanup, speculative abstractions, compatibility shims, and low-signal tests.
-- Match existing repository conventions and preserve unrelated working-tree changes.
-- Never use destructive Git operations or modify upstream, production, downstream, or external systems without explicit authorization.
-
-### Verification
-
-A change is complete only when:
-
-- the requested observable behavior works;
-- relevant diagnostics and tests pass;
-- the real interface has been exercised when one exists;
-- failures caused by the change are fixed; and
-- pre-existing failures are identified rather than hidden.
-
-Do not claim that something passes unless the proving command was executed and its output inspected.
-
-### Reporting
-
-- During work, report only meaningful phase changes, decisions, and blockers.
-- Final responses should state the outcome, evidence, concise changes with file references, and residual blockers or uncertainty.
-- Avoid routine progress narration and unsupported assurances.
-
-NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in this file is migration/reference-only; prefer Rust V2/PyO3 and `LiveNode` for current work.
-
-## Mission
-
-This repository contains reusable AI-agent skills for **NautilusTrader development only**. It guides architecture, implementation, testing, integration, operation, and review of NautilusTrader components. `docs/prompts/master-prompt.md` is the maintenance mission and scope authority.
-
-Upstream NautilusTrader is read-only ground truth. Inspect its source, developer guides, examples, tests, schemas, and toolchain standards to improve this repository, but never implement or prepare upstream changes while executing the master prompt.
-
-## Repository shape
-
-```
+## STRUCTURE
+```text
 nautilus-trader-dev-skill/
-├── skills/                       # 17 NT development skills
-│   ├── nt/                       # Entry-point router
-│   ├── nt-architect/             # Architecture decomposition
-│   ├── nt-implement/             # Rust-first component implementation
-│   ├── nt-strategy-builder-rust/ # Production Rust strategy and LiveNode path
-│   ├── nt-strategy-builder/      # Migration/reference-only Python workflows
-│   ├── nt-dex-adapter/           # Custom DEX adapter development
-│   └── nt-review/                # Pre-deployment review
-├── references/                   # Upstream-derived NT references and contracts
-├── tests/                        # Repository behavior, schema, cutover, and evidence gates
-├── tools/                        # Sync, freshness, schema, static-quality, and G2 validators
-└── docs/                         # Current guides, prompt, and tracking charters
+|-- skills/       # Instruction packs; enter through nt/SKILL.md
+|-- references/   # Upstream snapshots, local contracts, G2 evidence
+|-- tools/        # Upstream pin, synchronization, quality and evidence gates
+|-- tests/        # Host-Python repository gates; distinct from pinned runtime tests
+`-- docs/         # Workflows, behavior specifications, tracking and receipts
 ```
 
-## Routing
+## WHERE TO LOOK
+| Task | Location | Notes |
+|------|----------|-------|
+| Route an NT request | `skills/nt/SKILL.md` | Load the smallest relevant skill set. |
+| Architecture to review | `skills/nt-architect/`, `skills/nt-implement/`, `skills/nt-review/` | Workflow spine; Rust strategy work uses `skills/nt-strategy-builder-rust/`. |
+| Venue adapters | `skills/nt-adapters/`, `skills/nt-dex-adapter/` | CeFi and DEX instruction boundaries. |
+| Signals, data, backtests, operation | `skills/nt-signals/`, `skills/nt-data/`, `skills/nt-backtest/`, `skills/nt-live/` | Follow the router for narrower model/trading skills. |
+| Reproducible upstream baseline | `tools/upstream_baseline.py` | Pin authority, not the current-develop overlay. |
+| Reviewed develop changes | `references/upstream-delta-review.json` | Version-scoped overlay only. |
+| Canonical local contracts | `references/developer_guide/contracts/` | Distinct from upstream-derived snapshots. |
+| Maintenance and test detail | `tools/AGENTS.md`, `tests/AGENTS.md` | Subtree commands and gate ownership. |
+| Reference provenance | `references/AGENTS.md`, `references/README.md` | Shared content and current workflow routing. |
+| Behavior-spec deltas | `docs/specs/README.md` | Implementation manifests declare deterministic `spec-deltas`, including `[]`. |
+| Findings and closure | `docs/tracking/Findings.md` | Evidence-backed findings and closure. |
+| Invariants, wiring, skill readiness | `docs/tracking/Handguard.md`, `Structure.md`, `Components.md` | Separate charters; do not duplicate closure content. |
+| Governance evidence | `docs/tracking/receipts/` | Versioned, secret-safe JSON; priority and evidence state are independent. |
 
-Start with `skills/nt/SKILL.md`. It classifies the request and loads the smallest relevant skill set.
+## CODE MAP
+Digest-reported symbols and consumers; no LSP reference counts were supplied.
 
-| Work | Primary skill |
-| --- | --- |
-| Architecture and decomposition | `nt-architect` |
-| Component implementation | `nt-implement` |
-| Production Rust strategies | `nt-strategy-builder-rust` |
-| Backtests | `nt-backtest` |
-| Live operation | `nt-live` |
-| Market data and catalogs | `nt-data` |
-| Orders, positions, and execution | `nt-trading`, `nt-model` |
-| CeFi adapters | `nt-adapters` |
-| DEX adapters | `nt-dex-adapter` |
-| Signals and indicators | `nt-signals` |
-| Core contribution guidance | `nt-dev`, `nt-testing` |
-| Review | `nt-review` |
-| Learning | `nt-learn` |
+| Symbol | Type | Location | Refs | Role |
+|--------|------|----------|------|------|
+| `CHECKS` | Check registry | `tools/check_static_quality.py` | `tests/test_quality_gates.py` | Quality-gate inventory coupling. |
+| `CUTOVER_SKILL_NAMES` | Inventory constant | `tools/cutover_inventory.py` | `validate_cutover_inventory` consumer | Pins the skill inventory. |
 
-## Source authority
+## CONVENTIONS
+- Source authority: pinned upstream commit, reviewed develop overlay, local canonical contracts, then skill guidance/templates. Label version boundaries when they disagree.
+- New production guidance uses Rust V2, PyO3, and `LiveNode`; Python-era guidance is migration/reference-only.
+- Approved specifications describe stable behavior; executable skills, validators, and tests remain primary local truth.
+- Upstream is read-only ground truth. Maintenance implementation belongs in this skill repository, not upstream or a downstream trading project.
+- Regenerate durable G2 evidence when the pin or owned skill/test/tool content changes; evidence JSON comes from the harness, never manual edits.
+- Existing skill guidance is evidence-pinned; do not trim it for a documentation reformat. New skill-local files also change owned-content hashes.
 
-1. Pinned upstream commit from `tools/upstream_baseline.py` for reproducible G2 validation.
-2. Reviewed current-develop delta in `references/upstream-delta-review.json` for version-scoped overlays.
-3. Local canonical contracts in `references/developer_guide/contracts/`.
-4. Skill guidance and templates.
+## ANTI-PATTERNS
+- No invented APIs, unlabelled version mixing, or current-develop functionality represented as available at the pin.
+- No Cython, v1, .pyx, or `TradingNode` references without an adjacent migration/reference-only label accepted by `check_legacy_labelling.py`.
+- No upstream implementation or upstream-change preparation while executing the maintenance mission.
+- Do not treat host-Python static gates as pinned-v2 runtime evidence; these are separate test populations.
+- Do not claim a validator passed without inspecting successful output from the current session.
 
-When sources disagree, label the version boundary explicitly. Do not invent APIs or treat a current-develop feature as available at the pin.
+## UNIQUE STYLES
+- Skills are instruction packs with YAML-frontmatter `SKILL.md` entry points, not importable runtime modules.
+- The architecture, implementation, and review skills share the root reference tree by symlink; edits have cross-skill consumers.
+- Adapter and signal skills carry their own reference trees; do not assume all skill references are symlinks.
+- Python templates carry machine-checked `# TEMPLATE_CLASSIFICATION:` headers.
 
-## Development rules
-
-NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material below is migration/reference-only; use Rust V2/PyO3 and `LiveNode` for current work.
-
-- Default new guidance to Rust V2, PyO3, and `LiveNode`.
-- Label Cython/v1 and Python `TradingNode` material migration/reference-only.
-- Preserve user and concurrent-agent changes; do not revert unrelated work.
-- Use test-first development for behavioral changes.
-- Keep files focused and avoid speculative abstractions.
-- Regenerate G2 durable evidence when pinned upstream or owned skill/test/tool content changes.
-- Approved stable behavior specifications live under `docs/specs/`; executable skill content, validators, and tests remain primary local truth. Every implementation manifest declares deterministic `spec-deltas` as defined in `docs/specs/README.md`, including `spec-deltas: []` when no spec change applies.
-- Governance evidence receipts are versioned, secret-safe JSON under `docs/tracking/receipts/`. Impact priority and evidence state are independent.
-
-## Validation
-
-Run the relevant focused tests while editing, then complete:
+## COMMANDS
+Run relevant focused checks, then the documented repository validation gates:
 
 ```bash
 python3 -m pytest -q
@@ -155,13 +78,10 @@ python3 tools/check_governance_receipts.py
 git diff --check
 ```
 
-A validator result is evidence only when its command exited successfully in the current work session.
-
-## Tracking charters
-
-- `docs/tracking/Handguard.md`: non-negotiable invariants.
-- `docs/tracking/Structure.md`: current repository wiring and inventory.
-- `docs/tracking/Components.md`: per-skill behavior and readiness.
-- `docs/tracking/Findings.md`: current findings and closure evidence.
-
-Do not store session handoffs, completed implementation plans, external attestations, or generated agent state in the repository.
+## NOTES
+- Full-suite gates need the pinned checkout via `NT_UPSTREAM_ROOT` or `~/.cache/nautilus-trader-dev-skill/nautilus_trader-pinned`; the digest records pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
+- Pinned-v2 runtime tests under `skills/nt-dex-adapter/tests/` use `tools/run_pinned_v2_pytest.py` with the upstream virtualenv Python, not the host static-suite interpreter.
+- `pytest.ini` intentionally contains only `[pytest]`; do not describe repository pytest options as existing.
+- Legacy Python strategy material under `skills/nt-strategy-builder/` is migration/reference-only, not the production lane.
+- Do not store session handoffs, completed implementation plans, external attestations, or generated agent state in the repository.
+- This root update uses only the existing root and reducer digests. Generated metadata identifies the supplied baseline, not a newly inspected checkout state.
