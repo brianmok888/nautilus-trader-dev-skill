@@ -93,7 +93,7 @@ NT v2 compatibility note: Python live/integration-specific `TradingNode`; use `L
 - [ ] `FAILED` constant used in `.expect()` calls
 - [ ] `AHashMap`/`AHashSet` for price/instrument caches
 - [ ] Standard `HashMap` for RPC client configuration
-- [ ] production async tasks use `get_runtime().spawn()`; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules)
+- [ ] production async tasks use `get_runtime().spawn()`; deterministic tests may use `tokio::spawn()` on their own runtime (upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` `.pre-commit-hooks/check_tokio_usage.sh` skips adapter test modules)
 - [ ] `abort_on_panic` wrapper on every `extern "C"` FFI function
 - [ ] Matching `drop` function for every FFI constructor
 - [ ] Type-specific CVec drop functions (if CVec used)

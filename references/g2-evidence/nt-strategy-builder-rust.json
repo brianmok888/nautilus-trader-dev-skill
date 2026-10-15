@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "f0e15ef2290541a45f06d3954bbf97e7074d7d78173d23622b958744b26c0c9d",
+  "owned_content_sha256": "7c2f2f55ee5dbddcc1d87f75fa4e4559671f7c6394ed2470aed03c486793013e",
   "schema_version": 2,
   "scope": "repository:compile-extracted-rust-strategy-skill-example",
   "skill": "nt-strategy-builder-rust",
@@ -14,11 +14,11 @@
         "tests/test_rust_first_end_to_end.py::test_rust_strategy_skill_example_compiles_against_pinned_upstream"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.279928,
+      "duration_seconds": 29.11121,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "52eef7955cbdb8d95667c838c3e43907e0da8e9a",
-  "verified_at": "2026-10-14T22:07:20.367114+00:00"
+  "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
+  "verified_at": "2026-10-14T23:44:55.922829+00:00"
 }

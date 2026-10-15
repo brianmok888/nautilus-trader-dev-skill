@@ -17,9 +17,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-implement.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` passed the skill domain's scoped harnesses against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; schema-v2 provenance is recorded in `references/g2-evidence/nt-implement.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -30,7 +30,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
 ## Rust production lane
-Cap'n Proto schemas for instruments ship with the pinned baseline (`52eef7955cb`, upstream `fb605401ef`); use the generated schemas for instrument serialization work instead of hand-written wire formats.
+Cap'n Proto schemas for instruments ship with the pinned baseline (`2ceb2a9a62`, upstream `fb605401ef`); use the generated schemas for instrument serialization work instead of hand-written wire formats.
 
 Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings. On the deterministic simulation path, route clocks, randomness, task spawning, and network access through the DST seams `nautilus_network::dst::{time, task, net}`; with the `simulation` feature, HTTP/1.1 and WebSocket transports run over simulated byte streams, while HTTPS/TLS, HTTP/2, proxies, and streaming responses stay outside the simulated transport.
 
@@ -50,7 +50,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
 
 ## Overview
 

@@ -12,7 +12,7 @@ Review date: 2026-10-14
 - **Mission:** reusable NautilusTrader development skills only
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
-- **Upstream:** pinned reproducible baseline `52eef7955cbdb8d95667c838c3e43907e0da8e9a` plus preserved reviewed transition history; the source evidence cache remains read-only and builds use a disposable writable checkout
+- **Upstream:** pinned reproducible baseline `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` plus preserved reviewed transition history; the source evidence cache remains read-only and builds use a disposable writable checkout
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 

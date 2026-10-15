@@ -1,6 +1,6 @@
 # Value Types
 
-## Float conversion boundary at reviewed tip `52eef7955c`
+## Float conversion boundary at reviewed tip `2ceb2a9a6`
 
 PyO3 Price/Quantity `as_double()` and float-producing mixed arithmetic reject
 precision 17 or 18 with ValueError: float arithmetic supports precision <=16.
@@ -11,7 +11,7 @@ contract; do not assume the Python guard exists there.
 Sources: upstream `crates/model/src/types/fixed.rs` and
 `crates/model/src/python/types/{fixed,price,quantity}.rs`.
 
-> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
+> **NT v2 compatibility note:** Python examples target the pinned flat `nautilus_trader.model` / `nautilus_trader.testkit` surfaces (upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`); the v1 Cython submodules (`model.objects`, `model.currencies`) were removed at the pin.
 
 NautilusTrader provides specialized value types for representing core trading concepts:
 `Price`, `Quantity`, and `Money`. These types use fixed-point arithmetic internally

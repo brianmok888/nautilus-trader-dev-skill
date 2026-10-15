@@ -2,7 +2,7 @@
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/blockchain.md:107-131,301-330,748-773,774-837,1052-1067,1164-1209`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -77,7 +77,7 @@ or amount confidentiality need a separate execution design.
 
 Published balances use `total = free` and `locked = 0`. The wallet account applies local
 reservations when it derives effective free and locked balances, as described in
-[Wallet accounts](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/accounting.md#wallet-accounts).
+[Wallet accounts](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/accounting.md#wallet-accounts).
 
 After the client starts, `QueryAccount` republishes the installed snapshot without another RPC
 read. It fails when:

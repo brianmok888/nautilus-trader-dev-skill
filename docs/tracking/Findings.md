@@ -6,7 +6,7 @@
 
 Review date: 2026-10-14
 Reviewed upstream develop: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
-Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
+Pinned G2 baseline: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
 
 The review manifest preserves twelve contiguous transitions. The newest transition reviews 6 commits and 50 changed paths from the previously reviewed `52eef7955cbdb8d95667c838c3e43907e0da8e9a` through current develop `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` (yield curves become `YieldCurve` custom data; ordered backtest replay centralizes into `crates/data/src/replay`; network ref-count clones become explicit). The preceding transition reviews 292 commits and 1,578 changed paths from `81d0449da0e353d702d88019dc73d231d67923cd` through `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window releases Python `2.0.0rc7`/workspace `0.66.0`, raises the Rust toolchain to 1.99.0, drops Python 3.12 support (`requires-python >=3.13`), migrates Derive to API v3, ports Interactive Brokers onto ibapi 5.0.0, adds the CoinAPI market-data adapter, migrates Polymarket reference prices to PolyBolt, adds Lighter native contingent orders, standardizes venue book recovery on shared machinery, adds Kraken Spot L2 checksum resynchronization, restructures the execution reconciliation guide, refines the Parquet catalog API and typed configuration, adds calendar timers and local-time bar boundaries, native Greeks/yield-curve recording, option contract identity and chain selection, same-trade fill-price restatements, funding settlement semantics, and parallel `make pytest`; findings NT-2026-10-14-001 through NT-2026-10-14-058 were opened and are tracked below.
 
@@ -14,35 +14,45 @@ NT v2 compatibility note: Legacy migration/reference-only Cython/v1 terms and ob
 
 ## Open findings — 2026-10-14 develop-tip rescan (2ceb2a9a6)
 
-[NT-2026-10-14-061] [P1] [OPEN] V2 compliance: yield-curve guidance names the removed YieldCurveData type and a Feather dispatch boundary that upstream deleted.
+[NT-2026-10-14-061] [P1] [CLOSED 2026-10-14] V2 compliance: yield-curve guidance names the removed YieldCurveData type and a Feather dispatch boundary that upstream deleted.
   file: skills/nt-data/references/guides/cache_operations.md:7
   evidence: upstream `de7940536` renames `YieldCurveData` to `YieldCurve` and converts yield curves to custom data: `crates/persistence/src/writer/feather.rs` drops the `try_write!(message, YieldCurveData)` arm and its import, `crates/persistence/src/catalog/types.rs` removes the record selector, `crates/common/src/python/cache.rs` exposes `Cache.add_yield_curve`, and `docs/concepts/greeks.md` documents the new shape at tip `2ceb2a9a6`; the same stale sentences appear at `skills/nt-data/references/concepts/data.md:29`.
   fix: rename the type in guidance, restate yield curves as `YieldCurve` custom data (catalog replay to subscribers) instead of a native record family, and refresh the Feather boundary sentence to the tip's writer arms.
-  acceptance-test: no `YieldCurveData` token remains under `skills/`; nt-data guidance matches the tip's feather/catalog sources; suite green.
+  acceptance-test: no remaining YieldCurveData type usage under `skills/` (intentional rename-history mentions allowed); nt-data guidance matches the tip's feather/catalog sources; suite green.
+  closure: guidance now teaches `YieldCurve` custom data, the selector/writer removal, `Cache.add_yield_curve`, and the multiplier semantics; grep count 2 consists solely of `renamed from YieldCurveData` history notes (cache_operations.md, data.md).
+  closure-proof: docs/tracking/receipts/currency-repin-20261014/nt-2026-10-14-061-phase-3-specific.json independently verifies the grep count against the mission tree.
 
-[NT-2026-10-14-062] [P1] [OPEN] V2 compliance: backtest guidance cites the removed `crates/backtest/src/data_iterator.rs` path and `BacktestDataIterator` symbol.
+[NT-2026-10-14-062] [P1] [CLOSED 2026-10-14] V2 compliance: backtest guidance cites the removed `crates/backtest/src/data_iterator.rs` path and `BacktestDataIterator` symbol.
   file: skills/nt-backtest/references/concepts/backtesting.md:54
   evidence: upstream `1ed1c445e` deletes `crates/backtest/src/data_iterator.rs` (1058 lines removed) and centralizes ordered replay in `crates/data/src/replay/iterator.rs` (`pub struct DataIterator`), moving `data_batch.rs` to `crates/data/src/replay/batch.rs`; `crates/data/src/lib.rs` gains the `replay` module.
   fix: update the min-merge replay description to `DataIterator` at `crates/data/src/replay/iterator.rs` and re-anchor every `BacktestDataIterator` citation.
   acceptance-test: no `backtest/src/data_iterator` or `BacktestDataIterator` token remains under `skills/`; suite green.
+  closure: citations re-anchored to `DataIterator` at `crates/data/src/replay/iterator.rs` (both the engine description and the performance tip); grep count 0.
+  closure-proof: docs/tracking/receipts/currency-repin-20261014/nt-2026-10-14-062-phase-3-specific.json independently verifies the grep count against the mission tree.
 
-[NT-2026-10-14-063] [P2] [OPEN] Improvement opportunity: delta-batching default and `F_LAST` rejection are untaught.
+[NT-2026-10-14-063] [P2] [CLOSED 2026-10-14] Improvement opportunity: delta-batching default and `F_LAST` rejection are untaught.
   file: skills/nt-backtest/references/concepts/backtesting.md:50
   evidence: upstream `1ed1c445e` makes `BacktestNode` batch book deltas by default via `BacktestDataConfig.batch_deltas` (fills can differ; batched replay rejects deltas without a closing `F_LAST`; `batch_deltas=False` opts out); `RELEASES.md` records the breaking change at tip `2ceb2a9a6`.
   fix: teach the batching default, the fill-difference caveat, the `F_LAST` closing requirement, and the opt-out where BacktestNode/BacktestDataConfig replay is described.
   acceptance-test: guidance states the default and opt-out with the tip citation; suite green.
+  closure: backtesting.md now teaches the `batch_deltas` default, the fill-difference caveat, the `F_LAST` closing requirement, and the `batch_deltas=False` opt-out.
+  closure-proof: docs/tracking/receipts/currency-repin-20261014/nt-2026-10-14-063-phase-3-specific.json independently verifies the coverage count against the mission tree.
 
-[NT-2026-10-14-064] [P2] [OPEN] Improvement opportunity: PortfolioGreeks conversion semantics omit the contract multiplier.
+[NT-2026-10-14-064] [P2] [CLOSED 2026-10-14] Improvement opportunity: PortfolioGreeks conversion semantics omit the contract multiplier.
   file: skills/nt-data/references/concepts/data.md:29
   evidence: upstream `de7940536` changes `PortfolioGreeks::from(GreeksData)` to apply the contract multiplier (`RELEASES.md` breaking change at tip `2ceb2a9a6`); inspected guidance documents the type family without the conversion semantics.
   fix: state that portfolio-level Greeks aggregation applies the instrument contract multiplier when converting from per-instrument GreeksData.
   acceptance-test: guidance states the multiplier semantics with the tip citation; suite green.
+  closure: both nt-data surfaces (concepts/data.md and guides/cache_operations.md) state the `PortfolioGreeks::from(GreeksData)` contract-multiplier semantics with the `de7940536` citation.
+  closure-proof: docs/tracking/receipts/currency-repin-20261014/nt-2026-10-14-064-phase-3-specific.json independently verifies the coverage count against the mission tree.
 
-[NT-2026-10-14-065] [P1] [OPEN] V2 compliance: pinned upstream baseline is six develop commits stale and the currency prerequisite requires the pin move.
+[NT-2026-10-14-065] [P1] [CLOSED 2026-10-14] V2 compliance: pinned upstream baseline is six develop commits stale and the currency prerequisite requires the pin move.
   file: tools/upstream_baseline.py:3
   evidence: `python3 tools/check_upstream_freshness.py --format json` resolves develop tip `2ceb2a9a6` with a 6-commit window (`52eef7955..2ceb2a9a6`) and reports the manifest stale before this cycle's reviewed transition; `RELEASES.md` snapshot tokens differ at tip.
   fix: record the reviewed transition (done this cycle), move `UPSTREAM_COMMIT` to `2ceb2a9a6`, refresh the pinned checkout and developer-guide snapshots, and re-execute affected G2 evidence; freshness must exit 0.
   acceptance-test: `python3 tools/check_upstream_freshness.py --format json` exits 0; `python3 tools/check_dev_guide_snapshot_sync.py` passes; `python3 tools/check_skill_g2_harnesses.py --check-cards` exits 0.
+  closure: `UPSTREAM_COMMIT` moved to `2ceb2a9a6` (126 pin-citation files updated; historical mission manifest and receipts untouched); pinned checkout and writable worktree advanced (debug runtime rebuilt, `nautilus_trader 2.0.0rc7` editable); all 17 G2 harnesses re-executed PASS at the new pin (the four venv-dependent ones via the prepared writable root); snapshots matched without refresh; freshness exit 0.
+  closure-proof: docs/tracking/receipts/currency-repin-20261014/nt-2026-10-14-065-phase-3-specific.json independently verifies the freshness exit code against the mission tree.
 
 ## Open findings — 2026-10-14 upstream currency cycle (closed by the 2026-10-14 hardening mission)
 

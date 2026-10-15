@@ -1,6 +1,6 @@
 # Execution
 
-## Fill corrections at reviewed tip `52eef7955c`
+## Fill corrections at reviewed tip `2ceb2a9a6`
 
 `allow_overfills=false` rejects ordinary overfills, but not a reconciliation
 fill on a FILLED order when there are no recorded fills and the candidate
@@ -465,7 +465,7 @@ The likelihood of reconciliation race conditions increases when:
   provides time for WebSocket connections to stabilize before continuous reconciliation begins.
   Reducing this increases the chance of duplicate fills during the startup window.
 
-Since upstream `80938b7723` (at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`), the live
+Since upstream `80938b7723` (at pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`), the live
 `ExecutionManager` absorbs the same-fill ordering race engine-side before these thresholds are
 relevant: it queries exact fills before applying terminal mass-status order reports, deduplicates
 fills arriving via both the report and stream channels across ordering races, preserves newer

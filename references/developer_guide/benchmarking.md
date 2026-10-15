@@ -1,7 +1,7 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/benchmarking/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
-source_commit: 52eef7955cbdb8d95667c838c3e43907e0da8e9a
+source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
 sync_date: 2026-10-14
 target: NautilusTrader develop developer guide source snapshot
 confidence: high

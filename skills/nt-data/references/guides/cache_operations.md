@@ -16,7 +16,7 @@ the instrument contract multiplier (`PortfolioGreeks::from(GreeksData)` since
 cached.
 Preserve the record family/schema when promoting streamed analytics into a
 catalog; do not infer a cache getter or streaming method from catalog support.
-See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-52eef7955c).
+See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-2ceb2a9a6).
 Source: upstream `crates/persistence/src/catalog/types.rs`,
 `crates/persistence/src/writer/feather.rs`, `crates/common/src/python/cache.rs`,
 and `crates/common/src/greeks.rs`.
@@ -86,7 +86,7 @@ synthetic_ids = self.cache.synthetic_ids()
 ### Instrument closes
 
 The cache keeps the latest `InstrumentClose` per instrument (upstream commit `9d45d410db`, pinned
-`52eef7955cbdb8d95667c838c3e43907e0da8e9a`):
+`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`):
 
 ```python
 self.cache.add_instrument_close(close)          # store the latest close (last write wins)

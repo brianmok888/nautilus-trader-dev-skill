@@ -1,6 +1,6 @@
 # Polymarket
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/polymarket.md`, reviewed 2026-10-14.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
@@ -36,7 +36,7 @@ make build-debug
 ```
 
 For development wheels and source-build prerequisites, see the
-[installation guide](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/getting_started/installation.md).
+[installation guide](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/getting_started/installation.md).
 
 ## Examples
 
@@ -212,7 +212,7 @@ The adapter does not lock these BUY fills:
 - A reconciled fill more than 15 seconds older than the snapshot, or received before any snapshot.
 
 Locked collateral is capped at the reported total, with free balance equal to total minus locked,
-following the [balance model](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/accounting.md#balance-model).
+following the [balance model](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/accounting.md#balance-model).
 
 #### Refresh timing
 
@@ -438,7 +438,7 @@ Configure the node accordingly:
 
 - **Position checks**: Set `LiveExecutionEngineConfig.position_check_interval_secs=None` to disable
   periodic position checks for the node.
-- **History across restarts**: Configure [cache database persistence](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/cache.md#database-configuration)
+- **History across restarts**: Configure [cache database persistence](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/cache.md#database-configuration)
   and keep `load_cache=True` to retain order and fill history.
 
 ### Revoke or rotate access
@@ -949,9 +949,9 @@ A `delayed` response:
 #### Definitive and ambiguous outcomes
 
 Polymarket applies the shared
-[command outcome policy](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/policies.md#command-outcomes) and
+[command outcome policy](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/policies.md#command-outcomes) and
 the adapter guide's
-[diagnostic and strategy reason boundary](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#separate-diagnostics-from-strategy-facing-reasons)
+[diagnostic and strategy reason boundary](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#separate-diagnostics-from-strategy-facing-reasons)
 at its execution boundary.
 
 Ambiguous failures include:
@@ -1418,7 +1418,7 @@ so the position quantity equals the shares filled. Maker commission remains zero
 
 If the exact result cannot be represented as `Money`, the adapter returns an error instead of using
 zero or a generic commission. See the
-[commission failure contract](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#commission-failure-handling).
+[commission failure contract](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#commission-failure-handling).
 
 #### Fee basis across instrument updates
 
@@ -1525,7 +1525,7 @@ Startup applies qualifying fills without a synthetic rounding adjustment.
 Otherwise, including when the cache retains an open position that other trades built, the report
 keeps the Data API values, and the fills of closed orders in that instrument are not reported.
 These reports set `avg_px_open_precision` to 4, so a retained position whose fills fell outside a
-bounded lookback still passes the startup entry-price check against the truncated average. See [reported entry averages](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/reconciliation.md#reported-entry-averages).
+bounded lookback still passes the startup entry-price check against the truncated average. See [reported entry averages](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/reconciliation.md#reported-entry-averages).
 
 #### Resolved balances
 
@@ -1699,7 +1699,7 @@ instrument from position reconciliation.
 This recovery does not migrate cached inferred fills into venue fills. Before reusing orders and
 positions containing such fills, start with a clean cache or migrate them with a custom script that
 preserves their history. The cache's in-session purge methods skip open orders and positions.
-[Cache database configuration](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/cache.md#database-configuration) describes restart settings:
+[Cache database configuration](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/cache.md#database-configuration) describes restart settings:
 `CacheConfig.flush_on_start = true` clears all of the trader's cached state, including data for other adapters.
 :::
 
@@ -2134,7 +2134,7 @@ Two venue behaviors limit what the harness can force:
   recovery without isolating the ceiling wake.
 
 The harness requires the market WebSocket channel, the Gamma markets API, and the CLOB API. See
-[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared flags
+[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared flags
 and output format.
 
 #### Effective deltas
@@ -2444,7 +2444,7 @@ Resolution emits events by ownership:
 The winner closes at `1`, the loser at `0`, with close type `InstrumentCloseType.CONTRACT_EXPIRED`. In a live
 node, the execution engine settles each open position in the leg at that price. It emits one `PositionClosed`
 without an order or fill. The first close applied is authoritative (see
-[Settlement at contract expiration](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/positions.md#settlement-at-contract-expiration)).
+[Settlement at contract expiration](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/positions.md#settlement-at-contract-expiration)).
 
 Settlement does not redeem tokens or claim funds on-chain. The pUSD balance includes the payout
 only after redemption, so account balances exclude unredeemed winnings until then. Deposit Wallet
@@ -2541,7 +2541,7 @@ The cache also exposes `purge_order`, `purge_position`, `purge_closed_orders`,
 `purge_closed_positions`, and `purge_account_events` for trimming closed execution state.
 For long-running Polymarket nodes, schedule the bulk purges from `LiveExecutionEngineConfig`
 (15 min interval, 60 min buffer is a sensible default). See
-[Cache: purging cached data](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/cache.md#purging-cached-data) for the full set.
+[Cache: purging cached data](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/cache.md#purging-cached-data) for the full set.
 
 :::warning
 The caller decides when an instrument is no longer needed. Purging an instrument that another

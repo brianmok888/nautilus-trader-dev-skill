@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Rust
 
-## Rustdoc failure sections at reviewed tip `52eef7955c`
+## Rustdoc failure sections at reviewed tip `2ceb2a9a6`
 
 Start `# Errors` descriptions with `Returns an error if`, or
 ``Returns `None` if`` for an Option return. Start `# Panics` with `Panics if`.
@@ -67,7 +67,7 @@ The `nextest` profile is used to align with the workflow of the majority of core
 
 ### Strict Clippy audit (candidate report)
 
-Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Beyond the normal Clippy gate, `make clippy-strict-audit` (pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `scripts/clippy-strict-audit.py`) reports candidate violations of the configured
 strict lint set — `arithmetic_side_effects`, `as_conversions`, `expect_used`,
 `indexing_slicing`, `unwrap_used`, `panic`, `string_slice`, `unreachable`,

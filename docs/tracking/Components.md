@@ -8,7 +8,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material in 
 
 Review date: 2026-10-14
 Reviewed upstream develop: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
-Pinned G2 baseline: `52eef7955cbdb8d95667c838c3e43907e0da8e9a`
+Pinned G2 baseline: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
 
 The repository contains 17 NautilusTrader-development skills. Each skill owns a measurable G0-G7 card and a G2 evidence file. `nt-strategy-builder` remains migration/reference-only; its G2 harness requires a separately prepared writable checkout with the pinned Python V2 PyO3 runtime. Evidence is validated by `python3 tools/check_skill_g2_harnesses.py --check-cards`.
 
@@ -37,7 +37,7 @@ The repository contains 17 NautilusTrader-development skills. Each skill owns a 
 - Upstream delta: Pass - reviewed exactly through `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
 - Repository scope: Pass - 17 retained NautilusTrader-development skills; active removed-lane routes absent.
 - Readiness cards: Pass - all 136 G0-G7 declarations are structurally complete.
-- G2 execution: Pending - the baseline advanced to `52eef7955c`; all 17 durable evidence files require re-execution against final owned content.
+- G2 execution: Pending - the baseline advanced to `2ceb2a9a6`; all 17 durable evidence files require re-execution against final owned content.
 - Repository validation: Pending - focused baseline regressions pass, but the full final validation battery has not completed.
 - Skill-pack readiness: Pending - 49 current-cycle findings await implementation verification and specific Phase 2/Phase 3 receipts.
 - Shipping: Pending - commits, integration, push, and publication require separate authorization.

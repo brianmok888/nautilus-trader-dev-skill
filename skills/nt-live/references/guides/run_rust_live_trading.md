@@ -151,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Owned and hosted run modes (Python `LiveNode`)
 
 NT v2 compatibility note: upstream commit `e166a5e57c` finalized two run modes for the Python
-`LiveNode` and is included in the pinned baseline `52eef7955cbdb8d95667c838c3e43907e0da8e9a`;
+`LiveNode` and is included in the pinned baseline `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`;
 older pins through `6e59fd74ea`
 still exposed the historical `start`/`poll` entry points.
 

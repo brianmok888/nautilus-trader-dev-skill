@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data Testing Spec
 
-## Option-chain acceptance at reviewed tip `52eef7955c`
+## Option-chain acceptance at reviewed tip `2ceb2a9a6`
 
 Test series identity independently from contract identity: `OptionSeriesId`
 is the series; candidate contract symbols use `OptionContractSpec`,

@@ -5,7 +5,7 @@ use Rust `LiveNode` for current production wiring.
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/interactive_brokers.md:15-43,524-623,702-734`.
 This section supersedes contradictory historical guidance below at this pin.
 

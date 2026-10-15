@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Testing
 
-## Upstream Python test execution at reviewed tip `52eef7955c`
+## Upstream Python test execution at reviewed tip `2ceb2a9a6`
 
 Upstream `make pytest` runs `cd python && uv run --active --no-sync pytest -n logical`.
 The default worker count is logical CPU count capped at 32 via

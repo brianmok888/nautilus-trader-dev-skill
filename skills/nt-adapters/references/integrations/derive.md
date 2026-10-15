@@ -1,6 +1,6 @@
 # Derive
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/derive.md`, reviewed 2026-10-14.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
@@ -662,7 +662,7 @@ position report as flat.
 
 Position reports preserve the venue's average entry price. For perpetuals, this price includes opening fees
 and can differ from the average reconstructed from real fill prices. The adapter uses
-[`AvgPxReconciliation::OpeningOnly`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/reconciliation.md#reported-entry-averages) for
+[`AvgPxReconciliation::OpeningOnly`](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/reconciliation.md#reported-entry-averages) for
 perpetuals: a matching position quantity does not require the fill-derived average to equal the reported
 average. Real fill prices, quantities, and commissions remain intact. Nautilus keeps commissions out of the
 position's average entry price and deducts them from realized PnL. Other instrument types retain the default
@@ -993,7 +993,7 @@ complete recovery.
 
 Recovery unsubscribes and resubscribes the affected channel, accepting snapshots only after its
 subscription acknowledgement. It follows the
-[shared retry budget and ceiling](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#recovery-state-and-retry-budgets)
+[shared retry budget and ceiling](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#recovery-state-and-retry-budgets)
 until a snapshot is accepted or the channel is removed.
 
 - Reconnects preserve the recovery episode and its budget.
@@ -1033,7 +1033,7 @@ CARGO_BUILD_JOBS=4 bash scripts/strip-adapter-env.bash \
 - `--rounds` sets churn or disabled rounds (default `20`). `edges` runs once.
 
 Every scenario checks bounded shutdown. All except `disabled` start shutdown during recovery. See
-[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/spec_data_testing.md#stress-harnesses) for shared flags and output.
+[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/spec_data_testing.md#stress-harnesses) for shared flags and output.
 
 ## Deterministic simulation testing
 
@@ -1053,7 +1053,7 @@ The integration tests in `crates/adapters/derive/tests/integration/dst.rs` pin w
 and domain fields, including the ticker interval. They emit `DST_TRACE` and `DST_DOMAIN` records for
 downstream comparison across fresh processes with equal seeds, configuration, and peer scripts.
 `cargo-test-sim` runs the in-repository assertions. Fresh-process comparison stays in the downstream DST
-harness, as specified by the [adapter DST contract](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/dst.md#adapter-dst-contract).
+harness, as specified by the [adapter DST contract](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/dst.md#adapter-dst-contract).
 
 The static gate covers these production paths under `crates/adapters/derive/src/`:
 

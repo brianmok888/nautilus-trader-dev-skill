@@ -1,6 +1,6 @@
 # Hyperliquid
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/hyperliquid.md`, reviewed 2026-10-14.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
@@ -368,7 +368,7 @@ and each unique HIP-3 dex named by the wallet's recent historical orders or fill
 - Position reconciliation also includes spot holdings.
 
 The returned mass status records its coverage under the
-[mass-status history contract](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/reconciliation.md#mass-status-history-contract). With a
+[mass-status history contract](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/reconciliation.md#mass-status-history-contract). With a
 configured lookback, `lookback_start` carries its lower bound. Without one, the snapshot is unbounded.
 `reports_complete` is `false` for either of these conditions:
 
@@ -1383,7 +1383,7 @@ share the same book and the same venue-side precision options.
 ### Order book recovery
 
 The data client tracks each order book delta subscription with the
-[shared book recovery machinery](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership).
+[shared book recovery machinery](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#order-book-recovery-ownership).
 `l2Book` messages carry no sequence numbers, so the client accepts every message as a snapshot. It
 suppresses book output while a subscription write is in flight and resumes on the next snapshot.
 
@@ -1455,7 +1455,7 @@ CARGO_BUILD_JOBS=16 bash scripts/strip-adapter-env.bash \
 with a 20-second threshold, since the venue pushes `l2Book` about every five seconds.
 
 The harness requires the mainnet WebSocket stream and the public info API. See
-[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared flags
+[Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared flags
 and output format.
 
 ## Account and position management

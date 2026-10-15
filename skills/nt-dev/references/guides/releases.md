@@ -88,7 +88,7 @@ The project maintains two version numbers:
 
 These are bumped independently. The Python version drives the release tag (`v2.0.0rc7`).
 The Rust workspace version can run ahead of crates.io releases: the pinned upstream tree
-(`52eef7955cbdb8d95667c838c3e43907e0da8e9a`) carries workspace version `0.66.0`, while `0.65.0`
+(`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`) carries workspace version `0.66.0`, while `0.65.0`
 is the latest version published to crates.io.
 
 ## Crates.io publishing

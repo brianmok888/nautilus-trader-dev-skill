@@ -7,7 +7,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # nt-backtest
 
-## Funding settlement at reviewed tip `52eef7955c`
+## Funding settlement at reviewed tip `2ceb2a9a6`
 
 `SimulatedExchange.apply_funding_settlement` adds signed cash-flow amounts to
 position realized PnL through `PositionAdjusted`: it does not move funding
@@ -36,9 +36,9 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
 | G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped harnesses against `52eef7955cbdb8d95667c838c3e43907e0da8e9a`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-backtest` passed the skill domain's scoped harnesses against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; schema-v2 provenance is recorded in `references/g2-evidence/nt-backtest.json`. |
 | G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
 | G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
 | G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
@@ -80,7 +80,7 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
 
 ## What This Skill Covers
 
@@ -117,12 +117,12 @@ engine is no longer retained. A cache-backed chart still needs live node state,
 and multi-currency analysis should pass an explicit currency where the
 tearsheet API requires one.
 
-The property is present at the pinned G2 baseline `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+The property is present at the pinned G2 baseline `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
 The pinned result statistics (`stats_pnls`, `stats_returns`, and
 `stats_general`) remain available.
 
 ## v1.227.0 backtest/matching deltas
-Source: upstream NautilusTrader pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`.
+Source: upstream NautilusTrader pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
 
 NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 for new work.
 

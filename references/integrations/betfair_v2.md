@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/betfair.md:86-141,292-321,419-458,630-684`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -59,7 +59,7 @@ image has not arrived or one cleared after `INVALID_CLOCK`, receives a full imag
 keeps its remaining budget, and one waiting between attempts after its budget retries at once on the new
 connection.
 
-See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#order-book-recovery-ownership)
 for the shared recovery machinery and adapter responsibilities.
 
 
@@ -177,7 +177,7 @@ decision. The order stream carries the running total in `sv` (size voided). Void
 removal settle instead of streaming, so they do not reach this path.
 
 The adapter allocates each `sv` increase to locally applied fill lots newest-first and emits one
-cumulative [`OrderFillVoided`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/events/order_fill_voided.md) per affected `trade_id`. A
+cumulative [`OrderFillVoided`](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/events/order_fill_voided.md) per affected `trade_id`. A
 first-seen snapshot seeds its cumulative void state without reversing exposure Nautilus never
 applied, so a reconnect does not double-correct. Any `sv` increase also triggers an account refresh.
 
@@ -197,7 +197,7 @@ the venue's raw void detail.
 
 The Betfair Rust adapter is in active parity work. This page is the **primary Betfair guide**
 (user-directed cutover, 2026-08-26): active Betfair routing resolves here first. The upstream
-`docs/integrations/betfair.md` in the read-only pinned snapshot (pin `52eef7955cb`) is itself the
+`docs/integrations/betfair.md` in the read-only pinned snapshot (pin `2ceb2a9a62`) is itself the
 current v2 Rust-adapter guide (Rust implementation exposed to Python at
 `nautilus_trader.adapters.betfair`); treat it as the authoritative upstream reference, and this
 page as the repo-local delta/cutover tracker.
@@ -209,7 +209,7 @@ small edits instead of a full rewrite.
 ## Scope
 
 - Source of truth for this page: `crates/adapters/betfair`
-- Upstream reference: pinned `docs/integrations/betfair.md` (current v2 Rust-adapter guide at pin `52eef7955cb`); repo-local entry point in [betfair.md](betfair.md)
+- Upstream reference: pinned `docs/integrations/betfair.md` (current v2 Rust-adapter guide at pin `2ceb2a9a62`); repo-local entry point in [betfair.md](betfair.md)
 - Purpose of this page: track the current Rust surface and the current Rust-vs-v1 differences
 
 ## Current Rust status
@@ -218,7 +218,7 @@ small edits instead of a full rewrite.
 |--------------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|-----------------------------------------------------|
 | Order types              | `MARKET` only supports `AT_THE_CLOSE`; `LIMIT` supports BSP on close flows.                                  | Stable guide is still Python shaped in this area.                         | Decide final Betfair market order model.            |
 | Batch operations         | `SubmitOrderList` and `BatchCancelOrders` are implemented.                                                   | Stable guide used to mark these as unsupported.                           | Keep and promote.                                   |
-| Reconciliation scope     | `reconcile_market_ids_only` uses `reconcile_market_ids`; otherwise falls back to `stream_market_ids_filter`. | The pinned upstream doc at `52eef7955cb` documents the same coupling.          | Resolved - keep current.                             |
+| Reconciliation scope     | `reconcile_market_ids_only` uses `reconcile_market_ids`; otherwise falls back to `stream_market_ids_filter`. | The pinned upstream doc at `2ceb2a9a62` documents the same coupling.          | Resolved - keep current.                             |
 | Full image cache checks  | Rust uses `generate_mass_status()` at startup and on every stream reconnect; no `check_cache_against_order_image`. | Stable guide describes the Python full image cache check.                 | Add parity or document the Rust path as final.      |
 | Post-reconnect halt      | `submit_order` and `submit_order_list` emit `OrderDenied STREAM_RECONCILING` while the reconcile is in flight. | Python keeps trading during reconnect.                                    | Cutover done — keep current.                        |
 | Terminal order identity  | Retained local identity for up to 10,000 recent closed cached orders (`OcmState::DEDUP_RETENTION`): late fills/voids route through retained local identity, closed-order identity is restored across reconnects, and replace state resolves across REST, OCM, and startup reconciliation; terminal replace/reduction reports reconcile without duplicates; `customerOrderRef` collision checks compare against every tracked order; historical Bet IDs are suppressed once terminal. | Landed upstream at `8ecab1ce9` ("Retain Betfair terminal order identity"); the pinned upstream doc documents the same behavior. | Landed at `8ecab1ce9` - keep current.               |
@@ -315,7 +315,7 @@ The data client reconnect handler also updates the race stream auth when a race 
 is active.
 
 NT v2 compatibility note: the socket-state and reconnect-control layer sits on top of the
-session logic above and is included in the pinned baseline `52eef7955cb` (upstream commit
+session logic above and is included in the pinned baseline `2ceb2a9a62` (upstream commit
 `98e6c39d8` "Add Betfair socket-state reporting and reconnect control"; already present at the
 earlier develop snapshot `d2b62d35a7`): the data and execution clients publish transport state on the stable
 endpoint labels `betfair-data-streams` and `betfair-user-streams` (surfaced by the runner
@@ -545,7 +545,7 @@ keep-alive interval.
 | `stream_gap_recovery_lookback_mins` | `10`          | Lookback window for the post-reconnect mass-status reconciliation. |
 
 NT v2 compatibility note: the `stream_heartbeat_secs` and `stream_heartbeat_timeout_secs` names
-(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `52eef7955cb`;
+(seconds) reflect upstream commit `74d57e7e05`, included in the pinned baseline `2ceb2a9a62`;
 older pins through `6e59fd74ea` used the pre-rename millisecond spellings.
 Rust does not yet expose `certs_dir` or `instrument_config`.
 

@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/binance.md:907-1076`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -317,7 +317,7 @@ the Binance Futures `BTCUSDT` perpetual contract becomes `BTCUSDT-PERP`
 within Nautilus.
 
 ## Order capability
-RPI (retail price improvement) order support is available on Binance Futures at the pinned baseline (`52eef7955cb`, upstream `f05a1bee63`); check the pinned `docs/integrations/binance.md` for eligibility rules and examples before configuring RPI orders.
+RPI (retail price improvement) order support is available on Binance Futures at the pinned baseline (`2ceb2a9a62`, upstream `f05a1bee63`); check the pinned `docs/integrations/binance.md` for eligibility rules and examples before configuring RPI orders.
 
 The following tables detail order types, execution instructions, and
 time-in-force options across Binance account types.

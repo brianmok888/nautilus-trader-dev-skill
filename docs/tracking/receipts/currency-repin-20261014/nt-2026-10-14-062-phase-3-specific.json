@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "currency-repin-20261014",
+  "receipt": "nt-2026-10-14-062-phase-3-specific",
+  "finding_id": "NT-2026-10-14-062",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "bash -lc 'grep -rn BacktestDataIterator skills/ | wc -l'",
+  "exit_code": 0,
+  "output_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "output_excerpt": "0\n",
+  "redactions": [],
+  "recorded_at": "2026-10-14T23:52:04Z"
+}

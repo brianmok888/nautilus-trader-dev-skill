@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Data
 
-## Catalog and time-bar contracts at reviewed tip `52eef7955c`
+## Catalog and time-bar contracts at reviewed tip `2ceb2a9a6`
 
 Current market-data writes use Arrow `Decimal128(38, 16)` for prices/sizes,
 UTC nanosecond timestamps and integer durations. Raw Arrow queries return exact
@@ -49,7 +49,7 @@ Sources: upstream `docs/concepts/data/{catalog,index}.md`,
 `crates/persistence/src/catalog/types.rs`,
 `crates/persistence/src/python/backend/feather.rs` at this tip.
 
-NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `52eef7955cbdb8d95667c838c3e43907e0da8e9a`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
+NT v2 compatibility note: upstream ships per-type data guides at `docs/concepts/data/` (pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`): `bar.md`, `quote_tick.md`, `trade_tick.md`, `order_book_delta.md`, `order_book_deltas.md`, `order_book_depth.md`, `mark_price_update.md`, `index_price_update.md`, `funding_rate_update.md`, `instrument_status.md`, `instrument_close.md` (persistence coverage added by upstream `9d45d410d`), and `option_greeks.md`. This page keeps the consolidated pre-restructure view; consult the per-type page in the pinned checkout for type-specific serialization and streaming contracts.
 
 
 NautilusTrader provides a set of built-in data types specifically designed to represent a trading domain.
@@ -1660,7 +1660,7 @@ already in the required replay order.
 ### Same-binary Rust custom data
 
 Rust-defined custom data uses the `#[custom_data]` proc macro
-(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`) to generate the
+(`nautilus_persistence_macros`, source under `crates/persistence/src/common/custom.rs` at pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`) to generate the
 constructor, `HasTsInit`, `CustomDataTrait`, serde/JSON support, Arrow encode/decode, and
 `From`/`TryFrom` conversions for the engine-level `Data` enum:
 

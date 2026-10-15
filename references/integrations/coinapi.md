@@ -2,7 +2,7 @@
 
 ## Reviewed current pinned guidance (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/coinapi.md`. CoinAPI is a beta market-data provider, not an
 execution venue. Kalshi is separately planned in `docs/integrations/index.md:24`;
 it is not a supported CoinAPI product.
@@ -730,7 +730,7 @@ stopping at `limit` if set. `stream_*` samples the first 10,000 rows and raises 
 rounding. Pass explicit precisions when the file's precision is unknown. The OHLCV loader infers precisions
 per instrument, with the volume exception below.
 
-CoinAPI uses [high-precision mode](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/getting_started/installation.md#precision-mode) by default: 16 decimal
+CoinAPI uses [high-precision mode](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/getting_started/installation.md#precision-mode) by default: 16 decimal
 places rather than 9, to fit cryptocurrency sizes and CoinAPI volumes. OHLCV `sx_sum` can carry numeric tails
 consistent with floating-point noise, such as `689.5507347100003`. The loader rounds volumes half to even at
 the build's maximum precision, changing only values that exceed it, such as this example in a
@@ -819,7 +819,7 @@ The factory creates the client during `build`, where invalid credentials, endpoi
 concurrency, elapsed budgets, or attempt timeouts, and invalid retry backoff settings raise an error. The
 example reads its key from `COINAPI_API_KEY`. It overrides BTC/USD price precision to admit three-decimal
 OHLCV prices. See [Precision](#precision). For general node setup, see
-[Configure live trading](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/how_to/configure_live_trading.md).
+[Configure live trading](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/configure_live_trading.md).
 
 ### Instrument selections
 

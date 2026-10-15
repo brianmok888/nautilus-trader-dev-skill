@@ -36,7 +36,7 @@ Establish account state and reconciliation before commands; cover ambiguous outc
 Stamp initial account state through the execution event emitter's send surface: the fallible
 `try_send_account_state(state)` returns the dispatch error to the caller (the infallible
 `send_account_state` only logs), completing the send/try_send pair alongside the order-event and
-execution-report methods (`crates/live/src/execution/emitter.rs`, pinned `52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
+execution-report methods (`crates/live/src/execution/emitter.rs`, pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`).
 
 ### Phase 5: Add optional venue capabilities
 Add advanced orders or product slices only after the base lifecycle is stable.

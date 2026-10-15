@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/okx.md:1241-1269`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -206,7 +206,7 @@ A: Use `OKXInstrumentType.EVENTS`. To scope loading, pass OKX `seriesId` values 
 `BTC-ABOVE-DAILY` through `instrument_families`.
 
 ## Orders capability
-OKX behavior at the pinned baseline (`52eef7955cb`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
+OKX behavior at the pinned baseline (`2ceb2a9a62`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
 
 Below are the order types, execution instructions, and time-in-force options supported
 for linear perpetual swap products on OKX.

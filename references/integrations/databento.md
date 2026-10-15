@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/databento.md:361-425,557-604,882-912`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -908,7 +908,7 @@ for details.
 :::
 
 :::info
-See also the [Data concepts guide](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/data/index.md).
+See also the [Data concepts guide](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/data/index.md).
 :::
 
 ### Historical loader options

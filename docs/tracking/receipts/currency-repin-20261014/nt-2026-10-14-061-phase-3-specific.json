@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "currency-repin-20261014",
+  "receipt": "nt-2026-10-14-061-phase-3-specific",
+  "finding_id": "NT-2026-10-14-061",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "bash -lc 'grep -rn YieldCurveData skills/ | wc -l'",
+  "exit_code": 0,
+  "output_sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+  "output_excerpt": "2\n",
+  "redactions": [],
+  "recorded_at": "2026-10-14T23:52:37Z"
+}

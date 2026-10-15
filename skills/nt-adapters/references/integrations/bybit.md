@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 ## Reviewed current-develop overlay (2026-10-14)
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/bybit.md:223-275,854-896`.
 The reviewed sections below supersede conflicting historical guidance at this pin.
 
@@ -53,7 +53,7 @@ If the client cannot queue the initial subscription, it logs an error and releas
 recovering it. For example, the subscription can exceed the option connection's topic limit. A queued initial
 subscription whose write fails starts recovery at once.
 
-See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#order-book-recovery-ownership)
 for the shared recovery machinery and adapter responsibilities.
 
 ### Live recovery validation
@@ -406,7 +406,7 @@ Bybit supports self-match prevention via the `smp_type` setting (`BybitOrderSmpT
 `None`, `CancelMaker`, `CancelTaker`, `CancelBoth`). The execution-client-level `smp_type`
 is sent on every submitted order; the per-order `smp_type` parameter overrides it, and
 leaving both unset omits the field so the venue default applies
-(`crates/adapters/bybit/src/config.rs` at pin `52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
+(`crates/adapters/bybit/src/config.rs` at pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`).
 Inbound order and execution reports carry `BybitSmpType`, which adds a catch-all for
 values Bybit introduces later, so an unknown venue value cannot be echoed back in requests
 (`crates/adapters/bybit/src/common/enums.rs`).
@@ -956,7 +956,7 @@ NT v2 compatibility note: the v1 `bars_timestamp_on_close`, `use_gtd`, `use_ws_e
 `use_http_batch_api`, `repay_queue_interval_secs`, `ignore_uncached_instrument_executions`,
 `ws_trade_timeout_secs`, and `ws_auth_timeout_secs` keys are migration/reference-only; none are
 pinned fields (`crates/adapters/bybit/src/config.rs` at pin
-`52eef7955cbdb8d95667c838c3e43907e0da8e9a`).
+`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`).
 
 Use `BybitDataClientConfig` with `BybitDataClientFactory` and `BybitExecutionClientConfig` with
 `BybitExecutionClientFactory`. The current Python examples show the complete

@@ -1,6 +1,6 @@
 # Lighter
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/lighter.md`, reviewed 2026-10-14.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
@@ -18,7 +18,7 @@ models, and an in-tree L2 signer using Schnorr signatures over ECgFp5. This page
 configuration, capabilities, and operational limits.
 
 For L2 signing benchmarks and the official Go SDK comparison, see
-[`crates/adapters/lighter/benches/BENCHMARKS.md`](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/crates/adapters/lighter/benches/BENCHMARKS.md).
+[`crates/adapters/lighter/benches/BENCHMARKS.md`](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/crates/adapters/lighter/benches/BENCHMARKS.md).
 Absolute timings vary by machine, so only deltas measured on the same machine are meaningful.
 
 ## Overview
@@ -392,7 +392,7 @@ A venue subscription failure other than rate limiting fails a waiting initial su
 if recovery has started. Recovery then continues only while another consumer remains. A later
 subscribe starts afresh, and other markets recover independently.
 
-See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/adapters.md#order-book-recovery-ownership)
+See [Order book recovery ownership](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/adapters.md#order-book-recovery-ownership)
 for the shared recovery machinery and adapter responsibilities.
 
 ### Live recovery validation
@@ -420,7 +420,7 @@ CARGO_BUILD_JOBS=16 bash scripts/strip-adapter-env.bash \
 `--rounds` sets the number of rounds (12 by default).
 
 The harness requires the mainnet WebSocket stream and the public `orderBooks` and `orderBookDetails`
-APIs. See [Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared
+APIs. See [Stress harnesses](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/spec_data_testing.md#stress-harnesses) for the shared
 flags and output format.
 
 ## Order capabilities
@@ -838,7 +838,7 @@ fill, and position sources incomplete.
 
 History failure alone does not veto available active orders or explicit position reports.
 Bounded historical fills without an in-scope position report follow the engine's
-[order-only projection](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/reconciliation.md#order-only-fill-projection) rules.
+[order-only projection](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/reconciliation.md#order-only-fill-projection) rules.
 
 The [`trades` reference](https://apidocs.lighter.xyz/reference/trades) does not guarantee history depth, so a
 lookback can exceed available fills. Pagination walks back from the newest trade. Only a trade older than the

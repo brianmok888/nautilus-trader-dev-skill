@@ -1,6 +1,6 @@
 # Kraken
 
-Source: upstream `52eef7955cbdb8d95667c838c3e43907e0da8e9a`,
+Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
 `docs/integrations/kraken.md`, reviewed 2026-10-14.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
@@ -54,7 +54,7 @@ The adapter supports these product categories:
 
 :::warning
 Kraken Futures can return instrument definitions that need more than standard-precision mode's nine decimal places.
-Keep [high-precision mode](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/getting_started/installation.md#precision-mode) enabled for Futures. Standard-precision
+Keep [high-precision mode](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/getting_started/installation.md#precision-mode) enabled for Futures. Standard-precision
 mode continues to support Spot, but Futures clients fail to start or return instruments when any definition cannot
 be parsed. Futures catalog requests return no partial result and never round, clamp, or omit an unsupported
 definition.
@@ -835,7 +835,7 @@ carries no position report. Thus, the engine projects that order's fill as order
 
 This is the shared engine's documented behavior for an instrument with no in-scope position report, not a
 Kraken rule. See
-[Order-only fill projection](https://github.com/nautechsystems/nautilus_trader/blob/52eef7955cbdb8d95667c838c3e43907e0da8e9a/docs/concepts/execution/reconciliation.md#order-only-fill-projection). Removing the
+[Order-only fill projection](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/execution/reconciliation.md#order-only-fill-projection). Removing the
 synthetic FLAT is what exposes Kraken spot margin to it, because the sweep previously supplied an explicit
 FLAT.
 

@@ -6,7 +6,7 @@ NT v2 compatibility note: only the historical Cython/v1 naming noted in the over
 
 ## Overview
 
-## Indicator contracts at reviewed tip `52eef7955c`
+## Indicator contracts at reviewed tip `2ceb2a9a6`
 
 - RSI defaults to Wilder smoothing and reports values on 0..100, not 0..1.
   Flat warmed-up input yields 50; require `initialized()` before comparing with 30 or 70.

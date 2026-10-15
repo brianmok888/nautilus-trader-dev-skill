@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "currency-repin-20261014",
+  "receipt": "nt-2026-10-14-065-phase-3-specific",
+  "finding_id": "NT-2026-10-14-065",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "bash -lc 'python3 tools/check_upstream_freshness.py --format json >/dev/null; echo exit=$?'",
+  "exit_code": 0,
+  "output_sha256": "19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061",
+  "output_excerpt": "exit=0\n",
+  "redactions": [],
+  "recorded_at": "2026-10-14T23:52:37Z"
+}
