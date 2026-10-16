@@ -4,6 +4,10 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
+2026-10-16 — [B] — MODIFIED: clarified master-prompt review and feedback handling, delegated-return completeness, check-time evidence binding, scoped coverage, verdict continuation, event-driven waiting, and unresolved design choices; preserved one continuous Phases 0-6 mission without a menu, read-only upstream, receipt schemas, and Phase 6 shipping gates. Cache reclamation requires task ownership and no concurrent use; no Daedalus host or plan-lifecycle policy imported. — files: docs/prompts/master-prompt.md, docs/tracking/Findings.md
+
+2026-10-16 — [B] — MODIFIED: aligned every master-prompt methodology call with native OMO skill loading: programming, debugging, review-work, git-master, explicitly activated ulw-research/ultrawork, and direct audit/design/validation where no separate native skill exists. Removed obsolete skill-call aliases from the table and phase instructions; preserved continuous phase routing and separate verification/reconciliation reviews. — files: docs/prompts/master-prompt.md, docs/tracking/Findings.md
+
 Review date: 2026-10-14
 Reviewed upstream develop: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
 Pinned G2 baseline: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`

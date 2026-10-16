@@ -4,6 +4,13 @@
 
 Before executing any part of this mission, read and apply the target repository's root `AGENTS.md`. Its project-scoped workflow, NT-only boundary, read-only upstream rule, validation requirements, and reporting requirements are mandatory for the entire mission. When work enters a subdirectory, also read and apply any deeper `AGENTS.md`; deeper instructions override broader ones.
 
+This is one continuous Phases 0-6 mission, not a menu. Read the shared execution
+contract before starting, then each phase's complete instructions and referenced
+contracts when entering it. Roles 1-7 are internal dispatch roles, not user-facing
+options or additional selection gates. Reading, reviewing, or revising this
+document is document work; it does not launch the maintenance mission or
+authorize implementation, commits, integration, or shipping.
+
 **Primary repository:** resolve the current checkout with `git rev-parse --show-toplevel`
 and record that path during preflight; do not embed a host-specific repository path.
 **Mission worktree:** resolve and record a dedicated linked worktree during preflight. After creating it, run every edit, test, validation command, and mission commit from that worktree. Use the primary repository only for its cleanliness check and an explicitly authorized final integration.
@@ -20,22 +27,36 @@ and record that path during preflight; do not embed a host-specific repository p
 
 ## Methodology skills (invoke these during execution)
 
-The executing agent MUST load and apply these skills at the right phase. Invoke each as `/skill:<name>`; the names below match the currently available skill set. Do not skip — they encode the workflow discipline this mission requires.
+Use the current runtime's native skill loader and read each applicable skill's
+`SKILL.md` before applying it. Slash names below identify native skills, not
+shell commands. Do not invent unavailable aliases. Native skills supply the
+methodology; this document supplies NT scope, phase acceptance, evidence
+ownership, and shipping gates.
 
 | Skill | When to invoke | What it enforces |
 | --- | --- | --- |
-| `/skill:using-git-worktrees` | **Preflight** — creating the mission branch | Isolated worktree off a clean `main`; baseline recorded before any edit |
-| `/skill:requesting-code-review` | **Phase 1** — deep review | Adversarial review pass; findings must cite `file:line`, not vibes |
-| `/skill:ulw-research` | **Phase 1** — V2 compliance baseline, when exhaustive research is demanded | Maximum-saturation research pass over current NT V2 docs/source; activates only on explicit user demand |
-| `/skill:brainstorming` | **Phase 2** — when fix approach is ambiguous | Explore approach before coding; pick deliberately, not by default |
-| `/skill:test-driven-development` | **Phase 2** — every fix segment | Test first → watch fail → implement → verify pass |
-| `/skill:systematic-debugging` | **Phase 2** — when a failing regression test's cause is unclear | Root-cause the failure before patching; no shotgun fixes |
-| `/skill:verification-before-completion` | **Phase 3 / Phase 4 / Phase 5** — post-implementation gate and before any later `Pass` | Run the actual command once per evidence state; cite real output; "should pass" is not Pass |
-| `/skill:requesting-code-review` | **Phase 3 / Phase 5** — independent verification and reconciliation | Independent review of the post-fix tree before closure or ship |
+| `/git-master` | **Preflight and authorized Git operations** | Inspect branch/worktree state and preserve ownership; use the preflight worktree contract below, not a separate worktree skill. |
+| Direct source-backed audit | **Phase 1** | Inspect source and guidance; cite `file:line`. A pre-implementation audit is not `/review-work`. |
+| `/ulw-research` | **Phase 1**, only for explicitly requested deep research | Research authoritative NT sources without expanding the mission. |
+| Direct design comparison | **Phase 2**, only when approach is ambiguous | Compare material alternatives under Phase 2; no separate brainstorming skill is required. |
+| `/programming` | **Phase 2**, code/test/tooling changes | Load language references; apply deterministic test discipline and red-green proof for behavioral fixes. Prose-only corrections use existing checks, not prose-pinning tests. |
+| `/debugging` | **Phase 2**, unexplained failure or bug | Test a root-cause hypothesis before patching. |
+| Direct measured validation | **Phases 3-5**, before any `Pass` | Run required commands against the candidate and inspect output; no separate completion-verification skill is required. |
+| `/review-work` | **Phases 3 and 5**, completed implementation/reconciliation artifacts | Manual QA and one independent gate reviewer per invocation; retain separate phase acceptance and receipt ownership. |
+| `/ultrawork` | **Template 8**, only when native ULW execution is explicitly selected | Load the native mode directive when required; document revision alone does not activate it. |
 
-**V2 ground-truth baseline:** the former `best-practice-research` skill is not available in the current skill set; `/skill:ulw-research` is its designated replacement. It activates only on an explicit user demand for exhaustive research — when so authorized, run it against the Phase 1 Source URLs. For routine currency work, rely on this prompt's **Upstream currency prerequisite** — `tools/check_upstream_freshness.py` and `references/upstream-delta-review.json` — plus `web_search`/`webfetch`. Training-data recall is never compliance evidence.
+**V2 ground-truth baseline:** `/ulw-research` activates only on explicit demand
+for deep research; when authorized, use the Phase 1 Source URLs. Routine currency
+work uses **Upstream currency prerequisite**, `tools/check_upstream_freshness.py`,
+`references/upstream-delta-review.json`, and current authoritative source reads
+or `web_search`/`webfetch`. Ordinary source reading does not activate deep research,
+`/ulw-plan`, `/ulw-execute`, or `/ulw-loop`. Training-data recall is not evidence.
 
-**Rule:** If a phase's skill is not available in the runtime, stop that phase and mark the mission `Blocked` — do not substitute unstructured work for a missing methodology skill, do not claim readiness, and do not ship.
+**Rule:** Check availability in the active native runtime. If an applicable
+required skill is unavailable, stop that dependent phase and mark the mission
+`Blocked`; continue independent authorized work. Do not claim a direct-methodology
+row loaded a nonexistent skill, fabricate native output, or ship with a missing
+required method.
 
 ---
 
@@ -82,7 +103,7 @@ Dispatch by these adapted roles:
   NautilusTrader V2 baseline, pinned upstream identity, source URL, or
   version-sensitive claim is unresolved or stale. **Return:** the upstream
   currency/delta evidence and, only when exhaustive research was explicitly
-  requested, `/skill:ulw-research` results over authoritative sources.
+   requested, `/ulw-research` results over authoritative sources.
 - **Template 3 — validate findings and plan remediation.** **Trigger:** Phase 1,
   external research, independent verification, or a rescan identifies a possible
   NT-development skill discrepancy. **Return:** validated `[NT-###]` findings
@@ -99,8 +120,9 @@ Dispatch by these adapted roles:
 - **Template 6 — independently verify the slice.** **Trigger:** Phase 2 presents
   a complete implementation manifest. **Return:** an independent per-finding
   result plus verifier-owned receipts and an `Approved` or `Rejected` verdict;
-  rejection dispatches back to Templates 3 and 5 without waiting for user
-  approval.
+  rejection invokes the handoff matrix: validate the deficiency, dispatch
+  Templates 3 and 5 for concrete implementation/manifest defects, or recover
+  missing inputs/evidence before re-verification. No new phase-selection turn.
 - **Template 7 — discover or rescan gaps.** **Trigger:** initial inventory/review,
   verification rejection, upstream drift, or final fixed-point review.
   **Return:** Phase 0, Phase 1, and Phase 5's deduplicated finding delta across
@@ -115,16 +137,20 @@ Repeat this controller loop:
 3. Dispatch Template 5 for one authorized segment. When Phase 2 records a
    complete implementation manifest, dispatch Template 6 automatically; do not
    pause for user approval.
-4. On `Rejected`, return through Templates 3 and 5, fix each deficiency, and
-   rerun invalidated verification with fresh evidence; never continue to later
-   phases on failed verification.
+4. On `Rejected`, classify each deficiency through the handoff matrix. Concrete
+   implementation or manifest defects return through Templates 3 and 5;
+   missing inputs/evidence require recovery before fresh verification, not blind
+   implementation. Never continue to later phases on failed verification.
 5. On `Approved`, run Phase 4 G0-G7 cards and dispatch Template 4 plus Phase 5
    reconciliation for affected specs, trackers, receipts, and skill artifacts.
-6. Rescan through Template 7. Any executable in-scope gap, invalid evidence,
-   failed or pending gate, upstream drift, reconciliation residual, or unverified
-   completion claim returns to implementation and fresh verification. Repeat
-   until every in-scope finding is `CLOSED`, every required gate is `Pass`, and
-   reconciliation finds no unresolved issue.
+6. Rescan affected coverage through Template 7; repeat broad discovery only
+   when scope or new evidence requires it. Confirmed executable gaps and failed
+   implementation checks return to Phase 2 and fresh verification. Missing or
+   invalid evidence, pending gates, upstream drift, and unverified claims first
+   follow the handoff matrix: obtain the missing input or refresh evidence;
+   implement only when a concrete correction is needed. Repeat until every
+   in-scope finding is `CLOSED`, every required gate is `Pass`, and reconciliation
+   finds no unresolved issue.
 7. Treat Phase 6 as the evidence-bound fixed point and separate shipping gate.
    Stop `Blocked` only when progress requires missing evidence, a user decision,
    expanded scope, unavailable mandatory methodology, or repeated no progress;
@@ -137,11 +163,65 @@ Phase 6's separate authorization has either completed the changed-tree/no-change
 shipping path or deliberately left publication pending. An empty task list is
 not proof, and skill-pack documentation never proves application readiness.
 
+### Review, waiting, and delegated handoffs
+
+These shared rules apply to Phases 0-6 with or without Template 8. Initiate the
+review required by the owning phase on completed work; prior feedback is not
+an entry requirement. Verify received findings against actual artifacts and
+correct confirmed defects only within the phase's permitted writes. Read-only
+verification records implementation deficiencies for Phase 2. Processing
+feedback does not itself require another review; reopen review for material
+changes or unresolved concerns. Preserve Phase 3's independent verifier, fresh
+checks, and verifier-owned evidence.
+
+At each delegated return, reconcile every requested finding/task ID and
+deliverable with a result and evidence or an explicit unresolved disposition.
+A successful worker exit is not acceptance. Persist the complete artifact,
+summarize it in conversation, and retrieve truncated output before relying on
+it. Missing items keep the return incomplete; they cannot produce `Approved`
+or a passing gate. Keep this inventory outside receipt JSON unless its existing
+schema already provides the field.
+
+Subscribe to exact completion or state-change events when available and continue
+independent authorized work while results are pending. Inspect completed results
+rather than repeatedly polling status. If subscriptions are unavailable,
+disclose a bounded status-check fallback. Retry after a relevant input,
+environment, implementation, or hypothesis changes. Missing evidence or a
+decision pauses dependent work, not unrelated authorized progress; do not
+restart implementation blindly. Native ULW owns scheduling and recovery; this
+document adds no second scheduler or arbitrary retry-count limit.
+
+### Check-time evidence binding
+
+- Before checks, record candidate repository/worktree identity, HEAD,
+  pre-existing dirty state, authorized input, and pinned upstream identity.
+  Capture hashes and additions/deletions/renames for tracked files and untracked
+  files in declared write targets; include mutable external fixtures and config
+  used by checks. Narrow tracked coverage only when validators establish the
+  complete dependency closure.
+- Bind each command and manual check to that candidate and declared coverage.
+  Bind evidence per implementation slice during a long mission, then reconcile
+  aggregate coverage before shipping. A handoff-only snapshot cannot prove what
+  earlier checks observed.
+- Compare state after checks and permitted governance writes with the check-time
+  snapshot. Separate verified inputs from exact stage-owned outputs; audit the
+  latter's pre-write state and final diff without excluding whole documentation
+  or receipt directories. Input changes invalidate affected evidence and require
+  fresh checks. Expected permitted output writes do not invalidate themselves.
+- Preserve prior receipts, transcripts, and captures. Corrections use new
+  owner-stage/run evidence except where an existing contract explicitly allows
+  mutable progress fields. A verifier never rewrites implementation receipts.
+  Reused evidence must match input identities, declared coverage, and current
+  validation requirements. Never edit durable evidence by hand to make it pass.
+- Keep snapshots and handoff metadata outside receipt JSON; retain the existing
+  receipt schema and ownership rules.
+
 ### Preflight and ownership
 
 Before Phase 0:
 
-**Invoke:** `/skill:using-git-worktrees` when creating the mission branch (step 4).
+**Invoke:** `/git-master` for Git state and worktree operations; follow the
+explicit worktree procedure below when creating the mission branch (step 4).
 
 1. Record the target repository `HEAD`, local `main`, `origin/main`, active branch/worktree, and `git status --short`.
 2. Record the pinned upstream commit, the reviewed upstream commit/ref, upstream `HEAD`, and upstream `git status --short`.
@@ -180,11 +260,21 @@ tracking a moving commit.
 Upstream builds and G2 harness runs are mission infrastructure, not deliverables. A full cargo workspace target plus a rebuilt Python venv can consume 30-60 GB; unmanaged caches filled the disk to 100% during a prior mission and froze every tool call. Prevent recurrence:
 
 1. **Redirect every cargo invocation** through one shared `CARGO_TARGET_DIR` under the writable upstream worktree, and name that directory `target` — upstream's `.gitignore` covers `*target/`, which keeps the checkout clean for the handguard's `git status` requirement. Never run cargo without the redirect (un-redirected runs silently create multi-GB orphan `target/` directories next to each checkout), and never use non-matching names like `target-v2`.
-2. **Check free disk before and after every build or test batch** (`df -h /`). If free space falls below 20 GB, stop and clean before continuing; a full filesystem blocks all execution, not just builds.
-3. **Clean disposable caches each time a test or build task completes**, before closing the mission, and before starting the next task segment: delete orphan `target/` directories this mission created outside the shared redirect, stale `/tmp/.tmp*` maturin and wheel temp directories, and superseded duplicate build directories. Deleting reproducible caches is always safe; rebuilds are expensive, outages are worse.
+2. **Check free disk before and after every build or test batch** on the actual execution host and artifact filesystem (`df -h /`, plus the shared target mount if different). If free space falls below 20 GB, pause artifact-producing work and reclaim only eligible mission-owned caches under rule 3; recheck capacity before continuing. If no eligible cleanup can restore capacity, report the blocker rather than deleting shared artifacts.
+3. **Inspect disposable caches each time a test or build task completes**, before closing the mission, and before starting the next task segment. Reclaim only confirmed disposable artifacts owned by this mission, using explicit resolved paths after checking that no process still uses them. This includes orphan `target/` directories the mission created outside the shared redirect and its own obsolete maturin/wheel temporary directories. Never delete `/tmp/.tmp*` by wildcard or sweep shared caches; if ownership or concurrent use is unclear, preserve the artifact and report the capacity blocker.
 4. **Never treat source as cache.** The pinned upstream checkout, the writable worktree's tracked files, `~/.cargo` toolchains, and everything under the skill repository are not deletable caches.
 
 ### States and stop conditions
+
+Use this handoff matrix without adding phase-selection or approval turns:
+
+| Result | Required continuation |
+| --- | --- |
+| Incomplete delegated return | Complete missing deliverables; do not mark a gate `Pass` or claim `Approved`. |
+| Phase 3 `Rejected`, or confirmed Phase 4/5 deficiency | Deduplicate/update the finding and classify it: concrete implementation/manifest defects return to authorized Phase 2; missing inputs/evidence follow the recovery row below. Rerun affected verification before advancement. |
+| Mandatory check unavailable or missing evidence | Keep its gate `Pending` or `Blocked`, state the missing input, and obtain it before rechecking. Missing evidence is not a code-repair instruction or a severity downgrade. |
+| Slice `Approved` | Record evidence and continue Phases 4-5; neither a slice nor one review closes the aggregate mission. |
+| Aggregate fixed point | All scoped findings closed, required gates measured `Pass`, current validation complete, and Phase 3 approved; proceed to Phase 6, retaining its separate shipping permissions. |
 
 - A finding is `OPEN` until its required correction and closure proof both pass; then it becomes `CLOSED`.
 - A gate is `Pass`, `Pending`, or `Blocked`. Only measured evidence can produce `Pass`.
@@ -241,7 +331,11 @@ Do not create tracked session plans, handoffs, generated agent state, historical
 
 ## Phase 1 — Deep Skill-Set Review (READ-ONLY, no edits)
 
-**Invoke:** `/skill:requesting-code-review` + `/skill:ulw-research` for the V2 compliance baseline (only when the user explicitly demands exhaustive research; otherwise `web_search`/`webfetch` against the Source URLs below plus the upstream currency prerequisite — no skill substitutes for primary-source evidence).
+**Method:** perform the source-backed audit directly. Load `/ulw-research` only
+when the user explicitly requests deep research; otherwise use current source
+reads and `web_search`/`webfetch` against the Source URLs plus the upstream
+currency prerequisite. Do not invoke `/review-work` as a pre-implementation
+audit skill; no skill substitutes for primary-source evidence.
 Treat upstream NautilusTrader source and official docs as read-only evidence;
 do not treat the upstream repository as an implementation target.
 
@@ -250,7 +344,18 @@ artifacts. Keep the mission-owned diff distinct from the
 preflight snapshot; never treat pre-existing user changes as stale artifacts or
 cleanup candidates.
 
-Audit every skill `SKILL.md`, reference file, and template. Produce a findings report grouped into four categories:
+Set coverage before discovery: without a narrower approved scope, audit every
+skill `SKILL.md`, reference file, and template. A scoped mission inspects
+implicated skills, references, templates, tests, validators, and tracker claims.
+Expand only when evidence shows another area is affected and disclose the
+expansion. Inventorying or hashing files is not semantic validation of every
+historical artifact. Preserve historical findings and reports; record a new
+current deficiency or dated correction without rewriting prior evidence.
+Do not reopen unrelated history for age or formatting alone. Scoped checks
+cannot claim repository-wide cleanliness or waive mandatory Phase 4/6 gates;
+an unmet required gate still prevents shipping.
+
+Produce a findings report grouped into four categories:
 
 ### Finding categories
 
@@ -287,11 +392,16 @@ Record source-backed findings in `docs/tracking/Findings.md` using the format ab
 
 ## Phase 2 — Skill-Set Fix Implementation (segment-by-segment, TDD)
 
-**Invoke:** `/skill:brainstorming` (when ambiguous) + `/skill:test-driven-development` (every segment).
+**Invoke:** `/programming` for code/test/tooling changes and `/debugging` for
+bugs or unexplained failures. Apply the design-comparison procedure below only
+when needed; prose-only segments use source evidence and existing validators.
 
 Work findings in priority order (P0 → P1 → P2). For each segment:
 
-1. **When approach is ambiguous:** brainstorm the approach before coding.
+1. **When approach is ambiguous:** compare distinct approaches with explicit
+   trade-offs before coding. Reuse choices and answers already supplied; do not
+   invent alternatives or questions for a resolved choice. Ask only for missing
+   material decisions and pause only dependent work.
 2. Define the acceptance check before editing. Behavioral and tooling corrections require a failing regression test first: watch it fail, apply the minimal root-cause fix, then run the focused and broader suites until green.
 3. Prose-only guidance corrections must cite a pinned upstream commit, versioned official documentation, or another recorded primary-source revision, then run applicable existing validators and pressure scenarios. Tests must not pin prose wording.
 4. **One commit per logical segment.** Do not batch unrelated fixes.
@@ -353,10 +463,11 @@ implementation artifacts.
    first result was invalid or incomplete.
 4. Exercise each changed user-facing skill or validator through its real
    invocation surface. Recorded Phase 2 output is context, never fresh evidence.
-5. Invoke `/skill:requesting-code-review` for independent post-implementation
-   review when available. Use `/skill:receiving-code-review` only to evaluate
-   feedback; any fix requires returning to Phase 2, recording a new manifest,
-   and rerunning this verification phase with fresh evidence.
+5. Invoke `/review-work` for completed implementation work: perform manual QA
+   and use one independent gate reviewer under its native contract. Evaluate
+   feedback directly against the artifacts, not through a separate feedback
+   skill. Confirmed implementation fixes return to Phase 2, with a new manifest
+   and fresh verification; missing evidence follows the handoff recovery matrix.
 6. Classify every Finding ID as `Verified`, `Deficient`, `Missing`, or
    `Not verifiable`, with file/symbol references and a receipt (rules below).
 
@@ -393,10 +504,14 @@ Receipts (machine-checkable evidence):
   validation is green, user-facing behavior is exercised, upstream is
   unchanged, and no unresolved P0/P1 finding remains.
 - Otherwise `Rejected`: record every deficiency as an actionable finding in
-  `docs/tracking/Findings.md`, return to Phase 2, fix it, and rerun every
-  invalidated Phase 3 check with fresh evidence. Continue the loop without
-  waiting for user approval. Do not enter later phases, merge, push, release,
-  or publish while the verdict is `Rejected`.
+  `docs/tracking/Findings.md` and apply the handoff matrix. Concrete implementation
+  or manifest defects return to Phase 2; missing inputs/evidence require recovery
+  and fresh checks, not implementation without a confirmed correction. Rerun
+  affected Phase 3 verification with fresh evidence and preserve verdict
+  `Rejected` until it passes. Continue without a new phase-selection or approval
+  turn inside existing authorization; a genuinely missing decision still pauses
+  dependent work. Do not enter later phases, merge, push, release, or publish
+  while the verdict is `Rejected`.
 
 Final output before continuing:
 - Per-finding verdicts, independent impact/evidence classifications, and validated JSON receipt paths
@@ -412,7 +527,9 @@ not shipping authorization.
 
 ## Phase 4 — Progressive Gate Checklist (PRIMARY DELIVERABLE)
 
-**Invoke:** `/skill:verification-before-completion` — every `Pass` status must cite real command output, not assertion.
+**Method:** apply the measured-validation and check-time evidence contracts
+directly. Every `Pass` must cite actual command output, not assertion; no
+separate completion-verification skill is required.
 
 For each in-scope NT-development skill, maintain a G0-G7 cutover readiness card in that skill's `SKILL.md`; keep `docs/tracking/Components.md` as the index.
 
@@ -453,12 +570,20 @@ labelling; current implementation guidance remains Rust/PyO3-oriented.
 
 ## Phase 5 — Reconciliation
 
-**Invoke:** `/skill:requesting-code-review` for independent post-fix review.
+**Invoke:** `/review-work` on the completed reconciliation artifact, with manual
+QA and one independent gate reviewer. This remains a distinct Phase 5 review,
+not a repeat invocation merely to process Phase 3 feedback.
 
-1. Reconcile the post-fix tree against the Phase 3 verdict and original findings ledger by stable Finding ID. Confirm every verified finding is `CLOSED`; keep each residual `OPEN`, record its concrete acceptance evidence in `docs/tracking/Findings.md`, and return it to Phase 2.
+Verify incoming findings against actual artifacts before acting. Confirmed
+implementation defects return to Phase 2; missing evidence follows the handoff
+matrix's recovery path instead of triggering blind code changes. Phase 5's
+independent reconciliation review remains required; evaluating its feedback
+does not by itself require an additional reviewer.
+
+1. Reconcile the post-fix tree against the Phase 3 verdict and original findings ledger by stable Finding ID. Confirm every verified finding is `CLOSED`; keep each residual `OPEN` and record its concrete acceptance evidence in `docs/tracking/Findings.md`. Apply the handoff matrix: implementation/manifest defects return to Phase 2; missing inputs/evidence require recovery and affected verification before closure.
 2. Apply the verified implementation manifest's `spec-deltas` entries in listed order using `docs/specs/README.md`. Missing, duplicate, or unresolved targets return to Phase 2 and block loop convergence; `spec-deltas: []` makes no spec edit.
 3. Regenerate each affected gate card from the accepted Phase 3 evidence. Do not rerun unchanged passing commands; run only gate-specific checks not already covered or checks invalidated by reconciliation edits.
-4. Invoke independent reconciliation review. Every in-scope review finding or reconciliation residual returns to Phase 2 for implementation, then flows through fresh Phase 3 verification and affected Phase 4 gates before reconciliation runs again. Continue until all findings are `CLOSED`, every gate is `Pass`, and independent reconciliation review has no unresolved finding. If review cannot run, record the infrastructure failure and keep shipping `Blocked` under the controller's genuine-blocker rule.
+4. Invoke independent reconciliation review. Classify each in-scope review finding or residual through the handoff matrix. Concrete implementation/manifest defects return to Phase 2; missing inputs/evidence follow recovery without blind implementation. Then run fresh affected Phase 3 verification and Phase 4 gates before reconciliation runs again. Continue until all findings are `CLOSED`, every gate is `Pass`, and independent reconciliation review has no unresolved finding. If review cannot run, record the infrastructure failure and keep shipping `Blocked` under the controller's genuine-blocker rule.
 
 ---
 
