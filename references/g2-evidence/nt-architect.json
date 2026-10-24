@@ -1,9 +1,10 @@
 {
-  "owned_content_sha256": "1bb6319091e3f06cd1e4475a682cf2bb1d1377785f745a4660ed8c3582ca6861",
+  "owned_content_sha256": "b1b1cce647aeb616ef0845b3c1c228e151ffe629bc8566d2c671d0ad43d9302b",
+  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
   "schema_version": 2,
   "scope": "upstream:cross-boundary-core-data-trading-backtest",
   "skill": "nt-architect",
-  "status": "pass",
+  "status": "pending",
   "steps": [
     {
       "command": [

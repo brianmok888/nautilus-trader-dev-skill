@@ -1,9 +1,10 @@
 {
-  "owned_content_sha256": "c94426c4488670d0b368f3e6017f4fa3c5a0e30f52dc1052cd2dd729b732e937",
+  "owned_content_sha256": "b0d7e6d085813e1f0f41e667fbdee14848e399ead4700637fcd698b8339e14a6",
+  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
   "schema_version": 2,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
-  "status": "pass",
+  "status": "pending",
   "steps": [
     {
       "command": [

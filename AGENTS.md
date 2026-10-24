@@ -64,6 +64,10 @@ Digest-reported symbols and consumers; no LSP reference counts were supplied.
 - Python templates carry machine-checked `# TEMPLATE_CLASSIFICATION:` headers.
 
 ## COMMANDS
+Before artifact-producing validation or G2 runs, apply
+`references/developer_guide/contracts/environment_tooling.md` bounded-build
+policy. Repository static Python checks do not require an upstream Rust build.
+
 Run relevant focused checks, then the documented repository validation gates:
 
 ```bash

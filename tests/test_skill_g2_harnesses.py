@@ -851,23 +851,20 @@ def test_implement_g2_validates_capnp_without_compiling_migration_python() -> No
     assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
 
 
-def test_implement_g2_passes_with_standard_capnp() -> None:
+def test_implement_g2_changed_content_requires_reverification() -> None:
     evidence_path = g2.repo_root() / "references/g2-evidence/nt-implement.json"
     payload = json.loads(evidence_path.read_text())
     skill_text = (g2.repo_root() / "skills/nt-implement/SKILL.md").read_text()
 
-    assert payload["status"] == "pass"
-    assert "pending_reason" not in payload
+    assert payload["status"] == "pending"
+    assert payload["pending_reason"]
     assert payload["steps"]
     assert any(
         "test_capnp_schema_precision.py" in " ".join(step["command"])
         for step in payload["steps"]
     )
-    assert "| G2 Pinned V2 examples |" in skill_text
-    assert "| Pass |" in skill_text
-
-    if g2.shutil.which("capnp") is None:
-        pytest.skip("capnp unavailable in this environment")
+    rows = g2.readiness_rows(skill_text)
+    assert rows["G2"][0] == "Pending"
 
 
 def test_strategy_builder_uses_documented_python_v2_working_directory() -> None:

@@ -15,6 +15,13 @@ During maintenance of this skill repository, upstream NautilusTrader source, dev
 
 Route all strategy implementation in this repository to Rust-first skills.
 
+Before any artifact-producing build or native-test preparation, read and apply
+the bounded-build/storage policy in
+`../../references/developer_guide/contracts/environment_tooling.md`: two build
+jobs, shared serialization, protected reserve plus explicit growth budget,
+monitored admission and ownership-aware retention. This also applies when a
+task starts through this router rather than `nt-implement`.
+
 ## Default direction
 
 - Prefer Rust V2, PyO3, and `LiveNode` for new Rust-backed work; this is the repository's Rust-oriented v2.0 readiness path.
@@ -34,7 +41,7 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 | --- | --- | --- | --- |
 | G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
 | G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` passed the skill domain's scoped harnesses against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; schema-v2 provenance is recorded in `references/g2-evidence/nt.json`. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pending | Build/storage policy changed owned content; prior execution is historical, not verification of this revision. Re-run `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` with admitted capacity; `references/g2-evidence/nt.json` records the pending reason. |
 | G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
 | G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
 | G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |

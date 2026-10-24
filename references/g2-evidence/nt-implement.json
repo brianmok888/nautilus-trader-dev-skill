@@ -1,9 +1,10 @@
 {
-  "owned_content_sha256": "48243cf65c9b3a9b44788e8e970aeb0fd5bd9de9a2cb00a5208889762a6974da",
+  "owned_content_sha256": "568e44e87ef5480d70ac020cf48489b83597b930d73d0a07beba5d1c0fec8288",
+  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
   "schema_version": 2,
   "scope": "repository:fixed-point-schema-plus-upstream-owners",
   "skill": "nt-implement",
-  "status": "pass",
+  "status": "pending",
   "steps": [
     {
       "command": [
