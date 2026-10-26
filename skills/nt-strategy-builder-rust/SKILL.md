@@ -272,6 +272,44 @@ existing Python strategy.
   compatibility (`ComponentBuildId`), and panics from payload destructors and logging are
   contained by the host. Do not bypass the binding to reach actor state directly.
 
+## Optional learning/advisory participation pattern
+
+A strategy may expose an optional participation switch for external learning or
+advisory systems. Participation is a generic, default-off capability of the
+strategy itself; this section defines only the contract, not an implementation.
+
+- **Default off**: participation is opt-in through a typed config field. When the
+  field is absent, off, or no provider is injected, the strategy runs as a strict
+  no-op with respect to participation: no capture hooks, no advisory reads, no
+  network calls, and no threads owned by the participation path.
+- **Deterministic output**: with participation off, builds and backtest results
+  are byte-for-byte identical to a build without the feature at all. Turning the
+  switch on never changes trading decisions; advisory input is never decision
+  authority.
+- **Docs-only injected ports**: the strategy accepts two injected ports,
+  described here for documentation only, with no implementation in the skill:
+  `AdvisoryProvider.read(context) -> advisory | null` and
+  `OutcomePublisher.publish(decision_record)`. Both are owned by the host
+  composition, stay generic, and carry no vendor, schema, or transport
+  requirements. A `null` advisory means "no input"; the strategy must not
+  fabricate advisory references.
+- **Config identity and provenance**: the config identity includes the
+  participation flag and provider identity (when on). Every published decision
+  record carries its provenance, the config identity, and the participation
+  state so runs replay exactly: an off-run replays as off, an on-run replays with
+  the same advisory inputs and outputs.
+- **Restart boundary only**: participation state is pinned at startup (or another
+  explicitly supported boundary) and never mutated mid-run by reading or writing
+  files. A strategy must not watch, hot-reload, or rewrite its participation
+  configuration during a run.
+- **Parity check**: when adding the field, describe a parity harness that runs
+  the same strategy twice, once without the feature and once with the switch off
+  plus the ports absent, and asserts identical decisions and event streams. The
+  harness proves the behavior; do not pin prose claims with tests about wording
+  in this section.
+
+In Daedalus deployments this pattern is realized as ai_improvement + AI Lane — see nautilus-daedalus-dev-skill. Do not implement AI Lane specifics in generic strategies.
+
 ## References
 
 - `crates/trading/src/strategy/mod.rs` — `Strategy` trait (source of truth)

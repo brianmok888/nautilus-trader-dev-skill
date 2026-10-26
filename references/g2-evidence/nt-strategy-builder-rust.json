@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "7c2f2f55ee5dbddcc1d87f75fa4e4559671f7c6394ed2470aed03c486793013e",
+  "owned_content_sha256": "940ede4b2ed471e101c972e88e8fd20b4edbd4d55a610046be6ed80b3442b1f1",
   "schema_version": 2,
   "scope": "repository:compile-extracted-rust-strategy-skill-example",
   "skill": "nt-strategy-builder-rust",
@@ -7,18 +7,18 @@
   "steps": [
     {
       "command": [
-        "/usr/bin/python3",
+        "/home/mok/verify-ai-strategy-20261026/.venv-verified/bin/python",
         "-m",
         "pytest",
         "-q",
         "tests/test_rust_first_end_to_end.py::test_rust_strategy_skill_example_compiles_against_pinned_upstream"
       ],
       "cwd": "repository",
-      "duration_seconds": 29.11121,
+      "duration_seconds": 3.443154,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
   "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-  "verified_at": "2026-10-14T23:44:55.922829+00:00"
+  "verified_at": "2026-10-26T08:35:16.565411+00:00"
 }
