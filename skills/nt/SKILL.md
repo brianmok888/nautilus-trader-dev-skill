@@ -39,14 +39,14 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `tools/check_dev_guide_snapshot_sync.py` and `references/upstream-delta-review.json` distinguish the immutable baseline from reviewed current-develop overlays. |
-| G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `tools/check_legacy_labelling.py` enforces explicit labels and current alternatives. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pending | Build/storage policy changed owned content; prior execution is historical, not verification of this revision. Re-run `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt` with admitted capacity; `references/g2-evidence/nt.json` records the pending reason. |
-| G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | Domain skills and `nt-strategy-builder-rust` own version-scoped bindings guidance. |
-| G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `tests/test_markdown_lane_contract.py` validates all four structural lanes. |
-| G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py` validates router contracts; domain skills own executable checks. |
-| G6 Operational and migration boundaries | Execute selected repository policy checks. | Pass | `nt-testing` and `nt-review` are required for production-facing, live, adapter, and cross-component work. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current evidence is recorded in `references/g2-evidence/nt.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | Pin and review upstream evidence without modifying upstream. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | Label retained Cython/v1 and Python live material as migration/reference-only. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt` is the current-pin harness; evidence is `references/g2-evidence/nt.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate selected Rust/PyO3 ownership for production implementation. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Keep Rust production, bounded PyO3, migration, and source-pinned lanes explicit. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Run repository and domain tests for routed work. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Execute selected repository policy checks. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 ## Routing
 
@@ -102,7 +102,13 @@ Migration/reference-only legacy material is physically quarantined under each sk
 
 ## Source-pinned upstream lane
 
-The authoritative pinned upstream commit is `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+The authoritative pinned upstream commit is `77d785c69205c4326e6aadb46d03fb45357a78f2`; canonical guide contracts live under `references/developer_guide/`, and reviewed current-develop overlays are version-scoped in `references/upstream-delta-review.json`.
 
 ## Boundaries
 

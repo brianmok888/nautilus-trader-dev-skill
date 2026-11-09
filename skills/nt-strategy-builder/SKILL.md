@@ -22,14 +22,14 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Execute the supported `BacktestNode`/`BacktestRunConfig` contract against pinned V2 and statically verify that retained Python templates remain migration/reference-only. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` passed against the writable pinned-V2 build selected through `NT_UPSTREAM_ROOT`; `tests/test_strategy_builder_v2_contract.py` provides executable V2 coverage plus static migration/reference checks, while pinned upstream backtest/live acceptance tests provide integration coverage; `references/g2-evidence/nt-strategy-builder.json` records provenance at `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels and Rust-first lane guidance. | Pass | `uv run python -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-strategy-builder.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Execute the supported `BacktestNode`/`BacktestRunConfig` contract against pinned V2 and statically verify that retained Python templates remain migration/reference-only. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt-strategy-builder` is the current-pin harness; evidence is `references/g2-evidence/nt-strategy-builder.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Classify migration-only Python, bounded PyO3 control-plane, and Rust production lanes while using current V2 API shapes. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels and Rust-first lane guidance. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt-strategy-builder.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 Migration gate: upstream NT V2 still supports Python strategies, but this repository applies a stricter Rust cutover policy. This skill and its executable templates are migration/reference-only; route all new strategy, research/config, backtest, paper, live, production, and performance implementation to `nt-strategy-builder-rust`. Non-NautilusTrader development lanes are outside this repository.
 
@@ -47,11 +47,22 @@ The Python API may select a registered Rust strategy, provide serializable param
 
 ## Migration/reference lane
 
+The G2 migration contract runs `tests/test_strategy_builder_v2_contract.py`
+through the pinned PyO3 environment, then the selected upstream Python tests.
+These static migration/reference checks and runtime compatibility probes do
+not authorize Python production strategies; new strategy work routes to Rust.
+
 Historical Python prose and examples are pointer-only from this root. Read `migration_reference/python/venue-and-simulation-examples.md` and `templates/legacy_migration/` only when translating an existing Python system. New implementation routes to `nt-strategy-builder-rust`; non-NautilusTrader development is outside this repository.
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `77d785c69205c4326e6aadb46d03fb45357a78f2`. Treat this immutable snapshot as upstream evidence, not as an editable production template.
 
 ## Overview
 

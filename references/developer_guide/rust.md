@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/rust/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/rust.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Rust
 
 This page defines NautilusTrader conventions for Rust source, Cargo manifests, PyO3 bindings, and tests.
@@ -41,6 +40,46 @@ cannot check.
 Match nearby code when the tools do not settle a choice. Change generator inputs and regenerate
 outputs instead of editing generated files directly.
 
+## Lint configuration
+
+`Cargo.toml` defines shared lint levels under `[workspace.lints]`. Each package inherits them with
+`[lints] workspace = true`. `clippy.toml` configures lint behavior, including thresholds, test
+allowances, and disallowed APIs; it does not set lint levels. `.cargo/config.toml` and the repository
+Clippy commands deny warnings so enabled checks fail the command.
+
+Crates adopt pedantic checks through `#![warn(clippy::pedantic)]` in each migrated target root.
+A library opt-in does not opt in its binaries, examples, or integration tests. Keep pedantic disabled
+in targets that have not migrated. Use narrow, reasoned source allowances for local exceptions,
+including documented macro exceptions.
+
+[Source attributes](https://doc.rust-lang.org/rustc/lints/levels.html#priority-of-lint-level-sources)
+override Cargo lint flags. Cargo
+[priority](https://doc.rust-lang.org/cargo/reference/manifest.html#the-lints-section) orders those flags
+and cannot preserve a shared allowance against a source group opt-in. Cargo also rejects package lint
+tables alongside workspace inheritance. The repository therefore generates shared allowance attributes after each
+source pedantic opt-in. This keeps direct Cargo commands and staged adoption working without copied
+lint tables or a custom Clippy runner. The generated attributes repeat the shared choices in source,
+with `Cargo.toml` as their authoritative definition.
+
+After changing shared allowances or adding an opt-in, run:
+
+```bash
+python3 -B scripts/update-clippy-allowances.py
+make check-clippy-allowances
+```
+
+The generator also covers module opt-ins: a group attribute in an inner scope overrides inherited
+allowances. Keep generated allowances after the opt-in and regenerate them instead of editing them.
+Pre-commit and repository Clippy commands check for drift. Run
+`python3 -B scripts/ci/test_clippy_allowances.py` for the isolated compiler regression probes.
+
+`make check-code` checks library and test targets; `scripts/clippy-changed.sh` also checks binaries.
+`make check-all-targets` includes examples and benches. These gates retain `-D warnings`.
+`make clippy-pedantic-crate-<package>` enables pedantic for one package's targets and appends shared
+allowance flags from the same generator.
+`make clippy-strict-audit` uses `--force-warn` to report candidate lints even at deliberately allowed
+sites; findings do not fail that audit.
+
 ## Module layout
 
 Arrange each hand-written module so its primary behavior appears before its supporting
@@ -48,18 +87,19 @@ implementation details.
 
 ### Module roots and declarations
 
-Preserve the surrounding module-root style when adding child modules. In each contiguous
-declaration block in a `mod.rs` file, order out-of-line module declarations by these sections:
+Preserve the surrounding module-root style when adding child modules.
+
+In each contiguous declaration block in a hand-written Rust file, order top-level out-of-line module
+declarations by these sections:
 
 1. `#[macro_use]` modules.
-1. Public modules.
-1. Restricted modules such as `pub(crate)`.
-1. Non-test `#[cfg(...)]`-gated modules.
-1. Private modules.
+1. Unconditional modules: public, restricted (such as `pub(crate)`), then private.
+1. Non-test `#[cfg(...)]`-gated modules: public, restricted, then private.
 1. Test-only modules.
 
-Alphabetize declarations within each section and leave one blank line between sections. The
-formatting hook enforces this order in `mod.rs` files.
+Alphabetize declarations in each visibility group, the `#[macro_use]` section, and the test-only section.
+Leave one blank line between groups and sections. The formatting hook enforces this order in all
+hand-written Rust files, including `lib.rs` and `mod.rs`.
 
 Use the narrowest visibility that serves the caller. The workspace denies unreachable `pub` items.
 
@@ -129,7 +169,7 @@ exception.
 - Keep adapter dependencies in the `# Adapter dependencies` section of the workspace
   `Cargo.toml`. Core crates must not depend on entries from that section.
 - Keep related dependency families compatible. The Cargo convention hook checks the known
-  constraints, including `capnp` with `capnpc`, `arrow` with `parquet`, and
+  constraints, including `arrow` with `parquet` and
   `dydx-proto` with `prost` and `tonic`.
 - List only declared dependencies under `[package.metadata.cargo-machete] ignored`.
 - Remove a root `[workspace.dependencies]` entry when no crate uses it. Cargo tools kept only for CI
@@ -223,9 +263,14 @@ The formatting hook:
 
 - Checks existing control-flow, spawn, and module-ordering rules at changed boundaries.
 - Compares staged and unstaged changes against `HEAD`, or against the merge base with `CHANGED_BASE_SHA` when set.
-- Falls back to checking all tracked Rust files when a CI base is unavailable.
+- Checks all tracked Rust files under `crates`, `examples`, and `docs` when the configured base cannot be resolved.
 - Reads complete changed files for context and includes lines used by exemption checks when selecting diagnostics.
 - Does not modify files.
+
+`make pre-commit` checks committed, staged, and unstaged Rust changes against the merge base with the
+local `origin/develop` ref, then runs prek if formatting passes. Set `CHANGED_BASE_SHA` to select
+another base. The default applies only to this formatting check. Commit-time hooks and direct
+`prek run --all-files` compare against `HEAD` unless `CHANGED_BASE_SHA` is set.
 
 These remain review conventions:
 
@@ -793,7 +838,7 @@ model.
 
 The Python targets accept the uv minor series defined by `required-version` in
 `python/pyproject.toml`. `make sync`, `make py-stubs`, and `make build-debug` stop when the installed
-version falls outside that range. Run `make update-uv` to install the exact project version from
+version falls outside that range. Run `make install-uv` to install the exact project version from
 `.nautilus-engineering/tools.toml`.
 
 Do not edit wrapper `///` comments in `crates/**/src/python/`. Edit the core Rust item docs and
@@ -918,19 +963,3 @@ The crate-local `cbindgen.toml` files define the header layout for native consum
 
 Run `make check-cbindgen-abi`. It generates both headers and checks their public names and compatibility enum
 values. It also compiles a C11 consumer against them. The scheduled nightly tests run this check.
-
-### Cap'n Proto schemas
-
-Schema files live under `crates/serialization/schemas/capnp/`, and generated Rust lives under
-`crates/serialization/generated/capnp/`.
-
-- Add fields at the end.
-- Do not remove fields or reuse field numbers. Mark obsolete fields as deprecated in comments.
-- Regenerate with `make regen-capnp`.
-- Review `git diff crates/serialization/generated/capnp`.
-- Run `make check-capnp-schemas` to verify the checked-in output.
-- Test the serialization crate with `make cargo-test-crate-nautilus-serialization`.
-
-Install the pinned compiler as described in
-[Environment setup](environment_setup.md#capn-proto). Generated bindings stay checked in so
-docs.rs can build without the compiler.

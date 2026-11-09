@@ -19,11 +19,10 @@ def test_current_develop_contract_overlays_cover_registration_reconnect_and_bloc
     for marker in ("ensure_registered", "before actor registration", "PyResult"):
         assert marker in testing
     for marker in (
-        "SocketReconnectRegistry",
-        "ReconnectSocket",
-        "AlreadyReconnecting",
+        "ReconnectRequestOutcome",
+        "already reconnecting",
         "Unsupported",
-        "endpoint",
+        "Stream-mode clients own their reconnect loop",
     ):
         assert marker in adapters
     for marker in (

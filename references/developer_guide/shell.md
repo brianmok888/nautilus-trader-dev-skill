@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/shell/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/shell.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Shell Scripts
 
 This page defines when to create a shell script and how to name, write, invoke, and test it.

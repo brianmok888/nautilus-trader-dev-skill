@@ -20,12 +20,12 @@
 //! Run with: `cargo run -p nautilus-kraken --example kraken-exec-tester --features examples`
 //!
 //! Required credential environment variables (Spot):
-//! - `KRAKEN_SPOT_API_KEY`.
-//! - `KRAKEN_SPOT_API_SECRET`.
+//! - `KRAKEN_SPOT_API_KEY`
+//! - `KRAKEN_SPOT_API_SECRET`
 //!
 //! Required credential environment variables (Futures):
-//! - `KRAKEN_FUTURES_API_KEY`.
-//! - `KRAKEN_FUTURES_API_SECRET`.
+//! - `KRAKEN_FUTURES_API_KEY`
+//! - `KRAKEN_FUTURES_API_SECRET`
 
 use nautilus_common::enums::Environment;
 use nautilus_kraken::{
@@ -40,9 +40,6 @@ use nautilus_model::{
 };
 use nautilus_testkit::testers::{ExecTester, ExecTesterConfig};
 use nautilus_trading::strategy::StrategyConfig;
-
-// *** THIS IS A TEST STRATEGY WITH NO ALPHA ADVANTAGE WHATSOEVER. ***
-// *** IT IS NOT INTENDED TO BE USED TO TRADE LIVE WITH REAL MONEY. ***
 
 // WARNING: With `DRY_RUN = false`, this tester submits orders to the configured
 // environment and may use real funds. Set `DRY_RUN = true` to connect without

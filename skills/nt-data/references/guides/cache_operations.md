@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Cache Operations Reference
 
-## Native analytics records and yield curves at reviewed tip `2ceb2a9a6`
+## Native analytics records and yield curves at reviewed tip `77d785c69`
 
 Treat `GreeksData` and `PortfolioGreeks` as native catalog families, not
 custom-data payloads. Yield curves moved to custom data at upstream
@@ -16,7 +16,7 @@ the instrument contract multiplier (`PortfolioGreeks::from(GreeksData)` since
 cached.
 Preserve the record family/schema when promoting streamed analytics into a
 catalog; do not infer a cache getter or streaming method from catalog support.
-See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-2ceb2a9a6).
+See [catalog contracts](../concepts/data.md#catalog-and-time-bar-contracts-at-reviewed-tip-77d785c69).
 Source: upstream `crates/persistence/src/catalog/types.rs`,
 `crates/persistence/src/writer/feather.rs`, `crates/common/src/python/cache.rs`,
 and `crates/common/src/greeks.rs`.
@@ -86,7 +86,7 @@ synthetic_ids = self.cache.synthetic_ids()
 ### Instrument closes
 
 The cache keeps the latest `InstrumentClose` per instrument (upstream commit `9d45d410db`, pinned
-`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`):
+`77d785c69205c4326e6aadb46d03fb45357a78f2`):
 
 ```python
 self.cache.add_instrument_close(close)          # store the latest close (last write wins)

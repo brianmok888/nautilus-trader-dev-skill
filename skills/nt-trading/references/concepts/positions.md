@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Positions
 
-## Virtual hedging history at reviewed tip `2ceb2a9a6`
+## Virtual hedging history at the current pin `77d785c692` (behavior introduced earlier in develop; historical reviewed tip `2ceb2a9a6`)
 
 A virtual HEDGING flip creates a new position ID and retains the original
 closed position in cache, so that path does not need a closed-cycle snapshot.

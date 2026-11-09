@@ -1,10 +1,9 @@
 {
-  "owned_content_sha256": "d1070b43c0cabe640b20937f549929d7d2d847d16548e1e7f878f940f3d13d33",
-  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
+  "owned_content_sha256": "8bb7b133633fc8f313eff80719edaac637f635bf74008347dad5662b8662f3ff",
   "schema_version": 2,
   "scope": "repository:review-policy-plus-upstream-safety-owners",
   "skill": "nt-review",
-  "status": "pending",
+  "status": "pass",
   "steps": [
     {
       "command": [
@@ -21,7 +20,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.639608,
+      "duration_seconds": 2.380277,
       "returncode": 0
     },
     {
@@ -39,11 +38,11 @@
         "--all-targets"
       ],
       "cwd": "upstream",
-      "duration_seconds": 1.558057,
+      "duration_seconds": 1.120918,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-  "verified_at": "2026-10-14T23:58:54.690020+00:00"
+  "upstream_commit": "77d785c69205c4326e6aadb46d03fb45357a78f2",
+  "verified_at": "2026-11-09T07:02:38.883199+00:00"
 }

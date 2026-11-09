@@ -4,6 +4,10 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
+from tools.upstream_baseline import default_upstream_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 IGNORED_PARTS = {".git", ".pytest_cache", ".ruff_cache", "__pycache__"}
 MARKDOWN_LINK = re.compile(r"(?<!!)(?:\[[^\]]+\]|\[[^\]]+\]\[[^\]]*\])\(([^)]+)\)")
@@ -136,19 +140,83 @@ def test_pinned_upstream_snapshot_detection_is_narrow(tmp_path: Path) -> None:
     )
     assert not _is_pinned_upstream_snapshot(missing_policy, missing_policy.read_text())
 
+    owned = tmp_path / "skills/nt-adapters/references/guides/rust.md"
+    owned.parent.mkdir(parents=True)
+    owned.write_text(snapshot.read_text())
+    assert _is_pinned_upstream_snapshot(owned, owned.read_text())
+    assert not _is_pinned_upstream_snapshot(
+        owned, owned.read_text().replace("a" * 40, "not-a-commit")
+    )
+    assert not _is_pinned_upstream_snapshot(
+        owned,
+        owned.read_text().replace("nautechsystems/nautilus_trader/", "other/project/"),
+    )
+    for original, replacement in (
+        ("docs/developer_guide/rust.md", "docs/developer_guide/../rust.md"),
+        ("docs/developer_guide/rust.md", "docs/developer_guide/"),
+        ("source_commit: " + "a" * 40, "source_commit: " + "a" * 41),
+        ("legacy_policy:", "other_policy:"),
+        ("target:", "other_target:"),
+    ):
+        assert not _is_pinned_upstream_snapshot(
+            owned, owned.read_text().replace(original, replacement)
+        )
+    assert not _is_pinned_upstream_snapshot(
+        owned, "---\ntitle: ordinary guide\n---\n" + owned.read_text()
+    )
+
+def test_snapshot_link_exemption_preserves_ordinary_broken_links(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(globals(), "REPO_ROOT", tmp_path)
+    owned = tmp_path / "skills/nt-adapters/references/guides/official_adapter_spec.md"
+    owned.parent.mkdir(parents=True)
+    metadata = (
+        "---\n"
+        "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/adapters.md\n"
+        "source_commit: " + "a" * 40 + "\n"
+        "target: NautilusTrader develop developer guide source snapshot\n"
+        "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only\n"
+        "---\n"
+    )
+    owned.write_text(metadata + "[Upstream guide](missing.md)\n", encoding="utf-8")
+    test_markdown_relative_links_resolve_within_repo()
+    owned.write_text("[Ordinary guide](missing.md)\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="missing.md"):
+        test_markdown_relative_links_resolve_within_repo()
+
 
 def _is_external_or_anchor(target: str) -> bool:
     return target.startswith(("http://", "https://", "mailto:", "#", "<"))
 
 
 def _is_pinned_upstream_snapshot(path: Path, text: str) -> bool:
+    copied_examples = (
+        REPO_ROOT / "skills/nt-trading/references/examples/rust_trading/examples"
+    )
+    if path.is_relative_to(copied_examples):
+        source = (
+            default_upstream_root() / "crates/trading/src/examples"
+            / path.relative_to(copied_examples)
+        )
+        return source.is_file() and source.read_text(encoding="utf-8") == text
+    metadata = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
+    if metadata is None:
+        return False
+    header = metadata.group(1)
     return (
-        "references/developer_guide" in path.as_posix()
-        and "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/" in text
-        and re.search(r"^source_commit: [0-9a-f]{40}$", text, re.MULTILINE) is not None
-        and "target: NautilusTrader develop developer guide source snapshot" in text
+        re.search(
+            r"(?:^|/)(?:references/developer_guide|skills/nt[^/]*/references/guides)/[^/]+\.md$",
+            path.as_posix(),
+        ) is not None
+        and re.search(
+            r"^source_repo: nautechsystems/nautilus_trader/docs/developer_guide/[A-Za-z0-9_-]+\.md$",
+            header, re.MULTILINE,
+        ) is not None
+        and re.search(r"^source_commit: [0-9a-f]{40}$", header, re.MULTILINE) is not None
+        and "target: NautilusTrader develop developer guide source snapshot" in header.splitlines()
         and "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only"
-        in text
+        in header.splitlines()
     )
 
 

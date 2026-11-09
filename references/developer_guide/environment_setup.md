@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/environment_setup/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/environment_setup.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Environment Setup
 
 Use an editor with current Rust and Python language support, such as PyCharm or Visual Studio Code.
@@ -19,9 +18,9 @@ Use an editor with current Rust and Python language support, such as PyCharm or 
 Source builds and the Rust crates require [Rust](https://www.rust-lang.org)
 ([installation guide](https://www.rust-lang.org/tools/install)).
 
-[Cap'n Proto](https://capnproto.org) is required for serialization schema compilation. The required
-version is specified in `.nautilus-engineering/tools.toml`. Ubuntu's default package is typically
-too old, so you may need to install from source (see below).
+[Cap'n Proto](https://capnproto.org) tooling is retained for HyperSync development. Its pinned version
+is specified in `.nautilus-engineering/tools.toml`. Ubuntu's default package is typically too old,
+so you may need to install from source (see below).
 
 :::info
 NautilusTrader *must* compile and run on **Linux, macOS, and Windows**. Please keep portability in
@@ -61,7 +60,7 @@ source "$HOME/.cargo/env"
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
-cargo install cargo-binstall --locked
+cargo install cargo-binstall --version "$(bash scripts/cargo-tool-version.sh cargo-binstall)" --locked
 make install-tools
 ./scripts/install-capnp.sh
 
@@ -94,6 +93,18 @@ test dependencies from the repository root:
 make sync
 ```
 
+For Python 3.15, exclude documentation dependencies. Set these variables before running sync, build,
+or test targets in the same shell:
+
+```bash
+export UV_PYTHON=3.15
+export UV_SYNC_FLAGS="--inexact --no-group docs"
+make sync
+```
+
+Documentation builds use Python 3.14. The `docs` dependency group supports Python 3.13 and 3.14
+because PyYAML does not yet publish Python 3.15 wheels.
+
 For frequent development, install a debug build of the package into `python/.venv`:
 
 ```bash
@@ -111,11 +122,11 @@ make install-tools
 
 This installs:
 
-- **Shared Cargo CLIs** pinned in `.nautilus-engineering/tools.toml`: `cargo-audit`, `cargo-deny`,
-  `cargo-edit`, `cargo-llvm-cov`, `cargo-nextest`, and `cargo-vet`.
+- **Shared Cargo CLIs** pinned in `.nautilus-engineering/tools.toml`: `cargo-audit`, `cargo-binstall`,
+  `cargo-deny`, `cargo-edit`, `cargo-fuzz`, `cargo-hawk`, `cargo-llvm-cov`, `cargo-machete`,
+  `cargo-nextest`, and `cargo-vet`.
 - **NautilusTrader Cargo CLIs** pinned in `Cargo.toml` under `[workspace.metadata.tools]`:
-  `cargo-codspeed`, `cargo-fuzz`, `cargo-hawk`, `cargo-machete`, `cbindgen`, `flamegraph`, and
-  `lychee`.
+  `cargo-codspeed`, `cbindgen`, `flamegraph`, and `lychee`.
 - **NautilusTrader Cargo CLI** pinned in `tools.toml`: `tokei` (line counter).
 - **Prebuilt binaries** pinned in `.nautilus-engineering/tools.toml`: `prek` (pre-commit runner) and
   `osv-scanner` (vulnerability scanner).
@@ -141,14 +152,15 @@ rustup toolchain install "$(bash scripts/tool-version.sh nightly)" --profile min
 #### One-off prerequisite: cargo-binstall
 
 `make install-tools` uses [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall) to fetch
-`prek` as a prebuilt binary instead of compiling it from source. Install `cargo-binstall` once per
-machine:
+`prek` as a prebuilt binary instead of compiling it from source. Install the shared pinned version
+before the first run:
 
 ```bash
-cargo install cargo-binstall --locked
+cargo install cargo-binstall --version "$(bash scripts/cargo-tool-version.sh cargo-binstall)" --locked
 ```
 
-This is a one-time step. Subsequent runs of `make install-tools` reuse the installed `cargo-binstall`.
+Each run of `make install-tools` updates `cargo-binstall` to the shared pin before installing the
+remaining tools.
 
 #### Single source of truth for versions
 
@@ -185,6 +197,8 @@ prek install
 ```
 
 Rerun `prek install` after pulling a change to the configured hook types.
+
+The Dockerfile hook installs native Hadolint in its isolated environment; it does not require Docker.
 
 Before opening a pull-request run the formatting and lint suite locally so that CI passes on the
 first attempt:
@@ -268,12 +282,12 @@ echo "PYTHONHOME: $PYTHONHOME"
 ## Dependency management
 
 Python dependencies are managed by [uv](https://docs.astral.sh/uv). The `[tool.uv]` section in
-`python/pyproject.toml` enforces three supply chain safety settings:
+`python/pyproject.toml` enforces these supply chain safety settings:
 
 - **`required-version`**: local uv commands accept any patch release in the supported minor series. If your
   local uv is outside that range, `uv lock` and `uv sync` fail with a version mismatch.
   `.nautilus-engineering/tools.toml` separately pins the exact version used by CI, Docker, pre-commit, and
-  `make update-uv`. The stub targets run through `make sync`, so they enforce the same supported range. See
+  `make install-uv`. The stub targets run through `make sync`, so they enforce the same supported range. See
   [Generated Python artifacts](rust.md#generated-python-artifacts).
 - **`exclude-newer = "7 days"`**: `uv lock` ignores package versions published within the last 7 days. This
   gives the community time to detect and quarantine compromised releases before they enter the lockfile. The
@@ -286,6 +300,7 @@ Python dependencies are managed by [uv](https://docs.astral.sh/uv). The `[tool.u
   uv 0.11.8+ stores the friendly/ISO form as `exclude-newer-span` inside `python/uv.lock`. It emits a sentinel
   `exclude-newer` timestamp alongside that field for backwards compatibility. `python/uv.lock` uses that
   format.
+- **`exclude-newer-package = { ruff = "3 days" }`**: Ruff uses the shared three-day native-tool cooldown.
 - **`no-build-package`**: explicit list of all third-party packages locked in `python/uv.lock`. `uv` refuses
   to build any of them from source. In normal operation, uv prefers wheels, so the setting is a no-op. It
   triggers only if a listed package stops publishing wheels for the target platform. In that case, `uv lock`
@@ -330,7 +345,7 @@ project version within that range:
 1. Sync the shared catalog.
 1. Update the `rev` in `.pre-commit-config.yaml`.
 1. Update each digest-pinned uv Docker image.
-1. Run `make update-uv` to install the project version locally.
+1. Run `make install-uv` to install the project version locally.
 
 ### Rust dependency cooldown
 
@@ -451,7 +466,9 @@ In Fish, use `source python/.venv/bin/activate.fish` for activation. Activation 
 
 ## Cap'n Proto
 
-[Cap'n Proto](https://capnproto.org) is required for serialization schema compilation.
+[Cap'n Proto](https://capnproto.org) tooling remains available for HyperSync development. The pinned
+HyperSync dependencies ship generated Rust bindings, so normal builds do not regenerate their schemas.
+NautilusTrader does not provide Cap'n Proto codecs.
 The required version is defined in `.nautilus-engineering/tools.toml`.
 
 Install the correct version for your platform:
@@ -552,6 +569,15 @@ Set the same toolchain in your [rust-analyzer settings](#rust-analyzer-settings)
 local patch.
 
 ## Services
+
+The Compose file pins PostgreSQL 18, Redis, and pgAdmin images. Before starting PostgreSQL 18
+with an existing volume from an earlier major version, back up the database and migrate it using
+[dump/restore or `pg_upgrade`](https://www.postgresql.org/docs/18/upgrading.html). Changing the
+image does not upgrade the stored data.
+
+For Debian-to-Alpine migration, back up and dump/restore the database even when the PostgreSQL major
+version is unchanged. The images use different libc collation rules, so reusing the old data directory
+can invalidate indexes.
 
 Initialize PostgreSQL, Redis, and pgAdmin from the repository root:
 

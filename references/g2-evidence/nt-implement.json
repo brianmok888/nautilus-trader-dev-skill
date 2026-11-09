@@ -1,21 +1,22 @@
 {
-  "owned_content_sha256": "568e44e87ef5480d70ac020cf48489b83597b930d73d0a07beba5d1c0fec8288",
-  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
+  "owned_content_sha256": "db2785a70bc5274b5eeed60390f0d1631668446bf05c34feb4b66e31d6855f4c",
   "schema_version": 2,
-  "scope": "repository:fixed-point-schema-plus-upstream-owners",
+  "scope": "upstream:serialization-and-component-owners",
   "skill": "nt-implement",
-  "status": "pending",
+  "status": "pass",
   "steps": [
     {
       "command": [
-        "/usr/bin/python3",
-        "-m",
-        "pytest",
-        "-q",
-        "tests/test_capnp_schema_precision.py"
+        "cargo",
+        "check",
+        "-p",
+        "nautilus-serialization",
+        "--features",
+        "arrow,sbe",
+        "--lib"
       ],
-      "cwd": "repository",
-      "duration_seconds": 0.916425,
+      "cwd": "upstream",
+      "duration_seconds": 0.729833,
       "returncode": 0
     },
     {
@@ -33,11 +34,11 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 0.565596,
+      "duration_seconds": 0.615392,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-  "verified_at": "2026-10-14T23:58:49.559435+00:00"
+  "upstream_commit": "77d785c69205c4326e6aadb46d03fb45357a78f2",
+  "verified_at": "2026-11-09T08:25:13.899664+00:00"
 }

@@ -1,12 +1,11 @@
-import hashlib
 from pathlib import Path
 
-from tools.upstream_baseline import UPSTREAM_COMMIT
+from tools.check_dev_guide_snapshot_sync import strip_local_metadata
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_PATH = REPO_ROOT / "skills/nt-testing/SKILL.md"
 PINNED_SPEC_PATH = REPO_ROOT / "references/developer_guide/spec_exec_testing.md"
-PINNED_SPEC_SHA256 = "eb18a4ca880f319c2084b981b96a47a6fb6beb9ebabe3cf2a594348ee6752ed8"
 
 
 def read(path: Path) -> str:
@@ -21,9 +20,21 @@ def execution_freshness_section() -> str:
 
 
 def test_pinned_execution_spec_snapshot_remains_immutable() -> None:
-    digest = hashlib.sha256(PINNED_SPEC_PATH.read_bytes()).hexdigest()
+    snapshot = read(PINNED_SPEC_PATH)
+    upstream = default_upstream_root() / "docs/developer_guide/spec_exec_testing.md"
 
-    assert digest == PINNED_SPEC_SHA256
+    assert f"source_commit: {UPSTREAM_COMMIT}\n" in snapshot
+    metadata = snapshot.split("---\n", 2)[1].splitlines()
+    assert (
+        "source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_exec_testing.md"
+        in metadata
+    )
+    assert "target: NautilusTrader develop developer guide source snapshot" in metadata
+    assert (
+        "legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only"
+        in metadata
+    )
+    assert strip_local_metadata(snapshot) == read(upstream)
 
 
 def test_current_overlay_versions_the_execution_spec_delta() -> None:

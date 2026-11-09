@@ -17,14 +17,14 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` passed the skill domain's scoped harnesses against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; schema-v2 provenance is recorded in `references/g2-evidence/nt-adapters.json`. A G2 `cargo check` result is compilation only; it is not spec, testnet, resilience, fuzz, or operations acceptance evidence. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run python -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-adapters.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the selected NT V2 baseline. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt-adapters` is the current-pin harness; evidence is `references/g2-evidence/nt-adapters.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt-adapters.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 
 Adapter gates: Rust owns HTTP/WebSocket networking, request signing, parsing, normalization, subscription/order state, and reconnect logic; Python/PyO3 is only the control/config exposure. Before `Pass`, run adapter unit/spec tests, `cargo nextest`, `cargo clippy`, `cargo deny`, and `scripts/fuzz-adapter.sh`/fuzz targets for parsers or protocol changes.
@@ -54,12 +54,14 @@ PyO3 exposes Rust-owned adapter configuration, factory construction, status, and
 ```rust
 use pyo3::prelude::*;
 
-#[pyclass(frozen)]
+#[pyclass(frozen, module = "nautilus_trader._libnautilus.your_venue")]
+#[pyo3_stub_gen::derive::gen_stub_pyclass(module = "nautilus_trader.adapters.your_venue")]
 struct AdapterConfigBinding {
     inner: AdapterConfig,
 }
 
 #[pymethods]
+#[pyo3_stub_gen::derive::gen_stub_pymethods]
 impl AdapterConfigBinding {
     #[getter]
     fn environment(&self) -> &str {
@@ -68,14 +70,38 @@ impl AdapterConfigBinding {
 }
 ```
 
+Use the selected venue's real module names and include the optional
+`pyo3-stub-gen` dependency in its `python` feature. Runtime module paths and
+public import paths have distinct roles; regenerate stubs with the current
+upstream tooling when the exposed configuration changes.
+
 ## Migration/reference lane
 
 Quarantined Python examples and prior Python adapter guidance live under `migration_reference/python/` and `references/examples/migration_reference/`. They are migration/reference-only, never the production default.
 
 ## Source-pinned upstream lane
-Python custom adapter support is available at the pinned baseline (`2ceb2a9a62`, upstream `e9848a98ca`): adapter factories expose a Python registration path for custom adapters. Prefer the Rust core + PyO3 lane for production; use the Python path only for Python-side custom adapters.
 
-Use `references/developer_guide/adapters.md` and `references/developer_guide/rust.md` as the source-pinned upstream snapshots at commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`. Preserve their provenance and compare later APIs explicitly rather than silently replacing pinned guidance.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+Use `references/developer_guide/adapters.md` and
+`references/developer_guide/rust.md` for the shared source-pinned developer
+contracts; the skill-local guide copies below cover adapter-specific consumers.
+
+Python custom adapter support is available at the pinned baseline (current pin `77d785c692` (introduced earlier in develop; historical pair `2ceb2a9a62`/`e9848a98ca`), upstream `e9848a98ca`): adapter factories expose a Python registration path for custom adapters. Prefer the Rust core + PyO3 lane for production; use the Python path only for Python-side custom adapters.
+
+The owned `references/guides/official_adapter_spec.md`, `rust.md`,
+`spec_data_testing.md`, and `spec_exec_testing.md` snapshots and the mirrored Rust
+examples with current source are synchronized to upstream develop
+`77d785c69205c4326e6aadb46d03fb45357a78f2` (2026-11-09). Each guide records its
+source path and commit in frontmatter. This is a develop source snapshot, not
+release or execution evidence. Shared developer-guide snapshots, venue pages,
+and integration inventories retain their separately recorded versions; do not
+assume they were synchronized by this unit. The retained BitMEX examples have no
+matching source in this develop checkout and remain historical/reference-only.
 
 ## What This Skill Covers
 
@@ -134,6 +160,18 @@ Current high-risk rules:
 - Treat transport, timeout, send, retry, parse, and whole-batch failures as
   ambiguous outcome failures unless the venue returns an explicit per-order
   rejection.
+- `nautilus_network::mode::ConnectionMode` has exactly `Active`, `Reconnect`,
+  `Disconnect`, and `Closed`. `Disconnect` requests intentional disconnection
+  without reconnecting; `Closed` is terminal. Source: upstream develop
+  `77d785c69205c4326e6aadb46d03fb45357a78f2`, `crates/network/src/mode.rs`.
+- Polymarket WebSocket commission or other owned-leg validation failure emits
+  no fill and quarantines the trade for targeted terminal REST resolution. A
+  later valid WebSocket copy must not silently apply that quarantined trade.
+  Keep subsequent stream processing alive, and never substitute zero or generic
+  commission. See the synchronized adapter guide
+  `references/guides/official_adapter_spec.md#websocket-fills` and upstream
+  `crates/adapters/polymarket/src/websocket/dispatch.rs` at develop
+  `77d785c69205c4326e6aadb46d03fb45357a78f2`.
 
 Current-develop retry contract (upstream commits
 `77868193d234f7022cac1e14e1c72a419a958665` and
@@ -153,7 +191,7 @@ Current venue safety overlays:
   loss. Source: upstream develop commit
   `276e5410115edb40baac9270876c970550c086ee`.
 - BitMEX is historical/reference-only: its Rust crate and Python adapter module
-  are unavailable at pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
+  are unavailable at pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`.
   Retained examples cannot provide current production wiring. The adapter was
   removed following exchange closure in upstream commit
   `3adf5a8dc0c9e676eb1e131911a73ad693ea7b42`.
@@ -543,7 +581,7 @@ account channels on a timer, and cancel the refresh loop with `CancellationToken
 ### Task Management
 
 Classify every production task by its owner before choosing storage and
-shutdown (pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`, `docs/developer_guide/adapters.md` "Task
+shutdown (pinned `77d785c69205c4326e6aadb46d03fb45357a78f2`, `docs/developer_guide/adapters.md` "Task
 management"; `crates/live/src/task.rs`):
 
 | Ownership | Use | Required behavior |
@@ -659,6 +697,6 @@ Rust adapter code must include:
   subscription routing; beta data provider with no execution client. Kalshi remains a
   separate planned integration, not CoinAPI coverage.
 - `references/integrations/betfair_v2.md` — The primary Betfair guide: all Betfair work routes
-  here first (Rust adapter surface, tracked against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`). `betfair.md` is a cleared,
+  here first (Rust adapter surface, tracked against `77d785c69205c4326e6aadb46d03fb45357a78f2`). `betfair.md` is a cleared,
   migration/reference-only v1 stub; the upstream-maintained v1 doc stays readable in the pinned
   upstream snapshot.

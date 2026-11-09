@@ -2,7 +2,7 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 # Value Type Patterns Reference Guide
 
-## Float conversion boundary at reviewed tip `2ceb2a9a6`
+## Float conversion boundary at the current pin `77d785c692` (behavior introduced earlier in develop; historical reviewed tip `2ceb2a9a6`)
 
 PyO3 Price/Quantity `as_double()` and float-producing mixed arithmetic reject
 precision 17 or 18 with ValueError: float arithmetic supports precision <=16.
@@ -378,8 +378,7 @@ restored = AccountBalance.from_dict(d)
 ## Instrument Properties
 
 Instruments expose their specifications through the same value types, keeping precision
-handling uniform across the model (pinned
-`flat `python/nautilus_trader/model/__init__.pyi` stubs at pin `2ceb2a9a624e174a5160c10f8188afbdd57ecb99``):
+handling uniform across the model (flat `python/nautilus_trader/model/__init__.pyi` stubs exist at the current pin `77d785c69205c4326e6aadb46d03fb45357a78f2`):
 
 - Precision and increments: `price_precision` / `size_precision` (`int`) with the
   matching `price_increment` (`Price`) and `size_increment` (`Quantity`).

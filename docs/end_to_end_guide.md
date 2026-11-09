@@ -5,7 +5,7 @@ This guide gives the default NautilusTrader Development Skills workflow for a ne
 All new strategy, integration, and live work follows the Rust-first path in this guide. Python NT material is migration/reference-only unless an upstream contract explicitly requires Python bindings.
 
 **Prerequisites**:
-- Rust 1.99.0 toolchain and Cargo installed for the pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` develop baseline.
+- Rust 1.99.1 toolchain and Cargo installed for the pinned `77d785c69205c4326e6aadb46d03fb45357a78f2` develop baseline; read `rust-toolchain.toml` before setup.
 - NautilusTrader skills installed, especially `nt-architect`, `nt-implement`, `nt-strategy-builder-rust`, `nt-live`, `nt-testing`, and `nt-review`.
 - Venue credentials available through environment variables or a local `.env` file for live/sandbox runs.
 
@@ -22,7 +22,7 @@ cargo new my-strategy --bin
 cd my-strategy
 ```
 
-Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. The published crates.io lane is `0.65`; the pinned source workspace declares `0.66.0`, which is not published on crates.io. These are intentionally different lanes: use the release snippet below for a standalone project, or use the source-pinned path lane in repository validation when exact API parity with commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` is required. `cargo info nautilus-live@0.65.0` succeeds while `cargo info nautilus-live@0.66.0` reports no published version.
+Add NautilusTrader live/trading crates, your venue adapter, and runtime support to `Cargo.toml`. The current upstream quickstart uses crate series `0.67`; the pinned develop workspace declares `0.68.0`. Verify registry availability before using these dependencies in a standalone project. For exact API parity with commit `77d785c69205c4326e6aadb46d03fb45357a78f2`, use a source-pinned checkout or path dependencies. The published RC and unreleased develop boundary is recorded in `references/README.md`.
 
 ```toml
 [dependencies]
@@ -31,12 +31,12 @@ dotenvy = "0.15"
 log = "0.4"
 tokio = { version = "1", features = ["full"] }
 
-nautilus-common = "0.65"
-nautilus-backtest = { version = "0.65", features = ["streaming"] }
-nautilus-live = "0.65"
-nautilus-model = "0.65"
-nautilus-okx = "0.65"
-nautilus-trading = { version = "0.65", features = ["examples"] }
+nautilus-common = "0.67"
+nautilus-backtest = { version = "0.67", features = ["streaming"] }
+nautilus-live = "0.67"
+nautilus-model = "0.67"
+nautilus-okx = "0.67"
+nautilus-trading = { version = "0.67", features = ["examples"] }
 ```
 
 Use the relevant adapter crate for your venue; OKX is shown because the official upstream `docs/how_to/run_rust_live_trading.md` guide uses OKX.

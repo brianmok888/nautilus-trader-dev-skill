@@ -1,7 +1,10 @@
 # Polymarket
 
-Source: upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`,
-`docs/integrations/polymarket.md`, reviewed 2026-10-14.
+Source review boundary: current develop `77d785c69205c4326e6aadb46d03fb45357a78f2`.
+The retained integration body derives from `docs/integrations/polymarket.md` at
+`2ceb2a9a624e174a5160c10f8188afbdd57ecb99` (2026-10-14); it has not been
+fully synchronized. Follow the current adapter contract for commission
+quarantine and terminal REST failures; current integration review is pending.
 NT v2 compatibility note: legacy Cython/v1 and Python `TradingNode` material
 is migration/reference-only; prefer Rust v2/PyO3 and `LiveNode` for production.
 Legacy Python live-node examples belong to the `migration_reference` lane.

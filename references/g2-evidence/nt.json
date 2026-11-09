@@ -1,10 +1,9 @@
 {
-  "owned_content_sha256": "b0d7e6d085813e1f0f41e667fbdee14848e399ead4700637fcd698b8339e14a6",
-  "pending_reason": "Build/storage guidance changed owned content on 2026-10-24; steps and verified_at below describe historical execution only. Current scoped pinned execution harness not rerun; validation used a source-only upstream snapshot, not a runtime build environment. Passing static policy checks and pressure probes are not upstream compilation evidence.",
+  "owned_content_sha256": "c402bfde26d41b382036ba4b0b9ea3033030f6307cfc381ad992de7092b24909",
   "schema_version": 2,
   "scope": "repository:router-and-readiness-dispatch",
   "skill": "nt",
-  "status": "pending",
+  "status": "pass",
   "steps": [
     {
       "command": [
@@ -20,7 +19,7 @@
         "tests/test_v2_current_develop_overlays.py"
       ],
       "cwd": "repository",
-      "duration_seconds": 2.190422,
+      "duration_seconds": 2.000557,
       "returncode": 0
     },
     {
@@ -30,11 +29,11 @@
         "--check-card-declarations"
       ],
       "cwd": "repository",
-      "duration_seconds": 0.646163,
+      "duration_seconds": 0.759758,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-  "verified_at": "2026-10-14T22:54:34.237665+00:00"
+  "upstream_commit": "77d785c69205c4326e6aadb46d03fb45357a78f2",
+  "verified_at": "2026-11-09T08:25:12.307570+00:00"
 }

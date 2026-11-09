@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.check_dev_guide_snapshot_sync import strip_local_metadata
+from tools.upstream_baseline import UPSTREAM_COMMIT, default_upstream_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -38,9 +41,18 @@ def test_lighter_guides_teach_current_tester_startup_convention() -> None:
 def test_network_config_guides_use_current_field_names() -> None:
     spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
 
+    assert f"source_commit: {UPSTREAM_COMMIT}\n" in spec
+    assert strip_local_metadata(spec) == (
+        default_upstream_root() / "docs/developer_guide/adapters.md"
+    ).read_text(encoding="utf-8")
     assert "heartbeat_msg" not in spec
-    assert "heartbeat_payload: Some(TEXT_PING.to_string())" in spec
-    assert "heartbeat_interval_secs" in spec
+    config = (
+        default_upstream_root() / "crates/network/src/websocket/config.rs"
+    ).read_text()
+    assert "pub heartbeat_payload: Option<String>" in config
+    assert "pub heartbeat_interval_secs: Option<u64>" in config
+    assert "venue text heartbeats" in spec
+    assert "protocol control frames" in spec
 
     for path in (
         "skills/nt-adapters/references/integrations/betfair_v2.md",
@@ -57,16 +69,31 @@ def test_network_config_guides_use_current_field_names() -> None:
         assert "| `stream_heartbeat_secs` " in guide
         assert "| `stream_heartbeat_timeout_secs` " in guide
 
+def test_reconnect_outcomes_match_current_transport_and_socket_handle() -> None:
+    upstream = default_upstream_root()
+    spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
+    mode = (upstream / "crates/network/src/mode.rs").read_text(encoding="utf-8")
+    outcomes = mode.split("pub enum ReconnectRequestOutcome {", 1)[1].split("\n}", 1)[0]
+    for outcome in ("Accepted", "AlreadyReconnecting", "Disconnected", "Closed", "Unsupported"):
+        assert f"    {outcome}," in outcomes
+    assert "ReconnectRequestOutcome" in spec
+    assert "Stream-mode clients own their reconnect loop" in spec
+    assert "handles report `Unsupported`" in spec
+    socket = (upstream / "crates/live/src/socket.rs").read_text(encoding="utf-8")
+    assert "pub struct SocketReconnectHandle" in socket
+    assert "pub fn request_reconnect(&self) -> ReconnectRequestOutcome" in socket
+
 
 def test_adapter_spec_covers_fallible_commission_contract() -> None:
     spec = read("skills/nt-adapters/references/guides/official_adapter_spec.md")
 
     for marker in (
         "calculate_commission",
-        "anyhow::Result<Option<Money>>",
+        "Ok(Some(commission))",
         "Ok(None)",
         "Fail closed",
-        "68975d9347",
+        "Err(error)",
+        "Never replace",
     ):
         assert marker in spec, f"spec lacks commission contract marker {marker}"
 

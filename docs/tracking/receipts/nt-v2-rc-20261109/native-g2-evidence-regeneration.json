@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-rc-20261109",
+  "receipt": "native-g2-evidence-regeneration",
+  "finding_id": "NT-2026-11-09-002",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "NT_UPSTREAM_ROOT=<runtime-checkout> python3 tools/check_skill_g2_harnesses.py --execute --skill <all 17 skills>; python3 -m pytest -q",
+  "exit_code": 0,
+  "output_sha256": "03811dfef708db35e39144eaab9d79dd07a2bfe293908d797f4bdf6e221c9ef3",
+  "output_excerpt": "All 17 G2 harnesses PASS at 77d785c69205c4326e6aadb46d03fb45357a78f2 under the signature-bound guard (2 jobs, 20 GiB reserve, per-stage growth allowances, min free 28.3 GB). PyO3 fixture: nautilus_trader-2.0.0rc9-cp314 built and installed from the guarded checkout. Full suite: 485 passed, 13 skipped, exit 0. All seven documented validators exit 0; 496 governance receipts validated; git diff --check clean.",
+  "redactions": [
+    "runtime checkout path abbreviated to <runtime-checkout>"
+  ],
+  "recorded_at": "2026-11-09T06:12:54Z"
+}

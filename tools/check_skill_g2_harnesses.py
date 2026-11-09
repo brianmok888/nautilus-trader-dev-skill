@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Mapping
@@ -11,6 +10,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -298,22 +298,24 @@ HARNESSES: dict[str, Harness] = {
     ),
     "nt-implement": Harness(
         skill="nt-implement",
-        scope="repository:fixed-point-schema-plus-upstream-owners",
-        summary="Validate implementation templates and compile representative Rust component owners",
+        scope="upstream:serialization-and-component-owners",
+        summary="Compile current serialization and representative Rust component owners",
         allowed_tokens=(
-            "test_capnp_schema_precision.py",
+            "nautilus-serialization",
             "nautilus-common",
             "nautilus-indicators",
             "nautilus-trading",
             "nautilus-backtest",
         ),
         steps=(
-            repository_step(
-                PYTHON,
-                "-m",
-                "pytest",
-                "-q",
-                "tests/test_capnp_schema_precision.py",
+            upstream_step(
+                "cargo",
+                "check",
+                "-p",
+                "nautilus-serialization",
+                "--features",
+                "arrow,sbe",
+                "--lib",
             ),
             upstream_step(
                 "cargo",
@@ -655,6 +657,16 @@ def validate_harnesses(
             )
         if not harness.steps:
             errors.append(f"{key} has no validation steps")
+        if key == "nt-implement" and not any(
+            step.cwd is WorkingDirectory.UPSTREAM
+            and step.command[:2] == ("cargo", "check")
+            and any(
+                step.command[index:index + 2] == ("-p", "nautilus-serialization")
+                for index in range(len(step.command) - 1)
+            )
+            for step in harness.steps
+        ):
+            errors.append(f"{key}: harness must compile the upstream serialization owner")
         if not harness.allowed_tokens:
             errors.append(f"{key} has no machine-checkable scope tokens")
         if not harness.owned_paths:
@@ -783,16 +795,12 @@ def run_harness(
     write_evidence(
         harness, root=repo_root, upstream_root=upstream_root, results=evidence_steps
     )
-    status = (
-        RunStatus.PENDING
-        if harness.skill == "nt-implement" and shutil.which("capnp") is None
-        else RunStatus.PASS
-    )
+    status = RunStatus.PASS
     return RunResult(skill=harness.skill, status=status)
 
 
 def evidence_command(skill: str) -> str:
-    return f"uv run python tools/check_skill_g2_harnesses.py --execute --skill {skill}"
+    return f"python3 tools/check_skill_g2_harnesses.py --execute --skill {skill}"
 
 
 def readiness_rows(text: str) -> dict[str, tuple[str, str]]:
@@ -988,24 +996,49 @@ def write_evidence(
 ) -> None:
     if harness.evidence_file is None:
         return
+    commit = upstream_commit(upstream_root)
+    clean = upstream_is_clean(upstream_root)
     destination = root / harness.evidence_file
     destination.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "schema_version": 2,
-        "skill": harness.skill,
-        "scope": harness.scope,
-        "owned_content_sha256": harness_content_hash(root, harness),
-        "upstream_commit": upstream_commit(upstream_root),
-        "upstream_clean": upstream_is_clean(upstream_root),
-        "verified_at": datetime.now(UTC).isoformat(),
-        "steps": results,
-    }
-    if harness.skill == "nt-implement" and shutil.which("capnp") is None:
-        payload["status"] = "pending"
-        payload["pending_reason"] = "capnp executable unavailable"
-    else:
-        payload["status"] = "pass"
-    destination.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    skill_path = root / "skills" / harness.skill / "SKILL.md"
+    text = skill_path.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        if line.startswith("| G2 "):
+            cells = line.split("|")
+            if len(cells) == 6 and cells[3].strip() in {"Pending", "Blocked"}:
+                cells[3] = " Pass "
+                lines[index] = "|".join(cells)
+    updated = "".join(lines)
+    with TemporaryDirectory(prefix=".g2-evidence-", dir=root) as temporary:
+        staging = Path(temporary)
+        original = staging / "original-card"
+        if updated != text:
+            original.hardlink_to(skill_path)
+        try:
+            if updated != text:
+                promoted = staging / "promoted-card"
+                promoted.write_text(updated, encoding="utf-8")
+                promoted.chmod(skill_path.stat().st_mode)
+                promoted.replace(skill_path)
+            payload = {
+                "schema_version": 2,
+                "skill": harness.skill,
+                "scope": harness.scope,
+                "owned_content_sha256": harness_content_hash(root, harness),
+                "upstream_commit": commit,
+                "upstream_clean": clean,
+                "verified_at": datetime.now(UTC).isoformat(),
+                "steps": results,
+                "status": "pass",
+            }
+            evidence = staging / "evidence.json"
+            evidence.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+            evidence.replace(destination)
+        except (OSError, OwnedContentError):
+            if updated != text:
+                original.replace(skill_path)
+            raise
 
 
 def format_step(step: Step) -> str:

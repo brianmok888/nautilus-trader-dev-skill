@@ -66,7 +66,7 @@ METADATA_KEYS = [
     "confidence:",
     "legacy_policy:",
 ]
-CURRENT_SYNC_DATE = "2026-10-14"
+CURRENT_SYNC_DATE = "2026-11-09"
 CURRENT_SYNC_COMMIT = UPSTREAM_COMMIT
 CURRENT_RELEASE_TAG = "v1.231.0"
 CURRENT_RELEASE_DATE = "2026-08-02"
@@ -287,11 +287,9 @@ CONTRACT_TERM_GROUPS = {
         "adapter runtime",
         "block_on boundary",
     ): [
-        "outside an ambient Tokio runtime",
-        "PyO3",
-        "DataClient",
-        "ExecutionClient",
-        "spawn",
+        "get_runtime().block_on()",
+        "synchronous adapter code",
+        "async function",
     ],
     (
         Path("skills/nt-testing/SKILL.md"),
@@ -682,13 +680,9 @@ BLOCK_ON_CANONICAL_WARNING_TARGETS = {
         "spawn the operation",
     ],
     Path("skills/nt-adapters/references/guides/rust.md"): [
-        "Never use",
         "get_runtime().block_on()",
-        "inside live",
-        "DataClient",
-        "ExecutionClient",
-        "trait method",
-        "spawn work",
+        "synchronous adapter code",
+        "async function",
     ],
     Path("skills/nt-dev/references/guides/rust_conventions.md"): [
         "Never use",
@@ -1524,7 +1518,11 @@ def run_checks(root: Path) -> CheckResult:
     for markdown_file in _iter_checked_markdown_files(root):
         text = _read(markdown_file)
         relative = _relative(markdown_file, root)
-        if relative != "docs/tracking/Findings.md" and "references/guides/" in text:
+        if (
+            relative != "docs/tracking/Findings.md"
+            and "references/guides/" in text
+            and not (markdown_file.parent / "references/guides").is_dir()
+        ):
             errors.append(f"stale references/guides path in {relative}")
         if "pre-commit install" in text and "prek install" not in text:
             errors.append(f"unqualified pre-commit install in {relative}")

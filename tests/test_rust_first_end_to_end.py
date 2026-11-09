@@ -93,6 +93,10 @@ def named_rust_fence(text: str, marker: str) -> str:
 def test_primary_end_to_end_path_is_rust_project_cargo_and_native_live_node() -> None:
     text = read(GUIDE)
     primary = section(text, "Primary Path: Rust Strategy to LiveNode")
+    quickstart = read(UPSTREAM_ROOT / "docs/how_to/run_rust_live_trading.md")
+    upstream_version = re.search(r'^nautilus-live = "([^"]+)"$', quickstart, re.MULTILINE)
+    assert upstream_version is not None
+    assert f'nautilus-live = "{upstream_version.group(1)}"' in primary
 
     required = [
         "cargo new my-strategy --bin",

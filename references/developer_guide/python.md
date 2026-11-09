@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/python/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/python.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Python
 
 [Python](https://www.python.org/) provides most user-facing code in NautilusTrader. Its ecosystem of
@@ -141,3 +140,54 @@ def test_streaming_feather_writer_rejects_unregistered_custom_data() -> None: ..
 
 [Ruff](https://astral.sh/ruff) is used to lint the codebase. Its rules are configured in
 `python/pyproject.toml`, with ignore justifications typically commented.
+The built-in `E301` through `E306` rules enforce blank lines around definitions and decorators.
+Ruff also controls import spacing, indentation, and wrapping.
+
+### Statement spacing
+
+`make format` runs Ruff, then `scripts/format-python.py` to apply statement spacing. The pre-commit
+hook applies the same rules to its selected Python files.
+
+- Separate `if`, `match`, `for`, `async for`, and `while` statements from preceding code. No separator
+  is necessary for the first statement in a block or after a docstring.
+- Keep related statements together when a variable on the preceding statement's last line occurs
+  on the control-flow header's first line. An existing separator can remain. A preceding compound
+  statement ends the group.
+- Remove a separator when the first body line refers to a variable on the preceding statement's
+  last line. Shared named receivers count, such as `engine` in `engine.run()`. A shared `self` or
+  `cls` alone does not qualify. Strings, call names, uppercase names, annotations, and shadowed
+  bindings do not establish this relationship. Comments between statements prevent removal;
+  other spacing rules can still insert a separator above attached comments.
+- Separate multiline collection literals and constructor-style calls from sibling statements.
+  A constructor-style call has a final name that starts with an uppercase letter after any leading
+  underscores, such as `Order(...)` or `model.Order(...)`. This is a naming convention, not type
+  resolution. Single-line expressions, comprehensions, ordinary calls, and nested arguments do not
+  trigger construction spacing. First-body-line continuation takes precedence when no comment lies
+  between the statements.
+
+For example:
+
+```python
+prepare()
+
+config = EngineConfig(
+    trader_id=trader_id,
+    risk_engine=risk_config,
+)
+
+engine.configure(config)
+```
+
+After Ruff formats a file, check or fix its statement spacing:
+
+```bash
+uv run --project python --no-sync python scripts/format-python.py --check examples/backtest/model_configs_example.py
+uv run --project python --no-sync python scripts/format-python.py --fix examples/backtest/model_configs_example.py
+```
+
+The command checks whole files and does not stage changes. Directory arguments use Ruff's file
+discovery and exclusions. Generated directories, stub directories, `.pyi` files, and symlink files
+are skipped. The command respects standalone `# fmt: off` and `# fmt: on` comments at statement
+boundaries, and `# fmt: skip` markers combined with other directives such as `noqa`. It preserves
+comments, string contents, source encodings, and LF or CRLF line endings. Lone CR line endings are
+rejected; convert them to LF or CRLF before running the command.

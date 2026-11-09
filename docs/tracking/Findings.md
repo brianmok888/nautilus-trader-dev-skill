@@ -4,6 +4,32 @@
 <!-- Role: Current evidence-backed findings and closure state. -->
 <!-- Does NOT contain: session history, plans, or external attestations. -->
 
+## Current upstream alignment
+
+[NT-2026-11-09-003] [P1] [CLOSED 2026-11-09] Evidence generation failure leaves G2 readiness falsely promoted.
+  file: tools/check_skill_g2_harnesses.py:990
+  evidence: failed upstream metadata queries, broken owned-content symlinks, and unwritable evidence destinations leave the G2 card at Pass without durable evidence; a real file-size limit also truncates the card or prior evidence. All five filesystem regression cases fail before their corresponding correction.
+  fix: resolve upstream metadata before promotion, stage card and evidence writes before replacing their destinations, and preserve the original card through a hardlink for rollback without rewriting its content.
+  acceptance-test: all five failure cases preserve the original Pending card and propagate the error; partial writes also preserve prior evidence; successful generation still hashes the promoted card; affected harnesses and the full repository gates pass.
+  closure: five filesystem failure regressions pass; affected nt and nt-implement harnesses regenerated at the current pin, cards pass, guarded full suite reports 493 passed and 10 skipped with exit 0, and independent review approves the correction. Mission build target pruned after confirming no active compiler.
+  closure-proof: docs/tracking/receipts/nt-v2-rc-20261109/evidence-write-preservation.json
+
+[NT-2026-11-09-001] [P1] [CLOSED 2026-11-09] V2 compliance: source baseline and owned references lag current upstream.
+  file: tools/upstream_baseline.py:4
+  evidence: upstream develop advanced 586 commits and 2088 paths from `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` to `77d785c69205c4326e6aadb46d03fb45357a78f2`; published `v2.0.0rc8` peels to `d53849b216e20f2c122ca01b4dd0da377638b186`, while develop is unreleased rc9. Current guides remove Cap'n Proto and change serialization, event, fixed-point, and test execution contracts.
+  fix: synchronize source snapshots and copied examples, correct confirmed Rust/PyO3 guidance and validator contracts, reconcile the complete transition manifest, and regenerate affected evidence against the current pin.
+  acceptance-test: current-pin source comparisons, full repository tests, upstream freshness, card checks, independent verification, and governance reconciliation pass with exact current content hashes.
+  closure: all 586 transition commits reviewed with per-commit evidence; tools/check_upstream_freshness.py exit 0 (status current, manifest reviewed); exact snapshot and example comparisons pass; 22 shared guides, 33 trading files, 81 analysis files, and 23 adapter examples synchronized; upstream currency, tracking, and freshness tests pass.
+  closure-proof: docs/tracking/receipts/nt-v2-rc-20261109/transition-review-freshness.json
+
+[NT-2026-11-09-002] [P1] [CLOSED 2026-11-09] V2 compliance: current-pin runtime readiness lacks admitted native execution evidence.
+  file: references/developer_guide/contracts/environment_tooling.md:12
+  evidence: retained G2 JSON refers to prior upstream and owned content. A mission-owned writable checkout now has Rust 1.99.1, isolated uv 0.13.6, and a signature-bound guard with two jobs, a shared lock, a 20 GiB reserve, a 32 GiB generation budget, and 4 GiB safety margin. Current serialization/component compilation and nt-implement execution passed; remaining per-skill and PyO3 fixture evidence is still being obtained. Earlier full pytest subprocesses are not counted as bounded-build proof.
+  fix: preserve historical evidence, keep current gate claims Pending, provision an admitted writable native environment and compatible fixtures, then execute the actual per-skill harnesses and obtain independent verification. Preserve source snapshots as read-only evidence.
+  acceptance-test: all 17 harnesses produce current-pin evidence from admitted native runs, all 136 readiness cells have measured Pass evidence, and `python3 tools/check_skill_g2_harnesses.py --check-cards` passes.
+  closure: all 17 per-skill G2 harnesses executed and PASS at the current pin under the guarded environment; durable evidence rewritten with matching owned-content hashes; full pytest and all documented validators green.
+  closure-proof: docs/tracking/receipts/nt-v2-rc-20261109/native-g2-evidence-regeneration.json
+
 2026-10-24 — [B] — MODIFIED: bounded-build/storage policy is loaded from the router and root guide: jobs two, shared serialization, 20 GiB reserve plus signature-bound growth/margin, monitored fail-closed admission, measured line-table/full-debug choice, native fixture reuse, two owned generations and no unauthorized shared-cache deletion. This instruction pack does not install a runtime limiter. Changed owned-content G2 cards/evidence are Pending, retaining historical execution rather than fabricating a new upstream build. Three independent pressure probes reject budget/deletion/concurrency shortcuts. VM08 final targeted static suite: 181 passed; card validation and 495 governance receipts pass with recorded interpreter identity and a source-only pinned upstream snapshot. No Rust/G2 execution harness or full generic suite was run. — files: AGENTS.md, skills/nt/SKILL.md, references/developer_guide/contracts/environment_tooling.md, affected G2 cards/evidence, tests/test_skill_g2_harnesses.py
 
 2026-10-16 — [B] — MODIFIED: clarified master-prompt review and feedback handling, delegated-return completeness, check-time evidence binding, scoped coverage, verdict continuation, event-driven waiting, and unresolved design choices; preserved one continuous Phases 0-6 mission without a menu, read-only upstream, receipt schemas, and Phase 6 shipping gates. Cache reclamation requires task ownership and no concurrent use; no Daedalus host or plan-lifecycle policy imported. — files: docs/prompts/master-prompt.md, docs/tracking/Findings.md
@@ -11,8 +37,8 @@
 2026-10-16 — [B] — MODIFIED: aligned every master-prompt methodology call with native OMO skill loading: programming, debugging, review-work, git-master, explicitly activated ulw-research/ultrawork, and direct audit/design/validation where no separate native skill exists. Removed obsolete skill-call aliases from the table and phase instructions; preserved continuous phase routing and separate verification/reconciliation reviews. — files: docs/prompts/master-prompt.md, docs/tracking/Findings.md
 
 Review date: 2026-10-14
-Reviewed upstream develop: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
-Pinned G2 baseline: `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`
+Reviewed upstream develop: `77d785c69205c4326e6aadb46d03fb45357a78f2`
+Pinned G2 baseline: `77d785c69205c4326e6aadb46d03fb45357a78f2`
 
 The review manifest preserves twelve contiguous transitions. The newest transition reviews 6 commits and 50 changed paths from the previously reviewed `52eef7955cbdb8d95667c838c3e43907e0da8e9a` through current develop `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` (yield curves become `YieldCurve` custom data; ordered backtest replay centralizes into `crates/data/src/replay`; network ref-count clones become explicit). The preceding transition reviews 292 commits and 1,578 changed paths from `81d0449da0e353d702d88019dc73d231d67923cd` through `52eef7955cbdb8d95667c838c3e43907e0da8e9a`. `references/upstream-delta-review.json` records every transition commit/path classification. The current develop window releases Python `2.0.0rc7`/workspace `0.66.0`, raises the Rust toolchain to 1.99.0, drops Python 3.12 support (`requires-python >=3.13`), migrates Derive to API v3, ports Interactive Brokers onto ibapi 5.0.0, adds the CoinAPI market-data adapter, migrates Polymarket reference prices to PolyBolt, adds Lighter native contingent orders, standardizes venue book recovery on shared machinery, adds Kraken Spot L2 checksum resynchronization, restructures the execution reconciliation guide, refines the Parquet catalog API and typed configuration, adds calendar timers and local-time bar boundaries, native Greeks/yield-curve recording, option contract identity and chain selection, same-trade fill-price restatements, funding settlement semantics, and parallel `make pytest`; findings NT-2026-10-14-001 through NT-2026-10-14-058 were opened and are tracked below.
 

@@ -51,6 +51,9 @@ Digest-reported symbols and consumers; no LSP reference counts were supplied.
 - Existing skill guidance is evidence-pinned; do not trim it for a documentation reformat. New skill-local files also change owned-content hashes.
 
 ## ANTI-PATTERNS
+
+NT v2 compatibility note: the Cython/v1, .pyx, and TradingNode tokens below
+are migration/reference-only audit targets; use Rust V2/PyO3 and LiveNode.
 - No invented APIs, unlabelled version mixing, or current-develop functionality represented as available at the pin.
 - No Cython, v1, .pyx, or `TradingNode` references without an adjacent migration/reference-only label accepted by `check_legacy_labelling.py`.
 - No upstream implementation or upstream-change preparation while executing the maintenance mission.

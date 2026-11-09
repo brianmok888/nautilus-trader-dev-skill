@@ -1,12 +1,18 @@
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
+---
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
+target: NautilusTrader develop developer guide source snapshot
+confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
+---
 # Benchmarking
 
 Use this guide to write, run, and profile NautilusTrader benchmarks. It contains benchmark layout,
 examples, local commands, and the measurement procedure for published results.
 
 For benchmark scope, evidence requirements, and CI policy, see
-[`/BENCHMARKING.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/BENCHMARKING.md) at the repository root.
+[`/BENCHMARKING.md`](../../BENCHMARKING.md) at the repository root.
 
 ---
 
@@ -53,28 +59,25 @@ path = "benches/foo_iai.rs"
 harness = false
 ```
 
-To opt into the nightly CI performance workflow, register the benchmark and add its crate to
-`CI_BENCH_CRATES` in the workspace `Makefile` when the list does not already include it. Add a
-deterministic Criterion target to `CODSPEED_BENCH_TARGETS` when CPU simulation preserves what the
-benchmark intends to measure. Do not add iai, Criterion's `iter_custom` or `with_filter` APIs,
-OS-dependent work, or concurrent wall-clock benchmarks to the CodSpeed subset.
+To use the nightly CI performance workflow, register the benchmark. If `CI_BENCH_CRATES` does not include its
+crate, add the crate in the workspace `Makefile`. Add a deterministic Criterion target to
+`CODSPEED_BENCH_TARGETS` when CPU simulation preserves what the benchmark intends to measure. Do not add iai,
+Criterion's `iter_custom` or `with_filter` APIs, OS-dependent work, or concurrent wall-clock benchmarks to the
+CodSpeed subset.
 
 ---
 
 ## Writing Criterion benchmarks
 
-1. **Set up outside the timing loop.** All work that doesn't change between
-   iterations belongs in the surrounding code or in `iter_batched_ref`'s
-   setup closure, not in the body passed to `iter`.
-2. **Wrap inputs in `black_box`** so the optimizer doesn't fold them away.
-3. **Use `iter_batched_ref` for mutating benches.** It excludes input
-   `Drop` from the timed region, which otherwise dominates the measurement
-   on benches that own large structures.
-4. **Add `Throughput::Elements(n)`** to size-parameterized groups so
-   Criterion reports per-element throughput.
-5. **Comment intent.** State what the benchmark is measuring (the hot path,
-   the worst case, the cache-cold case) so a future reader understands
-   what regressing it would mean.
+- **Setup**: Put all work that stays the same between iterations in the surrounding code or
+  `iter_batched_ref`'s setup closure, outside the body passed to `iter`.
+- **Inputs**: Wrap inputs in `black_box` so the optimizer cannot fold them away.
+- **Mutating benchmarks**: Use `iter_batched_ref` to exclude input `Drop` from the timed region.
+  Otherwise, dropping large owned structures dominates the measurement.
+- **Throughput**: Add `Throughput::Elements(n)` to size-parameterized groups so Criterion reports
+  per-element throughput.
+- **Intent**: Comment on what the benchmark measures (the hot path, worst case, or cache-cold case)
+  so readers understand what a regression would mean.
 
 ```rust
 use std::hint::black_box;
@@ -133,9 +136,9 @@ setup outside the measured function and compare counts produced by the same tool
 | Goal                               | Command                                                               |
 | ---------------------------------- | --------------------------------------------------------------------- |
 | All benches in one crate           | `cargo bench -p nautilus-execution`                                   |
-| One core bench module              | `cargo bench -p nautilus-execution --bench matching_core`             |
+| One core bench module              | `cargo bench -p nautilus-execution --bench matching`                  |
 | One engine bench module            | `cargo bench -p nautilus-execution --bench matching_engine`           |
-| One core benchmark name pattern    | `cargo bench -p nautilus-execution --bench matching_core -- iterate`  |
+| One core benchmark name pattern    | `cargo bench -p nautilus-execution --bench matching -- iterate`       |
 | One engine benchmark name pattern  | `cargo bench -p nautilus-execution --bench matching_engine -- submit` |
 | Quick smoke run (low sample count) | `cargo bench ... -- --quick`                                          |
 | All nightly registered benches     | `make cargo-ci-benches`                                               |
@@ -156,7 +159,29 @@ the selected benchmark targets build and register, but it does not upload measur
 The canonical backtest cases use the first 10,000 rows of the checked-in
 `test_data/btc-perp-20211231-20220201_1m.csv` file. A shared fixture drives replay-only, scheduled
 market-order, passive limit-order, and bar-EMA scenarios. The correctness test and both timed paths
-use the same fixture loader and exact result fingerprints.
+use the same fixture loader and comparison rules:
+
+- **Numerical outputs**: General, return, and PnL statistics, return-series values, and
+  `realized_return` on positions and position snapshots compare within the tolerances below.
+- **Exact state**: All other values must match exactly. Prices, quantities, money, fees, account
+  state, identifiers, and timestamps remain exact, as do statistic names, field presence, null
+  values, and record structure and ordering.
+
+Finite numerical outputs use an absolute tolerance of `1e-12` in the output's units and a relative
+tolerance of `1e-12`:
+
+```text
+abs(actual - expected) <= max(1e-12, 1e-12 * max(abs(actual), abs(expected)))
+```
+
+The absolute bound matches the reference precision used by the skewness and kurtosis tests and
+handles values near zero. The relative bound scales that rounding budget to larger metrics.
+NaN matches only NaN, infinities must have the same sign, and signed zeros compare equal.
+
+The checks exclude the full `CanonicalBacktestResult` digest, which hashes exact canonical bytes.
+Comparisons between legacy and typed input, and between preloaded and freshly loaded runs,
+remain exact within one environment. Both precision modes produce the same trading-state fingerprint,
+but some numerical values differ beyond the tolerances, so each mode has its own reference files.
 
 Run the semantic check first:
 
@@ -164,6 +189,15 @@ Run the semantic check first:
 CARGO_BUILD_JOBS=16 cargo test --locked -p nautilus-backtest \
     --test integration canonical_backtest_workloads::
 ```
+
+To export candidate references, prefix that command with
+`NAUTILUS_BENCH_RESULT_DIR="$PWD/target/canonical-results/standard"`. Each case writes its full
+`<case>.json` and `<case>.reference.json` before reference verification, so a reference mismatch
+leaves the candidate files available. Repeat with `--features high-precision` and output directory
+`$PWD/target/canonical-results/high`.
+For intentional changes to expected behavior, review each legacy `<scenario>.reference.json` and
+copy it to `crates/backtest/test_data/canonical/<precision>/<scenario>.json`, where `<precision>`
+is `standard` or `high`.
 
 Then run Criterion in test mode to confirm that every affected benchmark case executes without
 collecting samples:
@@ -175,13 +209,13 @@ CARGO_BUILD_JOBS=16 cargo bench --locked -p nautilus-backtest \
 
 The `run_preloaded` cases load the CSV and build the engine outside the returned `iter_custom`
 duration. The `load_build_run` cases include CSV loading, engine setup, data registration, and
-`BacktestEngine::run`. Both exclude result projection and fingerprint verification from the
+`BacktestEngine::run`. Both exclude result projection and reference verification from the
 reported duration, while still checking the result after every measured iteration.
 
-See [`crates/backtest/benches/BENCHMARKS.md`](https://github.com/nautechsystems/nautilus_trader/blob/develop/crates/backtest/benches/BENCHMARKS.md) for the
+See [`crates/backtest/benches/BENCHMARKS.md`](../../crates/backtest/benches/BENCHMARKS.md) for the
 published baseline, measurement record, and current profile target.
 
-The [v2 migration guide](https://github.com/nautechsystems/nautilus_trader/blob/develop/MIGRATION_V2.md#compare-backtest-performance) contains the
+The [v2 migration guide](../../MIGRATION_V2.md#compare-backtest-performance) contains the
 cross-version backtest comparison procedure.
 
 ---
@@ -282,7 +316,7 @@ use `panic = "abort"` and are built via `[profile.release]`).
 
 > **Note** Benchmark binaries are compiled with the custom `[profile.bench]`
 > defined in the workspace `Cargo.toml`. That profile inherits from
-> `release` and sets `debug = "full"`, preserving full optimisation *and*
+> `release` and sets `debug = "full"`, preserving full optimization *and*
 > debug symbols so tools like `cargo flamegraph` or `perf` produce
 > human-readable stack traces.
 
@@ -290,10 +324,10 @@ use `panic = "abort"` and are built via `[profile.release]`).
 
 ## Templates
 
-Starter files live in [`docs/dev_templates/`](../../../../references/dev_templates/):
+Starter files live in [`docs/dev_templates/`](../dev_templates/):
 
-- **Criterion**: [`criterion_template.rs`](../../../../references/dev_templates/criterion_template.rs)
-- **iai**: [`iai_template.rs`](../../../../references/dev_templates/iai_template.rs)
+- **Criterion**: [`criterion_template.rs`](../dev_templates/criterion_template.rs)
+- **iai**: [`iai_template.rs`](../dev_templates/iai_template.rs)
 
 Copy the template into the target crate's `benches/`, adjust imports and
 group names, register in `Cargo.toml`, and start measuring.

@@ -1,89 +1,94 @@
+"""Behavioral regressions for the replacement of retired Cap'n Proto G2 work."""
+
 from __future__ import annotations
 
-import re
+import json
 import shutil
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = REPOSITORY_ROOT / "skills/nt-implement/templates/capnp_schema.capnp"
+from tools import check_skill_g2_harnesses as g2
 
 
-def _schema_text() -> str:
-    return SCHEMA_PATH.read_text(encoding="utf-8")
+def test_current_serialization_compile_failure_stops_implementation_harness(
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[tuple[str, ...], Path]] = []
 
+    def runner(
+        command: tuple[str, ...], *, cwd: Path, check: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append((command, cwd))
+        serialization_compile = (
+            command[:2] == ("cargo", "check")
+            and "nautilus-serialization" in command
+        )
+        return subprocess.CompletedProcess(command, 1 if serialization_compile else 0)
 
-def _struct_body(schema: str, name: str) -> str:
-    match = re.search(rf"struct\s+{re.escape(name)}\s*\{{(?P<body>.*?)\n\}}", schema, re.DOTALL)
-    assert match is not None, f"missing struct {name}"
-    return match.group("body")
-
-
-def _assert_field(body: str, name: str, ordinal: int, capnp_type: str) -> None:
-    declaration = rf"^\s*{re.escape(name)}\s+@{ordinal}\s+:{re.escape(capnp_type)}\s*;"
-    assert re.search(declaration, body, re.MULTILINE), (
-        f"missing {name} @{ordinal} :{capnp_type}"
+    result = g2.run_harness(
+        replace(g2.HARNESSES["nt-implement"], evidence_file=None),
+        repo_root=tmp_path / "repo",
+        upstream_root=tmp_path / "upstream",
+        runner=runner,
     )
 
-
-def test_trading_values_use_upstream_fixed_point_shapes() -> None:
-    schema = _schema_text()
-    signed_raw = _struct_body(schema, "Int128")
-    unsigned_raw = _struct_body(schema, "UInt128")
-    signal = _struct_body(schema, "TradingSignal")
-    market_data = _struct_body(schema, "CustomMarketData")
-
-    _assert_field(signed_raw, "lo", 0, "UInt64")
-    _assert_field(signed_raw, "hi", 1, "UInt64")
-    _assert_field(unsigned_raw, "lo", 0, "UInt64")
-    _assert_field(unsigned_raw, "hi", 1, "UInt64")
-    _assert_field(signal, "valueRaw", 2, "Int128")
-    _assert_field(signal, "valuePrecision", 5, "UInt8")
-    _assert_field(market_data, "priceRaw", 1, "Int128")
-    _assert_field(market_data, "quantityRaw", 2, "UInt128")
-    _assert_field(market_data, "pricePrecision", 4, "UInt8")
-    _assert_field(market_data, "quantityPrecision", 5, "UInt8")
-    assert "Float64" not in signal
-    assert "Float64" not in market_data
+    assert result.status is g2.RunStatus.BLOCKED
+    assert result.failed_step is not None
+    assert calls[-1] == (result.failed_step.command, tmp_path / "upstream")
+    assert "nautilus-serialization" in result.failed_step.command
 
 
-def test_schema_compiles_and_fixed_point_signal_round_trips(tmp_path: Path) -> None:
-    capnp = shutil.which("capnp")
-    if capnp is None:
-        pytest.skip("Pending: capnp compiler is unavailable; structural boundary test remains active")
-
-    subprocess.run(
-        (capnp, "compile", "-o-", str(SCHEMA_PATH)),
-        cwd=tmp_path,
-        check=True,
-        capture_output=True,
+def test_validation_rejects_missing_serialization_compile() -> None:
+    harness = g2.HARNESSES["nt-implement"]
+    without_serialization = replace(
+        harness,
+        steps=tuple(
+            step for step in harness.steps
+            if "nautilus-serialization" not in step.command
+        ),
     )
-    signal_text = (
-        '(timestamp = 42, instrumentId = "BTCUSDT", '
-        "valueRaw = (lo = 123456789, hi = 0), valuePrecision = 8, "
-        'metadata = "round-trip", side = buy)'
-    )
-    encoded = subprocess.run(
-        (capnp, "convert", "text:binary", str(SCHEMA_PATH), "TradingSignal"),
-        input=signal_text.encode(),
-        check=True,
-        capture_output=True,
-    ).stdout
-    decoded = subprocess.run(
-        (capnp, "convert", "binary:text", str(SCHEMA_PATH), "TradingSignal"),
-        input=encoded,
-        check=True,
-        capture_output=True,
-    ).stdout
-    reencoded = subprocess.run(
-        (capnp, "convert", "text:binary", str(SCHEMA_PATH), "TradingSignal"),
-        input=decoded,
-        check=True,
-        capture_output=True,
-    ).stdout
 
-    assert reencoded == encoded
-    assert b"valueRaw" in decoded
-    assert b"valuePrecision = 8" in decoded
+    errors = g2.validate_harnesses({"nt-implement": without_serialization})
+
+    assert "nt-implement: harness must compile the upstream serialization owner" in errors
+
+
+@pytest.mark.parametrize("capnp_available", [False, True])
+def test_successful_execution_and_evidence_ignore_retired_compiler(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capnp_available: bool,
+) -> None:
+    monkeypatch.setattr(
+        shutil, "which",
+        lambda executable: "/usr/bin/capnp" if capnp_available else None,
+    )
+    calls: list[tuple[str, ...]] = []
+    harness = replace(g2.HARNESSES["nt-implement"], owned_paths=())
+    skill = tmp_path / "skills/nt-implement/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("Implementation fixture\n", encoding="utf-8")
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    monkeypatch.setattr(g2, "upstream_commit", lambda root: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda root: True)
+
+    def runner(
+        command: tuple[str, ...], *, cwd: Path, check: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        assert cwd == upstream
+        assert command[:2] == ("cargo", "check")
+        return subprocess.CompletedProcess(command, 0)
+
+    result = g2.run_harness(
+        harness, repo_root=tmp_path, upstream_root=upstream, runner=runner,
+    )
+
+    assert result.status is g2.RunStatus.PASS
+    assert calls == [step.command for step in harness.steps]
+    assert harness.evidence_file is not None
+    evidence = json.loads((tmp_path / harness.evidence_file).read_text(encoding="utf-8"))
+    assert evidence["status"] == "pass"
+    assert "pending_reason" not in evidence

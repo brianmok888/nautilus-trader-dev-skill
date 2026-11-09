@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/testing.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Testing
 
 Automated tests serve as executable specifications for the trading platform. They document intended
@@ -34,6 +33,15 @@ reach.
 
 Not every module requires every technique. Use this section to decide which layers apply
 before adding tests or `debug_assert!` statements.
+
+:::note
+
+Generally avoid log captures as evidence of correctness or as synchronization signals. Assert on returned
+values, emitted events, protocol traffic, or resulting state instead. Integration tests should usually avoid
+asserting exact log wording. Capture logs when logging itself is the contract, such as ensuring sensitive
+data is omitted, and prefer semantic checks over matching full messages.
+
+:::
 
 ### Mechanism ladder
 
@@ -111,6 +119,177 @@ The `surface` probe in `crates/common/src/live/dst.rs` only pins the re-export s
 callers actually use the seam. Enforcement is by review. Run the audit whenever a new async module enters the
 workspace or an existing module gains new control-plane scheduling.
 
+## Behavior-driven development
+
+Behavior-driven development (BDD) uses concrete examples to agree on required behavior before
+implementing it. Gherkin expresses those examples in a readable form that binds to test code.
+**Use Gherkin for policies spanning components with a few distinct outcomes** that reviewers need
+to understand. A feature file explains the conditions under which the system makes a decision and
+the outcome callers can observe. Step text binds to Rust at runtime, so each feature adds a layer
+the compiler does not check. Keep calculations, detailed permutations, and wiring checks in Rust.
+
+**BDD describes how behavior is specified; integration describes the components a test exercises.**
+The startup reconciliation scenarios are integration tests written in Gherkin. They run the real
+node, execution manager, cache, and portfolio with a scripted execution client. Gherkin does not add
+a mandatory layer to the [testing policy](#testing-policy), and scripted venue responses do not
+establish [live adapter acceptance](spec_exec_testing.md).
+
+### Selecting rules and examples
+
+Start from a documented contract, an agreed behavior change, or a confirmed defect. Use the code to
+check how the behavior is implemented. If the intended rule and implementation disagree, resolve
+that disagreement before treating the current result as the specification.
+
+For each rule:
+
+1. State the guarantee and its scope, including the configuration and inputs it depends on.
+1. Identify inputs that produce meaningfully different outcomes, including failure and recovery.
+1. Choose a concrete example for each distinction that a reader needs to understand the rule.
+1. Identify the observation that proves each outcome and the smallest execution boundary that can
+   produce it. Raise open behavior questions with the change or in an issue before encoding an expectation.
+
+For example, the [reconciliation contract](../concepts/execution/reconciliation.md) requires an
+unresolved in-scope position report to block actors and strategies from starting when reconciliation
+is enabled. Priced recovery, missing-price failure, and disabled generation illustrate distinct
+outcomes under that rule. Keep those distinctions visible in separate scenarios.
+
+### Test ownership and overlap
+
+**Give each concrete example a primary test.** Use Gherkin for representative behavior contracts and
+focused Rust tests for detailed permutations or component interactions that need no separate
+domain explanation. For startup reconciliation, a typical division is:
+
+| Concern                                  | Primary coverage                | What it proves                                          |
+| ---------------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| Recovered exposure before trading starts | Gherkin integration scenario    | Strategies observe recovered exposure at startup.       |
+| Unrecoverable exposure blocks startup    | Gherkin integration scenario    | Startup fails before trading and cleans up connections. |
+| Price precision and arithmetic bounds    | Rust unit or parametrized tests | Exact values hold across numeric boundaries.            |
+| Client identity and report routing       | Rust integration tests          | Reports reach the correct account and execution client. |
+| Task ordering and cancellation races     | Deterministic simulation tests  | Required outcomes hold across controlled schedules.     |
+
+Overlapping production paths are expected. Retain tests at different boundaries when they prove
+different properties: a reconciliation calculation and its visibility in a strategy callback need
+different observations. A second full startup test with the same setup, action, and assertions
+needs a distinct purpose.
+
+#### Replacing an existing test
+
+Before replacing an existing test with a Gherkin scenario:
+
+- Compare inputs, assertions, entry points, lifecycle paths, and execution environments.
+- Preserve unique checks for identity, precision, filtering, lifecycle, cleanup, and simulation.
+- Confirm the replacement runs in the normal test selection and proves the same contract.
+
+A scenario that requests stop from a strategy's start callback does not prove the node reaches
+`Running`. Retain a test that checks that transition. Share fixture construction and scripted
+clients; do not call an existing test function from a step definition or reproduce reconciliation
+logic in the fixture.
+
+### Writing Gherkin
+
+Organize each feature around a coherent capability, such as startup reconciliation. Use the
+following structure:
+
+- **`Feature`** names the capability and explains why its behavior matters.
+- **`Rule`**, where useful, groups examples of one guarantee or policy.
+- **`Scenario`** names one observable behavior and provides the context needed to interpret it.
+- **`Scenario Outline`** varies inputs for the same behavior, such as long and short exposure. Keep
+  distinct policies in separate scenarios instead of combining them into one conditional matrix.
+
+#### Context and outcomes
+
+Write `Given` steps for initial conditions, `When` for the action, and `Then` for observable results.
+Use domain terms such as position reports, recovered exposure, and strategy startup. Name a Rust
+method or entry point when its public contract is the subject of the example; otherwise keep
+construction and wiring details in the step definitions.
+
+Use `Background` for a short, common starting context. Keep conditions that explain a scenario's
+different result in that scenario. An explicit override, such as disabling startup reconciliation,
+must remain visible. State rule-relevant configuration even when it matches the default. Include
+units and exact financial values in examples. Keep scenarios focused enough that a reader can
+explain the rule without reading the Rust steps.
+
+**Identify when an outcome holds if ordering matters.** In the startup feature,
+`the strategy observes a long position of 5.000 ETH at 2500.25 USDT when it starts` requires an
+observation from the start callback. A final cache assertion cannot prove that ordering. Failure
+scenarios must assert the relevant failure reason and prohibited effects, such as an actor or
+strategy starting after reconciliation fails.
+
+Use tags to select policies, such as `@recovery`. Normal test discovery must include the suite
+without an opt-in filter.
+
+### Rust steps and fixtures
+
+#### Layout and reuse
+
+Use the workspace `cucumber` development dependency for Rust Gherkin suites. Follow the live
+crate's `tests/spec/main.rs` runner and `tests/spec/features/<capability>.feature` layout. These are
+repository layout choices; the runner configures the feature path. When adding another capability,
+give it its own `World` and runner test with an explicit feature path so suites do not consume each
+other's features. Keep steps with their workflow, and split Rust modules when distinct workflows
+need separate setup or observations.
+
+- **Steps**: Reuse a step only when its words have the same meaning, setup, and assertion contract
+  in both callers. Avoid broad patterns that match unrelated behaviors or select expected results
+  from hidden state.
+- **Fixtures**: Put construction shared by independent test targets in `tests/common/`, as with the
+  [startup client fixture](../../crates/live/tests/common/startup.rs). Keep fixtures used by only one
+  suite local to it.
+- **World**: Scope it to the workflow under test. Do not grow a shared `World` or a general fixture
+  framework for hypothetical future features.
+
+#### Step behavior
+
+Step definitions translate domain inputs into production calls and compare observations with
+explicit expectations. Use domain types or `Decimal` for financial values and assert the fields
+that establish the contract, including identity where relevant. Script responses at the external
+client boundary while keeping the behavior under test real. **Keep test controls in test code**:
+do not add production flags, configuration, hooks, or accessors solely to drive a scenario.
+
+#### Isolation and timing
+
+Cucumber creates a fresh `World` for each scenario, but scenarios in a suite share a process and
+runtime. Nextest's per-test process isolation does not separate them. State outside the `World`,
+including callbacks and the thread-local message bus, needs explicit cleanup.
+
+- Run suites using the live node's thread-local state sequentially on one runtime thread.
+- Release clients, tasks, subscriptions, and shared state even after a failed step. Arrange cleanup
+  so an assertion or timeout cannot bypass disposal.
+- Record observations at the lifecycle boundary the contract names, such as a strategy's `on_start`.
+  Requesting stop there can prevent entry into `Running`; choose a later observation when needed.
+- Bound actions with timeouts and follow the [async waiting conventions](#waiting-for-asynchronous-effects)
+  when waiting for effects. A normal timeout scenario does not establish deterministic-simulation coverage.
+
+### Maintaining feature files
+
+Update the rule, its examples, and the implementation together when required behavior changes.
+Do not change an expected outcome to match a defect. Fix the defect in the same change; if that
+is not possible, record it in an issue and add the regression example with the fix. A code refactor
+that preserves behavior should usually require changes only to the Rust bindings or fixtures.
+Add an example when it introduces a meaningful distinction; use focused parametrized or property
+tests for additional combinations that illustrate the same rule.
+
+#### Runner requirements
+
+Run changed scenarios and affected existing tests. Use a standard Rust test harness with one
+`#[tokio::test]` per suite so nextest discovers it. Follow the
+[live runner](../../crates/live/tests/spec/main.rs):
+
+- Use `fail_on_skipped()` so unmatched steps fail.
+- Assert that `execution_has_failed()` is false and at least one step passed. Failed assertions,
+  ambiguous bindings, parse errors, and empty selections must fail the command.
+- Parse Cucumber options separately from libtest arguments, using `CUCUMBER_FILTER_TAGS` for filtering.
+
+For a new or changed runner, verify discovery, filtering, and scenario/step failure reporting.
+Temporarily use a wrong expectation, an unmatched step, and an empty filter to confirm each exits
+nonzero. Restore valid scenarios and filter settings afterward. Count scenarios from Cucumber's
+summary; nextest reports each Gherkin suite as one test. See
+[running the startup scenarios](#gherkin-startup-reconciliation-scenarios) for commands and tag filtering.
+
+The [Cucumber example-mapping guide](https://cucumber.io/docs/bdd/example-mapping/) describes how to
+develop rules and examples. The [Gherkin reference](https://cucumber.io/docs/gherkin/reference/)
+defines the syntax used here.
+
 ## Property-based testing
 
 Property testing verifies that logic holds for *all* valid inputs, not just hand-picked examples.
@@ -174,6 +353,9 @@ global Rust state conflicts. Use `make pytest` rather than invoking pytest direc
 `PYTEST_XDIST_AUTO_NUM_WORKERS` to change the worker count, for example
 `make pytest PYTEST_XDIST_AUTO_NUM_WORKERS=8`.
 
+To run on Python 3.15, first set the
+[environment variables](environment_setup.md#1-install-dependencies) that exclude documentation dependencies.
+
 Local `make pytest` runs use the debug extension from `make build-debug`. CI tests a release wheel. Do not
 probe Rust panic paths in process in `python/tests/` with `pytest.raises(BaseException)` or similar broad
 catches. These tests can appear to pass against the debug build and abort the interpreter against the release
@@ -212,6 +394,43 @@ supported full-suite gate and is not guaranteed to pass. Plain `cargo test` rema
 doctests and focused tests known to work with the libtest runner.
 :::
 
+#### Gherkin startup reconciliation scenarios
+
+The live-node [feature file](../../crates/live/tests/spec/features/startup_reconciliation.feature)
+describes startup reconciliation in Given/When/Then steps.
+The [Rust step definitions](../../crates/live/tests/spec/main.rs) run the real node with scripted
+venue responses and observe recovered exposure inside the strategy's start callback.
+
+To display all scenarios and their steps, run:
+
+```bash
+CARGO_BUILD_JOBS=4 cargo test --locked -p nautilus-live --test spec --profile nextest \
+  startup_reconciliation -- --nocapture
+```
+
+To select the recovery scenarios, use Cucumber's tag filter:
+
+```bash
+CUCUMBER_FILTER_TAGS='@recovery' CARGO_BUILD_JOBS=4 \
+  cargo test --locked -p nautilus-live --test spec --profile nextest startup_reconciliation -- --nocapture
+```
+
+Nextest discovers the feature suite as one `startup_reconciliation` test. The `spec` target also
+contains a separate test for disposal after a panic; these commands select only the feature suite:
+
+```bash
+CARGO_BUILD_JOBS=4 NEXTEST_TEST_THREADS=2 \
+  cargo nextest run --locked -p nautilus-live --test spec --cargo-profile nextest \
+  -E 'test(=startup_reconciliation)' --no-capture
+```
+
+The scenarios run sequentially on one runtime thread with a fresh node per scenario. A test guard
+disposes the node when the startup step returns or unwinds after a panic. Successful scenarios
+request stop from the strategy start callback and do not prove entry into `Running`.
+Both `start()` and `run()` use the real execution manager, cache, and portfolio. Missing or ambiguous
+step bindings and failed assertions fail the suite. A filter that selects no scenarios also fails.
+This suite uses the normal runtime; it does not establish deterministic-simulation coverage.
+
 #### Rust doctests
 
 `cargo nextest` cannot execute doctests, so they run through a separate target:
@@ -223,25 +442,25 @@ cargo test --doc --workspace --features "$(bash scripts/cargo-features.bash)" --
 ```
 
 Doc examples are a maintained test surface. The scheduled `nightly-tests` workflow runs this target
-with Python 3.13 and 3.14. See the [Rust guide](rust.md#doc-examples) for how to annotate a fence so
+with Python 3.13, 3.14, and 3.15. See the [Rust guide](rust.md#doc-examples) for how to annotate a fence so
 it compiles.
 
 #### Testing with optional features
 
-Use `EXTRA_FEATURES` to include optional features like `capnp` or `hypersync`:
+Use `EXTRA_FEATURES` to include optional features like `sbe` or `hypersync`:
 
 ```bash
-# Test with capnp feature
-make cargo-test EXTRA_FEATURES="capnp"
+# Test with SBE support
+make cargo-test EXTRA_FEATURES="nautilus-common/sbe"
 
 # Test with multiple features
-make cargo-test EXTRA_FEATURES="capnp hypersync"
+make cargo-test EXTRA_FEATURES="nautilus-common/sbe hypersync"
 
 # Legacy shorthand for hypersync
 make cargo-test HYPERSYNC=true
 
 # Test specific crate with features
-make cargo-test-crate-nautilus-serialization FEATURES="capnp"
+make cargo-test-crate-nautilus-serialization FEATURES="sbe"
 ```
 
 ### IDE integration
@@ -259,10 +478,11 @@ make cargo-test-crate-nautilus-serialization FEATURES="capnp"
   together to avoid the act-assert-act smell.
 - Use `unwrap`, `expect`, or direct `panic!`/`assert` calls inside tests. Clarity and conciseness matter more
   than defensive error handling here.
-- Do not capture log output to assert on log messages. Log capture in tests is fragile
-  because loggers are global state, test execution order is non-deterministic, and the
-  assertions break when log wording changes. Instead, verify the observable behavior
-  (return values, state changes, side effects) that the log message reflects.
+- For behavior tests, assert return values, state changes, or side effects rather than log messages.
+  Log capture uses global state, depends on test execution order, and can break when wording changes.
+- Capture logs only when logging itself is the contract, such as excluding secrets and preserving
+  public diagnostic context. Serialize capture and join emitting tasks before releasing it.
+  Assert the relevant records and secret absence; avoid whole-transcript assertions.
 
 ### Python tests (`python/tests/`)
 

@@ -1,6 +1,6 @@
 # Tick Scheme
 
-## Tick schemes at reviewed tip `2ceb2a9a6`
+## Tick schemes at the current pin `77d785c692` (behavior introduced earlier in develop; historical reviewed tip `2ceb2a9a6`)
 
 The flat PyO3 model exports `FixedTickScheme`, `TieredTickScheme`,
 `register_tick_scheme`, `get_tick_scheme` and `list_tick_schemes`.

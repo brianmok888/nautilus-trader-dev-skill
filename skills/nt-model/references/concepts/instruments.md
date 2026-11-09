@@ -1,6 +1,6 @@
 # Instruments
 
-## Option identity at reviewed tip `2ceb2a9a6`
+## Option identity at the current pin `77d785c692` (behavior introduced earlier in develop; historical reviewed tip `2ceb2a9a6`)
 
 `OptionSeriesId` remains the series identity. The Rust contract API is
 `OptionContractSpec`, `OptionSymbologyScheme`

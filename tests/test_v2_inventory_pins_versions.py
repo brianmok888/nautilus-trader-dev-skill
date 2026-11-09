@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -77,7 +78,10 @@ def test_pinned_nautilus_rust_dependencies_match_upstream_quickstart() -> None:
 
     assert dependencies
     assert [(path, version) for path, version in dependencies if version != expected_version] == []
-    assert "Rust 1.99.0" in read("docs/end_to_end_guide.md")
+    toolchain = tomllib.loads(
+        (default_upstream_root() / "rust-toolchain.toml").read_text()
+    )["toolchain"]["channel"]
+    assert f"Rust {toolchain}" in read("docs/end_to_end_guide.md")
 
 def test_documented_inventory_lists_all_seventeen_nt_skills() -> None:
     expected = {
@@ -203,7 +207,10 @@ def test_version_guidance_distinguishes_pins_from_support_policy() -> None:
     dev = read("skills/nt-dev/SKILL.md")
 
     assert "Python 3.13-3.14" in dev
-    assert "repository toolchain is pinned to Rust 1.99.0" in dev
+    toolchain = tomllib.loads(
+        (default_upstream_root() / "rust-toolchain.toml").read_text()
+    )["toolchain"]["channel"]
+    assert f"toolchain and workspace MSRV are Rust {toolchain}" in dev
     assert "not a permanent MSRV promise" in dev
 
     # README stays descriptive: version/commit pins live in skills and tools,

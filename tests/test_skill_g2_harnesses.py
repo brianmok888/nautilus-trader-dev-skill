@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import resource
+import shutil
+import signal
 import subprocess
 import sys
 import tomllib
@@ -332,7 +335,7 @@ def test_runner_returns_blocked_when_step_executable_is_missing(tmp_path: Path) 
     assert result.failed_step == harness.steps[0]
 
 
-def test_nt_implement_run_reports_pending_without_capnp(
+def test_nt_implement_run_passes_without_retired_capnp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -343,7 +346,7 @@ def test_nt_implement_run_reports_pending_without_capnp(
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, 0)
 
-    monkeypatch.setattr(g2.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
 
     result = g2.run_harness(
         harness,
@@ -352,8 +355,8 @@ def test_nt_implement_run_reports_pending_without_capnp(
         runner=passing_runner,
     )
 
-    assert result.status is g2.RunStatus.PENDING
-    assert result.ok is False
+    assert result.status is g2.RunStatus.PASS
+    assert result.ok is True
 
 
 def test_execute_prints_pending_for_nt_implement_without_capnp(
@@ -822,6 +825,90 @@ def test_evidence_schema_has_no_self_referential_repository_commit(
     assert payload["owned_content_sha256"] == g2.harness_content_hash(tmp_path, harness)
 
 
+def test_successful_evidence_promotes_only_g2_before_hashing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    harness = replace(
+        g2.HARNESSES["nt-data"],
+        owned_paths=(Path("skills/nt-data/SKILL.md"),),
+    )
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text(
+        "| G1 Legacy labelling | Check. | Pending | Awaiting checks. |\n"
+        "| G2 Pinned V2 examples | Compile. | Pending | Harness evidence. |\n"
+    )
+    monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+
+    g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+
+    assert "| G1 Legacy labelling | Check. | Pending |" in skill.read_text()
+    assert "| G2 Pinned V2 examples | Compile. | Pass |" in skill.read_text()
+    assert harness.evidence_file is not None
+    payload = json.loads((tmp_path / harness.evidence_file).read_text())
+    assert payload["owned_content_sha256"] == g2.harness_content_hash(tmp_path, harness)
+
+
+@pytest.mark.parametrize("failure", ["upstream", "owned-content", "destination"])
+def test_failed_evidence_preserves_readiness_card(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str,
+) -> None:
+    harness = g2.HARNESSES["nt-data"]
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    original = "| G2 Pinned V2 examples | Compile. | Pending | Harness evidence. |\n"
+    skill.write_text(original)
+    assert harness.evidence_file is not None
+    destination = tmp_path / harness.evidence_file
+    destination.parent.mkdir(parents=True)
+    if failure == "upstream":
+        expected_error = subprocess.CalledProcessError
+    else:
+        monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+        monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+        if failure == "owned-content":
+            (skill.parent / "broken.md").symlink_to("missing.md")
+            expected_error = g2.OwnedContentError
+        else:
+            destination.mkdir()
+            expected_error = IsADirectoryError
+
+    with pytest.raises(expected_error):
+        g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+
+    assert skill.read_text() == original
+    assert not destination.is_file()
+
+@pytest.mark.parametrize("padding", ["", "existing content\n" * 20])
+def test_file_size_limit_preserves_card_and_previous_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, padding: str,
+) -> None:
+    harness = g2.HARNESSES["nt-data"]
+    skill = tmp_path / "skills/nt-data/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    original = "| G2 Pinned V2 examples | Compile. | Pending | Harness evidence. |\n" + padding
+    skill.write_text(original)
+    assert harness.evidence_file is not None
+    destination = tmp_path / harness.evidence_file
+    destination.parent.mkdir(parents=True)
+    destination.write_text("previous evidence\n")
+    monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+    limits = resource.getrlimit(resource.RLIMIT_FSIZE)
+    handler = signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+    try:
+        resource.setrlimit(resource.RLIMIT_FSIZE, (128, limits[1]))
+        with pytest.raises(OSError):
+            g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+    finally:
+        resource.setrlimit(resource.RLIMIT_FSIZE, limits)
+        signal.signal(signal.SIGXFSZ, handler)
+
+    assert skill.read_text() == original
+    assert destination.read_text() == "previous evidence\n"
+
+
 def test_router_harness_requires_subordinate_card_declarations() -> None:
     command = g2.HARNESSES["nt"].steps[1].command
 
@@ -838,33 +925,49 @@ def test_readiness_cards_do_not_embed_volatile_test_counts() -> None:
             assert "2026-07-29:" not in line
 
 
-def test_implement_g2_validates_capnp_without_compiling_migration_python() -> None:
+def test_implement_g2_compiles_current_serialization_features() -> None:
     harness = g2.HARNESSES["nt-implement"]
-    command_text = " ".join(
-        argument for step in harness.steps for argument in step.command
+    calls: list[tuple[str, ...]] = []
+
+    def runner(
+        command: tuple[str, ...], *, cwd: Path, check: bool, text: bool
+    ) -> subprocess.CompletedProcess[str]:
+        assert cwd == g2.repo_root()
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0)
+
+    result = g2.run_harness(
+        replace(harness, evidence_file=None),
+        repo_root=g2.repo_root(), upstream_root=g2.repo_root(), runner=runner,
     )
 
-    assert "fixed-point-schema" in harness.scope
-    assert "compileall" not in command_text
-    assert "tests/test_capnp_schema_precision.py" in command_text
-    assert any(step.cwd is g2.WorkingDirectory.REPOSITORY for step in harness.steps)
-    assert any(step.cwd is g2.WorkingDirectory.UPSTREAM for step in harness.steps)
+    assert result.ok
+    assert (
+        "cargo", "check", "-p", "nautilus-serialization",
+        "--features", "arrow,sbe", "--lib",
+    ) in calls
 
 
-def test_implement_g2_changed_content_requires_reverification() -> None:
-    evidence_path = g2.repo_root() / "references/g2-evidence/nt-implement.json"
-    payload = json.loads(evidence_path.read_text())
-    skill_text = (g2.repo_root() / "skills/nt-implement/SKILL.md").read_text()
-
-    assert payload["status"] == "pending"
-    assert payload["pending_reason"]
-    assert payload["steps"]
-    assert any(
-        "test_capnp_schema_precision.py" in " ".join(step["command"])
-        for step in payload["steps"]
+def test_implement_g2_changed_content_requires_reverification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    harness = replace(
+        g2.HARNESSES["nt-implement"],
+        owned_paths=(Path("skills/nt-implement/SKILL.md"),),
     )
-    rows = g2.readiness_rows(skill_text)
-    assert rows["G2"][0] == "Pending"
+    skill = tmp_path / "skills/nt-implement/SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("Implementation fixture\n")
+    monkeypatch.setattr(g2, "upstream_commit", lambda _: g2.EXPECTED_UPSTREAM_COMMIT)
+    monkeypatch.setattr(g2, "upstream_is_clean", lambda _: True)
+    g2.write_evidence(harness, root=tmp_path, upstream_root=tmp_path, results=[])
+    assert harness.evidence_file is not None
+    payload = json.loads((tmp_path / harness.evidence_file).read_text())
+    assert payload["owned_content_sha256"] == g2.harness_content_hash(tmp_path, harness)
+
+    skill.write_text("Changed implementation guidance\n")
+
+    assert payload["owned_content_sha256"] != g2.harness_content_hash(tmp_path, harness)
 
 
 def test_strategy_builder_uses_documented_python_v2_working_directory() -> None:

@@ -23,9 +23,9 @@ use nautilus_model::{
     events::PortfolioSnapshot,
     identifiers::{AccountId, PositionId},
     position::Position,
-    types::{Currency, Money},
+    types::{Currency, Money, fixed::MAX_FLOAT_PRECISION},
 };
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, prelude::ToPrimitive};
 
 use crate::{
     Returns,
@@ -330,14 +330,14 @@ impl PortfolioAnalyzer {
     pub fn add_trade(&mut self, position_id: &PositionId, ts_event: UnixNanos, pnl: &Money) {
         let currency = pnl.currency;
         let entry = self.realized_pnls.entry(currency).or_default();
-        entry.push((*position_id, ts_event, pnl.as_f64()));
+        entry.push((*position_id, ts_event, trade_pnl_value(pnl)));
     }
 
     /// Records a trade's PnL realized at `ts_event`, observed during portfolio processing.
     pub fn record_trade(&mut self, position_id: &PositionId, ts_event: UnixNanos, pnl: &Money) {
         let currency = pnl.currency;
         let entry = self.recorded_realized_pnls.entry(currency).or_default();
-        entry.push((*position_id, ts_event, pnl.as_f64()));
+        entry.push((*position_id, ts_event, trade_pnl_value(pnl)));
     }
 
     /// Records a position return at a specific timestamp.
@@ -971,6 +971,16 @@ impl PortfolioAnalyzer {
     }
 }
 
+fn trade_pnl_value(pnl: &Money) -> f64 {
+    if pnl.currency.precision > MAX_FLOAT_PRECISION {
+        pnl.as_decimal()
+            .to_f64()
+            .expect("Decimal money values fit in f64")
+    } else {
+        pnl.as_f64()
+    }
+}
+
 fn canonical_position_id(position_id: PositionId) -> PositionId {
     const UUID4_STRING_LEN: usize = 36;
 
@@ -1109,7 +1119,7 @@ mod tests {
             closing_order_id: None,
             entry: OrderSide::Buy,
             side: PositionSide::Flat,
-            signed_qty: 0.0,
+            signed_qty: 0.into(),
             quantity: Quantity::default(),
             peak_qty: Quantity::default(),
             price_precision: 2,
@@ -1126,7 +1136,7 @@ mod tests {
             ts_last: UnixNanos::default(),
             ts_closed: Some(UnixNanos::from(1_706_659_200_000_000_000)),
             duration_ns: DurationNanos::new(2),
-            avg_px_open: 0.0,
+            avg_px_open: 0.into(),
             avg_px_close: None,
             realized_return,
             realized_pnl: Some(Money::new(realized_pnl, currency)),
@@ -1134,6 +1144,10 @@ mod tests {
             buy_qty: Quantity::default(),
             sell_qty: Quantity::default(),
             commissions: IndexMap::new(),
+            cost_open: 0.into(),
+            cost_close: 0.into(),
+            qty_closed: 0.into(),
+            realized_pnl_remainder: 0.into(),
         }
     }
 

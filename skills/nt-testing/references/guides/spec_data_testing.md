@@ -1,25 +1,17 @@
-NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` references in this file are retained for migration/reference-only context. Prefer Rust v2/PyO3 guidance and `LiveNode` for new Rust-backed live work.
-
+---
+source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_data_testing.md
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
+target: NautilusTrader develop developer guide source snapshot
+confidence: high
+legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
+---
 # Data Testing Spec
 
-## Option-chain acceptance at reviewed tip `2ceb2a9a6`
-
-Test series identity independently from contract identity: `OptionSeriesId`
-is the series; candidate contract symbols use `OptionContractSpec`,
-`OptionSymbologyScheme` and `OptionInstrumentId`. Verify exact strike,
-underlying, expiration and kind, venue qualification, and definition validation
-for CME holiday/listing exceptions. Selection uses
-`StrikeRange` (Fixed, AtmRelative, AtmPercent, Delta). Cover missing Greeks
-and deterministic ATM fallback separately from data-engine Greek-aware delta
-selection. Do not assert that the model-level resolver enforces delta bounds.
-Source: upstream `crates/model/src/identifiers/option_instrument_id.rs` and
-`crates/model/src/data/option_chain.rs`.
-
-This section defines a rigorous test matrix for validating adapter data
-functionality using the Rust `DataTester` actor. Python exposes it as a built-in
-actor configured through `nautilus_trader.testkit.DataTesterConfig`; Rust code
-imports it from `nautilus_testkit::testers`. Each test case is identified by a
-prefixed ID (e.g. TC-D01) and grouped by functionality.
+Use this test matrix to validate adapter data functionality with the Rust `DataTester` actor. Python exposes
+it as a built-in actor configured through `nautilus_trader.testkit.DataTesterConfig`. Rust code imports it
+from `nautilus_testkit::testers`. Cases use prefixed IDs (for example, TC-D01) and are grouped by
+functionality.
 
 **Each adapter must pass the subset of tests matching its supported data types.**
 
@@ -37,9 +29,9 @@ Before running data tests:
 - Target instrument available and loadable via the instrument provider.
 - API credentials set via environment variables (`{VENUE}_API_KEY`, `{VENUE}_API_SECRET`) when
   the venue requires authentication for the data being tested.
-- If the venue offers a demo/testnet mode, use credentials created
-  for that environment. Demo and production API keys are typically separate and not
-  interchangeable; using the wrong credentials produces authentication errors (e.g. HTTP 401).
+- If the venue offers a demo/testnet mode, use credentials created for that environment. Demo and production
+  API keys are typically separate and not interchangeable. Using the wrong credentials produces authentication
+  errors (e.g. HTTP 401).
 
 **Python node setup**:
 
@@ -99,11 +91,215 @@ or microseconds.
 - `ts_init` is the local clock when Nautilus created the object. Small `ts_event` >
   `ts_init` skew is possible when the venue clock is ahead.
 
-`DataTester` warns when `ts_event` or `ts_init` fails the scale check on instruments,
-quotes, trades, bars, book deltas, book depth, mark and index prices, funding rates,
-instrument status and close, option greeks, and historical batches of those types.
-It does not check reconstructed books in `on_book`. Treat a warning as a failure for the
-case that produced the message.
+`DataTester` warns when `ts_event` or `ts_init` fails the scale check on these data types, including
+historical batches of each:
+
+- Instruments, instrument status, and instrument close.
+- Book deltas and book depth.
+- Quotes, trades, and bars.
+- Mark prices, index prices, and funding rates.
+- Option greeks.
+
+It does not check reconstructed books in `on_book`. Treat a warning as a failure for the case that
+produced the message.
+
+---
+
+## Order book sync conformance
+
+Adapters that maintain order books from a venue stream must keep their output valid through venue and network
+faults. Unit and integration suites cannot reproduce venue timing. Thus, changes to book sync and recovery
+machinery need both a deterministic model check and live validation against a real venue.
+
+**Live validation** here means market-data-only observation: subscribe, request, and fault-inject. Do not
+place orders during this validation. A **dark book** is a subscribed book that never receives data.
+
+### Book stream contract
+
+`BookStreamChecker` in `nautilus_live::book::conformance`, enabled by the `nautilus-live`
+`test-support` feature, applies the contract to every emitted `OrderBookDeltas` batch:
+
+- A batch ends with `F_LAST`. Each `F_LAST` closes an event group, and the book must pass its
+  integrity check after every group because consumers observe it at those boundaries.
+- A snapshot group is a `Clear` followed by `Add` deltas, all flagged `F_SNAPSHOT`. A lone `Clear`
+  is an empty snapshot.
+- An incremental group carries neither `F_SNAPSHOT` nor `Clear`, and follows a snapshot.
+- Each incremental group's sequence exceeds the previous one when the venue sequence is monotonic within a
+  snapshot episode. OKX `seqId` can reset. Polymarket, Hyperliquid, Betfair, and AX Exchange books carry no
+  venue sequence. Thus, the checkers for all these venues skip this rule and rely on the oracle.
+- A book emits nothing after its unsubscribe settles.
+
+### Validation levels
+
+Match the level to the riskiest aspect of the change. Higher levels include the bars of each level below.
+
+| Level              | Trigger                                                                                          | Method                                                                                          | Acceptance                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| L0 Model           | Any change to `BookSync`, `BookRecovery`, or an adapter's use of them                            | Property test of the per-book state machine against a reference model, plus planted regressions | The property test passes, and reverting a known fix, such as the gap ownership rule, makes it fail                                    |
+| L1 Conformance     | Any change to previously validated sync/recovery code                                            | Rerun the venue's stress harness or established oracle                                          | PASS at the documented bar, zero checker violations, zero dark books, zero unexplained errors                                         |
+| L2 Edge probe      | Boundary behavior changes (timeouts, disabled paths, budget exhaustion, the retry ceiling)       | Targeted boundary scenarios, including each new tuning extreme                                  | Every scenario passes. Disabled paths stay quiet. An exhausted budget reaches the ceiling and a late snapshot still restores the book |
+| L3 Race probe      | Concurrency or ordering changes (gates, epochs, reconnect interplay), or any live-found race fix | Fault injection plus subscribe churn under an independent oracle                                | Dozens of forced recoveries complete with zero dark books. The reported race scenario passes with no recurrence                       |
+| L4 Full validation | New sync/recovery implementation                                                                 | L1-L3 plus a sustained churn and reconnect-fault soak                                           | All lower bars hold for the full soak. Recovery latencies stay bounded                                                                |
+
+The L0 property test is `schedule_keeps_sync_contract` in `crates/live/src/book/sync.rs`.
+Record the level, venue, oracle, and result with the change. A fix that live validation finds
+restarts at the level that found it: the rerun must clear the same bar, not a lighter one.
+
+### Fault catalog
+
+Every adapter must produce these outcomes, whichever
+[recovery family](adapters.md#order-book-recovery-ownership) it belongs to:
+
+| Fault                       | Required outcome                                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sequence gap                | Output stops at the gap and resumes only after a fresh snapshot replaces the book.                                                                      |
+| Missing or late snapshot    | The snapshot deadline starts or retries recovery. A snapshot accepted between attempts ends it.                                                         |
+| Recovery cannot start       | The book stays unowned and requests recovery again on its next frame. A refused task cancels its claimed episode.                                       |
+| Rejected replacement        | Recovery retries. An error the classifier marks permanent skips the budget and retries at the ceiling.                                                  |
+| Retry budget exhausted      | One error log, then retries at the ceiling until a snapshot is accepted.                                                                                |
+| Reconnect mid-recovery      | The running recovery keeps its budget, ownership, and in-flight write, and its next ceiling wait ends at once. Other books resync from fresh snapshots. |
+| Unsubscribe during recovery | Recovery and its pending writes stop, and the book emits nothing further.                                                                               |
+
+### Forcing techniques
+
+Prefer distinct orderings over raw volume. A probe earns its place only if it forces an ordering that the
+suite cannot produce (reconnect mid-recovery, a snapshot racing gate-open, an unsubscribe racing an in-flight
+subscribe). Message count alone does not justify a probe.
+
+| Technique                                                                   | Stresses                                                             | Figures that proved effective                                                           | Caught in practice                                                        |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Subscribe churn (rotating unsubscribe/resubscribe with periodic full flaps) | Recovery initiation, gate/epoch rollover, in-flight cancel races     | 20 s ticks over a 10-15 min run. Dozens of forced recoveries (40+) with zero dark books | Duplicate-subscribe flaw that could not recover (forced a design revisit) |
+| Traffic freeze (STOP the tunnel ~40 s)                                      | Dead-connection detection, reconnect replay, post-reconnect recovery | 2-3 freezes per run, spaced minutes apart                                               | Proves reconnect recovery under total packet loss. No defect caught yet   |
+| Proxy fault injection (drop/hold/cut frames by rule)                        | Gap handling, held-frame release, oracle conformance                 | Thousands of oracle batches per run (6k+), per-round gap counts                         | Timeout-scaled harness race (fixed observe window vs new default)         |
+| Tuning extremes (0 plus a short non-default value)                          | Disabled-deadline branches, param threading end to end               | One short run per extreme (4-5 min) with churn active                                   | Confirmed the review-found zero-timeout fix live. Proves threading        |
+| Client-issued reconnect (public reconnect command, then exercise)           | Reconnect recovery without touching host networking                  | 5+ consecutive reconnect/reconcile passes                                               | Proves recovery without host faults. No defect caught yet                 |
+| Serial repetition of the race scenario                                      | Scheduler sensitivity                                                | 5+ consecutive live passes. 100x repetition for deterministic harnesses                 | Flakes that pass once and fail rarely                                     |
+
+Route each venue through a network location that it serves. Polymarket restricts access by region. OKX,
+Lighter, Binance, Hyperliquid, and AX Exchange validate direct. Confirm the route delivers venue data before a
+long run: sockets can connect while the venue stays silent. Branches the venue never produces live belong in a
+captured-wire deterministic harness, not in the live run.
+
+### Oracles
+
+An oracle is an independent reconstruction of venue truth, compared with the emitted book through
+`BookStreamChecker::verify`:
+
+- Build it from a separate connection or a REST snapshot, never from the adapter's own state.
+- Compare at an aligned venue sequence. Skip a sample that cannot be aligned. It does not count as a pass.
+- Count a snapshot episode verified once a comparison after its snapshot succeeds. A harness with
+  `Coverage::Episodes`, such as OKX, verifies each batch as it arrives and fails a session unless each episode
+  is verified. A harness with `Coverage::Samples`, such as Binance, matches oracle samples by update ID after
+  the fact. Thus, it reports oracle checks and unmatched samples, not episode coverage.
+
+### Stress harnesses
+
+Stress harnesses are development tools for changes to book sync and recovery code. They are not
+part of the published crates and do not run in CI. The `BookStreamChecker` they use ships with
+`nautilus-live` under the `test-support` feature, so other tests can apply the same contract.
+
+An adapter that uses the shared book machinery keeps its live harness at
+`crates/adapters/<venue>/tests/stress/book_stress.rs`, registered as a test target named
+`<venue>-book-stress`:
+
+```toml
+[[test]]
+name = "okx-book-stress"
+path = "tests/stress/book_stress.rs"
+harness = false
+test = false
+required-features = ["examples"]
+```
+
+`harness = false` lets the target own its runtime and arguments, and `test = false` keeps it out of
+default `cargo test` and nextest runs. Add `nautilus-live` with the `test-support` feature to the crate's
+dev-dependencies.
+
+The shared machinery is test source at `crates/live/tests/book/stress/`, which each harness compiles
+in with a path include:
+
+```rust
+#[path = "../../../../live/tests/book/stress/mod.rs"]
+mod stress;
+```
+
+The shared module runs the harness, and the venue supplies only its own pieces by implementing
+`StressVenue`:
+
+- A `WireCodec` that classifies each venue frame as a book snapshot, a book update, or an unsubscribe
+  acknowledgement. It records the frame in the oracle before any fault applies. It can also rewrite a frame to
+  plant a sequence gap or an in-band mismatch, and answer an adapter subscribe with a venue rejection.
+- The proxy routes, the data client configuration, and any extra proxy routes, such as a REST
+  snapshot proxy.
+- The oracle comparison for each emitted batch, the condition for a healthy book, and a startup
+  self-check.
+- The scenarios, written against `Session`.
+
+`FaultProxy` relays the adapter's WebSocket traffic to the venue. For a route whose upstream URL is
+not a WebSocket URL, it relays CRLF-delimited lines over raw TCP. A line route serves the proxy address
+alone, and the venue's `WireCodec::connect` opens its upstream connection, for example over TLS.
+
+The proxy applies per-book `Fault` rules (drop snapshots or updates, corrupt, hold, silence, cut on
+unsubscribe, reject subscribes) and connection-wide cuts and freezes. `Session` passes emitted batches
+for requested books through `BookStreamChecker` and the oracle. It waits for books to heal. At shutdown,
+it checks that all sockets and reconnect handles are released.
+
+Each harness accepts the same flags, and venues add their own. `--help` lists them:
+
+| Flag              | Meaning                                                        | Default       |
+| ----------------- | -------------------------------------------------------------- | ------------- |
+| `--scenario NAME` | Scenario to run.                                               | `churn`       |
+| `--timeout SECS`  | `book_snapshot_timeout_secs`. `0` disables snapshot deadlines. | `10`          |
+| `--rounds N`      | Stress rounds.                                                 | Venue default |
+
+Run the harness explicitly, with adapter environment variables stripped:
+
+```bash
+CARGO_BUILD_JOBS=16 bash scripts/strip-adapter-env.bash \
+  cargo test -p nautilus-okx --features examples --test okx-book-stress -- --timeout 10 --rounds 18
+```
+
+Betfair streams market data only to logged-in accounts, so its harness runs with the Betfair credentials set.
+See [Live recovery validation](../integrations/betfair.md#live-recovery-validation). AX Exchange market data
+also requires authentication, so its harness reads sandbox credentials from the environment and runs without
+the wrapper.
+
+The harness writes one line per event to stderr, each led by a fixed word:
+
+| Line       | Meaning                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `START`    | The venue and arguments.                                                |
+| `CHECK`    | The startup self-check or a scenario probe passed.                      |
+| `ROUND`    | A stress round finished, with its counters.                             |
+| `SHUTDOWN` | A session stopped cleanly, with its counters and oracle coverage.       |
+| `PASS`     | The run finished. Always the last line of a passing run.                |
+| `FAIL`     | A check failed or any thread panicked. The process exits with status 1. |
+
+A deadline failure reports the venue frames each proxy route received, separating a silent route
+from an adapter failure.
+
+**Self-checks**: A `harness = false` target cannot run `#[test]` functions, so the venue proves its
+wire parsing and oracle in `StressVenue::self_check` before any venue traffic. The shared proxy,
+argument parsing, and wire book carry unit tests in the `nautilus-live` `book` test target. Run them
+with `cargo nextest run -p nautilus-live --features test-support --test book`.
+
+**Harness documentation**: Add a `Live recovery validation` heading to the adapter's integration guide.
+Include its checks, injected faults, run command, scenarios, flags, and required endpoints. OKX, Binance,
+Lighter, Polymarket, Hyperliquid, Bybit, Betfair, and AX Exchange provide harnesses.
+
+### In-band verification
+
+When a venue publishes a book checksum or hash, validate the completed state it covers and treat a
+mismatch as a gap. This catches corruption that sequence checks miss, without an external oracle.
+
+- **Kraken**: Validates the CRC32 checksum on each Spot L2 `book` and L3 message when
+  `validate_l2_checksum` and `validate_l3_checksum` are enabled, both the default.
+- **Polymarket**: Rejects snapshot hash mismatches when all hash inputs are available. Snapshots with
+  missing inputs and incremental updates remain unverified and do not trigger hash recovery.
+  Missing depth can remain undetected until a fresh snapshot. See
+  [book snapshot validation](../integrations/polymarket.md#book-snapshot-validation)
+  and [price change bursts](../integrations/polymarket.md#price-change-bursts).
+- **OKX**: `books` frames carry a zero `checksum`, so verification relies on the oracle instead.
 
 ---
 
@@ -129,10 +325,10 @@ Verify instrument loading and subscription before testing market data streams.
 | **Prerequisite**   | Adapter connected.                                                                            |
 | **Action**         | DataTester requests all instruments for the venue on start.                                   |
 | **Event sequence** | `on_instruments` callback receives instrument list.                                           |
-| **Pass criteria**  | At least one instrument received; each has valid symbol, price precision, and size increment. |
+| **Pass criteria**  | At least one instrument received. Each has valid symbol, price precision, and size increment. |
 | **Skip when**      | Never.                                                                                        |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -141,7 +337,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -161,7 +357,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Instrument received with correct `instrument_id`, valid fields. |
 | **Skip when**      | Adapter does not support instrument subscriptions.              |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -170,7 +366,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -190,7 +386,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Instrument loaded with correct ID, price precision, size increment, and trading rules. |
 | **Skip when**      | Never.                                                                                 |
 
-**Considerations:**
+**Considerations**:
 
 - This tests the instrument provider's `load` / `load_async` method directly.
 - Verify the instrument is cached and available via `self.cache.instrument(instrument_id)`.
@@ -205,12 +401,12 @@ Test order book subscription modes and snapshot requests.
 | ------ | -------------------------- | ----------------------------------- | ----------------- |
 | TC-D10 | Subscribe book deltas      | Stream `OrderBookDeltas` updates.   | No book support.  |
 | TC-D11 | Subscribe book at interval | Periodic `OrderBook` snapshots.     | No book support.  |
-| TC-D12 | Subscribe book depth       | `OrderBookDepth` snapshots.       | No book depth.    |
+| TC-D12 | Subscribe book depth       | `OrderBookDepth` snapshots.         | No book depth.    |
 | TC-D13 | Request book snapshot      | One-time book snapshot request.     | No book snapshot. |
 | TC-D14 | Managed book from deltas   | Build local book from delta stream. | No book support.  |
 
-Python uses `BookType.L2_MBP` for these scenarios. The Rust builder can override `book_type` when
-an adapter requires a different book representation.
+Python and Rust default to `BookType.L2_MBP` for these scenarios. Set `book_type` when an adapter requires
+a different book representation.
 
 ### TC-D10: Subscribe book deltas
 
@@ -219,10 +415,10 @@ an adapter requires a different book representation.
 | **Prerequisite**   | Adapter connected, instrument loaded.                                                  |
 | **Action**         | DataTester subscribes to order book deltas.                                            |
 | **Event sequence** | `OrderBookDeltas` events received in `on_book_deltas`.                                 |
-| **Pass criteria**  | Deltas received with valid instrument ID; at least one delta contains bid/ask updates. |
+| **Pass criteria**  | Deltas received with valid instrument ID. At least one delta contains bid/ask updates. |
 | **Skip when**      | Adapter does not support order book data.                                              |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -231,7 +427,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -249,10 +445,10 @@ DataTesterConfig::builder()
 | **Prerequisite**   | Adapter connected, instrument loaded.                                                                 |
 | **Action**         | DataTester subscribes to periodic order book snapshots.                                               |
 | **Event sequence** | `OrderBook` events received in `on_book` at configured interval.                                      |
-| **Pass criteria**  | Book snapshots received with bid/ask levels; updates arrive at approximately the configured interval. |
+| **Pass criteria**  | Book snapshots received with bid/ask levels. Updates arrive at approximately the configured interval. |
 | **Skip when**      | Adapter does not support order book data.                                                             |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -263,7 +459,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -278,25 +474,31 @@ DataTesterConfig::builder()
 
 ### TC-D12: Subscribe book depth
 
-| Field              | Value                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| **Prerequisite**   | Adapter connected, instrument loaded.                                                |
-| **Action**         | DataTester subscribes to `OrderBookDepth` snapshots.                               |
-| **Event sequence** | `OrderBookDepth` events received in `on_book_depth`.                               |
-| **Pass criteria**  | Depth snapshots received with up to 10 bid/ask levels; prices are correctly ordered. |
-| **Skip when**      | Adapter does not support book depth subscriptions.                                   |
+| Field              | Value                                                                            |
+| ------------------ | -------------------------------------------------------------------------------- |
+| **Prerequisite**   | Adapter connected, instrument loaded.                                            |
+| **Action**         | DataTester subscribes to `OrderBookDepth` snapshots.                             |
+| **Event sequence** | `OrderBookDepth` events received in `on_book_depth`.                             |
+| **Pass criteria**  | Depth snapshots respect the requested level limit. Prices are correctly ordered. |
+| **Skip when**      | Adapter does not support book depth subscriptions.                               |
 
-**Python config:**
+Choose a depth supported by the venue. See the adapter guide for its limit. `book_depth` applies to all
+enabled book subscriptions and the book snapshot request. Omitting it uses the adapter default.
+
+- When depth runs alongside deltas or interval books, DataTester subscribes to depth with
+  `managed=False` so it cannot overwrite the delta-managed book.
+- When only depth is enabled, its managed setting follows `manage_book`.
+
+**Python config**:
 
 ```python
 DataTesterConfig(
     instrument_ids=[instrument_id],
     subscribe_book_depth=True,
-    book_depth=10,
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -304,7 +506,6 @@ DataTesterConfig::builder()
     .instrument_ids(vec![instrument_id])
     .subscribe_book_depth(true)
     .book_type(BookType::L2_MBP)
-    .book_depth(10)
     .build()?
 ```
 
@@ -318,7 +519,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Snapshot contains bid/ask levels with valid prices and sizes. |
 | **Skip when**      | Adapter does not support book snapshot requests.              |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -328,7 +529,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -344,17 +545,17 @@ DataTesterConfig::builder()
 | Field              | Value                                                                                                                     |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | **Prerequisite**   | Adapter connected, instrument loaded, book deltas streaming.                                                              |
-| **Action**         | DataTester subscribes to deltas with `manage_book=True`; builds local order book from the delta stream.                   |
-| **Event sequence** | `OrderBookDeltas` applied to local `OrderBook`; book logged with configured depth.                                        |
-| **Pass criteria**  | Local book builds correctly from deltas; bid levels descend, ask levels ascend; book is not empty after initial snapshot. |
+| **Action**         | DataTester subscribes to deltas with `manage_book=True`. Builds local order book from the delta stream.                   |
+| **Event sequence** | `OrderBookDeltas` applied to local `OrderBook`. Book logged with configured depth.                                        |
+| **Pass criteria**  | Local book builds correctly from deltas. Bid levels descend, ask levels ascend. Book is not empty after initial snapshot. |
 | **Skip when**      | Adapter does not support order book data.                                                                                 |
 
-**Considerations:**
+**Considerations**:
 
 - The managed book applies each delta to an `OrderBook` instance maintained by the actor.
 - Use `book_levels_to_print` to control logging verbosity.
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -365,7 +566,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -399,10 +600,10 @@ Test quote tick subscriptions and historical requests.
 | **Prerequisite**   | Adapter connected, instrument loaded.                                             |
 | **Action**         | DataTester subscribes to quotes on start.                                         |
 | **Event sequence** | `QuoteTick` events received in `on_quote`.                                        |
-| **Pass criteria**  | At least one `QuoteTick` received with valid bid/ask prices and sizes; bid < ask. |
+| **Pass criteria**  | At least one `QuoteTick` received with valid bid/ask prices and sizes. Bid < ask. |
 | **Skip when**      | Never.                                                                            |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -411,7 +612,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -431,7 +632,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Quotes received with valid timestamps, bid/ask prices, and sizes. |
 | **Skip when**      | Adapter does not support historical quote requests.               |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -461,7 +662,7 @@ Test trade tick subscriptions and historical requests.
 | **Pass criteria**  | At least one `TradeTick` received with valid price, size, and aggressor side. |
 | **Skip when**      | Never.                                                                        |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -470,7 +671,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -490,7 +691,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Trades received with valid timestamps, prices, sizes, and trade IDs. |
 | **Skip when**      | Adapter does not support historical trade requests.                  |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -499,7 +700,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -527,10 +728,10 @@ Test bar subscriptions and historical requests.
 | **Prerequisite**   | Adapter connected, instrument loaded, bar type configured.                                     |
 | **Action**         | DataTester subscribes to bars for a configured `BarType`.                                      |
 | **Event sequence** | `Bar` events received in `on_bar`.                                                             |
-| **Pass criteria**  | At least one `Bar` received with valid OHLCV values; high >= low, high >= open, high >= close. |
+| **Pass criteria**  | At least one `Bar` received with valid OHLCV values. High >= low, high >= open, high >= close. |
 | **Skip when**      | Adapter does not support bar subscriptions.                                                    |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -540,7 +741,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -561,7 +762,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Bars received with valid OHLCV values and ascending timestamps. |
 | **Skip when**      | Adapter does not support historical bar requests.               |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -571,7 +772,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -605,7 +806,7 @@ Test derivatives-specific data streams: mark prices, index prices, and funding r
 | **Pass criteria**  | At least one `MarkPriceUpdate` received with valid instrument ID and mark price. |
 | **Skip when**      | Instrument is not a derivative, or adapter does not provide mark prices.         |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -614,7 +815,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -634,7 +835,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | At least one `IndexPriceUpdate` received with valid instrument ID and index price. |
 | **Skip when**      | Instrument is not a derivative, or adapter does not provide index prices.          |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -643,7 +844,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -663,7 +864,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | At least one `FundingRateUpdate` received with valid instrument ID and rate. |
 | **Skip when**      | Instrument is not a perpetual, or adapter does not provide funding rates.    |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -672,7 +873,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -692,7 +893,7 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Funding rates received with valid timestamps and rate values.                                |
 | **Skip when**      | Instrument is not a perpetual, or adapter does not support historical funding rate requests. |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -701,7 +902,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -732,12 +933,12 @@ Test instrument status and close event subscriptions.
 | **Pass criteria**  | Status events received with valid `MarketStatusAction` (e.g. `Trading`). |
 | **Skip when**      | Adapter does not support instrument status subscriptions.                |
 
-**Considerations:**
+**Considerations**:
 
 - Status events may only fire on state changes (e.g. trading halt -> resume).
 - During normal trading hours, a `Trading` status may be received on subscribe.
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -746,7 +947,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -766,12 +967,12 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Close event received with valid close price and close type. |
 | **Skip when**      | Adapter does not support instrument close subscriptions.    |
 
-**Considerations:**
+**Considerations**:
 
 - Close events typically fire at end-of-session for traditional markets.
 - May not fire for 24/7 crypto venues unless the adapter synthesizes a daily close.
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -780,7 +981,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -811,16 +1012,16 @@ Test option greeks and option chain subscriptions.
 | **Pass criteria**  | Greeks received with valid delta, gamma, vega, theta values. |
 | **Skip when**      | Adapter does not support option greeks subscriptions.        |
 
-**Considerations:**
+**Considerations**:
 
 - Greeks are only available for option instruments.
 - Values depend on the venue's pricing model and may update on every quote change.
-- Some venues (Bybit, Deribit) subscribe per instrument; OKX subscribes per instrument
-  family and filters to the requested instruments.
+- Some venues (Bybit, Deribit) subscribe per instrument. OKX subscribes per instrument family and filters to
+  the requested instruments.
 - `rho` may be zero when the venue does not provide it (Bybit, OKX).
 - `underlying_price` and `open_interest` may be `None` depending on the venue channel.
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -829,7 +1030,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -849,25 +1050,29 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Chain snapshot contains greeks for instruments matching the series. |
 | **Skip when**      | Adapter does not support option chain subscriptions.                |
 
-**Considerations:**
+**Considerations**:
 
 - Option chain subscriptions are managed by the DataEngine, which creates per-instrument
   quote and greeks subscriptions internally.
-- ATM-relative strike ranges boot from an initial reference price (HTTP) and then track live option Greeks (pinned `148e7cf6`).
-- Not yet configurable via `DataTesterConfig`; requires manual actor setup with
-  `subscribe_option_chain` and an `OptionSeriesId`.
+- Dynamic strike ranges require an ATM price before instrument subscriptions begin. The
+  DataEngine requests an initial reference price and otherwise waits for live option Greeks.
+- Not yet configurable via `DataTesterConfig`. Requires manual actor setup with `subscribe_option_chain` and
+  an `OptionSeriesId`.
 
 ---
 
 ## Group 9: Lifecycle
 
-Test actor lifecycle behavior: unsubscribe handling and custom parameters.
+Test actor lifecycle behavior: unsubscribe handling, retirement cleanup, and custom parameters.
 
-| TC     | Name                    | Description                                | Skip when         |
-| ------ | ----------------------- | ------------------------------------------ | ----------------- |
-| TC-D70 | Unsubscribe on stop     | Unsubscribe from data feeds on actor stop. | No unsub support. |
-| TC-D71 | Custom subscribe params | Adapter-specific subscription parameters.  | N/A.              |
-| TC-D72 | Custom request params   | Adapter-specific request parameters.       | N/A.              |
+| TC     | Name                    | Description                                     | Skip when         |
+| ------ | ----------------------- | ----------------------------------------------- | ----------------- |
+| TC-D70 | Unsubscribe on stop     | Unsubscribe from data feeds on actor stop.      | No unsub support. |
+| TC-D71 | Custom subscribe params | Adapter-specific subscription parameters.       | N/A.              |
+| TC-D72 | Custom request params   | Adapter-specific request parameters.            | N/A.              |
+| TC-D73 | Retirement cleanup      | Release an actor's retained data subscriptions. | N/A.              |
+| TC-D74 | DeFi shared pool demand | Keep shared pool feeds until the final owner.   | No DeFi support.  |
+| TC-D75 | DeFi bootstrap cancel   | Discard snapshots for canceled pool bootstraps. | No DeFi support.  |
 
 ### TC-D70: Unsubscribe on stop
 
@@ -875,11 +1080,11 @@ Test actor lifecycle behavior: unsubscribe handling and custom parameters.
 | ------------------ | ---------------------------------------------------------------- |
 | **Prerequisite**   | Active data subscriptions (quotes, trades, book).                |
 | **Action**         | Stop the actor with `can_unsubscribe=True` (default).            |
-| **Event sequence** | Data subscriptions removed; no further data events received.     |
-| **Pass criteria**  | Clean unsubscribe; no errors in logs; no data events after stop. |
+| **Event sequence** | Data subscriptions removed. No further data events received.     |
+| **Pass criteria**  | Clean unsubscribe. No errors in logs. No data events after stop. |
 | **Skip when**      | Adapter does not support unsubscribe.                            |
 
-**Python config:**
+**Python config**:
 
 ```python
 DataTesterConfig(
@@ -890,7 +1095,7 @@ DataTesterConfig(
 )
 ```
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 DataTesterConfig::builder()
@@ -912,14 +1117,13 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Data flows with adapter-specific parameters in effect.                 |
 | **Skip when**      | N/A (adapter-specific).                                                |
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 use nautilus_core::Params;
 use serde_json::json;
 
-let mut subscribe_params = Params::new();
-subscribe_params.insert("key".to_string(), json!("value"));
+let subscribe_params = Params::new([("key".to_string(), json!("value"))].into());
 
 DataTesterConfig::builder()
     .client_id(client_id)
@@ -929,7 +1133,7 @@ DataTesterConfig::builder()
     .build()?
 ```
 
-**Considerations:**
+**Considerations**:
 
 - `subscribe_params` is opaque to the DataTester and passed through to the adapter.
 - The Python `DataTesterConfig` constructor does not expose this Rust-only field.
@@ -945,14 +1149,13 @@ DataTesterConfig::builder()
 | **Pass criteria**  | Historical data received with adapter-specific parameters in effect. |
 | **Skip when**      | N/A (adapter-specific).                                              |
 
-**Rust config:**
+**Rust config**:
 
 ```rust
 use nautilus_core::Params;
 use serde_json::json;
 
-let mut request_params = Params::new();
-request_params.insert("key".to_string(), json!("value"));
+let request_params = Params::new([("key".to_string(), json!("value"))].into());
 
 DataTesterConfig::builder()
     .client_id(client_id)
@@ -962,62 +1165,130 @@ DataTesterConfig::builder()
     .build()?
 ```
 
-**Considerations:**
+**Considerations**:
 
 - `request_params` is opaque to the DataTester and passed through to the adapter.
 - The Python `DataTesterConfig` constructor does not expose this Rust-only field.
 - Consult the adapter's guide for supported parameters.
 
+### TC-D73: Retirement cleanup
+
+| Field              | Value                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Prerequisite**   | An actor has venue-backed subscriptions. Two actors share an internally aggregated bar.                                               |
+| **Action**         | Retire the first actor, then retire the second actor through the trader.                                                              |
+| **Event sequence** | `on_dispose` completes. Unsubscribe commands are sent. The actor is deregistered.                                                     |
+| **Pass criteria**  | The first retirement keeps shared data active. The final retirement releases the retained route and leaves no retired actor handlers. |
+| **Skip when**      | N/A.                                                                                                                                  |
+
+The shared bar must remain active after the first actor retires and stop after the final actor
+retires.
+
+**Considerations**:
+
+- `DataTesterConfig` does not cover multi-actor retirement. Create two actors manually, then remove
+  them through Python `Controller.remove_actor` or Rust `Trader::remove_actor`.
+- If `on_dispose` fails, the actor must remain registered with its subscriptions intact so a later
+  retirement can release them without invoking the failed hook again.
+- A failed `on_stop` or `on_fault` must not block retirement: disposal and deregistration must still
+  complete from the corresponding transitional state.
+
+### TC-D74: DeFi shared pool demand
+
+| Field              | Value                                                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **Prerequisite**   | A DeFi data client. Two actors subscribe to the same pool, through the same or overlapping subscription types.             |
+| **Action**         | Retire or unsubscribe one actor, then the other, in each order.                                                            |
+| **Event sequence** | The first release sends no client unsubscribe for shared types. The final release unsubscribes and stops the pool updater. |
+| **Pass criteria**  | Pool events keep reaching the remaining actor and the profiler until the final release. None flow afterwards.              |
+| **Skip when**      | Adapter does not provide DeFi pool subscriptions.                                                                          |
+
+Cover these overlaps:
+
+- Two actors with the same subscription type, retired in either order.
+- `SubscribePool` with each narrower type (swaps, liquidity updates, fee collects, flash events),
+  unsubscribed in both orders. The narrower event filters must stay active while either
+  subscription remains.
+- The same pool on two data clients. Each client keeps its own demand, and the pool updater stays
+  active until both release.
+
+**Considerations**:
+
+- `DataTesterConfig` does not cover DeFi pool subscriptions. Create the actors manually.
+- A duplicate unsubscribe from one actor must not release another actor's demand.
+
+### TC-D75: DeFi bootstrap cancel
+
+| Field              | Value                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| **Prerequisite**   | A DeFi data client. The pool is absent from the cache, so a subscription requests a pool snapshot.    |
+| **Action**         | Subscribe, release the final owner before the pool definition arrives, then subscribe again.          |
+| **Event sequence** | Two snapshot requests are sent. The response to the first arrives after the second subscription.      |
+| **Pass criteria**  | The engine discards the first response. Only the response to the current request installs a profiler. |
+| **Skip when**      | Adapter does not provide pool snapshots.                                                              |
+
+**Considerations**:
+
+- The second subscription requests a new snapshot only while the pool is absent from the cache. Once
+  the first request's pool definition arrives, a later subscription builds the profiler from the
+  cached pool instead, so the case needs a delayed response.
+- An engine reset or disconnect also cancels pending bootstraps. A response that arrives afterwards
+  must not install a profiler.
+
 ---
 
 ## DataTester configuration reference
 
-The Python constructor accepts the parameters below. Defaults are resolved values after
-construction. Historical quote, trade, and bar requests use a one-hour lookback; funding rate
-requests use seven days. The lookback is not configurable through `DataTesterConfig`.
+The Python constructor accepts the parameters below. Defaults are resolved values after construction.
+Historical quote, trade, and bar requests default to a one-hour lookback. Funding rate requests default to
+seven days. Set `request_start` and `request_end` to choose a historical window, and `request_limit` to cap
+records per request. Use timezone-aware datetimes. An unset start uses the default lookback before
+`request_end`, or before now when the end is unset. These settings apply to quotes, trades, bars, and funding
+rates. The start must not be later than the end.
 
-| Parameter                     | Type                 | Default | Affects groups  |
-| ----------------------------- | -------------------- | ------- | --------------- |
-| `actor_id`                    | `ActorId?`           | `None`  | All             |
-| `client_id`                   | `ClientId?`          | `None`  | All             |
-| `instrument_ids`              | `list[InstrumentId]` | `[]`    | All             |
-| `bar_types`                   | `list[BarType]?`     | `None`  | 5               |
-| `subscribe_book_deltas`       | `bool`               | `False` | 2               |
-| `subscribe_book_depth`        | `bool`               | `False` | 2               |
-| `subscribe_book_at_interval`  | `bool`               | `False` | 2               |
-| `subscribe_quotes`            | `bool`               | `False` | 3               |
-| `subscribe_trades`            | `bool`               | `False` | 4               |
-| `subscribe_mark_prices`       | `bool`               | `False` | 6               |
-| `subscribe_index_prices`      | `bool`               | `False` | 6               |
-| `subscribe_funding_rates`     | `bool`               | `False` | 6               |
-| `subscribe_bars`              | `bool`               | `False` | 5               |
-| `subscribe_instrument`        | `bool`               | `False` | 1               |
-| `subscribe_instrument_status` | `bool`               | `False` | 7               |
-| `subscribe_instrument_close`  | `bool`               | `False` | 7               |
-| `subscribe_option_greeks`     | `bool`               | `False` | 8               |
-| `can_unsubscribe`             | `bool`               | `True`  | 9               |
-| `request_instruments`         | `bool`               | `False` | 1               |
-| `request_book_snapshot`       | `bool`               | `False` | 2               |
-| `request_book_deltas`         | `bool`               | `False` | Not implemented |
-| `request_quotes`              | `bool`               | `False` | 3               |
-| `request_trades`              | `bool`               | `False` | 4               |
-| `request_bars`                | `bool`               | `False` | 5               |
-| `request_funding_rates`       | `bool`               | `False` | 6               |
-| `book_depth`                  | `PositiveInt?`       | `None`  | 2               |
-| `book_interval_ms`            | `PositiveInt`        | `1000`  | 2               |
-| `book_levels_to_print`        | `PositiveInt`        | `10`    | 2               |
-| `manage_book`                 | `bool`               | `True`  | 2               |
-| `log_data`                    | `bool`               | `True`  | All             |
-| `stats_interval_secs`         | `int`                | `5`     | All             |
-| `log_events`                  | `bool`               | `True`  | All             |
-| `log_commands`                | `bool`               | `True`  | All             |
+| Parameter                     | Type                 | Default  | Affects groups  |
+| ----------------------------- | -------------------- | -------- | --------------- |
+| `actor_id`                    | `ActorId?`           | `None`   | All             |
+| `client_id`                   | `ClientId?`          | `None`   | All             |
+| `instrument_ids`              | `list[InstrumentId]` | `[]`     | All             |
+| `bar_types`                   | `list[BarType]?`     | `None`   | 5               |
+| `subscribe_book_deltas`       | `bool`               | `False`  | 2               |
+| `subscribe_book_depth`        | `bool`               | `False`  | 2               |
+| `subscribe_book_at_interval`  | `bool`               | `False`  | 2               |
+| `subscribe_quotes`            | `bool`               | `False`  | 3               |
+| `subscribe_trades`            | `bool`               | `False`  | 4               |
+| `subscribe_mark_prices`       | `bool`               | `False`  | 6               |
+| `subscribe_index_prices`      | `bool`               | `False`  | 6               |
+| `subscribe_funding_rates`     | `bool`               | `False`  | 6               |
+| `subscribe_bars`              | `bool`               | `False`  | 5               |
+| `subscribe_instrument`        | `bool`               | `False`  | 1               |
+| `subscribe_instrument_status` | `bool`               | `False`  | 7               |
+| `subscribe_instrument_close`  | `bool`               | `False`  | 7               |
+| `subscribe_option_greeks`     | `bool`               | `False`  | 8               |
+| `can_unsubscribe`             | `bool`               | `True`   | 9               |
+| `request_instruments`         | `bool`               | `False`  | 1               |
+| `request_book_snapshot`       | `bool`               | `False`  | 2               |
+| `request_book_deltas`         | `bool`               | `False`  | Not implemented |
+| `request_quotes`              | `bool`               | `False`  | 3               |
+| `request_trades`              | `bool`               | `False`  | 4               |
+| `request_bars`                | `bool`               | `False`  | 5               |
+| `request_funding_rates`       | `bool`               | `False`  | 6               |
+| `request_start`               | `datetime?`          | `None`   | 3, 4, 5, 6      |
+| `request_end`                 | `datetime?`          | `None`   | 3, 4, 5, 6      |
+| `request_limit`               | `PositiveInt?`       | `None`   | 3, 4, 5, 6      |
+| `book_type`                   | `BookType`           | `L2_MBP` | 2               |
+| `book_depth`                  | `PositiveInt?`       | `None`   | 2               |
+| `book_interval_ms`            | `PositiveInt`        | `1000`   | 2               |
+| `book_levels_to_print`        | `PositiveInt`        | `10`     | 2               |
+| `manage_book`                 | `bool`               | `True`   | 2               |
+| `log_data`                    | `bool`               | `True`   | All             |
+| `stats_interval_secs`         | `int`                | `5`      | All             |
+| `log_events`                  | `bool`               | `True`   | All             |
+| `log_commands`                | `bool`               | `True`   | All             |
 
 The Rust builder also exposes these parameters:
 
-| Parameter          | Type       | Default  | Affects groups |
-| ------------------ | ---------- | -------- | -------------- |
-| `book_type`        | `BookType` | `L2_MBP` | 2              |
-| `subscribe_params` | `Params?`  | `None`   | 9              |
-| `request_params`   | `Params?`  | `None`   | 9              |
-
----
+| Parameter          | Type      | Default | Affects groups |
+| ------------------ | --------- | ------- | -------------- |
+| `subscribe_params` | `Params?` | `None`  | 9              |
+| `request_params`   | `Params?` | `None`  | 9              |

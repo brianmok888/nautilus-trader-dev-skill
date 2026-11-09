@@ -13,14 +13,14 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | API claims match the pinned developer-guide snapshot. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` verifies the immutable developer-guide snapshot. |
-| G1 Legacy labelling | NT v2 compatibility note: legacy/Cython/v1 guidance is migration/reference-only and does not enter production code. | Pass | `uv run python tools/check_dev_guide_sync.py` enforces migration labels for legacy/Cython/v1 guidance. |
-| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pending | Build/storage policy changed owned content; prior execution is historical, not verification of this revision. Re-run `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-review` with admitted capacity; `references/g2-evidence/nt-review.json` records the pending reason. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` validates selected ownership and callback boundaries. |
-| G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py` enforces Rust/PyO3/Python lane ownership. |
-| G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` runs the readiness-focused repository tests. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run python -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-review.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | API claims match the pinned developer-guide snapshot. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | NT v2 compatibility note: legacy/Cython/v1 guidance is migration/reference-only and does not enter production code. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Changed Rust examples compile or have scoped harness evidence. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt-review` is the current-pin harness; evidence is `references/g2-evidence/nt-review.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Python production guidance is quarantined; Rust retains execution authority. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Targeted tests plus relevant lint/build commands are recorded. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt-review.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 NT v2 compatibility note: Rust-oriented v2.0 readiness rejects unlabelled legacy/Cython/v1 guidance as migration/reference-only and requires Rust-owned production paths. Python live `TradingNode` material is reference-only; current Rust-backed live work uses `LiveNode`.
 
@@ -31,7 +31,7 @@ Review behavior before style. Classify findings as **Blocker** (unsafe or incorr
 **Correctness and lifecycle**
 - Verify deterministic startup, warmup, reset, stop, and shutdown behavior.
 - Confirm order rejection, cancellation, expiration, partial fill, reconciliation, position limits, and circuit-breaker paths.
-- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
+- Verify adapter order-status-report filtering follows the shared rule at `crates/live/src/execution/reports.rs` (pinned `77d785c69205c4326e6aadb46d03fb45357a78f2`, upstream `9b7db823`): open-only venue report requests must retain both open and in-flight reports (`is_open() || is_inflight()`); only the documented Bybit and Polymarket reconciliation exceptions may deviate.
 - Ensure `DataActor`, strategy, adapter, cache, and message bus responsibilities are separated and messages remain immutable after publication.
 - Check current V2 shapes: `TryFrom<OrderInitialized>`, owned cache snapshots at boundaries, `RecencyMap` behavior, v2 wranglers, and raw fixed-point overflow handling.
 
@@ -72,4 +72,10 @@ Legacy Python review prose, checklists, and examples are physically quarantined 
 
 ## Source-pinned upstream lane
 
-Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`. Version-scope any newer upstream guidance until the pin advances.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+Validate review claims against the immutable snapshot under [`references/developer_guide/`](../../references/developer_guide/), particularly `rust.md`, `ffi.md`, `testing.md`, `benchmarking.md`, `adapters.md`, and `coding_standards.md`, pinned to commit `77d785c69205c4326e6aadb46d03fb45357a78f2`. Version-scope any newer upstream guidance until the pin advances.

@@ -13,25 +13,14 @@
 //  limitations under the License.
 // -------------------------------------------------------------------------------------------------
 
-//! Order book imbalance actor.
-//!
-//! Subscribes to order book deltas for a set of instruments and tracks the
-//! cumulative bid/ask quoted volume. For each batch of deltas, sums the
-//! resting size at each updated price level per side and computes:
-//!
-//! `imbalance = (bid_volume - ask_volume) / (bid_volume + ask_volume)`
-//!
-//! The result ranges from -1.0 (all volume on the ask side) to +1.0 (all
-//! volume on the bid side). This measures which side of the book receives
-//! more quoted volume across updates, not the incremental change in volume.
-//! In a betting exchange context, bids correspond to "back" orders and asks
-//! to "lay" orders.
+//! Runtime state for the order book imbalance strategy.
 
-pub mod actor;
-pub mod config;
+use nautilus_core::UnixNanos;
 
-#[cfg(test)]
-mod tests;
-
-pub use actor::{BookImbalanceActor, ImbalanceState};
-pub use config::BookImbalanceActorConfig;
+#[derive(Debug, Default)]
+pub(super) struct ImbalanceState {
+    pub size_precision: Option<u8>,
+    pub last_trigger_ns: Option<UnixNanos>,
+    pub update_count: u64,
+    pub signal_count: u64,
+}

@@ -20,7 +20,7 @@
 //! Run with: `cargo run --example hyperliquid-exec-tester --package nautilus-hyperliquid --features examples`
 //!
 //! Required credential environment variables:
-//! - `HYPERLIQUID_PK` (or `HYPERLIQUID_TESTNET_PK` for testnet).
+//! - `HYPERLIQUID_PK` (or `HYPERLIQUID_TESTNET_PK` for testnet)
 
 use log::LevelFilter;
 use nautilus_common::{enums::Environment, logging::logger::LoggerConfig};
@@ -92,6 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_data_client(None, Box::new(data_factory), Box::new(data_config))?
         .add_exec_client(None, Box::new(exec_factory), Box::new(exec_config))?
         .with_reconciliation(true)
+        .with_reconciliation_lookback_mins(24 * 60)
         .with_delay_post_stop_secs(10)
         .build()?;
 

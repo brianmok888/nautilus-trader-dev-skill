@@ -92,7 +92,7 @@ def readiness_gate_text(extra: str = "") -> str:
         "\n"
         "| Gate | Description | Status | Evidence |\n"
         "|---|---|---|---|\n"
-        "| G0 Scope and ownership | Verify latest docs and upstream commit. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
+        "| G0 Scope and ownership | Verify pinned upstream source scope. | Pass | `git rev-parse HEAD` recorded in `README.md`. |\n"
         "| G1 Legacy labelling | Mark Cython, v1, and TradingNode guidance reference-only. | Pending | Awaiting `uv run python tools/check_dev_guide_sync.py`. |\n"
         "| G2 Pinned V2 examples | Compile or validate examples against the pinned NT V2 master/develop baseline. | Pending | Awaiting upstream-backed example validation. |\n"
         "| G3 Rust bindings/PyO3 | Verify Rust bindings, PyO3 registration, callback routing, and crate paths. | Pending | Awaiting PyO3 boundary audit. |\n"
@@ -300,6 +300,24 @@ def test_reports_stale_capnp_version_file(tmp_path: Path) -> None:
 
     assert result.ok is False
     assert "stale cap'n proto version source in skills/nt-dev/SKILL.md" in result.errors
+
+
+def test_accepts_existing_skill_local_guides_path(tmp_path: Path) -> None:
+    write(
+        tmp_path / "skills/nt-adapters/AGENTS.md",
+        "Read references/guides/spec_data_testing.md before testing.\n",
+    )
+    write(
+        tmp_path / "skills/nt-adapters/references/guides/spec_data_testing.md",
+        "# Adapter acceptance tests\n",
+    )
+
+    result = run_checks(tmp_path)
+
+    assert (
+        "stale references/guides path in skills/nt-adapters/AGENTS.md"
+        not in result.errors
+    )
 
 
 def test_reports_imprecise_ld_library_path_guidance(tmp_path: Path) -> None:
@@ -2263,8 +2281,7 @@ def test_success_when_required_files_metadata_paths_and_invariants_exist(
     )
     write(
         tmp_path / "skills/nt-adapters/references/guides/rust.md",
-        "Use get_runtime().block_on() only outside an ambient Tokio runtime such as PyO3; "
-        "Never use get_runtime().block_on() inside live DataClient or ExecutionClient trait method implementations, spawn work instead.\n",
+        "Use get_runtime().block_on() when synchronous adapter code must call an async function.\n",
     )
 
     for name in CURRENT_DEV_GUIDE_FILES:

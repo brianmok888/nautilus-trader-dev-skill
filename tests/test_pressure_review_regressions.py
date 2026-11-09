@@ -180,11 +180,12 @@ def test_data_custom_persistence_uses_model_registry() -> None:
 
 def test_testing_preferred_async_pattern_awaits_exact_signal() -> None:
     guide = read("skills/nt-testing/references/guides/testing.md")
-    section = guide.split("### Deterministic async completion", 1)[1].split("##", 1)[0]
+    section = guide.split("## Waiting for asynchronous effects", 1)[1].split("##", 1)[0]
 
-    assert "subscribe" in section
-    assert "trigger" in section
+    assert "Subscribe before reading the authoritative state" in section
+    assert "Recheck it after every notification" in section
     assert "bounded timeout" in section
-    assert "wait_until_async" not in section
+    assert "When no suitable signal exists" in section
+    assert "wait_until_async" in section
     assert "eventually" not in section
     assert "sleep(" not in section

@@ -6,11 +6,10 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 
 **Entry Point:** `SKILL.md` (555 lines)
 
-## TEMPLATE QUICK REFERENCE (5 files)
+## TEMPLATE QUICK REFERENCE (4 files)
 
 | Need | Template | Key Feature |
 |------|----------|-------------|
-| Cap'n Proto schema | `capnp_schema.capnp` | Zero-copy serialization schema |
 | Exchange connectivity migration reference | `legacy_migration/adapters/exchange.py` | Legacy Python LiveDataClient, LiveExecutionClient |
 | Data-only adapter | `legacy_migration/adapters/data_provider.py` | Data streaming only |
 | Exchange-specific config example | `legacy_migration/adapters/kraken_config.py` | Venue configuration patterns |

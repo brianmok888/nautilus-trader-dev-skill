@@ -1,6 +1,6 @@
 # Value Types
 
-## Float conversion boundary at reviewed tip `2ceb2a9a6`
+## Float conversion boundary at the current pin `77d785c692` (behavior introduced earlier in develop; historical reviewed tip `2ceb2a9a6`)
 
 PyO3 Price/Quantity `as_double()` and float-producing mixed arithmetic reject
 precision 17 or 18 with ValueError: float arithmetic supports precision <=16.

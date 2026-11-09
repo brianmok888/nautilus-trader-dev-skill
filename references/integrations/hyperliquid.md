@@ -188,14 +188,22 @@ though orders are live on the venue. See [GH-4010](https://github.com/nautechsys
 Hyperliquid offers linear perpetual futures, HIP-3 builder-deployed perpetuals, native
 spot markets, and HIP-4 binary outcome markets.
 
-| Product Type      | Data Feed | Trading | Notes                                            |
-| ----------------- | --------- | ------- | ------------------------------------------------ |
-| Spot              | ✓         | ✓       | Native spot markets.                             |
-| Perpetual Futures | ✓         | ✓       | USDC-settled linear perps (validator-operated).  |
-| HIP-3 Perpetuals  | ✓         | ✓       | Builder-deployed perps with per-dex collateral.  |
-| HIP-4 Outcomes    | ✓         | ✓       | Fully-collateralized binary outcome side tokens. |
+| Product Type      | Data Feed | Trading | Readiness    | Notes                                            |
+| ----------------- | --------- | ------- | ------------ | ------------------------------------------------ |
+| Spot              | ✓         | ✓       | Stable       | Native spot markets.                             |
+| Perpetual Futures | ✓         | ✓       | Stable       | USDC-settled linear perps (validator-operated).  |
+| HIP-3 Perpetuals  | ✓         | ✓       | Stable       | Builder-deployed perps with per-dex collateral.  |
+| HIP-4 Outcomes    | ✓         | ✓       | Experimental | Fully-collateralized binary outcome side tokens. |
 
-All four product types load automatically at connect. No per-product opt-in is required.
+Checkmarks identify implemented data and execution paths with automated test coverage.
+Production readiness requires validation of the order types and account configuration your strategy uses.
+
+HIP-4 live validation covers read-only testnet HTTP and WebSocket fills, winning and losing settlement
+fills, and position reports. It does not cover a fresh order lifecycle or live synthetic settlement polling.
+HIP-4 remains experimental; keep [synthetic settlement polling disabled](#settlement-dispatch).
+
+All four product types load automatically at connect when their metadata is available.
+No per-product opt-in is required.
 
 :::note
 Standard Hyperliquid perpetuals are settled in USDC. HIP-3 dexes may settle in

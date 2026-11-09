@@ -4,6 +4,8 @@ import ast
 import re
 from pathlib import Path
 
+from tools.upstream_baseline import default_upstream_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -25,11 +27,15 @@ def test_end_to_end_guide_uses_published_release_lane() -> None:
     cargo = re.search(r"```toml\n(.*?)```", text, flags=re.DOTALL)
 
     assert cargo is not None
-    assert 'nautilus-live = "0.65"' in cargo.group(1)
-    assert 'nautilus-okx = "0.65"' in cargo.group(1)
-    assert 'nautilus-live = "0.65.0"' not in cargo.group(1)
-    assert "not published on crates.io" in text
-    assert "source-pinned path lane" in text
+    quickstart = (
+        default_upstream_root() / "docs/how_to/run_rust_live_trading.md"
+    ).read_text()
+    for name in ("nautilus-live", "nautilus-okx"):
+        dependency = re.search(rf'^{name}\s*=\s*"[^"]+"', quickstart, re.MULTILINE)
+        assert dependency is not None
+        assert dependency.group(0) in cargo.group(1)
+    assert "Verify registry availability" in text
+    assert "source-pinned checkout or path dependencies" in text
 
 
 def test_learning_setup_uses_pinned_upstream_bootstrap() -> None:
@@ -39,5 +45,10 @@ def test_learning_setup_uses_pinned_upstream_bootstrap() -> None:
     assert "make sync" in setup
     assert "uv sync --all-extras" not in setup
     assert "rustup toolchain install nightly" not in setup
-    assert 'nautilus-live = "0.65"' in stage09
+    quickstart = (
+        default_upstream_root() / "docs/how_to/run_rust_live_trading.md"
+    ).read_text()
+    dependency = re.search(r'^nautilus-live\s*=\s*"[^"]+"', quickstart, re.MULTILINE)
+    assert dependency is not None
+    assert dependency.group(0) in stage09
     assert 'version = "0.62"' not in stage09

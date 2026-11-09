@@ -20,9 +20,9 @@
 //! Run with: `cargo run --example blockchain-data-tester --package nautilus-blockchain --features hypersync`
 //!
 //! Required environment variables:
-//! - `ENVIO_API_TOKEN`.
-//! - `RPC_WSS_URL`.
-//! - `RPC_HTTP_URL`.
+//! - `ENVIO_API_TOKEN`
+//! - `RPC_WSS_URL`
+//! - `RPC_HTTP_URL`
 
 use std::{sync::Arc, time::Duration};
 
@@ -46,7 +46,6 @@ use nautilus_model::{
     identifiers::{ClientId, InstrumentId, TraderId},
 };
 
-// Requires capnp installed on the machine
 // Run with `cargo run -p nautilus-blockchain --bin node_test --features hypersync`
 // To enable debug logging: `export NAUTILUS_LOG=debug`
 

@@ -17,20 +17,22 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pending | Build/storage policy changed owned content; prior execution is historical, not verification of this revision. Re-run `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-implement` with admitted capacity; `references/g2-evidence/nt-implement.json` records the pending reason. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run python -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-implement.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt-implement` is the current-pin harness; evidence is `references/g2-evidence/nt-implement.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt-implement.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 
 Implementation gates: no new component starts until the status gate before coding classifies the lane and names test evidence. Production/performance/live changes must target Rust crates and PyO3 seams, then record `cargo nextest`, `cargo clippy`, `cargo deny`, and focused checker/test output before `Pass`.
 
 ## Rust production lane
-Cap'n Proto schemas for instruments ship with the pinned baseline (`2ceb2a9a62`, upstream `fb605401ef`); use the generated schemas for instrument serialization work instead of hand-written wire formats.
+At upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`, use the existing Arrow and SBE owners in `crates/serialization` and serde support on model types for serialization work. Cap'n Proto schemas from the historical baseline are migration/reference-only; current upstream removed their code, schemas, tests, regeneration scripts, and compiler setup.
+
+The G2 harness provides compilation only for serialization and representative implementation owners. Durable evidence remains pending until real execution against the aligned upstream records the changed owned content; host-Python tests do not establish that compile result.
 
 Implement new components in the owning Rust crate: model types in `crates/model/`, backtest models in `crates/backtest/`, adapters in `crates/adapters/`, and strategies through `nt-strategy-builder-rust`. Encode identifiers, precision, lifecycle, and risk state in Rust types; keep hot handlers allocation-aware and deterministic. Use the Nautilus runtime for async work and prove component behavior with focused Rust unit/integration tests before exposing bindings. On the deterministic simulation path, route clocks, randomness, task spawning, and network access through the DST seams `nautilus_network::dst::{time, task, net}`; with the `simulation` feature, HTTP/1.1 and WebSocket transports run over simulated byte streams, while HTTPS/TLS, HTTP/2, proxies, and streaming responses stay outside the simulated transport.
 
@@ -50,7 +52,13 @@ Python migration material is pointer-only here and physically quarantined under 
 
 ## Source-pinned upstream lane
 
-Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+Source: [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at `77d785c69205c4326e6aadb46d03fb45357a78f2`.
 
 ## Overview
 
@@ -504,11 +512,12 @@ pub extern "C" fn custom_momentum_update(
    - Import from `nautilus_common::live::get_runtime` (shorter re-export path)
    - Tests are exempt: `#[tokio::test]` creates its own runtime
 
-10. **Cap'n Proto Serialization** (see `references/developer_guide/rust.md`):
-    - Schema files in `crates/serialization/schemas/capnp/`
-    - Regenerate with `make regen-capnp` or `./scripts/regen-capnp.sh`
-    - Verify with `make check-capnp-schemas`; CI enforces consistency
-    - Test with `make cargo-test EXTRA_FEATURES="capnp"`
+10. **Serialization** (upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`):
+    - Arrow schemas and codecs: `crates/serialization/src/arrow/`; use the existing type-specific encoders and decoders for columnar persistence.
+    - SBE decoding utilities: `crates/serialization/src/sbe/`; use its `DecodeCursor` and shared `SbeDecodeError` when implementing SBE message decoders.
+    - Serde derives live on model types, for example `crates/model/src/data/quote.rs`; `serde` and `serde_json` are ordinary dependencies of the serialization crate, not feature flags.
+    - Compile the serialization owner with `cargo check -p nautilus-serialization --features arrow,sbe --lib`.
+    - Test exact round-trips and invalid-input failures in the chosen format's owner. Do not invent a replacement schema for the retired Cap'n Proto template.
 
 11. **Fixed-point Precision** (see `references/concepts/data.md`):
     - `Price` and `Quantity` use fixed-point arithmetic; raw values must be valid multiples

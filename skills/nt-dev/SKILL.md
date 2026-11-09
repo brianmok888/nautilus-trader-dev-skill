@@ -17,14 +17,14 @@ For delivery and cutover decisions, complete every applicable standard gate in `
 
 | Gate | Description | Status | Evidence |
 | --- | --- | --- | --- |
-| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `uv run python tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; `references/upstream-delta-review.json` records the reviewed current-develop delta. This gate does not certify every official-doc page or release tag. |
-| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `uv run python tools/check_dev_guide_sync.py` passed; `uv run python -m pytest -q tests/test_dev_guide_sync.py -k 'legacy or cython or v1 or tradingnode'` passed 27 tests. |
-| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `uv run python tools/check_skill_g2_harnesses.py --execute --skill nt-dev` passed the skill domain's scoped harnesses against `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; schema-v2 provenance is recorded in `references/g2-evidence/nt-dev.json`. |
-| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `uv run python -m pytest -q tests/test_v2_guidance_hardening.py -k 'pyo3 or binding or rust or live_runner'` passed 10 selected ownership and callback boundary tests. |
-| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `uv run python -m pytest -q tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_v2_guidance_hardening.py` passed; `uv run python tools/check_dev_guide_snapshot_sync.py` matched all 18 pinned guide bodies. |
-| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `uv run python -m pytest -q --ignore=tests/test_quality_gates.py` passed; `uv run python tools/check_dev_guide_sync.py` passed. |
-| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `uv run python -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_rust_first_end_to_end.py -k 'safety or fail_closed or precision or overflow or secret or async or ffi or audit or legacy or cython or v1'` passed 26 selected repository policy checks; change-specific deterministic ordering, precision/overflow, secrets, async, FFI, and audit evidence remains required where applicable. |
-| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | Current per-skill evidence is recorded in `references/g2-evidence/nt-dev.json`; repository closure is summarized in `docs/tracking/Findings.md`. |
+| G0 Scope and ownership | Confirm the pinned developer-guide snapshot and record the current-develop overlay before copying APIs. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` passed against pinned upstream `77d785c69205c4326e6aadb46d03fb45357a78f2`; `references/upstream-delta-review.json` records the complete 586-commit reviewed transition to this pin. |
+| G1 Legacy labelling | No Cython/v1/TradingNode guidance remains unlabelled outside source-pinned upstream snapshots. | Pass | `python3 tools/check_legacy_labelling.py` and `python3 tools/check_dev_guide_sync.py` passed on the synchronized source tree. |
+| G2 Pinned V2 examples | Compile or validate examples applicable to this skill against the pinned NT V2 baseline. | Pass | `python3 tools/check_skill_g2_harnesses.py --execute --skill nt-dev` is the current-pin harness; evidence is `references/g2-evidence/nt-dev.json`. Pass requires its actual successful execution against `77d785c69205c4326e6aadb46d03fb45357a78f2`. A G2 `cargo check` result is compilation only; it does not prove spec, testnet, resilience, fuzz, or operations acceptance. |
+| G3 Rust bindings/PyO3 | Validate the selected Rust/PyO3 ownership, registration, and callback boundaries exercised by the repository checks. | Pass | `python3 -m pytest -q tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed as part of 158 repository checks; source audits checked current Rust/PyO3 ownership and callback signatures. Runtime execution is covered separately by G2. |
+| G4 Functional gates | Classify migration/reference-only Python, bounded PyO3 control-plane, source-pinned upstream snapshots, and Rust production lanes while using current V2 API shapes. | Pass | `python3 -m pytest -q tests/test_dev_guide_sync.py tests/test_v2_guidance_hardening.py tests/test_markdown_lane_contract.py tests/test_template_classification.py tests/test_current_develop_guidance.py tests/test_nt_v2_state_and_custom_data.py` passed 158 repository policy checks; this does not certify downstream application behavior. |
+| G5 References and templates | Collect readiness-focused checker, targeted test, lint, or build evidence before marking implementation complete. | Pass | `python3 tools/check_dev_guide_snapshot_sync.py` and `python3 tools/check_rust_trading_reference_sync.py` passed; exact source comparisons covered 22 shared guides, 33 trading source files, 81 analysis files, and 23 matching adapter examples. |
+| G6 Operational and migration boundaries | Run selected repository policy checks for legacy labels, the NT-only repository boundary, and Rust-first lane guidance. | Pass | `python3 tools/check_legacy_labelling.py` and the 158-test source-policy run passed for migration labels, language lanes, precision, callbacks, and fail-closed guidance; live venue acceptance remains change-specific. |
+| G7 Durable evidence | Report changed paths, validation commands, evidence, and unresolved gates. | Pass | `references/g2-evidence/nt-dev.json` records current-pin G2 execution (status pass, owned-content hash match); mission closure receipts under `docs/tracking/receipts/nt-v2-rc-20261109/`; `python3 tools/check_governance_receipts.py` validated 497 receipts. |
 
 
 Development gates: the minimum Rust compliance evidence for changed production code is `cargo fmt --check`, `cargo nextest`, `cargo clippy`, `cargo deny`, and relevant PyO3/stub regeneration checks. Python checks are limited to bounded public PyO3 projections, and retained Python material is migration/reference-only.
@@ -45,7 +45,13 @@ it is not a template for new production implementation.
 
 ## Source-pinned upstream lane
 
-Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`; label newer upstream behavior as version-scoped drift.
+
+Current source pin: `77d785c69205c4326e6aadb46d03fb45357a78f2`. The latest
+published RC is `v2.0.0rc8`; develop is an unreleased rc9 source boundary.
+See `references/README.md`. Older commit-specific notes below are historical
+review context; they do not establish current G2 execution or release availability.
+
+Base developer workflow and FFI claims on [`references/developer_guide/rust.md`](../../references/developer_guide/rust.md) at immutable commit `77d785c69205c4326e6aadb46d03fb45357a78f2`; label newer upstream behavior as version-scoped drift.
 
 ## What This Skill Covers
 
@@ -55,7 +61,7 @@ NautilusTrader **developer workflow** — environment setup, coding standards, t
 
 ## When To Use
 
-- Setting up a development environment (uv, Rust toolchain, Cap'n Proto, IDE configs)
+- Setting up a development environment (uv, Rust toolchain, native dependencies, IDE configs)
 - Writing code that follows project conventions (formatting, naming, comments)
 - Running tests (unit, integration, property-based, fuzzing, memory leak)
 - Writing or running benchmarks (Criterion, iai, flamegraph)
@@ -79,7 +85,6 @@ NautilusTrader **developer workflow** — environment setup, coding standards, t
 |------|---------|---------|
 | **uv** | Python venv & dependency management | [docs.astral.sh/uv](https://docs.astral.sh/uv) |
 | **Rust** | Core platform implementation | [rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) |
-| **Cap'n Proto** | Serialization schema compilation | Version pinned in `tools.toml`; install with `./scripts/install-capnp.sh` |
 | **prek** | Automated formatting/linting at commit | `make install-tools`, then `prek install` |
 
 ### Initial Setup
@@ -159,18 +164,12 @@ repeat the exports and restart applications that inherited the old environment. 
 `set -gx` equivalents and `source python/.venv/bin/activate.fish` (see the mirrored developer guide:
 `references/developer_guide/environment_setup.md`).
 
-### Cap'n Proto Installation
+### Serialization dependencies
 
-```bash
-# Script (recommended; reads pinned version from tools.toml)
-./scripts/install-capnp.sh
-
-# Inspect pinned version used by repo tooling
-bash scripts/tool-version.sh capnp
-
-# macOS
-brew install capnp
-```
+Current upstream removed Cap'n Proto and its compiler-install scripts. For
+current Rust serialization, use the owning serde/MessagePack, Arrow, or optional
+market-data SBE contract in `crates/serialization`; read features from its
+`Cargo.toml` rather than enabling a removed feature.
 
 ### Builds & Rebuilds
 
@@ -292,17 +291,18 @@ NT v2 compatibility note: legacy Cython/v1 reference-only; prefer Rust v2/PyO3 f
 - Treat v2 status as readiness-scoped rather than complete v1-equivalent
   coverage. Do not claim v2 production readiness from method presence,
   generated stubs, or partial adapter wiring alone.
-- Officially supported Python versions are Python 3.13-3.14 (upstream
-  dropped Python 3.12 support at `a7a2facd0`; `requires-python` is
-  `>=3.13,<3.15` at the pinned baseline).
-- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain is pinned to Rust 1.99.0 (raised from 1.98.1 at
-  `2adc66f26`, which also bumped the documented MSRV). This is not a permanent MSRV promise;
+- Read supported Python versions from `python/pyproject.toml`: the current
+  package constraint is `>=3.13,<3.16`. Historical Python 3.13-3.14 support
+  followed the removal of Python 3.12 at `a7a2facd0`; docs extras can have a
+  narrower interpreter range than the package itself.
+- Treat `rust-toolchain.toml` as the reproducible Rust baseline: the repository toolchain and workspace MSRV are Rust 1.99.1 at the current pin. Historical Rust 1.99.0 followed 1.98.1 at
+  `2adc66f26`; read the current manifest before setup. This is not a permanent MSRV promise;
   upstream policy generally follows the latest stable Rust release.
 - Upstream Python v2 controller, execution-algorithm, `FeeModel`, and
   `FillModel` subclass capabilities are compatibility facts, not authorization
   for active work in this repository. Keep their examples under
   `migration_reference/`; implement new orchestration, routed-order,
-  fee, and fill behavior in Rust. At the pinned develop `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` (in-pin
+  fee, and fill behavior in Rust. At the pinned develop `77d785c69205c4326e6aadb46d03fb45357a78f2` (in-pin
   since `d2b62d35a7`), change `e4d3ac7f37` additionally accepts any Python object exposing
   `get_commission` as `FeeModelAny::Python` in simulation configs; that
   duck-typed path stays reference-only.
@@ -383,20 +383,22 @@ hint before rerunning if local uv differs.
 ### Running Tests
 
 ```bash
-# NT v2 compatibility note: legacy v1 Python tests are migration/reference-only.
-make pytest
-
-# v2 Python tests (python/tests/) — uses debug Rust extension
+# v2 Python tests: build debug extension, parallel suite, then LiveNode file separately
 make pytest
 
 # Rust tests
 make cargo-test
 # With optional features:
-make cargo-test EXTRA_FEATURES="capnp hypersync"
+make cargo-test EXTRA_FEATURES="hypersync"
 
 # Performance tests
 make cargo-ci-benches
 ```
+
+The current `make pytest` target uses `-n logical` for the main Python suite,
+then runs `tests/unit/test_live_node.py` separately. It does not forward
+`PYTEST_ARGS`. For a sequential focused check after extension preparation,
+run `uv run --no-sync pytest -n 0 tests/<path>` from `python/`.
 
 ### Test Style
 

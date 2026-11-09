@@ -6,8 +6,9 @@ The V2 PyO3 model module exports `register_custom_data_class` from
 `nautilus_trader.model`. Registration takes a single class argument: the class
 must provide a `to_json` instance method and a `from_json(data)` classmethod,
 plus `encode_record_batch_py` / `decode_record_batch_py` for Arrow
-record-batch persistence (these may raise for message-bus-only types, but must
-exist before catalog persistence is used). Registration is process-global, so
+record-batch persistence. Registration requires both Arrow methods to exist,
+even for message-bus-only types; retain stubs that raise when persistence is
+unsupported. Registration is process-global, so
 perform it once during application startup.
 
 ```python
@@ -38,12 +39,14 @@ class MySignal:
 register_custom_data_class(MySignal)
 ```
 
-`encode_record_batch_py` receives a list of instances plus schema metadata and
-returns a PyArrow `RecordBatch`. `decode_record_batch_py` receives a record batch
-plus metadata and returns a list of instances. Define and version that schema in
-the owning component. Message-bus-only types can omit both Arrow callbacks, but
-catalog writes for that type must then be rejected rather than silently assumed
-to work.
+`encode_record_batch_py(self, items)` receives a list of instances and returns a
+PyArrow `RecordBatch`. `decode_record_batch_py(metadata, batch)` receives schema
+metadata first and the record batch second, and returns a list of instances.
+Define and version that schema in the owning component. Message-bus-only types
+must retain both Arrow callback stubs so registration succeeds; catalog writes
+must fail explicitly until Arrow persistence is implemented. Source:
+`crates/model/src/python/data/mod.rs` (`register_custom_data_class` and its
+encoder/decoder callbacks) at develop `77d785c69205c4326e6aadb46d03fb45357a78f2`.
 
 ## Current Rust custom-data surface
 

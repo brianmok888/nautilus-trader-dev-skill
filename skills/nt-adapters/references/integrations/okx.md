@@ -206,7 +206,7 @@ A: Use `OKXInstrumentType.EVENTS`. To scope loading, pass OKX `seriesId` values 
 `BTC-ABOVE-DAILY` through `instrument_families`.
 
 ## Orders capability
-OKX behavior at the pinned baseline (`2ceb2a9a62`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
+OKX behavior at the current pin `77d785c692` (behaviors introduced earlier in develop; historical pin `2ceb2a9a62`): websocket recovery after reconnect re-subscribes and resynchronizes order books; `tradeQuoteCcy` supports the USD-to-USDC spot migration; and the adapter DST wire-test contract is enforced by upstream CI conventions (`6777353c5d`).
 
 Below are the order types, execution instructions, and time-in-force options supported
 for linear perpetual swap products on OKX.

@@ -1,6 +1,6 @@
 # Rust
 
-Source snapshot: `docs/concepts/rust.md` at upstream commit `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`.
+Source snapshot: `docs/concepts/rust.md` at upstream commit `77d785c69205c4326e6aadb46d03fb45357a78f2`.
 
 Nautilus has a complete Rust implementation under the `crates/` directory.
 You can write actors, strategies, run backtests, and trade live without Python.
@@ -18,7 +18,7 @@ Nautilus has two paths. Choose the one that matches how you want to author
 and deploy the system.
 
 - **Rust**: Pure Rust under `crates/`. Runs without Python.
-- **Python**: [Python user components](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/python.md) running on the Rust core through PyO3
+- **Python**: [Python user components](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/python.md) running on the Rust core through PyO3
   bindings under `python/nautilus_trader/`.
 
 ### Capability matrix
@@ -90,11 +90,11 @@ The Nautilus crates are published to
 
 ```toml
 [dependencies]
-nautilus-backtest = "0.65"
-nautilus-common = "0.65"
-nautilus-execution = "0.65"
-nautilus-model = { version = "0.65", features = ["test-support"] }
-nautilus-trading = { version = "0.65", features = ["examples"] }
+nautilus-backtest = "0.67"
+nautilus-common = "0.67"
+nautilus-execution = "0.67"
+nautilus-model = { version = "0.67", features = ["test-support"] }
+nautilus-trading = { version = "0.67", features = ["examples"] }
 
 anyhow = "1"
 log = "0.4"
@@ -104,12 +104,12 @@ For live trading, add the live crate and the adapter for your venue:
 
 ```toml
 [dependencies]
-nautilus-live = "0.65"
-nautilus-okx = "0.65"
+nautilus-live = "0.67"
+nautilus-okx = "0.67"
 ```
 
-To track the latest development branch, point all Nautilus dependencies at the
-same git source to avoid type mismatches between crates.io and git versions:
+To track the latest development branch, point all Nautilus dependencies at the same git source. This avoids
+type mismatches between crates.io and git versions:
 
 ```toml
 [dependencies]
@@ -120,17 +120,17 @@ nautilus-model = { git = "https://github.com/nautechsystems/nautilus_trader.git"
 nautilus-trading = { git = "https://github.com/nautechsystems/nautilus_trader.git", branch = "develop", features = ["examples"] }
 ```
 
-The minimum supported Rust version (MSRV) is **1.99.0**.
+The minimum supported Rust version (MSRV) is **1.99.1**.
 
 ### Feature flags
 
-| Flag             | Crate               | Effect                                              |
-| ---------------- | ------------------- | --------------------------------------------------- |
-| `high-precision` | `nautilus-model`    | 16-digit fixed precision (default is 9).            |
-| `test-support`   | `nautilus-model`    | Test fixtures, builders, specs, and defaults.       |
-| `examples`       | `nautilus-trading`  | Example strategies (`EmaCross`, `GridMarketMaker`). |
-| `streaming`      | `nautilus-backtest` | Catalog-based data streaming via `BacktestNode`.    |
-| `defi`           | `nautilus-model`    | DeFi data types. Implies `high-precision`.          |
+| Flag             | Crate               | Effect                                               |
+| ---------------- | ------------------- | ---------------------------------------------------- |
+| `high-precision` | `nautilus-model`    | 16-digit fixed precision (default is 9).             |
+| `test-support`   | `nautilus-model`    | Test fixtures, builders, specs, and defaults.        |
+| `examples`       | `nautilus-trading`  | Example strategies (`EmaCross`, `GridMarketMaker`).  |
+| `streaming`      | `nautilus-backtest` | Catalog-based data streaming through `BacktestNode`. |
+| `defi`           | `nautilus-model`    | DeFi data types. Implies `high-precision`.           |
 
 :::tip
 Standard 9-digit precision handles most traditional finance instruments.
@@ -160,22 +160,21 @@ fn main() {
 }
 ```
 
-Declaring `GLOBAL` selects mimalloc. Call `register_allocator_mimalloc` at the start of `main`,
-before constructing a Nautilus node, so the version header reports `allocator: mimalloc <version>`.
-Registration **only updates the header metadata**; it does not select the allocator.
+Declaring `GLOBAL` selects mimalloc. Call `register_allocator_mimalloc` at the start of `main`, before
+constructing a Nautilus node, so the version header reports `allocator: mimalloc <version>`. Registration
+**only updates the header metadata**. It does not select the allocator.
 
 The default system allocator also works. Measure throughput and resident memory on your workload
 and platform when comparing allocator choices.
-See the [architecture guide](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/architecture.md#memory-allocation) for background.
+See the [architecture guide](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/architecture.md#memory-allocation) for background.
 
 ## Actors
 
-An actor receives market data, custom data/signals, and system events but does
-not manage orders. Implement the `DataActor` trait and use `nautilus_actor!` to
-wire your `DataActorCore` field into the runtime contract. Your type
-implements or derives `Debug`; the macro supplies the native runtime wiring.
-User code normally uses the `DataActor` facade methods for subscriptions,
-cache access, and clock access.
+An actor receives market data, custom data/signals, and system events but does not manage orders. Implement
+the `DataActor` trait and use `nautilus_actor!` to wire your `DataActorCore` field into the runtime contract.
+Your type implements or derives `Debug`. The macro supplies the native runtime wiring.
+
+User code normally uses the `DataActor` facade methods for subscriptions, cache access, and clock access.
 
 ### Handler methods
 
@@ -202,20 +201,23 @@ override what you need.
 | `on_time_event`        | `TimeEvent`               |
 
 For a step-by-step walkthrough, see the
-[Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/write_rust_actor.md) how-to guide.
-For a complete example, see
-[`BookImbalanceActor`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/actors/imbalance).
+[Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/write_rust_actor.md) how-to guide.
+For an actor with market-data subscriptions, see
+[`DataTester`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/testkit/src/testers/data).
 
 ## Strategies
 
-A strategy extends an actor with order management. Implement `DataActor` for
-data handling and use `nautilus_strategy!` to wire your `StrategyCore` field
-into the strategy runtime contract. `StrategyCore` stores the runtime strategy
-state; normal strategy logic reaches it through facade methods on `self`.
-Runtime registration requires the native wiring generated by the macro, but
-normal strategy logic uses `Strategy` methods and the facade methods on `self`.
-Strategies also override order event handlers on the `Strategy` trait, such as
-`on_order_filled` (`OrderFilled`) and `on_order_canceled` (`OrderCanceled`).
+A strategy extends an actor with order management. Implement `DataActor` for data handling and use
+`nautilus_strategy!` to wire your `StrategyCore` field into the strategy runtime contract. `StrategyCore`
+stores the runtime strategy state. Runtime registration requires the native wiring generated by the macro.
+
+Normal strategy logic uses `Strategy` methods and facade methods on `self` to reach that state. Strategies
+also override order event handlers on the `Strategy` trait, such as `on_order_filled` (`OrderFilled`) and
+`on_order_canceled` (`OrderCanceled`).
+
+The built-in [`OrderBookImbalance`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/strategies/orderbook_imbalance)
+uses the same Rust implementation from Rust and Python. Its managed book subscription reads current best
+sizes, submits capped FOK or IOC limit orders, and supports dry-run signal reporting.
 
 ### Order management
 
@@ -232,7 +234,7 @@ The `Strategy` trait provides order methods through the facade:
 | `close_position`      | Close a position with a market order.     |
 | `close_all_positions` | Close all open positions.                 |
 
-The `OrderApi` (accessed via `self.order()`) builds orders and order lists:
+The `OrderApi` (accessed through `self.order()`) builds orders and order lists:
 
 - `generate_client_order_id`
 - `generate_order_list_id`
@@ -250,11 +252,16 @@ The `OrderApi` (accessed via `self.order()`) builds orders and order lists:
 
 ### Cache and clock access
 
-The cache facade's `try_*` lookups return a lookup error's `Access` variant for borrow conflicts;
-`NotFound` still means the requested data is absent. The cache facade's `get()` method and native-backed clock
-scheduling methods return access errors through `anyhow::Result`. Existing infallible accessors
-still panic on conflicts. Release conflicting borrows before retrying; these errors do not defer
-callbacks or change their delivery order.
+Cache and clock access report borrow conflicts through different interfaces:
+
+- The cache facade's `try_*` lookups return a lookup error's `Access` variant for borrow conflicts. `NotFound`
+  still means the requested data is absent.
+- The cache facade's `get()` method and native-backed clock scheduling methods return access errors through
+  `anyhow::Result`.
+- Existing infallible accessors still panic on conflicts.
+
+Release conflicting borrows before retrying. These errors do not defer callbacks or change their delivery
+order.
 
 ### Core wiring macros
 
@@ -267,11 +274,9 @@ struct field. The macros tell the traits where that field lives.
 | `nautilus_strategy!(Type)`                     | `StrategyCore`           | Runtime wiring and `Strategy`. |
 | `nautilus_execution_algorithm!(Type, { ... })` | `ExecutionAlgorithmCore` | Runtime wiring and algorithm.  |
 
-The macros expect a field named `core`; pass a field name as the second
-argument when needed. They do not make the actor, strategy, or `StrategyCore`
-deref to runtime internals.
-The execution algorithm macro takes an `on_order()` implementation block because
-that method defines the algorithm's required order handling.
+The macros expect a field named `core`. Pass a field name as the second argument when needed. They do not make
+the actor, strategy, or `StrategyCore` deref to runtime internals. The execution algorithm macro takes an
+`on_order()` implementation block because that method defines the algorithm's required order handling.
 
 ### Native traits
 
@@ -297,14 +302,13 @@ latency-sensitive native Rust code, not the portable authoring path.
 | Rust launched from Python | Only when needed | Same as native Rust.                |
 | Python-authored component | No               | Facades only.                       |
 
-Native traits expose borrowed core state, `Rc<RefCell<_>>`, and runtime
-references. Use them when native Rust code intentionally accepts those borrow
-rules for an explicit latency-sensitive path. Engine, runtime, registration,
-PyO3, and testkit code can import `DataActorNative`, `StrategyNative`, or
-`ExecutionAlgorithmNative` when they need actor-core, strategy-core, or
-execution-algorithm-core access. Do not use them in ordinary portable actor,
-strategy, or execution algorithm logic or Python-authored components, because
-those types do not cross the Python boundary.
+Native traits expose borrowed core state, `Rc<RefCell<_>>`, and runtime references. Use them when native Rust
+code intentionally accepts those borrow rules for an explicit latency-sensitive path.
+
+Engine, runtime, registration, PyO3, and testkit code can import `DataActorNative`, `StrategyNative`, or
+`ExecutionAlgorithmNative` when they need actor-core, strategy-core, or execution-algorithm-core access. These
+types do not cross the Python boundary. Do not use them in ordinary portable actor, strategy, or execution
+algorithm logic or Python-authored components.
 
 `ExecutionAlgorithmCore` owns a `DataActorCore`, but it does not deref to one.
 Normal execution algorithm logic should use `id()`, `actor_id()`,
@@ -326,14 +330,17 @@ for normal strategy order construction. Reach for
 | `cache_ref()` | `Ref<'_, Cache>`         | Need short live-cache reads.    |
 | `cache_rc()`  | `Rc<RefCell<Cache>>`     | Mutate, store, or pass cache.   |
 
-Use `try_cache_ref()` and `try_clock_mut()` to handle failed native borrows without panicking.
-`try_cache_ref()` returns `ComponentAccessError::ReadConflict` when the cache is mutably borrowed;
-`try_clock_mut()` returns `ComponentAccessError::WriteConflict` when the clock is already borrowed.
-Both return `ComponentAccessError::NotRegistered` when registration has not supplied the resource.
-Import the error type from `nautilus_common::component`. The error identifies the resource and
-attempted operation. Callback reentry can cause a conflict, but a conflict alone does not establish its cause.
-See [reentrancy diagnostics](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/developer_guide/callback_dispatch.md#reentrancy-and-dispatch-diagnostics)
-for message meanings and corrective action.
+Use `try_cache_ref()` and `try_clock_mut()` to handle failed native borrows without panicking. Import
+`ComponentAccessError` from `nautilus_common::component`:
+
+- `try_cache_ref()` returns `ComponentAccessError::ReadConflict` when the cache is mutably borrowed.
+- `try_clock_mut()` returns `ComponentAccessError::WriteConflict` when the clock is already borrowed.
+- Both return `ComponentAccessError::NotRegistered` when registration has not supplied the resource.
+
+The error identifies the resource and attempted operation. Callback reentry can cause a conflict, but a
+conflict alone does not establish its cause. See [reentrancy
+diagnostics](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../developer_guide/callback_dispatch.md#reentrancy-and-dispatch-diagnostics) for message meanings
+and corrective action.
 
 #### `StrategyNative` methods
 
@@ -353,7 +360,7 @@ for message meanings and corrective action.
 | `exec_algorithm_core_mut()` | `&mut ExecutionAlgorithmCore` | Mutate execution algorithm internals. |
 
 For a step-by-step walkthrough, see the
-[Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/write_rust_strategy.md) how-to guide.
+[Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/write_rust_strategy.md) how-to guide.
 For complete examples, see
 [`EmaCross`](https://github.com/nautechsystems/nautilus_trader/tree/develop/crates/trading/src/examples/strategies/ema_cross)
 and
@@ -361,9 +368,8 @@ and
 
 ### Running Rust components
 
-Rust strategies and actors can run through two paths. The examples
-below use strategies, but the same pattern applies to bundled actors via
-`add_actor` (pure Rust) and `add_builtin_actor` (from Python).
+Rust strategies and actors can run through two paths. The examples below use strategies, but the same pattern
+applies to bundled actors through `add_actor` (pure Rust) and `add_builtin_actor` (from Python).
 
 #### Pure Rust
 
@@ -376,7 +382,7 @@ node.add_strategy(strategy)?;
 node.run().await?;
 ```
 
-See [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/run_rust_live_trading.md) for a
+See [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/run_rust_live_trading.md) for a
 full walkthrough.
 
 #### Built-in examples from Python
@@ -411,21 +417,21 @@ Built-in strategy configs:
 | `ExecTesterConfig`           | `ExecTester`           |
 | `GridMarketMakerConfig`      | `GridMarketMaker`      |
 | `HurstVpinDirectionalConfig` | `HurstVpinDirectional` |
+| `OrderBookImbalanceConfig`   | `OrderBookImbalance`   |
 
 `add_builtin_actor` follows the same bundled-only rule for actors used by
 examples and tests.
 
-Built-in actor configs (via `add_builtin_actor`):
+Built-in actor configs (through `add_builtin_actor`):
 
-| Config                     | Actor                |
-| -------------------------- | -------------------- |
-| `BookImbalanceActorConfig` | `BookImbalanceActor` |
-| `DataTesterConfig`         | `DataTester`         |
+| Config             | Actor        |
+| ------------------ | ------------ |
+| `DataTesterConfig` | `DataTester` |
 
 ## Backtesting
 
 For annotated walkthroughs of both APIs, see the
-[Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/run_rust_backtest.md) how-to guide.
+[Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/run_rust_backtest.md) how-to guide.
 
 ### `BacktestEngine` (low-level API)
 
@@ -455,7 +461,7 @@ Source:
 ## Live trading
 
 For an annotated walkthrough, see the
-[Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/run_rust_live_trading.md) how-to guide.
+[Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/run_rust_live_trading.md) how-to guide.
 
 The `LiveNode` connects to real venues and data sources through adapter clients. The builder
 pattern configures data and execution clients, then `run()` starts the async
@@ -488,13 +494,13 @@ against live venues.
 
 ## Related guides
 
-- [Python](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/python.md) - Python ownership, runtime, and public API boundaries.
-- [Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/write_rust_actor.md) - Step-by-step actor walkthrough.
-- [Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/write_rust_strategy.md) - Step-by-step strategy walkthrough.
-- [Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/run_rust_backtest.md) - BacktestEngine and BacktestNode usage.
-- [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/how_to/run_rust_live_trading.md) - LiveNode setup and venue connection.
-- [Architecture](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/architecture.md) - System design and data/execution flow.
-- [Actors](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/actors.md) - Actor concepts (applies to both Python and Rust).
-- [Strategies](https://github.com/nautechsystems/nautilus_trader/blob/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/strategies.md) - Strategy concepts and handler reference.
-- [Events](https://github.com/nautechsystems/nautilus_trader/tree/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/events) - Event types and handler dispatch.
-- [Backtesting](https://github.com/nautechsystems/nautilus_trader/tree/2ceb2a9a624e174a5160c10f8188afbdd57ecb99/docs/concepts/backtesting) - Backtest concepts and matching engine behavior.
+- [Python](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/python.md) - Python ownership, runtime, and public API boundaries.
+- [Write an Actor (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/write_rust_actor.md) - Step-by-step actor walkthrough.
+- [Write a Strategy (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/write_rust_strategy.md) - Step-by-step strategy walkthrough.
+- [Run a Backtest (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/run_rust_backtest.md) - BacktestEngine and BacktestNode usage.
+- [Run Live Trading (Rust)](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/../how_to/run_rust_live_trading.md) - LiveNode setup and venue connection.
+- [Architecture](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/architecture.md) - System design and data/execution flow.
+- [Actors](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/actors.md) - Actor concepts (applies to both Python and Rust).
+- [Strategies](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/strategies.md) - Strategy concepts and handler reference.
+- [Events](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/events/) - Event types and handler dispatch.
+- [Backtesting](https://github.com/nautechsystems/nautilus_trader/blob/77d785c69205c4326e6aadb46d03fb45357a78f2/docs/concepts/backtesting/) - Backtest concepts and matching engine behavior.

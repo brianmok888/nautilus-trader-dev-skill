@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/spec_data_testing/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/spec_data_testing.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Data Testing Spec
 
 Use this test matrix to validate adapter data functionality with the Rust `DataTester` actor. Python exposes
@@ -242,9 +241,9 @@ not a WebSocket URL, it relays CRLF-delimited lines over raw TCP. A line route s
 alone, and the venue's `WireCodec::connect` opens its upstream connection, for example over TLS.
 
 The proxy applies per-book `Fault` rules (drop snapshots or updates, corrupt, hold, silence, cut on
-unsubscribe, reject subscribes) and connection-wide cuts and freezes. `Session` passes each emitted batch
-through `BookStreamChecker` and the oracle. It waits for books to heal. At shutdown, it checks that all
-sockets and reconnect handles are released.
+unsubscribe, reject subscribes) and connection-wide cuts and freezes. `Session` passes emitted batches
+for requested books through `BookStreamChecker` and the oracle. It waits for books to heal. At shutdown,
+it checks that all sockets and reconnect handles are released.
 
 Each harness accepts the same flags, and venues add their own. `--help` lists them:
 
@@ -291,13 +290,16 @@ Lighter, Polymarket, Hyperliquid, Bybit, Betfair, and AX Exchange provide harnes
 
 ### In-band verification
 
-When a venue publishes a book checksum or hash, validate it and treat a mismatch as a gap. This
-catches corruption in the covered data that sequence checks miss, without an external oracle.
+When a venue publishes a book checksum or hash, validate the completed state it covers and treat a
+mismatch as a gap. This catches corruption that sequence checks miss, without an external oracle.
 
 - **Kraken**: Validates the CRC32 checksum on each Spot L2 `book` and L3 message when
   `validate_l2_checksum` and `validate_l3_checksum` are enabled, both the default.
-- **Polymarket**: Validates the hash on each book snapshot carrying a hash and its full preimage.
-  See [book snapshot validation](../integrations/polymarket.md#book-snapshot-validation).
+- **Polymarket**: Rejects snapshot hash mismatches when all hash inputs are available. Snapshots with
+  missing inputs and incremental updates remain unverified and do not trigger hash recovery.
+  Missing depth can remain undetected until a fresh snapshot. See
+  [book snapshot validation](../integrations/polymarket.md#book-snapshot-validation)
+  and [price change bursts](../integrations/polymarket.md#price-change-bursts).
 - **OKX**: `books` frames carry a zero `checksum`, so verification relies on the oracle instead.
 
 ---
@@ -404,8 +406,8 @@ Test order book subscription modes and snapshot requests.
 | TC-D13 | Request book snapshot      | One-time book snapshot request.     | No book snapshot. |
 | TC-D14 | Managed book from deltas   | Build local book from delta stream. | No book support.  |
 
-Python uses `BookType.L2_MBP` for these scenarios. The Rust builder can override `book_type` when
-an adapter requires a different book representation.
+Python and Rust default to `BookType.L2_MBP` for these scenarios. Set `book_type` when an adapter requires
+a different book representation.
 
 ### TC-D10: Subscribe book deltas
 
@@ -1122,8 +1124,7 @@ DataTesterConfig::builder()
 use nautilus_core::Params;
 use serde_json::json;
 
-let mut subscribe_params = Params::new();
-subscribe_params.insert("key".to_string(), json!("value"));
+let subscribe_params = Params::new([("key".to_string(), json!("value"))].into());
 
 DataTesterConfig::builder()
     .client_id(client_id)
@@ -1155,8 +1156,7 @@ DataTesterConfig::builder()
 use nautilus_core::Params;
 use serde_json::json;
 
-let mut request_params = Params::new();
-request_params.insert("key".to_string(), json!("value"));
+let request_params = Params::new([("key".to_string(), json!("value"))].into());
 
 DataTesterConfig::builder()
     .client_id(client_id)
@@ -1241,49 +1241,55 @@ Cover these overlaps:
 ## DataTester configuration reference
 
 The Python constructor accepts the parameters below. Defaults are resolved values after construction.
-Historical quote, trade, and bar requests use a one-hour lookback. Funding rate requests use seven days. The
-lookback is not configurable through `DataTesterConfig`.
+Historical quote, trade, and bar requests default to a one-hour lookback. Funding rate requests default to
+seven days. Set `request_start` and `request_end` to choose a historical window, and `request_limit` to cap
+records per request. Use timezone-aware datetimes. An unset start uses the default lookback before
+`request_end`, or before now when the end is unset. These settings apply to quotes, trades, bars, and funding
+rates. The start must not be later than the end.
 
-| Parameter                     | Type                 | Default | Affects groups  |
-| ----------------------------- | -------------------- | ------- | --------------- |
-| `actor_id`                    | `ActorId?`           | `None`  | All             |
-| `client_id`                   | `ClientId?`          | `None`  | All             |
-| `instrument_ids`              | `list[InstrumentId]` | `[]`    | All             |
-| `bar_types`                   | `list[BarType]?`     | `None`  | 5               |
-| `subscribe_book_deltas`       | `bool`               | `False` | 2               |
-| `subscribe_book_depth`        | `bool`               | `False` | 2               |
-| `subscribe_book_at_interval`  | `bool`               | `False` | 2               |
-| `subscribe_quotes`            | `bool`               | `False` | 3               |
-| `subscribe_trades`            | `bool`               | `False` | 4               |
-| `subscribe_mark_prices`       | `bool`               | `False` | 6               |
-| `subscribe_index_prices`      | `bool`               | `False` | 6               |
-| `subscribe_funding_rates`     | `bool`               | `False` | 6               |
-| `subscribe_bars`              | `bool`               | `False` | 5               |
-| `subscribe_instrument`        | `bool`               | `False` | 1               |
-| `subscribe_instrument_status` | `bool`               | `False` | 7               |
-| `subscribe_instrument_close`  | `bool`               | `False` | 7               |
-| `subscribe_option_greeks`     | `bool`               | `False` | 8               |
-| `can_unsubscribe`             | `bool`               | `True`  | 9               |
-| `request_instruments`         | `bool`               | `False` | 1               |
-| `request_book_snapshot`       | `bool`               | `False` | 2               |
-| `request_book_deltas`         | `bool`               | `False` | Not implemented |
-| `request_quotes`              | `bool`               | `False` | 3               |
-| `request_trades`              | `bool`               | `False` | 4               |
-| `request_bars`                | `bool`               | `False` | 5               |
-| `request_funding_rates`       | `bool`               | `False` | 6               |
-| `book_depth`                  | `PositiveInt?`       | `None`  | 2               |
-| `book_interval_ms`            | `PositiveInt`        | `1000`  | 2               |
-| `book_levels_to_print`        | `PositiveInt`        | `10`    | 2               |
-| `manage_book`                 | `bool`               | `True`  | 2               |
-| `log_data`                    | `bool`               | `True`  | All             |
-| `stats_interval_secs`         | `int`                | `5`     | All             |
-| `log_events`                  | `bool`               | `True`  | All             |
-| `log_commands`                | `bool`               | `True`  | All             |
+| Parameter                     | Type                 | Default  | Affects groups  |
+| ----------------------------- | -------------------- | -------- | --------------- |
+| `actor_id`                    | `ActorId?`           | `None`   | All             |
+| `client_id`                   | `ClientId?`          | `None`   | All             |
+| `instrument_ids`              | `list[InstrumentId]` | `[]`     | All             |
+| `bar_types`                   | `list[BarType]?`     | `None`   | 5               |
+| `subscribe_book_deltas`       | `bool`               | `False`  | 2               |
+| `subscribe_book_depth`        | `bool`               | `False`  | 2               |
+| `subscribe_book_at_interval`  | `bool`               | `False`  | 2               |
+| `subscribe_quotes`            | `bool`               | `False`  | 3               |
+| `subscribe_trades`            | `bool`               | `False`  | 4               |
+| `subscribe_mark_prices`       | `bool`               | `False`  | 6               |
+| `subscribe_index_prices`      | `bool`               | `False`  | 6               |
+| `subscribe_funding_rates`     | `bool`               | `False`  | 6               |
+| `subscribe_bars`              | `bool`               | `False`  | 5               |
+| `subscribe_instrument`        | `bool`               | `False`  | 1               |
+| `subscribe_instrument_status` | `bool`               | `False`  | 7               |
+| `subscribe_instrument_close`  | `bool`               | `False`  | 7               |
+| `subscribe_option_greeks`     | `bool`               | `False`  | 8               |
+| `can_unsubscribe`             | `bool`               | `True`   | 9               |
+| `request_instruments`         | `bool`               | `False`  | 1               |
+| `request_book_snapshot`       | `bool`               | `False`  | 2               |
+| `request_book_deltas`         | `bool`               | `False`  | Not implemented |
+| `request_quotes`              | `bool`               | `False`  | 3               |
+| `request_trades`              | `bool`               | `False`  | 4               |
+| `request_bars`                | `bool`               | `False`  | 5               |
+| `request_funding_rates`       | `bool`               | `False`  | 6               |
+| `request_start`               | `datetime?`          | `None`   | 3, 4, 5, 6      |
+| `request_end`                 | `datetime?`          | `None`   | 3, 4, 5, 6      |
+| `request_limit`               | `PositiveInt?`       | `None`   | 3, 4, 5, 6      |
+| `book_type`                   | `BookType`           | `L2_MBP` | 2               |
+| `book_depth`                  | `PositiveInt?`       | `None`   | 2               |
+| `book_interval_ms`            | `PositiveInt`        | `1000`   | 2               |
+| `book_levels_to_print`        | `PositiveInt`        | `10`     | 2               |
+| `manage_book`                 | `bool`               | `True`   | 2               |
+| `log_data`                    | `bool`               | `True`   | All             |
+| `stats_interval_secs`         | `int`                | `5`      | All             |
+| `log_events`                  | `bool`               | `True`   | All             |
+| `log_commands`                | `bool`               | `True`   | All             |
 
 The Rust builder also exposes these parameters:
 
-| Parameter          | Type       | Default  | Affects groups |
-| ------------------ | ---------- | -------- | -------------- |
-| `book_type`        | `BookType` | `L2_MBP` | 2              |
-| `subscribe_params` | `Params?`  | `None`   | 9              |
-| `request_params`   | `Params?`  | `None`   | 9              |
+| Parameter          | Type      | Default | Affects groups |
+| ------------------ | --------- | ------- | -------------- |
+| `subscribe_params` | `Params?` | `None`  | 9              |
+| `request_params`   | `Params?` | `None`  | 9              |

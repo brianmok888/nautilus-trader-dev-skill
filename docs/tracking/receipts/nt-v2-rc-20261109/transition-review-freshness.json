@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-rc-20261109",
+  "receipt": "transition-review-freshness",
+  "finding_id": "NT-2026-11-09-001",
+  "owner_stage": "phase-2",
+  "evidence_state": "verified",
+  "severity": "P1",
+  "command": "NT_UPSTREAM_ROOT=/home/mok/.cache/nautilus-trader-dev-skill/mission-20261109-upstream python3 tools/check_upstream_freshness.py --format json",
+  "exit_code": 0,
+  "output_sha256": "4604ef60b91c0ee228cec830bfdf18a7793ce0fb5ef33df6a9d120d5b5f1dfd9",
+  "output_excerpt": "{\"manifest_error\": null, \"manifest_reviewed\": true, \"pinned_commit\": \"77d785c69205c4326e6aadb46d03fb45357a78f2\", \"refs\": [{\"status\": \"current\", \"commits_ahead\": 0, \"current_commit\": \"77d785c69205c4326e6aadb46d03fb45357a78f2\"}], \"nightly_contained\": true}",
+  "redactions": [],
+  "recorded_at": "2026-11-09T04:49:29Z"
+}

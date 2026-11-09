@@ -1,6 +1,6 @@
 # Orders
 
-## Fill corrections at reviewed tip `2ceb2a9a6`
+## Fill corrections at reviewed tip `77d785c69`
 
 `allow_overfills=false` rejects ordinary overfills, but not a reconciliation
 fill on a FILLED order when there are no recorded fills and the candidate
@@ -603,7 +603,7 @@ These contingency types relate to ContingencyType FIX tag <1385> <https://www.on
 ### Strategy-managed contingencies
 
 Upstream commit
-[`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`](https://github.com/nautechsystems/nautilus_trader/commit/2ceb2a9a624e174a5160c10f8188afbdd57ecb99)
+[`77d785c69205c4326e6aadb46d03fb45357a78f2`](https://github.com/nautechsystems/nautilus_trader/commit/77d785c69205c4326e6aadb46d03fb45357a78f2)
 defines precise semantics for `StrategyConfig.manage_contingent_orders`. Enable it to manage open
 OTO, OCO, and OUO relationships for orders that are **not active local**. The strategy sends the
 resulting cancel and quantity-update commands through the normal execution path before it calls
@@ -635,7 +635,7 @@ Ownership and scope boundaries:
   non-active-local peers.
 
 These semantics are included in the pinned G2 baseline
-`2ceb2a9a624e174a5160c10f8188afbdd57ecb99`. The manual partial-trigger recipe below remains the
+`77d785c69205c4326e6aadb46d03fb45357a78f2`. The manual partial-trigger recipe below remains the
 portable fallback when the flag is disabled.
 
 #### One-Triggers-Other (OTO)

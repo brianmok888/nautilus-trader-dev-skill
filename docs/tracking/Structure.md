@@ -5,14 +5,14 @@
 <!-- Updated when: skill inventory, repository boundaries, or validation wiring changes. -->
 <!-- Does NOT contain: plans, historical attestations, or session state. -->
 
-Review date: 2026-10-14
+Review date: 2026-11-09
 
 ## Repository shape
 
 - **Mission:** reusable NautilusTrader development skills only
 - **Skills:** 17 `nt*` skills, routed by `skills/nt/SKILL.md`
 - **Content:** Markdown guidance and references, Rust examples/contracts, Python repository validators and migration references
-- **Upstream:** pinned reproducible baseline `2ceb2a9a624e174a5160c10f8188afbdd57ecb99` plus preserved reviewed transition history; the source evidence cache remains read-only and builds use a disposable writable checkout
+- **Upstream:** source baseline `77d785c69205c4326e6aadb46d03fb45357a78f2`, published RC8 boundary, and preserved reviewed transition history. The new transition remains pending until every source disposition is complete; the evidence cache remains read-only and native verification uses a separate disposable writable checkout.
 - **Validation:** pytest, deterministic sync/freshness checks, legacy labelling, Findings schema, static-quality orchestration, progressive cutover gates, and per-skill G2 harness cards
 - **Excluded:** downstream application skills, session state, handoffs, completed plans, and external attestations
 

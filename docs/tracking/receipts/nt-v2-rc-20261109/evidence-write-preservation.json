@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-rc-20261109",
+  "receipt": "evidence-write-preservation",
+  "finding_id": "NT-2026-11-09-003",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified",
+  "severity": "none",
+  "command": "python3 -m pytest -q --tb=short; python3 tools/check_skill_g2_harnesses.py --execute --skill nt --skill nt-implement; python3 tools/check_skill_g2_harnesses.py --check-cards; required repository validators; guarded closure prune",
+  "exit_code": 0,
+  "output_sha256": "34d92aa0beefd3663e50897c3bf0266c005c8bd605328c9e4974469b6f071ee5",
+  "output_excerpt": "Evidence preservation correction verified: three original filesystem regressions and two RLIMIT_FSIZE partial-write cases failed before their corresponding fixes; focused harness tests passed after staged card/evidence publication and hardlink rollback. Independent gate reviewer APPROVED. Final affected harness run 1794212708-47e3dffc1fff: nt and nt-implement PASS, exit 0, no capacity stop. All readiness cards pass. Final full-suite run 1794212912-da12bd6d7da9: 493 passed, 10 skipped in 23.72s, exit 0, no capacity stop. All documented non-build validators passed. Earlier runs stopped at a too-small growth allowance and used runtime refs missing nightly history; neither counted as success. Closure confirmed no cargo/rustc active and removed only the mission runtime target: 2492674048 bytes allocated; free bytes before 56937340928, after 59430010880. Source checkouts remained clean; no commits or shipping actions.",
+  "redactions": [],
+  "recorded_at": "2026-11-09T08:29:45Z"
+}

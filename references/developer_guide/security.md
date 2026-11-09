@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/security/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/security.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Security Architecture
 
 This page describes the security model for the NautilusTrader release pipeline.
@@ -161,6 +160,11 @@ gh attestation verify "$ARTIFACT" \
   --cert-identity-regex "$IDENTITY" \
   --cert-oidc-issuer "$ISSUER"
 ```
+
+For artifacts with publication recovery attestations, use the release notes' verification command with
+`--predicate-type`. These attestations record the original build and later publication separately.
+See [partial release recovery](releases.md#recovering-a-partial-release) for the recorded identities and
+verification requirements.
 
 ### PyPI publish provenance
 

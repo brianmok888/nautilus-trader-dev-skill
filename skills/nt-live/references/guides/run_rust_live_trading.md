@@ -15,11 +15,11 @@ Add the live crate, your venue adapter, and supporting crates to
 
 ```toml
 [dependencies]
-nautilus-common = "0.65"
-nautilus-live = "0.65"
-nautilus-model = "0.65"
-nautilus-okx = "0.65"
-nautilus-trading = { version = "0.65", features = ["examples"] }
+nautilus-common = "0.67"
+nautilus-live = "0.67"
+nautilus-model = "0.67"
+nautilus-okx = "0.67"
+nautilus-trading = { version = "0.67", features = ["examples"] }
 
 anyhow = "1"
 dotenvy = "0.15"
@@ -151,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Owned and hosted run modes (Python `LiveNode`)
 
 NT v2 compatibility note: upstream commit `e166a5e57c` finalized two run modes for the Python
-`LiveNode` and is included in the pinned baseline `2ceb2a9a624e174a5160c10f8188afbdd57ecb99`;
+`LiveNode` and is included in the pinned baseline `77d785c69205c4326e6aadb46d03fb45357a78f2`;
 older pins through `6e59fd74ea`
 still exposed the historical `start`/`poll` entry points.
 

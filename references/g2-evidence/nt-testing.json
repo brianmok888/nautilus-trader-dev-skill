@@ -1,5 +1,5 @@
 {
-  "owned_content_sha256": "3be3d5c61e5f1ad9076ed77371d7ce6b846dcd5fd01cea945ec91cdf5bbacd18",
+  "owned_content_sha256": "bad50af1b6cb3fa80e47a736d4c696a2378f20b8dc1339f19738e1c63b248c54",
   "schema_version": 2,
   "scope": "upstream:testkit-data-execution-test-targets",
   "skill": "nt-testing",
@@ -14,7 +14,7 @@
         "--lib"
       ],
       "cwd": "upstream",
-      "duration_seconds": 216.07041,
+      "duration_seconds": 3.504908,
       "returncode": 0
     },
     {
@@ -28,11 +28,11 @@
         "examples"
       ],
       "cwd": "upstream",
-      "duration_seconds": 56.287719,
+      "duration_seconds": 0.861575,
       "returncode": 0
     }
   ],
   "upstream_clean": true,
-  "upstream_commit": "2ceb2a9a624e174a5160c10f8188afbdd57ecb99",
-  "verified_at": "2026-10-14T23:49:29.095735+00:00"
+  "upstream_commit": "77d785c69205c4326e6aadb46d03fb45357a78f2",
+  "verified_at": "2026-11-09T06:43:45.991238+00:00"
 }

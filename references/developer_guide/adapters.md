@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/adapters/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/adapters.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Adapters
 
 ## Introduction
@@ -474,31 +473,38 @@ methods.
 Classify a value before choosing its type and diagnostic output. Apply the more restrictive rule
 when a venue gives one value more than one role.
 
-| Value class                  | Examples                                                                                                      | Diagnostic output                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Secret material              | Passwords, private keys, API secrets, passphrases, bearer and session tokens, refresh tokens, and signatures. | Always show `<redacted>`.                                                               |
-| Credential identity          | API keys, client IDs, usernames, and account identifiers used during authentication.                          | Redact by default. Use a masked API key only when operational correlation requires it.  |
-| Secret-bearing location      | Proxy URLs, RPC URLs, request paths, and query parameters that can contain credentials.                       | Redact the complete location from logs and errors.                                      |
-| Deliberately public identity | Wallet addresses, vault addresses, and public account names that the venue exposes publicly.                  | Show only when the type and adapter contract deliberately classify the value as public. |
+| Value class                  | Examples                                                                                                      | Diagnostic output                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Secret material              | Passwords, private keys, API secrets, passphrases, bearer and session tokens, refresh tokens, and signatures. | Always show `<redacted>`.                                                                      |
+| Credential identity          | API keys, client IDs, usernames, and account identifiers used during authentication.                          | Redact by default. Use a masked API key only when operational correlation requires it.         |
+| Secret-bearing location      | Proxy URLs, RPC URLs, request paths, and query parameters that can contain credentials.                       | Show at most a public origin (see below); redact the whole location when its origin is secret. |
+| Deliberately public identity | Wallet addresses, vault addresses, and public account names that the venue exposes publicly.                  | Show only when the type and adapter contract deliberately classify the value as public.        |
 
 An API key, username, or URL can be insufficient to authenticate by itself. Do not infer from this that it is
 safe to print. Configs often cross logging, exception, and Python representation boundaries where partial
 credential identity stays sensitive.
 
+When the adapter classifies a URL's scheme, host, and port as public, diagnostics may show only that
+origin. Omit user information, paths, queries, and fragments. If the origin itself contains a credential
+identity, as some RPC URLs do, redact the whole URL with `SecretString` or `REDACTED`.
+
 #### Use the common secret types
 
-Use `nautilus_core::string::secret` and `zeroize` instead of defining adapter-local redaction or
-zeroization conventions.
+Use `nautilus_core::string::secret`, `nautilus_network`, and `zeroize` instead of defining adapter-local
+redaction or zeroization conventions.
 
-| Mechanism                     | Use                                                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `SecretString`                | Own a string that must zeroize on drop and render as `<redacted>` with `Debug`.                                                       |
-| `REDACTED`                    | Replace an unconditional secret field in a custom `Debug` or `Display` implementation.                                                |
-| `redact_option`               | Preserve `Some` versus `None` while redacting an optional field in a custom `Debug`.                                                  |
-| `mask_api_key`                | Correlate an API key only through an explicit masked-identity method. Do not use it for secret material.                              |
-| `Zeroizing<T>`                | Bound the lifetime of an owned plaintext `String`, byte buffer, decoded key, canonical payload, or serialized authentication message. |
-| `Zeroize` and `ZeroizeOnDrop` | Clear secret-bearing fields in structs that cannot use `SecretString`, including byte arrays and signing types.                       |
-| `zeroize_json_value`          | Clear owned strings in a mutable JSON value after serializing secret-bearing fields.                                                  |
+| Mechanism                          | Use                                                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `SecretString`                     | Own a string that must zeroize on drop and render as `<redacted>` with `Debug`.                                                       |
+| `ConnectionUrl`                    | Store a URL with a public origin; `Debug` shows that origin. Borrow the original value with `expose()` only where required.           |
+| `url_origin`                       | Format the public HTTP or WebSocket origin of a URL, including compatible stored `String` fields; otherwise show `<redacted>`.        |
+| `TransportError::redacted_message` | Keep a typed transport category, I/O kind, and HTTP rejection status while omitting arbitrary error payloads.                         |
+| `REDACTED`                         | Replace an unconditional secret field in a custom `Debug` or `Display` implementation.                                                |
+| `redact_option`                    | Preserve `Some` versus `None` while redacting an optional field in a custom `Debug`.                                                  |
+| `mask_api_key`                     | Correlate an API key only through an explicit masked-identity method. Do not use it for secret material.                              |
+| `Zeroizing<T>`                     | Bound the lifetime of an owned plaintext `String`, byte buffer, decoded key, canonical payload, or serialized authentication message. |
+| `Zeroize` and `ZeroizeOnDrop`      | Clear secret-bearing fields in structs that cannot use `SecretString`, including byte arrays and signing types.                       |
+| `zeroize_json_value`               | Clear owned strings in a mutable JSON value after serializing secret-bearing fields.                                                  |
 
 #### Use `SecretString` safely
 
@@ -537,7 +543,8 @@ zeroization conventions.
 - Convert credential strings accepted by a Python constructor to `SecretString` at the Rust
   boundary.
 - Apply the Rust `Debug` and `Display` redaction rules to Python `__repr__` and `__str__`.
-- Expose only a presence check for secret material and secret-bearing locations.
+- Expose only a presence check for secret material and secret-bearing locations, except for an
+  existing endpoint URL getter required for caller compatibility. Keep that raw value out of diagnostics.
 - Return credential identity, such as a username, only when an existing public API or another
   explicit caller needs it. Document the choice and keep the value out of diagnostics.
 - Never expose passwords, private keys, API secrets, passphrases, tokens, or signatures through
@@ -556,8 +563,8 @@ zeroization conventions.
 
 #### Redact diagnostics and transport errors
 
-- Never include credentials, signatures, secret material, or secret-bearing URLs in errors or logs
-  at any level.
+- Never include credentials, signatures, secret material, or secret-bearing URL components in errors
+  or logs at any level. Show at most an origin classified as public under the location rule above.
 - Log request metadata such as the method, field count, and byte lengths instead of credentials or
   authentication payloads. Shared transports log metadata rather than payload contents.
 - Treat TRACE as developer-facing diagnostic output. Raw inbound payloads are allowed when their
@@ -569,14 +576,19 @@ zeroization conventions.
 - Never log a raw authentication request or response, or any frame whose schema can contain secret
   material.
 
-| Surface                      | Required handling                                                                                                | Zeroization boundary                                                   |
+| Surface                      | Required handling                                                                                                | Boundary                                                               |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | HTTP secret body             | Use `HttpClient::request_with_secret_body`.                                                                      | The client retains the zeroizing owner. Lower layers may copy it.      |
-| HTTP path or `HashMap` query | Use `HttpClient::request_with_url_redacted`.                                                                     | The URL is omitted from transport errors.                              |
-| HTTP typed query             | Use `HttpClient::request_with_params_url_redacted`.                                                              | The URL is omitted from transport errors.                              |
+| HTTP path or `HashMap` query | Use `HttpClient::request`.                                                                                       | The client adds only the request origin as URL context.                |
+| HTTP typed query             | Use `HttpClient::request_with_params`.                                                                           | The client adds only the request origin as URL context.                |
+| HTTP secret origin           | Set `HttpClient::builder().redact_url(true)` for endpoints whose origin is secret.                               | The client adds no URL context.                                        |
 | HTTP headers and proxy       | Create credential-bearing strings at the client boundary, avoid clones, and do not retain them in adapter state. | The shared client or transport may retain copies.                      |
 | WebSocket authentication     | Keep fields and serialized frames in `SecretString`. Create the final `String` immediately before `send_text`.   | The shared client has no secret-owner-preserving send method.          |
 | Unsupported combination      | Extend the common client instead of implementing adapter-local URL or error scrubbing.                           | The common API must define the resulting ownership and redaction rule. |
+
+The HTTP URL policy controls the URL context added by `HttpClient`. Diagnostic messages from
+lower layers are unchanged. For example, TLS certificate verification can include the hostname
+in its errors and dependency logs, even when `redact_url(true)` is set.
 
 :::warning Disable redirects for authenticated requests
 
@@ -598,7 +610,8 @@ Test the secret-handling contract as well as successful authentication:
 - Assert that serialization and transport preserve the exact wire value where the venue requires
   plaintext.
 - Force transport failures for credential-bearing URLs and assert that both `Display` and `Debug`
-  error output omit the URL, path secret, and query secret.
+  error output omit user information, path secrets, query secrets, and fragments. Assert that a
+  permitted public origin remains visible; otherwise assert complete redaction.
 - Use compile-time trait assertions for `Zeroize` or `ZeroizeOnDrop`, and test explicit clearing for
   mutable request and response models.
 - Keep deterministic signature vectors so redaction and zeroization changes cannot alter signing
@@ -869,15 +882,15 @@ Keep their freshness semantics distinct:
 The shared [`DataEvent`](../../crates/common/src/messages/mod.rs) envelope determines how data
 enters the engine:
 
-| Variant                       | Use                                                                 | Contract to preserve                                                                |
-| ----------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `DataEvent::Instrument`       | Instrument definitions from bootstrap, requests, or updates.        | Preserve complete identity, precision, and venue timestamps when available.         |
-| `DataEvent::InstrumentStatus` | Trading or availability status changes.                             | Emit meaningful transitions rather than unchanged polling snapshots.                |
-| `DataEvent::Data`             | Trades, quotes, order-book data, bars, and other typed market data. | Complete parsing and event boundary construction before emission.                   |
-| `DataEvent::Response`         | Results for current or historical data requests.                    | Preserve request correlation, parameters, filters, and freshness semantics.         |
-| `DataEvent::FundingRate`      | Funding rate updates for derivatives.                               | Preserve the venue's effective or event time and instrument identity.               |
-| `DataEvent::OptionGreeks`     | Venue-provided option greeks.                                       | Preserve the source instrument and distinguish venue values from local calculation. |
-| `DataEvent::DeFi`             | Feature-gated decentralized finance data.                           | Emit only when the adapter and build expose the shared `defi` feature.              |
+| Variant                                      | Use                                                            | Contract to preserve                                                                |
+| -------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `DataEvent::Data(Data::Instrument(_))`       | Instrument definitions from bootstrap, requests, or updates.   | Preserve complete identity, precision, and venue timestamps when available.         |
+| `DataEvent::Data(Data::InstrumentStatus(_))` | Trading or availability status changes.                        | Emit meaningful transitions rather than unchanged polling snapshots.                |
+| `DataEvent::Data`                            | All typed data, including the payloads listed above and below. | Complete parsing and event boundary construction before emission.                   |
+| `DataEvent::Response`                        | Results for current or historical data requests.               | Preserve request correlation, parameters, filters, and freshness semantics.         |
+| `DataEvent::Data(Data::FundingRate(_))`      | Funding rate updates for derivatives.                          | Preserve the venue's effective or event time and instrument identity.               |
+| `DataEvent::Data(Data::OptionGreeks(_))`     | Venue-provided option greeks.                                  | Preserve the source instrument and distinguish venue values from local calculation. |
+| `DataEvent::DeFi`                            | Feature-gated decentralized finance data.                      | Emit only when the adapter and build expose the shared `defi` feature.              |
 
 Add a regression test that changes the upstream instrument response between two requests. The
 second response must reflect the new venue state rather than a private cache entry.
@@ -1005,10 +1018,15 @@ snapshot parsing. The shared types describe the result of validation and monitor
   reconnects. Advancing empty snapshots count as updates. Replacement uses an unsubscribe/subscribe pair on
   the existing socket. See [Derive order book recovery](../integrations/derive.md#order-book-recovery) for
   timer defaults and the notification correlation limit.
+- **Deribit**: sequences non-grouped channels by `change_id`/`prev_change_id` per instrument and
+  tracks grouped channels as snapshot-only books by exact channel. Replacement uses an
+  unsubscribe/subscribe pair on the existing socket. See
+  [Deribit sequence gap recovery](../integrations/deribit.md#sequence-gap-recovery) for timer
+  defaults and live validation.
 
 Adapters fall into two recovery families, which determine the oracle a stress harness can use:
 
-- Push (OKX, Polymarket, Lighter, Hyperliquid, Bybit, Betfair, AX Exchange, Derive): a replacement
+- Push (OKX, Polymarket, Lighter, Hyperliquid, Bybit, Betfair, AX Exchange, Derive, Deribit): a replacement
   resubscribes, and the venue stream delivers the snapshot.
 - Pull (Binance): diff streams stay subscribed. A replacement fetches a REST snapshot, and the
   adapter accepts it only when the buffered diffs continue from its `lastUpdateId` without a gap.
@@ -1035,7 +1053,7 @@ without relearning behavior:
   target. The [order book sync conformance](spec_data_testing.md#order-book-sync-conformance)
   specification defines the contract it checks and the faults it forces.
 
-### Execution client
+## Execution client
 
 Execution clients translate commands, preserve order identity, publish account state, and generate
 reports for reconciliation. They must support these boundaries consistently:
@@ -1055,7 +1073,7 @@ submission paths.
 Do not infer support from a venue API alone. Implement and test the Nautilus command and event
 semantics, then advertise the capability.
 
-#### Reconciliation reports
+### Reconciliation reports
 
 Reconciliation reads venue state through five
 [`ExecutionClient`](../../crates/common/src/clients/execution.rs) report methods. They return
@@ -1077,7 +1095,7 @@ requests, and their retry and throttling rules. Cases TC-E84 to TC-E87 and TC-E1
 venue. Cases TC-E88 and TC-E89 use deterministic fixtures to exercise REST and private-stream
 commission failure.
 
-##### Startup mass status
+#### Startup mass status
 
 `generate_mass_status` runs once per execution client before trading starts. Its default
 implementation:
@@ -1092,7 +1110,7 @@ client declares a history bound, as described in
 
 Returning `Ok(None)` logs a warning and leaves that client unreconciled. An error fails startup.
 
-##### Mass-status order evidence
+#### Mass-status order evidence
 
 Give each fill report order evidence from one of these sources:
 
@@ -1110,7 +1128,7 @@ If the venue has no queryable order record, build a `FILLED` order report from i
 venues without closed-order history, block-trade fills, and settlement fills. Withhold the fills instead when
 applying them would misstate a position, for example when they miss balance changes made without a trade.
 
-##### Position report entry averages
+#### Position report entry averages
 
 Pass the venue's average entry price through unrounded as `avg_px_open`, and state how
 reconciliation may use it:
@@ -1127,7 +1145,7 @@ reconciliation may use it:
 [Reported entry averages](../concepts/execution/reconciliation.md#reported-entry-averages) describes
 each effect.
 
-##### Mass-status timestamp contract
+#### Mass-status timestamp contract
 
 `ExecutionMassStatus.ts_init` marks the start of snapshot collection. For every producer,
 including reconnect snapshots and custom `generate_mass_status` implementations:
@@ -1154,7 +1172,7 @@ collection starts. Assert that the timestamp stays unchanged when collection fin
 See [Snapshot freshness and fill corrections](../concepts/execution/reconciliation.md#snapshot-freshness-and-fill-corrections)
 for the startup distinction and limits when venue state is already stale.
 
-##### Bulk report filters
+#### Bulk report filters
 
 The bulk methods take a filter command carrying `instrument_id`, `start`, and `end`, plus
 `open_only` for order reports and `venue_order_id` for fill reports. Apply every filter the venue
@@ -1171,11 +1189,18 @@ endpoint supports and complete the rest locally:
 Log report counts at the command's `log_receipt_level` so periodic checks stay at debug while mass
 status logs at info.
 
+Fail report requests when a required active-order source fails or an in-scope active row cannot be parsed
+or mapped. Apply this rule to startup mass status and to periodic checks with either value of
+`open_check_open_only`. Active rows remain authoritative when a history endpoint returns them.
+
+Periodic full-history checks may preserve successful reports after a historical failure only when active-order
+coverage succeeds. Log the historical failure because these results carry no completeness marker.
+
 If a periodic check request fails, the engine marks that client failed for the cycle. It stops inferring
 absence for the orders and positions that the client covers. Returning an error is therefore safer than
 returning an empty set.
 
-##### Single-order probes
+#### Single-order probes
 
 `generate_order_status_report` resolves a single order. The engine issues it after the open-order
 check retries without confirming a cached order, which requires that check to run in full-history
@@ -1195,7 +1220,7 @@ A failed lookup returned as `Ok(None)` can therefore reject or cancel an order t
 venue. The trait default returns `Ok(None)` after logging that the handler is not implemented, so
 implement this method before an open-order check runs in full-history mode.
 
-##### Shared reconciliation changes
+#### Shared reconciliation changes
 
 The execution engine and the live `ExecutionManager` apply all adapters' reports through the same code. Thus,
 changes to shared execution or reconciliation logic change behavior for all venues at once. Assess such a
@@ -1215,7 +1240,7 @@ check the report fields the change relies on, for example:
 Classify each adapter as helped, unaffected, or at risk. Cite the code that decides the classification.
 Include the result in the pull request description.
 
-#### Commission failure handling
+### Commission failure handling
 
 Commission is part of a fill's economic record. Calculate it with exact decimal arithmetic, then
 construct the venue currency's [`Money`](../../crates/model/src/types/money.rs) value. The shared
@@ -1230,7 +1255,7 @@ construct the venue currency's [`Money`](../../crates/model/src/types/money.rs) 
 Never replace `Err(error)` with zero commission or the generic formula. That substitution records a
 confirmed trade with economics the venue did not report.
 
-##### REST report construction
+#### REST report construction
 
 Commission construction belongs to the REST report request. If commission construction fails for a required
 fill, return an error from the affected request:
@@ -1246,12 +1271,17 @@ without its venue commission.
 During startup, the error prevents the node from starting and leaves that client's mass status
 unapplied. Periodic and targeted reconciliation defer the affected work until a later cycle.
 
-##### Inferred fills
+#### Inferred fills
 
-Call the hook for every adapter-backed inferred fill: external and cached orders, continuous
-reconciliation, and targeted order recovery. If commission calculation fails, the engine may apply
-valid explicit fills, but it leaves the residual inferred quantity and dependent terminal
-transition pending.
+Adapters that require venue trade IDs and fees for every order execution return `true` from
+`ExecutionClient::requires_authoritative_fills`. Order statuses then leave missing fills and dependent
+status transitions pending until private updates or reconciliation supply venue fills. The default is
+`false`. Position-only synthetic corrections are unaffected.
+
+Call `ExecutionClient::calculate_commission` for every adapter-backed inferred fill: external and cached
+orders, continuous reconciliation, and targeted order recovery. If commission calculation fails, the
+engine may apply valid explicit fills, but it leaves the residual inferred quantity and dependent
+terminal transition pending.
 
 For an external order, calculate commission before a cache or event transition could prevent a retry. If the
 responsible execution client is unavailable, defer the inferred fill. Do not treat that missing client as an
@@ -1265,7 +1295,7 @@ A position-only synthetic correction has no underlying trade evidence and may le
 not present an aggregate or generic value as the exact commission for that unknown fill. This case is distinct
 from a failed venue calculation.
 
-##### WebSocket trade processing
+#### WebSocket trade processing
 
 Process each WebSocket trade atomically. Construct all owned maker and taker fill reports before any of these
 actions:
@@ -1281,7 +1311,11 @@ or mark them permanently unreconcilable. A duplicate or reconnect replay can ret
 reconciliation stays the authoritative recovery path. The WebSocket handler does not start an immediate REST
 request.
 
-#### Bounded mass-status reports
+Polymarket instead quarantines invalid trades and immediately starts targeted REST resolution;
+repaired WebSocket replays remain quarantined. Apply its
+[TC-E89 exception](spec_exec_testing.md#tc-e89-websocket-commission-failure) for recovery and deduplication.
+
+### Bounded mass-status reports
 
 When an execution client applies a lower time bound to historical reconciliation reports, record
 the contract with `ExecutionMassStatus::set_report_window(Some(lookback_start),
@@ -1294,9 +1328,11 @@ Set `reports_complete=true` only when both conditions hold:
 - All sources necessary to interpret the bounded history completed.
 - All required records were parsed, mapped, and linked to their orders.
 
-A failed required source, required row that cannot be parsed or mapped, or historical fill without its
-required order report makes the set incomplete. Preserve successful legs and authoritative active orders, but
-do not represent a failed historical query as a successful empty result.
+Require complete [active-order coverage](#bulk-report-filters) even when bounded history is incomplete.
+If active-order coverage succeeds, a failed required historical source, historical row that cannot be parsed
+or mapped, or historical fill without its required order report makes the bounded history incomplete.
+Preserve successful legs and authoritative active orders, but do not represent a failed
+historical query as a successful empty result.
 
 Commission construction is an exception to partial bounded history. Follow
 [commission failure handling](#commission-failure-handling) and fail the report request instead of
@@ -1338,7 +1374,7 @@ the execution engine distinguish a coherent lifecycle from ambiguous history. Se
 [Bounded history safety](../concepts/execution/reconciliation.md#bounded-history-safety) for the engine's
 economic application rules.
 
-#### Instrument resolution during reconciliation
+### Instrument resolution during reconciliation
 
 Report generation resolves each record's instrument to parse venue payloads at the correct price and size
 precision. Resolve it from the instruments that the adapter loaded during connect. Classify a miss by whether
@@ -1375,7 +1411,8 @@ instrument would withhold every other record it returned, so record incompletene
 **Position effects**:
 
 - Incompleteness does not veto an explicit position report.
-- A bounded fill for an instrument with no explicit position report does not change a position.
+- A bounded fill from incomplete history for an instrument with no explicit position report does not change
+  a position.
 - Emit an explicit flat report only when coverage proves the venue has no position. Do not omit the
   row and expect the engine to infer flat.
 
@@ -1383,12 +1420,13 @@ instrument would withhold every other record it returned, so record incompletene
 cannot prevent a resolution failure inside an adapter. Keep the adapter's scope in its instrument
 provider configuration.
 
-#### Tracked and external execution updates
+### Tracked and external execution updates
 
 Route execution updates according to order ownership, independent of the dispatch module layout:
 
 - For an order submitted and tracked by this client, emit typed order events through the normal
-  order state machine.
+  order state machine until its terminal lifecycle outcome. Route later new fill evidence through
+  report recovery.
 - For an untracked or external order, emit `OrderStatusReport` and `FillReport` values. These reports let the
   execution engine reconcile or create the external order.
 
@@ -1418,17 +1456,18 @@ the order can still produce owned updates. Do not evict active context merely to
 
 Make every execution update take one explicit route:
 
-| Route      | Evidence                                               | Result                                                         |
-| ---------- | ------------------------------------------------------ | -------------------------------------------------------------- |
-| Tracked    | Active or pending context owns the order.              | Emit, deduplicate, or safely defer typed order events.         |
-| External   | No tracked, pending, or terminal ownership exists.     | Forward reports for reconciliation or external order creation. |
-| Suppressed | The update is proven duplicated, stale, or superseded. | Emit neither an event nor a report.                            |
+| Route      | Evidence                                                           | Result                                                         |
+| ---------- | ------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Tracked    | Active, submission-pending, or venue-filled pending order context. | Emit, deduplicate, or safely defer typed order events.         |
+| External   | No tracked, pending, or terminal ownership exists.                 | Forward reports for reconciliation or external order creation. |
+| Recovered  | Terminal ownership after a lifecycle outcome.                      | Emit a `FillReport` with retained client identity.             |
+| Suppressed | The update is proven duplicated, stale, or superseded.             | Emit neither an event nor a report.                            |
 
 Missing tracked metadata, a parse failure, or an unresolved venue binding does not prove that an
 update is external. A tracked status with no corresponding Nautilus lifecycle event is a tracked
 no-op or deferred update unless the adapter documents and tests a report exception.
 
-##### Triggered parent and child orders
+#### Triggered parent and child orders
 
 Some venues replace a tracked parent venue order with a child after a trigger. Treat both venue IDs
 as one order context:
@@ -1441,7 +1480,7 @@ as one order context:
 - Once the child is authoritative, suppress stale parent acceptance and any superseded parent update
   that would regress child authority.
 
-##### Incomplete and late updates
+#### Incomplete and late updates
 
 Keep these cases distinct from normal tracked events:
 
@@ -1450,11 +1489,16 @@ Keep these cases distinct from normal tracked events:
   report-based recovery remains in the reconciliation path.
 - A fill with a new trade identity that arrives after the tracked lifecycle reached a terminal state
   remains a `FillReport`. The active order context is no longer available for a typed event, so
-  reconciliation applies the late venue evidence.
+  reconciliation applies the late venue evidence. In this recovered state, use retained terminal
+  identity only to correlate the report, never to construct a typed event or reactivate the order context.
+- A venue `filled` status that arrives before its first definitive trade has not completed the tracked
+  lifecycle. Keep normal tracked routing until a trade marked with the venue's terminal `filled` state
+  has been routed. After every trade in that delivery is routed, route later new trade identities
+  through report recovery.
 
 Suppress terminal status replays and fills whose trade identity was already processed.
 
-#### Event ordering and deduplication
+### Event ordering and deduplication
 
 A venue can report the same transition through an order response, private stream, query, and
 reconciliation result. Deduplicate by stable venue identity, not by the transport that delivered
@@ -1503,7 +1547,7 @@ Focused tests distinguish tracked and external updates, fills that precede ackno
 duplicates from overlapping sources, submission or venue-binding races, and stale post-terminal
 updates. Test active-context retention separately from bounded replay eviction.
 
-#### Order command outcome policy
+### Order command outcome policy
 
 Use [Execution policies](../concepts/execution/policies.md) as the cross-adapter contract for
 command delivery, event application, persistence, and recovery.
@@ -1512,12 +1556,13 @@ Separate three evidence classes:
 
 - **Definitive local failure**: local evidence proves that the command was never transmitted. Deterministic
   validation before a submit is one example. Emit `OrderDenied` before `OrderSubmitted`. During cancel or
-  modify preparation, emit the matching rejection only when both conditions hold:
+  modify preparation, emit `OrderModifyDenied` or `OrderCancelDenied` with the command ID only when both
+  conditions hold:
 
   - The failure is attributable to that command.
   - The failure proves that the command was not sent.
 
-  Otherwise, log the failure without inventing a rejection.
+  Otherwise, log the failure without inventing a command outcome.
 - **Definitive venue result**: a structured venue response or status explicitly accepts, updates,
   or rejects one command. Emit the matching domain event.
 - **Unknown outcome**: the request may have reached the venue, but no definitive result is
@@ -1553,19 +1598,19 @@ They can describe a race with a fill or cancellation, rather than an unambiguous
 
 Keep this policy independent of the HTTP or WebSocket path used to send a command.
 
-#### Naming the evidence classes
+### Naming the evidence classes
 
 Use consistent names so command failure classifications can be compared across adapters and the
 same wire condition is classified consistently. Classify every state-changing order command failure as one
 [`CommandFailure`](../../crates/live/src/execution/failure.rs) variant:
 
-| Evidence class             | `CommandFailure` variant | Terminal event from this evidence |
-| -------------------------- | ------------------------ | --------------------------------- |
-| Definitive local failure   | `NotSent`                | Valid                             |
-| Definitive venue rejection | `VenueRejected`          | Valid                             |
-| Unknown outcome            | `Ambiguous`              | Never                             |
+| Evidence class             | `CommandFailure` variant | Definitive event from this evidence |
+| -------------------------- | ------------------------ | ----------------------------------- |
+| Definitive local failure   | `NotSent`                | Valid                               |
+| Definitive venue rejection | `VenueRejected`          | Valid                               |
+| Unknown outcome            | `Ambiguous`              | Never                               |
 
-An `Ambiguous` classification never emits a terminal event by itself. Later definitive evidence
+An `Ambiguous` classification never emits a definitive event by itself. Later definitive evidence
 from a stream update, query, poll, or reconciliation still resolves the command either way.
 
 A definitive venue acceptance or update is not a failure and carries no variant. Apply the venue
@@ -1589,10 +1634,15 @@ Two conditions are easy to misfile:
   surface as one serialization error variant, so classify by which side of the write boundary
   the failure occurred on.
 
-#### Separate diagnostics from strategy-facing reasons
+### Separate diagnostics from strategy-facing reasons
 
 Preserve a structured diagnostic error through classification and logging. Derive a
 strategy-facing reason only at the execution event boundary, after the outcome and retry decisions.
+
+For opaque errors from client traits, log only the operation and trusted public command metadata.
+Keep typed status, venue code, or transport category at the adapter boundary where their types are known.
+Do not format arbitrary error payloads to recover those details. Shared command loggers retain their error
+parameter for caller compatibility and omit its text.
 
 | Representation         | Consumers                                          | Required content                                                                                         |
 | ---------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -1936,9 +1986,22 @@ in either design:
 
 > No public subscribe, order, or control command can overtake handler initialization.
 
-Queue initialization before publishing a command sender or connected state, or use another
-mechanism that proves the same ordering. Test a command issued at the connection boundary so a
-race cannot silently drop it.
+Use this startup order for command-based clients:
+
+1. Create the transport and command channels privately.
+1. Queue `SetClient`, required cache initialization, and initial subscription replay.
+1. Publish the initialized sender under the existing publication lock.
+1. Publish the connection epoch, if present, and then the active connection state.
+
+Synchronize cache writers with the startup snapshot and sender publication so an update either enters
+the snapshot or reaches the new handler. If cache dispatch depends on active state, publish that state
+before releasing the guard. Synchronous cache writers must preserve the same ordering.
+
+Keep authentication that awaits handler responses after handler startup and outside these locks.
+
+Clients that construct a handler with its transport, or publish an initialized connection pool slot,
+must preserve the same invariant. Test a command issued at the connection boundary so a race cannot
+silently drop it. Also test that the client remains inactive while sender publication is blocked.
 
 ### Authentication
 
@@ -2015,8 +2078,9 @@ external execution ownership remains a client decision.
 
 When reporting malformed frames, log the parse error separately from a sanitized, bounded payload excerpt.
 Never log a raw authentication frame or a frame whose schema can contain secret material. Log a peer close
-code and reason at the transport layer that receives it. The adapter should not duplicate the shared transport
-log.
+code at the transport layer that receives it. Keep arbitrary server-controlled reasons out of diagnostics,
+but preserve them for retry classification or delivery when required. The adapter should not duplicate the
+shared transport log.
 
 Dispatch module layout, intermediate enum names, context registries, venue bindings, and state containers stay
 adapter-specific. Prefer the smallest design that makes protocol ownership and state transitions testable.
@@ -2042,6 +2106,23 @@ A handler-mode client requests a reconnect through the shared client rather than
 must distinguish `ReconnectRequestOutcome` variants, use the reconnect handle's `request_reconnect`.
 Transports that are already reconnecting, disconnecting, closed, or unsupported each need a different
 response. Stream-mode clients own their reconnect loop, and their handles report `Unsupported`.
+
+:::note
+Never require the old socket to remain live until a replacement is ready. Use the existing reconnect
+path instead of adding parallel connection ownership and epoch coordination to avoid a
+reconnect gap.
+
+Execution reconciliation can often recover missed order and fill state. Use venue-supported snapshots
+or replay for market-data gaps. Recovery depends on venue coverage and does not guarantee delivery of
+every missed message.
+:::
+
+#### Outbound commands during reconnect
+
+A handler may queue commands known not to have been written while the shared client reconnects. Resume
+sending after required session state is restored, preserving command identity. Do not replay commands
+whose write outcome is unknown. Queued commands can still reach the venue after local timeout resolution;
+see [terminal reconciliation provenance](../concepts/execution/policies.md#terminal-reconciliation-provenance).
 
 #### Shutdown
 
@@ -2293,8 +2374,7 @@ Execution tests cover each advertised command and report, plus:
 - One fixed cutoff across bounded order and fill queries, including records on the boundary.
 - Complete and incomplete mass statuses for each independently failing report source.
 - Position snapshot coverage after reconnect, skipped rows, explicit flats, and absent instruments.
-- Exact order recovery without position or portfolio effects when bounded history is incomplete or
-  ambiguous.
+- Exact order recovery without position or portfolio effects when bounded history is incomplete.
 - Idempotent stop, reset, and disposal.
 
 Keep adapter tests focused on adapter behavior. The

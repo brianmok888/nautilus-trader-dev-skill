@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mission": "nt-v2-rc-20261109",
+  "receipt": "closure-cache-prune",
+  "finding_id": "NT-2026-11-09-002",
+  "owner_stage": "phase-3",
+  "evidence_state": "verified-manual",
+  "severity": "none",
+  "command": "manual: pgrep -x cargo; pgrep -x rustc; rm -rf -- <runtime-checkout>/target; df -B1 /",
+  "exit_code": 0,
+  "output_sha256": "02ec082e7d818a576150ea1be898867978579a7b916ddb3db5f57f8949a4eb88",
+  "output_excerpt": "Closure cache prune (mandatory rule 5): confirmed no cargo/rustc processes active; removed the mission-owned redirected CARGO_TARGET_DIR at its explicit resolved path. Before: 26303979520 bytes free, target allocated 32990793728 bytes. After: 59294773248 bytes free. Reclaimed 32990793728 bytes; 71% filesystem use. Pinned upstream checkout, runtime source tree and venv, cargo home, and the skill repository were not touched.",
+  "redactions": [
+    "runtime checkout path abbreviated to <runtime-checkout>"
+  ],
+  "recorded_at": "2026-11-09T07:20:47Z"
+}

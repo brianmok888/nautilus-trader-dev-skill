@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/coding_standards/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/coding_standards.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Coding Standards
 
 ## Code Style
@@ -20,6 +19,9 @@ The following applies to **all** source files (Rust, Python, shell, etc.):
 
 - Use **spaces only**, never hard tab characters.
 - Lines should generally stay below **100 characters**. Wrap thoughtfully when necessary.
+- Within each order-command event family, place `Denied` before `Rejected` in declarations,
+  match arms, callbacks, registration lists, and documentation. Preserve explicit discriminants
+  and serialized tags.
 - Use American English spelling (`color`, `serialize`, `behavior`), enforced by `.typos.toml`. Preserve
   external API spellings through exact identifier exceptions. Exclude verbatim data and generated files. Run
   `prek run typos --all-files` to check the repository.

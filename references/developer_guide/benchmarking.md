@@ -1,13 +1,12 @@
 ---
 source_url: https://nautilustrader.io/docs/nightly/developer_guide/benchmarking/
 source_repo: nautechsystems/nautilus_trader/docs/developer_guide/benchmarking.md
-source_commit: 2ceb2a9a624e174a5160c10f8188afbdd57ecb99
-sync_date: 2026-10-14
+source_commit: 77d785c69205c4326e6aadb46d03fb45357a78f2
+sync_date: 2026-11-09
 target: NautilusTrader develop developer guide source snapshot
 confidence: high
 legacy_policy: source-pinned upstream snapshot; historical guidance is migration/reference-only
 ---
-
 # Benchmarking
 
 Use this guide to write, run, and profile NautilusTrader benchmarks. It contains benchmark layout,
@@ -138,9 +137,9 @@ setup outside the measured function and compare counts produced by the same tool
 | Goal                               | Command                                                               |
 | ---------------------------------- | --------------------------------------------------------------------- |
 | All benches in one crate           | `cargo bench -p nautilus-execution`                                   |
-| One core bench module              | `cargo bench -p nautilus-execution --bench matching_core`             |
+| One core bench module              | `cargo bench -p nautilus-execution --bench matching`                  |
 | One engine bench module            | `cargo bench -p nautilus-execution --bench matching_engine`           |
-| One core benchmark name pattern    | `cargo bench -p nautilus-execution --bench matching_core -- iterate`  |
+| One core benchmark name pattern    | `cargo bench -p nautilus-execution --bench matching -- iterate`       |
 | One engine benchmark name pattern  | `cargo bench -p nautilus-execution --bench matching_engine -- submit` |
 | Quick smoke run (low sample count) | `cargo bench ... -- --quick`                                          |
 | All nightly registered benches     | `make cargo-ci-benches`                                               |
@@ -161,7 +160,29 @@ the selected benchmark targets build and register, but it does not upload measur
 The canonical backtest cases use the first 10,000 rows of the checked-in
 `test_data/btc-perp-20211231-20220201_1m.csv` file. A shared fixture drives replay-only, scheduled
 market-order, passive limit-order, and bar-EMA scenarios. The correctness test and both timed paths
-use the same fixture loader and exact result fingerprints.
+use the same fixture loader and comparison rules:
+
+- **Numerical outputs**: General, return, and PnL statistics, return-series values, and
+  `realized_return` on positions and position snapshots compare within the tolerances below.
+- **Exact state**: All other values must match exactly. Prices, quantities, money, fees, account
+  state, identifiers, and timestamps remain exact, as do statistic names, field presence, null
+  values, and record structure and ordering.
+
+Finite numerical outputs use an absolute tolerance of `1e-12` in the output's units and a relative
+tolerance of `1e-12`:
+
+```text
+abs(actual - expected) <= max(1e-12, 1e-12 * max(abs(actual), abs(expected)))
+```
+
+The absolute bound matches the reference precision used by the skewness and kurtosis tests and
+handles values near zero. The relative bound scales that rounding budget to larger metrics.
+NaN matches only NaN, infinities must have the same sign, and signed zeros compare equal.
+
+The checks exclude the full `CanonicalBacktestResult` digest, which hashes exact canonical bytes.
+Comparisons between legacy and typed input, and between preloaded and freshly loaded runs,
+remain exact within one environment. Both precision modes produce the same trading-state fingerprint,
+but some numerical values differ beyond the tolerances, so each mode has its own reference files.
 
 Run the semantic check first:
 
@@ -169,6 +190,15 @@ Run the semantic check first:
 CARGO_BUILD_JOBS=16 cargo test --locked -p nautilus-backtest \
     --test integration canonical_backtest_workloads::
 ```
+
+To export candidate references, prefix that command with
+`NAUTILUS_BENCH_RESULT_DIR="$PWD/target/canonical-results/standard"`. Each case writes its full
+`<case>.json` and `<case>.reference.json` before reference verification, so a reference mismatch
+leaves the candidate files available. Repeat with `--features high-precision` and output directory
+`$PWD/target/canonical-results/high`.
+For intentional changes to expected behavior, review each legacy `<scenario>.reference.json` and
+copy it to `crates/backtest/test_data/canonical/<precision>/<scenario>.json`, where `<precision>`
+is `standard` or `high`.
 
 Then run Criterion in test mode to confirm that every affected benchmark case executes without
 collecting samples:
@@ -180,7 +210,7 @@ CARGO_BUILD_JOBS=16 cargo bench --locked -p nautilus-backtest \
 
 The `run_preloaded` cases load the CSV and build the engine outside the returned `iter_custom`
 duration. The `load_build_run` cases include CSV loading, engine setup, data registration, and
-`BacktestEngine::run`. Both exclude result projection and fingerprint verification from the
+`BacktestEngine::run`. Both exclude result projection and reference verification from the
 reported duration, while still checking the result after every measured iteration.
 
 See [`crates/backtest/benches/BENCHMARKS.md`](../../crates/backtest/benches/BENCHMARKS.md) for the
