@@ -3,10 +3,10 @@ NT v2 compatibility note: legacy Cython/v1 and Python live `TradingNode` referen
 # nt-signals
 
 Indicators, order books, bar aggregation, custom data types, portfolio
-statistics, and tearsheets. Earned its file: score 13 (vendors a full Rust
+statistics, and tearsheets. Earned its file: score 14 (vendors a full Rust
 crate as reference material); distinct analysis domain.
 
-**Entry:** `SKILL.md` (271 lines; G0-G7 readiness gates with pinned evidence).
+**Entry:** `SKILL.md` (G0-G7 readiness gates with pinned evidence).
 
 ## WHERE TO LOOK
 

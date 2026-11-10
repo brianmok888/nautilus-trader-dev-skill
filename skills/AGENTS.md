@@ -68,3 +68,10 @@ Upstream NT V2 supports Python strategies, but this repository's stricter cutove
 | Review before deploy | `nt-review/` |
 | Check setup/tooling | `nt-dev/` |
 | Check test policy | `nt-testing/` |
+
+## MAINTENANCE BOUNDARIES
+
+- Location score 12: cross-skill routing and shared-reference ownership are a distinct domain.
+- Workflow `references/` links resolve outside their skill directories; editing a shared target affects all three workflow consumers.
+- Source identifiers in older guidance are historical metadata. Resolve the pin through `tools/upstream_baseline.py`; retain each snapshot and reviewed overlay's own provenance.
+- Guidance-only indexing does not establish a new G2, runtime, venue, or operational result.
